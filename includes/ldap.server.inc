@@ -93,7 +93,7 @@ class ldap_server {
   function connect() {
     if (!$con = ldap_connect($this->server_addr, $this->port)) {
       watchdog('user', 'LDAP Connect failure to '. $this->server_addr .':'. $this->port);
-      return;
+      return FALSE;
     }
 
     ldap_set_option($con, LDAP_OPT_PROTOCOL_VERSION, 3);
@@ -104,24 +104,26 @@ class ldap_server {
       ldap_get_option($con, LDAP_OPT_PROTOCOL_VERSION, $vers);
       if ($vers == -1) {
         watchdog('user', 'Could not get LDAP protocol version.');
-        return;
+        return FALSE;
       }
       if ($vers != 3) {
         watchdog('user', 'Could not start TLS, only supported by LDAP v3.');
-        return;
+        return FALSE;
       }
       elseif (!function_exists('ldap_start_tls')) {
         watchdog('user', 'Could not start TLS. It does not seem to be supported by this PHP setup.');
-        return;
+        return FALSE;
       }
       elseif (!ldap_start_tls($con)) {
         watchdog('user', t("Could not start TLS. (Error %errno: %error).", array('%errno' => ldap_errno($con), '%error' => ldap_error($con))));
-        return;
+        return FALSE;
       }
     }
 
   // Store the resulting resource
   $this->connection = $con;
+
+  return TRUE;
   }
 
 
@@ -160,10 +162,12 @@ class ldap_server {
   function disconnect() {
     if (!$this->connection) {
       watchdog('ldap', 'LDAP disconnect failure from '. $this->server_addr . ':' . $this->port);
+      return FALSE;
     }
 
   ldap_unbind($this->connection);
   $this->connection = NULL;
+  return TRUE;
   }
 
   /**

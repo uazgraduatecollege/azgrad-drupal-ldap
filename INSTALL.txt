@@ -1,8 +1,7 @@
 ==================================================================================
-LDAP API Installation instructions:
+Lightweight Directory Access Protocol (LDAP) Installation instructions:
 ==================================================================================
-1) Download the whole package of files from
-   http://drupal.org/project/ldap_api.
+1) Download the whole package of files from http://drupal.org/project/ldap.
 
 2) Upload the LDAP files to the modules directory. The packages includes files
    needed by the LDAP API, and optional modules to provide LDAP-based
@@ -18,5 +17,5 @@ These modules will NOT work If you are using PHP 4 or any other version less
 than 5.1.
 
 ==================================================================================
-More documentation is available at http://drupal.org/project/ldap_api
+More documentation is available at http://drupal.org/project/ldap
 ==================================================================================
