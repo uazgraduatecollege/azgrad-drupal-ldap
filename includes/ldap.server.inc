@@ -23,20 +23,19 @@ class ldap_server {
   public $basedn;
   private $binddn = FALSE; // Default to an anonymous bind.
   private $bindpw = FALSE; // Default to an anonymous bind.
+  private $properties = array('sid', 'name', 'address', 'port', 'tls', 'basedn', 'binddn', 'bindpw');
   protected $connection;
-  const properties = array('sid', 'name', 'address', 'port', 'tls', 'basedn', 'binddn', 'bindpw');
 
   /**
    * Constructor Method
    */
   function __construct($sid = 1) {
-    if (!is_numeric($params)) {
-      return;      
+    if (is_null($sid)) {
+      return;
     }
 
-    $this->sid = $sid;
-    $record = db_fetch_object(db_query("SELECT * FROM {ldap_servers} WHERE sid = %d", $this->sid));
-    foreach (properties as $property) {
+    $record = db_fetch_object(db_query("SELECT * FROM {ldap_servers} WHERE sid = %d", $sid));
+    foreach ($this->properties as $property) {
       if (isset($record->$property)) {
         $this->$property = $record->$property;
       }
@@ -51,7 +50,6 @@ class ldap_server {
     $this->disconnect();
   }
 
-
   /**
    * Invoke Method
    */
@@ -59,6 +57,27 @@ class ldap_server {
     $this->connect();
     $this->bind();
   }
+
+  /** 
+   * Get Method
+   *
+   * @param string property
+   *   The requested property name.
+   *
+   * @return 
+   *   The value of the requested variable.
+   */ 
+  function __get($property) {
+    return $this->$property;
+  }
+
+  /** 
+   * Set Method
+   */ 
+  function __set($property,$value) {
+    $this->$property = $value;
+  }
+
 
   /**
    * Error Handling Method
@@ -171,6 +190,21 @@ class ldap_server {
   }
 
   /**
+   * Saves the current server config to the database.
+   *
+   * @return
+   *   True if the operation is sucessful.
+   */
+  function save() {
+  }
+
+  /**
+   * (Re)loads the current server config from the database.
+   */
+  function load() {
+  }
+
+  /**
    * Preform an LDAP search.
    *
    * @peram string $filter
@@ -209,6 +243,5 @@ class ldap_server {
  *   These functions operate on the server class while not quite fitting
  *   within the class.
  */
-
 
 // vim:fenc=utf-8:ft=php:ai:si:ts=2:sw=2:et:

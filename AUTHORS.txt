@@ -1,0 +1,27 @@
+$Id$
+
+Lightweight Directory Access Protocol - An API and access modules to integrate corporate LDAP with Drupal.
+
+Copyright (c) 2010 by John Barclay, Chris Porter, Zach Schimke and others
+http://drupal.org/project/ldap
+
+
+May 21, 2010 - August 9, 2010
+
+
+* LDAP API
+  Zach Schimke (retsamedoc) - Primary Contact
+  John Barclay (johnbarclay)
+  Chris Porter (netw3rker)
+
+* LDAP Authentication
+  Chris Porter (netw3rker) - Primary Contact
+
+* LDAP Authorization
+  John Barclay (johnbarclay) - Primary Contact
+
+* Testing
+
+* Documention
+
+

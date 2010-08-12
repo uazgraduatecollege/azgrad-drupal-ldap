@@ -32,7 +32,15 @@ function ldap_authentication_menu() {
     'access arguments' => array('administer site configuration'),
     'weight' => 1,
   );
-
+  $items['admin/settings/ldap/servers/%/authentication'] = array(
+    'title' => 'Authentication',
+    'description' => 'Change per-server authentication options.',
+    'type' => MENU_LOCAL_TASK,
+    'file' => 'ldap_authentication.admin.inc',
+    'page callback' => 'ldap_authentication_edit_server',
+    'access arguments' => array('Add/Edit LDAP Servers'),
+    'weight' => 1,
+  );
   return $items;
 }
 

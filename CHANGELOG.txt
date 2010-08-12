@@ -5,6 +5,14 @@ LDAP Module 0.x
 Version 0.1-UNSTABLE
 =====================
 
-- Created and populated the basic directory structure.
-- Initial CVS import.
-
+- (retsamedoc) Added ctools as a prereq; server config actions are now modal
+  forms.
+- (retsamedoc) Converted ldap_server_edit_server_* to use the ldap_server
+  class.
+- (retsamedoc) Added advanced help module hooks.
+- (retsamedoc) Added per-server configuration options to ldap_authorization
+  and ldap_authentication.
+- (retsamedoc) Modified ldap_api.install to add table descriptions.
+- (retsamedoc) Added caching features.
+- (retsamedoc) Initial CVS import.
+- (retsamedoc) Created and populated the basic directory structure.

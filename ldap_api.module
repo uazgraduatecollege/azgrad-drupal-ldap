@@ -33,7 +33,7 @@ function ldap_api_theme() {
   return array(
     'ldap_api_list_servers_form' => array(
       'arguments' => array('form' => NULL),
-      'file' => 'ldap_servers.theme.inc'
+      'file' => 'ldap_server.theme.inc'
     ),
   );
 }
@@ -41,8 +41,8 @@ function ldap_api_theme() {
 /**
  * Implementation of hook_perm().
  */
-function ldap_api_perm(){
-  return array('Add/Edit LDAP Servers','Delete LDAP Servers','(De-)Activate LDAP Servers');
+function ldap_api_perm() {
+  return array('Add/Edit LDAP Servers', 'Delete LDAP Servers', '(De-)Activate LDAP Servers');
 }
 
 /**
@@ -61,54 +61,103 @@ function ldap_api_menu() {
     'page callback' => 'ldap_api_info',
     'access arguments' => array('administer site configuration'),
     'file' => 'ldap_api.admin.inc',
-    'type' => MENU_LOCAL_TASK,
+#    'type' => MENU_LOCAL_TASK,
   );
   $items['admin/settings/ldap/info'] = array(
-    'title' => 'Info',
-    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'title' => 'Information',
+    'type' => MENU_LOCAL_TASK,
+    'page callback' => 'ldap_api_info',
+    'access arguments' => array('administer site configuration'),
+    'file' => 'ldap_api.admin.inc',
     'weight' => 1,
+  );
+  $items['admin/settings/ldap/help'] = array(
+    'title' => 'Help',
+    'type' => MENU_LOCAL_TASK,
+    'file' => 'ldap_api.help.inc',
+    'page callback' => 'ldap_api_help_index',
+    'weight' => 10,
   );
   $items['admin/settings/ldap/servers'] = array(
     'title' => 'Servers',
     'description' => 'Configure LDAP Servers',
     'type' => MENU_LOCAL_TASK,
-    'file' => 'ldap_servers.admin.inc',
+    'file' => 'ldap_server.admin.inc',
     'page callback' => 'ldap_api_list_servers',
     'access arguments' => array('administer site configuration'),
     'weight' => 1,
   );
-  $items['admin/settings/ldap/servers/add'] = array(
-    'title' => 'Add',
-    'description' => 'Add an LDAP Server',
-    'type' => MENU_LOCAL_TASK,
-    'file' => 'ldap_servers.admin.inc',
-    'page callback' => 'ldap_api_add_server',
-    'access arguments' => array('Add/Edit LDAP Servers'),
-    'weight' => -1,
-  );
   $items['admin/settings/ldap/servers/list'] = array(
     'title' => 'List',
     'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => -1,
+  );
+  $items['admin/settings/ldap/servers/add'] = array(
+    'title' => 'New',
+    'description' => 'Add an LDAP Server',
+    'type' => MENU_LOCAL_TASK,
+    'file' => 'ldap_server.admin.inc',
+    'page callback' => 'ldap_api_add_server',
+    'access arguments' => array('Add/Edit LDAP Servers'),
     'weight' => 1,
   );
-  $item['admin/settings/ldap/servers/%'] = array (
-    'title' => 'Edit',
-    'title callback' => 'ldap_api_server_name',
-    'title arguments' => array(4),
+  $items['admin/settings/ldap/servers/%'] = array(
+    'title' => 'Server Configuration',
     'description' => 'Edit an LDAP Server',
     'type' => MENU_CALLBACK,
-    'file' => 'ldap_servers.admin.inc',
+    'file' => 'ldap_server.admin.inc',
     'page callback' => 'ldap_api_edit_server',
     'page arguments' => array(4),
     'access arguments' => array('Add/Edit LDAP Servers'),
-    'weight' => 0,
+    'weight' => -1,
   );
-  $item['admin/settings/ldap/servers/%/edit'] = array(
-    'title' => 'Edit',
+  $items['admin/settings/ldap/servers/%/edit'] = array(
+    'title' => 'General',
     'type' => MENU_DEFAULT_LOCAL_TASK,
-    'weight' => 0,
+    'weight' => -1,
   );
+  $items['admin/settings/ldap/servers/%/delete'] = array(
+    'title' => 'Delete',
+    'description' => 'Delete an LDAP Server',
+    'type' => MENU_CALLBACK,
+    'file' => 'ldap_server.admin.inc',
+    'page callback' => 'ldap_api_delete_server',
+    'page arguments' => array(4),
+    'access arguments' => array('Add/Edit LDAP Servers'),
+    'weight' => -1,
+  );
+  $items['admin/settings/ldap/servers/%/activate'] = array(
+    'title' => 'Activate',
+    'description' => 'Activate an LDAP Server',
+    'type' => MENU_CALLBACK,
+    'file' => 'ldap_server.admin.inc',
+    'page callback' => 'ldap_api_activate_server',
+    'page arguments' => array(4),
+    'access arguments' => array('(De-)Activate LDAP Servers'),
+    'weight' => -1,
+  );
+  $items['admin/settings/ldap/servers/%/deactivate'] = array(
+    'title' => 'Deactivate',
+    'description' => 'Deactivate an LDAP Server',
+    'type' => MENU_CALLBACK,
+    'file' => 'ldap_server.admin.inc',
+    'page callback' => 'ldap_api_deactivate_server',
+    'page arguments' => array(4),
+    'access arguments' => array('(De-)Activate LDAP Servers'),
+    'weight' => -1,
+  );
+
   return $items;
+}
+
+/**
+ * Implementation of hook_flush_caches().
+ * 
+ * This hook is also invoked on every cron run by system_cron(), so it may be 
+ * called a lot more often than you'd think.
+ */
+function ldap_api_flush_caches() {
+  return array('ldap_cache');
 }
 
 /**
@@ -118,14 +167,6 @@ function ldap_api_simpletest() {
   $dir = drupal_get_path('module', 'ldap_api') .'/tests';
   $tests = file_scan_directory($dir, '\.test$');
   return array_keys($tests);
-}
-
-
-/**
- * Implementation of hook_flush_caches().
- */
-function ldap_api_flush_caches() {
-  return array();
 }
 
 // vim:fenc=utf-8:ft=php:ai:si:ts=2:sw=2:et:
