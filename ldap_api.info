@@ -1,4 +1,3 @@
-; $Id$
 name = API
 description = An LDAP API that can be used by other modules.
 package = "Lightweight Directory Access Protocol"

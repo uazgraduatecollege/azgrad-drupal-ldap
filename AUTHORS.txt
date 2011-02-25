@@ -1,4 +1,3 @@
-$Id$
 
 Lightweight Directory Access Protocol - An API and access modules to integrate corporate LDAP with Drupal.
 
