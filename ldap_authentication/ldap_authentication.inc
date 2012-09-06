@@ -503,6 +503,7 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
         'mail' => $ldap_user['mail'],
       );
       user_save($account, $edit);
+      user_set_authmaps($account, array('authname_ldap_authentication' => $authname));
     }
 
   }
