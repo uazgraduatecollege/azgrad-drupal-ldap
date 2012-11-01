@@ -168,7 +168,8 @@ class LdapServer {
       $this->bindpw = $server_record->bindpw;
       $this->bindpw = ldap_servers_decrypt($this->bindpw);
     }
-	$this->paginationEnabled = (boolean)(ldap_servers_php_supports_pagination() && $this->searchPagination);
+    
+    $this->paginationEnabled = (boolean)(ldap_servers_php_supports_pagination() && $this->searchPagination);
 
     $this->queriableWithoutUserCredentials = (boolean)(
       $this->bind_method == LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT ||
