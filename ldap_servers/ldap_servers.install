@@ -246,3 +246,21 @@ function ldap_servers_update_7105() {
 
   return ($msg) ? $msg :  t('No database changes made.');
 }
+
+
+
+/**
+ * Change ldap_servers "bind_method" field to small int.
+ */
+function ldap_servers_update_7106() {
+  db_change_field('ldap_servers', 'bind_method', 'bind_method', array(
+    'type' => 'int',
+    'size' => 'small',
+    'not null' => TRUE,
+    'default' => 0,
+    ));
+  $msg = t('ldap_servers "bind_method" field changed to small int');
+
+  return ($msg) ? $msg : t('No database changes made.');
+}
+
