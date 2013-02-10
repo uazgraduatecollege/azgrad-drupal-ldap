@@ -482,6 +482,7 @@ function _ldap_authorization_ldap_authorization_maps_alter(&$user, &$user_ldap_e
           $entries = $ldap_server->search($branch, $filter, array('cn'));
         }
         if ($entries !== FALSE) {
+          unset($entries['count']);
           foreach ($entries as $entry) {
             if (isset($entry['cn'])) {
               $authorization_id = $entry['cn'][0];
