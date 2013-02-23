@@ -245,7 +245,7 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
     if ($ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT ||
         $ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_ANON_USER
         ) {
-      $bind_success = ($ldap_server->bind() == LDAP_SUCCESS);
+      $bind_success = ($ldap_server->bind(NULL, NULL, FALSE) == LDAP_SUCCESS);
     }
     elseif ($ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_ANON) {
       $bind_success = ($ldap_server->bind(NULL, NULL, TRUE) == LDAP_SUCCESS);
@@ -260,7 +260,7 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
         $transformname = $ldap_server->drupalToLdapNameTransform($authname, $watchdog_tokens);
         $replace = array($basedn, $transformname);
         $userdn = str_replace($search, $replace, $ldap_server->user_dn_expression);
-        $bind_success = ($ldap_server->bind($userdn, $pass) == LDAP_SUCCESS);
+        $bind_success = ($ldap_server->bind($userdn, $password, FALSE) == LDAP_SUCCESS);
         if ($bind_success) {
           break;
         }
@@ -341,7 +341,7 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
       $credentials_pass = (boolean)($ldap_user);
     }
     else {
-      $credentials_pass = ($ldap_server->bind($ldap_user['dn'], $pass) == LDAP_SUCCESS);
+      $credentials_pass = ($ldap_server->bind($ldap_user['dn'], $pass, FALSE) == LDAP_SUCCESS);
     }
     if (!$credentials_pass) {
       if ($detailed_watchdog_log) {

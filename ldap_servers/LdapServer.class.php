@@ -265,6 +265,10 @@ class LdapServer {
     else {
       $userdn = ($userdn != NULL) ? $userdn : $this->binddn;
       $pass = ($pass != NULL) ? $pass : $this->bindpw;
+      if (drupal_strlen($pass) == 0 || drupal_strlen($userdn) == 0) {
+        watchdog('ldap', "LDAP bind failure for user userdn=%userdn, pass=%pass.", array('%userdn' => $userdn, '%pass' => $pass));
+        return LDAP_LOCAL_ERROR;
+      }
       if (@!ldap_bind($this->connection, $userdn, $pass)) {
         watchdog('ldap', "LDAP bind failure for user %user. Error %errno: %error", array('%user' => $userdn, '%errno' => ldap_errno($this->connection), '%error' => ldap_error($this->connection)));
         return ldap_errno($this->connection);
