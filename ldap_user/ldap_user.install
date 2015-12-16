@@ -24,7 +24,7 @@ function ldap_user_install() {
   // db_query("UPDATE {system} SET weight = -1 WHERE name = 'ldap_user'");
 
   // _ldap_user_install_update_authmap();
-
+  \Drupal::service('router.builder')->rebuild();
 
 
 }
