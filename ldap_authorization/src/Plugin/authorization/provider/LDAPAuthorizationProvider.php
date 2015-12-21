@@ -13,11 +13,12 @@ use Drupal\authorization\Provider\ProviderPluginBase;
 /**
  * @AuthorizationProvider(
  *   id = "ldap_provider",
- *   label = @Translation("LDAP Authorization provider"),
+ *   label = @Translation("LDAP Authorization"),
  *   description = @Translation("LDAP provider to the Authorization API.")
  * )
  */
 class LDAPAuthorizationProvider extends ProviderPluginBase {
+
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
 
     $provider_tokens = array(
@@ -46,7 +47,7 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
         '#type' => 'radios',
         '#title' => t('LDAP Server used in !profile_name configuration.', $provider_tokens),
         '#required' => 1,
-        '#default_value' => $this->configuration['server'],
+        '#default_value' => $this->configuration['status']['server'],
         '#options' => $server_options,
       );
     } else {
@@ -59,14 +60,14 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
 
     $form['status']['type'] = array(
       '#type' => 'hidden',
-      '#value' =>  $this->configuration['type'],
+      '#value' =>  $this->configuration['status']['type'],
       '#required' => 1,
     );
 
     $form['status']['only_ldap_authenticated'] = array(
       '#type' => 'checkbox',
       '#title' => t('Only apply the following LDAP to !profile_name configuration to users authenticated via LDAP.  On uncommon reason for disabling this is when you are using Drupal authentication, but want to leverage LDAP for authorization; for this to work the Drupal username still has to map to an LDAP entry.', $provider_tokens),
-      '#default_value' =>  $this->configuration['only_ldap_authenticated'],
+      '#default_value' =>  $this->configuration['status']['only_ldap_authenticated'],
     );
 
 
@@ -105,19 +106,19 @@ Representations of groups derived from LDAP might initially look like:
     $form['filter_and_mappings']['use_first_attr_as_groupid'] = array(
       '#type' => 'checkbox',
       '#title' => t('Convert full dn to value of first attribute before mapping.  e.g.  <code>cn=students,ou=groups,dc=hogwarts,dc=edu</code> would be converted to <code>students</code>', $provider_tokens),
-      '#default_value' => $this->configuration['use_first_attr_as_groupid'],
+      '#default_value' => $this->configuration['filter_and_mappings']['use_first_attr_as_groupid'],
     );
     $form['filter_and_mappings']['mappings'] = array(
       '#type' => 'textarea',
       '#title' => t('Mapping of LDAP to !profile_name (one per line)', $provider_tokens),
-      '#default_value' => $this->mappingsToPipeList($this->configuration['mappings']),
+      '#default_value' => $this->mappingsToPipeList($this->configuration['filter_and_mappings']['mappings']),
       '#cols' => 50,
       '#rows' => 5,
     );
     $form['filter_and_mappings']['use_filter'] = array(
       '#type' => 'checkbox',
       '#title' => t('Only grant !profile_namePlural that match a filter above.', $provider_tokens),
-      '#default_value' => $this->configuration['use_filter'],
+      '#default_value' => $this->configuration['filter_and_mappings']['use_filter'],
       '#description' => t('If enabled, only above mapped !profile_namePlural will be assigned (e.g. students and administrator).
         <strong>If not checked, !profile_namePlural not mapped above also may be created and granted (e.g. gryffindor and probation students).  In some LDAPs this can lead to hundreds of !profile_namePlural being created if "Create !profile_namePlural if they do not exist" is enabled below.
         </strong>', $provider_tokens)
@@ -179,6 +180,46 @@ Representations of groups derived from LDAP might initially look like:
      */
 
     return $form;
+  }
+
+
+  /**
+   * {@inheritdoc}
+   */
+  public function validateConfigurationForm(array &$form, FormStateInterface $form_state) {
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
+    $values = $form_state->getValues();
+    // @TODO what does this do?
+
+    // Since the form is nested into another, we can't simply use #parents for
+    // doing this array restructuring magic. (At least not without creating an
+    // unnecessary dependency on internal implementation.)
+    // $values += $values['test'];
+    // $values += $values['advanced'];
+    // $values += !empty($values['autocomplete']) ? $values['autocomplete'] : array();
+    // unset($values['test'], $values['advanced'], $values['autocomplete']);
+
+    // // Highlighting retrieved data only makes sense when we retrieve data.
+    // $values['highlight_data'] &= $values['retrieve_data'];
+
+    // // For password fields, there is no default value, they're empty by default.
+    // // Therefore we ignore empty submissions if the user didn't change either.
+    // if ($values['http_pass'] === ''
+    //     && isset($this->configuration['http_user'])
+    //     && $values['http_user'] === $this->configuration['http_user']) {
+    //   $values['http_pass'] = $this->configuration['http_pass'];
+    // }
+
+    foreach ($values as $key => $value) {
+      $form_state->setValue($key, $value);
+    }
+
+    parent::submitConfigurationForm($form, $form_state);
   }
 
   protected function mappingsToPipeList($mappings) {
