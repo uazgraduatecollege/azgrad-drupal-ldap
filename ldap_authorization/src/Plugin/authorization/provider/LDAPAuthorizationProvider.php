@@ -20,6 +20,8 @@ use Drupal\authorization\Provider\ProviderPluginBase;
 class LDAPAuthorizationProvider extends ProviderPluginBase {
 
   public $synchOnLogon = TRUE;
+  public $providerType = 'ldap';
+  public $allowConsumerObjectCreation = TRUE;
 
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
 
@@ -151,13 +153,13 @@ Representations of groups derived from LDAP might initially look like:
     );
 
     $synchronization_actions = array();
-    if ($this->revokeLdapProvisioned)  {
+    if ($this->configuration['more']['synchronization_actions']['revoke_ldap_provisioned'])  {
       $synchronization_actions[] = 'revoke_ldap_provisioned';
     }
-    if ($this->createConsumers)  {
+    if ($this->configuration['more']['synchronization_actions']['create_consumers'])  {
       $synchronization_actions[] = 'create_consumers';
     }
-    if ($this->regrantLdapProvisioned)  {
+    if ($this->configuration['more']['synchronization_actions']['regrant_ldap_provisioned'])  {
       $synchronization_actions[] = 'regrant_ldap_provisioned';
     }
 
@@ -165,9 +167,10 @@ Representations of groups derived from LDAP might initially look like:
       'revoke_ldap_provisioned' => t('Revoke !profile_namePlural previously granted by LDAP Authorization but no longer valid.', $provider_tokens),
       'regrant_ldap_provisioned' => t('Re grant !profile_namePlural previously granted by LDAP Authorization but removed manually.', $provider_tokens),
     );
-    // if ($this->consumer->allowConsumerObjectCreation) {
-    //   $options['create_consumers'] = t('Create !profile_namePlural if they do not exist.', $provider_tokens);
-    // }
+    // Move to consumer
+    if ($this->consumer->allowConsumerObjectCreation) {
+      $options['create_consumers'] = t('Create !profile_namePlural if they do not exist.', $provider_tokens);
+    }
 
     $form['more']['synchronization_actions'] = array(
       '#type' => 'checkboxes',
