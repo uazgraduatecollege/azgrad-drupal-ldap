@@ -19,6 +19,8 @@ use Drupal\authorization\Provider\ProviderPluginBase;
  */
 class LDAPAuthorizationProvider extends ProviderPluginBase {
 
+  public $synchOnLogon = TRUE;
+
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
 
     $provider_tokens = array(
@@ -134,6 +136,7 @@ Representations of groups derived from LDAP might initially look like:
     );
 
     $synchronization_modes = array();
+    $this->synchOnLogon = (bool)(@$this->configuration['more']['synchronization_modes']['user_logon']);
     if ($this->synchOnLogon)  {
       $synchronization_modes[] = 'user_logon';
     }
