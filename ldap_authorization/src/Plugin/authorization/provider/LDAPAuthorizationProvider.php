@@ -108,6 +108,7 @@ Representations of groups derived from LDAP might initially look like:
       '#title' => t('Convert full dn to value of first attribute before mapping.  e.g.  <code>cn=students,ou=groups,dc=hogwarts,dc=edu</code> would be converted to <code>students</code>', $provider_tokens),
       '#default_value' => $this->configuration['filter_and_mappings']['use_first_attr_as_groupid'],
     );
+
     $form['filter_and_mappings']['mappings'] = array(
       '#type' => 'textarea',
       '#title' => t('Mapping of LDAP to !profile_name (one per line)', $provider_tokens),
@@ -115,6 +116,7 @@ Representations of groups derived from LDAP might initially look like:
       '#cols' => 50,
       '#rows' => 5,
     );
+
     $form['filter_and_mappings']['use_filter'] = array(
       '#type' => 'checkbox',
       '#title' => t('Only grant !profile_namePlural that match a filter above.', $provider_tokens),
@@ -123,7 +125,6 @@ Representations of groups derived from LDAP might initially look like:
         <strong>If not checked, !profile_namePlural not mapped above also may be created and granted (e.g. gryffindor and probation students).  In some LDAPs this can lead to hundreds of !profile_namePlural being created if "Create !profile_namePlural if they do not exist" is enabled below.
         </strong>', $provider_tokens)
     );
-
 
     $form['more'] = array(
       '#type' => 'fieldset',
