@@ -188,6 +188,11 @@ Representations of groups derived from LDAP might initially look like:
    * {@inheritdoc}
    */
   public function validateConfigurationForm(array &$form, FormStateInterface $form_state) {
+    $values = $form_state->getValues();
+    $mappings = $values['filter_and_mappings']['mappings'];
+    $mappings = $this->normalizeMappings($this->pipeListToArray($mappings, TRUE));
+    $values['filter_and_mappings']['mappings'] = $mappings;
+    $form_state->setValues($values);
   }
 
   /**
@@ -229,5 +234,39 @@ Representations of groups derived from LDAP might initially look like:
       $result_text .= $map['from'] . '|' . $map['user_entered'] . "\n";
     }
     return $result_text;
+  }
+
+  protected function pipeListToArray($mapping_list_txt, $make_item0_lowercase = FALSE) {
+    $result_array = array();
+    $mappings = preg_split('/[\n\r]+/', $mapping_list_txt);
+    foreach ($mappings as $line) {
+      if (count($mapping = explode('|', trim($line))) == 2) {
+        $item_0 = ($make_item0_lowercase) ? \Drupal\Component\Utility\Unicode::strtolower(trim($mapping[0])) : trim($mapping[0]);
+        $result_array[] = array($item_0, trim($mapping[1]));
+      }
+    }
+    return $result_array;
+  }
+
+
+ /**
+   * @see LdapAuthorizationConsumerAbstract::normalizeMappings
+   */
+  public function normalizeMappings($mappings) {
+    $new_mappings = array();
+    $roles_by_name = user_roles(TRUE); // in rid => role name format
+    foreach ($mappings as $i => $mapping) {
+      $new_mapping = array();
+      $new_mapping['user_entered'] = $mapping[1];
+      $new_mapping['from'] = $mapping[0];
+      $new_mapping['normalized'] = $mapping[1];
+      $new_mapping['simplified'] = $mapping[1];
+      $create_consumers = (boolean)($this->allowConsumerObjectCreation && $this->consumerConf->createConsumers);
+      $new_mapping['valid'] = (boolean)(!$create_consumers && !empty($roles_by_name[$mapping[1]]));
+      $new_mapping['error_message'] = ($new_mapping['valid']) ? '' : t("Role %role_name does not exist and role creation is not enabled.", array('%role' => $mapping[1]));
+      $new_mappings[] = $new_mapping;
+    }
+
+    return $new_mappings;
   }
 }
