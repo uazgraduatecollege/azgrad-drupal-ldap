@@ -234,6 +234,29 @@ Representations of groups derived from LDAP might initially look like:
     parent::submitConfigurationForm($form, $form_state);
   }
 
+
+  public function buildRowForm(array $form, FormStateInterface $form_state, $index) {
+    $row = array();
+    $row['query'] = array(
+      '#type' => 'textfield',
+      '#title' => t('LDAP query'),
+      '#default_value' => $this->configuration['query'],
+    );
+    return $row;
+  }
+
+  public function buildRowDescription() {
+    return '
+      Representations of groups derived from LDAP might initially look like:
+      <ul>
+        <li><code>cn=students,ou=groups,dc=hogwarts,dc=edu</code></li>
+        <li><code>cn=gryffindor,ou=groups,dc=hogwarts,dc=edu</code></li>
+        <li><code>cn=faculty,ou=groups,dc=hogwarts,dc=edu</code></li>
+        <li><code>cn=probation students,ou=groups,dc=hogwarts,dc=edu</code></li>
+      </ul>
+      ';
+  }
+
   protected function mappingsToPipeList($mappings) {
     $result_text = "";
     foreach ($mappings as $map) {
