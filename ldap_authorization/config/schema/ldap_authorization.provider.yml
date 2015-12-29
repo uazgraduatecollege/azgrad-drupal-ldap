@@ -11,10 +11,6 @@ authorization.provider.plugin.ldap_authorization:
     use_first_attr_as_groupid:
       type: boolean
       label: 'Convert full dn to value of first attribute before mapping.'
-    # This should be in the profile or Roles not here
-    mappings:
-      type: string
-      label: 'Mapping of LDAP to the authorization profile (one per line)'
     # The below should be in Drupal roles not LDAP
     use_filter:
       type: boolean

@@ -113,14 +113,6 @@ Representations of groups derived from LDAP might initially look like:
       '#default_value' => $this->configuration['filter_and_mappings']['use_first_attr_as_groupid'],
     );
 
-    $form['filter_and_mappings']['mappings'] = array(
-      '#type' => 'textarea',
-      '#title' => t('Mapping of LDAP to !profile_name (one per line)', $provider_tokens),
-      '#default_value' => $this->mappingsToPipeList($this->configuration['filter_and_mappings']['mappings']),
-      '#cols' => 50,
-      '#rows' => 5,
-    );
-
     $form['filter_and_mappings']['use_filter'] = array(
       '#type' => 'checkbox',
       '#title' => t('Only grant !profile_namePlural that match a filter above.', $provider_tokens),
@@ -237,10 +229,11 @@ Representations of groups derived from LDAP might initially look like:
 
   public function buildRowForm(array $form, FormStateInterface $form_state, $index) {
     $row = array();
+    $mappings = $this->configuration['profile']->getProviderMappings();
     $row['query'] = array(
       '#type' => 'textfield',
       '#title' => t('LDAP query'),
-      '#default_value' => $this->configuration['query'],
+      '#default_value' => $mappings[$index]['query'],
     );
     return $row;
   }
@@ -255,6 +248,24 @@ Representations of groups derived from LDAP might initially look like:
         <li><code>cn=probation students,ou=groups,dc=hogwarts,dc=edu</code></li>
       </ul>
       ';
+  }
+
+  public function validateRowForm(array &$form, FormStateInterface $form_state) {
+  }
+
+  public function submitRowForm(array &$form, FormStateInterface $form_state) {
+    $values = $form_state->getValues();
+    // Create an array of just the provider values
+    $provider_mappings = array();
+    foreach ($values as $key => $value) {
+      $provider_mappings[] = $value['provider_mappings'];
+    }
+    // Nuke our form_state leaving just the mapping
+    // @TODO this gets wiped by consumer_mappings
+    // $form_state->setValues(array('provider_mappings' => $provider_mappings));
+    $form_state->setValue('provider_mappings', $provider_mappings);
+
+    parent::submitRowForm($form, $form_state);
   }
 
   protected function mappingsToPipeList($mappings) {

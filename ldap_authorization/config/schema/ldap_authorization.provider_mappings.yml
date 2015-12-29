@@ -1,0 +1,7 @@
+authorization.provider_mappings.plugin.ldap_authorization:
+  type: mapping
+  label: Provider map
+  mapping:
+    query:
+      type: string
+      label: 'Query'
