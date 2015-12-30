@@ -250,24 +250,6 @@ Representations of groups derived from LDAP might initially look like:
       ';
   }
 
-  public function validateRowForm(array &$form, FormStateInterface $form_state) {
-  }
-
-  public function submitRowForm(array &$form, FormStateInterface $form_state) {
-    $values = $form_state->getValues();
-    // Create an array of just the provider values
-    $provider_mappings = array();
-    foreach ($values as $key => $value) {
-      $provider_mappings[] = $value['provider_mappings'];
-    }
-    // Nuke our form_state leaving just the mapping
-    // @TODO this gets wiped by consumer_mappings
-    // $form_state->setValues(array('provider_mappings' => $provider_mappings));
-    $form_state->setValue('provider_mappings', $provider_mappings);
-
-    parent::submitRowForm($form, $form_state);
-  }
-
   protected function mappingsToPipeList($mappings) {
     $result_text = "";
     foreach ($mappings as $map) {
