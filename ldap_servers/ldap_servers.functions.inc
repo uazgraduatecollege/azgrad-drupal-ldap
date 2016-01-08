@@ -223,6 +223,13 @@ function ldap_server_massage_text($value, $value_type, $context) {
         }
 
         foreach ($values as $key => $val) {
+            // Might be a Drupal field
+            if ( $val->value ) {
+                $is_field = TRUE;
+                $val = $val->getValue();
+            } else {
+                $is_field = FALSE;
+            }
             // Escaping of filter meta characters
             $val = str_replace('\\', '\5c', $val);
             $val = str_replace('*',  '\2a', $val);
@@ -234,7 +241,11 @@ function ldap_server_massage_text($value, $value_type, $context) {
 
             if (null === $val) $val = '\0';  // apply escaped "null" if string is empty
 
-            $values[$key] = $val;
+            if ( $is_field ) {
+                $values[$key]->setValue($val);
+            } else {
+                $values[$key] = $val;
+            }
         }
 
         return ($is_scalar) ? $values[0] : $values;
