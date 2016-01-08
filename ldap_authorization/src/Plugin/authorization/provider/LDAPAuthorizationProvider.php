@@ -197,6 +197,28 @@ Representations of groups derived from LDAP might initially look like:
       ';
   }
 
+  public function apply($user, $op, $identifier, $provider_mapping) {
+    // Configure this provider
+    $profile = $this->configuration['profile'];
+    $config = $profile->getProviderConfig();
+
+    // Load the correct server
+    $server_id = $config['status']['server'];
+    $ldap_server = \Drupal::entityManager()->getStorage('ldap_server')->load($server_id);
+
+    // Get user data
+    $ldap_user = ldap_servers_get_user_ldap_data($user, $server_id);
+
+    // Iterate memberOf looking for matches from the LDAP configuration
+    // Get the memberof key from the server config entity
+    $groupUserMembershipsAttr = $ldap_server->get('grp_user_memb_attr');
+    foreach ( $ldap_user['attr'][$groupUserMembershipsAttr] as $dn ) {
+      if ( $provider_mapping['query'] == $dn ) {
+        return $dn;
+      }
+    }
+  }
+
   protected function mappingsToPipeList($mappings) {
     $result_text = "";
     foreach ($mappings as $map) {

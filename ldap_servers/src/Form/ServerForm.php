@@ -349,7 +349,7 @@ class ServerForm extends EntityForm {
           '#type' => 'textfield',
         '#size' => 30,
         '#title' => t('Attribute in User Entry Containing Groups'),
-        '#description' => t('e.g. memberOf'),
+        '#description' => t('e.g. memberOf <em>(case sensitive)</em>.'),
         '#states' => array(
           'enabled' => array(   // action to take.
             ':input[name=grp_user_memb_attr_exists]' => array('checked' => TRUE),
