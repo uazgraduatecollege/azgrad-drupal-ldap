@@ -723,10 +723,10 @@ function ldap_servers_get_user_ldap_data($drupal_user, $id = NULL, $ldap_context
 
   // Try to retrieve the user from the cache.
   // Key is module name.value name.identifier
-  $cache_key = 'ldap_servers.user_data.' . $drupal_username;
+  $cache_key = 'ldap_servers:user_data:' . $drupal_username;
   $cache = \Drupal::cache()->get($cache_key);
-  if ( $cache ) {
-    return $cache;
+  if ( $cache->cid = $cache_key && $cache->data ) {
+    return $cache->data;
   }
 
   $ldap_server = ($id) ? ldap_servers_get_servers($id, 'enabled', TRUE) : FALSE;
@@ -740,15 +740,14 @@ function ldap_servers_get_user_ldap_data($drupal_user, $id = NULL, $ldap_context
 
   if ($ldap_user) {
     $ldap_user['id'] = $id;
+    // Set the cache here
+    $cache_expiry = 5 * 60 + time(); // 5 minutes
+    $cache_tags = array('ldap', 'ldap_servers', 'ldap_servers.user_data');
+    $ldap_user = \Drupal::cache()->set($cache_key, $ldap_user, $cache_expiry, $cache_tags);
   }
   else {
     $ldap_user = FALSE;
   }
-
-  // Set the cache here
-  $cache_expiry = 5 * 60 + time(); // 5 minutes
-  $cache_tags = array('ldap', 'ldap_servers', 'ldap_servers.user_data');
-  $ldap_user = \Drupal::cache()->set($cache_key, $ldap_user, $cache_expiry, $cache_tags);
 
   return $ldap_user;
 }
@@ -758,7 +757,7 @@ function ldap_servers_get_user_ldap_data($drupal_user, $id = NULL, $ldap_context
  */
 function ldap_servers_user_logout($account) {
   // When the user logs out clear the LDAP cached data.
-  $cache_key = 'ldap_servers.user_data.' . $account->getUsername();
+  $cache_key = 'ldap_servers:user_data:' . $account->getUsername();
   if ($cache = \Drupal::cache()->get($cache_key)) {
     \Drupal::cache()->delete($cache_key);
   }
