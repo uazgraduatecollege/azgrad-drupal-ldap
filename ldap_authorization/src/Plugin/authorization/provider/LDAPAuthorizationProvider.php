@@ -25,12 +25,13 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
   public $handlers = array('ldap', 'ldap_authentication');
 
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
-
     $profile = $this->configuration['profile'];
 
     $tokens = $this->getTokens();
     $tokens += $profile->getTokens();
-    $tokens += $profile->getConsumer()->getTokens();
+    if ( $profile->hasValidConsumer() ) {
+      $tokens += $profile->getConsumer()->getTokens();
+    }
 
     $servers = ldap_servers_get_servers(NULL, 'enabled');
     $server_options = array();
