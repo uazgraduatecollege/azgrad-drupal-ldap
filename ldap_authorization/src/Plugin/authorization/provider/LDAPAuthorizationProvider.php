@@ -209,14 +209,16 @@ Representations of groups derived from LDAP might initially look like:
     // Get user data
     $ldap_user = ldap_servers_get_user_ldap_data($user, $server_id);
 
+    $result_array = array();
     // Iterate memberOf looking for matches from the LDAP configuration
     // Get the memberof key from the server config entity
     $groupUserMembershipsAttr = $ldap_server->get('grp_user_memb_attr');
     foreach ( $ldap_user['attr'][$groupUserMembershipsAttr] as $dn ) {
       if ( $provider_mapping['query'] == $dn ) {
-        return $dn;
+        $result_array[] = $dn;
       }
     }
+    return $result_array;
   }
 
   protected function mappingsToPipeList($mappings) {
