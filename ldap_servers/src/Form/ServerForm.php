@@ -148,6 +148,7 @@ class ServerForm extends EntityForm {
     $form['bind']['bindpw'] = array(
       '#type' => 'password',
       '#title' => t('Password for non-anonymous search'),
+      '#description' => $server->get('bindpw') ? t("Password exists in database.") : t("<strong>Warning: No password exists in database.</strong>"),
       '#size' => 20,
       '#states' => array(
         'enabled' => array(   // action to take.
@@ -156,8 +157,8 @@ class ServerForm extends EntityForm {
       ),
     );
 
-    $form['bind']['clear_bindpw'] = array(
-      '#default_value' => $server->get('clear_bindpw'),
+    $form['bind']['bindpw_clear'] = array(
+      '#default_value' => $server->get('bindpw_clear'),
       '#type' => 'checkbox',
       '#title' => t('Clear existing password from database.  Check this when switching away from Service Account Binding.'),
       '#default_value' => 0,
@@ -479,6 +480,27 @@ class ServerForm extends EntityForm {
    */
   public function save(array $form, FormStateInterface $form_state) {
     $server = $this->entity;
+
+    // Handle the password as the form is empty
+    // If there is a new password encrypt it.
+    if ( null !== $form_state->getValue('bindpw') && $form_state->getValue('bindpw') ) {
+      $server->set('bindpw', ldap_servers_encrypt($form_state->getValue('bindpw')));
+    }
+    // What does bindpw_new do?
+    elseif ($form_state->getValue('bindpw_new')) {
+      $server->set('bindpw_new', ldap_servers_encrypt($form_state->getValue('bindpw_new')));
+      $server->set('bindpw', ldap_servers_encrypt($form_state->getValue('bindpw_new')));
+    }
+    // If the bindpw_clear is checked clear the password from the database
+    elseif ( $form_state->getValue('bindpw_clear') ) {
+      $server->set('bindpw', NULL);
+    }
+    // If there isn't a password then load the existing one
+    else {
+      $entity = ldap_servers_get_servers($server->id());
+      $server->set('bindpw', $entity->get('bindpw'));
+    }
+
     $status = $server->save();
 
     switch ($status) {
