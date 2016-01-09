@@ -194,6 +194,8 @@ Representations of groups derived from LDAP might initially look like:
         <li><code>cn=faculty,ou=groups,dc=hogwarts,dc=edu</code></li>
         <li><code>cn=probation students,ou=groups,dc=hogwarts,dc=edu</code></li>
       </ul>
+      Also supports regular expressions. For example:
+        <code>cn=.*,ou=groups,dc=hogwarts,dc=edu</code>
       ';
   }
 
@@ -214,7 +216,8 @@ Representations of groups derived from LDAP might initially look like:
     // Get the memberof key from the server config entity
     $groupUserMembershipsAttr = $ldap_server->get('grp_user_memb_attr');
     foreach ( $ldap_user['attr'][$groupUserMembershipsAttr] as $dn ) {
-      if ( $provider_mapping['query'] == $dn ) {
+      $pattern = "/^" . preg_quote($dn) . "$/";
+      if ( preg_match($pattern, $provider_mapping['query'], $matches) ) {
         $result_array[] = $dn;
       }
     }
