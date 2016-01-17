@@ -85,7 +85,7 @@ function _ldap_servers_encrypt_types($type = 'all') {
 function _ldap_servers_encrypt($clear_txt, $enc_type = NULL) {
 
   if (!$enc_type) {
-    $enc_type = \Drupal::config('ldap_servers.settings')->get('encryption');
+    $enc_type = \Drupal::config('ldap_servers.settings')->get('encryption') ? \Drupal::config('ldap_servers.settings')->get('encryption') : LDAP_SERVERS_ENC_TYPE_CLEARTEXT;
   }
 
   if ($enc_type == LDAP_SERVERS_ENC_TYPE_CLEARTEXT) {
