@@ -25,9 +25,10 @@ class LdapServersSettings extends ConfigFormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $values = $form_state->getValues();
+    $encryption = $values['encryption'] ? $values['encryption'] : LDAP_SERVERS_ENC_TYPE_CLEARTEXT;
     $this->config('ldap_servers.settings')
       ->set('require_ssl_for_credentials', $values['require_ssl_for_credentials'])
-      ->set('encryption', $values['encryption'])
+      ->set('encryption', $encryption)
       // ->set('previous_encryption', $values['previous_encryption'])
       ->save();
 
@@ -124,9 +125,8 @@ class LdapServersSettings extends ConfigFormBase {
       $new_encryption = $form_state->getValue(['encryption']);
       $old_encryption = $form_state->getValue(['previous_encryption']);
 
-      // use db instead of functions to avoid classes encryption and decryption
       if ($new_encryption != $old_encryption) {
-        $servers = db_query("SELECT id, bindpw FROM {ldap_servers} WHERE bindpw is not NULL AND bindpw <> ''")->fetchAllAssoc('id');
+        $servers = ldap_servers_get_servers();
         foreach ($servers as $id => $server) {
           if ($server->bindpw != '') {
             $decrypted_bind_pwd = ldap_servers_decrypt($server->get('bindpw'), $old_encryption);
@@ -135,10 +135,8 @@ class LdapServersSettings extends ConfigFormBase {
           else {
             $rencrypted = '';
           }
-          db_query("UPDATE {ldap_servers} SET bindpw = :bindpw WHERE id = :id", [
-            ':bindpw' => $rencrypted,
-            ':id' => $id,
-          ]);
+          $server->set('bindpw', $rencrypted);
+          $server->save();
         }
       }
     }
