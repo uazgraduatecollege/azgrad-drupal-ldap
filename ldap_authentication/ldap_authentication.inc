@@ -398,11 +398,12 @@ function ldap_authentication_test_credentials($auth_conf, $sso_login, $authname,
   $authentication_result = LDAP_AUTHENTICATION_RESULT_FAIL_GENERIC;
   $ldap_user = FALSE;
   $ldap_server = NULL;
-  foreach ($auth_conf->enabledAuthenticationServers as $sid => $ldap_server) {
-    $watchdog_tokens['%sid'] = $sid;
+
+  foreach ($auth_conf->enabledAuthenticationServers as $id => $ldap_server) {
+    $watchdog_tokens['%id'] = $id;
     $watchdog_tokens['%bind_method'] = $ldap_server->get('bind_method');
     if ($detailed_watchdog_log) {
-      watchdog('ldap_authentication', '%username : Trying server %sid where bind_method = %bind_method', $watchdog_tokens, WATCHDOG_DEBUG);
+      watchdog('ldap_authentication', '%username : Trying server %id where bind_method = %bind_method', $watchdog_tokens, WATCHDOG_DEBUG);
     }
 
     // #1 CONNECT TO SERVER
@@ -412,13 +413,13 @@ function ldap_authentication_test_credentials($auth_conf, $sso_login, $authname,
       $authentication_result = LDAP_AUTHENTICATION_RESULT_FAIL_CONNECT;
       $watchdog_tokens['%err_msg'] = $ldap_server->errorMsg('ldap');
       if ($detailed_watchdog_log) {
-        watchdog('ldap_authentication',  '%username : Failed connecting to %sid.  Error: %err_msg', $watchdog_tokens, WATCHDOG_DEBUG);
+        watchdog('ldap_authentication',  '%username : Failed connecting to %id.  Error: %err_msg', $watchdog_tokens, WATCHDOG_DEBUG);
       }
       $watchdog_tokens['%err_msg'] = NULL;
       continue; // next server, please
     }
     elseif ($detailed_watchdog_log) {
-      watchdog('ldap_authentication',  '%username : Success at connecting to %sid', $watchdog_tokens, WATCHDOG_DEBUG);
+      watchdog('ldap_authentication',  '%username : Success at connecting to %id', $watchdog_tokens, WATCHDOG_DEBUG);
     }
 
 /**
@@ -472,7 +473,7 @@ function ldap_authentication_test_credentials($auth_conf, $sso_login, $authname,
     if (!$bind_success) {
       if ($detailed_watchdog_log) {
         $watchdog_tokens['%err_text'] = $ldap_server->errorMsg('ldap');
-        watchdog('ldap_authentication', '%username : Trying server %sid where bind_method = %bind_method.  Error: %err_text', $watchdog_tokens, WATCHDOG_DEBUG);
+        watchdog('ldap_authentication', '%username : Trying server %id where bind_method = %bind_method.  Error: %err_text', $watchdog_tokens, WATCHDOG_DEBUG);
         $watchdog_tokens['%err_text'] = NULL;
       }
       $authentication_result = ($ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_USER) ? LDAP_AUTHENTICATION_RESULT_FAIL_CREDENTIALS : LDAP_AUTHENTICATION_RESULT_FAIL_BIND;
@@ -499,7 +500,7 @@ function ldap_authentication_test_credentials($auth_conf, $sso_login, $authname,
     if (!$ldap_user) {
       if ($detailed_watchdog_log) {
         $watchdog_tokens['%err_text'] = $ldap_server->errorMsg('ldap');
-        watchdog('ldap_authentication', '%username : Trying server %sid where bind_method = %bind_method.  Error: %err_text', $watchdog_tokens, WATCHDOG_DEBUG);
+        watchdog('ldap_authentication', '%username : Trying server %id where bind_method = %bind_method.  Error: %err_text', $watchdog_tokens, WATCHDOG_DEBUG);
         $watchdog_tokens['%err_text'] = NULL;
       }
       if ($ldap_server->ldapErrorNumber()) {
@@ -545,7 +546,7 @@ function ldap_authentication_test_credentials($auth_conf, $sso_login, $authname,
     if (!$credentials_pass) {
       if ($detailed_watchdog_log) {
         $watchdog_tokens['%err_text'] = $ldap_server->errorMsg('ldap');
-        watchdog('ldap_authentication', '%username : Testing user credentials on server %sid where bind_method = %bind_method.  Error: %err_text', $watchdog_tokens, WATCHDOG_DEBUG);
+        watchdog('ldap_authentication', '%username : Testing user credentials on server %id where bind_method = %bind_method.  Error: %err_text', $watchdog_tokens, WATCHDOG_DEBUG);
         $watchdog_tokens['%err_text'] = NULL;
       }
       $authentication_result = LDAP_AUTHENTICATION_RESULT_FAIL_CREDENTIALS;
