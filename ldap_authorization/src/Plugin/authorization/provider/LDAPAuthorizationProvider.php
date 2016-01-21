@@ -219,8 +219,9 @@ Representations of groups derived from LDAP might initially look like:
     // Get the memberof key from the server config entity
     $groupUserMembershipsAttr = $ldap_server->get('grp_user_memb_attr');
     foreach ( $ldap_user['attr'][$groupUserMembershipsAttr] as $dn ) {
-      $pattern = "/^" . preg_quote($dn) . "$/";
-      if ( preg_match($pattern, $provider_mapping['query'], $matches) ) {
+      // @TODO Just replace '=' with '\=' instead
+      $pattern = "/^" . preg_quote($provider_mapping['query']) . "$/";
+      if ( preg_match($pattern, $dn, $matches) ) {
         $result_array[] = $dn;
       }
     }
