@@ -743,7 +743,7 @@ function ldap_servers_get_user_ldap_data($drupal_user, $id = NULL, $ldap_context
     // Set the cache here
     $cache_expiry = 5 * 60 + time(); // 5 minutes
     $cache_tags = array('ldap', 'ldap_servers', 'ldap_servers.user_data');
-    $ldap_user = \Drupal::cache()->set($cache_key, $ldap_user, $cache_expiry, $cache_tags);
+    \Drupal::cache()->set($cache_key, $ldap_user, $cache_expiry, $cache_tags);
   }
   else {
     $ldap_user = FALSE;
