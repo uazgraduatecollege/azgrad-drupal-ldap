@@ -200,6 +200,9 @@ Representations of groups derived from LDAP might initially look like:
   }
 
   public function apply($user, $op, $identifier, $provider_mapping) {
+    if ( empty($provider_mapping['query']) ) {
+      return;
+    }
     // Configure this provider
     $profile = $this->configuration['profile'];
     $config = $profile->getProviderConfig();
