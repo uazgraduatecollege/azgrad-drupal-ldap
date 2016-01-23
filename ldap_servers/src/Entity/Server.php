@@ -930,7 +930,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
   public function userUserToExistingLdapEntry($user) {
 
     if (is_object($user)) {
-      $user_ldap_entry = $this->userUserNameToExistingLdapEntry($user->name);
+      $user_ldap_entry = $this->userUserNameToExistingLdapEntry($user->getAccountName());
     }
     elseif (is_array($user)) {
       $user_ldap_entry = $user;
@@ -1309,7 +1309,6 @@ class Server extends ConfigEntityBase implements ServerInterface {
 
 
  /**
-  /**
    *  get list of all groups that a user is a member of.
    *
    *    If $nested = TRUE,
@@ -1341,10 +1340,10 @@ class Server extends ConfigEntityBase implements ServerInterface {
       $nested = $this->groupNested;
     }
 
-    if ($this->groupUserMembershipsConfigured) { // preferred method
+    if ($this->groupUserMembershipsConfigured()) { // preferred method
       $group_dns = $this->groupUserMembershipsFromUserAttr($user_ldap_entry, $nested);
     }
-    elseif ($this->groupGroupEntryMembershipsConfigured) {
+    elseif ($this->groupGroupEntryMembershipsConfigured()) {
       $group_dns = $this->groupUserMembershipsFromEntry($user_ldap_entry, $nested);
     }
 
@@ -1377,18 +1376,17 @@ class Server extends ConfigEntityBase implements ServerInterface {
    */
 
   public function groupUserMembershipsFromUserAttr($user, $nested = NULL) {
-
-    if (!$this->groupUserMembershipsConfigured) {
+    if (!$this->groupUserMembershipsConfigured()) {
       return FALSE;
     }
     if ($nested === NULL) {
-      $nested = $this->groupNested;
+      $nested = $this->groupNested();
     }
 
-    $not_user_ldap_entry = empty($user['attr'][$this->groupUserMembershipsAttr]);
+    $not_user_ldap_entry = empty($user['attr'][$this->groupUserMembershipsAttr()]);
     if ($not_user_ldap_entry) { // if drupal user passed in, try to get user_ldap_entry
       $user = $this->userUserToExistingLdapEntry($user);
-      $not_user_ldap_entry = empty($user['attr'][$this->groupUserMembershipsAttr]);
+      $not_user_ldap_entry = empty($user['attr'][$this->groupUserMembershipsAttr()]);
       if ($not_user_ldap_entry) {
         return FALSE; // user's membership attribute is not present.  either misconfigured or query failed
       }
@@ -1399,7 +1397,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
     $tested_group_ids = array();
     $level = 0;
 
-    $member_group_dns = $user_ldap_entry['attr'][$this->groupUserMembershipsAttr];
+    $member_group_dns = $user_ldap_entry['attr'][$this->groupUserMembershipsAttr()];
     if (isset($member_group_dns['count'])) {
       unset($member_group_dns['count']);
     }
@@ -1407,13 +1405,13 @@ class Server extends ConfigEntityBase implements ServerInterface {
     foreach ($member_group_dns as $i => $member_group_dn) {
       $all_group_dns[] = $member_group_dn;
       if ($nested) {
-        if ($this->groupMembershipsAttrMatchingUserAttr == 'dn') {
+        if ($this->groupMembershipsAttrMatchingUserAttr() == 'dn') {
           $member_value = $member_group_dn;
         }
         else {
-          $member_value = ldap_servers_get_first_rdn_value_from_dn($member_group_dn, $this->groupMembershipsAttrMatchingUserAttr);
+          $member_value = ldap_servers_get_first_rdn_value_from_dn($member_group_dn, $this->groupMembershipsAttrMatchingUserAttr());
         }
-        $ors[] =  $this->groupMembershipsAttr . '=' . $member_value;
+        $ors[] =  $this->groupMembershipsAttr() . '=' . $member_value;
       }
     }
 
@@ -1571,11 +1569,11 @@ class Server extends ConfigEntityBase implements ServerInterface {
    */
   public function groupUserMembershipsFromDn($user) {
 
-    if (!$this->groupDeriveFromDn || !$this->groupDeriveFromDnAttr) {
+    if (!$this->groupDeriveFromDn() || !$this->groupDeriveFromDnAttr()) {
       return FALSE;
     }
     elseif ($user_ldap_entry = $this->userUserToExistingLdapEntry($user)) {
-      return ldap_servers_get_all_rdn_values_from_dn($user_ldap_entry['dn'], $this->groupDeriveFromDnAttr);
+      return ldap_servers_get_all_rdn_values_from_dn($user_ldap_entry['dn'], $this->groupDeriveFromDnAttr());
     }
     else {
       return FALSE;
@@ -1693,4 +1691,59 @@ class Server extends ConfigEntityBase implements ServerInterface {
     return array($errors, $results, $ldap_user);
   }
 
+
+  /*
+   * Replicating 7.x properties
+   *
+   * grp_unused
+   * grp_user_memb_attr_exists
+   * grp_user_memb_attr
+   * grp_memb_attr
+   * grp_memb_attr_match_user_attr
+   * grp_nested
+   * grp_object_cat
+   * grp_derive_from_dn
+   * grp_derive_from_dn_attr
+   */
+  protected function groupNested() {
+    return $this->get('grp_nested');
+  }
+
+  protected function groupUserMembershipsAttrExists() {
+    return $this->get('grp_user_memb_attr_exists');
+  }
+
+  protected function groupUserMembershipsAttr() {
+    return $this->get('grp_user_memb_attr');
+  }
+
+  protected function groupMembershipsAttrMatchingUserAttr() {
+    return $this->get('grp_memb_attr_match_user_attr');
+  }
+
+  protected function groupMembershipsAttr() {
+    return $this->get('grp_memb_attr');
+  }
+
+  protected function groupObjectClass() {
+    return $this->get('grp_object_cat');
+  }
+
+  protected function groupDeriveFromDn() {
+    return $this->get('grp_derive_from_dn');
+  }
+
+  protected function groupDeriveFromDnAttr() {
+    return $this->get('grp_derive_from_dn_attr');
+  }
+
+  protected function groupUserMembershipsConfigured() {
+    // $this->groupUserMembershipsConfigured = ($this->groupUserMembershipsAttrExists && $this->groupUserMembershipsAttr);
+    return $this->groupUserMembershipsAttrExists() && $this->groupUserMembershipsAttr();
+  }
+
+  protected function groupGroupEntryMembershipsConfigured() {
+    // $this->groupGroupEntryMembershipsConfigured = ($this->groupMembershipsAttrMatchingUserAttr && $this->groupMembershipsAttr);
+    return $this->groupMembershipsAttrMatchingUserAttr() && $this->groupMembershipsAttr();
+  }
 }

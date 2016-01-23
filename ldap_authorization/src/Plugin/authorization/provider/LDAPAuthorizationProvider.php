@@ -199,10 +199,16 @@ Representations of groups derived from LDAP might initially look like:
       ';
   }
 
-  public function apply($user, $op, $identifier, $provider_mapping) {
-    if ( empty($provider_mapping['query']) ) {
-      return;
-    }
+  public function getProposals($user, $op, $identifier, $provider_mapping) {
+    // In 7.x-2.x we get groups from Server via three methods
+    // and then filter out the ones we don't want
+    // https://www.drupal.org/node/1498558
+    // Server->groupUserMembershipsFromDn($user)
+    // https://www.drupal.org/node/1487018
+    // https://www.drupal.org/node/1499172
+    // Server->groupMembershipsFromUser($user, 'group_dns')
+    // So what does the 'query' do then? Is it the filter?
+
     // Configure this provider
     $profile = $this->configuration['profile'];
     $config = $profile->getProviderConfig();
@@ -214,18 +220,28 @@ Representations of groups derived from LDAP might initially look like:
     // Get user data
     $ldap_user = ldap_servers_get_user_ldap_data($user, $server_id);
 
-    $result_array = array();
-    // Iterate memberOf looking for matches from the LDAP configuration
-    // Get the memberof key from the server config entity
-    $groupUserMembershipsAttr = $ldap_server->get('grp_user_memb_attr');
-    foreach ( $ldap_user['attr'][$groupUserMembershipsAttr] as $dn ) {
-      // @TODO Just replace '=' with '\=' instead
-      $pattern = "/^" . preg_quote($provider_mapping['query']) . "$/";
-      if ( preg_match($pattern, $dn, $matches) ) {
-        $result_array[] = $dn;
-      }
-    }
-    return $result_array;
+    // Get user groups from DN
+    $derive_from_dn_authorizations = $ldap_server->groupUserMembershipsFromDn($user);
+    // Get user groups from membership
+    $group_dns = $ldap_server->groupMembershipsFromUser($user);
+
+    $values = array_merge($derive_from_dn_authorizations, $group_dns);
+    $values = array_unique($values);
+
+    return (count($values)) ? array_combine($values, $values) : array();
+
+    // $result_array = array();
+    // // Iterate memberOf looking for matches from the LDAP configuration
+    // // Get the memberof key from the server config entity
+    // $groupUserMembershipsAttr = $ldap_server->get('grp_user_memb_attr');
+    // foreach ( $ldap_user['attr'][$groupUserMembershipsAttr] as $dn ) {
+    //   // @TODO Just replace '=' with '\=' instead
+    //   $pattern = "/^" . preg_quote($provider_mapping['query']) . "$/";
+    //   if ( preg_match($pattern, $dn, $matches) ) {
+    //     $result_array[] = $dn;
+    //   }
+    // }
+    // return $result_array;
   }
 
   protected function mappingsToPipeList($mappings) {
