@@ -413,7 +413,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
     $scope = LDAP_SCOPE_SUBTREE
     ) {
     $all_entries = array();
-    foreach ($this->basedn as $base_dn) {  // need to search on all basedns one at a time
+    foreach ($this->getBasedn() as $base_dn) {  // need to search on all basedns one at a time
       $entries = $this->search($base_dn, $filter, $attributes, $attrsonly, $sizelimit, $timelimit, $deref, $scope);  // no attributes, just dns needed
       if ($entries === FALSE) { // if error in any search, return false
         return FALSE;
@@ -466,8 +466,8 @@ class Server extends ConfigEntityBase implements ServerInterface {
       */
 
     if ($base_dn == NULL) {
-      if (count($this->basedn) == 1) {
-        $base_dn = $this->basedn[0];
+      if (count($this->getBasedn()) == 1) {
+        $base_dn = $this->getBasedn()[0];
       }
       else {
         return FALSE;
@@ -687,7 +687,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
    */
   public function getBasedn() {
     // Get the basedn value
-    $basedn = $this->basedn;
+    $basedn = $this->get('basedn');
     // See if it is an array
     if ( ! is_array($basedn) ) {
       // @TODO Is it serialised?
@@ -1294,7 +1294,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
               }
               $query_for_child_members = '&(|' . join($object_classes_ors) . ')(' . $query_for_child_members . ')';
             }
-            foreach ($this->basedn as $base_dn) {  // need to search on all basedns one at a time
+            foreach ($this->getBasedn() as $base_dn) {  // need to search on all basedns one at a time
               $child_member_entries = $this->search($base_dn, $query_for_child_members, array('objectclass', $this->groupMembershipsAttr, $this->groupMembershipsAttrMatchingUserAttr));
               if ($child_member_entries !== FALSE) {
                 $this->groupMembersResursive($child_member_entries, $all_member_dns, $tested_group_ids, $level + 1, $max_levels, $object_classes);
@@ -1421,7 +1421,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
         $or = '(|(' . join(")(", $current_ors) . '))';  // e.g. (|(cn=group1)(cn=group2)) or   (|(dn=cn=group1,ou=blah...)(dn=cn=group2,ou=blah...))
         $query_for_parent_groups = '(&(objectClass=' . $this->groupObjectClass . ')' . $or . ')';
 
-        foreach ($this->get('basedn') as $base_dn) {  // need to search on all basedns one at a time
+        foreach ($this->getBasedn() as $base_dn) {  // need to search on all basedns one at a time
           // debug("query for parent groups, base_dn=$base_dn, $query_for_parent_groups");
           $group_entries = $this->search($base_dn, $query_for_parent_groups);  // no attributes, just dns needed
           if ($group_entries !== FALSE  && $level < LDAP_SERVER_LDAP_QUERY_RECURSION_LIMIT) {
