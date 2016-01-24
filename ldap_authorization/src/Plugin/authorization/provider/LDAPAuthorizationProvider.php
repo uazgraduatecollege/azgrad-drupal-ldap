@@ -19,10 +19,11 @@ use Drupal\authorization\Provider\ProviderPluginBase;
  */
 class LDAPAuthorizationProvider extends ProviderPluginBase {
 
-  public $synchOnLogon = TRUE;
   public $providerType = 'ldap';
-  public $allowConsumerObjectCreation = TRUE;
   public $handlers = array('ldap', 'ldap_authentication');
+
+  public $synchOnLogon = TRUE;
+  protected $allowConsumerObjectCreation = TRUE;
 
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
     $profile = $this->configuration['profile'];
