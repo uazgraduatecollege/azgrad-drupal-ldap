@@ -118,10 +118,10 @@ Representations of groups derived from LDAP might initially look like:
 
     $form['filter_and_mappings']['use_filter'] = array(
       '#type' => 'checkbox',
-      '#title' => t('Only grant !consumer_namePlural that match a filter above.', $tokens),
+      '#title' => t('Only grant !consumer_namePlural that match a filter below.', $tokens),
       '#default_value' => $this->configuration['filter_and_mappings']['use_filter'],
-      '#description' => t('If enabled, only above mapped !consumer_namePlural will be assigned (e.g. students and administrator).
-        <strong>If not checked, !consumer_namePlural not mapped above also may be created and granted (e.g. gryffindor and probation students).  In some LDAPs this can lead to hundreds of !consumer_namePlural being created if "Create !consumer_namePlural if they do not exist" is enabled below.
+      '#description' => t('If enabled, only below mapped !consumer_namePlural will be assigned (e.g. students and administrator).
+        <strong>If not checked, !consumer_namePlural not mapped below also may be created and granted (e.g. gryffindor and probation students).  In some LDAPs this can lead to hundreds of !consumer_namePlural being created if "Create !consumer_namePlural if they do not exist" is enabled below.
         </strong>', $tokens)
     );
 
@@ -182,6 +182,12 @@ Representations of groups derived from LDAP might initially look like:
       '#title' => t('LDAP query'),
       '#default_value' => $mappings[$index]['query'],
     );
+    $row['is_regex'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Is this query a regular expression?'),
+      '#default_value' => $mappings[$index]['is_regex'],
+    );
+
     return $row;
   }
 
