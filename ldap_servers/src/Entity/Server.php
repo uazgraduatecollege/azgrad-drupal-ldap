@@ -391,7 +391,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
    *
    * @param string $filter
    *   The search filter. such as sAMAccountName=jbarclay.  attribute values (e.g. jbarclay) should be esacaped before calling
-
+   *
    * @param array $attributes
    *   List of desired attributes. If omitted, we only return "dn".
    *
@@ -443,7 +443,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
    *
    * @param string $filter
    *   The search filter. such as sAMAccountName=jbarclay.  attribute values (e.g. jbarclay) should be esacaped before calling
-
+   *
    * @param array $attributes
    *   List of desired attributes. If omitted, we only return "dn".
    *
@@ -464,7 +464,6 @@ class Server extends ConfigEntityBase implements ServerInterface {
       * -- wait for php 5.4? https://svn.php.net/repository/php/php-src/tags/php_5_4_0RC6/NEWS (ldap_control_paged_result
       * -- http://sgehrig.wordpress.com/2009/11/06/reading-paged-ldap-results-with-php-is-a-show-stopper/
       */
-
 
     if ($base_dn == NULL) {
       if (count($this->basedn) == 1) {

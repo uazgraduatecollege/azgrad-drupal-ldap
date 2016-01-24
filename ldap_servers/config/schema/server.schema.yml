@@ -78,7 +78,7 @@ ldap_servers.server.*:
       label: 'DN of testing username, e.g. cn=hpotter,ou=people,dc=hogwarts,dc=edu'
     grp_unused:
       type: boolean
-      label: 'Groups are not relevant to this Drupal site.  This is generally true if LDAP Groups, LDAP Authorization, etc are not it use.'
+      label: 'Groups are not relevant to this Drupal site.  This is generally true if LDAP Groups and LDAP Authorization are not in use.'
     grp_object_cat:
       type: string
       label: 'Name of Group Object Class'

@@ -300,7 +300,7 @@ class ServerForm extends EntityForm {
     $form['groups']['grp_unused'] = array(
       '#default_value' => $server->get('grp_unused'),
       '#type' => 'checkbox',
-      '#title' => t('Groups are not relevant to this Drupal site.  This is generally true if LDAP Groups, LDAP Authorization, etc are not it use.'),
+      '#title' => t('Groups are not relevant to this Drupal site.  This is generally true if LDAP Groups and LDAP Authorization are not in use.'),
       '#disabled' => FALSE,
     );
 
