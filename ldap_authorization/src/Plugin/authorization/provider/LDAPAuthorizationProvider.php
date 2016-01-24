@@ -199,7 +199,7 @@ Representations of groups derived from LDAP might initially look like:
       ';
   }
 
-  public function getProposals($user, $op, $identifier, $provider_mapping) {
+  public function getProposals($user, $op, $identifier) {
     // In 7.x-2.x we get groups from Server via three methods
     // and then filter out the ones we don't want
     // https://www.drupal.org/node/1498558
@@ -242,6 +242,16 @@ Representations of groups derived from LDAP might initially look like:
     //   }
     // }
     // return $result_array;
+  }
+
+  public function filterProposals($proposals, $op=NULL, $provider_mapping) {
+    foreach ( $proposals as $key=>$value ) {
+      if ( $value == $provider_mapping['query'] ) {
+        return TRUE;
+      }
+      // @TODO Match regular expressions
+    }
+    return FALSE;
   }
 
   protected function mappingsToPipeList($mappings) {
