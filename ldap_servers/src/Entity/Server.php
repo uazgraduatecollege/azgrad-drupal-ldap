@@ -1332,11 +1332,11 @@ class Server extends ConfigEntityBase implements ServerInterface {
 
     $group_dns = FALSE;
     $user_ldap_entry = @$this->userUserToExistingLdapEntry($user);
-    if (!$user_ldap_entry || $this->groupFunctionalityUnused) {
+    if (!$user_ldap_entry || $this->groupFunctionalityUnused()) {
       return FALSE;
     }
     if ($nested === NULL) {
-      $nested = $this->groupNested;
+      $nested = $this->groupNested();
     }
 
     if ($this->groupUserMembershipsConfigured()) { // preferred method
@@ -1456,12 +1456,11 @@ class Server extends ConfigEntityBase implements ServerInterface {
    *  @see tests/DeriveFromEntry/ldap_servers.inc for fuller notes and test example
    */
   public function groupUserMembershipsFromEntry($user, $nested = NULL) {
-
-    if (!$this->groupGroupEntryMembershipsConfigured) {
+    if ( ! $this->groupGroupEntryMembershipsConfigured() ) {
       return FALSE;
     }
     if ($nested === NULL) {
-      $nested = $this->groupNested;
+      $nested = $this->groupNested();
     }
 
     $user_ldap_entry = $this->userUserToExistingLdapEntry($user);
@@ -1470,16 +1469,16 @@ class Server extends ConfigEntityBase implements ServerInterface {
     $tested_group_ids = array(); // array of dns already tested to avoid excess queries MIXED CASE VALUES
     $level = 0;
 
-    if ($this->groupMembershipsAttrMatchingUserAttr == 'dn') {
+    if ($this->groupMembershipsAttrMatchingUserAttr() == 'dn') {
       $member_value = $user_ldap_entry['dn'];
     }
     else {
-      $member_value = $user_ldap_entry['attr'][$this->groupMembershipsAttrMatchingUserAttr][0];
+      $member_value = $user_ldap_entry['attr'][$this->groupMembershipsAttrMatchingUserAttr()][0];
     }
 
-    $group_query = '(&(objectClass=' . $this->groupObjectClass . ')(' . $this->groupMembershipsAttr . "=$member_value))";
+    $group_query = '(&(objectClass=' . $this->groupObjectClass() . ')(' . $this->groupMembershipsAttr() . "=$member_value))";
 
-    foreach ($this->get('basedn') as $base_dn) {  // need to search on all basedns one at a time
+    foreach ($this->getBasedn() as $base_dn) {  // need to search on all basedns one at a time
       $group_entries = $this->search($base_dn, $group_query, array()); // only need dn, so empty array forces return of no attributes
       if ($group_entries !== FALSE) {
         $max_levels = ($nested) ? LDAP_SERVER_LDAP_QUERY_RECURSION_LIMIT : 0;
@@ -1511,7 +1510,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
 
   public function groupMembershipsFromEntryResursive($current_group_entries, &$all_group_dns, &$tested_group_ids, $level, $max_levels) {
 
-    if (!$this->groupGroupEntryMembershipsConfigured || !is_array($current_group_entries) || count($current_group_entries) == 0) {
+    if (!$this->groupGroupEntryMembershipsConfigured() || !is_array($current_group_entries) || count($current_group_entries) == 0) {
       return FALSE;
     }
     if (isset($current_group_entries['count'])) {
@@ -1520,18 +1519,18 @@ class Server extends ConfigEntityBase implements ServerInterface {
 
     $ors = array();
     foreach ($current_group_entries as $i => $group_entry) {
-      if ($this->groupMembershipsAttrMatchingUserAttr == 'dn') {
+      if ($this->groupMembershipsAttrMatchingUserAttr() == 'dn') {
         $member_id = $group_entry['dn'];
       }
       else {// maybe cn, uid, etc is held
-        $member_id = ldap_servers_get_first_rdn_value_from_dn($group_entry['dn'], $this->groupMembershipsAttrMatchingUserAttr);
+        $member_id = ldap_servers_get_first_rdn_value_from_dn($group_entry['dn'], $this->groupMembershipsAttrMatchingUserAttr());
       }
 
       if ($member_id && !in_array($member_id, $tested_group_ids)) {
         $tested_group_ids[] = $member_id;
         $all_group_dns[] = $group_entry['dn'];
         // add $group_id (dn, cn, uid) to query
-        $ors[] =  $this->groupMembershipsAttr . '=' . $member_id;
+        $ors[] =  $this->groupMembershipsAttr() . '=' . $member_id;
       }
     }
 
@@ -1540,9 +1539,9 @@ class Server extends ConfigEntityBase implements ServerInterface {
       for ($i=0; $i < $count; $i=$i+LDAP_SERVER_LDAP_QUERY_CHUNK) { // only 50 or so per query
         $current_ors = array_slice($ors, $i, LDAP_SERVER_LDAP_QUERY_CHUNK);
         $or = '(|(' . join(")(", $current_ors) . '))';  // e.g. (|(cn=group1)(cn=group2)) or   (|(dn=cn=group1,ou=blah...)(dn=cn=group2,ou=blah...))
-        $query_for_parent_groups = '(&(objectClass=' . $this->groupObjectClass . ')' . $or . ')';
+        $query_for_parent_groups = '(&(objectClass=' . $this->groupObjectClass() . ')' . $or . ')';
 
-        foreach ($this->get('basedn') as $base_dn) {  // need to search on all basedns one at a time
+        foreach ($this->getBasedn() as $base_dn) {  // need to search on all basedns one at a time
           $group_entries = $this->search($base_dn, $query_for_parent_groups);  // no attributes, just dns needed
           if ($group_entries !== FALSE  && $level < $max_levels) {
             $this->groupMembershipsFromEntryResursive($group_entries, $all_group_dns, $tested_group_ids, $level + 1, $max_levels);
@@ -1704,6 +1703,10 @@ class Server extends ConfigEntityBase implements ServerInterface {
    * grp_derive_from_dn
    * grp_derive_from_dn_attr
    */
+  protected function groupFunctionalityUnused() {
+    return $this->get('grp_unused');
+  }
+
   protected function groupNested() {
     return $this->get('grp_nested');
   }
