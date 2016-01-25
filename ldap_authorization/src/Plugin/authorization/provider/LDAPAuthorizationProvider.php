@@ -23,7 +23,6 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
   public $handlers = array('ldap', 'ldap_authentication');
 
   public $synchOnLogon = TRUE;
-  protected $allowConsumerObjectCreation = TRUE;
 
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
     $profile = $this->configuration['profile'];
@@ -329,7 +328,6 @@ Representations of groups derived from LDAP might initially look like:
       $new_mapping['from'] = $mapping[0];
       $new_mapping['normalized'] = $mapping[1];
       $new_mapping['simplified'] = $mapping[1];
-      $create_consumers = (boolean)($this->allowConsumerObjectCreation && $this->consumerConf->createConsumers);
       $new_mapping['valid'] = (boolean)(!$create_consumers && !empty($roles_by_name[$mapping[1]]));
       $new_mapping['error_message'] = ($new_mapping['valid']) ? '' : t("Role %role_name does not exist and role creation is not enabled.", array('%role' => $mapping[1]));
       $new_mappings[] = $new_mapping;
