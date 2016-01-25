@@ -232,33 +232,68 @@ Representations of groups derived from LDAP might initially look like:
     // Get user groups from membership
     $group_dns = $ldap_server->groupMembershipsFromUser($user);
 
-    $values = array_merge($derive_from_dn_authorizations, $group_dns);
-    $values = array_unique($values);
+    $proposed_ldap_authorizations = array_merge($derive_from_dn_authorizations, $group_dns);
+    $proposed_ldap_authorizations = array_unique($proposed_ldap_authorizations);
 
-    return (count($values)) ? array_combine($values, $values) : array();
-
-    // $result_array = array();
-    // // Iterate memberOf looking for matches from the LDAP configuration
-    // // Get the memberof key from the server config entity
-    // $groupUserMembershipsAttr = $ldap_server->get('grp_user_memb_attr');
-    // foreach ( $ldap_user['attr'][$groupUserMembershipsAttr] as $dn ) {
-    //   // @TODO Just replace '=' with '\=' instead
-    //   $pattern = "/^" . preg_quote($provider_mapping['query']) . "$/";
-    //   if ( preg_match($pattern, $dn, $matches) ) {
-    //     $result_array[] = $dn;
-    //   }
-    // }
-    // return $result_array;
+    return (count($proposed_ldap_authorizations)) ? array_combine($proposed_ldap_authorizations, $proposed_ldap_authorizations) : array();
   }
 
-  public function filterProposals($proposals, $op=NULL, $provider_mapping) {
-    foreach ( $proposals as $key=>$value ) {
-      if ( $value == $provider_mapping['query'] ) {
-        return TRUE;
+  public function filterProposals($proposed_ldap_authorizations, $op=NULL, $provider_mapping) {
+    // Configure this provider
+    $profile = $this->configuration['profile'];
+    $config = $profile->getProviderConfig();
+
+    $filtered_proposals = array();
+    foreach ( $proposed_ldap_authorizations as $key=>$value ) {
+      // Match regular expressions
+      if ( $provider_mapping['is_regex'] ) {
+        $pattern = $provider_mapping['query'];
+        try {
+          if ( preg_match($pattern, $value, $matches) ) {
+            // If there is a subpattern then return the first one
+            // @TODO support named subpatterns
+            if ( count($matches) > 1 ) {
+              $filtered_proposals[$key] = $matches[1];
+            } else {
+              $filtered_proposals[$key] = $value;
+            }
+          }
+        } catch (Exception $e) {
+          // @TODO log errors.
+        }
       }
-      // @TODO Match regular expressions
+      else if ( $value == $provider_mapping['query'] ) {
+        $filtered_proposals[$key] = $value;
+      }
     }
-    return FALSE;
+    return $filtered_proposals;
+  }
+
+  public function sanitizeProposals($proposals, $op=NULL) {
+    // Configure this provider
+    $profile = $this->configuration['profile'];
+    $config = $profile->getProviderConfig();
+
+    foreach ($proposals as $key => $authorization_id) {
+      if ( $config['filter_and_mappings']['use_first_attr_as_groupid'] ) {
+        $attr_parts = ldap_explode_dn($authorization_id, 0);
+        if (count($attr_parts) > 0) {
+          $first_part = explode('=', $attr_parts[0]);
+          if (count($first_part) > 1) {
+            $authorization_id = ldap_pear_unescape_dn_value(trim($first_part[1]));
+          }
+        }
+        $new_key = \Drupal\Component\Utility\Unicode::strtolower($authorization_id);
+      }
+      else {
+        $new_key = \Drupal\Component\Utility\Unicode::strtolower($key);
+      }
+      $proposals[$new_key] = $authorization_id;
+      if ($key != $new_key) {
+        unset($proposals[$key]);
+      }
+    }
+    return $proposals;
   }
 
   protected function mappingsToPipeList($mappings) {
