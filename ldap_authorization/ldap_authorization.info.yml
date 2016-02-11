@@ -6,3 +6,4 @@ package: Lightweight Directory Access Protocol
 dependencies:
   - ldap_servers
   - ldap_user
+  - authorization
