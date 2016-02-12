@@ -67,7 +67,7 @@ $conf['og_group2']['og_group'] = array(
   'synchOnLogon' => 1,
 
   'revokeLdapProvisioned' => 1,
-  'createConsumers' => 0,
+  'createConsumerTargets' => 0,
   'regrantLdapProvisioned' => 1,
 
 );
@@ -156,7 +156,7 @@ $conf['drupal_role_default']['drupal_role'] = array(
   'synchOnLogon' => 1,
 
   'revokeLdapProvisioned' => 1,
-  'createConsumers' => 1,
+  'createConsumerTargets' => 1,
   'regrantLdapProvisioned' => 1,
   );
 
@@ -201,7 +201,7 @@ $conf['drupal_role_authentication_test']['drupal_role'] = array(
   'synchOnLogon' => 1,
 
   'revokeLdapProvisioned' => 1,
-  'createConsumers' => 1,
+  'createConsumerTargets' => 1,
   'regrantLdapProvisioned' => 1,
   );
 
