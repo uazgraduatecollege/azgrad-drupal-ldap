@@ -225,11 +225,13 @@ Representations of groups derived from LDAP might initially look like:
 
     // Get user data
     $ldap_user = ldap_servers_get_user_ldap_data($user, $server_id);
-
     // Get user groups from DN
     $derive_from_dn_authorizations = $ldap_server->groupUserMembershipsFromDn($user);
+    if ( ! $derive_from_dn_authorizations ) $derive_from_dn_authorizations = array();
+
     // Get user groups from membership
     $group_dns = $ldap_server->groupMembershipsFromUser($user);
+    if ( ! $group_dns ) $group_dns = array();
 
     $proposed_ldap_authorizations = array_merge($derive_from_dn_authorizations, $group_dns);
     $proposed_ldap_authorizations = array_unique($proposed_ldap_authorizations);
