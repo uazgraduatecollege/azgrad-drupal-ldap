@@ -399,6 +399,7 @@ function ldap_authentication_test_credentials($auth_conf, $sso_login, $authname,
   $ldap_user = FALSE;
   $ldap_server = NULL;
 
+  /* @var \Drupal\ldap_servers\Entity\Server $ldap_server */
   foreach ($auth_conf->enabledAuthenticationServers as $id => $ldap_server) {
     $watchdog_tokens['%id'] = $id;
     $watchdog_tokens['%bind_method'] = $ldap_server->get('bind_method');
@@ -455,7 +456,7 @@ function ldap_authentication_test_credentials($auth_conf, $sso_login, $authname,
     }
     elseif ($ldap_server->get('bind_method') == LDAP_SERVERS_BIND_METHOD_USER && $sso_login == FALSE) {
       // with sso enabled this method of binding isn't valid
-      foreach ($ldap_server->get('basedn') as $basedn) {
+      foreach ($ldap_server->getBasedn() as $basedn) {
         $search = array('%basedn', '%username');
         $transformname =  $ldap_server->userUsernameToLdapNameTransform($authname, $watchdog_tokens);
         $replace = array($basedn, $transformname);
