@@ -121,7 +121,9 @@ function ldap_user_schema() {
  * @ingroup config_upgrade
  */
 function ldap_user_update_8001() {
-  update_variables_to_config('ldap_user.settings', array(
-    'ldap_user_cron_last_uid_checked' => 'cron_last_uid_checked',
-  ));
+  if (function_exists('update_variables_to_config')) {
+    update_variables_to_config('ldap_user.settings', array(
+      'ldap_user_cron_last_uid_checked' => 'cron_last_uid_checked',
+    ));
+  }
 }

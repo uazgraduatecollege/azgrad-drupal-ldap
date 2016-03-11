@@ -23,9 +23,11 @@ function ldap_help_uninstall() {
  * @ingroup config_upgrade
  */
 function ldap_help_update_8000() {
-  update_variables_to_config('ldap_help.settings', array(
-    'ldap_help_watchdog_detail' => 'watchdog_detail',
-    'ldap_help_user_data_clear' => 'user_data_clear',
-    'ldap_help_user_data_clear_set_date' => 'user_data_clear_set_date',
-  ));
+  if (function_exists('update_variables_to_config')) {
+    update_variables_to_config('ldap_help.settings', array(
+      'ldap_help_watchdog_detail' => 'watchdog_detail',
+      'ldap_help_user_data_clear' => 'user_data_clear',
+      'ldap_help_user_data_clear_set_date' => 'user_data_clear_set_date',
+    ));
+  }
 }
