@@ -1104,15 +1104,14 @@ class LdapUserConf {
   }
 
   /**
-   * set ldap associations of a drupal account by altering user fields
+   * set LDAP associations of a Drupal account by altering user fields
    *
    * @param string $drupal_username
    *
-   * @return boolean TRUE on success, FALSE on error or failure because of invalid user or ldap accounts
+   * @return boolean TRUE on success, FALSE on error or failure because of invalid user or LDAP accounts
    *
    */
   function ldapAssociateDrupalAccount($drupal_username) {
-
     if ($this->drupalAcctProvisionServer) {
       $prov_events = array(LDAP_USER_EVENT_LDAP_ASSOCIATE_DRUPAL_ACCT);
       $ldap_server = ldap_servers_get_servers($this->drupalAcctProvisionServer, 'enabled', TRUE);  // $ldap_user['sid']
@@ -1127,20 +1126,34 @@ class LdapUserConf {
         return FALSE;
       }
       else {
-        $user_edit = array();
-        $user_edit['data']['ldap_user']['init'] = array(
-          'sid'  => $ldap_user['sid'],
-          'dn'   => $ldap_user['dn'],
-          'mail'   => $account->mail,
-        );
+        // @TODO Data has been retired. Should we migrate it somewhere else?
+        try {
+          $data = unserialize($account->get('data'));
+          if ( ! is_array($data) ) {
+            $data = array();
+          }
+
+          $data['ldap_user']['init'] = array(
+            'sid'  => $ldap_server->id(),
+            'dn'   => $ldap_user['dn'],
+            'mail'   => $account->mail,
+          );
+          $account->set('data', serialize($data));
+        } catch (Exception $e) {
+          // Do nothing.
+        }
+
         $ldap_user_puid = $ldap_server->userPuidFromLdapEntry($ldap_user['attr']);
         if ($ldap_user_puid) {
-          $user_edit['ldap_user_puid'][\Drupal\Core\Language\Language::LANGCODE_NOT_SPECIFIED][0]['value'] = $ldap_user_puid; //
+          $account->set('ldap_user_puid', $ldap_user_puid);
         }
-        $user_edit['ldap_user_puid_property'][\Drupal\Core\Language\Language::LANGCODE_NOT_SPECIFIED][0]['value'] = $ldap_server->unique_persistent_attr;
-        $user_edit['ldap_user_puid_sid'][\Drupal\Core\Language\Language::LANGCODE_NOT_SPECIFIED][0]['value'] = $ldap_server->sid;
-        $user_edit['ldap_user_current_dn'][\Drupal\Core\Language\Language::LANGCODE_NOT_SPECIFIED][0]['value'] = $ldap_user['dn'];
-        $account = user_save($account, $user_edit, 'ldap_user');
+        $account->set('ldap_user_puid_property', $ldap_server->get('unique_persistent_attr'));
+        // @TODO Should be changed to ldap_user_puid_server_id
+        $account->set('ldap_user_puid_sid', $ldap_server->id());
+        $account->set('ldap_user_current_dn', $ldap_user['dn']);
+        // @TODO Shouldn't we set the "last checked" date?
+        $account->set('ldap_user_last_checked', time());
+        $account->save();
         return (boolean)$account;
       }
     }

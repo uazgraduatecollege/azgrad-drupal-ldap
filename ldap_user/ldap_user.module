@@ -7,6 +7,7 @@
  */
 
 use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\Core\Form\FormState;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 define('LDAP_USER_DRUPAL_HELP_URL', 'http://drupal.org/node/997082');
 
@@ -554,7 +555,7 @@ function ldap_user_form_password_policy_password_tab_alter(&$form, &$form_state)
  * store password from logon forms in ldap_user_ldap_provision_pwd static variable
  * for use in provisioing to ldap
  */
-function ldap_user_grab_password_validate($form, \Drupal\Core\Form\FormState &$form_state) {
+function ldap_user_grab_password_validate($form, FormState &$form_state) {
   // This is not a login form but profile form and user is insertingpassword to update email
   if (!empty($form_state->getValue('current_pass_required_values') )) {
     if (!empty($form_state->getValue('current_pass')) && empty($form_state->getValue('pass'))) {
@@ -634,7 +635,7 @@ function ldap_user_form_user_register_form_alter(&$form, $form_state) {
   if ($ldap_user_conf->provisionEnabled(LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY, LDAP_USER_DRUPAL_USER_PROV_ON_USER_UPDATE_CREATE)) {
     $ldap_fieldset['ldap_user_association']['#disabled'] = TRUE;
     $ldap_fieldset['ldap_user_association']['#description'] =  t('Since "Create
-      or Synch to Drupal user anytime a Drupal user account is created or updated"
+      or Sync to Drupal user anytime a Drupal user account is created or updated"
       is selected at admin/config/people/ldap/user, this option will have no
       effect so its disabled.');
   }
@@ -666,7 +667,11 @@ function ldap_user_form_user_register_form_alter(&$form, $form_state) {
   }
 
   $form['#validate'][] = 'ldap_user_form_register_form_validate';
-  $form['#submit'][] = 'ldap_user_form_register_form_submit2';
+  foreach ( array_keys($form['actions']) as $action ) {
+    if ( isset($form['actions'][$action]['#type']) && $form['actions'][$action]['#type'] == 'submit' ) {
+      $form['actions'][$action]['#submit'][] = 'ldap_user_form_register_form_submit2';
+    }
+  }
 
 }
 
@@ -692,7 +697,7 @@ function ldap_user_form_register_form_validate($form, &$form_state) {
     }
   }
 
-  // if trying to provision and ldap account and one already exists, throw error.
+  // if trying to provision an LDAP account and one already exists, throw error.
   if (@$values['ldap_user_create_ldap_acct']) {
     $ldap_user_conf = ldap_user_conf();
     $ldap_user = ldap_servers_get_user_ldap_data($drupal_username, $ldap_user_conf->ldapEntryProvisionServer, 'ldap_user_prov_to_ldap');
@@ -707,18 +712,21 @@ function ldap_user_form_register_form_validate($form, &$form_state) {
 
 
 /** called after user_register_form_submit **/
-function ldap_user_form_register_form_submit2($form, &$form_state) {
-
-  $values = $form_state['values'];
+function ldap_user_form_register_form_submit2(&$form, FormState $form_state) {
+  // It's only called when a user who can create a new user does so using the register form.
+  $values = $form_state->getValues();
   $ldap_user_association_set = FALSE;
 
+  // Create LDAP account?
   if (@$values['ldap_user_create_ldap_acct']) {
     if ($account = user_load_by_name($values['name'])) {
       $ldap_user_conf = ldap_user_conf();
       $ldap_provision_entry = $ldap_user_conf->getProvisionRelatedLdapEntry($account);
+      // Does the LDAP user exist? If not then create it.
       if (!$ldap_provision_entry) {
         $provision_result = $ldap_user_conf->provisionLdapEntry($account);
       }
+      // If so then associate it.
       else {
         $ldap_user_association_set = TRUE;
       }
@@ -728,9 +736,12 @@ function ldap_user_form_register_form_submit2($form, &$form_state) {
     }
   }
 
-  if ($ldap_user_association_set || @$values['ldap_user_association'] == LDAP_USER_MANUAL_ACCT_CONFLICT_LDAP_ASSOCIATE) {
-    $ldap_user_conf = ldap_user_conf();
-    $ldap_user_conf->ldapAssociateDrupalAccount($form_state['values']['name']);
+  // Either LDAP provision (above) has said "associate" or the person creating
+  // the account has said "associate" or the LDAP user settings says
+  // "Associate manually created Drupal accounts with related LDAP Account if one exists."
+  $ldap_user_conf = ldap_user_conf();
+  if ($ldap_user_association_set || @$values['ldap_user_association'] == LDAP_USER_MANUAL_ACCT_CONFLICT_LDAP_ASSOCIATE || @$ldap_user_conf->manualAccountConflict == LDAP_USER_MANUAL_ACCT_CONFLICT_LDAP_ASSOCIATE ) {
+    $ldap_user_conf->ldapAssociateDrupalAccount($values['name']);
   }
 
 }

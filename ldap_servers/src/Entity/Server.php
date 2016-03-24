@@ -901,12 +901,15 @@ class Server extends ConfigEntityBase implements ServerInterface {
    * @return string user's PUID or permanent user id (within ldap), converted from binary, if applicable
    */
   public function userPuidFromLdapEntry($ldap_entry) {
-
     if ($this->get('unique_persistent_attr')
-        && isset($ldap_entry[$this->get('unique_persistent_attr')][0])
-        && is_scalar($ldap_entry[$this->get('unique_persistent_attr')][0])
+        && isset($ldap_entry[$this->get('unique_persistent_attr')])
+        && is_scalar($ldap_entry[$this->get('unique_persistent_attr')])
         ) {
-      $puid = $ldap_entry[$this->get('unique_persistent_attr')][0];
+      $puid = $ldap_entry[$this->get('unique_persistent_attr')];
+      // If its still an array...
+      if ( is_array($puid) ) {
+        $puid = $puid[0];
+      }
       return ($this->get('unique_persistent_attr_binary')) ? ldap_servers_binary($puid) : $puid;
     }
     else {
