@@ -376,16 +376,18 @@ class ServerTestForm extends EntityForm {
             $mapping[] = "$key = " . $value[0];
           }
         }
-        $results_tables['basic'][] = [
-          theme_item_list([
-            'items' => $mapping,
-            'title' => t('Attributes available to anonymous search', [
-              '%bind_dn' => $ldap_server->get('binddn'),
-              ]),
-            'type' => 'ul',
-            'attributes' => [],
+
+        $item_list = array(
+          'type' => 'ul',
+          '#theme' => 'item_list',
+          '#items' => $mapping,
+          '#title' => t('Attributes available to anonymous search', [
+            '%bind_dn' => $ldap_server->get('binddn'),
           ])
-          ];
+        );
+        $results_tables['basic'][] = [
+          render($item_list)
+        ];
       }
       $results_tables['basic'][] = [
         t('Binding with DN (%bind_dn).  Using supplied password ', [
