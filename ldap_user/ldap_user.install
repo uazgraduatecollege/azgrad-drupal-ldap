@@ -66,56 +66,6 @@ function ldap_user_uninstall() {
 }
 
 /**
- * Implements hook_schema().
- * Taken from https://www.drupal.org/files/drupal-remove_openid_from_core-556380-81.patch
- * Because of http://drupal.stackexchange.com/questions/63121/whats-for-authmap-table-in-drupal
- */
-function ldap_user_schema() {
-  $schema['ldap_user_identities'] = array(
-    'description' => 'Stores LDAP authentication mapping.',
-    'fields' => array(
-      'aid' => array(
-        'description' => 'Primary Key: Unique authmap ID.',
-        'type' => 'serial',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-      ),
-      'uid' => array(
-        'type' => 'int',
-        'not null' => TRUE,
-        'default' => 0,
-        'description' => "User's {users}.uid.",
-      ),
-      'identifier' => array(
-        'type' => 'varchar',
-        'length' => 128,
-        'not null' => TRUE,
-        'default' => '',
-        'description' => 'Unique LDAP identifier.',
-      ),
-      'module' => array(
-        'type' => 'varchar',
-        'length' => 128,
-        'not null' => TRUE,
-        'default' => '',
-        'description' => 'Module which is controlling the authentication.',
-      ),
-    ),
-    'unique keys' => array(
-      'identifier' => array('identifier'),
-    ),
-    'primary key' => array('aid'),
-    'foreign keys' => array(
-      'user' => array(
-        'table' => 'users',
-        'columns' => array('uid' => 'uid'),
-      ),
-    ),
-  );
-  return $schema;
-}
-
-/**
  * Converts default_file_main variable to config.
  *
  * @ingroup config_upgrade
