@@ -706,12 +706,12 @@ class Server extends ConfigEntityBase implements ServerInterface {
    */
   public function userUserEntityFromPuid($puid) {
 
-    $query = new EntityFieldQuery();
-    $query->entityCondition('entity_type', 'user')
-    ->fieldCondition('ldap_user_puid_sid', 'value', $this->id(), '=')
-    ->fieldCondition('ldap_user_puid', 'value', $puid, '=')
-    ->fieldCondition('ldap_user_puid_property', 'value', $this->get('unique_persistent_attr'), '=')
-    ->addMetaData('account', \Drupal::entityManager()->getStorage('user')->load(1)); // run the query as user 1
+    $query = \Drupal::entityQuery('user');
+    $query
+      ->condition('ldap_user_puid_sid', $this->id(), '=')
+      ->condition('ldap_user_puid', $puid, '=')
+      ->condition('ldap_user_puid_property', $this->get('unique_persistent_attr'), '=')
+      ->addMetaData('account', \Drupal::entityManager()->getStorage('user')->load(1)); // run the query as user 1
 
     $result = $query->execute();
 
