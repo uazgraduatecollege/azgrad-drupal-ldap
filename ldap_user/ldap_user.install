@@ -127,3 +127,30 @@ function ldap_user_update_8001() {
     ));
   }
 }
+
+/**
+ * Convert ldap_user_identities table to authmap.
+ * Drop ldap_user_identities table.
+ */
+function ldap_user_update_8301(&$sandbox) {
+  // Check for externalauth module (which has been a dependency for ages).
+  if ( ! \Drupal::moduleHandler()->moduleExists('externalauth') ) {
+    drupal_set_message("Please install the <a href='https://drupal.org/project/externalauth'>External Auth</a> module.", "error");
+    // @TODO Throw an \Drupal\Core\Utility\UpdateException
+    return false;
+  }
+
+  // Iterate over the old table and create entries in the new table.
+  foreach ( db_query("SELECT aid, uid, identifier FROM {ldap_user_identities}")->fetchAll() as $identity ) {
+    // Load the user as the service expects an account.
+    $account = user_load($identity->uid);
+    $authmap = \Drupal::service('externalauth.authmap');
+    $authmap->save($account, 'ldap_user', $identity->identifier);
+
+    // Delete the row if successful.
+    db_query("DELETE FROM {ldap_user_identities} WHERE aid = :aid", array(':aid' => $identity->aid));
+  }
+
+  // Drop the table if successful.
+  db_query("DROP TABLE {ldap_user_identities}");
+}
