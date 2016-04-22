@@ -224,7 +224,7 @@ function ldap_server_massage_text($value, $value_type, $context) {
 
         foreach ($values as $key => $val) {
             // Might be a Drupal field
-            if ( $val->value ) {
+            if ( isset($val->value) ) {
                 $is_field = TRUE;
                 $val = $val->getValue();
             } else {
