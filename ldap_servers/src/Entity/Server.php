@@ -1644,7 +1644,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
    * {@inheritdoc}
    *
    */
-  public function testBindingCredentials(string $bindpw=NULL, &$results_tables) {
+  public function testBindingCredentials($bindpw=NULL, &$results_tables) {
     $errors = FALSE;
     $results = array();
 
