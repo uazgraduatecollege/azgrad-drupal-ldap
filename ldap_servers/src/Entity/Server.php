@@ -735,12 +735,12 @@ class Server extends ConfigEntityBase implements ServerInterface {
   }
 
   function userUsernameToLdapNameTransform($drupal_username, &$watchdog_tokens) {
-    if ($this->ldapToDrupalUserPhp && \Drupal::moduleHandler()->moduleExists('php')) {
+    if ($this->get('ldap_to_drupal_user') && \Drupal::moduleHandler()->moduleExists('php')) {
       global $name;
       $old_name_value = $name;
       $name = $drupal_username;
-      $code = "<?php global \$name; \n" . $this->ldapToDrupalUserPhp . "; \n ?>";
-      $watchdog_tokens['%code'] = $this->ldapToDrupalUserPhp;
+      $code = "<?php global \$name; \n" . $this->get('ldap_to_drupal_user') . "; \n ?>";
+      $watchdog_tokens['%code'] = $this->get('ldap_to_drupal_user');
       $code_result = php_eval($code);
       $watchdog_tokens['%code_result'] = $code_result;
       $ldap_username = $code_result;

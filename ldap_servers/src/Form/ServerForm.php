@@ -259,22 +259,22 @@ class ServerForm extends EntityForm {
         Base DNs are entered above.'),
     );
 
-    // $form['users']['ldap_to_drupal_user'] = array(
-    //   '#default_value' => $server->get('ldap_to_drupal_user'),
-    //   'fieldset' => 'users',
-    //   '#disabled' => (!module_exists('php')),
-    //   '#type' => 'textarea',
-    //   '#cols' => 25,
-    //   '#rows' => 5,
-    //   '#title' => t('PHP to transform Drupal login username to LDAP UserName attribute.'),
-    //   '#description' => t('This will appear as disabled unless the "PHP filter" core module is enabled. Enter PHP to transform Drupal username to the value of the UserName attribute.
-    //     The code should print the UserName attribute.
-    //     PHP filter module must be enabled for this to work.
-    //     The variable $name is available and is the user\'s login username.
-    //     Careful, bad PHP code here will break your site. If left empty, no name transformation will be done.
-    //     <br/>Example:<br/>Given the user will logon with jdoe@xyz.com and you want the ldap UserName attribute to be
-    //     jdoe.<br/><code>$parts = explode(\'@\', $name); if (count($parts) == 2) {print $parts[0]};</code>'),
-    // );
+    $form['users']['ldap_to_drupal_user'] = array(
+      '#default_value' => $server->get('ldap_to_drupal_user'),
+      'fieldset' => 'users',
+      '#disabled' => (!\Drupal::moduleHandler()->moduleExists('php')),
+      '#type' => 'textarea',
+      '#cols' => 25,
+      '#rows' => 5,
+      '#title' => t('PHP to transform Drupal login username to LDAP UserName attribute.'),
+      '#description' => t('This will appear as disabled unless the "PHP filter" core module is enabled. Enter PHP to transform Drupal username to the value of the UserName attribute.
+        The code should print the UserName attribute.
+        PHP filter module must be enabled for this to work.
+        The variable $name is available and is the user\'s login username.
+        Careful, bad PHP code here will break your site. If left empty, no name transformation will be done.
+        <br/>Example:<br/>Given the user will logon with jdoe@xyz.com and you want the ldap UserName attribute to be
+        jdoe.<br/><code>$parts = explode(\'@\', $name); if (count($parts) == 2) {print $parts[0]};</code>'),
+    );
 
    $form['users']['testing_drupal_username'] = array(
       '#default_value' => $server->get('testing_drupal_username'),

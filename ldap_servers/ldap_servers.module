@@ -369,7 +369,7 @@ function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$param
 
   $url = Url::fromRoute('entity.ldap_server.collection');
   $tokens = array(
-    '!edit_link' => \Drupal::l($url, $url),
+    '!edit_link' => \Drupal::l($url->toString(), $url),
     '!sid' => $ldap_server->id(),
   );
 
