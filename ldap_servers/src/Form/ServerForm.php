@@ -495,8 +495,8 @@ class ServerForm extends EntityForm {
     elseif ( $form_state->getValue('bindpw_clear') ) {
       $server->set('bindpw', NULL);
     }
-    // If there isn't a password then load the existing one
-    else {
+    // If there isn't a password then load the existing one (unless this an anonymous bind server)
+    elseif ( $form_state->getValue('bind_method') != LDAP_SERVERS_BIND_METHOD_ANON || $form_state->getValue('bind_method') != LDAP_SERVERS_BIND_METHOD_ANON_USER ) {
       $entity = ldap_servers_get_servers($server->id());
       $server->set('bindpw', $entity->get('bindpw'));
     }
