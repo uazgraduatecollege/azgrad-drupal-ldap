@@ -568,19 +568,21 @@ function ldap_user_grab_password_validate($form, FormState &$form_state) {
   }
 }
 
-
 /*
  * Replaces the authmap table retired in Drupal 8
  */
 function ldap_user_get_uid_from_map($identifier) {
-  return db_query("SELECT uid FROM {ldap_user_identities} WHERE identifier = :identifier AND module = 'ldap_user'", array(':identifier' => $identifier))->fetchColumn();
+  $externalauth = \Drupal::service('externalauth.externalauth');
+  $externalauth->load($identifier, 'ldap_user');
+  return $externalauth->uid;
 }
 
 /*
  * Replaces the authmap table retired in Drupal 8
  */
 function ldap_user_get_identifier_from_map($uid) {
-  return db_query("SELECT identifier FROM {ldap_user_identities} WHERE uid = :uid AND module = 'ldap_user'", array(':uid' => $uid))->fetchColumn();
+  $authmap = \Drupal::service('externalauth.authmap')->getAuthdata($uid, 'ldap_user');
+  return $authmap->authname;
 }
 
 /*
@@ -588,24 +590,16 @@ function ldap_user_get_identifier_from_map($uid) {
  * Drupal 7: user_set_authmap
  */
 function ldap_user_set_identifier($account, $identifier) {
-  $table = 'ldap_user_identities';
-  $data = array(
-    'uid' => $account->uid->value,
-    'identifier' => $identifier,
-    'module' => 'ldap_user',
-  );
-  db_insert($table)->fields($data)->execute();
+  $authmap = \Drupal::service('externalauth.authmap');
+  $authmap->save($account, 'ldap_user', $identifier);
 }
 
 /*
  * Called from hook_user_delete ldap_user_user_delete
  */
 function ldap_user_identities_delete($uid) {
-  $table = 'ldap_user_identities';
-  db_delete($table)
-    ->condition('uid', $uid)
-    ->condition('module', 'ldap_user')
-    ->execute();
+  $authmap = \Drupal::service('externalauth.authmap');
+  $authmap->delete($uid);
 }
 
 /**
