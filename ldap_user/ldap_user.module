@@ -417,15 +417,15 @@ function ldap_user_ldap_user_attrs_list_alter(&$available_user_attrs, &$params) 
     if (!isset($available_user_attrs[$field_id]) || !is_array($available_user_attrs[$field_id])) {
       $available_user_attrs[$field_id] = array();
     }
-    // @FIXME: not working with entityManager() replacement of field_info_instances
-    // $available_user_attrs[$field_id] = $available_user_attrs[$field_id] + array(
-    //   'name' => t('Field') . ': ' . $field_instance['label'],
-    //   'configurable_to_drupal' => 1,
-    //   'configurable_to_ldap' => 1,
-    //   'enabled' => FALSE,
-    //   'config_module' => 'ldap_user',
-    //   'prov_module' => 'ldap_user',
-    // );
+
+    $available_user_attrs[$field_id] = $available_user_attrs[$field_id] + array(
+      'name' => t('Field') . ': ' . $field_instance->getLabel(),
+      'configurable_to_drupal' => 1,
+      'configurable_to_ldap' => 1,
+      'enabled' => FALSE,
+      'config_module' => 'ldap_user',
+      'prov_module' => 'ldap_user',
+    );
   }
 
 
@@ -751,19 +751,19 @@ function ldap_user_form_register_form_submit2(&$form, FormState $form_state) {
 
 function ldap_user_ldap_exclude(\Drupal\user\UserInterface $account = NULL, $edit = NULL, $direction = LDAP_USER_PROV_DIRECTION_ALL) {
   // always exclude user 1
-  if (is_object($account) && isset($account->uid) && $account->uid == 1) {
+  if (is_object($account) && $account->id() == 1) {
     return TRUE;
   }
   
   // exclude users who have the field ldap_user_ldap_exclude set to 1
-  if (is_object($account) && isset($account->ldap_user_ldap_exclude['und'][0]['value']) 
-    && $account->ldap_user_ldap_exclude[\Drupal\Core\Language\Language::LANGCODE_NOT_SPECIFIED][0]['value'] == 1) {
+  if (is_object($account) && !empty($account->ldap_user_ldap_exclude->first())
+    && $account->ldap_user_ldap_exclude->first()->getValue() == 1) {
     return TRUE;
   }
 
   // exclude new users who have the value set to 1 in their $edit array
   if (is_array($edit) && isset($edit['ldap_user_ldap_exclude']['und'][0]['value'])
-    && $edit['ldap_user_ldap_exclude'][\Drupal\Core\Language\Language::LANGCODE_NOT_SPECIFIED][0]['value'] == 1) {
+    && $edit['ldap_user_ldap_exclude'][0]['value'] == 1) {
     return TRUE;
   }
 
@@ -793,6 +793,7 @@ function ldap_user_is_ldap_associated($account, $direction = NULL) {
       $to_drupal_user = TRUE;
     }
     elseif (isset($account->uid)) {
+      // @FIXME use methods as ldap_user_identities is deprecated.
       $authmaps = db_query(
         "SELECT aid, uid, module, identifier FROM {ldap_user_identities} WHERE uid = :uid AND module = :module",
         array(
@@ -833,14 +834,15 @@ function ldap_user_synch_to_drupal($username, $prov_event = LDAP_USER_EVENT_SYNC
 
   $ldap_user_conf = ldap_user_conf();
   $account = user_load_by_name($username);
-  $user_edit = array();
-  $ldap_user_conf->synchToDrupalAccount($account, $user_edit, $prov_event, $ldap_user, FALSE);
+  $ldap_user_conf->synchToDrupalAccount($account, $account, $prov_event, $ldap_user, FALSE);
 
 }
 
 /**
  * api function for ldap associated user provisioning
  * note: does no checking if synching is enabled or configured for a given context
+ * @FIXME $user_edit is deprecated (LDAP).
+ * This shouldn't operate on user_edit any more.
  */
 function ldap_user_provision_to_drupal($ldap_user, $user_edit = array()) {
 
@@ -938,13 +940,12 @@ function ldap_user_ldap_provision_semaphore($action, $op, $value = NULL, $reset 
 /**
  * Implements hook_user_login().
  */
-function ldap_user_user_login(&$edit, $account) {
+function ldap_user_user_login($account) {
 
-  if (ldap_user_ldap_exclude($account, $edit)) {
+  if (ldap_user_ldap_exclude($account)) {
     return; 
   }
   $ldap_user_conf = ldap_user_conf();
-  $user_edit = array();
 
    // provision or synch to ldap, not both
   $provision_result = array('status' => 'none');
@@ -970,6 +971,7 @@ function ldap_user_user_login(&$edit, $account) {
     && $provision_result['status'] != 'success'
     && $ldap_user_conf->provisionEnabled(LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY, LDAP_USER_LDAP_ENTRY_PROV_ON_AUTHENTICATE)
     ) {
+    // @FIXME $user_edit is deprecated.
     $bool_result = $ldap_user_conf->synchToLdapEntry($account, $user_edit);
     if ($bool_result) {
       ldap_user_ldap_provision_semaphore('synch', 'set', $account->name);
@@ -979,12 +981,12 @@ function ldap_user_user_login(&$edit, $account) {
   $prov_enabled = $ldap_user_conf->provisionEnabled(LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, LDAP_USER_LDAP_ENTRY_PROV_ON_AUTHENTICATE);
 
   if ($ldap_user_conf->provisionsDrupalAccountsFromLdap && in_array(LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER, array_keys($ldap_user_conf->provisionsDrupalEvents))) {
-    $ldap_user = ldap_servers_get_user_ldap_data($account->name, $ldap_user_conf->drupalAcctProvisionServer, 'ldap_user_prov_to_drupal');
+    $ldap_user = ldap_servers_get_user_ldap_data($account, $ldap_user_conf->drupalAcctProvisionServer, 'ldap_user_prov_to_drupal');
     if ($ldap_user) {
       $ldap_server = ldap_servers_get_servers($ldap_user_conf->drupalAcctProvisionServer, NULL, TRUE);
-      $ldap_user_conf->entryToUserEdit($ldap_user, $user_edit, $ldap_server, LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, array(LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER));
+      $ldap_user_conf->entryToUserEdit($ldap_user, $account, $ldap_server, LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, array(LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER));
     }
-    $account = user_save($account, $user_edit, 'ldap_user');
+    $account->save();
   }
 
 }
@@ -992,7 +994,8 @@ function ldap_user_user_login(&$edit, $account) {
 
 /**
  * Implements hook_user_insert().
- *
+ * @FIXME hook_user_insert has gone away (Core).
+ * @FIXME $user_edit is deprecated (LDAP).
  */
 function ldap_user_user_insert(&$user_edit, $account, $category) {
 
@@ -1026,6 +1029,7 @@ function ldap_user_user_insert(&$user_edit, $account, $category) {
         }
        }
       elseif ($ldap_provision_entry) {
+        // @FIXME $user_edit is deprecated
         $bool_result = $ldap_user_conf->synchToLdapEntry($account, $user_edit);
         if ($bool_result) {
           ldap_user_ldap_provision_semaphore('synch', 'set', $account->name);
@@ -1037,6 +1041,8 @@ function ldap_user_user_insert(&$user_edit, $account, $category) {
 
 /**
  * Implements hook_user_update()
+ * hook_user_update has gone away (Core).
+ * @FIXME $user_edit is deprecated (LDAP).
  */
 
 function ldap_user_user_update(&$user_edit, $account, $category) {
@@ -1083,6 +1089,8 @@ function ldap_user_user_update(&$user_edit, $account, $category) {
 
  /**
  * Implements hook_user_presave()
+ * @FIXME hook_user_presave has gone away (Core).
+ * @FIXME $user_edit is deprecated (LDAP).
  */
 
 function ldap_user_user_presave(&$user_edit, $account, $category) {

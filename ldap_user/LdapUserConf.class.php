@@ -5,7 +5,7 @@
  * This class represents a ldap_user module's configuration
  * It is extended by LdapUserConfAdmin for configuration and other admin functions
  */
-
+use Drupal\field\Entity\FieldStorageConfig;
 require_once('ldap_user.module');
 
 class LdapUserConf {
@@ -282,7 +282,16 @@ class LdapUserConf {
           if (!empty($mapping['prov_events'])) {
             $result = count(array_intersect($prov_events, $mapping['prov_events']));
             if ($result) {
-              $mappings[$attribute] = $mapping;
+              if ($direction == LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER && isset($mapping['user_attr'])) {
+                $key = $mapping['user_attr'];
+              }
+              elseif ($direction == LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY && isset($mapping['ldap_attr'])) {
+                $key = $mapping['ldap_attr'];
+              }
+              else {
+                continue;
+              }
+              $mappings[$key] = $mapping;
             }
           }
         }
@@ -792,6 +801,7 @@ class LdapUserConf {
 
     if ($this->drupalAcctProvisionServer) {
       $ldap_server = ldap_servers_get_servers($this->drupalAcctProvisionServer, NULL, TRUE);
+      // @FIXME $user_edit is deprecated.
       $this->entryToUserEdit($ldap_user, $user_edit, $ldap_server, LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, array($prov_event));
     }
 
@@ -1010,19 +1020,22 @@ class LdapUserConf {
      */
 
     if (!$account) {
-      $account = new stdClass();
+      $account = \Drupal::entityManager()->getStorage('user')->create($user_edit);
     }
-    $account->is_new = TRUE;
+    $account->enforceIsNew();
 
+    // Should pass in an LDAP record or a username.
     if (!$ldap_user && !isset($user_edit['name'])) {
       return FALSE;
     }
 
+    // Get an LDAP user from the LDAP server
     if (!$ldap_user) {
       $watchdog_tokens['%username'] = $user_edit['name'];
       if ($this->drupalAcctProvisionServer) {
         $ldap_user = ldap_servers_get_user_ldap_data($user_edit['name'], $this->drupalAcctProvisionServer, 'ldap_user_prov_to_drupal');
       }
+      // Still no LDAP user
       if (!$ldap_user) {
         if ($this->detailedWatchdog) {
           \Drupal::logger('ldap_user')->debug('%username : failed to find associated ldap entry for username in provision.', []);
@@ -1030,11 +1043,15 @@ class LdapUserConf {
         return FALSE;
       }
     }
-   // dpm('ldap_user 675');dpm($ldap_user);
-    if (!isset($user_edit['name']) && isset($account->name)) {
-      $user_edit['name'] = $account->name;
-      $watchdog_tokens['%username'] = $user_edit['name'];
+
+    // If we don't have an account name already we should set one.
+    if ( ! $account->label() ) {
+      $ldap_server = ldap_servers_get_servers($this->drupalAcctProvisionServer, 'enabled', TRUE);
+      $account->set('name', $ldap_user[$ldap_server->get('user_attr')]);
+      $watchdog_tokens['%username'] = $account->label();
     }
+
+    // Can we get details from an LDAP server?
     if ($this->drupalAcctProvisionServer) {
 
       $ldap_server = ldap_servers_get_servers($this->drupalAcctProvisionServer, 'enabled', TRUE);  // $ldap_user['sid']
@@ -1056,45 +1073,53 @@ class LdapUserConf {
 
       if ($account2) { // synch drupal account, since drupal account exists
         // 1. correct username and authmap
-        $this->entryToUserEdit($ldap_user, $user_edit, $ldap_server, LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, array(LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER));
-        $account = user_save($account2, $user_edit, 'ldap_user');
-        user_set_authmaps($account, array("authname_ldap_user" => $user_edit['name']));
+        $this->entryToUserEdit($ldap_user, $account2, $ldap_server, LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, array(LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER));
+        $account = $account2;
+        $account->save();
+        // Update the identifier table
+        ldap_user_set_identifier($account, $account->label());
+
         // 2. attempt synch if appropriate for current context
+        // @FIXME $user_edit is deprecated (LDAP)
         if ($account) {
           $account = $this->synchToDrupalAccount($account, $user_edit, LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER, $ldap_user, TRUE);
         }
         return $account;
       }
       else { // create drupal account
-        $this->entryToUserEdit($ldap_user, $user_edit, $ldap_server, LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, array(LDAP_USER_EVENT_CREATE_DRUPAL_USER));
+        $this->entryToUserEdit($ldap_user, $account, $ldap_server, LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, array(LDAP_USER_EVENT_CREATE_DRUPAL_USER));
         if ($save) {
-          $watchdog_tokens = array('%drupal_username' =>  $user_edit['name']);
-          if (empty($user_edit['name'])) {
+          $watchdog_tokens = array('%drupal_username' => $account->get('name'));
+          if (empty($account->label())) {
             drupal_set_message(t('User account creation failed because of invalid, empty derived Drupal username.'), 'error');
             \Drupal::logger('ldap_user')->error('Failed to create Drupal account %drupal_username because drupal username could not be derived.', []);
             return FALSE;
           }
-          if (!isset($user_edit['mail']) || !$user_edit['mail']) {
+          if (!$account->getEmail()) {
             drupal_set_message(t('User account creation failed because of invalid, empty derived email address.'), 'error');
             \Drupal::logger('ldap_user')->error('Failed to create Drupal account %drupal_username because email address could not be derived by LDAP User module', []);
             return FALSE;
           }
-          if ($account_with_same_email = user_load_by_mail($user_edit['mail'])) {
-            $watchdog_tokens['%email'] = $user_edit['mail'];
+          // What is the email address for the ldap_user?
+          $mail = $ldap_user[$ldap_server->get('mail_attr')];
+
+          if ($account_with_same_email = user_load_by_mail($mail)) {
+            $watchdog_tokens['%email'] = $mail;
             $watchdog_tokens['%duplicate_name'] = $account_with_same_email->name;
             \Drupal::logger('ldap_user')->error('LDAP user %drupal_username has email address
               (%email) conflict with a drupal user %duplicate_name', []);
             drupal_set_message(t('Another user already exists in the system with the same email address. You should contact the system administrator in order to solve this conflict.'), 'error');
             return FALSE;
           }
-          $account = entity_create('user', $user_edit);
-          $account->enforceIsNew();
           $account->save();
           if (!$account) {
             drupal_set_message(t('User account creation failed because of system problems.'), 'error');
           }
           else {
-            ldap_user_set_identifier($account, $user_edit['name']);
+            ldap_user_set_identifier($account, $account->label());
+            if ( ! empty($user_data) ) {
+              ldap_user_identities_data_update($account, $user_data);
+            }
           }
           return $account;
         }
@@ -1173,17 +1198,17 @@ class LdapUserConf {
    *
    */
 
-  function entryToUserEdit($ldap_user, &$edit, $ldap_server, $direction = LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, $prov_events = NULL) {
+  function entryToUserEdit($ldap_user, &$account, $ldap_server, $direction = LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, $prov_events = NULL) {
 
     // need array of user fields and which direction and when they should be synched.
     if (!$prov_events) {
       $prov_events = ldap_user_all_events();
     }
     $mail_synched = $this->isSynched('[property.mail]', $prov_events, $direction);
-    if (!isset($edit['mail']) && $mail_synched) {
+    if (! $account->getEmail() && $mail_synched) {
       $derived_mail = $ldap_server->userEmailFromLdapEntry($ldap_user['attr']);
       if ($derived_mail) {
-        $edit['mail'] = $derived_mail;
+        $account->set('mail', $derived_mail);
       }
     }
 
@@ -1193,28 +1218,27 @@ class LdapUserConf {
 			$picture = $ldap_server->userPictureFromLdapEntry($ldap_user['attr'], $drupal_username);
 
 			if ($picture){
-				$edit['picture'] = $picture;
-				if(isset($picture->md5Sum)){
-					$edit['data']['ldap_user']['init']['thumb5md'] = $picture->md5Sum;
-				}
+				$account->set('picture', $picture);
 			}
 		}
 
-    if ($this->isSynched('[property.name]', $prov_events, $direction) && !isset($edit['name']) && $drupal_username) {
-      $edit['name'] = $drupal_username;
+    if ($this->isSynched('[property.name]', $prov_events, $direction) && !$account->label() && $drupal_username) {
+      $account->set('name', $drupal_username);
     }
 
+    // Only fired on LDAP_USER_EVENT_CREATE_DRUPAL_USER. Shouldn't it respect the checkbox on the sync form?
     if ($direction == LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER && in_array(LDAP_USER_EVENT_CREATE_DRUPAL_USER, $prov_events)) {
-      $edit['mail'] = isset($edit['mail']) ? $edit['mail'] : $ldap_user['mail'];
-      $edit['pass'] = isset($edit['pass']) ? $edit['pass'] : user_password(20);
-      $edit['init'] = isset($edit['init']) ? $edit['init'] : $edit['mail'];
-      $edit['status'] = isset($edit['status']) ? $edit['status'] : 1;
-      $edit['signature'] = isset($edit['signature']) ? $edit['signature'] : '';
+      $derived_mail = $ldap_server->userEmailFromLdapEntry($ldap_user['attr']);
+      if ( ! $account->getEmail() ) $account->set('mail', $derived_mail);
+      if ( ! $account->getPassword() ) $account->set('pass', user_password(20));
+      if ( ! $account->getInitialEmail() ) $account->set('init', $derived_mail);
+      if ( ! $account->isBlocked() ) $account->set('status', 1);
 
-      $edit['data']['ldap_user']['init'] = array(
-        'sid'  => $ldap_user['sid'],
+      // @FIXME data has gone away (Core). Use external_auth data column?
+      $user_data['init'] = array(
+        'sid'  => $ldap_server->id(),
         'dn'   => $ldap_user['dn'],
-        'mail' => $edit['mail'],
+        'mail' => $derived_mail,
       );
     }
 
@@ -1224,17 +1248,17 @@ class LdapUserConf {
     if ($this->isSynched('[field.ldap_user_puid]', $prov_events, $direction)) {
       $ldap_user_puid = $ldap_server->userPuidFromLdapEntry($ldap_user['attr']);
       if ($ldap_user_puid) {
-        $edit['ldap_user_puid'][\Drupal\Core\Language\Language::LANGCODE_NOT_SPECIFIED][0]['value'] = $ldap_user_puid; //
+        $account->set('ldap_user_puid', $ldap_user_puid);
       }
     }
     if ($this->isSynched('[field.ldap_user_puid_property]', $prov_events, $direction)) {
-      $edit['ldap_user_puid_property'][\Drupal\Core\Language\Language::LANGCODE_NOT_SPECIFIED][0]['value'] = $ldap_server->unique_persistent_attr;
+      $account->set('ldap_user_puid_property', $ldap_server->unique_persistent_attr);
     }
     if ($this->isSynched('[field.ldap_user_puid_sid]', $prov_events, $direction)) {
-      $edit['ldap_user_puid_sid'][\Drupal\Core\Language\Language::LANGCODE_NOT_SPECIFIED][0]['value'] = $ldap_server->sid;
+      $account->set('ldap_user_puid_sid', $ldap_server->id());
     }
     if ($this->isSynched('[field.ldap_user_current_dn]', $prov_events, $direction)) {
-      $edit['ldap_user_current_dn'][\Drupal\Core\Language\Language::LANGCODE_NOT_SPECIFIED][0]['value'] = $ldap_user['dn'];
+      $account->set('ldap_user_current_dn', $ldap_user['dn']);
     }
 
     // Get any additional mappings.
@@ -1261,38 +1285,24 @@ class LdapUserConf {
 
       // Are we dealing with a field?
       if ($value_type == 'field') {
-        // Field api field - first we get the field.
-        $field = field_info_field($value_name);
-        // Then the columns for the field in the schema.
-        $columns = array_keys($field['columns']);
-        // Then we convert the value into an array if it's scalar.
-        $values = $field['cardinality'] == 1 ? array($value) : (array) $value;
-
-        $items = array();
-        // Loop over the values and set them in our $items array.
-        foreach ($values as $delta => $value) {
-          if (isset($value)) {
-            // We set the first column value only, this is consistent with
-            // the Entity Api (@see entity_metadata_field_property_set).
-            $items[$delta][$columns[0]] = $value;
-          }
-        }
-        // Add them to our edited item.
-        $edit[$value_name][\Drupal\Core\Language\Language::LANGCODE_NOT_SPECIFIED] = $items;
+        $account->set($value_name, $value);
       }
       elseif ($value_type == 'property') {
         // Straight property.
-        $edit[$value_name] = $value;
+        // @FIXME We don't know if this is right in Drupal 8 or not.
+        $account->set($value_name, $value);
       }
     }
 
     // Allow other modules to have a say.
 
-    \Drupal::moduleHandler()->alter('ldap_user_edit_user', $edit, $ldap_user, $ldap_server, $prov_events);
-    if (isset($edit['name']) && $edit['name'] == '') {  // don't let empty 'name' value pass for user
-      unset($edit['name']);
+    \Drupal::moduleHandler()->alter('ldap_user_edit_user', $account, $ldap_user, $ldap_server, $prov_events);
+    if ( empty($account->label()) ) {  // don't let empty 'name' value pass for user
+      $account->set('name', $ldap_user[$ldap_server->get('user_attr')]);
     }
 
+    // Set ldap_user_last_checked
+    $account->set('ldap_user_last_checked', time());
   }
   /**
    * given configuration of synching, determine is a given synch should occur
