@@ -1095,13 +1095,11 @@ class LdapUserConf {
             \Drupal::logger('ldap_user')->error('Failed to create Drupal account %drupal_username because drupal username could not be derived.', []);
             return FALSE;
           }
-          if (!$account->getEmail()) {
+          if (! $mail = $account->getEmail()) {
             drupal_set_message(t('User account creation failed because of invalid, empty derived email address.'), 'error');
             \Drupal::logger('ldap_user')->error('Failed to create Drupal account %drupal_username because email address could not be derived by LDAP User module', []);
             return FALSE;
           }
-          // What is the email address for the ldap_user?
-          $mail = $ldap_user[$ldap_server->get('mail_attr')];
 
           if ($account_with_same_email = user_load_by_mail($mail)) {
             $watchdog_tokens['%email'] = $mail;
