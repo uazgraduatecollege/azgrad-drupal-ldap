@@ -56,6 +56,13 @@ class Server extends ConfigEntityBase implements ServerInterface {
   protected $label;
 
   /**
+   * Server connection.
+   *
+   * @var Resource
+   */
+  protected $connection;
+
+  /**
    * Connect Method
    */
   public function connect() {
