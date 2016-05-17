@@ -333,10 +333,16 @@ the top of this form.
         $form[$parent_fieldset][$mapping_id][$table_id]['second-header'][] = array(
           '#title' => $cell['data'],
           '#type' => 'item',
-          '#attributes' => array('class' => array($cell['class'])),
-          '#rowspan' => $cell['rowspan'],
-          '#colspan' => $cell['colspan'],
         );
+        if (isset($cell['class'])) {
+          $form[$parent_fieldset][$mapping_id][$table_id]['second-header']['#attributes'] = array('class' => array($cell['class']));
+        }
+        if (isset($cell['rowspan'])) {
+          $form[$parent_fieldset][$mapping_id][$table_id]['second-header']['#rowspan'] = $cell['rowspan'];
+        }
+        if (isset($cell['colspan'])) {
+          $form[$parent_fieldset][$mapping_id][$table_id]['second-header']['#colspan'] = $cell['colspan'];
+        }
       }
 
       // Add in all the mappings. @TODO fix the save handlers.
