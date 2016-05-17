@@ -583,7 +583,8 @@ function ldap_user_get_uid_from_map($identifier) {
  * Replaces the authmap table retired in Drupal 8
  */
 function ldap_user_get_identifier_from_map($uid) {
-  $authmap = \Drupal::service('externalauth.authmap')->getAuthdata($uid, 'ldap_user');
+  $authmap = \Drupal::service('externalauth.authmap');
+  $authmap->getAuthdata($uid, 'ldap_user');
   if ( property_exists($authmap, 'authname') ) {
     return $authmap->authname;
   }
@@ -796,15 +797,8 @@ function ldap_user_is_ldap_associated($account, $direction = NULL) {
     if (property_exists($account, 'ldap_user_current_dn') && !empty($account->ldap_user_current_dn['und'][0]['value'])) {
       $to_drupal_user = TRUE;
     }
-    elseif (isset($account->uid)) {
-      // @FIXME use methods as ldap_user_identities is deprecated.
-      $authmaps = db_query(
-        "SELECT aid, uid, module, identifier FROM {ldap_user_identities} WHERE uid = :uid AND module = :module",
-        array(
-          ':uid' => $account->uid,
-          ':module' => 'ldap_user'
-        )
-        )->fetchAllAssoc('aid',  PDO::FETCH_ASSOC);
+    elseif ($account->id()) {
+      $authmaps = ldap_user_get_identifier_from_map($account->id());
       $to_drupal_user = (boolean)(count($authmaps));
     }
   }
