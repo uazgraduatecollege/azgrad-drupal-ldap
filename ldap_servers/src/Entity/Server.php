@@ -804,7 +804,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
    */
   public function userEmailFromLdapEntry($ldap_entry) {
 
-    if ($ldap_entry && $this->get('mail_attr')) { // not using template
+    if ($ldap_entry && $this->get('mail_attr') && isset($ldap_entry[$this->get('mail_attr')][0])) { // not using template
       $mail = isset($ldap_entry[$this->get('mail_attr')][0]) ? $ldap_entry[$this->get('mail_attr')][0] : FALSE;
       return $mail;
     }
