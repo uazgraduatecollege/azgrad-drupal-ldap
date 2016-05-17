@@ -375,6 +375,8 @@ function ldap_server_massage_text($value, $value_type, $context) {
     /**
     * Converts all Hex expressions ("\HEX") to their original ASCII characters
     *
+    * Update taken from zendframework/zf1
+    *
     * @param string $string String to convert
     *
     * @static
@@ -382,8 +384,12 @@ function ldap_server_massage_text($value, $value_type, $context) {
     * @return string
     */
     function ldap_pear_hex2asc($string) {
-        $string = preg_replace("/\\\([0-9A-Fa-f]{2})/e", "''.chr(hexdec('\\1')).''", $string);
-        return $string;
+      $string = preg_replace_callback(
+        "/\\\([0-9A-Fa-f]{2})/",
+        function (array $matches) { return chr(hexdec($matches[0])); },
+        $string
+      );
+      return $string;
     }
 
     /**
