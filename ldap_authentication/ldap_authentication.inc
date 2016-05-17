@@ -132,7 +132,7 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state, $re
 
   if (!$auth_conf = ldap_authentication_get_valid_conf()) {
     \Drupal::logger('ldap_authentication')->error('Failed to get valid ldap authentication configuration.');
-    $form_state->setErrorByName('name', 'Server Error: Failed to get valid ldap authentication configuration.' . $error);
+    $form_state->setErrorByName('name', 'Server Error: Failed to get valid ldap authentication configuration.');
     return;
   }
 
@@ -373,21 +373,21 @@ function ldap_authentication_corresponding_drupal_user($authname, $auth_conf, &$
   if (is_object($drupal_account)) {
     $drupal_account_is_authmapped = ldap_user_get_identifier_from_map($drupal_account->id());
     if ($drupal_account->id() == 1 && $detailed_watchdog_log) {
-      watchdog('ldap_authentication',  '%username : Drupal username maps to user 1, so do not authenticate with ldap', $watchdog_tokens, WATCHDOG_DEBUG);
+      \Drupal::logger('ldap_authentication')->debug('%username : Drupal username maps to user 1, so do not authenticate with ldap', $watchdog_tokens);
     }
     elseif ($detailed_watchdog_log) {
-      watchdog('ldap_authentication',  '%username : Drupal User Account found.  Continuing on to attempt ldap authentication', $watchdog_tokens, WATCHDOG_DEBUG);
+      \Drupal::logger('ldap_authentication')->debug('%username : Drupal User Account found.  Continuing on to attempt ldap authentication', $watchdog_tokens);
     }
   }
   else {  // account does not exist
     $drupal_account_is_authmapped = FALSE;
     if ($auth_conf->ldapUser->createLDAPAccounts == FALSE) {
       if ($detailed_watchdog_log) {
-        watchdog('ldap_authentication', '%username : Drupal User Account not found and configuration is set to not create new accounts.', $watchdog_tokens, WATCHDOG_DEBUG);
+        \Drupal::logger('ldap_authentication')->debug('%username : Drupal User Account not found and configuration is set to not create new accounts.', $watchdog_tokens);
       }
     }
     if ($detailed_watchdog_log) {
-      watchdog('ldap_authentication', '%username : Existing Drupal User Account not found.  Continuing on to attempt ldap authentication', $watchdog_tokens, WATCHDOG_DEBUG);
+      \Drupal::logger('ldap_authentication')->debug('%username : Existing Drupal User Account not found.  Continuing on to attempt ldap authentication', $watchdog_tokens);
     }
   }
   return array($drupal_account, $drupal_account_is_authmapped);
@@ -404,7 +404,7 @@ function ldap_authentication_test_credentials($auth_conf, $sso_login, $authname,
     $watchdog_tokens['%id'] = $id;
     $watchdog_tokens['%bind_method'] = $ldap_server->get('bind_method');
     if ($detailed_watchdog_log) {
-      watchdog('ldap_authentication', '%username : Trying server %id where bind_method = %bind_method', $watchdog_tokens, WATCHDOG_DEBUG);
+      \Drupal::logger('ldap_authentication')->debug('%username : Trying server %id where bind_method = %bind_method', $watchdog_tokens);
     }
 
     // #1 CONNECT TO SERVER
@@ -414,13 +414,13 @@ function ldap_authentication_test_credentials($auth_conf, $sso_login, $authname,
       $authentication_result = LDAP_AUTHENTICATION_RESULT_FAIL_CONNECT;
       $watchdog_tokens['%err_msg'] = $ldap_server->errorMsg('ldap');
       if ($detailed_watchdog_log) {
-        watchdog('ldap_authentication',  '%username : Failed connecting to %id.  Error: %err_msg', $watchdog_tokens, WATCHDOG_DEBUG);
+        \Drupal::logger('ldap_authentication')->debug('%username : Failed connecting to %id.  Error: %err_msg', $watchdog_tokens);
       }
       $watchdog_tokens['%err_msg'] = NULL;
       continue; // next server, please
     }
     elseif ($detailed_watchdog_log) {
-      watchdog('ldap_authentication',  '%username : Success at connecting to %id', $watchdog_tokens, WATCHDOG_DEBUG);
+      \Drupal::logger('ldap_authentication')->debug('%username : Success at connecting to %id', $watchdog_tokens);
     }
 
 /**
@@ -448,11 +448,11 @@ function ldap_authentication_test_credentials($auth_conf, $sso_login, $authname,
       $bind_success = ($ldap_server->bind(NULL, NULL, FALSE) == LDAP_SUCCESS);
     }
     elseif ($ldap_server->get('bind_method') == LDAP_SERVERS_BIND_METHOD_ANON ||
-        $ldap_server->get('bind_method') == LDAP_SERVERS_BIND_METHOD_ANON_USER) {
+      $ldap_server->get('bind_method') == LDAP_SERVERS_BIND_METHOD_ANON_USER) {
       $bind_success = ($ldap_server->bind(NULL, NULL, TRUE) == LDAP_SUCCESS);
     }
     elseif ($sso_login) {
-      watchdog('ldap_authentication', 'Trying to use SSO with LDAP_SERVERS_BIND_METHOD_USER bind method.', $watchdog_tokens, WATCHDOG_ERROR);
+      \Drupal::logger('ldap_authentication')->error('Trying to use SSO with LDAP_SERVERS_BIND_METHOD_USER bind method.', $watchdog_tokens);
     }
     elseif ($ldap_server->get('bind_method') == LDAP_SERVERS_BIND_METHOD_USER && $sso_login == FALSE) {
       // with sso enabled this method of binding isn't valid
@@ -468,13 +468,13 @@ function ldap_authentication_test_credentials($auth_conf, $sso_login, $authname,
       }
     }
     else {
-      watchdog('ldap_authentication', 'No bind method set in ldap_server->bind_method in _ldap_authentication_user_login_authenticate_validate.', $watchdog_tokens, WATCHDOG_ERROR);
+      \Drupal::logger('ldap_authentication')->debug('No bind method set in ldap_server->bind_method in _ldap_authentication_user_login_authenticate_validate.', $watchdog_tokens);
     }
 
     if (!$bind_success) {
       if ($detailed_watchdog_log) {
         $watchdog_tokens['%err_text'] = $ldap_server->errorMsg('ldap');
-        watchdog('ldap_authentication', '%username : Trying server %id where bind_method = %bind_method.  Error: %err_text', $watchdog_tokens, WATCHDOG_DEBUG);
+        \Drupal::logger('ldap_authentication')->debug('%username : Trying server %id where bind_method = %bind_method.  Error: %err_text', $watchdog_tokens);
         $watchdog_tokens['%err_text'] = NULL;
       }
       $authentication_result = ($ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_USER) ? LDAP_AUTHENTICATION_RESULT_FAIL_CREDENTIALS : LDAP_AUTHENTICATION_RESULT_FAIL_BIND;
@@ -489,9 +489,9 @@ function ldap_authentication_test_credentials($auth_conf, $sso_login, $authname,
       $ldap_user = $ldap_server->userUserNameToExistingLdapEntry($authname);
       if ($detailed_watchdog_log) {
         $watchdog_tokens['%result'] = var_export($result, TRUE);
-        watchdog('ldap_authentication', '%username : attempting single sign-on
+        \Drupal::logger('ldap_authentication')->debug('%username : attempting single sign-on
           login in bind_method of LDAP_SERVERS_BIND_METHOD_USER. Result of
-          userUserNameToExistingLdapEntry: <pre>%result</pre>', $watchdog_tokens, WATCHDOG_DEBUG);
+          userUserNameToExistingLdapEntry: <pre>%result</pre>', $watchdog_tokens);
       }
     }
     else {
@@ -501,7 +501,7 @@ function ldap_authentication_test_credentials($auth_conf, $sso_login, $authname,
     if (!$ldap_user) {
       if ($detailed_watchdog_log) {
         $watchdog_tokens['%err_text'] = $ldap_server->errorMsg('ldap');
-        watchdog('ldap_authentication', '%username : Trying server %id where bind_method = %bind_method.  Error: %err_text', $watchdog_tokens, WATCHDOG_DEBUG);
+        \Drupal::logger('ldap_authentication')->debug('%username : Trying server %id where bind_method = %bind_method.  Error: %err_text', $watchdog_tokens);
         $watchdog_tokens['%err_text'] = NULL;
       }
       if ($ldap_server->ldapErrorNumber()) {
@@ -547,7 +547,7 @@ function ldap_authentication_test_credentials($auth_conf, $sso_login, $authname,
     if (!$credentials_pass) {
       if ($detailed_watchdog_log) {
         $watchdog_tokens['%err_text'] = $ldap_server->errorMsg('ldap');
-        watchdog('ldap_authentication', '%username : Testing user credentials on server %id where bind_method = %bind_method.  Error: %err_text', $watchdog_tokens, WATCHDOG_DEBUG);
+        \Drupal::logger('ldap_authentication')->debug('%username : Testing user credentials on server %id where bind_method = %bind_method.  Error: %err_text', $watchdog_tokens);
         $watchdog_tokens['%err_text'] = NULL;
       }
       $authentication_result = LDAP_AUTHENTICATION_RESULT_FAIL_CREDENTIALS;
@@ -572,7 +572,7 @@ function ldap_authentication_test_credentials($auth_conf, $sso_login, $authname,
   $watchdog_tokens['%auth_result'] = $authentication_result;
   $watchdog_tokens['%err_text'] =  _ldap_authentication_err_text($authentication_result) ;
   if ($detailed_watchdog_log) {
-    watchdog('ldap_authentication',  '%username : Authentication result id=%result auth_result=%auth_result (%err_text)', $watchdog_tokens, WATCHDOG_DEBUG);
+    \Drupal::logger('ldap_authentication')->debug('%username : Authentication result id=%result auth_result=%auth_result (%err_text)', $watchdog_tokens);
   }
 
   return array($authentication_result, $ldap_user, $ldap_server);
@@ -580,27 +580,24 @@ function ldap_authentication_test_credentials($auth_conf, $sso_login, $authname,
 
 function ldap_authentication_fail_response($authentication_result, $auth_conf, $detailed_watchdog_log, &$watchdog_tokens) {
   $watchdog_tokens['%err_text'] =  _ldap_authentication_err_text($authentication_result);
- // fail scenario 1.  ldap auth exclusive and failed  throw error so no other authentication methods are allowed
+  // fail scenario 1.  ldap auth exclusive and failed  throw error so no other authentication methods are allowed
   if ($auth_conf->authenticationMode == LDAP_AUTHENTICATION_EXCLUSIVE) {
     if ($detailed_watchdog_log) {
-      watchdog('ldap_authentication', '%username : setting error because failed at ldap and
+      \Drupal::logger('ldap_authentication')->debug('%username : setting error because failed at ldap and
         LDAP_AUTHENTICATION_EXCLUSIVE is set to true.  So need to stop authentication of Drupal user that is not user 1.
-        error message: %err_text', $watchdog_tokens, WATCHDOG_DEBUG);
+        error message: %err_text', $watchdog_tokens);
     }
     // form_set_error('name', $watchdog_tokens['%err_text']);
     drupal_set_message("TODO: Form set error replacement.", "error");
   }
   else {
- // fail scenario 2.  simply fails ldap.  return false, but don't throw form error
- // don't show user message, may be using other authentication after this that may succeed.
+    // fail scenario 2.  simply fails ldap.  return false, but don't throw form error
+    // don't show user message, may be using other authentication after this that may succeed.
     if ($detailed_watchdog_log) {
-      watchdog('ldap_authentication',
-        '%username : Failed ldap authentication.
+      \Drupal::logger('ldap_authentication')->debug('%username : Failed ldap authentication.
         User may have authenticated successfully by other means in a mixed authentication site.
         LDAP Authentication Error #: %auth_result  error message: %err_text',
-        $watchdog_tokens,
-        WATCHDOG_DEBUG
-        );
+        $watchdog_tokens);
     }
   }
 }
