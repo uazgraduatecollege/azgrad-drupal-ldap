@@ -113,7 +113,6 @@ class LdapServersSettings extends ConfigFormBase {
     }
 
     $form = parent::buildForm($form, $form_state);
-    array_unshift($form['#submit'], 'ldap_servers_settings_submit'); // needs to be first
     return $form;
   }
 

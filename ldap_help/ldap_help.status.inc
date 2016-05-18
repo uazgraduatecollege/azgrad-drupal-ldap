@@ -263,12 +263,11 @@ function ldap_help_get_ldap_servers() {
   ldap_servers_module_load_include('inc', 'ldap_servers', 'ldap_servers.settings');
   ldap_servers_module_load_include('inc', 'ldap_servers', 'ldap_servers.admin');
 
-  $conf_form = ldap_servers_settings();
-
-  $selected = @$conf_form['encryption']['ldap_servers_encryption']['#default_value'];
+  $selected = \Drupal::config('ldap_servers.settings')->get('encryption');
+  $options = ldap_servers_encrypt_types('encrypt');
   $status[] = array(
       'title' => 'encryption',
-      'value' => @$conf_form['encryption']['ldap_servers_encryption']['#options'][$selected],
+      'value' => @$options[$selected],
     );
 
   $servers_objects = ldap_servers_get_servers(NULL, 'all');
