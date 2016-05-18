@@ -140,7 +140,7 @@ class ServerForm extends EntityForm {
       '#size' => 80,
       '#states' => array(
         'enabled' => array(   // action to take.
-          ':input[name=bind_method]' => array('value' => LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT),
+          ':input[name=bind_method]' => array('value' => strval(LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT)),
         ),
       ),
     );
@@ -152,7 +152,7 @@ class ServerForm extends EntityForm {
       '#size' => 20,
       '#states' => array(
         'enabled' => array(   // action to take.
-          ':input[name=bind_method]' => array('value' => LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT),
+          ':input[name=bind_method]' => array('value' => strval(LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT)),
         ),
       ),
     );
