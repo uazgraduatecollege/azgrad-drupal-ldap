@@ -26,8 +26,9 @@ class ServerForm extends EntityForm {
     $server = $this->entity;
 
     $form['server'] = array(
-      '#type' => 'fieldset',
+      '#type' => 'details',
       '#title' => t('Server'),
+      '#open' => TRUE,
     );
 
     $form['server']['label'] = array(
@@ -96,7 +97,7 @@ class ServerForm extends EntityForm {
     );
 
     $form['bind'] = array(
-      '#type' => 'fieldset',
+      '#type' => 'details',
       '#title' => t('Binding'),
     );
 
@@ -165,7 +166,7 @@ class ServerForm extends EntityForm {
     );
 
     $form['users'] = array(
-      '#type' => 'fieldset',
+      '#type' => 'details',
       '#title' => t('Users'),
     );
 
@@ -261,7 +262,6 @@ class ServerForm extends EntityForm {
 
     $form['users']['ldap_to_drupal_user'] = array(
       '#default_value' => $server->get('ldap_to_drupal_user'),
-      'fieldset' => 'users',
       '#disabled' => (!\Drupal::moduleHandler()->moduleExists('php')),
       '#type' => 'textarea',
       '#cols' => 25,
@@ -293,7 +293,7 @@ class ServerForm extends EntityForm {
     );
 
     $form['groups'] = array(
-      '#type' => 'fieldset',
+      '#type' => 'details',
       '#title' => t('Groups'),
     );
 
@@ -445,7 +445,7 @@ class ServerForm extends EntityForm {
     );
 
     $form['pagination'] = array(
-      '#type' => 'fieldset',
+      '#type' => 'details',
       '#title' => t('Pagination'),
     );
 

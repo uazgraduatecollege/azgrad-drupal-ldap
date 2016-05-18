@@ -56,7 +56,7 @@ class LdapServersSettings extends ConfigFormBase {
 
     $form['#title'] = "Configure LDAP Preferences";
     $form['ssl'] = [
-      '#type' => 'fieldset',
+      '#type' => 'details',
       '#title' => t('Require HTTPS on Credential Pages'),
     ];
 
@@ -85,7 +85,7 @@ class LdapServersSettings extends ConfigFormBase {
       '#type' => 'text',
       '#default_value' => \Drupal::config('ldap_servers.settings')->get('encryption'),
     ];
-    $form['encryption'] = ['#type' => 'fieldset', '#title' => t('Encryption')];
+    $form['encryption'] = ['#type' => 'details', '#title' => t('Encryption')];
     // @FIXME
     // Could not extract the default value because it is either indeterminate, or
     // not scalar. You'll need to provide a default value in
