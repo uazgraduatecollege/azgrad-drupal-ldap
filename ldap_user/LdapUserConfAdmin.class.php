@@ -553,19 +553,10 @@ EOT;
           if ($mapping['direction'] == LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER) {
             $row_id = $map_index[$mapping['user_attr']];
             $to_drupal_user_mappings_exist = TRUE;
-            if (!$is_drupal_user_prov_server) {
-              $errors['mappings__'. $sid] =  t('Mapping rows exist for provisioning to drupal user,  but server %sid is not enabled for provisioning
-                to drupal users.', $tokens);
-            }
           }
           if ($mapping['direction'] == LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY) {
             $row_id = $map_index[$mapping['ldap_attr']];
             $to_ldap_entries_mappings_exist = TRUE;
-            if (!$is_ldap_entry_prov_server) {
-              $errors['mappings__'. $sid] =  t('Mapping rows exist for provisioning to ldap entries,
-                but server %sid is not enabled for provisioning
-                to ldap entries.', $tokens);
-            }
 
             if (count(array_keys($ldap_attribute_maps_in_token)) != 1) {
               $token_field_id = join('__', array('sm', 'user_tokens', $row_id));
