@@ -1,13 +1,12 @@
-<?php /**
- * @file
- * Contains \Drupal\ldap_user\EventSubscriber\InitSubscriber.
- */
-
+<?php
 namespace Drupal\ldap_user\EventSubscriber;
 
 use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
+/**
+ *
+ */
 class InitSubscriber implements EventSubscriberInterface {
 
   /**
@@ -17,8 +16,12 @@ class InitSubscriber implements EventSubscriberInterface {
     return [KernelEvents::REQUEST => ['onEvent', 0]];
   }
 
+  /**
+   *
+   */
   public function onEvent() {
-    ldap_user_ldap_provision_semaphore(NULL, NULL, NULL, TRUE); // reset for simpletest page load behavior
+    // Reset for simpletest page load behavior.
+    ldap_user_ldap_provision_semaphore(NULL, NULL, NULL, TRUE);
   }
 
 }

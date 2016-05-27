@@ -1,15 +1,10 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\ldap_servers\ServerListBuilder.
- */
-
 namespace Drupal\ldap_servers;
 
+use Drupal\Core\Url;
 use Drupal\Core\Config\Entity\ConfigEntityListBuilder;
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Url;
 
 /**
  * Provides a listing of Server entities.
@@ -44,26 +39,30 @@ class ServerListBuilder extends ConfigEntityListBuilder {
     return $row + parent::buildRow($entity);
   }
 
+  /**
+   *
+   */
   public function getOperations(EntityInterface $entity) {
     $operations = parent::getDefaultOperations($entity);
-    if ( ! isset($operations['test']) ) {
-       $operations['test'] = array(
+    if (!isset($operations['test'])) {
+      $operations['test'] = array(
         'title' => $this->t('Test'),
         'weight' => 10,
-        'url' => \Drupal\Core\Url::fromRoute('entity.ldap_server.test_form', ['ldap_server' => $entity->id()]),
+        'url' => Url::fromRoute('entity.ldap_server.test_form', ['ldap_server' => $entity->id()]),
       );
     }
-    if ( $entity->get('status') == 1 ) {
+    if ($entity->get('status') == 1) {
       $operations['disable'] = array(
         'title' => $this->t('Disable'),
         'weight' => 15,
-        'url' => \Drupal\Core\Url::fromRoute('entity.ldap_server.enable_disable', ['action' => 'disable', 'id' => $entity->id()]),
+        'url' => Url::fromRoute('entity.ldap_server.enable_disable', ['action' => 'disable', 'id' => $entity->id()]),
       );
-    } else {
+    }
+    else {
       $operations['enable'] = array(
         'title' => $this->t('Enable'),
         'weight' => 15,
-        'url' => \Drupal\Core\Url::fromRoute('entity.ldap_server.enable_disable', ['action' => 'enable', 'id' => $entity->id()]),
+        'url' => Url::fromRoute('entity.ldap_server.enable_disable', ['action' => 'enable', 'id' => $entity->id()]),
       );
     }
     return $operations;

@@ -3,12 +3,11 @@
 
 /**
  * @file
- * test script functions for testing ldap functionality outside of Drupal
- *
+ * Test script functions for testing ldap functionality outside of Drupal.
  */
 
 error_reporting(E_ALL | E_STRICT);
-set_time_limit (0);
+set_time_limit(0);
 ini_set("display_errors", 1);
 ini_set("max_execution_time", 0);
 
@@ -26,10 +25,10 @@ define('LDAP_COMPARE_FALSE', 0x05);
 define('LDAP_COMPARE_TRUE', 0x06);
 define('LDAP_AUTH_METHOD_NOT_SUPPORTED', 0x07);
 define('LDAP_STRONG_AUTH_REQUIRED', 0x08);
-//NotusedinLDAPv3);
+// NotusedinLDAPv3);.
 define('LDAP_PARTIAL_RESULTS', 0x09);
 
-//Next5newinLDAPv3);
+// Next5newinLDAPv3);.
 define('LDAP_REFERRAL', 0x0a);
 define('LDAP_ADMINLIMIT_EXCEEDED', 0x0b);
 define('LDAP_UNAVAILABLE_CRITICAL_EXTENSION', 0x0c);
@@ -68,11 +67,11 @@ define('LDAP_NOT_ALLOWED_ON_RDN', 0x43);
 define('LDAP_ALREADY_EXISTS', 0x44);
 define('LDAP_NO_OBJECT_CLASS_MODS', 0x45);
 define('LDAP_RESULTS_TOO_LARGE', 0x46);
-//NexttwoforLDAPv3);
+// NexttwoforLDAPv3);.
 define('LDAP_AFFECTS_MULTIPLE_DSAS', 0x47);
 define('LDAP_OTHER', 0x50);
 
-//UsedbysomeAPIs);
+// UsedbysomeAPIs);.
 define('LDAP_SERVER_DOWN', 0x51);
 define('LDAP_LOCAL_ERROR', 0x52);
 define('LDAP_ENCODING_ERROR', 0x53);
@@ -84,7 +83,7 @@ define('LDAP_USER_CANCELLED', 0x58);
 define('LDAP_PARAM_ERROR', 0x59);
 define('LDAP_NO_MEMORY', 0x5a);
 
-//PreliminaryLDAPv3codes);
+// PreliminaryLDAPv3codes);.
 define('LDAP_CONNECT_ERROR', 0x5b);
 define('LDAP_NOT_SUPPORTED', 0x5c);
 define('LDAP_CONTROL_NOT_FOUND', 0x5d);
@@ -94,16 +93,19 @@ define('LDAP_CLIENT_LOOP', 0x60);
 define('LDAP_REFERRAL_LIMIT_EXCEEDED', 0x61);
 
 
-//error_reporting(E_ALL  &  ~E_NOTICE);
-
+// error_reporting(E_ALL  &  ~E_NOTICE);.
 define('LDAP_SCRIPTS_COMMAND_LINE_WARNING', "Warning: PHP from the command line may have different PHP versions, php.ini files, and security context than running in a webserver context. This may produce false test results since Drupal LDAP Modules are run in the web server context.");
 
-require_once('config.inc');
+require_once 'config.inc';
 
+/**
+ *
+ */
 function ldap_help_connect($address, $port, $tls, $test = FALSE) {
 
   if ($test) {
-    $false_con = ldap_connect("fakehostname.sdfserewerdfsdf.com", 389); // test for ldap extensions that don't actually connect until bind
+    // Test for ldap extensions that don't actually connect until bind.
+    $false_con = ldap_connect("fakehostname.sdfserewerdfsdf.com", 389);
     if (ldap_errno($false_con) == LDAP_SUCCESS) {
       $con = ldap_connect($address, $port);
       return array(LDAP_OTHER, "ldap_connect does not actually connect until bind with installed extension, so connect is not a valid test.", $con);
@@ -137,10 +139,16 @@ function ldap_help_connect($address, $port, $tls, $test = FALSE) {
   return array(LDAP_SUCCESS, "Successful Connection!", $con);
 }
 
+/**
+ *
+ */
 function ldap_help_show_error($con) {
   return "\nLDAP Error Number: " . ldap_errno($con) . "\nLDAP Error Description: " . ldap_error($con);
 }
 
+/**
+ *
+ */
 function ldap_help_display($title, $value = NULL) {
   if (is_array($value)) {
     echo "\n" . $title;
@@ -151,7 +159,7 @@ function ldap_help_display($title, $value = NULL) {
   if (!$title && $value) {
     echo "\n" . $value;
   }
-  elseif ((int)$title === $title) {
+  elseif ((int) $title === $title) {
     echo "\n" . $value;
   }
   else {
@@ -159,12 +167,13 @@ function ldap_help_display($title, $value = NULL) {
   }
 
 }
+
 /**
  * Disconnect (unbind) from an active LDAP server.
  */
 function ldap_help_disconnect(&$con) {
   if (!$con) {
-    // never bound or not currently bound, so no need to disconnect
+    // Never bound or not currently bound, so no need to disconnect.
   }
   else {
     ldap_help_disconnect($con);
@@ -172,7 +181,8 @@ function ldap_help_disconnect(&$con) {
   }
 }
 
-/** parse php modules from phpinfo */
+/**
+ * Parse php modules from phpinfo .*/
 function ldap_help_parsePHPModules() {
   ob_start();
   phpinfo(INFO_MODULES);
@@ -183,11 +193,14 @@ function ldap_help_parsePHPModules() {
   return isset($matches[1][0]) ? "\nphpinfo() LDAP Info:" . $matches[1][0] : '';
 }
 
+/**
+ *
+ */
 function ldap_help_encodePassword($password) {
-  $password="\"" . $password . "\"";
-  $encoded="";
-  for ($i=0; $i <strlen($password); $i++) {
-    $encoded .="{$password{$i}}\000";
+  $password = "\"" . $password . "\"";
+  $encoded = "";
+  for ($i = 0; $i < strlen($password); $i++) {
+    $encoded .= "{$password{$i}}\000";
   }
   return $encoded;
 }

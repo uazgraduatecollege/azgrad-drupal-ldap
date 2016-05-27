@@ -1,16 +1,24 @@
 <?php
 namespace Drupal\ldap_user;
-
+/**
+ *
+ */
 class LdapUserUITests extends LdapTestCase {
 
+  /**
+   *
+   */
   public static function getInfo() {
     return array(
       'name' => 'LDAP User User Interface',
       'description' => 'Test ldap user admin interface.',
-      'group' => 'LDAP User'
+      'group' => 'LDAP User',
     );
   }
 
+  /**
+   *
+   */
   function __construct($test_id = NULL) {
     parent::__construct($test_id);
   }
@@ -19,68 +27,64 @@ class LdapUserUITests extends LdapTestCase {
   protected $ldap_test_data;
 
   /**
-   *  create one or more server configurations in such as way
-   *  that this setUp can be a prerequisite for ldap_authentication and ldap_authorization
+   * Create one or more server configurations in such as way
+   *  that this setUp can be a prerequisite for ldap_authentication and ldap_authorization.
    */
-
   function setUp() {
     parent::setUp(array('ldap_user', 'ldap_test'));
     // @FIXME
-// // @FIXME
-// // This looks like another module's variable. You'll need to rewrite this call
-// // to ensure that it uses the correct configuration object.
-// variable_set('ldap_simpletest', 2);
-
-  }
-
-  function tearDown() {
-    parent::tearDown();
-    // @FIXME
-// // @FIXME
-// // This looks like another module's variable. You'll need to rewrite this call
-// // to ensure that it uses the correct configuration object.
-// variable_del('ldap_help_watchdog_detail');
-
-    // @FIXME
-// // @FIXME
-// // This looks like another module's variable. You'll need to rewrite this call
-// // to ensure that it uses the correct configuration object.
-// variable_del('ldap_simpletest');
-
+    // // @FIXME
+    // // This looks like another module's variable. You'll need to rewrite this call
+    // // to ensure that it uses the correct configuration object.
+    // variable_set('ldap_simpletest', 2);
   }
 
   /**
-   * make sure user admin interface works.  (its a beast)
+   *
+   */
+  function tearDown() {
+    parent::tearDown();
+    // @FIXME
+    // // @FIXME
+    // // This looks like another module's variable. You'll need to rewrite this call
+    // // to ensure that it uses the correct configuration object.
+    // variable_del('ldap_help_watchdog_detail');
+    // @FIXME
+    // // @FIXME
+    // // This looks like another module's variable. You'll need to rewrite this call
+    // // to ensure that it uses the correct configuration object.
+    // variable_del('ldap_simpletest');
+  }
+
+  /**
+   * Make sure user admin interface works.  (its a beast)
    */
   function testUI() {
 
-    // just to give warning if setup doesn't succeed.  may want to take these out at some point.
+    // Just to give warning if setup doesn't succeed.  may want to take these out at some point.
     // @FIXME
-// // @FIXME
-// // This looks like another module's variable. You'll need to rewrite this call
-// // to ensure that it uses the correct configuration object.
-// $setup_success = (
-//         module_exists('ldap_user') &&
-//         module_exists('ldap_servers') &&
-//         (variable_get('ldap_simpletest', 2) > 0)
-//       );
-
-    $this->assertTrue($setup_success, ' ldap_user setup successful',  $this->testId('user interface tests'));
+    // // @FIXME
+    // // This looks like another module's variable. You'll need to rewrite this call
+    // // to ensure that it uses the correct configuration object.
+    // $setup_success = (
+    //         module_exists('ldap_user') &&
+    //         module_exists('ldap_servers') &&
+    //         (variable_get('ldap_simpletest', 2) > 0)
+    //       );.
+    $this->assertTrue($setup_success, ' ldap_user setup successful', $this->testId('user interface tests'));
 
     $sids = array('activedirectory1');
     $this->prepTestData('hogwarts', $sids, 'provisionToDrupal', 'default');
 
     $this->privileged_user = $this->drupalCreateUser(array(
       'administer site configuration',
-      'administer users'
-      ));
+      'administer users',
+    ));
 
     $this->drupalLogin($this->privileged_user);
 
     $ldap_user_conf = ldap_user_conf();
-  //  debug('ldap_user_conf before form submission'); debug($ldap_user_conf);
-
-
+    // debug('ldap_user_conf before form submission'); debug($ldap_user_conf);
     $this->drupalGet('admin/config/people/ldap/user');
 
     // Populate the field settings with new settings.
@@ -96,10 +100,8 @@ class LdapUserUITests extends LdapTestCase {
       'orphanedCheckQty' => '50',
       'ldapEntryProvisionServer' => $sid,
     );
-    // 'wsEnabled' => TRUE, 'wsKey' => $wsKey,
-
-
-// 'wsUserIps' => join("\n", $wsUserIps),
+    // 'wsEnabled' => TRUE, 'wsKey' => $wsKey,.
+    // 'wsUserIps' => join("\n", $wsUserIps),.
     $edit = $edit_direct_map + array(
       'drupalAcctProvisionTriggers[' . LDAP_USER_DRUPAL_USER_PROV_ON_AUTHENTICATE . ']' => TRUE,
       'drupalAcctProvisionTriggers[' . LDAP_USER_DRUPAL_USER_PROV_ON_USER_UPDATE_CREATE . ']' => TRUE,
@@ -145,26 +147,22 @@ class LdapUserUITests extends LdapTestCase {
     $this->drupalPost('admin/config/people/ldap/user', $edit, t('Save'));
 
     $ldap_user_conf = ldap_user_conf(NULL, TRUE);
-   // debug('edit'); debug($edit); debug('user conf object after save'); debug($ldap_user_conf);
-
+    // debug('edit'); debug($edit); debug('user conf object after save'); debug($ldap_user_conf);
     foreach ($edit_direct_map as $property => $value) {
       $this->assertTrue($ldap_user_conf->{$property} == $value, $property . ' ' . t('field set correctly'), $this->testId('user interface tests'));
     }
 
-   // $this->assertTrue(
-   //   ($ldap_user_conf->wsUserIps[0] == $wsUserIps[0] && $ldap_user_conf->wsUserIps[1] == $wsUserIps[1])
-    //  , t('webserice ips set correctly'), $this->testId('user interface tests'));
-
+    // $this->assertTrue(
+    //   ($ldap_user_conf->wsUserIps[0] == $wsUserIps[0] && $ldap_user_conf->wsUserIps[1] == $wsUserIps[1])
+    //  , t('webserice ips set correctly'), $this->testId('user interface tests'));.
     $this->assertTrue(
       isset($ldap_user_conf->drupalAcctProvisionTriggers[LDAP_USER_DRUPAL_USER_PROV_ON_AUTHENTICATE]) &&
-      isset($ldap_user_conf->drupalAcctProvisionTriggers[LDAP_USER_DRUPAL_USER_PROV_ON_USER_UPDATE_CREATE])
-      , t('drupal provision triggers set correctly'), $this->testId('user interface tests'));
+      isset($ldap_user_conf->drupalAcctProvisionTriggers[LDAP_USER_DRUPAL_USER_PROV_ON_USER_UPDATE_CREATE]), t('drupal provision triggers set correctly'), $this->testId('user interface tests'));
 
     $this->assertTrue(
       isset($ldap_user_conf->ldapEntryProvisionTriggers[LDAP_USER_LDAP_ENTRY_PROV_ON_USER_UPDATE_CREATE]) &&
       isset($ldap_user_conf->ldapEntryProvisionTriggers[LDAP_USER_LDAP_ENTRY_PROV_ON_AUTHENTICATE]) &&
-      isset($ldap_user_conf->ldapEntryProvisionTriggers[LDAP_USER_LDAP_ENTRY_DELETE_ON_USER_DELETE])
-      , t('ldap provision triggers  set correctly'), $this->testId('user interface tests'));
+      isset($ldap_user_conf->ldapEntryProvisionTriggers[LDAP_USER_LDAP_ENTRY_DELETE_ON_USER_DELETE]), t('ldap provision triggers  set correctly'), $this->testId('user interface tests'));
 
     $field_token = '[field.field_lname]';
     $field_lname_set_correctly = (
@@ -187,13 +185,6 @@ class LdapUserUITests extends LdapTestCase {
       debug('ldap_user_conf->synchMapping[direction][field.field_lname]'); debug($ldap_user_conf->ldapUserSynchMappings[LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER]['field.field_lname']);
     }
 
-
-
-    
   }
-
-
-
-  
 
 }

@@ -1,8 +1,4 @@
-<?php /**
- * @file
- * Contains \Drupal\ldap_authentication\Routing\RouteSubscriber.
- */
-
+<?php
 namespace Drupal\ldap_authentication\Routing;
 
 use Drupal\Core\Routing\RouteSubscriberBase;

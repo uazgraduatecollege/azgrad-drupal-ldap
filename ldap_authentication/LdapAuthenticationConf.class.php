@@ -3,15 +3,17 @@
 /**
  * @file
  * This class represents an ldap_authentication module's configuration
- * It is extended by LdapAuthenticationConfAdmin for configuration and other admin functions
+ * It is extended by LdapAuthenticationConfAdmin for configuration and other admin functions.
  */
 
 module_load_include('php', 'ldap_user', 'LdapUserConf.class');
-
+/**
+ *
+ */
 class LdapAuthenticationConf {
 
   /**
-   * server configuration ids being used for authentication
+   * Server configuration ids being used for authentication.
    *
    * @var array
    *
@@ -20,7 +22,7 @@ class LdapAuthenticationConf {
   public $sids = array();
 
   /**
-   * server configuration ids being used for authentication
+   * Server configuration ids being used for authentication.
    *
    * @var associative array of LdapServer objects keyed on sids
    *
@@ -31,11 +33,12 @@ class LdapAuthenticationConf {
 
 
   /**
-   * LdapUser configuration object
+   * LdapUser configuration object.
    *
    * @var LdapUser object
    */
-  public $ldapUser = NULL; // ldap_user configuration object
+  // ldap_user configuration object.
+  public $ldapUser = NULL;
 
   /**
    * Has current object been saved to the database?
@@ -45,25 +48,25 @@ class LdapAuthenticationConf {
   public $inDatabase = FALSE;
 
   /**
-    * Choice of authentication modes
-    *
-    * @var integer
-    *   LDAP_AUTHENTICATION_MODE_DEFAULT (LDAP_AUTHENTICATION_MIXED)
-    *   LDAP_AUTHENTICATION_MIXED - signifies both LDAP and Drupal authentication are allowed
-    *     Drupal authentication is attempted first.
-    *   LDAP_AUTHENTICATION_EXCLUSIVE - signifies only LDAP authenication is allowed
-    */
+   * Choice of authentication modes.
+   *
+   * @var integer
+   *   LDAP_AUTHENTICATION_MODE_DEFAULT (LDAP_AUTHENTICATION_MIXED)
+   *   LDAP_AUTHENTICATION_MIXED - signifies both LDAP and Drupal authentication are allowed
+   *     Drupal authentication is attempted first.
+   *   LDAP_AUTHENTICATION_EXCLUSIVE - signifies only LDAP authenication is allowed
+   */
   public $authenticationMode = LDAP_AUTHENTICATION_MODE_DEFAULT;
 
   /**
    * The following are used to alter the logon interface to direct users
-   * to local LDAP specific authentication help
+   * to local LDAP specific authentication help.
    */
 
   /**
    * Text describing username to use, such as "Hogwarts Username"
    *  which will be inserted on logon forms to help users figure out which
-   *  username to use
+   *  username to use.
    *
    * @var string
    */
@@ -72,7 +75,7 @@ class LdapAuthenticationConf {
   /**
    * Text describing password to use, such as "Hogwards LDAP Password"
    *  which will be inserted on logon forms.  Useful in organizations with
-   *  multiple account types for authentication
+   *  multiple account types for authentication.
    *
    * @var string
    */
@@ -81,7 +84,7 @@ class LdapAuthenticationConf {
   /**
    * Text and Url to provide help link for password such as:
    *   ldapUserHelpLinkUrl:    https://passwords.hogwarts.edu
-   *   ldapUserHelpLinkText:  Hogwarts IT Password Support Page
+   *   ldapUserHelpLinkText:  Hogwarts IT Password Support Page.
    *
    * @var string
    */
@@ -92,28 +95,28 @@ class LdapAuthenticationConf {
    * Email handling option
    *   LDAP_AUTHENTICATION_EMAIL_FIELD_REMOVE -- don't show email on user forms
    *   LDAP_AUTHENTICATION_EMAIL_FIELD_DISABLE (default) -- disable email on user forms
-   *   LDAP_AUTHENTICATION_EMAIL_FIELD_ALLOW -- allow editing of email on user forms
+   *   LDAP_AUTHENTICATION_EMAIL_FIELD_ALLOW -- allow editing of email on user forms.
    *
    * @var int
    */
   public $emailOption = LDAP_AUTHENTICATION_EMAIL_FIELD_DEFAULT;
 
-   /**
+  /**
    * Email handling option
    *   LDAP_AUTHENTICATION_EMAIL_UPDATE_ON_LDAP_CHANGE_ENABLE_NOTIFY -- (default) Update stored email if LDAP email differs at login and notify user
    *   LDAP_AUTHENTICATION_EMAIL_UPDATE_ON_LDAP_CHANGE_ENABLE  -- Update stored email if LDAP email differs at login but don\'t notify user
-   *   LDAP_AUTHENTICATION_EMAIL_UPDATE_ON_LDAP_CHANGE_DISABLE -- Don\'t update stored email if LDAP email differs at login
+   *   LDAP_AUTHENTICATION_EMAIL_UPDATE_ON_LDAP_CHANGE_DISABLE -- Don\'t update stored email if LDAP email differs at login.
    *
    * @var int
    */
   public $emailUpdate = LDAP_AUTHENTICATION_EMAIL_UPDATE_ON_LDAP_CHANGE_DEFAULT;
 
 
-   /**
+  /**
    * Password handling option
    *   LDAP_AUTHENTICATION_PASSWORD_FIELD_SHOW -- show field disabled on user forms
    *   LDAP_AUTHENTICATION_PASSWORD_FIELD_HIDE (default) -- disable password on user forms
-   *   LDAP_AUTHENTICATION_PASSWORD_FIELD_ALLOW -- allow editing of password on user forms
+   *   LDAP_AUTHENTICATION_PASSWORD_FIELD_ALLOW -- allow editing of password on user forms.
    *
    * @var int
    */
@@ -130,39 +133,39 @@ class LdapAuthenticationConf {
   public $apiPrefs = array();
 
   /**
-   * Advanced options.   whitelist / blacklist options
+   * Advanced options.   whitelist / blacklist options.
    *
-   * these are on the fuzzy line between authentication and authorization
-   * and determine if a user is allowed to authenticate with ldap
-   *
+   * These are on the fuzzy line between authentication and authorization
+   * and determine if a user is allowed to authenticate with ldap.
    */
 
   /**
-   * text which must be present in user's LDAP entry's DN for user to authenticate with LDAP
-   *   e.g. "ou=people"
+   * Text which must be present in user's LDAP entry's DN for user to authenticate with LDAP
+   *   e.g. "ou=people".
    *
    * @var string
    */
-  public $allowOnlyIfTextInDn = array(); // eg ou=education that must be met to allow ldap authentication
+  // Eg ou=education that must be met to allow ldap authentication.
+  public $allowOnlyIfTextInDn = array();
 
   /**
-   * text which prohibits logon if found in user's LDAP entry's DN for user to authenticate with LDAP
-   *   e.g. "ou=guest accounts"
+   * Text which prohibits logon if found in user's LDAP entry's DN for user to authenticate with LDAP
+   *   e.g. "ou=guest accounts".
    *
    * @var string
    */
   public $excludeIfTextInDn = array();
 
   /**
-   * code that prints 1 or 0 signifying if user is allowed
-   *   should not start with <?php
+   * Code that prints 1 or 0 signifying if user is allowed
+   *   should not start with <?php.
    *
    * @var string of php
    */
   public $allowTestPhp = NULL;
 
   /**
-   * if at least 1 ldap authorization must exist for user to be allowed
+   * If at least 1 ldap authorization must exist for user to be allowed
    *   True signfies disallow if no authorizations.
    *   False signifies don't consider authorizations.
    *
@@ -192,18 +195,30 @@ class LdapAuthenticationConf {
     'cookieExpire',
   );
 
+  /**
+   *
+   */
   public function hasEnabledAuthenticationServers() {
     return !(count($this->enabledAuthenticationServers) == 0);
   }
 
+  /**
+   *
+   */
   public function enabled_servers() {
     return $this->hasEnabledAuthenticationServers();
   }
 
+  /**
+   *
+   */
   function __construct() {
     $this->load();
   }
 
+  /**
+   *
+   */
   function load() {
 
     if ($saved = \Drupal::config('ldap_authentication.settings')->get("ldap_authentication_conf")) {
@@ -213,7 +228,8 @@ class LdapAuthenticationConf {
           $this->{$property} = $saved[$property];
         }
       }
-      $this->enabledAuthenticationServers = array(); // reset in case reloading instantiated object
+      // Reset in case reloading instantiated object.
+      $this->enabledAuthenticationServers = array();
       $enabled_ldap_servers = ldap_servers_get_servers(NULL, 'enabled');
       foreach ($this->sids as $sid => $enabled) {
         if ($enabled && isset($enabled_ldap_servers[$sid])) {
@@ -234,19 +250,21 @@ class LdapAuthenticationConf {
   }
 
   /**
-   * Destructor Method
+   * Destructor Method.
    */
-  function __destruct() { }
+  function __destruct() {}
 
-
- /**
-   * decide if a username is excluded or not
+  /**
+   * Decide if a username is excluded or not.
    *
-   * @param string $name as proposed drupal username
-   * @param array $ldap_user where top level keys are 'dn','attr','mail'
+   * @param string $name
+   *   as proposed drupal username
+   * @param array $ldap_user
+   *   where top level keys are 'dn','attr','mail'
+   *
    * @return boolean FALSE means NOT allow; TRUE means allow
    *
-   * @todo.  this function should simply invoke hook_ldap_authentication_allowuser_results_alter
+   * @todo. this function should simply invoke hook_ldap_authentication_allowuser_results_alter
    *   and most of this function should go in ldap_authentication_allowuser_results_alter
    */
   public function allowUser($name, $ldap_user) {
@@ -255,12 +273,13 @@ class LdapAuthenticationConf {
      * do one of the exclude attribute pairs match
      */
     $ldap_user_conf = ldap_user_conf();
-    // if user does not already exists and deferring to user settings AND user settings only allow
+    // If user does not already exists and deferring to user settings AND user settings only allow.
     $user_register = Drupal::config('user.settings')->get('register');
 
     foreach ($this->excludeIfTextInDn as $test) {
       if (stripos($ldap_user['dn'], $test) !== FALSE) {
-        return FALSE;//  if a match, return FALSE;
+        // If a match, return FALSE;.
+        return FALSE;
       }
     }
 
@@ -277,7 +296,7 @@ class LdapAuthenticationConf {
         $code_result = php_eval($code);
         $_name = NULL;
         $_ldap_user_entry = NULL;
-        if ((boolean)($code_result) == FALSE) {
+        if ((boolean) ($code_result) == FALSE) {
           return FALSE;
         }
       }
@@ -324,7 +343,8 @@ class LdapAuthenticationConf {
 
       $user = new \stdClass();
       $user->name = $name;
-      $user->ldap_authenticated = TRUE; // fake user property added for query
+      // Fake user property added for query.
+      $user->ldap_authenticated = TRUE;
       $consumers = ldap_authorization_get_consumers();
       $has_enabled_consumers = FALSE;
       $has_ldap_authorizations = FALSE;
@@ -356,7 +376,7 @@ class LdapAuthenticationConf {
 
     }
 
-    // allow other modules to hook in and refuse if they like
+    // Allow other modules to hook in and refuse if they like.
     $hook_result = TRUE;
     \Drupal::moduleHandler()->alter('ldap_authentication_allowuser_results', $ldap_user, $name, $hook_result);
 
@@ -370,6 +390,5 @@ class LdapAuthenticationConf {
      */
     return TRUE;
   }
-
 
 }

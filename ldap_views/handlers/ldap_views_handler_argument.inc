@@ -2,12 +2,16 @@
 
 /**
  * @file
- * Basic textfield argument to handle known ldap attributes
+ * Basic textfield argument to handle known ldap attributes.
+ */
+
+/**
+ *
  */
 class ldap_views_handler_argument extends views_handler_argument {
 
   /**
-   * Build the query based upon the formula
+   * Build the query based upon the formula.
    */
   function query() {
     if ($this->real_field == 'basedn' || $this->real_field == 'filter') {
@@ -18,4 +22,5 @@ class ldap_views_handler_argument extends views_handler_argument {
       $this->query->add_where(0, $this->real_field, $this->argument, '=');
     }
   }
+
 }

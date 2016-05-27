@@ -1,16 +1,13 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\ldap_user\Form\LdapUserTestForm.
- */
-
 namespace Drupal\ldap_user\Form;
 
-use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Render\Element;
+use Drupal\Core\Form\FormBase;
 
+/**
+ *
+ */
 class LdapUserTestForm extends FormBase {
 
   /**
@@ -20,7 +17,10 @@ class LdapUserTestForm extends FormBase {
     return 'ldap_user_test_form';
   }
 
-  public function buildForm(array $form, \Drupal\Core\Form\FormStateInterface $form_state, $op = NULL) {
+  /**
+   *
+   */
+  public function buildForm(array $form, FormStateInterface $form_state, $op = NULL) {
 
     $username = @$_SESSION['ldap_user_test_form']['testing_drupal_username'];
 
@@ -60,12 +60,13 @@ class LdapUserTestForm extends FormBase {
       '#default_value' => $selected_actions,
       '#options' => $synch_trigger_options,
       '#states' => [
-        'visible' => [ // action to take.
+    // Action to take.
+        'visible' => [
           ':input[name="wsEnabled"]' => [
-            'checked' => TRUE
-            ]
-          ]
+            'checked' => TRUE,
+          ],
         ],
+      ],
     ];
 
     $form['submit'] = [
@@ -77,17 +78,22 @@ class LdapUserTestForm extends FormBase {
     return $form;
   }
 
-  public function validateForm(array &$form, \Drupal\Core\Form\FormStateInterface $form_state) {
+  /**
+   *
+   */
+  public function validateForm(array &$form, FormStateInterface $form_state) {
     if ($form_state->getValue(['test_mode']) == 'execute' && count(array_filter($form_state->getValue([
-      'action'
-      ]))) > 1) {
+      'action',
+    ]))) > 1) {
       $form_state->setErrorByName('test_mode', t('Only one action may be selected for "Execute Action" testing mode.'));
     }
 
-
   }
 
-  public function submitForm(array &$form, \Drupal\Core\Form\FormStateInterface $form_state) {
+  /**
+   *
+   */
+  public function submitForm(array &$form, FormStateInterface $form_state) {
 
     $username = $form_state->getValue(['testing_drupal_username']);
     $selected_actions = $form_state->getValue(['action']);
@@ -99,8 +105,8 @@ class LdapUserTestForm extends FormBase {
       $user_object = user_load_by_name($username);
       if ($user_object) {
         $user_entities = \Drupal::entityManager()->getStorage('user', [
-          $user_object->uid
-          ]);
+          $user_object->uid,
+        ]);
         $user_entity = $user_entities[$user_object->uid];
       }
       else {
@@ -129,12 +135,13 @@ class LdapUserTestForm extends FormBase {
 
       if (is_object($user_object)) {
         $authmaps = db_query("SELECT aid, uid, module, identifier FROM {ldap_user_identities} WHERE uid = :uid", [
-          ':uid' => $user_object->uid
-          ])->fetchAllAssoc('aid', PDO::FETCH_ASSOC);
+          ':uid' => $user_object->uid,
+        ])->fetchAllAssoc('aid', PDO::FETCH_ASSOC);
       }
       else {
         $authmaps = 'No authmaps available.  Authmaps only shown if user account exists beforehand';
-        $user_object = new stdClass(); // need for testing.
+        // Need for testing.
+        $user_object = new stdClass();
         $user_object->name = $username;
       }
       $results['User Authmap'] = $authmaps;
@@ -170,7 +177,7 @@ class LdapUserTestForm extends FormBase {
           }
         }
       }
-      // do all synchs second, in case logic of form changes to allow executing mulitple events
+      // Do all synchs second, in case logic of form changes to allow executing mulitple events.
       foreach (array_filter($selected_actions) as $i => $synch_trigger) {
         $synch_trigger_description = $synch_trigger_options[$synch_trigger];
         foreach ([
@@ -183,7 +190,7 @@ class LdapUserTestForm extends FormBase {
               $results['synchToDrupalAccount method results']["context = $synch_trigger_description"]['proposed'] = $user_edit;
             }
             else {
-              // to ldap
+              // To ldap.
               $provision_result = $ldap_user_conf->synchToLdapEntry($user_object, $user_edit, [], $test_query);
               $results['synchToLdapEntry method results']["context = $synch_trigger_description"] = $provision_result;
             }
@@ -193,13 +200,12 @@ class LdapUserTestForm extends FormBase {
               $results['synchToDrupalAccount method results']["context = $synch_trigger_description"] = 'Not enabled.';
             }
             else {
-              // to ldap
+              // To ldap.
               $results['synchToLdapEntry method results']["context = $synch_trigger_description"] = 'Not enabled.';
             }
           }
         }
       }
-
 
       if (function_exists('dpm')) {
         dpm($results);

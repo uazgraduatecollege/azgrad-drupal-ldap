@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Defines a default ldap_view
+ * Defines a default ldap_view.
  */
 
 /**
@@ -12,7 +12,7 @@ function ldap_views_views_default_views() {
   /*
    * View 'ad_users'
    */
-  $view = new view;
+  $view = new view();
   $view->name = 'ad_users_example';
   $view->description = 'Users from AD. You must define a ldap data source whith ad_users identifier, and mail, name and samaccountname attributes';
   $view->tag = 'default';
@@ -209,5 +209,3 @@ function ldap_views_views_default_views() {
 
   return $views;
 }
-
-

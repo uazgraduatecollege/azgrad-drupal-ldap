@@ -21,19 +21,16 @@ function ldap_sso_menu() {
   return $items;
 }
 
-
 /**
  * Implements hook_user_logout().
  *
  * The user just logged out.
- *
  */
-
 function ldap_sso_user_logout($account) {
   $auth_conf = ldap_authentication_get_valid_conf();
   if ($auth_conf->seamlessLogin == 1) {
     $cookie_string = 'do not auto login';
-    $cookie_timeout = (int)$auth_conf->cookieExpire;
+    $cookie_timeout = (int) $auth_conf->cookieExpire;
     setcookie("seamless_login", $cookie_string, (($cookie_timeout == -1) ? 0 : $cookie_timeout + time()), base_path(), "");
     $_SESSION['seamless_login'] = $cookie_string;
   }
@@ -43,7 +40,7 @@ function ldap_sso_user_logout($account) {
  * Implements hook_boot().
  *  Perform setup tasks. This entry point is used because hook_user_load no
  *  longer runs on anonymous users, and hook_boot is guaranteed to run,
- *  regardless of cache
+ *  regardless of cache.
  */
 function ldap_sso_boot() {
   if (!drupal_is_cli() && $GLOBALS['user']->uid == 0) {
@@ -52,27 +49,29 @@ function ldap_sso_boot() {
     }
 
     if (!(isset($_COOKIE['seamless_login'])) || $_COOKIE['seamless_login'] == 'auto login') {
-      if ((arg(0) == 'user' && !(is_numeric(arg(1)))) || arg(0) == 'logout' ) {
+      if ((arg(0) == 'user' && !(is_numeric(arg(1)))) || arg(0) == 'logout') {
         return;
       }
       else {
-        if (isset($_COOKIE['seamless_login_attempted']))
+        if (isset($_COOKIE['seamless_login_attempted'])) {
           $login_attempted = $_COOKIE['seamless_login_attempted'];
+        }
         else {
           $login_attempted = FALSE;
         }
-        require_once(DRUPAL_ROOT . '/includes/common.inc');
-        require_once(DRUPAL_ROOT . '/includes/path.inc');
+        require_once DRUPAL_ROOT . '/includes/common.inc';
+        require_once DRUPAL_ROOT . '/includes/path.inc';
         $ldap_authentication_conf = variable_get('ldap_authentication_conf', array());
 
         if (isset($ldap_authentication_conf['seamlessLogin']) && $ldap_authentication_conf['seamlessLogin'] == 1 && ($login_attempted != 'true')) {
-          setcookie("seamless_login_attempted", 'true', time() + (int)$ldap_authentication_conf['cookieExpire'], base_path(), "");
+          setcookie("seamless_login_attempted", 'true', time() + (int) $ldap_authentication_conf['cookieExpire'], base_path(), "");
           $_SESSION['seamless_login_attempted'] = $login_attempted;
-          // removed with http://drupal.org/node/1485118 patch
-          //$ldap_sso_q = (!isset($_GET['q']) || $_GET['q'] == '') ? 'user' : $_GET['q'];
-          //drupal_goto('user/login/sso', array('query' => array('destination' => rawurlencode($ldap_sso_q))));
+          // Removed with http://drupal.org/node/1485118 patch
+          // $ldap_sso_q = (!isset($_GET['q']) || $_GET['q'] == '') ? 'user' : $_GET['q'];
+          // drupal_goto('user/login/sso', array('query' => array('destination' => rawurlencode($ldap_sso_q))));
           drupal_bootstrap(DRUPAL_BOOTSTRAP_LANGUAGE);
-          if (ldap_sso_path_excluded_from_sso()) { // seems redundant, but need to check this again after additional bootstrap
+          // Seems redundant, but need to check this again after additional bootstrap.
+          if (ldap_sso_path_excluded_from_sso()) {
             return;
           }
           drupal_goto('user/login/sso', array('query' => drupal_get_destination()));
@@ -85,22 +84,30 @@ function ldap_sso_boot() {
   }
 }
 
+/**
+ *
+ */
 function ldap_sso_default_excluded_paths() {
   return array(
-    'admin/config/search/clean-urls/check'
+    'admin/config/search/clean-urls/check',
   );
 }
+
+/**
+ *
+ */
 function ldap_sso_path_excluded_from_sso($path = FALSE) {
 
   $result = FALSE;
   if ($path) {
-    // don't derive
+    // don't derive.
   }
   elseif ($_SERVER['PHP_SELF'] == '/index.php') {
     $path = $_GET['q'];
   }
   else {
-    $path = ltrim($_SERVER['PHP_SELF'], '/'); // cron.php, etc.
+    // cron.php, etc.
+    $path = ltrim($_SERVER['PHP_SELF'], '/');
   }
 
   if (in_array($path, ldap_sso_default_excluded_paths())) {
@@ -118,7 +125,6 @@ function ldap_sso_path_excluded_from_sso($path = FALSE) {
     }
   }
 
-
   if (isset($ldap_authentication_conf['ssoExcludedPaths'])) {
     $patterns = join("\r\n", $ldap_authentication_conf['ssoExcludedPaths']);
     if ($patterns) {
@@ -128,25 +134,27 @@ function ldap_sso_path_excluded_from_sso($path = FALSE) {
       $path = (function_exists('drupal_strtolower')) ? drupal_strtolower($path) : strtolower($path);
 
       $to_replace = array(
-        '/(\r\n?|\n)/', // newlines
-        '/\\\\\*/',     // asterisks
-        '/(^|\|)\\\\<front\\\\>($|\|)/' // <front>
+      // Newlines.
+        '/(\r\n?|\n)/',
+      // Asterisks.
+        '/\\\\\*/',
+      // <front>.
+        '/(^|\|)\\\\<front\\\\>($|\|)/',
       );
       $replacements = array(
         '|',
         '.*',
-        '\1' . preg_quote(config('system.site')->get('frontpage'), '/') . '\2'
+        '\1' . preg_quote(config('system.site')->get('frontpage'), '/') . '\2',
       );
       $patterns_quoted = preg_quote($patterns, '/');
       $regex = '/^(' . preg_replace($to_replace, $replacements, $patterns_quoted) . ')$/';
-      $result = (bool)preg_match($regex, $path);
+      $result = (bool) preg_match($regex, $path);
     }
   }
 
   return $result;
 
 }
-
 
 /**
  * A proxy function for the actual authentication routine. This is in place
@@ -165,8 +173,7 @@ function ldap_sso_user_login_sso() {
   $detailed_watchdog_log = config('ldap_help.settings')->get('watchdog_detail');
   $auth_conf = ldap_authentication_get_valid_conf();
   $implementation = $auth_conf->ldapImplementation;
-  //$enabled = $auth_conf->ssoEnabled; // this is redundant since hook won't be called if ldap_sso isn't enabled.
-
+  // $enabled = $auth_conf->ssoEnabled; // this is redundant since hook won't be called if ldap_sso isn't enabled.
   if ($detailed_watchdog_log) {
     $watchdog_tokens = array(
       '!implementation' => $auth_conf->ldapImplementation,
@@ -174,7 +181,7 @@ function ldap_sso_user_login_sso() {
       '!server_remote_user' => @$_SERVER['REMOTE_USER'],
       '!server_redirect_remote_user' => @$_SERVER['REDIRECT_REMOTE_USER'],
       '!ssoRemoteUserStripDomainName' => $auth_conf->ssoRemoteUserStripDomainName,
-      '!seamlessLogin' => $auth_conf->seamlessLogin
+      '!seamlessLogin' => $auth_conf->seamlessLogin,
     );
 
     \Drupal::logger('ldap_authentication')->debug(
@@ -183,16 +190,15 @@ function ldap_sso_user_login_sso() {
     );
   }
 
-  //if ($enabled != TRUE) {  // this is redundant as well as problematic.  if ldap_sso is disabled, no need to redirect to user/login
+  // If ($enabled != TRUE) {  // this is redundant as well as problematic.  if ldap_sso is disabled, no need to redirect to user/login
   //  drupal_goto('user/login');
-  //}
-
+  // }.
   $remote_user = NULL;
   $realm = NULL;
   $domain = NULL;
 
   switch ($implementation) {
-    case 'mod_auth_sspi' :
+    case 'mod_auth_sspi':
       $remote_user = FALSE;
       if (isset($_SERVER['REMOTE_USER'])) {
         $remote_user = $_SERVER['REMOTE_USER'];
@@ -202,7 +208,7 @@ function ldap_sso_user_login_sso() {
       }
       break;
 
-    case 'mod_auth_kerb' :
+    case 'mod_auth_kerb':
       $remote_user = FALSE;
       if (isset($_SERVER['REMOTE_USER'])) {
         $remote_user = $_SERVER['REMOTE_USER'];
@@ -215,7 +221,8 @@ function ldap_sso_user_login_sso() {
         $remote_user,
         $matches)) {
         $remote_user = $matches[1];
-        $realm = $matches[2]; // This can be used later if realms is ever supported properly
+        // This can be used later if realms is ever supported properly.
+        $realm = $matches[2];
       }
       break;
   }
@@ -228,10 +235,9 @@ function ldap_sso_user_login_sso() {
               $watchdog_tokens);
   }
 
-
   if ($remote_user) {
     if ($auth_conf->ssoRemoteUserStripDomainName) {
-      // might be in form <remote_user>@<domain> or <domain>\<remote_user>
+      // Might be in form <remote_user>@<domain> or <domain>\<remote_user>.
       $domain = NULL;
       $exploded = preg_split('/[\@\\\\]/', $remote_user);
       if (count($exploded) == 2) {
@@ -315,10 +321,12 @@ function ldap_sso_user_login_sso() {
         $_SESSION['seamless_login'] = 'do not auto login';
       }
       drupal_set_message(theme('ldap_authentication_message_not_found',
-          array('message' => t('Sorry, your LDAP credentials were not found, ' .
+          array(
+            'message' => t('Sorry, your LDAP credentials were not found, ' .
           'or the LDAP server is not available. You may log in ' .
            'with other credentials on the !user_login_form.',
-            array('!user_login_form' => l(t('user login form'), 'user/login'))))
+            array('!user_login_form' => l(t('user login form'), 'user/login'))),
+          )
         ), 'error');
       if ($detailed_watchdog_log) {
         \Drupal::logger('ldap_authentication')->debug(
@@ -343,9 +351,10 @@ function ldap_sso_user_login_sso() {
       }
     }
     drupal_set_message(theme('ldap_authentication_message_not_authenticated',
-      array('message' =>
-      t('You were not authenticated by the server.
-      You may log in with your credentials below.')
+      array(
+        'message' =>
+        t('You were not authenticated by the server.
+      You may log in with your credentials below.'),
       )
       ), 'error');
     if ($detailed_watchdog_log) {

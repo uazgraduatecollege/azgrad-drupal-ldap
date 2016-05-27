@@ -2,12 +2,20 @@
 
 /**
  * @file
- * This classextends by LdapAuthenticationConf for configuration and other admin functions
+ * This classextends by LdapAuthenticationConf for configuration and other admin functions.
  */
 
-ldap_servers_module_load_include('php', 'ldap_authentication', 'LdapAuthenticationConf.class');
+use Drupal\Core\Url;
 
+ldap_servers_module_load_include('php', 'ldap_authentication', 'LdapAuthenticationConf.class');
+/**
+ *
+ */
 class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
+
+  /**
+   *
+   */
   protected function setTranslatableProperties() {
 
     /**
@@ -21,7 +29,7 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
         (2) The reset password form will be left available at user/password for user 1; but no links to it
         will be provided to anonymous users.
         (3) Password fields in user profile form will be removed except for user 1.'),
-      );
+    );
 
     $values['authenticationServersDescription'] = t('Check all LDAP server configurations to use in authentication.
      Each will be tested for authentication until successful or
@@ -41,7 +49,6 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
      or a page within this drupal site that is available to anonymous users.');
 
     $values['ldapUserHelpLinkTextDescription']  = t('Text for above link e.g. Account Help or Campus Password Help Page');
-
 
     /**
      * LDAP User Restrictions
@@ -79,14 +86,13 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
       LDAP_AUTHENTICATION_EMAIL_FIELD_REMOVE => t('Don\'t show an email field on user forms.  LDAP derived email will be used for user and connot be changed by user'),
       LDAP_AUTHENTICATION_EMAIL_FIELD_DISABLE => t('Show disabled email field on user forms with LDAP derived email.  LDAP derived email will be used for user and connot be changed by user'),
       LDAP_AUTHENTICATION_EMAIL_FIELD_ALLOW => t('Leave email field on user forms enabled.  Generally used when provisioning to LDAP or not using email derived from LDAP.'),
-      );
+    );
 
     $values['emailUpdateOptions'] = array(
       LDAP_AUTHENTICATION_EMAIL_UPDATE_ON_LDAP_CHANGE_ENABLE_NOTIFY => t('Update stored email if LDAP email differs at login and notify user.'),
       LDAP_AUTHENTICATION_EMAIL_UPDATE_ON_LDAP_CHANGE_ENABLE => t('Update stored email if LDAP email differs at login but don\'t notify user.'),
       LDAP_AUTHENTICATION_EMAIL_UPDATE_ON_LDAP_CHANGE_DISABLE => t('Don\'t update stored email if LDAP email differs at login.'),
-      );
-
+    );
 
     /**
     * Password
@@ -96,7 +102,7 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
       LDAP_AUTHENTICATION_PASSWORD_FIELD_SHOW => t('Display password field disabled (Prevents password updates).'),
       LDAP_AUTHENTICATION_PASSWORD_FIELD_HIDE => t('Don\'t show password field on user forms except login form.'),
       LDAP_AUTHENTICATION_PASSWORD_FIELD_ALLOW => t('Display password field and allow updating it. In order to change password in LDAP, LDAP provisioning for this field must be enabled.'),
-      );
+    );
 
     /**
      *  Single Sign-On / Seamless Sign-On
@@ -105,7 +111,7 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
     $values['ldapImplementationOptions'] = array(
       'mod_auth_sspi' => t('mod_auth_sspi'),
       'mod_auth_kerb' => t('mod_auth_kerb'),
-      );
+    );
 
     // @FIXME
     // $values['cookieExpirePeriod'] = array(-1 => t('Session'), 0 => t('Immediately')) +
@@ -123,9 +129,8 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
     //   'for more information.', array('!readme' =>
     //   l(t('README.txt'), drupal_get_path('module', 'ldap_sso') . '/README.txt')))
     //   . '</p>';
-
     $values['ssoEnabledDescription'] = '<strong>' . t('Single Sign on is enabled.') .
-      '</strong> ' . t('To disable it, disable the LDAP SSO Module on the') . ' ' . \Drupal::l(t('Modules Form'), \Drupal\Core\Url::fromRoute('system.modules_list')) . '.<p>' .
+      '</strong> ' . t('To disable it, disable the LDAP SSO Module on the') . ' ' . \Drupal::l(t('Modules Form'), Url::fromRoute('system.modules_list')) . '.<p>' .
       t('Single Sign-On enables ' .
       'users of this site to be authenticated by visiting the URL ' .
       '"user/login/sso, or automatically if selecting "automated ' .
@@ -137,13 +142,13 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
       t("Which paths will not check for SSO? cron.php is common example.  Specify pages by using their paths. Enter one path per line. The '*' character is a wildcard.
         Example paths are %blog for the blog page and %blog-wildcard for every personal blog. %front is the front page.",
         array('%blog' => 'blog', '%blog-wildcard' => 'blog/*', '%front' => '<front>'));
-      '</p>';
+    '</p>';
 
     $values['ssoExcludedHostsDescription'] = '<p>' .
       t('If your site is accessible via multiple hostnames, you may only want
         the LDAP SSO module to authenticate against some of them. To exclude
         any hostnames from SSO, enter them here. Enter one host per line.');
-      '</p>';
+    '</p>';
 
     // @FIXME
     // $values['ssoRemoteUserStripDomainNameDescription'] = t('Useful when the ' .
@@ -182,7 +187,7 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
   }
 
   /**
-   * 0.  Logon Options
+   * 0.  Logon Options.
    */
   public $authenticationModeDefault = LDAP_AUTHENTICATION_MIXED;
   public $authenticationModeOptions;
@@ -191,7 +196,7 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
   protected $authenticationServersOptions = array();
 
   /**
-   * 1.  User Login Interface
+   * 1.  User Login Interface.
    */
   protected $loginUIUsernameTxtDescription;
   protected $loginUIPasswordTxtDescription;
@@ -200,15 +205,15 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
 
 
   /**
-   * 2.  LDAP User Restrictions
+   * 2.  LDAP User Restrictions.
    */
 
   protected $allowOnlyIfTextInDnDescription;
   protected $excludeIfTextInDnDescription;
   protected $allowTestPhpDescription;
 
-   /**
-   * 4. Email
+  /**
+   * 4. Email.
    */
 
   public $emailOptionDefault = LDAP_AUTHENTICATION_EMAIL_FIELD_REMOVE;
@@ -218,8 +223,8 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
   public $emailUpdateOptions;
 
 
-   /**
-   * 5. Single Sign-On / Seamless Sign-On
+  /**
+   * 5. Single Sign-On / Seamless Sign-On.
    */
 
   public $ssoEnabledDescription;
@@ -235,12 +240,18 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
   public $hasError = FALSE;
   public $errorName = NULL;
 
+  /**
+   *
+   */
   public function clearError() {
     $this->hasError = FALSE;
     $this->errorMsg = NULL;
     $this->errorName = NULL;
   }
 
+  /**
+   *
+   */
   public function save() {
     foreach ($this->saveable as $property) {
       $save[$property] = $this->{$property};
@@ -249,16 +260,25 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
     $this->load();
   }
 
+  /**
+   *
+   */
   static public function getSaveableProperty($property) {
     $ldap_authentication_conf = \Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf');
     return isset($ldap_authentication_conf[$property]) ? $ldap_authentication_conf[$property] : FALSE;
 
   }
 
+  /**
+   *
+   */
   static public function uninstall() {
     \Drupal::config('ldap_authentication.settings')->clear('ldap_authentication_conf')->save();
   }
 
+  /**
+   *
+   */
   public function __construct() {
     parent::__construct();
     $this->setTranslatableProperties();
@@ -270,7 +290,9 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
     }
   }
 
-
+  /**
+   *
+   */
   public function drupalForm() {
     if (count($this->authenticationServersOptions) == 0) {
       $message = ldap_servers_no_enabled_servers_msg('configure LDAP Authentication');
@@ -281,11 +303,12 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
       return $form;
     }
 
-    $tokens = array();  // not sure what the tokens would be for this form?
+    // Not sure what the tokens would be for this form?
+    $tokens = array();
 
     $form['intro'] = array(
-        '#type' => 'item',
-        '#markup' => t('<h1>LDAP Authentication Settings</h1>'),
+      '#type' => 'item',
+      '#markup' => t('<h1>LDAP Authentication Settings</h1>'),
     );
 
     $form['logon'] = array(
@@ -309,7 +332,7 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
       '#required' => FALSE,
       '#default_value' => $this->sids,
       '#options' => $this->authenticationServersOptions,
-      '#description' => $this->authenticationServersDescription
+      '#description' => $this->authenticationServersDescription,
     );
 
     $form['login_UI'] = array(
@@ -343,7 +366,6 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
       '#description' => $this->ldapUserHelpLinkUrlDescription,
     );
 
-
     $form['login_UI']['ldapUserHelpLinkText'] = array(
       '#type' => 'textfield',
       '#title' => t('LDAP Account User Help Link Text'),
@@ -358,7 +380,6 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
       '#collapsible' => TRUE,
       '#collapsed' => FALSE,
     );
-
 
     $form['restrictions']['allowOnlyIfTextInDn'] = array(
       '#type' => 'textarea',
@@ -385,7 +406,7 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
       '#cols' => 50,
       '#rows' => 3,
       '#description' => t($this->allowTestPhpDescription, $tokens),
-      '#disabled' => (boolean)(!\Drupal::moduleHandler()->moduleExists('php')),
+      '#disabled' => (boolean) (!\Drupal::moduleHandler()->moduleExists('php')),
     );
 
     if (!\Drupal::moduleHandler()->moduleExists('php')) {
@@ -397,9 +418,9 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
       '#title' => t('Deny access to users without Ldap Authorization Module
         authorization mappings such as Drupal roles.
         Requires LDAP Authorization to be enabled and configured!'),
-      '#default_value' =>  $this->excludeIfNoAuthorizations,
+      '#default_value' => $this->excludeIfNoAuthorizations,
       '#description' => t($this->excludeIfNoAuthorizationsDescription, $tokens),
-      '#disabled' => (boolean)(!\Drupal::moduleHandler()->moduleExists('ldap_authorization')),
+      '#disabled' => (boolean) (!\Drupal::moduleHandler()->moduleExists('ldap_authorization')),
     );
 
     $form['email'] = array(
@@ -423,8 +444,7 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
       '#required' => 1,
       '#default_value' => $this->emailUpdate,
       '#options' => $this->emailUpdateOptions,
-      );
-
+    );
 
     $form['password'] = array(
       '#type' => 'fieldset',
@@ -447,7 +467,7 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
       '#type' => 'fieldset',
       '#title' => t('Single Sign-On'),
       '#collapsible' => TRUE,
-      '#collapsed' => (boolean)(!$this->ssoEnabled),
+      '#collapsed' => (boolean) (!$this->ssoEnabled),
     );
 
     if ($this->ssoEnabled) {
@@ -461,7 +481,7 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
         '#type' => 'markup',
         '#markup' => '<p><em>' . t('LDAP Single Sign-On module must be enabled for options below to work.')
         . ' ' . t('It is currently disabled.')
-        . ' ' . \Drupal::l(t('See modules form'), \Drupal\Core\Url::fromRoute('system.modules_list')) . '</p></em>',
+        . ' ' . \Drupal::l(t('See modules form'), Url::fromRoute('system.modules_list')) . '</p></em>',
       );
     }
 
@@ -470,7 +490,7 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
       '#title' => t('Strip REMOTE_USER domain name'),
       '#description' => t($this->ssoRemoteUserStripDomainNameDescription),
       '#default_value' => $this->ssoRemoteUserStripDomainName,
-      '#disabled' => (boolean)(!$this->ssoEnabled),
+      '#disabled' => (boolean) (!$this->ssoEnabled),
     );
 
     $form['sso']['seamlessLogin'] = array(
@@ -478,8 +498,8 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
       '#title' => t('Turn on automated single sign-on'),
       '#description' => t($this->seamlessLogInDescription),
       '#default_value' => $this->seamlessLogin,
-      '#disabled' => (boolean)(!$this->ssoEnabled),
-      );
+      '#disabled' => (boolean) (!$this->ssoEnabled),
+    );
 
     $form['sso']['cookieExpire'] = array(
       '#type' => 'select',
@@ -487,7 +507,7 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
       '#description' => t($this->cookieExpireDescription),
       '#default_value' => $this->cookieExpire,
       '#options' => $this->cookieExpirePeriod,
-      '#disabled' => (boolean)(!$this->ssoEnabled),
+      '#disabled' => (boolean) (!$this->ssoEnabled),
     );
 
     $form['sso']['ldapImplementation'] = array(
@@ -496,7 +516,7 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
       '#description' => t($this->ldapImplementationDescription),
       '#default_value' => $this->ldapImplementation,
       '#options' => $this->ldapImplementationOptions,
-      '#disabled' => (boolean)(!$this->ssoEnabled),
+      '#disabled' => (boolean) (!$this->ssoEnabled),
     );
 
     $form['sso']['ssoExcludedPaths'] = array(
@@ -504,7 +524,7 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
       '#title' => t('SSO Excluded Paths'),
       '#description' => t($this->ssoExcludedPathsDescription),
       '#default_value' => $this->arrayToLines($this->ssoExcludedPaths),
-      '#disabled' => (boolean)(!$this->ssoEnabled),
+      '#disabled' => (boolean) (!$this->ssoEnabled),
     );
 
     $form['sso']['ssoExcludedHosts'] = array(
@@ -512,7 +532,7 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
       '#title' => t('SSO Excluded Hosts'),
       '#description' => t($this->ssoExcludedHostsDescription),
       '#default_value' => $this->arrayToLines($this->ssoExcludedHosts),
-      '#disabled' => (boolean)(!$this->ssoEnabled),
+      '#disabled' => (boolean) (!$this->ssoEnabled),
     );
 
     $form['submit'] = array(
@@ -520,13 +540,13 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
       '#value' => 'Save',
     );
 
-  return $form;
-}
+    return $form;
+  }
 
-/**
- * validate form, not object
- */
-  public function drupalFormValidate($values)  {
+  /**
+   * Validate form, not object.
+   */
+  public function drupalFormValidate($values) {
 
     $this->populateFromDrupalForm($values);
 
@@ -535,9 +555,9 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
     return $errors;
   }
 
-/**
- * validate object, not form
- */
+  /**
+   * Validate object, not form.
+   */
   public function validate() {
     $errors = array();
 
@@ -562,34 +582,41 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
     return $errors;
   }
 
+  /**
+   *
+   */
   protected function populateFromDrupalForm($values) {
 
-    $this->authenticationMode = ($values['authenticationMode']) ? (int)$values['authenticationMode'] : NULL;
+    $this->authenticationMode = ($values['authenticationMode']) ? (int) $values['authenticationMode'] : NULL;
     $this->sids = $values['authenticationServers'];
     $this->allowOnlyIfTextInDn = $this->linesToArray($values['allowOnlyIfTextInDn']);
     $this->excludeIfTextInDn = $this->linesToArray($values['excludeIfTextInDn']);
     $this->allowTestPhp = $values['allowTestPhp'];
-    $this->loginUIUsernameTxt = ($values['loginUIUsernameTxt']) ? (string)$values['loginUIUsernameTxt'] : NULL;
-    $this->loginUIPasswordTxt = ($values['loginUIPasswordTxt']) ? (string)$values['loginUIPasswordTxt'] : NULL;
-    $this->ldapUserHelpLinkUrl = ($values['ldapUserHelpLinkUrl']) ? (string)$values['ldapUserHelpLinkUrl'] : NULL;
-    $this->ldapUserHelpLinkText = ($values['ldapUserHelpLinkText']) ? (string)$values['ldapUserHelpLinkText'] : NULL;
-    $this->excludeIfNoAuthorizations = ($values['excludeIfNoAuthorizations']) ? (int)$values['excludeIfNoAuthorizations'] : NULL;
-    $this->emailOption  = ($values['emailOption']) ? (int)$values['emailOption'] : NULL;
-    $this->emailUpdate  = ($values['emailUpdate']) ? (int)$values['emailUpdate'] : NULL;
-    $this->passwordOption  = ($values['passwordOption']) ? (int)$values['passwordOption'] : NULL;
+    $this->loginUIUsernameTxt = ($values['loginUIUsernameTxt']) ? (string) $values['loginUIUsernameTxt'] : NULL;
+    $this->loginUIPasswordTxt = ($values['loginUIPasswordTxt']) ? (string) $values['loginUIPasswordTxt'] : NULL;
+    $this->ldapUserHelpLinkUrl = ($values['ldapUserHelpLinkUrl']) ? (string) $values['ldapUserHelpLinkUrl'] : NULL;
+    $this->ldapUserHelpLinkText = ($values['ldapUserHelpLinkText']) ? (string) $values['ldapUserHelpLinkText'] : NULL;
+    $this->excludeIfNoAuthorizations = ($values['excludeIfNoAuthorizations']) ? (int) $values['excludeIfNoAuthorizations'] : NULL;
+    $this->emailOption  = ($values['emailOption']) ? (int) $values['emailOption'] : NULL;
+    $this->emailUpdate  = ($values['emailUpdate']) ? (int) $values['emailUpdate'] : NULL;
+    $this->passwordOption  = ($values['passwordOption']) ? (int) $values['passwordOption'] : NULL;
     $this->ssoExcludedPaths = $this->linesToArray($values['ssoExcludedPaths']);
     $this->ssoExcludedHosts = $this->linesToArray($values['ssoExcludedHosts']);
-    $this->ssoRemoteUserStripDomainName = ($values['ssoRemoteUserStripDomainName']) ? (int)$values['ssoRemoteUserStripDomainName'] : NULL;
-    $this->seamlessLogin = ($values['seamlessLogin']) ? (int)$values['seamlessLogin'] : NULL;
-    $this->cookieExpire = ($values['cookieExpire']) ? (int)$values['cookieExpire'] : NULL;
-    $this->ldapImplementation = ($values['ldapImplementation']) ? (string)$values['ldapImplementation'] : NULL;
+    $this->ssoRemoteUserStripDomainName = ($values['ssoRemoteUserStripDomainName']) ? (int) $values['ssoRemoteUserStripDomainName'] : NULL;
+    $this->seamlessLogin = ($values['seamlessLogin']) ? (int) $values['seamlessLogin'] : NULL;
+    $this->cookieExpire = ($values['cookieExpire']) ? (int) $values['cookieExpire'] : NULL;
+    $this->ldapImplementation = ($values['ldapImplementation']) ? (string) $values['ldapImplementation'] : NULL;
 
-    foreach ( $values['authenticationServers'] as $sid => $enabled ) {
-      if ( $enabled )
+    foreach ($values['authenticationServers'] as $sid => $enabled) {
+      if ($enabled) {
         $this->enabledAuthenticationServers[$sid] = $enabled;
+      }
     };
   }
 
+  /**
+   *
+   */
   public function drupalFormSubmit($values) {
 
     $this->populateFromDrupalForm($values);
@@ -604,6 +631,9 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
 
   }
 
+  /**
+   *
+   */
   protected function arrayToLines($array) {
     $lines = "";
     if (is_array($array)) {
@@ -615,6 +645,9 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
     return $lines;
   }
 
+  /**
+   *
+   */
   protected function linesToArray($lines) {
     $lines = trim($lines);
 

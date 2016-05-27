@@ -2,10 +2,12 @@
 
 /**
  * @file
- * theming functions for ldap_servers module
- *
+ * Theming functions for ldap_servers module.
  */
 
+/**
+ *
+ */
 function theme_ldap_servers_https_required($vars) {
 
   if (!isset($vars['site_contact_link']) || empty($vars['site_contact_link'])) {

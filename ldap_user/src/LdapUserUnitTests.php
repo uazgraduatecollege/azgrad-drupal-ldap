@@ -1,15 +1,26 @@
 <?php
-namespace Drupal\ldap_user;
+use Drupal\Component\Utility\Unicode;
 
+namespace Drupal\ldap_user;
+/**
+ *
+ */
 class LdapUserUnitTests extends LdapTestCase {
+
+  /**
+   *
+   */
   public static function getInfo() {
     return array(
       'name' => 'LDAP User Unit Tests',
       'description' => 'Test functions outside of real contexts.',
-      'group' => 'LDAP User'
+      'group' => 'LDAP User',
     );
   }
 
+  /**
+   *
+   */
   function __construct($test_id = NULL) {
     parent::__construct($test_id);
   }
@@ -18,52 +29,50 @@ class LdapUserUnitTests extends LdapTestCase {
   protected $ldap_test_data;
 
   /**
-   *  create one or more server configurations in such as way
-   *  that this setUp can be a prerequisite for ldap_authentication and ldap_authorization
+   * Create one or more server configurations in such as way
+   *  that this setUp can be a prerequisite for ldap_authentication and ldap_authorization.
    */
-
   function setUp() {
     parent::setUp(array('ldap_servers', 'ldap_user', 'ldap_authentication', 'ldap_test'));
     // @FIXME
-// // @FIXME
-// // This looks like another module's variable. You'll need to rewrite this call
-// // to ensure that it uses the correct configuration object.
-// variable_set('ldap_simpletest', 2);
-
-  }
-
-  function tearDown() {
-    parent::tearDown();
-    // @FIXME
-// // @FIXME
-// // This looks like another module's variable. You'll need to rewrite this call
-// // to ensure that it uses the correct configuration object.
-// variable_del('ldap_help_watchdog_detail');
-
-    // @FIXME
-// // @FIXME
-// // This looks like another module's variable. You'll need to rewrite this call
-// // to ensure that it uses the correct configuration object.
-// variable_del('ldap_simpletest');
-
+    // // @FIXME
+    // // This looks like another module's variable. You'll need to rewrite this call
+    // // to ensure that it uses the correct configuration object.
+    // variable_set('ldap_simpletest', 2);
   }
 
   /**
-   * make sure install succeeds and ldap user functions/methods work
+   *
+   */
+  function tearDown() {
+    parent::tearDown();
+    // @FIXME
+    // // @FIXME
+    // // This looks like another module's variable. You'll need to rewrite this call
+    // // to ensure that it uses the correct configuration object.
+    // variable_del('ldap_help_watchdog_detail');
+    // @FIXME
+    // // @FIXME
+    // // This looks like another module's variable. You'll need to rewrite this call
+    // // to ensure that it uses the correct configuration object.
+    // variable_del('ldap_simpletest');
+  }
+
+  /**
+   * Make sure install succeeds and ldap user functions/methods work.
    */
   function testUnitTests() {
 
-    // just to give warning if setup doesn't succeed.
+    // Just to give warning if setup doesn't succeed.
     // @FIXME
-// // @FIXME
-// // This looks like another module's variable. You'll need to rewrite this call
-// // to ensure that it uses the correct configuration object.
-// $setup_success = (
-//         module_exists('ldap_user') &&
-//         module_exists('ldap_servers') &&
-//         (variable_get('ldap_simpletest', 2) > 0)
-//       );
-
+    // // @FIXME
+    // // This looks like another module's variable. You'll need to rewrite this call
+    // // to ensure that it uses the correct configuration object.
+    // $setup_success = (
+    //         module_exists('ldap_user') &&
+    //         module_exists('ldap_servers') &&
+    //         (variable_get('ldap_simpletest', 2) > 0)
+    //       );.
     $this->assertTrue($setup_success, ' ldap_user setup successful', $this->testId('setup'));
 
     $api_functions = array(
@@ -72,7 +81,7 @@ class LdapUserUnitTests extends LdapTestCase {
       'ldap_user_provision_to_drupal' => array(2, 1),
       'ldap_user_ldap_provision_semaphore' => array(4, 2),
       'ldap_user_token_replace' => array(3, 2),
-      'ldap_user_token_tokenize_entry' => array(5, 2)
+      'ldap_user_token_tokenize_entry' => array(5, 2),
     );
 
     foreach ($api_functions as $api_function_name => $param_count) {
@@ -80,13 +89,12 @@ class LdapUserUnitTests extends LdapTestCase {
       $this->assertTrue(
         function_exists($api_function_name) &&
         $param_count[1] == $reflector->getNumberOfRequiredParameters() &&
-        $param_count[0] == $reflector->getNumberOfParameters()
-        , ' api function ' . $api_function_name . ' parameters and required parameters count unchanged.', $this->testId($api_function_name . ' unchanged'));
+        $param_count[0] == $reflector->getNumberOfParameters(), ' api function ' . $api_function_name . ' parameters and required parameters count unchanged.', $this->testId($api_function_name . ' unchanged'));
     }
 
     $this->assertTrue(\Drupal::service("cron")->run(), t('Cron can run with ldap user enabled.'), $this->testId('cron works'));
 
-    // test user token functions
+    // Test user token functions.
     $entity = new stdClass();
     $entity->lname['und'][0]['value'] = 'potter';
     $entity->house['und'][0]['value'] = 'Gryffindor';
@@ -96,14 +104,14 @@ class LdapUserUnitTests extends LdapTestCase {
     $mail = ldap_user_token_replace('[property.mail]', $account, $entity);
     $this->assertTrue($mail == $account->mail, t('[property.mail] token worked on ldap_user_token_replace().'), $this->testId('tokens.property'));
     $lname = ldap_user_token_replace('[field.lname]', $account, $entity);
-    $this->assertTrue($lname ==  $entity->lname['und'][0]['value'], t('[field.lname] token worked on ldap_user_token_replace().'), $this->testId('tokens.property.field'));
+    $this->assertTrue($lname == $entity->lname['und'][0]['value'], t('[field.lname] token worked on ldap_user_token_replace().'), $this->testId('tokens.property.field'));
     $house1 = ldap_user_token_replace('[field.house:1]', $account, $entity);
     $this->assertTrue($house1 == $entity->house['und'][1]['value'], t('[field.house:1] token worked on ldap_user_token_replace().'), $this->testId('tokens.property.field.ordinal'));
-    //@todo need tests for :last and a multivalued attribute.  see http://drupal.org/node/1245736
-
+    // @todo need tests for :last and a multivalued attribute.  see http://drupal.org/node/1245736
 
     $sids = array('activedirectory1');
-    $this->prepTestData('hogwarts', $sids, 'default'); // prepTestData($sids, 'provisionToDrupal', 'default');
+    // prepTestData($sids, 'provisionToDrupal', 'default');.
+    $this->prepTestData('hogwarts', $sids, 'default');
     $ldap_server = ldap_servers_get_servers('activedirectory1', NULL, TRUE, TRUE);
     $ldap_user_conf = ldap_user_conf('admin', TRUE);
 
@@ -119,7 +127,6 @@ class LdapUserUnitTests extends LdapTestCase {
       'sid' => 'activedirectory1',
     );
 
-
     $array_diff = array_diff($ldap_user, $desired_result);
     $this->assertTrue(count($array_diff) == 0, t('ldap_servers_get_user_ldap_data retrieved correct attributes and values'), $this->testId('ldap_servers_get_user_ldap_data'));
     if (count($array_diff) != 0) {
@@ -130,12 +137,12 @@ class LdapUserUnitTests extends LdapTestCase {
 
     unset($user_edit['pass']);
     $desired_result = array(
-        'mail' => 'hpotter@hogwarts.edu',
-        'name' => 'hpotter',
-        'init' => 'hpotter@hogwarts.edu',
-        'status' => 1,
-        'signature' => '',
-        'data' =>
+      'mail' => 'hpotter@hogwarts.edu',
+      'name' => 'hpotter',
+      'init' => 'hpotter@hogwarts.edu',
+      'status' => 1,
+      'signature' => '',
+      'data' =>
         array(
           'ldap_authentication' =>
           array(
@@ -147,7 +154,7 @@ class LdapUserUnitTests extends LdapTestCase {
             ),
           ),
         ),
-        'ldap_user_puid' =>
+      'ldap_user_puid' =>
         array(
           'und' =>
           array(
@@ -157,7 +164,7 @@ class LdapUserUnitTests extends LdapTestCase {
             ),
           ),
         ),
-        'ldap_user_puid_property' =>
+      'ldap_user_puid_property' =>
         array(
           'und' =>
           array(
@@ -167,7 +174,7 @@ class LdapUserUnitTests extends LdapTestCase {
             ),
           ),
         ),
-        'ldap_user_puid_sid' =>
+      'ldap_user_puid_sid' =>
         array(
           'und' =>
           array(
@@ -177,7 +184,7 @@ class LdapUserUnitTests extends LdapTestCase {
             ),
           ),
         ),
-        'ldap_user_current_dn' =>
+      'ldap_user_current_dn' =>
         array(
           'und' =>
           array(
@@ -187,10 +194,10 @@ class LdapUserUnitTests extends LdapTestCase {
             ),
           ),
         ),
-      );
+    );
     $array_diff = array_diff($user_edit, $desired_result);
-    //@todo need better diff, this will give false positives in most cases
-  //  debug('user_edit,desired_result,diff'); debug( array($user_edit, $desired_result, $array_diff));
+    // @todo need better diff, this will give false positives in most cases
+    //   debug('user_edit,desired_result,diff'); debug( array($user_edit, $desired_result, $array_diff));
     $this->assertTrue(count($array_diff) == 0, t('ldapUserConf::entryToUserEdit retrieved correct property, field, and data values.'), $this->testId('ldapUserConf::entryToUserEdit'));
     if (count($array_diff) != 0) {
       debug('ldapUserConf::entryToUserEdit failed.  resulting user edit array:'); debug($user_edit); debug('desired result:'); debug($desired_result); debug('array_diff:'); debug($array_diff);
@@ -213,11 +220,11 @@ class LdapUserUnitTests extends LdapTestCase {
       foreach ($tests as $boolean_result => $attribute_tokens) {
         foreach ($attribute_tokens as $attribute_token) {
           $is_synched = $ldap_user_conf->isSynched($attribute_token, array($prov_event), LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER);
-          // debug("is_synched_tests: is_synched=$is_synched, attribute_token=$attribute_token, prov_event=$prov_event");
-          if ((int)$is_synched !== (int)$boolean_result) {
+          // debug("is_synched_tests: is_synched=$is_synched, attribute_token=$attribute_token, prov_event=$prov_event");.
+          if ((int) $is_synched !== (int) $boolean_result) {
             $fail = TRUE;
             $debug[$attribute_token] = "isSynched($attribute_token, array($prov_event),
-              LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER) returned $is_synched when it should have returned ". (int)$boolean_result;
+              LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER) returned $is_synched when it should have returned " . (int) $boolean_result;
           }
         }
       }
@@ -233,7 +240,7 @@ class LdapUserUnitTests extends LdapTestCase {
 
     $ldap_user_required_attributes = $ldap_user_conf->getLdapUserRequiredAttributes(LDAP_USER_PROV_DIRECTION_ALL);
 
-    $provision_enabled_truth = (boolean)(
+    $provision_enabled_truth = (boolean) (
       $ldap_user_conf->provisionEnabled(LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, LDAP_USER_DRUPAL_USER_PROV_ON_USER_UPDATE_CREATE)
       && $ldap_user_conf->provisionEnabled(LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, LDAP_USER_DRUPAL_USER_PROV_ON_AUTHENTICATE)
       && !$ldap_user_conf->provisionEnabled(LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY, LDAP_USER_LDAP_ENTRY_PROV_ON_USER_UPDATE_CREATE)
@@ -246,18 +253,15 @@ class LdapUserUnitTests extends LdapTestCase {
     $ldap_user_conf->provisionEnabled(LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, LDAP_USER_LDAP_ENTRY_PROV_ON_USER_UPDATE_CREATE));
     $this->assertFalse($provision_enabled_false, t('provisionEnabled works'), $this->testId('provisionEnabled.2'));
 
-
     $account = new stdClass();
     $account->name = 'hpotter';
     $params = array('ldap_context' => 'ldap_user_prov_to_drupal', 'direction' => LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER);
     list($ldap_entry, $error) = $ldap_user_conf->drupalUserToLdapEntry($account, 'activedirectory1', $params);
-  //  debug('ldap_entry'); debug($ldap_entry);
-
+    // debug('ldap_entry'); debug($ldap_entry);
     $account = NULL;
     $user_edit = array('name' => 'hpotter');
 
-    // test method provisionDrupalAccount()
-
+    // Test method provisionDrupalAccount()
     $hpotter = $ldap_user_conf->provisionDrupalAccount($account, $user_edit, NULL, TRUE);
 
     $hpotter = user_load_by_name('hpotter');
@@ -282,11 +286,10 @@ class LdapUserUnitTests extends LdapTestCase {
     );
     $this->assertTrue($fields_set, t('user ldap_user_puid, ldap_user_puid_property, ldap_user_puid_sid, and  ldap_user_current_dn correctly populated for hpotter'), $this->testId('provisionDrupalAccount function test 3'));
 
-
     $data_diff = array_diff(
       $hpotter->data['ldap_user'],
       array(
-      'init' =>
+        'init' =>
         array(
           'sid' => 'activedirectory1',
           'dn' => NULL,
@@ -295,9 +298,8 @@ class LdapUserUnitTests extends LdapTestCase {
       )
     );
     $this->assertTrue(count($data_diff) == 0, t('user->data array correctly populated for hpotter'), $this->testId());
-    // test account exists with correct username, mail, fname, puid, puidfield, dn
-
-    // change some user mock ldap data first, (mail and fname) then synch
+    // Test account exists with correct username, mail, fname, puid, puidfield, dn
+    // Change some user mock ldap data first, (mail and fname) then synch.
     $account = user_load_by_name('hpotter');
 
     $user_edit = NULL;
@@ -316,11 +318,12 @@ class LdapUserUnitTests extends LdapTestCase {
       'config_module' => 'ldap_servers',
       'prov_module' => 'ldap_user',
       'user_tokens' => '',
-      );
+    );
     $ldap_user_conf->save();
 
     $this->testFunctions->setFakeServerUserAttribute($sid, 'cn=hpotter,ou=people,dc=hogwarts,dc=edu', 'mail', 'hpotter@owlcarriers.com', 0);
-    $ldap_server = ldap_servers_get_servers('activedirectory1', NULL, TRUE, TRUE); // clear server cache;
+    // Clear server cache;.
+    $ldap_server = ldap_servers_get_servers('activedirectory1', NULL, TRUE, TRUE);
     $user = $ldap_user_conf->synchToDrupalAccount($account, $user_edit, LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER, NULL, TRUE);
 
     $hpotter = user_load_by_name('hpotter');
@@ -361,16 +364,14 @@ class LdapUserUnitTests extends LdapTestCase {
 
     $user_edit = array('name' => 'hpotter');
     // @FIXME
-// user_save() is now a method of the user entity.
-// $hpotter = user_save($hpottergranger, $user_edit, 'ldap_user');
-
-
-
-    // delete and recreate test account to make sure account is in correct state
+    // user_save() is now a method of the user entity.
+    // $hpotter = user_save($hpottergranger, $user_edit, 'ldap_user');
+    // Delete and recreate test account to make sure account is in correct state
     $ldap_user_conf->deleteDrupalAccount('hpotter');
-    $this->assertFalse(// @FIXME
-// To reset the user cache, use EntityStorageInterface::resetCache().
-\Drupal::entityManager()->getStorage('user')->load($hpotter_uid), t('deleteDrupalAccount deleted hpotter successfully'), $this->testId());
+    // @FIXME
+    $this->assertFalse(
+    // To reset the user cache, use EntityStorageInterface::resetCache().
+    \Drupal::entityManager()->getStorage('user')->load($hpotter_uid), t('deleteDrupalAccount deleted hpotter successfully'), $this->testId());
 
     $ldap_server = ldap_servers_get_servers('activedirectory1', 'enabled', TRUE, TRUE);
     $ldap_server->refreshFakeData();
@@ -380,38 +381,40 @@ class LdapUserUnitTests extends LdapTestCase {
 
   }
 
+  /**
+   *
+   */
   function testProvisionToDrupal() {
-      // @FIXME
-// // @FIXME
-// // This looks like another module's variable. You'll need to rewrite this call
-// // to ensure that it uses the correct configuration object.
-// /**
-//      * test that $ldap_user_conf->synchToDrupalAccount() works for various contexts.
-//      * make sure changing when a given field/property is flagged for a particular context, everything works
-//      * tests one property (property.mail) and one field (field.field_lname) as well as username, puid
-//      */
-// 
-//       // just to give warning if setup doesn't succeed.  may want to take these out at some point.
-//     $setup_success = (
-//         module_exists('ldap_user') &&
-//         module_exists('ldap_servers') &&
-//         (variable_get('ldap_simpletest', 0) > 0)
-//       );
-
+    // @FIXME
+    // // @FIXME
+    // // This looks like another module's variable. You'll need to rewrite this call
+    // // to ensure that it uses the correct configuration object.
+    // /**
+    //      * test that $ldap_user_conf->synchToDrupalAccount() works for various contexts.
+    //      * make sure changing when a given field/property is flagged for a particular context, everything works
+    //      * tests one property (property.mail) and one field (field.field_lname) as well as username, puid
+    //      */
+    //
+    //       // just to give warning if setup doesn't succeed.  may want to take these out at some point.
+    //     $setup_success = (
+    //         module_exists('ldap_user') &&
+    //         module_exists('ldap_servers') &&
+    //         (variable_get('ldap_simpletest', 0) > 0)
+    //       );
     $this->assertTrue($setup_success, ' ldap_user setup successful', $this->testId("setup"));
-
 
     $sid = 'activedirectory1';
     $sids = array($sid);
     $this->prepTestData('hogwarts', $sids, 'provisionToDrupal', 'default');
     $tests = array();
 
-    $tests[] =  array(
+    $tests[] = array(
       'disabled' => 0,
       'user' => 'hpotter',
       'field_name' => 'field_lname',
       'field_values' => array(array('sn' => 'Potter'), array('sn' => 'Pottery-Chard')),
-      'field_results' => array('Potter', 'Pottery-Chard'),  // first value is what is desired on synch, second if no sycn
+    // First value is what is desired on synch, second if no sycn.
+      'field_results' => array('Potter', 'Pottery-Chard'),
       'mapping' => array(
         'sid' => $sid,
         'name' => 'Field: Last Name',
@@ -427,13 +430,14 @@ class LdapUserUnitTests extends LdapTestCase {
       ),
     );
 
-    // test for compound tokens
-    $tests[] =  array(
+    // Test for compound tokens.
+    $tests[] = array(
       'disabled' => 0,
       'user' => 'hpotter',
       'field_name' => 'field_display_name',
-      'field_values' => array(array('givenname' => 'Harry', 'sn' => 'Potter'), array('givenname' => 'Sir Harry',  'sn' => 'Potter')),
-      'field_results' => array('Harry Potter', 'Sir Harry Potter'),  // desired results
+      'field_values' => array(array('givenname' => 'Harry', 'sn' => 'Potter'), array('givenname' => 'Sir Harry', 'sn' => 'Potter')),
+    // Desired results.
+      'field_results' => array('Harry Potter', 'Sir Harry Potter'),
       'mapping' => array(
         'sid' => $sid,
         'ldap_attr' => '[givenName] [sn]',
@@ -449,9 +453,8 @@ class LdapUserUnitTests extends LdapTestCase {
       ),
     );
 
-
-    // test for constants in use (e.g. "Smith" and "0") instead of tokens e.g. "[sn]" and "[enabled]"
-    $tests[] =  array(
+    // Test for constants in use (e.g. "Smith" and "0") instead of tokens e.g. "[sn]" and "[enabled]".
+    $tests[] = array(
       'disabled' => 0,
       'user' => 'hpotter',
       'field_name' => 'field_lname',
@@ -460,7 +463,8 @@ class LdapUserUnitTests extends LdapTestCase {
       'mapping' => array(
         'sid' => $sid,
         'name' => 'Field: Last Name',
-        'ldap_attr' => 'Smith', // testing of a constant mapped to a field.  that is everyone should have last name smith
+    // Testing of a constant mapped to a field.  that is everyone should have last name smith.
+        'ldap_attr' => 'Smith',
         'user_attr' => '[field.field_lname]',
         'convert' => 0,
         'direction' => LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER,
@@ -473,8 +477,8 @@ class LdapUserUnitTests extends LdapTestCase {
       ),
     );
 
-    // test for compound tokens
-    $tests[] =  array(
+    // Test for compound tokens.
+    $tests[] = array(
       'disabled' => 0,
       'user' => 'hpotter',
       'property_name' => 'signature',
@@ -495,7 +499,7 @@ class LdapUserUnitTests extends LdapTestCase {
       ),
     );
 
-    $tests[] =  array(
+    $tests[] = array(
       'disabled' => 0,
       'user' => 'hpotter',
       'property_name' => 'mail',
@@ -516,7 +520,7 @@ class LdapUserUnitTests extends LdapTestCase {
       ),
     );
 
-    $tests[] =  array(
+    $tests[] = array(
       'disabled' => 0,
       'user' => 'hpotter',
       'property_name' => 'status',
@@ -525,7 +529,8 @@ class LdapUserUnitTests extends LdapTestCase {
       'mapping' => array(
         'sid' => $sid,
         'ldap_attr' => '0',
-        'user_attr' => '[property.status]',  // testing of a constant mapped to property
+    // Testing of a constant mapped to property.
+        'user_attr' => '[property.status]',
         'convert' => 0,
         'direction' => LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER,
         'prov_events' => array(LDAP_USER_EVENT_CREATE_DRUPAL_USER),
@@ -554,25 +559,26 @@ class LdapUserUnitTests extends LdapTestCase {
 
     $this->privileged_user = $this->drupalCreateUser(array(
       'administer site configuration',
-      'administer users'
-      ));
-    
+      'administer users',
+    ));
+
     /** Tests for various synch contexts **/
     foreach ($tests as $j => $test) {
 
       $field_name = isset($test['field_name']) ? $test['field_name'] : FALSE;
       $property_name = isset($test['property_name']) ? $test['property_name'] : FALSE;
       $direction = ($property_name) ? $test['mapping']['direction'] : $test['mapping']['direction'];
-      foreach ($test_prov_events[$direction] as $i => $prov_event) {  // test for each provision event
+      // Test for each provision event.
+      foreach ($test_prov_events[$direction] as $i => $prov_event) {
 
         // 1. set fake ldap values for field and property in fake ldap server
-        // and clear out mappings and set to provision account with test field and prop[0] on provision
+        // and clear out mappings and set to provision account with test field and prop[0] on provision.
         $ldap_server = ldap_servers_get_servers('activedirectory1', 'enabled', TRUE);
         $this->prepTestData('hogwarts', $sids, 'provisionToDrupal', 'default');
         $ldap_user_conf = ldap_user_conf('admin', TRUE);
         if ($property_name) {
           $token_attributes = array();
-          ldap_servers_token_extract_attributes($token_attributes,  $test['mapping']['ldap_attr']);
+          ldap_servers_token_extract_attributes($token_attributes, $test['mapping']['ldap_attr']);
           foreach ($token_attributes as $attr_name => $attr_parts) {
             $this->testFunctions->setFakeServerUserAttribute(
               'activedirectory1',
@@ -586,14 +592,14 @@ class LdapUserUnitTests extends LdapTestCase {
         }
         if ($field_name) {
           $token_attributes = array();
-          ldap_servers_token_extract_attributes($token_attributes,  $test['mapping']['ldap_attr']);
-          //debug('token_attributes'); debug($token_attributes);
-          foreach ($token_attributes as $attr_name => $attr_parts ) {
+          ldap_servers_token_extract_attributes($token_attributes, $test['mapping']['ldap_attr']);
+          // debug('token_attributes'); debug($token_attributes);
+          foreach ($token_attributes as $attr_name => $attr_parts) {
             $this->testFunctions->setFakeServerUserAttribute(
               'activedirectory1',
               'cn=hpotter,ou=people,dc=hogwarts,dc=edu',
               $attr_name,
-              $test['field_values'][0][\Drupal\Component\Utility\Unicode::strtolower($attr_name)],
+              $test['field_values'][0][Unicode::strtolower($attr_name)],
               0);
           }
           $field_token = '[field.' . $field_name . ']';
@@ -602,44 +608,48 @@ class LdapUserUnitTests extends LdapTestCase {
 
         $ldap_user_conf->save();
         $ldap_user_conf = ldap_user_conf('admin', TRUE);
-       // debug("ldap_user_conf in prep field_token=$field_token"); debug($ldap_user_conf->synchMapping); debug($ldap_user_conf->ldapUserSynchMappings);
+        // debug("ldap_user_conf in prep field_token=$field_token"); debug($ldap_user_conf->synchMapping); debug($ldap_user_conf->ldapUserSynchMappings);.
         ldap_user_ldap_provision_semaphore(NULL, NULL, NULL, TRUE);
         ldap_servers_flush_server_cache();
 
-        // 2. delete user
+        // 2. delete user.
         $username = $test['user'];
         $user_object = user_load_by_name($username);
         if (is_object($user_object)) {
-          $user_object->uid->delete(); // watch out for this.
+          // Watch out for this.
+          $user_object->uid->delete();
         }
 
-        // 3. create new user with provisionDrupalAccount
+        // 3. create new user with provisionDrupalAccount.
         $account = NULL;
         $user_edit = array('name' => $username);
-       // $this->ldapTestId = $this->module_name . ': provisionDrupalAccount function test';
+        // $this->ldapTestId = $this->module_name . ': provisionDrupalAccount function test';.
         $result = $ldap_user_conf->provisionDrupalAccount($account, $user_edit, NULL, TRUE);
         list($user_object, $user_entity) = ldap_user_load_user_acct_and_entity($username);
         if ($property_name) {
-          if (in_array($prov_event, $ldap_user_conf->ldapUserSynchMappings[$direction][$property_token]['prov_events'])) { // if intended to synch
+          // If intended to synch.
+          if (in_array($prov_event, $ldap_user_conf->ldapUserSynchMappings[$direction][$property_token]['prov_events'])) {
             $property_success = ($user_object->{$property_name} == $test['property_results'][0]);
             $this->assertTrue($property_success, t("provisionDrupalAccount worked for property $property_name"), $this->testId(":provisionDrupalAccount.i=$j.prov_event=$prov_event"));
             if (!$property_success) {
-              debug('field fail,' . $property_name); debug($user_entity->{$property_name}); debug($test['property_results'][0]); //debug($user_entity);
+              // debug($user_entity);
+              debug('field fail,' . $property_name); debug($user_entity->{$property_name}); debug($test['property_results'][0]);
             }
           }
           else {
-          // debug("property_name=$property_name not configured to provisionDrupalAccount on drupal user create for direction=$direction and prov_event=$prov_event");
+            // debug("property_name=$property_name not configured to provisionDrupalAccount on drupal user create for direction=$direction and prov_event=$prov_event");.
           }
         }
         if ($field_name) {
-          // debug("property_name=$property_name, prov_event=$prov_event, direction=$direction, field_token=$field_token, sid=$sid, ldap_user_conf->ldapUserSynchMappings $direction - $sid"); debug($ldap_user_conf->ldapUserSynchMappings[$direction][$sid]);
-
-          if (in_array($prov_event, $ldap_user_conf->ldapUserSynchMappings[$direction][$field_token]['prov_events'])) { // if intended to synch
+          // debug("property_name=$property_name, prov_event=$prov_event, direction=$direction, field_token=$field_token, sid=$sid, ldap_user_conf->ldapUserSynchMappings $direction - $sid"); debug($ldap_user_conf->ldapUserSynchMappings[$direction][$sid]);.
+          // If intended to synch.
+          if (in_array($prov_event, $ldap_user_conf->ldapUserSynchMappings[$direction][$field_token]['prov_events'])) {
             $field_success = isset($user_entity->{$field_name}['und'][0]['value']) &&
               $user_entity->{$field_name}['und'][0]['value'] == $test['field_results'][0];
-            $this->assertTrue($field_success, t("provisionDrupalAccount worked for field $field_name"),  $this->testId(":provisionDrupalAccount.i=$j.prov_event=$prov_event"));
+            $this->assertTrue($field_success, t("provisionDrupalAccount worked for field $field_name"), $this->testId(":provisionDrupalAccount.i=$j.prov_event=$prov_event"));
             if (!$field_success) {
-              debug('field fail,' . $field_name); debug($user_entity->{$field_name}); debug($test['field_results'][0]); //debug($user_entity);
+              // debug($user_entity);
+              debug('field fail,' . $field_name); debug($user_entity->{$field_name}); debug($test['field_results'][0]);
             }
           }
           else {
@@ -648,16 +658,16 @@ class LdapUserUnitTests extends LdapTestCase {
         }
         ldap_user_ldap_provision_semaphore(NULL, NULL, NULL, TRUE);
       }
-      
-            /**
+
+      /**
         * manually create drupal user with option of not ldap associated checked
         */
-   
+
       if ($hpotter = user_load_by_name('hpotter')) {
         $hpotter->uid->delete();
       }
       $this->assertFalse(user_load_by_name('hpotter'), t('hpotter removed before manual account creation test'), $this->testId('manual non ldap account created'));
-      
+
       $this->drupalLogout();
       $this->drupalLogin($this->privileged_user);
       $this->drupalGet('admin/people/create');
@@ -670,18 +680,15 @@ class LdapUserUnitTests extends LdapTestCase {
         'ldap_user_association' => LDAP_USER_MANUAL_ACCT_CONFLICT_NO_LDAP_ASSOCIATE,
       );
       $this->drupalPost('admin/people/create', $edit, t('Create new account'));
-      
+
       $hpotter = user_load_by_name('hpotter');
       $this->assertTrue($hpotter, t('hpotter created via ui form'), $this->testId('manual non ldap account created'));
       $this->assertTrue($hpotter && !ldap_user_is_ldap_associated($hpotter), t('hpotter not ldap associated'), $this->testId('manual non ldap account created'));
-       
-     
-     
-    }
-         /**
-     * $entry = $servers['activedirectory1']->dnExists($desired_dn, 'ldap_entry');
 
-     * $this->assertFalse($entry, t("Corresponding LDAP entry deleted when Drupal Account deleted for " . $username), $this->ldapTestId);
+    }
+    /**
+     * $entry = $servers['activedirectory1']->dnExists($desired_dn, 'ldap_entry');
+          *      * $this->assertFalse($entry, t("Corresponding LDAP entry deleted when Drupal Account deleted for " . $username), $this->ldapTestId);
      */
   }
 

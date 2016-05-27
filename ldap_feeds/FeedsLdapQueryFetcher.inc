@@ -2,12 +2,11 @@
 
 /**
  * @file
- * FeedsLdapQueryFetcher
+ * FeedsLdapQueryFetcher.
  */
 
-
 /**
- * FeedsLdapQueryFetcherResult
+ * FeedsLdapQueryFetcherResult.
  */
 class FeedsLdapQueryFetcherResult extends FeedsFetcherResult {
   public $query_ids = array();
@@ -24,7 +23,7 @@ class FeedsLdapQueryFetcherResult extends FeedsFetcherResult {
   }
 
   /**
-   * Overrides parent::getRaw();
+   * Overrides parent::getRaw();.
    */
   public function getRaw() {
 
@@ -38,6 +37,7 @@ class FeedsLdapQueryFetcherResult extends FeedsFetcherResult {
     }
     return $results;
   }
+
 }
 
 /**
@@ -54,7 +54,6 @@ class FeedsLdapQueryFetcher extends FeedsFetcher {
     return $result;
   }
 
-
   /**
    * Override parent::configDefaults().
    */
@@ -64,7 +63,7 @@ class FeedsLdapQueryFetcher extends FeedsFetcher {
     );
   }
 
-    /**
+  /**
    * Override parent::configForm().
    */
   public function configForm(&$form_state) {
@@ -82,8 +81,8 @@ class FeedsLdapQueryFetcher extends FeedsFetcher {
       '#required' => TRUE,
       '#default_value' => $this->config['query_ids'],
       '#description' => t('If more than one query is selected, results from all the queries will be returned.') .
-        ' ' .
-        t('Queries can be added and edited at !link', array('!link' => l(t('LDAP Query Admin'), LDAP_QUERY_INDEX_BASE_PATH))),
+      ' ' .
+      t('Queries can be added and edited at !link', array('!link' => l(t('LDAP Query Admin'), LDAP_QUERY_INDEX_BASE_PATH))),
       '#options' => $query_options,
     );
 
@@ -113,7 +112,7 @@ class FeedsLdapQueryFetcher extends FeedsFetcher {
    * Override parent::sourceFormValidate().
    */
   public function sourceFormValidate(&$values) {
-     // could execute query and see if it returns anything for validation
+    // Could execute query and see if it returns anything for validation.
   }
 
 }

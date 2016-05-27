@@ -2,19 +2,18 @@
 
 /**
  * @file
- * Defines functions for administrative interface for servers
- *
+ * Defines functions for administrative interface for servers.
  */
 
 /**
  * @return index of ldap queries
  */
-
 function ldap_query_index() {
 
   return ldap_query_list(NULL, TRUE);
 
 }
+
 /**
  * LDAP queries list.
  *
@@ -22,23 +21,23 @@ function ldap_query_index() {
  *   query id.  if empty list all queries
  * @param $actions
  *   True or False indicating if query edit, delete, enable, disable, etc links should show in table
+ *
  * @return
  *   The HTML table with the servers list.
  */
 function ldap_query_list($qid = NULL, $actions = FALSE) {
 
   $ldap_queries = ldap_query_get_queries($qid, 'all');
-  $variables =  array(
+  $variables = array(
     'ldap_queries' => $ldap_queries,
     'action' => TRUE,
     'type' => 'table',
-    );
+  );
 
   $html = theme('ldap_query_list', $variables);
 
   return $html;
 }
-
 
 /**
  * Implements the LDAP query edit page.
@@ -53,7 +52,6 @@ function ldap_query_list($qid = NULL, $actions = FALSE) {
  * @return
  *   The form structure.
  */
-
 function ldap_query_admin_form($form, &$form_state, $op = NULL, $qid = NULL) {
   ldap_servers_module_load_include('php', 'ldap_query', 'LdapQueryAdmin.class');
   $server = new LdapQueryAdmin($qid);
@@ -73,13 +71,11 @@ function ldap_query_admin_form_validate($form, &$form_state) {
   foreach ($errors as $error_name => $error_text) {
     form_set_error($error_name, t($error_text));
   }
- // $warnings = $server->drupalFormWarnings($op, $form_state['values']);
-  //foreach ($warnings as $warning_name => $warning_text) {
-   // drupal_set_message($warning_text, 'warning');
-  //}
-
-  //$form_state['ldap_warnings'] = (boolean)(count($warnings) > 0);
-
+  // $warnings = $server->drupalFormWarnings($op, $form_state['values']);
+  // foreach ($warnings as $warning_name => $warning_text) {
+  // drupal_set_message($warning_text, 'warning');
+  // }
+  // $form_state['ldap_warnings'] = (boolean)(count($warnings) > 0);.
 }
 
 /**
@@ -91,18 +87,19 @@ function ldap_query_admin_form_submit($form, &$form_state) {
   $verb = ($op == 'edit') ? 'edited' : $op . 'ed';
   ldap_servers_module_load_include('php', 'ldap_query', 'LdapQueryAdmin.class');
   $query = new LdapQueryAdmin($form_state['values']['qid']);
-  $query->drupalFormSubmit($op, $form_state['values']);  // add form data to object and save or create
+  // Add form data to object and save or create.
+  $query->drupalFormSubmit($op, $form_state['values']);
 
   if ($query->hasError() == FALSE) {
     drupal_set_message(t('LDAP Query %name !verb.', array('!verb' => $verb, '%name' => $query->name)), 'status');
     ldap_query_cache_clear();
-   // if ($form_state['ldap_warnings'] && $op != 'add') {
-      // do nothing, but don't redirect away from form.
-      // if there are warnings, want them to see form even if its been saved
-   // }
-   // else {
-      drupal_goto(LDAP_QUERY_MENU_BASE_PATH . '/query');
-   // }
+    // If ($form_state['ldap_warnings'] && $op != 'add') {
+    // do nothing, but don't redirect away from form.
+    // if there are warnings, want them to see form even if its been saved
+    // }
+    // else {.
+    drupal_goto(LDAP_QUERY_MENU_BASE_PATH . '/query');
+    // }.
   }
   else {
     form_set_error($server->errorName(), $server->errorMsg());
@@ -124,12 +121,12 @@ function ldap_query_admin_form_submit($form, &$form_state) {
  */
 function ldap_query_admin_delete($form, &$form_state, $op = NULL, $qid = NULL) {
 
-
   if ($qid && ($ldap_query = ldap_query_get_queries($qid, 'all', TRUE))) {
     // array()
-
     $variables = array(
-      'ldap_query' => $ldap_query, 'actions' => FALSE, 'type' => 'detail'
+      'ldap_query' => $ldap_query,
+      'actions' => FALSE,
+      'type' => 'detail',
     );
     $form['#prefix'] = '<div>' . theme('ldap_query', $variables) . '</div>';
     $form['qid'] = array(
@@ -178,9 +175,8 @@ function ldap_query_admin_delete_submit($form, &$form_state) {
   drupal_goto(LDAP_QUERY_MENU_BASE_PATH . '/query/list');
 }
 
-
 /**
- * Implements the LDAP query disable
+ * Implements the LDAP query disable.
  *
  * @param $form_state
  *   A form state array.
@@ -190,13 +186,13 @@ function ldap_query_admin_delete_submit($form, &$form_state) {
  * @return
  *   The form structure.
  */
-
-
 function ldap_query_admin_enable_disable($form, &$form_state, $action = NULL, $qid = NULL) {
 
   if ($ldap_query = ldap_query_get_queries($qid, 'all', TRUE)) {
     $variables = array(
-      'ldap_query' => $ldap_query, 'actions' => FALSE, 'type' => 'detail'
+      'ldap_query' => $ldap_query,
+      'actions' => FALSE,
+      'type' => 'detail',
     );
     $form['#prefix'] = "<div>" . theme('ldap_query', $variables) . "</div>";
 
@@ -214,7 +210,7 @@ function ldap_query_admin_enable_disable($form, &$form_state, $action = NULL, $q
     );
     return confirm_form(
       $form,
-      t('Are you sure you want to') . t($action) . ' ' . t('the LDAP query named <em><strong>%name</strong></em>?', array('%name' =>  $ldap_query->name)),
+      t('Are you sure you want to') . t($action) . ' ' . t('the LDAP query named <em><strong>%name</strong></em>?', array('%name' => $ldap_query->name)),
       LDAP_QUERY_MENU_BASE_PATH . '/query/list',
       t('<p></p>'),
       t($action),
@@ -247,7 +243,9 @@ function ldap_query_admin_enable_disable_submit($form, &$form_state) {
 
 }
 
-
+/**
+ *
+ */
 function ldap_query_test($qid) {
 
   $ldap_query = ldap_query_get_queries($qid, 'all', TRUE);
@@ -255,6 +253,5 @@ function ldap_query_test($qid) {
   $display = theme('ldap_query_results', array('results' => $results, 'ldap_query' => $ldap_query, 'show_query' => TRUE));
 
   return $display;
-
 
 }

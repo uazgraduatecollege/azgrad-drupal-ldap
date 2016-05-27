@@ -1,6 +1,8 @@
 <?php
 namespace Drupal\ldap_servers;
-
+/**
+ *
+ */
 class LdapTypeNovell extends LdapTypeAbstract {
 
   public $documentation = 'http://www.novell.com/documentation/edir873/index.html?page=/documentation/edir873/edir873/data/h0000007.html';

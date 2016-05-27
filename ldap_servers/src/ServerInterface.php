@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\ldap_servers\ServerInterface.
- */
-
 namespace Drupal\ldap_servers;
 
 use Drupal\Core\Config\Entity\ConfigEntityInterface;
@@ -14,5 +9,4 @@ use Drupal\Core\Config\Entity\ConfigEntityInterface;
  */
 interface ServerInterface extends ConfigEntityInterface {
   // Add get/set methods for your configuration properties here.
-
 }

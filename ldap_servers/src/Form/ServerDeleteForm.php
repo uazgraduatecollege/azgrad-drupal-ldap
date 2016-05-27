@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\ldap_servers\Form\ServerDeleteForm.
- */
-
 namespace Drupal\ldap_servers\Form;
 
 use Drupal\Core\Entity\EntityConfirmFormBase;
@@ -15,6 +10,7 @@ use Drupal\Core\Url;
  * Builds the form to delete Server entities.
  */
 class ServerDeleteForm extends EntityConfirmFormBase {
+
   /**
    * {@inheritdoc}
    */
@@ -38,7 +34,6 @@ class ServerDeleteForm extends EntityConfirmFormBase {
 
   /**
    * {@inheritdoc}
-   *
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $this->entity->delete();
@@ -53,7 +48,7 @@ class ServerDeleteForm extends EntityConfirmFormBase {
       $this->t('@type: deleted @label.',
         [
           '@type' => $this->entity->bundle(),
-          '@label' => $this->entity->label()
+          '@label' => $this->entity->label(),
         ]
         )
     );

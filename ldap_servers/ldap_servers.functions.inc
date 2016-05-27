@@ -2,16 +2,16 @@
 
 /**
  * @file
- * collection of functions that don't belong in server object
+ * Collection of functions that don't belong in server object.
  */
 
+use Drupal\Component\Utility\Unicode;
 /**
-  * Modify an LDAP Entry
-  *
-  * this has been depracated in favor or $ldap_server->modifyLdapEntry($dn, $attributes)
-  * which handles empty attributes better.
-  *
-  */
+ * Modify an LDAP Entry.
+ *
+ * This has been depracated in favor or $ldap_server->modifyLdapEntry($dn, $attributes)
+ * which handles empty attributes better.
+ */
 function ldap_user_modify($dn, $attributes, $ldap_server) {
   $result = ldap_modify($ldap_server->connection, $dn, $attributes);
   if (!$result) {
@@ -23,12 +23,12 @@ function ldap_user_modify($dn, $attributes, $ldap_server) {
 }
 
 /**
- * Modify a password
+ * Modify a password.
  */
 function ldap_password_modify($userdn, $new_password, $ldap_server) {
 
   $new_password = "\"" . $new_password . "\"";
-  $len = \Drupal\Component\Utility\Unicode::strlen($new_password);
+  $len = Unicode::strlen($new_password);
   $new_pass = NULL;
   for ($i = 0; $i < $len; $i++) {
     $new_pass .= "{$new_password{$i}}\000";
@@ -43,13 +43,11 @@ function ldap_password_modify($userdn, $new_password, $ldap_server) {
 }
 
 /**
- *
- *  this attempts to find bad dns, but should only be used as warningswe
+ * This attempts to find bad dns, but should only be used as warningswe
  *  as the ldap spec allows for any old character to be escaped and ldap
  *  implementations may not follow the spec.
  *
- *  http://www.ietf.org/rfc/rfc2253.txt
- *
+ *  Http://www.ietf.org/rfc/rfc2253.txt.
  */
 function ldap_baddn($dn, $dn_name) {
   $result = array();
@@ -68,15 +66,12 @@ function ldap_baddn($dn, $dn_name) {
 }
 
 /**
- *
- *  this attempts to find bad dns, but should only be used as warningswe
+ * This attempts to find bad dns, but should only be used as warningswe
  *  as the ldap spec allows for any old character to be escaped and ldap
  *  implementations may not follow the spec.
  *
- *  http://www.ietf.org/rfc/rfc2253.txt
- *
+ *  Http://www.ietf.org/rfc/rfc2253.txt.
  */
-
 function ldap_badattr($attr, $attr_name) {
   $result = array();
   $valid_attr_name = '[_a-zA-Z\d\s]';
@@ -92,13 +87,15 @@ function ldap_badattr($attr, $attr_name) {
 }
 
 /**
- * get array of required attributes for an ldap query
+ * Get array of required attributes for an ldap query.
  *
- * @param string $sid server id or ldap server object being used
- * @param string $direction LDAP_USER_PROV_DIRECTION_* constant
+ * @param string $sid
+ *   server id or ldap server object being used
+ * @param string $direction
+ *   LDAP_USER_PROV_DIRECTION_* constant
  * @param string $ldap_context
- * @param boolean $reset cache
- *
+ * @param bool $reset
+ *   cache
  */
 function ldap_servers_attributes_needed($sid, $ldap_context = 'all', $reset = TRUE) {
 
@@ -120,17 +117,19 @@ function ldap_servers_attributes_needed($sid, $ldap_context = 'all', $reset = TR
   return $return;
 }
 
-
 /**
- * function to massage (change case, escape, unescape) ldap attribute names
+ * Function to massage (change case, escape, unescape) ldap attribute names
  * and values.  The primary purpose of this is to articulate and ensure consistency
  * across ldap modules.
  *
- * @param mixed $value to be massaged
- * @param enum $value_type = 'attr_name' or 'attr_value;
- * @param enum $context...see LDAP_SERVER_MASSAGE_* constants
+ * @param mixed $value
+ *   to be massaged
+ * @param enum $value_type
+ *   = 'attr_name' or 'attr_value;
+ * @param enum $context...see
+ *   LDAP_SERVER_MASSAGE_* constants
  *
- * .e.g. ldap_server_massage_text($value, 'attr_value', LDAP_SERVER_MASSAGE_QUERY_LDAP)
+ *   .e.g. ldap_server_massage_text($value, 'attr_value', LDAP_SERVER_MASSAGE_QUERY_LDAP)
  */
 function ldap_server_massage_text($value, $value_type, $context) {
 
@@ -160,15 +159,16 @@ function ldap_server_massage_text($value, $value_type, $context) {
       case LDAP_SERVER_MASSAGE_STORE_ARRAY:
       case LDAP_SERVER_MASSAGE_STORE_PROPERTY:
 
-      break;
+        break;
 
     }
   }
-  elseif ($value_type == 'attr_name') { // attr_name
+  // attr_name.
+  elseif ($value_type == 'attr_name') {
     switch ($context) {
 
       case LDAP_SERVER_MASSAGE_DISPLAY:
-      break;
+        break;
 
       case LDAP_SERVER_MASSAGE_TOKEN_REPLACE:
 
@@ -182,17 +182,17 @@ function ldap_server_massage_text($value, $value_type, $context) {
       case LDAP_SERVER_MASSAGE_STORE_ARRAY:
       case LDAP_SERVER_MASSAGE_STORE_PROPERTY:
         if ($scalar) {
-          $value = \Drupal\Component\Utility\Unicode::strtolower($value);
+          $value = Unicode::strtolower($value);
         }
         elseif (is_array($value)) {
           foreach ($value as $i => $val) {
-            $value[$i] = \Drupal\Component\Utility\Unicode::strtolower($val);
+            $value[$i] = Unicode::strtolower($val);
           }
         }
         else {
-         // neither scalar nor array $value
+          // Neither scalar nor array $value.
         }
-      break;
+        break;
 
     }
   }
@@ -201,213 +201,233 @@ function ldap_server_massage_text($value, $value_type, $context) {
 
 }
 
- /**
-    * from pear net_ldap2-2.0.11
-    *
-    * Escapes the given VALUES according to RFC 2254 so that they can be safely used in LDAP filters.
-    *
-    * Any control characters with an ACII code < 32 as well as the characters with special meaning in
-    * LDAP filters "*", "(", ")", and "\" (the backslash) are converted into the representation of a
-    * backslash followed by two hex digits representing the hexadecimal value of the character.
-    *
-    * @param array $values Array of values to escape
-    *
-    * @static
-    * @return array Array $values, but escaped
-    */
-    function ldap_pear_escape_filter_value($values = array()) {
-        // Parameter validation
-        $is_scalar = is_scalar($values);
-        if (!is_array($values)) {
-            $values = array($values);
-        }
+/**
+ * From pear net_ldap2-2.0.11.
+ *
+ * Escapes the given VALUES according to RFC 2254 so that they can be safely used in LDAP filters.
+ *
+ * Any control characters with an ACII code < 32 as well as the characters with special meaning in
+ * LDAP filters "*", "(", ")", and "\" (the backslash) are converted into the representation of a
+ * backslash followed by two hex digits representing the hexadecimal value of the character.
+ *
+ * @param array $values
+ *   Array of values to escape
+ *
+ * @static
+ *
+ * @return array Array $values, but escaped
+ */
+function ldap_pear_escape_filter_value($values = array()) {
+  // Parameter validation.
+  $is_scalar = is_scalar($values);
+  if (!is_array($values)) {
+    $values = array($values);
+  }
 
-        foreach ($values as $key => $val) {
-            // Might be a Drupal field
-            if ( isset($val->value) ) {
-                $is_field = TRUE;
-                $val = $val->getValue();
-            } else {
-                $is_field = FALSE;
-            }
-            // Escaping of filter meta characters
-            $val = str_replace('\\', '\5c', $val);
-            $val = str_replace('*',  '\2a', $val);
-            $val = str_replace('(',  '\28', $val);
-            $val = str_replace(')',  '\29', $val);
+  foreach ($values as $key => $val) {
+    // Might be a Drupal field.
+    if (isset($val->value)) {
+      $is_field = TRUE;
+      $val = $val->getValue();
+    }
+    else {
+      $is_field = FALSE;
+    }
+    // Escaping of filter meta characters.
+    $val = str_replace('\\', '\5c', $val);
+    $val = str_replace('*', '\2a', $val);
+    $val = str_replace('(', '\28', $val);
+    $val = str_replace(')', '\29', $val);
 
-            // ASCII < 32 escaping
-            $val = ldap_pear_asc2hex32($val);
+    // ASCII < 32 escaping.
+    $val = ldap_pear_asc2hex32($val);
 
-            if (null === $val) $val = '\0';  // apply escaped "null" if string is empty
+    if (NULL === $val) {
+      // Apply escaped "null" if string is empty.
+      $val = '\0';
+    }
+    if ($is_field) {
+      $values[$key]->setValue($val);
+    }
+    else {
+      $values[$key] = $val;
+    }
+  }
 
-            if ( $is_field ) {
-                $values[$key]->setValue($val);
-            } else {
-                $values[$key] = $val;
-            }
-        }
+  return ($is_scalar) ? $values[0] : $values;
+}
 
-        return ($is_scalar) ? $values[0] : $values;
+/**
+ * Undoes the conversion done by {@link escape_filter_value()}.
+ *
+ * Converts any sequences of a backslash followed by two hex digits into the corresponding character.
+ *
+ * @param array $values
+ *   Array of values to escape
+ *
+ * @static
+ *
+ * @return array Array $values, but unescaped
+ */
+function ldap_pear_unescape_filter_value($values = array()) {
+  // Parameter validation.
+  $is_scalar = is_scalar($values);
+  if (!is_array($values)) {
+    $values = array($values);
+  }
+
+  foreach ($values as $key => $value) {
+    // Translate hex code into ascii.
+    $values[$key] = ldap_pear_hex2asc($value);
+  }
+
+  return ($is_scalar) ? $values[0] : $values;
+}
+
+/**
+ * Escapes a DN value according to RFC 2253.
+ *
+ * Escapes the given VALUES according to RFC 2253 so that they can be safely used in LDAP DNs.
+ * The characters ",", "+", """, "\", "<", ">", ";", "#", "=" with a special meaning in RFC 2252
+ * are preceeded by ba backslash. Control characters with an ASCII code < 32 are represented as \hexpair.
+ * Finally all leading and trailing spaces are converted to sequences of \20.
+ *
+ * @param array $values
+ *   An array containing the DN values that should be escaped
+ *
+ * @static
+ *
+ * @return array The array $values, but escaped
+ */
+function ldap_pear_escape_dn_value($values = array()) {
+  // Parameter validation.
+  $is_scalar = is_scalar($values);
+
+  if (!is_array($values)) {
+    $values = array($values);
+  }
+
+  foreach ($values as $key => $val) {
+    // Escaping of filter meta characters.
+    $val = str_replace('\\', '\\\\', $val);
+    $val = str_replace(',', '\,', $val);
+    $val = str_replace('+', '\+', $val);
+    $val = str_replace('"', '\"', $val);
+    $val = str_replace('<', '\<', $val);
+    $val = str_replace('>', '\>', $val);
+    $val = str_replace(';', '\;', $val);
+    $val = str_replace('#', '\#', $val);
+    $val = str_replace('=', '\=', $val);
+
+    // ASCII < 32 escaping.
+    $val = ldap_pear_asc2hex32($val);
+
+    // Convert all leading and trailing spaces to sequences of \20.
+    if (preg_match('/^(\s*)(.+?)(\s*)$/', $val, $matches)) {
+      $val = $matches[2];
+      for ($i = 0; $i < strlen($matches[1]); $i++) {
+        $val = '\20' . $val;
+      }
+      for ($i = 0; $i < strlen($matches[3]); $i++) {
+        $val = $val . '\20';
+      }
     }
 
-    /**
-    * Undoes the conversion done by {@link escape_filter_value()}.
-    *
-    * Converts any sequences of a backslash followed by two hex digits into the corresponding character.
-    *
-    * @param array $values Array of values to escape
-    *
-    * @static
-    * @return array Array $values, but unescaped
-    */
-    function ldap_pear_unescape_filter_value($values = array()) {
-        // Parameter validation
-        $is_scalar = is_scalar($values);
-        if (!is_array($values)) {
-            $values = array($values);
-        }
-
-        foreach ($values as $key => $value) {
-            // Translate hex code into ascii
-            $values[$key] = ldap_pear_hex2asc($value);
-        }
-
-        return ($is_scalar) ? $values[0] : $values;
+    if (NULL === $val) {
+      // Apply escaped "null" if string is empty.
+      $val = '\0';
     }
+    $values[$key] = $val;
+  }
 
+  return ($is_scalar) ? $values[0] : $values;
+}
 
- /**
-    * Escapes a DN value according to RFC 2253
-    *
-    * Escapes the given VALUES according to RFC 2253 so that they can be safely used in LDAP DNs.
-    * The characters ",", "+", """, "\", "<", ">", ";", "#", "=" with a special meaning in RFC 2252
-    * are preceeded by ba backslash. Control characters with an ASCII code < 32 are represented as \hexpair.
-    * Finally all leading and trailing spaces are converted to sequences of \20.
-    *
-    * @param array $values An array containing the DN values that should be escaped
-    *
-    * @static
-    * @return array The array $values, but escaped
-    */
-    function ldap_pear_escape_dn_value($values = array()) {
-        // Parameter validation
-        $is_scalar = is_scalar($values);
+/**
+ * Undoes the conversion done by escape_dn_value().
+ *
+ * Any escape sequence starting with a baskslash - hexpair or special character -
+ * will be transformed back to the corresponding character.
+ *
+ * @param array $values
+ *   Array of DN Values
+ *
+ * @return array Same as $values, but unescaped
+ *
+ * @static
+ */
+function ldap_pear_unescape_dn_value($values = array()) {
+  $is_scalar = is_scalar($values);
 
-        if (!is_array($values)) {
-            $values = array($values);
-        }
+  // Parameter validation.
+  if (!is_array($values)) {
+    $values = array($values);
+  }
 
-        foreach ($values as $key => $val) {
-            // Escaping of filter meta characters
-            $val = str_replace('\\', '\\\\', $val);
-            $val = str_replace(',',    '\,', $val);
-            $val = str_replace('+',    '\+', $val);
-            $val = str_replace('"',    '\"', $val);
-            $val = str_replace('<',    '\<', $val);
-            $val = str_replace('>',    '\>', $val);
-            $val = str_replace(';',    '\;', $val);
-            $val = str_replace('#',    '\#', $val);
-            $val = str_replace('=',    '\=', $val);
+  foreach ($values as $key => $val) {
+    // Strip slashes from special chars.
+    $val = str_replace('\\\\', '\\', $val);
+    $val = str_replace('\,', ',', $val);
+    $val = str_replace('\+', '+', $val);
+    $val = str_replace('\"', '"', $val);
+    $val = str_replace('\<', '<', $val);
+    $val = str_replace('\>', '>', $val);
+    $val = str_replace('\;', ';', $val);
+    $val = str_replace('\#', '#', $val);
+    $val = str_replace('\=', '=', $val);
 
-            // ASCII < 32 escaping
-            $val = ldap_pear_asc2hex32($val);
+    // Translate hex code into ascii.
+    $values[$key] = ldap_pear_hex2asc($val);
+  }
 
-            // Convert all leading and trailing spaces to sequences of \20.
-            if (preg_match('/^(\s*)(.+?)(\s*)$/', $val, $matches)) {
-                $val = $matches[2];
-                for ($i = 0; $i < strlen($matches[1]); $i++) {
-                    $val = '\20' . $val;
-                }
-                for ($i = 0; $i < strlen($matches[3]); $i++) {
-                    $val = $val . '\20';
-                }
-            }
+  return ($is_scalar) ? $values[0] : $values;
+}
 
-            if (null === $val) $val = '\0';  // apply escaped "null" if string is empty
+/**
+ * Converts all Hex expressions ("\HEX") to their original ASCII characters.
+ *
+ * Update taken from zendframework/zf1
+ *
+ * @param string $string
+ *   String to convert
+ *
+ * @static
+ *
+ * @author beni@php.net, heavily based on work from DavidSmith@byu.net
+ *
+ * @return string
+ */
+function ldap_pear_hex2asc($string) {
+  $string = preg_replace_callback(
+    "/\\\([0-9A-Fa-f]{2})/",
+    function (array $matches) {
+      return chr(hexdec($matches[0]));
+    },
+    $string
+  );
+  return $string;
+}
 
-            $values[$key] = $val;
-        }
-
-        return ($is_scalar) ? $values[0] : $values;
+/**
+ * Converts all ASCII chars < 32 to "\HEX".
+ *
+ * @param string $string
+ *   String to convert
+ *
+ * @static
+ *
+ * @return string
+ */
+function ldap_pear_asc2hex32($string) {
+  for ($i = 0; $i < strlen($string); $i++) {
+    $char = substr($string, $i, 1);
+    if (ord($char) < 32) {
+      $hex = dechex(ord($char));
+      if (strlen($hex) == 1) {
+        $hex = '0' . $hex;
+      }
+      $string = str_replace($char, '\\' . $hex, $string);
     }
-
-    /**
-    * Undoes the conversion done by escape_dn_value().
-    *
-    * Any escape sequence starting with a baskslash - hexpair or special character -
-    * will be transformed back to the corresponding character.
-    *
-    * @param array $values Array of DN Values
-    *
-    * @return array Same as $values, but unescaped
-    * @static
-    */
-    function ldap_pear_unescape_dn_value($values = array()) {
-      $is_scalar = is_scalar($values);
-
-        // Parameter validation
-        if (!is_array($values)) {
-            $values = array($values);
-        }
-
-        foreach ($values as $key => $val) {
-            // strip slashes from special chars
-            $val = str_replace('\\\\', '\\', $val);
-            $val = str_replace('\,',    ',', $val);
-            $val = str_replace('\+',    '+', $val);
-            $val = str_replace('\"',    '"', $val);
-            $val = str_replace('\<',    '<', $val);
-            $val = str_replace('\>',    '>', $val);
-            $val = str_replace('\;',    ';', $val);
-            $val = str_replace('\#',    '#', $val);
-            $val = str_replace('\=',    '=', $val);
-
-            // Translate hex code into ascii
-            $values[$key] = ldap_pear_hex2asc($val);
-        }
-
-      return ($is_scalar) ? $values[0] : $values;
-    }
-
-
-
-    /**
-    * Converts all Hex expressions ("\HEX") to their original ASCII characters
-    *
-    * Update taken from zendframework/zf1
-    *
-    * @param string $string String to convert
-    *
-    * @static
-    * @author beni@php.net, heavily based on work from DavidSmith@byu.net
-    * @return string
-    */
-    function ldap_pear_hex2asc($string) {
-      $string = preg_replace_callback(
-        "/\\\([0-9A-Fa-f]{2})/",
-        function (array $matches) { return chr(hexdec($matches[0])); },
-        $string
-      );
-      return $string;
-    }
-
-    /**
-    * Converts all ASCII chars < 32 to "\HEX"
-    *
-    * @param string $string String to convert
-    *
-    * @static
-    * @return string
-    */
-    function ldap_pear_asc2hex32($string) {
-        for ($i = 0; $i < strlen($string); $i++) {
-            $char = substr($string, $i, 1);
-            if (ord($char) < 32) {
-                $hex = dechex(ord($char));
-                if (strlen($hex) == 1) $hex = '0' . $hex;
-                $string = str_replace($char, '\\' . $hex, $string);
-            }
-        }
-        return $string;
-    }
+  }
+  return $string;
+}

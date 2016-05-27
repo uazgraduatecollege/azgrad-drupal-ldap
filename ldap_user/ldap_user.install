@@ -5,6 +5,7 @@
  * Install, update and uninstall functions for the LDAP User module.
  */
 
+use Drupal\Core\Url;
 use Drupal\Component\Utility\SafeMarkup;
 use Drupal\Core\Utility\UpdateException;
 /**
@@ -12,34 +13,33 @@ use Drupal\Core\Utility\UpdateException;
  */
 function ldap_user_install() {
 
-  // foreach (ldap_user_user_entity_fields() as $field_id => $field_conf) {
+  // Foreach (ldap_user_user_entity_fields() as $field_id => $field_conf) {
   //   $field_info = field_info_field($field_id);
   //   if (!$field_info) {
   //     field_create_field($field_conf['field']);
   //     field_create_instance($field_conf['instance']);
   //   }
-  // }
-
+  // }.
   // // make ldap user weight slightly less than other ldap modules so it can load
   // // user's associated ldap data first and save on ldap queries.
-
-  // db_query("UPDATE {system} SET weight = -1 WHERE name = 'ldap_user'");
-
+  // db_query("UPDATE {system} SET weight = -1 WHERE name = 'ldap_user'");.
   // _ldap_user_install_update_authmap();
   \Drupal::service('router.builder')->rebuild();
 
-
 }
 
+/**
+ *
+ */
 function _ldap_user_install_update_authmap() {
   db_update('authmap')
-  ->fields(
+    ->fields(
     array(
       'module' => 'ldap_user',
     )
-  )
-  ->condition('module', 'ldap_authentication')
-  ->execute();
+    )
+    ->condition('module', 'ldap_authentication')
+    ->execute();
 
 }
 
@@ -48,23 +48,19 @@ function _ldap_user_install_update_authmap() {
  */
 function ldap_user_uninstall() {
 
-  // foreach (ldap_user_user_entity_fields() as $field_id => $field_conf) {
-
-  //   $instance = field_info_instance($field_conf['instance']['entity_type'], $field_conf['instance']['field_name'], $field_conf['instance']['bundle']);
+  // Foreach (ldap_user_user_entity_fields() as $field_id => $field_conf) {
+  // $instance = field_info_instance($field_conf['instance']['entity_type'], $field_conf['instance']['field_name'], $field_conf['instance']['bundle']);
   //   if ($instance) {
   //     field_delete_instance($instance);
   //   }
-
-  //   $field_info = field_info_field($field_conf['field']['field_name']);
+  // $field_info = field_info_field($field_conf['field']['field_name']);
   //   if ($field_info) {
   //     field_delete_field($field_conf['field']['field_name']);
   //   }
-  // }
-
+  // }.
   // variable_del('ldap_user_conf');
   // variable_del('ldap_user_cron_last_orphan_checked');
-  // variable_del('ldap_user_cron_last_uid_checked');
-
+  // variable_del('ldap_user_cron_last_uid_checked');.
 }
 
 /**
@@ -85,8 +81,8 @@ function ldap_user_update_8001() {
  */
 function ldap_user_update_8301(&$sandbox) {
   // Check for externalauth module (which has been a dependency for ages).
-  if ( ! \Drupal::moduleHandler()->moduleExists('externalauth') ) {
-    $external_link =  \Drupal\Core\Url::fromUri('https://drupal.org/project/externalauth');
+  if (!\Drupal::moduleHandler()->moduleExists('externalauth')) {
+    $external_link = Url::fromUri('https://drupal.org/project/externalauth');
     $message = t('Please install the 8301 %external_link module.', array('%external_link' => \Drupal::l('External Auth', $external_link)));
     drupal_set_message($message, "error");
     throw new UpdateException($message);
@@ -107,7 +103,7 @@ function ldap_user_update_8301(&$sandbox) {
     ->execute();
 
   // Iterate over the old table and create entries in the new table.
-  foreach ($result as $identity ) {
+  foreach ($result as $identity) {
     // Load the user as the service expects an account.
     $account = user_load($identity->uid);
     $authmap = \Drupal::service('externalauth.authmap');
@@ -131,8 +127,8 @@ function ldap_user_update_8301(&$sandbox) {
  */
 function ldap_user_update_8302(&$sandbox) {
   // Check for externalauth module (which has been a dependency for ages).
-  if ( ! \Drupal::moduleHandler()->moduleExists('externalauth') ) {
-    $external_link =  \Drupal\Core\Url::fromUri('https://drupal.org/project/externalauth');
+  if (!\Drupal::moduleHandler()->moduleExists('externalauth')) {
+    $external_link = Url::fromUri('https://drupal.org/project/externalauth');
     $message = t('Please install the 8301 %external_link module.', array('%external_link' => \Drupal::l('External Auth', $external_link)));
     drupal_set_message($message, "error");
     throw new UpdateException($message);
@@ -140,7 +136,8 @@ function ldap_user_update_8302(&$sandbox) {
   // Drop the table if it exists.
   try {
     db_query("DROP TABLE {ldap_user_identities}");
-  } catch (Exception $e) {
+  }
+  catch (Exception $e) {
     drupal_set_message("Couldn't drop the table 'ldap_user_identities'. Maybe it's been dropped aleady?", "warning");
   }
 }

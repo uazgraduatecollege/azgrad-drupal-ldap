@@ -1,17 +1,14 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\ldap_servers\Form\LdapServersAdminEnableDisable.
- */
-
 namespace Drupal\ldap_servers\Form;
 
-use Drupal\Core\Entity\ContentEntityConfirmFormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Render\Element;
+use Drupal\Core\Entity\ContentEntityConfirmFormBase;
 use Drupal\Core\Url;
 
+/**
+ *
+ */
 class LdapServersAdminEnableDisable extends ContentEntityConfirmFormBase {
 
   /**
@@ -44,7 +41,10 @@ class LdapServersAdminEnableDisable extends ContentEntityConfirmFormBase {
     return $this->t('Disable/Enable');
   }
 
-  public function buildForm(array $form, \Drupal\Core\Form\FormStateInterface $form_state, $action = NULL, $sid = NULL) {
+  /**
+   *
+   */
+  public function buildForm(array $form, FormStateInterface $form_state, $action = NULL, $sid = NULL) {
 
     if ($ldap_server = ldap_servers_get_servers($sid, 'all', TRUE)) {
       $variables = [
@@ -61,7 +61,6 @@ class LdapServersAdminEnableDisable extends ContentEntityConfirmFormBase {
       //
       // @see https://www.drupal.org/node/2195739
       // $form['#prefix'] = "<div>" . theme('ldap_servers_server', $variables) . "</div>";
-
       // var_dump($ldap_server);die();
       $form['sid'] = [
         '#type' => 'hidden',
@@ -75,18 +74,20 @@ class LdapServersAdminEnableDisable extends ContentEntityConfirmFormBase {
         '#type' => 'hidden',
         '#value' => $action,
       ];
-      // return $form;
-
+      // Return $form;.
       return parent::buildForm($form, $form_state);
 
-      // return confirm_form($form, t('Are you sure you want to') . t($action) . ' ' . t('the LDAP server named <em><strong>%name</strong></em>?', [
+      // Return confirm_form($form, t('Are you sure you want to') . t($action) . ' ' . t('the LDAP server named <em><strong>%name</strong></em>?', [
       //   '%name' => $ldap_server->name
-      //   ]), LDAP_SERVERS_MENU_BASE_PATH . '/servers/list', t('<p></p>'), t($action), t('Cancel'));
+      //   ]), LDAP_SERVERS_MENU_BASE_PATH . '/servers/list', t('<p></p>'), t($action), t('Cancel'));.
     }
 
   }
 
-  public function submitForm(array &$form, \Drupal\Core\Form\FormStateInterface $form_state) {
+  /**
+   *
+   */
+  public function submitForm(array &$form, FormStateInterface $form_state) {
     $values = $form_state->getValues();
     $name = $values['name'];
     $sid = $values['sid'];

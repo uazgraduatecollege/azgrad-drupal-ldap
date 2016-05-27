@@ -1,16 +1,14 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\ldap_authentication\Form\LdapAuthenticationAdminForm.
- */
-
 namespace Drupal\ldap_authentication\Form;
 
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\ConfigFormBase;
-use Drupal\Core\Render\Element;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 
+/**
+ *
+ */
 class LdapAuthenticationAdminForm extends ConfigFormBase {
 
   /**
@@ -27,13 +25,19 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
     return ['ldap_authentication.settings'];
   }
 
-  public function buildForm(array $form, \Drupal\Core\Form\FormStateInterface $form_state) {
+  /**
+   *
+   */
+  public function buildForm(array $form, FormStateInterface $form_state) {
     ldap_servers_module_load_include('php', 'ldap_authentication', 'LdapAuthenticationConfAdmin.class');
     $auth_conf = new \LdapAuthenticationConfAdmin();
     return $auth_conf->drupalForm();
   }
 
-  public function validateForm(array &$form, \Drupal\Core\Form\FormStateInterface $form_state) {
+  /**
+   *
+   */
+  public function validateForm(array &$form, FormStateInterface $form_state) {
 
     ldap_servers_module_load_include('php', 'ldap_authentication', 'LdapAuthenticationConfAdmin.class');
     $auth_conf = new \LdapAuthenticationConfAdmin();
@@ -44,11 +48,15 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
 
   }
 
-  public function submitForm(array &$form, \Drupal\Core\Form\FormStateInterface $form_state) {
+  /**
+   *
+   */
+  public function submitForm(array &$form, FormStateInterface $form_state) {
 
     ldap_servers_module_load_include('php', 'ldap_authentication', 'LdapAuthenticationConfAdmin.class');
     $auth_conf = new \LdapAuthenticationConfAdmin();
-    $auth_conf->drupalFormSubmit($form_state->getValues()); // add form data to object and save or create
+    // Add form data to object and save or create.
+    $auth_conf->drupalFormSubmit($form_state->getValues());
     if (!$auth_conf->hasEnabledAuthenticationServers()) {
       drupal_set_message(t('No LDAP servers are enabled for authentication,
       so no LDAP Authentication can take place.  This essentially disables

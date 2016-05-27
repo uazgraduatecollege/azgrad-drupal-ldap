@@ -1,16 +1,13 @@
 <?php
 
-/**
- * @file
- * Contains \Drupal\ldap_servers\Form\LdapServersSettings.
- */
-
 namespace Drupal\ldap_servers\Form;
 
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Render\Element;
 
+/**
+ *
+ */
 class LdapServersSettings extends ConfigFormBase {
 
   /**
@@ -44,7 +41,10 @@ class LdapServersSettings extends ConfigFormBase {
     return ['ldap_servers.settings'];
   }
 
-  public function buildForm(array $form, \Drupal\Core\Form\FormStateInterface $form_state) {
+  /**
+   *
+   */
+  public function buildForm(array $form, FormStateInterface $form_state) {
     if (!ldap_servers_ldap_extension_loaded()) {
       drupal_set_message(t('PHP LDAP Extension is not loaded.'), "warning");
     }
@@ -66,12 +66,12 @@ class LdapServersSettings extends ConfigFormBase {
       '#type' => 'ul',
     );
     $form['ssl']['require_ssl_for_credentials'] = array(
-        '#type' => 'checkbox',
-        '#title' => t('If checked, modules using LDAP will not allow credentials to
+      '#type' => 'checkbox',
+      '#title' => t('If checked, modules using LDAP will not allow credentials to
           be entered on or submitted to HTTP pages, only HTTPS. This option should be used with an
           approach to get all logon forms to be https, such as:') . drupal_render($settings),
-        '#default_value' => \Drupal::config('ldap_servers.settings')->get('require_ssl_for_credentials'),
-      );
+      '#default_value' => \Drupal::config('ldap_servers.settings')->get('require_ssl_for_credentials'),
+    );
 
     $options = ldap_servers_encrypt_types('encrypt');
     // @FIXME
@@ -101,13 +101,12 @@ class LdapServersSettings extends ConfigFormBase {
     discovery of a clear text password.'),
     ];
 
-
     // $options will be empty if server does not support mcrypt.
     // Disable the form field and explain this to the user.
     if (empty($options)) {
       $form['encryption']['encryption']['#options'] = [
-        LDAP_SERVERS_ENC_TYPE_CLEARTEXT => t('Not available.')
-        ];
+        LDAP_SERVERS_ENC_TYPE_CLEARTEXT => t('Not available.'),
+      ];
       $form['encryption']['encryption']['#disabled'] = TRUE;
       $form['encryption']['encryption']['#description'] .= ' <strong>' . t('Encryption is not supported on this web server.') . '</strong>';
     }
@@ -119,7 +118,7 @@ class LdapServersSettings extends ConfigFormBase {
   /**
    * {@inheritdoc}
    */
-  public function _submitForm(array &$form, \Drupal\Core\Form\FormStateInterface $form_state) {
+  public function _submitForm(array &$form, FormStateInterface $form_state) {
     if ($form_state->isSubmitted()) {
       $new_encryption = $form_state->getValue(['encryption']);
       $old_encryption = $form_state->getValue(['previous_encryption']);
