@@ -517,7 +517,7 @@ EOT;
       $to_ldap_entries_mappings_exist = FALSE;
       foreach ($this->ldapUserSynchMappings as $synch_direction => $mappings) {
         $map_index = array();
-        $tokens = array(); // array('%sid' => $sid);
+        $tokens['%sid'] = $this->drupalAcctProvisionServer;
         $to_drupal_user_mappings_exist = FALSE;
         $to_ldap_entries_mappings_exist = FALSE;
 
@@ -553,19 +553,19 @@ EOT;
           if ($mapping['direction'] == LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER) {
             $row_id = $map_index[$mapping['user_attr']];
             $to_drupal_user_mappings_exist = TRUE;
-          //  if (!$is_drupal_user_prov_server) {
-           //   $errors['mappings__'. $sid] =  t('Mapping rows exist for provisioning to drupal user, but server %sid is not enabled for provisioning
-            //    to drupal users.', $tokens);
-          //  }
+            if (!$is_drupal_user_prov_server) {
+              $errors['mappings__'. $sid] =  t('Mapping rows exist for provisioning to drupal user,  but server %sid is not enabled for provisioning
+                to drupal users.', $tokens);
+            }
           }
           if ($mapping['direction'] == LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY) {
             $row_id = $map_index[$mapping['ldap_attr']];
             $to_ldap_entries_mappings_exist = TRUE;
-           // if (!$is_ldap_entry_prov_server) {
-            //  $errors['mappings__'. $sid] =  t('Mapping rows exist for provisioning to ldap entries,
-            //    but server %sid is not enabled for provisioning
-             //   to ldap entries.', $tokens);
-           // }
+            if (!$is_ldap_entry_prov_server) {
+              $errors['mappings__'. $sid] =  t('Mapping rows exist for provisioning to ldap entries,
+                but server %sid is not enabled for provisioning
+                to ldap entries.', $tokens);
+            }
 
             if (count(array_keys($ldap_attribute_maps_in_token)) != 1) {
               $token_field_id = join('__', array('sm', 'user_tokens', $row_id));
@@ -574,6 +574,7 @@ EOT;
             }
 
           }
+          // FIXME none of these id's should be working.
           $ldap_attr_field_id = join('__', array('sm', 'ldap_attr', $row_id));
           $user_attr_field_id = join('__', array('sm', 'user_attr', $row_id));
           $first_context_field_id = join('__', array('sm', 1, $row_id));
@@ -880,7 +881,7 @@ EOT;
         continue;
       }
       if ( !$this->isMappingConfigurable($mapping, 'ldap_user') && ($mapping['direction'] == $direction || $mapping['direction'] == LDAP_USER_PROV_DIRECTION_ALL)) { // is configurable by ldap_user module (not direction to ldap_user)
-        $rows[$row_id] = $this->getSynchFormRow('nonconfigurable', $direction, $mapping, $user_attr_options, $row);
+        $rows[$row_id] = $this->getSyncFormRow('nonconfigurable', $direction, $mapping, $user_attr_options, $row_id);
         $row++;
       }
     }
@@ -890,7 +891,7 @@ EOT;
       foreach ($this->ldapUserSynchMappings[$direction] as $target_attr_token => $mapping) {  // key could be ldap attribute name or user attribute name
         if (isset($mapping['enabled']) && $mapping['enabled'] && $this->isMappingConfigurable($this->synchMapping[$direction][$target_attr_token], 'ldap_user')) {
           $row_id = 'row-' . $row;
-          $rows[$row_id] = $this->getSynchFormRow('update', $direction, $mapping, $user_attr_options, $row);
+          $rows[$row_id] = $this->getSyncFormRow('update', $direction, $mapping, $user_attr_options, $row_id);
           $row++;
         }
       }
@@ -898,8 +899,9 @@ EOT;
 
    // 3. leave 4 rows for adding more mappings
     for ($i=0; $i<4; $i++) {
+      drupal_set_message($row);
       $row_id = 'custom-' . $i;
-      $rows[$row_id] = $this->getSynchFormRow('add', $direction, NULL, $user_attr_options, $row);
+      $rows[$row_id] = $this->getSyncFormRow('add', $direction, NULL, $user_attr_options, $row_id);
       $row++;
     }
 
@@ -918,9 +920,11 @@ EOT;
    *
    * @return a single row
    */
-  private function getSynchFormRow($action, $direction, $mapping, $user_attr_options, $row) {
+  private function getSyncFormRow($action, $direction, $mapping, $user_attr_options, $row_id) {
 
     $result = array();
+    $id_prefix = 'mappings__' . $direction . '__table';
+    $user_attr_input_id =  $id_prefix . "[$row_id][user_attr]";
 
     $result['remove'] = array(
       '#type' => 'checkbox',
@@ -931,7 +935,7 @@ EOT;
     );
 
     if ($action == 'nonconfigurable') {
-      $result['ldap_attr'] = array(
+      $ldap_attr = array(
         '#type' => 'item',
         '#default_value' => isset($mapping['ldap_attr']) ? $mapping['ldap_attr'] : '',
         '#markup' => isset($mapping['source']) ? $mapping['source'] : '?',
@@ -939,7 +943,7 @@ EOT;
       );
     }
     else {
-      $result['ldap_attr'] = array(
+      $ldap_attr = array(
         '#type' => 'textfield',
         '#title' => 'LDAP attribute',
         '#title_display' => 'invisible',
@@ -948,9 +952,17 @@ EOT;
         '#maxlength' => 255,
         '#attributes' => array('class' => array('ldap-attr')),
       );
+      // Change the visibility rules for LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY.
+      if ($direction == LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY) {
+        $ldap_attr['#states'] = array(
+          'visible' => array(
+            'select[name="' . $user_attr_input_id . '"]' => array('value' => 'user_tokens'),
+          ),
+        );
+      }
     }
 
-    $result['convert'] = array(
+    $convert = array(
       '#type' => 'checkbox',
       '#title' => 'Convert from binary',
       '#title_display' => 'invisible',
@@ -960,13 +972,13 @@ EOT;
     );
 
     if ($action == 'nonconfigurable') {
-      $result['user_attr'] = array(
+      $user_attr = array(
         '#type' => 'item',
         '#markup' => isset($mapping['name']) ? $mapping['name'] : '?',
       );
     }
     else {
-      $result['user_attr'] = array(
+      $user_attr = array(
         '#type' => 'select',
         '#title' => 'User attribute',
         '#title_display' => 'invisible',
@@ -975,20 +987,26 @@ EOT;
       );
     }
 
+    // Get the order of the columns correctly.
+    if ($direction == LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY) {
+      $result['user_attr'] = $user_attr;
+      $result['ldap_attr'] = $ldap_attr;
+      $result['convert'] = $convert;
+    } else {
+      $result['ldap_attr'] = $ldap_attr;
+      $result['convert'] = $convert;
+      $result['user_attr'] = $user_attr;
+    }
+
     if ($direction == LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY) {
       $result['user_tokens'] = array(
         '#type' => 'textfield',
         '#title' => 'User tokens',
         '#title_display' => 'invisible',
         '#default_value' => isset($mapping['user_tokens']) ? $mapping['user_tokens'] : '',
-        '#size' => 40,
+        '#size' => 20,
         '#maxlength' => 255,
         '#disabled' => ($action == 'nonconfigurable'),
-        '#states' => array(
-          'visible' => array(   // action to take.
-            ':input[name="' . $user_attr_input_id . '"]' => array('value' => 'user_tokens'),
-          )
-        ),
         '#attributes' => array('class' => array('tokens')),
       );
     }
@@ -997,11 +1015,14 @@ EOT;
       'action' => $action,
       'direction' => $direction,
     );
-
+    // FIXME: Is col used?
+    $col = ($direction == LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY) ? 5 : 4;
     $synchEvents = ($direction == LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER) ? $this->provisionsDrupalEvents : $this->provisionsLdapEvents;
 
     foreach ($synchEvents as $prov_event => $prov_event_name) {
+      // FIXME: Is col used?
       $col++;
+      // FIXME: $id never used
       $id =  $id_prefix . join('__', array('sm', $prov_event, $row));
       $result[$prov_event] = array(
         '#type' => 'checkbox',

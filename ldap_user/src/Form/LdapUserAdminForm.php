@@ -43,7 +43,7 @@ class LdapUserAdminForm extends ConfigFormBase {
   public function validateForm(array &$form, \Drupal\Core\Form\FormStateInterface $form_state) {
     list($errors, $warnings) = $this->ldap_user_conf_admin->drupalFormValidate($form_state->getValues(), $form['#storage']);
     foreach ($errors as $error_name => $error_text) {
-      $form_state->setErrorByName($error_name, t($error_text));
+      $form_state->setErrorByName($error_name, $error_text);
     }
     foreach ($warnings as $warning_name => $warning_text) {
       drupal_set_message($warning_text, 'warning');
