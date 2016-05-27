@@ -920,7 +920,6 @@ EOT;
 
     // 3. leave 4 rows for adding more mappings.
     for ($i = 0; $i < 4; $i++) {
-      drupal_set_message($row);
       $row_id = 'custom-' . $i;
       $rows[$row_id] = $this->getSyncFormRow('add', $direction, NULL, $user_attr_options, $row_id);
       $row++;
