@@ -5,6 +5,8 @@
  * The ldaphelp module is a module to help admins debug ldap_integration modules.
  */
 
+use Drupal\Core\Form\FormStateInterface;
+
 /**
  * Implements hook_menu().
  */
@@ -71,28 +73,28 @@ function ldap_help_menu() {
 /**
  *
  */
-function ldap_help_form_ldap_servers_settings_alter(&$form, &$form_state) {
+function ldap_help_form_ldap_servers_settings_alter(&$form, FormStateInterface $form_state) {
   $form['watchdog_detail'] = array('#type' => 'fieldset', '#title' => t('Development'));
   $form['watchdog_detail']['watchdog_detail'] = array(
     '#type' => 'checkbox',
     '#title' => t('Enabled Detailed LDAP Watchdog logging.  This is generally for
        debugging and reporting issues with the ldap modules and should not be left
        on.'),
-    '#default_value' => config('ldap_help.settings')->get('watchdog_detail'),
+    '#default_value' => \Drupal::config('ldap_help.settings')->get('watchdog_detail'),
   );
-  $date = config('ldap_help.settings')->get('user_data_clear_set_date');
+  $date = \Drupal::config('ldap_help.settings')->get('user_data_clear_set_date');
   $form['watchdog_detail']['user_data_clear'] = array(
     '#type' => 'checkbox',
     '#title' => t('Discard and ignore user authorization data stored by ldap module in user records data before %date.
       This is useful for implementers of development versions of the module
       that may have corrupt user data from the past.', array('%date' => date('Y-m-d H:i:s', $date))),
-    '#default_value' => config('ldap_help.settings')->get('user_data_clear'),
+    '#default_value' => \Drupal::config('ldap_help.settings')->get('user_data_clear'),
   // array('%date' => date('Y-m-d H:i:s', $date))
   );
   $form['watchdog_detail']['user_data_clear_date'] = array(
     '#type' => 'checkbox',
     '#title' => t('Reset the clear date to the current date %date', array('%date' => date('Y-m-d H:i:s'))),
-    '#default_value' => config('ldap_help.settings')->get('user_data_clear_set_date'),
+    '#default_value' => \Drupal::config('ldap_help.settings')->get('user_data_clear_set_date'),
   );
   $form['#submit'][] = 'ldap_help_watchdog_detail_submit';
 }
@@ -100,18 +102,20 @@ function ldap_help_form_ldap_servers_settings_alter(&$form, &$form_state) {
 /**
  *
  */
-function ldap_help_watchdog_detail_submit($form, &$form_state) {
-  if ($form_state['submitted']) {
-    $watchdog_detail = $form_state['values']['watchdog_detail'];
-    if ($watchdog_detail != config('ldap_help.settings')->get('watchdog_detail')) {
-      variable_set('ldap_help_watchdog_detail', $watchdog_detail);
+function ldap_help_watchdog_detail_submit(array &$form, FormStateInterface $form_state) {
+  if ($form_state->isSubmitted()) {
+    $config = \Drupal::configFactory()->getEditable('ldap_help.settings');
+    $watchdog_detail = $form_state->getValue('watchdog_detail');
+    if ($watchdog_detail != $config->get('watchdog_detail')) {
+      $config->set('watchdog_detail', $watchdog_detail);
     }
-    if ($form_state['values']['user_data_clear'] != config('ldap_help.settings')->get('user_data_clear')) {
-      variable_set('ldap_help_user_data_clear', $form_state['values']['user_data_clear']);
+    if ($form_state->getValue('user_data_clear') != $config->get('user_data_clear')) {
+      $config->set('user_data_clear', $form_state->getValue('user_data_clear'));
     }
-    if ($form_state['values']['user_data_clear_date'] != 0) {
-      variable_set('ldap_help_user_data_clear_set_date', time());
+    if ($form_state->getValue('user_data_clear_date') != 0) {
+      $config->set('user_data_clear_set_date', time());
     }
+    $config->save();
   }
 }
 
