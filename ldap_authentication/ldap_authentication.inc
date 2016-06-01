@@ -112,21 +112,17 @@ function _ldap_authentication_form_user_profile_form_alter(&$form, $form_state) 
  * -- form_set_error() to invalidate authentication process
  * -- setting $form_state['uid'] to indicate successful authentication
  */
-function _ldap_authentication_user_login_authenticate_validate(&$form_state, $return_user) {
+function _ldap_authentication_user_login_authenticate_validate(&$form_state, $return_user, $sso_login) {
 
   $detailed_watchdog_log = \Drupal::config('ldap_help.settings')->get('watchdog_detail');
   // $authname is the name the user is authenticated with from the logon form // patch 1599632.
   $authname = trim($form_state->getValue('name'));
 
   /*
-   * If a fake form state was passed into this function from
-   * _ldap_authentication_user_login_sso(), there will be a value outside of the
-   * form_state[values] array to let us know that we are not authenticating with
-   * a password, but instead just looking up a username/dn in LDAP since the web
-   * server already authenticated the user.
+   * SSO passes a fake form state into this function let us know that we are not
+   * authenticating with a password, but instead just looking up a username/dn
+   * in LDAP since the web server already authenticated the user.
    */
-  $sso_login = (NULL !== $form_state->getValue('sso_login') && $form_state->getValue('sso_login')) ? TRUE : FALSE;
-
   // $watchdog_tokens = array('%username' => $name); // patch 1599632.
   $watchdog_tokens = array('%username' => $authname, '%authname' => $authname);
   if ($detailed_watchdog_log) {

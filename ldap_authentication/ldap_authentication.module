@@ -361,9 +361,9 @@ function ldap_authentication_form_user_login_block_alter(&$form, &$form_state) {
 /**
  * Validate function for user logon forms.
  */
-function ldap_authentication_user_login_authenticate_validate($form, &$form_state, $return_user = FALSE) {
+function ldap_authentication_user_login_authenticate_validate($form, &$form_state, $return_user = FALSE, $sso_login = FALSE) {
   ldap_servers_module_load_include('inc', 'ldap_authentication', 'ldap_authentication');
-  return _ldap_authentication_user_login_authenticate_validate($form_state, $return_user);
+  return _ldap_authentication_user_login_authenticate_validate($form_state, $return_user, $sso_login);
 }
 
 /**
