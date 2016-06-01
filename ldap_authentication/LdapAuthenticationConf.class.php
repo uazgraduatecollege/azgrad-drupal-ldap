@@ -341,6 +341,7 @@ class LdapAuthenticationConf {
         return FALSE;
       }
 
+      // @FIXME: Several undefined functions in this scope.
       $user = new \stdClass();
       $user->name = $name;
       // Fake user property added for query.

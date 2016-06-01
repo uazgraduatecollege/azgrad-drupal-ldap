@@ -278,7 +278,8 @@ function ldap_authentication_form_user_pass_alter(&$form, $form_state) {
   $auth_conf = ldap_authentication_get_valid_conf();
   $form['ldap_warning'] = array(
     '#type' => 'item',
-    '#markup' => theme('ldap_authentication_user_pass_message', array('auth_conf' => $auth_conf)),
+   //@FIXME
+   // '#markup' => theme('ldap_authentication_user_pass_message', array('auth_conf' => $auth_conf)),
     '#weight' => 10,
   );
 
