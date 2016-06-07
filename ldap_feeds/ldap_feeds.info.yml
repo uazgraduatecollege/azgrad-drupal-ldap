@@ -7,6 +7,7 @@ dependencies:
   - feeds
   - ldap_servers
   - ldap_query
+  - ldap_user
 
 #configure = admin/structure/feeds
 
