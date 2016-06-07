@@ -28,17 +28,10 @@ use Drupal\feeds\Utility\Feed;
  *   title = @Translation("LDAP query"),
  *   description = @Translation("Retrieves data from an LDAP server using LDAPS's query module."),
  *   configuration_form = "Drupal\ldap_feeds\Feeds\Fetcher\Form\LDAPFetcherForm",
- *   arguments = {"@http_client", "@cache.feeds_download", "@file_system"}
+ *   arguments = {"@cache.feeds_download", "@file_system"}
  * )
  */
 class LDAPFetcher extends PluginBase implements ClearableInterface, FeedPluginFormInterface, FetcherInterface {
-
-  /**
-   * The Guzzle client.
-   *
-   * @var \GuzzleHttp\ClientInterface
-   */
-  protected $client;
 
   /**
    * The cache backend.
@@ -63,14 +56,12 @@ class LDAPFetcher extends PluginBase implements ClearableInterface, FeedPluginFo
    *   The plugin id.
    * @param array $plugin_definition
    *   The plugin definition.
-   * @param \GuzzleHttp\ClientInterface $client
-   *   The Guzzle client.
    * @param \Drupal\Core\Cache\CacheBackendInterface $cache
    *   The cache backend.
    * @param \Drupal\Core\File\FileSystemInterface $file_system
    *   The Drupal file system helper.
    */
-  public function __construct(array $configuration, $plugin_id, array $plugin_definition, ClientInterface $client, CacheBackendInterface $cache, FileSystemInterface $file_system) {
+  public function __construct(array $configuration, $plugin_id, array $plugin_definition, CacheBackendInterface $cache, FileSystemInterface $file_system) {
     $this->client = $client;
     $this->cache = $cache;
     $this->fileSystem = $file_system;

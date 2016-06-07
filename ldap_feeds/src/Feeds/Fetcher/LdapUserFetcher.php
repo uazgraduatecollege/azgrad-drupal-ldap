@@ -20,7 +20,7 @@ use Drupal\feeds\Result\FetcherResultInterface;
  *   title = @Translation("Drupal User LDAP Entry Fetcher"),
  *   description = @Translation("Retrieves user data for existing LDAP associated accounts."),
  *   configuration_form = "Drupal\ldap_feeds\Feeds\Fetcher\Form\LDAPUserFetcherForm",
- *   arguments = {"@http_client", "@cache.feeds_download", "@file_system"}
+ *   arguments = {"@cache.feeds_download", "@file_system"}
  * )
  */
 class LDAPUserFetcher extends LDAPFetcher {
@@ -34,12 +34,7 @@ class LDAPUserFetcher extends LDAPFetcher {
     $query = \Drupal::entityQuery('user');
     $entities = $query
       ->execute();
-    error_log("Got entities: " . count($entities));
-    error_log(print_r($entities, TRUE));
     $users = \Drupal\user\Entity\User::loadMultiple(array_keys($entities));
-
-    // $users = entity_load('user', array_keys($entities));
-    error_log("Got users: " . count($users) );
     if ($this->filterRoles) {
       $selectedRoles = array_filter($this->filterRoles);
       $filterOnRoles = (boolean) (count($selectedRoles));
@@ -48,10 +43,14 @@ class LDAPUserFetcher extends LDAPFetcher {
       $filterOnRoles = FALSE;
     }
 
+    // @TODO wire up the config.
+    $this->filterLdapAuthenticated = FALSE;
+    
+    // This was retired. Did we replace it?
+    // $data = $user->data['ldap_user'];
+    // error_log('data: ' . $data);
+
     foreach ($users as $uid => $user) {
-      // error_log($uid);
-      // $uid = $user->id;
-      error_log("Examining $uid");
       if (
         $uid == 0 ||
         $uid == 1 ||
@@ -74,6 +73,7 @@ class LDAPUserFetcher extends LDAPFetcher {
       }
     }
     $results['count'] = count($results);
+    error_log("Filtered users: " . $results['count']);
     return $results;
 
   }

@@ -17,7 +17,9 @@ use Drupal\authorization\Provider\ProviderPluginBase;
 class LDAPAuthorizationProvider extends ProviderPluginBase {
 
   public $providerType = 'ldap';
-  public $handlers = array('ldap', 'ldap_authentication');
+  // These are the allowed authentication handlers that should match with 
+  // the users `provider` column in `authmap` table provided by externalauth
+  public $handlers = array('ldap', 'ldap_authentication', 'ldap_user');
 
   public $synchOnLogon = TRUE;
 
