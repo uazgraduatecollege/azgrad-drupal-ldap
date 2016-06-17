@@ -26,7 +26,7 @@ authorization.provider.plugin.ldap_authorization:
         label: 'Action'
     revoke_ldap_provisioned:
       type: boolean
-      label: 'When should !profile_namePlural be granted/revoked from user?'
+      label: 'When should @profile_namePlural be granted/revoked from user?'
     regrant_ldap_provisioned:
       type: boolean
-      label: 'When should !profile_namePlural be granted/revoked from user?'
+      label: 'When should @profile_namePlural be granted/revoked from user?'

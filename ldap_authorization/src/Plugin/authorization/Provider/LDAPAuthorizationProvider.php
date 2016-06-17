@@ -52,7 +52,7 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
       }
       $form['status']['server'] = array(
         '#type' => 'radios',
-        '#title' => t('LDAP Server used in !profile_name configuration.', $tokens),
+        '#title' => t('LDAP Server used in @profile_name configuration.', $tokens),
         '#required' => 1,
         '#default_value' => $this->configuration['status']['server'],
         '#options' => $server_options,
@@ -74,22 +74,22 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
 
     $form['status']['only_ldap_authenticated'] = array(
       '#type' => 'checkbox',
-      '#title' => t('Only apply the following LDAP to !consumer_name configuration to users authenticated via LDAP.  On uncommon reason for disabling this is when you are using Drupal authentication, but want to leverage LDAP for authorization; for this to work the Drupal username still has to map to an LDAP entry.', $tokens),
+      '#title' => t('Only apply the following LDAP to @consumer_name configuration to users authenticated via LDAP.  On uncommon reason for disabling this is when you are using Drupal authentication, but want to leverage LDAP for authorization; for this to work the Drupal username still has to map to an LDAP entry.', $tokens),
       '#default_value' => $this->configuration['status']['only_ldap_authenticated'],
     );
 
     if (method_exists($this->consumer, 'mappingExamples')) {
-      $tokens['!examples'] = '<fieldset class="collapsible collapsed form-wrapper" id="authorization-mappings">
-<legend><span class="fieldset-legend">' . t('Examples based on current !profile_namePlural', $tokens) . '</span></legend>
+      $tokens['@examples'] = '<fieldset class="collapsible collapsed form-wrapper" id="authorization-mappings">
+<legend><span class="fieldset-legend">' . t('Examples based on current @profile_namePlural', $tokens) . '</span></legend>
 <div class="fieldset-wrapper">' . $this->consumer->mappingExamples($tokens) . '<div class="fieldset-wrapper">
 </fieldset>';
     }
     else {
-      $tokens['!examples'] = '';
+      $tokens['@examples'] = '';
     }
     $form['filter_and_mappings'] = array(
       '#type' => 'fieldset',
-      '#title' => t('II. LDAP to !consumer_name mapping and filtering', $tokens),
+      '#title' => t('II. LDAP to @consumer_name mapping and filtering', $tokens),
       '#description' => t('
 Representations of groups derived from LDAP might initially look like:
 <ul>
@@ -99,11 +99,11 @@ Representations of groups derived from LDAP might initially look like:
 <li><code>cn=probation students,ou=groups,dc=hogwarts,dc=edu</code></li>
 </ul>
 
-<p><strong>Mappings are used to convert and filter these group representations to !consumer_namePlural.</strong></p>
+<p><strong>Mappings are used to convert and filter these group representations to @consumer_namePlural.</strong></p>
 
-!consumer_mappingDirections
+@consumer_mappingDirections
 
-!examples
+@examples
 
 ', $tokens),
       '#collapsible' => TRUE,
@@ -118,10 +118,10 @@ Representations of groups derived from LDAP might initially look like:
 
     $form['filter_and_mappings']['use_filter'] = array(
       '#type' => 'checkbox',
-      '#title' => t('Only grant !consumer_namePlural that match a filter below.', $tokens),
+      '#title' => t('Only grant @consumer_namePlural that match a filter below.', $tokens),
       '#default_value' => $this->configuration['filter_and_mappings']['use_filter'],
-      '#description' => t('If enabled, only below mapped !consumer_namePlural will be assigned (e.g. students and administrator).
-        <strong>If not checked, !consumer_namePlural not mapped below also may be created and granted (e.g. gryffindor and probation students).  In some LDAPs this can lead to hundreds of !consumer_namePlural being created if "Create !consumer_namePlural if they do not exist" is enabled below.
+      '#description' => t('If enabled, only below mapped @consumer_namePlural will be assigned (e.g. students and administrator).
+        <strong>If not checked, @consumer_namePlural not mapped below also may be created and granted (e.g. gryffindor and probation students).  In some LDAPs this can lead to hundreds of @consumer_namePlural being created if "Create @consumer_namePlural if they do not exist" is enabled below.
         </strong>', $tokens),
     );
 
