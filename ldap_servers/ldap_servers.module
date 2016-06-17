@@ -629,13 +629,9 @@ function ldap_servers_get_user_ldap_data($drupal_user, $id = NULL, $ldap_context
     \Drupal::logger('ldap_servers')->error('Failed to load server object %sid in _ldap_servers_get_user_ldap_data', array('%sid' => $sid));
     return FALSE;
   }
-  // Fixme this has already been set
-  // but to ldap_user cn not drupal user name.
-  $drupal_username = $drupal_user->get('name')->value;
 
   $ldap_user = $ldap_server->userUserNameToExistingLdapEntry($drupal_username, $ldap_context);
 
-// FIXME user id here is incorrect.
   if ($ldap_user) {
     $ldap_user['id'] = $id;
     // Set the cache here
