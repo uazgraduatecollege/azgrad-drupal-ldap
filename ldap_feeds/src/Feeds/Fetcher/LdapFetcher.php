@@ -8,7 +8,6 @@
 namespace Drupal\ldap_feeds\Feeds\Fetcher;
 
 use Drupal\Core\Cache\CacheBackendInterface;
-use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\feeds\Exception\EmptyFeedException;
 use Drupal\feeds\FeedInterface;
@@ -28,7 +27,7 @@ use Drupal\feeds\Utility\Feed;
  *   title = @Translation("LDAP query"),
  *   description = @Translation("Retrieves data from an LDAP server using LDAPS's query module."),
  *   configuration_form = "Drupal\ldap_feeds\Feeds\Fetcher\Form\LDAPFetcherForm",
- *   arguments = {"@cache.feeds_download", "@file_system"}
+ *   arguments = {"@cache.feeds_download"}
  * )
  */
 class LDAPFetcher extends PluginBase implements ClearableInterface, FeedPluginFormInterface, FetcherInterface {
@@ -41,14 +40,7 @@ class LDAPFetcher extends PluginBase implements ClearableInterface, FeedPluginFo
   protected $cache;
 
   /**
-   * Drupal file system helper.
-   *
-   * @var \Drupal\Core\File\FileSystemInterface
-   */
-  protected $fileSystem;
-
-  /**
-   * Constructs an UploadFetcher object.
+   * Constructs an LdapFetcher object.
    *
    * @param array $configuration
    *   The plugin configuration.
@@ -58,13 +50,10 @@ class LDAPFetcher extends PluginBase implements ClearableInterface, FeedPluginFo
    *   The plugin definition.
    * @param \Drupal\Core\Cache\CacheBackendInterface $cache
    *   The cache backend.
-   * @param \Drupal\Core\File\FileSystemInterface $file_system
-   *   The Drupal file system helper.
    */
-  public function __construct(array $configuration, $plugin_id, array $plugin_definition, CacheBackendInterface $cache, FileSystemInterface $file_system) {
+  public function __construct(array $configuration, $plugin_id, array $plugin_definition, CacheBackendInterface $cache) {
     $this->client = $client;
     $this->cache = $cache;
-    $this->fileSystem = $file_system;
     parent::__construct($configuration, $plugin_id, $plugin_definition);
   }
 

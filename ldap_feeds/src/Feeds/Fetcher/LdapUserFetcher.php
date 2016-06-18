@@ -21,7 +21,7 @@ use Drupal\ldap_feeds\Result\LdapFetcherResult;
  *   title = @Translation("Drupal User LDAP Entry Fetcher"),
  *   description = @Translation("Retrieves user data for existing LDAP associated accounts."),
  *   configuration_form = "Drupal\ldap_feeds\Feeds\Fetcher\Form\LDAPUserFetcherForm",
- *   arguments = {"@cache.feeds_download", "@file_system"}
+ *   arguments = {"@cache.feeds_download"}
  * )
  */
 class LDAPUserFetcher extends LDAPFetcher {
