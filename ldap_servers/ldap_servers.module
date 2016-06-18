@@ -157,6 +157,8 @@ require_once 'ldap_servers.tokens.inc';
 use Drupal\Component\Utility\Unicode;
 use \Drupal\ldap_servers\Entity\Server;
 use Drupal\Core\Url;
+use Drupal\ldap_test\TestServer;
+use Drupal\user\UserInterface;
 
 /**
  * Advertise the current ldap api version.
@@ -480,7 +482,7 @@ function _ldap_servers_get_simpletest_servers($sid, $type = NULL, $flatten, $res
   // Two flavors of mock servers exist.  ultimately v2 will be used in all simpletests.
   if (\Drupal::config('ldap_test.settings')->get('simpletest') == 2) {
     ldap_servers_module_load_include('php', 'ldap_test', 'LdapServerTest.class');
-    $servers['all'] = LdapServerTest::getLdapServerObjects(NULL, 'all', FALSE);
+    $servers['all'] = TestServer::getLdapServerObjects(NULL, 'all', FALSE);
     foreach ($servers['all'] as $_sid => $ldap_server) {
       if ($ldap_server->status == 1) {
         $servers['enabled'][$_sid] = $ldap_server;
@@ -626,6 +628,7 @@ function ldap_servers_get_user_ldap_data($drupal_user, $id = NULL, $ldap_context
     return $cache->data;
   }
 
+  /* @var \Drupal\ldap_servers\Entity\Server $ldap_server*/
   $ldap_server = ($id) ? ldap_servers_get_servers($id, 'enabled', TRUE) : FALSE;
 
   if ($ldap_server === FALSE) {
@@ -653,7 +656,7 @@ function ldap_servers_get_user_ldap_data($drupal_user, $id = NULL, $ldap_context
 /**
  * Implements hook_user_logout().
  */
-function ldap_servers_user_logout($account) {
+function ldap_servers_user_logout(UserInterface $account) {
   // When the user logs out clear the LDAP cached data.
   $cache_key = 'ldap_servers:user_data:' . $account->getUsername();
   if ($cache = \Drupal::cache()->get($cache_key)) {

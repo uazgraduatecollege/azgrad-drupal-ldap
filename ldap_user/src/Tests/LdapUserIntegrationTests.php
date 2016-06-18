@@ -6,7 +6,9 @@ use Drupal\ldap_test\LdapTestCase;
 use Drupal\user\Entity\User;
 
 /**
+ * Integration tests for ldap_user.
  *
+ * @group ldap_user
  */
 class LdapUserIntegrationTests extends LdapTestCase {
 

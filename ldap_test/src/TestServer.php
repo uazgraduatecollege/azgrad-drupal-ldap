@@ -10,11 +10,12 @@ namespace Drupal\ldap_test;
  *
  * @todo make bindpw protected
  */
+use Drupal\ldap_servers\Entity\Server;
 
 /**
  * @FIXME: LdapServer does not exist, won't run.
  */
-class LdapServerTest extends LdapServer {
+class TestServer extends Server {
 
   public $entries;
   public $methodResponses;
@@ -385,12 +386,12 @@ class LdapServerTest extends LdapServer {
   public static function getLdapServerObjects($sid = NULL, $type = NULL, $flatten = FALSE) {
     $servers = array();
     if ($sid) {
-      $servers[$sid] = new LdapServerTest($sid);
+      $servers[$sid] = new TestServer($sid);
     }
     else {
       $server_ids = variable_get('ldap_test_servers', array());
       foreach ($server_ids as $sid => $_sid) {
-        $servers[$sid] = new LdapServerTest($sid);
+        $servers[$sid] = new TestServer($sid);
       }
     }
 

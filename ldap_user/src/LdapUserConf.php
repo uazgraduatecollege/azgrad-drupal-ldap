@@ -1224,7 +1224,7 @@ class LdapUserConf {
    * ... should not assume all attribues are present in ldap entry.
    *
    * @param array ldap entry $ldap_user
-   * @param array $edit
+   * @param User $account
    *   see hook_user_save, hook_user_update, etc
    * @param object $ldap_server
    * @param enum $direction

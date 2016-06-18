@@ -1,7 +1,11 @@
 <?php
-namespace Drupal\ldap_authentication;
+namespace Drupal\ldap_authentication\Tests;
+use Drupal\ldap_test\LdapTestCase;
+
 /**
+ * Tests covering the ldap_autehentication module.
  *
+ * @group ldap_authentication
  */
 class LdapAuthenticationTestCase extends LdapTestCase {
 
@@ -37,11 +41,9 @@ class LdapAuthenticationTestCase extends LdapTestCase {
       'ldap_test',
     // don't need any real servers, configured, just ldap_servers code base.
     ));
-    // @FIXME
-    // // @FIXME
-    // // This looks like another module's variable. You'll need to rewrite this call
-    // // to ensure that it uses the correct configuration object.
-    // variable_set('ldap_simpletest', 2);.
+
+    // @FIXME: Schema issues, config cannot be found.
+    //\Drupal::service('config.factory')->getEditable('ldap_test.settings')->set('simpletest', 2)->save();
   }
 
   /**
@@ -49,16 +51,16 @@ class LdapAuthenticationTestCase extends LdapTestCase {
    */
   function tearDown() {
     parent::tearDown();
-    // @FIXME
-    // // @FIXME
-    // // This looks like another module's variable. You'll need to rewrite this call
-    // // to ensure that it uses the correct configuration object.
-    // variable_del('ldap_help_watchdog_detail');
-    // @FIXME
-    // // @FIXME
-    // // This looks like another module's variable. You'll need to rewrite this call
-    // // to ensure that it uses the correct configuration object.
-    // variable_del('ldap_simpletest');
+    // @FIXME: Schema issues, config cannot be found.
+   /* \Drupal::service('config.factory')
+      ->getEditable('ldap_help.settings')
+      ->clear('watchdog_detail')
+      ->save();
+
+    \Drupal::service('config.factory')
+      ->getEditable('ldap_test.settings')
+      ->clear('simpletest')
+      ->save(); */
   }
 
   /**
@@ -351,8 +353,8 @@ class LdapAuthenticationTestCase extends LdapTestCase {
    * LDAP Authentication Exclusive Mode User Logon Test (ids = LDAP_authen.EM.ULT.*)
    */
   function testSSOUserLogon() {
-
-    module_enable(array('ldap_sso', 'ldap_help'));
+    \Drupal::service('module_installer')->install(['ldap_sso']);
+    \Drupal::service('module_installer')->install(['ldap_help']);
 
     $sid = 'activedirectory1';
     $testid = 'SSOUserLogon3';
@@ -439,7 +441,8 @@ class LdapAuthenticationTestCase extends LdapTestCase {
     $this->assertTrue(count($ldap_servers) == 1, ' ldap_authentication test server setup successful', $testid);
 
     // These 2 modules are configured in setup, but disabled for most authentication tests.
-    module_disable(array('ldap_authorization_drupal_role', 'ldap_authorization'));
+    \Drupal::service('module_installer')->uninstall(['ldap_authorization_drupal_role']);
+    \Drupal::service('module_installer')->uninstall(['ldap_authorization']);
 
     /**
      * LDAP_authen.WL.user1  test for user 1 being excluded from white and black list tests
@@ -466,8 +469,8 @@ class LdapAuthenticationTestCase extends LdapTestCase {
     $this->assertText(t('Member for'), 'User 1 successfully authenticated in LDAP_authen.WL.user1', $testid);
     $this->drupalGet('user/logout');
 
-    module_enable(array('ldap_authorization'));
-    module_enable(array('ldap_authorization_drupal_role'));
+    \Drupal::service('module_installer')->install(['ldap_authorization']);
+    \Drupal::service('module_installer')->install(['ldap_authorization_drupal_role']);
 
     /**
      * prep LDAP_authen.WL.allow
@@ -549,14 +552,17 @@ class LdapAuthenticationTestCase extends LdapTestCase {
     /**
     * LDAP_authen.WL.php.php disabled -- desired result: authenticate fail with warning the authentication disabled
     */
-    module_disable(array('php'));
+    //@FIXME: php module no longer exists
+    //module_disable(array('php'));
     $this->AttemptLogonNewUser('adumbledore');
     $this->assertText(
       LDAP_AUTHENTICATION_DISABLED_FOR_BAD_CONF_MSG,
       'With php disabled and php code in whitelist, refuse authentication. (allowTestPhp).',
       $testid
     );
-    module_enable(array('php'));
+
+    // @FIXME: php module no longer exists
+    //module_enable(array('php'));
 
     /**
     * LDAP_authen.WL.php.true -- desired result: authenticate success
@@ -616,7 +622,8 @@ class LdapAuthenticationTestCase extends LdapTestCase {
      */
 
     // These 2 modules are configured in setup, but disabled for most authentication tests.
-    module_disable(array('ldap_authorization_drupal_role', 'ldap_authorization'));
+    \Drupal::service('module_installer')->uninstall(['ldap_authorization_drupal_role']);
+    \Drupal::service('module_installer')->uninstall(['ldap_authorization']);
     $authenticationConf = new \LdapAuthenticationConfAdmin();
     $authenticationConf->excludeIfNoAuthorizations = 1;
     $authenticationConf->save();
@@ -636,8 +643,9 @@ class LdapAuthenticationTestCase extends LdapTestCase {
       $testid
     );
 
-    module_enable(array('ldap_authorization'), TRUE);
-    module_enable(array('ldap_authorization_drupal_role'), TRUE);
+    \Drupal::service('module_installer')->install(['ldap_authorization']);
+    \Drupal::service('module_installer')->install(['ldap_authorization_drupal_role']);
+
     // Clear static cache.
     $consumer = ldap_authorization_get_consumers('drupal_role', TRUE, TRUE);
 
@@ -665,26 +673,23 @@ class LdapAuthenticationTestCase extends LdapTestCase {
     $authenticationConf->excludeIfNoAuthorizations = 0;
     $authenticationConf->save();
     $authenticationConf = ldap_authentication_get_valid_conf(TRUE);
-    module_disable(array('ldap_authorization_drupal_role', 'ldap_authorization'));
-
+    \Drupal::service('module_installer')->uninstall(['ldap_authorization_drupal_role']);
+    \Drupal::service('module_installer')->uninstall(['ldap_authorization']);
   }
 
   /**
    * Make sure user admin interface works.
    */
   function testUI() {
+   // @FIXME: Broken due to schema issues.
+   // \Drupal::service('config.factory')->getEditable('ldap_test.settings')->set('simpletest', 2)->save();
 
-    // Just to give warning if setup doesn't succeed.  may want to take these out at some point.
-    // @FIXME
-    // // @FIXME
-    // // This looks like another module's variable. You'll need to rewrite this call
-    // // to ensure that it uses the correct configuration object.
-    // $setup_success = (
-    //         module_exists('ldap_user') &&
-    //         module_exists('ldap_servers') &&
-    //         module_exists('ldap_authentication') &&
-    //         (variable_get('ldap_simpletest', 2) > 0)
-    //       );.
+    $setup_success = (
+      \Drupal::moduleHandler()->moduleExists('ldap_user') &&
+      \Drupal::moduleHandler()->moduleExists('ldap_servers') &&
+      \Drupal::moduleHandler()->moduleExists('ldap_authentication') &&
+      \Drupal::config('ldap_test.settings')->get('simpletest') > 0
+    );
     $this->assertTrue($setup_success, ' ldap_authentication UI setup successful', $this->testId('user interface tests'));
 
     $sid = 'activedirectory1';
@@ -807,7 +812,8 @@ class LdapAuthenticationTestCase extends LdapTestCase {
       ),
     );
 
-    module_enable(array('php'));
+    // @FIXME: php module no longer exists
+    //module_enable(array('php'));
     foreach (array(0, 1) as $i) {
       $edit = array();
       foreach ($form_tests as $field_name => $conf) {

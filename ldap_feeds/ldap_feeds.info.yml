@@ -5,8 +5,8 @@ core: 8.x
 package: 'Lightweight Directory Access Protocol'
 dependencies:
   - feeds
-  - ldap_servers
-  - ldap_query
+  - ldap:ldap_servers
+  - ldap:ldap_query
 
 #configure = admin/structure/feeds
 

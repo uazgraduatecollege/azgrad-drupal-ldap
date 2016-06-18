@@ -1236,7 +1236,6 @@ function ldap_user_token_replace($token, $account, $entity = NULL) {
  */
 function ldap_user_token_tokenize_entry($account, $token_keys, $pre = LDAP_SERVERS_TOKEN_PRE, $post = LDAP_SERVERS_TOKEN_POST, $user_entity = NULL) {
 
-  $detailed_watchdog_log = variable_get('ldap_help_watchdog_detail', 0);
   $tokens = array();
   if (!$user_entity) {
     list($discard, $user_entity) = ldap_user_load_user_acct_and_entity($account->uid, 'uid');

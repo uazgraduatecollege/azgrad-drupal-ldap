@@ -4,8 +4,9 @@ type: module
 core: 8.x
 package: 'Lightweight Directory Access Protocol'
 dependencies:
-  - ldap_servers
-  - ldap_user
+  - ldap:ldap_servers
+  - ldap:ldap_user
+  - externalauth
 
 #configure = admin/config/people/ldap/authentication
 #files[] = LdapAuthenticationConf.class.php

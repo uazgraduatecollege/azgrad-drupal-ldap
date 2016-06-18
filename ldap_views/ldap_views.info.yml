@@ -4,8 +4,8 @@ type: module
 core: 8.x
 package: 'Lightweight Directory Access Protocol'
 dependencies:
-  - ldap_query
-  - views
+  - ldap:ldap_query
+  - drupal:views
 
 #files[] = ldap_views.module
 #files[] = ldap_views.install

@@ -6,7 +6,11 @@ use Drupal\ldap_test\LdapTestCase;
 use ReflectionFunction;
 
 /**
+ * Unit tests for ldap_user
  *
+ * @FIXME: Should not depend on a WebTestCase
+ *
+ * @group ldap_user
  */
 class LdapUserUnitTests extends LdapTestCase {
 
@@ -96,11 +100,11 @@ class LdapUserUnitTests extends LdapTestCase {
     $this->assertTrue(\Drupal::service("cron")->run(), t('Cron can run with ldap user enabled.'), $this->testId('cron works'));
 
     // Test user token functions.
-    $entity = new stdClass();
+    $entity = new \stdClass();
     $entity->lname['und'][0]['value'] = 'potter';
     $entity->house['und'][0]['value'] = 'Gryffindor';
     $entity->house['und'][1]['value'] = 'Privet Drive';
-    $account = new stdClass();
+    $account = new \stdClass();
     $account->mail = 'hpotter@hogwarts.edu';
     $mail = ldap_user_token_replace('[property.mail]', $account, $entity);
     $this->assertTrue($mail == $account->mail, t('[property.mail] token worked on ldap_user_token_replace().'), $this->testId('tokens.property'));

@@ -18,6 +18,7 @@ use Drupal\Component\Utility\Unicode;
 use Drupal\simpletest\WebTestBase;
 
 /**
+ * Primary test class for ldap.
  *
  */
 class LdapTestCase extends WebTestBase {

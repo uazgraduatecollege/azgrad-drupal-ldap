@@ -4,12 +4,13 @@
 namespace Drupal\ldap_servers\Tests;
 
 use Drupal\Component\Utility\Unicode;
-use Drupal\Core\Extension\ModuleInstaller;
-use Drupal\ldap_test\LdapServerTest;
+use Drupal\ldap_test\TestServer;
 use Drupal\ldap_test\LdapTestCase;
 
 /**
  * Tests covering ldap_server module.
+ *
+ * @group ldap_servers
  */
 class LdapServersTestCase extends LdapTestCase {
 
@@ -63,7 +64,7 @@ class LdapServersTestCase extends LdapTestCase {
       $group = "ldap_servers: functions: $ldap_type";
       // @FIXME $test_data = variable_get('ldap_test_server__' . $sid, array());
       ldap_servers_module_load_include('php', 'ldap_test', 'LdapServerTest.class');
-      $ldap_server = LdapServerTest::getLdapServerObjects($sid, NULL, TRUE);
+      $ldap_server = TestServer::getLdapServerObjects($sid, NULL, TRUE);
 
       // Check against csv data rather than ldap array to make sure csv to ldap conversion is correct.
       // @FIXME: Remove line below when fixed above

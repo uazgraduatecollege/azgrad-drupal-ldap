@@ -4,7 +4,9 @@ namespace Drupal\ldap_user\Tests;
 use Drupal\ldap_test\LdapTestCase;
 
 /**
+ * UI tests for ldap_user.
  *
+ * @group ldap_user
  */
 class LdapUserUITests extends LdapTestCase {
 
