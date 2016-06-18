@@ -7,6 +7,7 @@
  */
 
 use Drupal\Component\Utility\Unicode;
+use Drupal\user\Entity\User;
 
 require_once 'ldap_user.module';
 /**
@@ -506,7 +507,7 @@ class LdapUserConf {
   /**
    * Given a drupal account, provision an ldap entry if none exists.  if one exists do nothing.
    *
-   * @param object $account
+   * @param User $account
    *   drupal account object with minimum of name property
    * @param array $ldap_user
    *   as prepopulated ldap entry.  usually not provided
@@ -518,7 +519,7 @@ class LdapUserConf {
    *     array('existing' => existing ldap entry),
    *     array('description' = > blah blah)
    */
-  public function provisionLdapEntry($account, $ldap_user = NULL, $test_query = FALSE) {
+  public function provisionLdapEntry(User $account, $ldap_user = NULL, $test_query = FALSE) {
     // debug('provisionLdapEntry account'); //debug($account);
     $watchdog_tokens = array();
     $result = array(
@@ -535,6 +536,8 @@ class LdapUserConf {
       $account->name = $username;
     }
 
+    /* @var \Drupal\user\Entity\user $account */
+    /* @var \Drupal\user\Entity\user $user_entity */
     list($account, $user_entity) = ldap_user_load_user_acct_and_entity($account->name);
 
     if (is_object($account) && property_exists($account, 'uid') && $account->uid == 1) {
@@ -543,8 +546,7 @@ class LdapUserConf {
       // Do not provision or synch user 1.
       return $result;
     }
-
-    if ($account == FALSE || $account->uid == 0) {
+    if ($account == FALSE || $account->isAnonymous()) {
       $result['status'] = 'fail';
       $result['error_description'] = 'can not provision ldap user unless corresponding drupal account exists first.';
       return $result;
@@ -936,11 +938,9 @@ class LdapUserConf {
   /**
    * Populate ldap entry array for provisioning.
    *
-   * @param array $account
+   * @param \Drupal\user\Entity\User $account
    *   drupal account
    * @param object $ldap_server
-   * @param array $ldap_user
-   *   ldap entry of user, returned by reference
    * @param array $params
    *   with the following key values:
    *    'ldap_context' =>
@@ -948,10 +948,12 @@ class LdapUserConf {
    *   'function' => function calling function, e.g. 'provisionLdapEntry'
    *   'include_count' => should 'count' array key be included
    *   'direction' => LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY || LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER
+   * @param null $ldap_user_entry
    *
-   * @return array(ldap entry, $result) in ldap extension array format.!THIS IS NOT THE ACTUAL LDAP ENTRY
+   * @return array (ldap entry, $result)
+   *   In ldap extension array format. THIS IS NOT THE ACTUAL LDAP ENTRY.
    */
-  function drupalUserToLdapEntry($account, $ldap_server, $params, $ldap_user_entry = NULL) {
+  function drupalUserToLdapEntry(User $account, $ldap_server, $params, $ldap_user_entry = NULL) {
     // debug('call to drupalUserToLdapEntry, account:'); //debug($account); //debug('ldap_server'); //debug($ldap_server);
     // debug('params'); //debug($params); //debug('ldap_user_entry');//debug($ldap_user_entry);
     $provision = (isset($params['function']) && $params['function'] == 'provisionLdapEntry');

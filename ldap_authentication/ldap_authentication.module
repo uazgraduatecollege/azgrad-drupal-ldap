@@ -4,7 +4,6 @@
  * @file
  * This module injects itself into Drupal's Authentication stack.
  */
-
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 
@@ -172,9 +171,9 @@ function ldap_authentication_info($field = 0) {
 
 /**
  *
- * @param object $user
- * @return boolean
- *    true if user is recorded as ldap authenticated and identified (ldap_authentified)
+ * @param int|\User $user
+ * @return bool true
+ * true if user is recorded as ldap authenticated and identified (ldap_authentified)
  */
 function ldap_authentication_ldap_authenticated($user) {
 
