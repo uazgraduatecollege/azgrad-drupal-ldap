@@ -73,8 +73,8 @@ class LdapParser extends PluginBase implements ParserInterface {
     }
 
     // Report progress.
-    $state->total = filesize($fetcher_result->getFilePath());
-    $state->pointer = $parser->lastLinePos();
+    $state->total = count($result);
+    $state->pointer = count($result);
     $state->progress($state->total, $state->pointer);
 
     return $result;
