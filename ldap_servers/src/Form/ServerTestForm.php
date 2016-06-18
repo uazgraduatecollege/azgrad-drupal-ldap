@@ -241,6 +241,7 @@ class ServerTestForm extends EntityForm {
     $has_errors = FALSE;
     $values = $form_state->getValues();
     $id = $values['id'];
+    /* @var \Drupal\ldap_servers\Entity\Server $ldap_server */
     $ldap_server = ldap_servers_get_servers($id, 'all', TRUE);
 
     // $result = t('<h1>Test of name </h2>',$server_conf);.
@@ -408,7 +409,8 @@ class ServerTestForm extends EntityForm {
       }
     }
 
-    if (!$has_errors && isset($values['grp_test_grp_dn'])) {
+    //@FIXME: The following subsesction is disabled until fixed.
+    if (false && !$has_errors && isset($values['grp_test_grp_dn'])) {
       $group_dn = $values['grp_test_grp_dn'];
 
       $result = @ldap_read($ldap_server->connection, $group_dn, 'objectClass=*');

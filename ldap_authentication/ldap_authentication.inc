@@ -603,8 +603,7 @@ function ldap_authentication_fail_response($authentication_result, $auth_conf, $
         LDAP_AUTHENTICATION_EXCLUSIVE is set to true.  So need to stop authentication of Drupal user that is not user 1.
         error message: %err_text', $watchdog_tokens);
     }
-    // form_set_error('name', $watchdog_tokens['%err_text']);.
-    drupal_set_message("TODO: Form set error replacement.", "error");
+    drupal_set_message(t('Error: @token', array('@token' =>  $watchdog_tokens['%err_text'])), "error");
   }
   else {
     // Fail scenario 2.  simply fails ldap.  return false, but don't throw form error

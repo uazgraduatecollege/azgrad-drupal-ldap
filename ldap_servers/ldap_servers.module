@@ -155,10 +155,10 @@ require_once 'ldap_servers.functions.inc';
 require_once 'ldap_servers.tokens.inc';
 
 use Drupal\Component\Utility\Unicode;
+use Drupal\Core\Session\AccountProxy;
 use \Drupal\ldap_servers\Entity\Server;
 use Drupal\Core\Url;
 use Drupal\ldap_test\TestServer;
-use Drupal\user\UserInterface;
 
 /**
  * Advertise the current ldap api version.
@@ -656,7 +656,7 @@ function ldap_servers_get_user_ldap_data($drupal_user, $id = NULL, $ldap_context
 /**
  * Implements hook_user_logout().
  */
-function ldap_servers_user_logout(UserInterface $account) {
+function ldap_servers_user_logout(AccountProxy $account) {
   // When the user logs out clear the LDAP cached data.
   $cache_key = 'ldap_servers:user_data:' . $account->getUsername();
   if ($cache = \Drupal::cache()->get($cache_key)) {
