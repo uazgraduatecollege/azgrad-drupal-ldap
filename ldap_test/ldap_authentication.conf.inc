@@ -4,6 +4,9 @@
  * @file
  */
 
+require_once(dirname(__FILE__) . '/../ldap_authentication/ldap_authentication.module');
+
+
 /**
  *
  */

@@ -1,5 +1,10 @@
 <?php
-namespace Drupal\ldap_user;
+
+namespace Drupal\ldap_user\Tests;
+
+use Drupal\ldap_test\LdapTestCase;
+use Drupal\user\Entity\User;
+
 /**
  *
  */
@@ -16,12 +21,7 @@ class LdapUserIntegrationTests extends LdapTestCase {
     );
   }
 
-  /**
-   *
-   */
-  function __construct($test_id = NULL) {
-    parent::__construct($test_id);
-  }
+  public static $modules = array('ldap_servers', 'ldap_authentication', 'ldap_authorization', 'ldap_user');
 
   public $module_name = 'ldap_user';
   protected $ldap_test_data;
@@ -30,31 +30,33 @@ class LdapUserIntegrationTests extends LdapTestCase {
    * Create one or more server configurations in such as way
    *  that this setUp can be a prerequisite for ldap_authentication and ldap_authorization.
    */
-  function setUp() {
-    parent::setUp(array('ldap_user', 'ldap_test'));
-    // @FIXME
-    // // @FIXME
-    // // This looks like another module's variable. You'll need to rewrite this call
-    // // to ensure that it uses the correct configuration object.
-    // variable_set('ldap_simpletest', 2);
-  }
 
-  /**
-   *
-   */
-  function tearDown() {
-    parent::tearDown();
-    // @FIXME
-    // // @FIXME
-    // // This looks like another module's variable. You'll need to rewrite this call
-    // // to ensure that it uses the correct configuration object.
-    // variable_del('ldap_help_watchdog_detail');
-    // @FIXME
-    // // @FIXME
-    // // This looks like another module's variable. You'll need to rewrite this call
-    // // to ensure that it uses the correct configuration object.
-    // variable_del('ldap_simpletest');
+  /* @FIXME
+   * This looks like another module's variable. You'll need to rewrite this call
+   * to ensure that it uses the correct configuration object.
+   * function setUp() {
+   * parent::setUp();
+   * variable_set('ldap_simpletest', 2);
   }
+   */
+
+
+
+  /*    @FIXME
+  This looks like another module's variable. You'll need to rewrite this call
+  to ensure that it uses the correct configuration object.
+  function tearDown() {
+  parent::tearDown();
+  variable_del('ldap_help_watchdog_detail');
+   */
+
+  /*
+  @FIXME
+  This looks like another module's variable. You'll need to rewrite this call
+  to ensure that it uses the correct configuration object.
+  variable_del('ldap_simpletest');
+  }
+   */
 
   /**
    * Integration tests for provisioning to ldap.
@@ -62,16 +64,17 @@ class LdapUserIntegrationTests extends LdapTestCase {
   function testProvisionToLdap() {
 
     // Just to give warning if setup doesn't succeed.  may want to take these out at some point.
-    // @FIXME
-    // // @FIXME
-    // // This looks like another module's variable. You'll need to rewrite this call
-    // // to ensure that it uses the correct configuration object.
-    // $setup_success = (
-    //         module_exists('ldap_user') &&
-    //         module_exists('ldap_servers') &&
-    //         (variable_get('ldap_simpletest', 2) > 0)
-    //       );.
-    $this->assertTrue($setup_success, ' ldap_user setup successful', $this->testId("setup"));
+    /* @FIXME
+     * This looks like another module's variable. You'll need to rewrite this call
+     * to ensure that it uses the correct configuration object.
+     * $setup_success = (
+     *    module_exists('ldap_user') &&
+     *    module_exists('ldap_servers') &&
+     *    (variable_get('ldap_simpletest', 2) > 0)
+     * );
+     *
+     * $this->assertTrue($setup_success, ' ldap_user setup successful', $this->testId("setup"));
+     */
 
     foreach (array('activedirectory1', 'openldap1') as $test_sid) {
       $sids = array($test_sid);
@@ -90,7 +93,8 @@ class LdapUserIntegrationTests extends LdapTestCase {
         'pass' => user_password(),
         'status' => 1,
       );
-      $user_acct = new stdClass();
+      // @FIXME: Not a user
+      $user_acct = new User();
       $user_acct->is_new = TRUE;
       $user_acct->field_fname['und'][0]['value'] = 'Bercilak';
       $user_acct->field_lname['und'][0]['value'] = 'Hautdesert';
@@ -114,7 +118,8 @@ class LdapUserIntegrationTests extends LdapTestCase {
       );
       $this->assertTrue($ldap_entry_success, t("provision of ldap entry on user create succeeded for " . $username), $this->testId("test for provision to ldap on drupal acct create"));
       if (!$ldap_entry_success) {
-        debug('drupal_account'); debug($drupal_account);
+        // @FIXME: See above
+        // debug('drupal_account'); debug($drupal_account);
         debug("desired_dn=$desired_dn, ldap_entry_post=");
         debug($ldap_entry_post);
         debug('ldap_user_conf'); debug($ldap_user_conf);
@@ -411,17 +416,17 @@ class LdapUserIntegrationTests extends LdapTestCase {
    */
   function testDrupalAccountsOrphaned() {
     // Just to give warning if setup doesn't succeed.  may want to take these out at some point.
-    // @FIXME
-    // // @FIXME
-    // // This looks like another module's variable. You'll need to rewrite this call
-    // // to ensure that it uses the correct configuration object.
-    // $setup_success = (
-    //         module_exists('ldap_user') &&
-    //         module_exists('ldap_servers') &&
-    //         (variable_get('ldap_simpletest', 2) > 0)
-    //       );.
-    $this->assertTrue($setup_success, ' ldap_user setup successful', $this->testId('orphaned entries tests'));
-
+    /** @FIXME
+    * This looks like another module's variable. You'll need to rewrite this call
+    * to ensure that it uses the correct configuration object.
+    * $setup_success = (
+    *         module_exists('ldap_user') &&
+    *         module_exists('ldap_servers') &&
+    *         (variable_get('ldap_simpletest', 2) > 0)
+    *       );
+    *
+    *    $this->assertTrue($setup_success, ' ldap_user setup successful',  $this->testId('orphaned entries tests'));
+    */
     $sids = array('activedirectory1');
     $this->prepTestData('hogwarts', $sids, 'provisionToDrupal', 'default');
 
@@ -430,9 +435,8 @@ class LdapUserIntegrationTests extends LdapTestCase {
     $account_options = $drupal_form['basic_to_drupal']['orphanedDrupalAcctBehavior']['#options'];
     $cn_to_account = array();
     $ldap_server = ldap_servers_get_servers('activedirectory1', NULL, TRUE, TRUE);
-    // debug("ldap_server"); debug(is_object($ldap_server));
+
     foreach ($account_options as $account_option => $account_option_text) {
-      // debug("$account_option - $account_option_text");.
       $sids = array('activedirectory1');
       $this->prepTestData('hogwarts', $sids, 'provisionToDrupal', 'default');
       $ldap_user_conf->orphanedDrupalAcctBehavior = $account_option;
@@ -454,10 +458,8 @@ class LdapUserIntegrationTests extends LdapTestCase {
           'activedirectory1'
         );
         $cn_to_account[$name] = $account;
-        // debug("new account"); debug($account);
       }
-      // debug($cn_to_account['clone0']);
-      //  debug($cn_to_account[$last_clone_username]);.
+
       // Delete 10 ldap entries.
       $clone_first_uid = $cn_to_account[$first_clone_username]->uid;
       $clone_last_uid = $cn_to_account[$last_clone_username]->uid;
@@ -498,7 +500,6 @@ class LdapUserIntegrationTests extends LdapTestCase {
       $clone_last =
       // To reset the user cache, use EntityStorageInterface::resetCache().
       \Drupal::entityManager()->getStorage('user')->load($clone_last_uid);
-      // debug("post cron, clone0 and cloneN"); debug($clone_first->status);debug($clone_last->status); //debug($ldap_server->entries);.
       switch ($account_option) {
 
         case 'ldap_user_orphan_do_not_check':

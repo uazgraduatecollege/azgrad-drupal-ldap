@@ -4,6 +4,8 @@
  * @file
  */
 
+require_once(dirname(__FILE__) . '/../ldap_servers/ldap_servers.module');
+
 /**
  * Activedirectory is default Active Directory server config .
  */

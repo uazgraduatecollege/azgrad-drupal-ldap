@@ -1,5 +1,8 @@
 <?php
-namespace Drupal\ldap_user;
+namespace Drupal\ldap_user\Tests;
+
+use Drupal\ldap_test\LdapTestCase;
+
 /**
  *
  */
@@ -16,45 +19,37 @@ class LdapUserUITests extends LdapTestCase {
     );
   }
 
-  /**
-   *
-   */
-  function __construct($test_id = NULL) {
-    parent::__construct($test_id);
-  }
-
   public $module_name = 'ldap_user';
   protected $ldap_test_data;
+
+  public static $modules = array('ldap_servers', 'ldap_authentication', 'ldap_authorization', 'ldap_user');
+
 
   /**
    * Create one or more server configurations in such as way
    *  that this setUp can be a prerequisite for ldap_authentication and ldap_authorization.
+   *    * Function setUp() {
+   * parent::setUp(array('ldap_user', 'ldap_test'));
+   * // @FIXME
+   * // // @FIXME
+   * // // This looks like another module's variable. You'll need to rewrite this call
+   * // // to ensure that it uses the correct configuration object.
+   * // variable_set('ldap_simpletest', 2);
+   *    * }
+   *    * function tearDown() {
+   * parent::tearDown();
+   * // @FIXME
+   * // // @FIXME
+   * // // This looks like another module's variable. You'll need to rewrite this call
+   * // // to ensure that it uses the correct configuration object.
+   * // variable_del('ldap_help_watchdog_detail');
+   *    * // @FIXME
+   * // // @FIXME
+   * // // This looks like another module's variable. You'll need to rewrite this call
+   * // // to ensure that it uses the correct configuration object.
+   * // variable_del('ldap_simpletest');
+   *    * }.
    */
-  function setUp() {
-    parent::setUp(array('ldap_user', 'ldap_test'));
-    // @FIXME
-    // // @FIXME
-    // // This looks like another module's variable. You'll need to rewrite this call
-    // // to ensure that it uses the correct configuration object.
-    // variable_set('ldap_simpletest', 2);
-  }
-
-  /**
-   *
-   */
-  function tearDown() {
-    parent::tearDown();
-    // @FIXME
-    // // @FIXME
-    // // This looks like another module's variable. You'll need to rewrite this call
-    // // to ensure that it uses the correct configuration object.
-    // variable_del('ldap_help_watchdog_detail');
-    // @FIXME
-    // // @FIXME
-    // // This looks like another module's variable. You'll need to rewrite this call
-    // // to ensure that it uses the correct configuration object.
-    // variable_del('ldap_simpletest');
-  }
 
   /**
    * Make sure user admin interface works.  (its a beast)

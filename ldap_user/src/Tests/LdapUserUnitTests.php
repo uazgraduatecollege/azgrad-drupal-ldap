@@ -1,7 +1,10 @@
 <?php
-use Drupal\Component\Utility\Unicode;
+namespace Drupal\ldap_user\Tests;
 
-namespace Drupal\ldap_user;
+use Drupal\Component\Utility\Unicode;
+use Drupal\ldap_test\LdapTestCase;
+use ReflectionFunction;
+
 /**
  *
  */
@@ -28,35 +31,33 @@ class LdapUserUnitTests extends LdapTestCase {
   public $module_name = 'ldap_user';
   protected $ldap_test_data;
 
+  public static $modules = array('ldap_servers', 'ldap_authentication', 'ldap_authorization', 'ldap_user');
+
   /**
    * Create one or more server configurations in such as way
    *  that this setUp can be a prerequisite for ldap_authentication and ldap_authorization.
+   *    * Function setUp() {
+   * parent::setUp(array());
+   * // @FIXME
+   * // // @FIXME
+   * // // This looks like another module's variable. You'll need to rewrite this call
+   * // // to ensure that it uses the correct configuration object.
+   * // variable_set('ldap_simpletest', 2);
+   *    * }
+   *    * function tearDown() {
+   * parent::tearDown();
+   * // @FIXME
+   * // // @FIXME
+   * // // This looks like another module's variable. You'll need to rewrite this call
+   * // // to ensure that it uses the correct configuration object.
+   * // variable_del('ldap_help_watchdog_detail');
+   *    * // @FIXME
+   * // // @FIXME
+   * // // This looks like another module's variable. You'll need to rewrite this call
+   * // // to ensure that it uses the correct configuration object.
+   * // variable_del('ldap_simpletest');
+   *    * }.
    */
-  function setUp() {
-    parent::setUp(array('ldap_servers', 'ldap_user', 'ldap_authentication', 'ldap_test'));
-    // @FIXME
-    // // @FIXME
-    // // This looks like another module's variable. You'll need to rewrite this call
-    // // to ensure that it uses the correct configuration object.
-    // variable_set('ldap_simpletest', 2);
-  }
-
-  /**
-   *
-   */
-  function tearDown() {
-    parent::tearDown();
-    // @FIXME
-    // // @FIXME
-    // // This looks like another module's variable. You'll need to rewrite this call
-    // // to ensure that it uses the correct configuration object.
-    // variable_del('ldap_help_watchdog_detail');
-    // @FIXME
-    // // @FIXME
-    // // This looks like another module's variable. You'll need to rewrite this call
-    // // to ensure that it uses the correct configuration object.
-    // variable_del('ldap_simpletest');
-  }
 
   /**
    * Make sure install succeeds and ldap user functions/methods work.
@@ -64,17 +65,17 @@ class LdapUserUnitTests extends LdapTestCase {
   function testUnitTests() {
 
     // Just to give warning if setup doesn't succeed.
-    // @FIXME
-    // // @FIXME
+    /* @FIXME
     // // This looks like another module's variable. You'll need to rewrite this call
     // // to ensure that it uses the correct configuration object.
     // $setup_success = (
     //         module_exists('ldap_user') &&
     //         module_exists('ldap_servers') &&
     //         (variable_get('ldap_simpletest', 2) > 0)
-    //       );.
-    $this->assertTrue($setup_success, ' ldap_user setup successful', $this->testId('setup'));
+    );
 
+    $this->assertTrue($setup_success, ' ldap_user setup successful', $this->testId('setup'));
+     */
     $api_functions = array(
       'ldap_user_conf' => array(2, 0),
       'ldap_user_synch_to_drupal' => array(3, 1),
@@ -386,7 +387,7 @@ class LdapUserUnitTests extends LdapTestCase {
    */
   function testProvisionToDrupal() {
     // @FIXME
-    // // @FIXME
+    /* @FIXME
     // // This looks like another module's variable. You'll need to rewrite this call
     // // to ensure that it uses the correct configuration object.
     // /**
@@ -395,13 +396,15 @@ class LdapUserUnitTests extends LdapTestCase {
     //      * tests one property (property.mail) and one field (field.field_lname) as well as username, puid
     //      */
     //
-    //       // just to give warning if setup doesn't succeed.  may want to take these out at some point.
+    /*       // just to give warning if setup doesn't succeed.  may want to take these out at some point.
     //     $setup_success = (
     //         module_exists('ldap_user') &&
     //         module_exists('ldap_servers') &&
     //         (variable_get('ldap_simpletest', 0) > 0)
-    //       );
+    );
+
     $this->assertTrue($setup_success, ' ldap_user setup successful', $this->testId("setup"));
+     */
 
     $sid = 'activedirectory1';
     $sids = array($sid);

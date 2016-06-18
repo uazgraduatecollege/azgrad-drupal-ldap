@@ -1,9 +1,6 @@
 <?php
 
-/**
- * @file
- * Simpletest ldapServer class for testing without an actual ldap server.
- */
+namespace Drupal\ldap_test;
 
 /**
  * LDAP Server Class.
@@ -14,9 +11,8 @@
  * @todo make bindpw protected
  */
 
-ldap_servers_module_load_include('php', 'ldap_servers', 'LdapServer.class');
 /**
- *
+ * @FIXME: LdapServer does not exist, won't run.
  */
 class LdapServerTest extends LdapServer {
 

@@ -1,16 +1,13 @@
 <?php
 
-/**
- * @file
- * Simpletest for ldap servers.
- */
 
-if (function_exists('ldap_servers_module_load_include')) {
-  ldap_servers_module_load_include('php', 'ldap_test', 'LdapTestCase.class');
-}
-else {
-  module_load_include('php', 'ldap_test', 'LdapTestCase.class');
-}
+namespace Drupal\ldap_servers\Tests;
+
+use Drupal\Component\Utility\Unicode;
+use Drupal\Core\Extension\ModuleInstaller;
+use Drupal\ldap_test\LdapServerTest;
+use Drupal\ldap_test\LdapTestCase;
+
 /**
  *
  */
@@ -39,26 +36,20 @@ class LdapServersTestCase extends LdapTestCase {
   public $module_name = 'ldap_servers';
   protected $ldap_test_data;
 
+  public static $modules = array('ldap_test', 'ldap_servers');
+
   /**
    * Create one or more server configurations in such as way
    *  that this setUp can be a prerequisite for ldap_authentication and ldap_authorization.
-   */
-  function setUp() {
-    parent::setUp(array('ldap_test'));
-    variable_set('ldap_simpletest', 2);
-  }
-
-  /**
-   *
-   */
-  function tearDown() {
-    parent::tearDown();
-    variable_del('ldap_help_watchdog_detail');
-    variable_del('ldap_simpletest');
-  }
-
-  /**
-   *
+   *    * Function setUp() {
+   * parent::setUp(array('ldap_test'));
+   * variable_set('ldap_simpletest', 2);
+   * }
+   *    * function tearDown() {
+   * parent::tearDown();
+   * variable_del('ldap_help_watchdog_detail');
+   * variable_del('ldap_simpletest');
+   * }.
    */
   public function testApiFunctions() {
 
@@ -70,11 +61,13 @@ class LdapServersTestCase extends LdapTestCase {
       $this->prepTestData('hogwarts', array($sid));
 
       $group = "ldap_servers: functions: $ldap_type";
-      $test_data = variable_get('ldap_test_server__' . $sid, array());
+      // @FIXME $test_data = variable_get('ldap_test_server__' . $sid, array());
       ldap_servers_module_load_include('php', 'ldap_test', 'LdapServerTest.class');
       $ldap_server = LdapServerTest::getLdapServerObjects($sid, NULL, TRUE);
 
       // Check against csv data rather than ldap array to make sure csv to ldap conversion is correct.
+      // @FIXME: Remove line below when fixed above
+      $test_data['csv']['users']['101'] = 'temp';
       $user_csv_entry = $test_data['csv']['users']['101'];
       $user_dn = $user_csv_entry['dn'];
       $user_cn = $user_csv_entry['cn'];
@@ -157,26 +150,25 @@ class LdapServersTestCase extends LdapTestCase {
     $install_tables = array('ldap_servers');
     // disable, uninstall, and enable/install module.
     $modules = array($this->module_name);
+    $module_installer = ModuleInstaller();
     $ldap_module_uninstall_sequence = array('ldap_authentication', 'ldap_test', 'ldap_user', 'ldap_group', 'ldap_servers');
-    // Disable dependent modules.
-    module_disable($ldap_module_uninstall_sequence);
-    drupal_uninstall_modules($ldap_module_uninstall_sequence);
-    module_enable($modules, TRUE);
+    // Uninstall dependent modules.
+    $module_installer->uninstall($modules, TRUE);
+    // Uninstall dependent modules.
+    $module_installer->install($modules, TRUE);
     foreach ($install_tables as $table) {
       $this->assertTrue(db_table_exists($table), $table . ' table creates', $group);
     }
-    $var_created = $this->assertTrue(TRUE, 'ldap_servers_encryption variable initialized', $group);
-    $var_created = $this->assertTrue(config('ldap_server.settings')->get('encrypt_key'), 'ldap_servers_encrypt_key variable initialized', $group);
+    $this->assertTrue(TRUE, 'ldap_servers_encryption variable initialized', $group);
+    $this->assertTrue(config('ldap_server.settings')->get('encrypt_key'), 'ldap_servers_encrypt_key variable initialized', $group);
 
-    // Disable dependent modules.
-    module_disable($modules, TRUE);
     // Unistall dependent modules.
-    drupal_uninstall_modules($modules, TRUE);
+    $module_installer->uninstall($modules, TRUE);
     foreach ($install_tables as $table) {
       $this->assertFalse(db_table_exists($table), $table . ' table removed', $group);
     }
-    $var_created = $this->assertFalse(config('ldap_server.settings')->get('encryption'), 'ldap_servers_encryption variable removed', $group);
-    $var_created = $this->assertFalse(config('ldap_server.settings')->get('encrypt_key'), 'ldap_servers_encrypt_key variable removed', $group);
+    $this->assertFalse(\Drupal::config('ldap_server.settings')->get('encryption'), 'ldap_servers_encryption variable removed', $group);
+    $this->assertFalse(\Drupal::config('ldap_server.settings')->get('encrypt_key'), 'ldap_servers_encrypt_key variable removed', $group);
 
     // Test tokens, see http://drupal.org/node/1245736
     $ldap_entry = array(
@@ -382,8 +374,7 @@ class LdapServersTestCase extends LdapTestCase {
 
       $this->assertTrue(count(array_keys($ldap_servers)) == 0, 'Delete form for ldap server deleted server.', $this->ldapTestId . '.Delete Server');
 
-      // Return to fake server mode.
-      variable_set('ldap_simpletest', $ldap_simpletest_initial);
+      // @FIXME: variable_set('ldap_simpletest', $ldap_simpletest_initial); // return to fake server mode
     }
   }
 
@@ -402,13 +393,13 @@ class LdapServersTestCase extends LdapTestCase {
 
     $mismatches = array();
     foreach ($data as $field_id => $values) {
-      $field_id = drupal_strtolower($field_id);
+      $field_id = Unicode::strtolower($field_id);
       if (!isset($map[$field_id])) {
         // debug("no mapping for field: $field_id in item_id $item_id");.
         continue;
       }
       $property = $map[$field_id];
-      if (!property_exists($object, $property) && !property_exists($object, drupal_strtolower($property))) {
+      if (!property_exists($object, $property) && !property_exists($object, Unicode::strtolower($property))) {
         // debug("property $property does not exist in object in item_id $item_id");.
         continue;
       }
@@ -428,7 +419,7 @@ class LdapServersTestCase extends LdapTestCase {
       }
       else {
         if (in_array($field_id, $lcase_transformed) && is_scalar($field_value)) {
-          $field_value = drupal_strtolower($field_value);
+          $field_value = Unicode::strtolower($field_value);
         }
         $property_value_show = (is_scalar($property_value)) ? $property_value : serialize($property_value);
         $field_value_show = (is_scalar($field_value)) ? $field_value : serialize($field_value);
@@ -444,6 +435,7 @@ class LdapServersTestCase extends LdapTestCase {
         }
       }
       if (!$pass) {
+        // @FIXME: not instaniated likely
         $mismatches[] = "property $property ($property_value_show) does not match field $field_id value ($field_value_show)";
       }
     }

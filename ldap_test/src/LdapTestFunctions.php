@@ -1,5 +1,7 @@
 <?php
 
+namespace Drupal\ldap_test;
+
 /**
  * @file
  * Utility functions for ldap simpletests.
@@ -7,12 +9,14 @@
  * @todo could be moved into LdapTestCase.class.php
  */
 
+use Drupal\Component\Utility\Unicode;
 use Drupal\ldap_user\LdapUserConfAdmin;
+use LdapAuthenticationConfAdmin;
 
-require_once 'ldap_servers.conf.inc';
-require_once 'ldap_user.conf.inc';
-require_once 'ldap_authentication.conf.inc';
-require_once 'ldap_authorization.conf.inc';
+require_once dirname(__FILE__) . '/../ldap_servers.conf.inc';
+require_once dirname(__FILE__) . '/../ldap_user.conf.inc';
+require_once dirname(__FILE__) . '/../ldap_authentication.conf.inc';
+require_once dirname(__FILE__) . '/../ldap_authorization.conf.inc';
 /**
  *
  */
@@ -28,13 +32,9 @@ class LdapTestFunctions {
    *
    */
   function __construct() {
-    module_load_include('module', 'ldap_servers');
     $this->data['ldap_servers'] = ldap_test_ldap_servers_data();
-    module_load_include('module', 'ldap_user');
     $this->data['ldap_user'] = ldap_test_ldap_user_data();
-    module_load_include('module', 'ldap_authentication');
     $this->data['ldap_authorization'] = ldap_test_ldap_authorization_data();
-    module_load_include('module', 'ldap_authorization');
     $this->data['ldap_authentication'] = ldap_test_ldap_authentication_data();
   }
 
@@ -44,26 +44,26 @@ class LdapTestFunctions {
   function configureLdapServers($sids, $feetures = FALSE, $feature_name = NULL) {
     foreach ($sids as $i => $sid) {
       $current_sids[$sid] = $sid;
-      variable_set('ldap_test_server__' . $sid, $this->data['ldap_servers'][$sid]);
+      // @FIXME variable_set('ldap_test_server__' . $sid, $this->data['ldap_servers'][$sid]);
     }
-    variable_set('ldap_test_servers', $current_sids);
+    // @FIXME variable_set('ldap_test_servers', $current_sids);
   }
 
   /**
    *
    */
   function setFakeServerProperty($sid, $prop, $value) {
-    $test_data = variable_get('ldap_test_server__' . $sid, array());
+    // @FIXME  $test_data = variable_get('ldap_test_server__' . $sid, array());
     $test_data['properties'][$prop] = $value;
-    variable_set('ldap_test_server__' . $sid, $test_data);
+    // @FIXME  variable_set('ldap_test_server__' . $sid, $test_data);
   }
 
   /**
    *
    */
   function setFakeServerUserAttribute($sid, $dn, $attr_name, $attr_value, $i = 0) {
-    $attr_name = drupal_strtolower($attr_name);
-    $test_data = variable_get('ldap_test_server__' . $sid, array());
+    $attr_name = Unicode::strtolower($attr_name);
+    // @FIXME: $test_data = variable_get('ldap_test_server__' . $sid, array());
 
     $test_data['entries'][$dn][$attr_name][$i] = $attr_value;
     $count_set = (int) isset($test_data['entries'][$dn][$attr_name]['count']);
@@ -74,9 +74,9 @@ class LdapTestFunctions {
     $count_set = (int) isset($test_data['ldap'][$dn][$attr_name]['count']);
     // don't count the 'count'.
     $test_data['ldap'][$dn][$attr_name]['count'] = count($test_data['ldap'][$dn][$attr_name]) - $count_set;
-    variable_set('ldap_test_server__' . $sid, $test_data);
-    // Clear server cache;.
-    $ldap_server = ldap_servers_get_servers($sid, NULL, TRUE, TRUE);
+    // @FIXME: variable_set('ldap_test_server__' . $sid, $test_data);
+    // clear server cache;.
+    ldap_servers_get_servers($sid, NULL, TRUE, TRUE);
   }
 
   /**
@@ -108,37 +108,37 @@ class LdapTestFunctions {
         $ldapUserConfAdmin->{$prop_name} = $options[$prop_name];
       }
     }
-    $ldapUserConfAdmin->save();
+    // @FIXME: Format not up-to-date
+    // $ldapUserConfAdmin->save();
   }
 
   /**
+   * Function prepConsumerConf($consumer_confs) {
+   * create consumer authorization configuration.
+   * foreach ($consumer_confs as $consumer_type => $consumer_conf) {.
    *
-   */
-  function prepConsumerConf($consumer_confs) {
-    // Create consumer authorization configuration.
-    foreach ($consumer_confs as $consumer_type => $consumer_conf) {
-      // @FIXME: Function does not exist
-      $consumer_obj = ldap_authorization_get_consumer_object($consumer_type);
-      $consumer_conf_admin = new LdapAuthorizationConsumerConfAdmin($consumer_obj, TRUE);
-      foreach ($consumer_conf as $property_name => $property_value) {
-        $consumer_conf_admin->{$property_name} = $property_value;
-      }
-      foreach ($consumer_conf_admin->mappings as $i => $mapping) {
-        $mappings = $consumer_obj->normalizeMappings(
-          array(
-            array($mapping['from'], $mapping['user_entered']),
-          ), FALSE);
-        $consumer_conf_admin->mappings[$i] = $mappings[0];
-      }
-      $consumer_conf_admin->save();
-    }
-  }
-
-  /**
-   *
+   * @FIXME: Function does not exist
+   * $consumer_obj = ldap_authorization_get_consumer_object($consumer_type);
+   * $consumer_conf_admin = new LdapAuthorizationConsumerConfAdmin($consumer_obj, TRUE);
+   * foreach ($consumer_conf as $property_name => $property_value) {
+   * $consumer_conf_admin->{$property_name} = $property_value;
+   * }
+   * foreach ($consumer_conf_admin->mappings as $i => $mapping) {
+   * $mappings = $consumer_obj->normalizeMappings(
+   * array(
+   * array($mapping['from'], $mapping['user_entered'])
+   * )
+   * , FALSE);
+   * $consumer_conf_admin->mappings[$i] = $mappings[0];
+   * }
+   * $consumer_conf_admin->save();
+   * }
+   * }
    */
   function ldapUserIsAuthmapped($username) {
-    $authmaps = user_get_authmaps($username);
+    $externalauth = \Drupal::service('externalauth.externalauth');
+    $authmaps = $externalauth->load($username, 'ldap_user');
+    // @FIXME: Wrong return values
     return ($authmaps && in_array('ldap_user', array_keys($authmaps)));
   }
 
@@ -147,10 +147,12 @@ class LdapTestFunctions {
    */
   function drupalLdapUpdateUser($edit = array(), $ldap_authenticated = FALSE, $user) {
     if (count($edit)) {
-      $user = user_save($user, $edit);
+      // FIXME:
+      // $user = user_save($user, $edit);.
     }
     if ($ldap_authenticated) {
-      user_set_authmaps($user, array('authname_ldap_user' => $user->name));
+      // FIXME: see above authmaps
+      // user_set_authmaps($user, array('authname_ldap_user' => $user->name));.
     }
     return $user;
   }
@@ -176,7 +178,7 @@ class LdapTestFunctions {
             $new_roles[$id] = $name;
           }
         }
-        user_save($user, array('roles' => $new_roles));
+        // @FIXME user_save($user, array('roles' => $new_roles));
       }
     }
   }
@@ -309,10 +311,11 @@ class LdapTestFunctions {
 
     $this->data['ldap_servers'][$sid]['ldap'] = $this->ldapData['ldap_servers'][$sid];
     $this->data['ldap_servers'][$sid]['csv'] = $this->csvTables;
-    variable_set('ldap_test_server__' . $sid, $this->data['ldap_servers'][$sid]);
-    $current_sids = variable_get('ldap_test_servers', array());
-    $current_sids[] = $sid;
-    variable_set('ldap_test_servers', array_unique($current_sids));
+    // @FIXME
+    // variable_set('ldap_test_server__' . $sid, $this->data['ldap_servers'][$sid]);
+    // $current_sids = variable_get('ldap_test_servers', array());
+    // $current_sids[] = $sid;
+    // variable_set('ldap_test_servers', array_unique($current_sids));
   }
 
   /**

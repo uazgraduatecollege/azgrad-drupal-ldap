@@ -1,12 +1,9 @@
 <?php
 
-/**
- * @file
- * Ldap_authentication simpletests.
- */
+namespace Drupal\ldap_authentication\Tests;
 
-module_load_include('php', 'ldap_test', 'LdapTestCase.class');
-module_load_include('module', 'ldap_authentication');
+use Drupal\ldap_test\LdapTestCase;
+
 /**
  *
  */
@@ -33,18 +30,22 @@ class LdapAuthenticationTestCase extends LdapTestCase {
   public $module_name = 'ldap_authentication';
   protected $ldap_test_data;
 
+  public static $modules = array(
+    'ldap_servers',
+    'ldap_authentication',
+    'ldap_authorization',
+    'ldap_authorization_drupal_role',
+    'ldap_test',
+    'ldap_sso',
+  );
+
   /**
    *
    */
   function setUp() {
-    parent::setUp(array(
-      'ldap_authentication',
-      'ldap_authorization',
-      'ldap_authorization_drupal_role',
-      'ldap_test',
-    // don't need any real servers, configured, just ldap_servers code base.
-    ));
-    variable_set('ldap_simpletest', 2);
+    parent::setUp();
+    // @FIXME Update
+    // variable_set('ldap_simpletest', 2);
   }
 
   /**
@@ -52,8 +53,9 @@ class LdapAuthenticationTestCase extends LdapTestCase {
    */
   function tearDown() {
     parent::tearDown();
-    variable_del('ldap_help_watchdog_detail');
-    variable_del('ldap_simpletest');
+    // @FIXME Update
+    // variable_del('ldap_help_watchdog_detail');
+    // variable_del('ldap_simpletest');
   }
 
   /**
@@ -62,9 +64,9 @@ class LdapAuthenticationTestCase extends LdapTestCase {
   function testInstall() {
     $testid = $this->module_name . ': setup success';
     $setup_success = (
-        module_exists('ldap_authentication') &&
-        module_exists('ldap_servers')
-      );
+      \Drupal::moduleHandler()->moduleExists('ldap_authentication') &&
+      \Drupal::moduleHandler()->moduleExists('ldap_servers')
+    );
 
     $this->assertTrue($setup_success, ' ldap_authentication setup successful', $testid);
   }
@@ -300,6 +302,8 @@ class LdapAuthenticationTestCase extends LdapTestCase {
 
   }
 
+  // @FIXME: Remove SSO tests from here
+
   /**
    * Set mock server variables for sso tests.
    *
@@ -330,8 +334,6 @@ class LdapAuthenticationTestCase extends LdapTestCase {
    * LDAP Authentication Exclusive Mode User Logon Test (ids = LDAP_authen.EM.ULT.*)
    */
   function x_testSSOUserLogon() {
-
-    module_enable(array('ldap_sso'));
 
     $sid = 'activedirectory1';
     $testid = 'SSOUserLogon3';
@@ -649,15 +651,16 @@ class LdapAuthenticationTestCase extends LdapTestCase {
    * Make sure user admin interface works.
    */
   function testUI() {
+    $module_handler = \Drupal::moduleHandler();
 
     // Just to give warning if setup doesn't succeed.  may want to take these out at some point.
     $setup_success = (
-        module_exists('ldap_user') &&
-        module_exists('ldap_servers') &&
-        module_exists('ldap_authentication') &&
-        config('ldap_test.settings')->get('simpletest')
-        (config('ldap_test.settings')->get('simpletest') > 0)
-      );
+      $module_handler->moduleExists('ldap_user') &&
+      $module_handler->moduleExists('ldap_servers') &&
+      $module_handler->moduleExists('ldap_authentication') &&
+      \Drupal::config('ldap_test.settings')->get('simpletest') &&
+      \Drupal::config('ldap_test.settings')->get('simpletest') > 0
+    );
     $this->assertTrue($setup_success, ' ldap_authentication UI setup successful', $this->testId('user interface tests'));
 
     $sid = 'activedirectory1';

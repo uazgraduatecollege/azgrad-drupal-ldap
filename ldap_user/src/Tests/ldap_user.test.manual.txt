@@ -1,3 +1,5 @@
+// @Fixme: Documentation outdated, kept for migration purposes.
+
 
 /**********************************************
  * this is a summary of how to test ldap_user manually.

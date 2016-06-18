@@ -1,17 +1,26 @@
 <?php
 
-
+namespace Drupal\ldap_test;
 
 /**
  * @file
  * Simpletest class for LDAP simpletests.
  */
 
-module_load_include('php', 'ldap_test', 'LdapTestFunctions.class');
+/* @FIXME: Fix properly */
+// number of cloned drupal users (clone0, clone1, etc) to make for tests
+define('LDAP_TEST_USER_ORPHAN_CLONE_COUNT', 7);
+// Number of cloned drupal users to delete in orphan check.
+define('LDAP_TEST_USER_ORPHAN_CLONE_REMOVE_COUNT', 2);
+define('LDAP_TEST_LDAP_NAME', 'hogwarts');
+
+use Drupal\Component\Utility\Unicode;
+use Drupal\simpletest\WebTestBase;
+
 /**
  *
  */
-class LdapTestCase extends DrupalWebTestCase {
+class LdapTestCase extends WebTestBase {
 
   public $testFunctions;
   public $module_name;
@@ -42,15 +51,10 @@ class LdapTestCase extends DrupalWebTestCase {
    *
    */
   function setUp() {
-    $modules = func_get_args();
-    if (isset($modules[0]) && is_array($modules[0])) {
-      $modules = $modules[0];
-    }
-    parent::setUp($modules);
-    variable_set('ldap_simpletest', 2);
-    variable_set('ldap_help_watchdog_detail', 0);
-    $this->createTestUserFields();
-
+    parent::setUp();
+    // variable_set('ldap_simpletest', 2);
+    //  variable_set('ldap_help_watchdog_detail', 0);
+    // $this->createTestUserFields();
   }
 
   /**
@@ -58,8 +62,8 @@ class LdapTestCase extends DrupalWebTestCase {
    */
   function tearDown() {
     parent::tearDown();
-    variable_del('ldap_help_watchdog_detail');
-    variable_del('ldap_simpletest');
+    // variable_del('ldap_help_watchdog_detail');
+    // variable_del('ldap_simpletest');.
   }
 
   /**
@@ -112,7 +116,8 @@ class LdapTestCase extends DrupalWebTestCase {
       if (!empty($authorization_data[$ldap_authorization_conf_id])) {
         $this->testFunctions->prepConsumerConf($authorization_data[$ldap_authorization_conf_id]);
         foreach ($authorization_data[$ldap_authorization_conf_id] as $consumer_type => $discard) {
-          $this->consumerAdminConf[$consumer_type] = ldap_authorization_get_consumer_admin_object($consumer_type);
+          // @Fixme: Missing function
+          // $this->consumerAdminConf[$consumer_type] = ldap_authorization_get_consumer_admin_object($consumer_type);
         }
       }
     }
@@ -202,20 +207,18 @@ class LdapTestCase extends DrupalWebTestCase {
    * Keep user entity fields function for ldap_user
    * in base class instead of user test class in case
    * module integration testing is needed.
-   */
-  function createTestUserFields() {
-    foreach ($this->ldap_user_test_entity_fields() as $field_id => $field_conf) {
-      $field_info = field_info_field($field_id);
-      if (!$field_info) {
-        field_create_field($field_conf['field']);
-        field_create_instance($field_conf['instance']);
-      }
-      $field_info = field_info_field($field_id);
-    }
-  }
-
-  /**
    *
+   * @FIXME: Broken test
+   *    * function createTestUserFields() {
+   * foreach ($this->ldap_user_test_entity_fields() as $field_id => $field_conf) {
+   * $field_info = field_info_field($field_id);
+   * if (!$field_info) {
+   * field_create_field($field_conf['field']);
+   * field_create_instance($field_conf['instance']);
+   * }
+   * $field_info = field_info_field($field_id);
+   * }
+   * }
    */
   function ldap_user_test_entity_fields() {
 
@@ -376,7 +379,7 @@ class LdapTestCase extends DrupalWebTestCase {
         }
       }
     }
-
+    // @FIXME: Test broken, $props_set_display can be declared and overwritten multiple times
     return array($props_set_display, $props_set_correctly);
   }
 
@@ -387,12 +390,12 @@ class LdapTestCase extends DrupalWebTestCase {
 
     $mismatches = array();
     foreach ($data as $field_id => $values) {
-      $field_id = drupal_strtolower($field_id);
+      $field_id = Unicode::strtolower($field_id);
       if (!isset($map[$field_id])) {
         continue;
       }
       $property = $map[$field_id];
-      if (!is_object($object) || !property_exists($object, $property) && !property_exists($object, drupal_strtolower($property))) {
+      if (!is_object($object) || !property_exists($object, $property) && !property_exists($object, Unicode::strtolower($property))) {
         continue;
       }
       $property_value = $object->{$property};
@@ -401,7 +404,7 @@ class LdapTestCase extends DrupalWebTestCase {
       $field_value = isset($values[$item_id + 2]) ? $values[$item_id + 2] : $values[$item_id];
 
       if (in_array($field_id, $lcase_transformed) && is_scalar($field_value)) {
-        $field_value = drupal_strtolower($field_value);
+        $field_value = Unicode::strtolower($field_value);
       }
       $property_value_show = (is_scalar($property_value)) ? $property_value : serialize($property_value);
       $field_value_show = (is_scalar($field_value)) ? $field_value : serialize($field_value);
