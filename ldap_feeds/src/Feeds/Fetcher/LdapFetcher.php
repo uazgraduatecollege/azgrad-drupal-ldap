@@ -16,7 +16,7 @@ use Drupal\feeds\Plugin\Type\ClearableInterface;
 use Drupal\feeds\Plugin\Type\FeedPluginFormInterface;
 use Drupal\feeds\Plugin\Type\Fetcher\FetcherInterface;
 use Drupal\feeds\Plugin\Type\PluginBase;
-use Drupal\feeds\Result\HttpFetcherResult;
+use Drupal\feeds\Result\FetcherResult;
 use Drupal\feeds\StateInterface;
 use Drupal\feeds\Utility\Feed;
 
@@ -75,8 +75,8 @@ class LDAPFetcher extends PluginBase implements ClearableInterface, FeedPluginFo
     
     // @TODO
     // Perform an LDAP query
+    return new LdapFetcherResult($feed->getSource());
 
-    return;
   }
 
   /**

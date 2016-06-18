@@ -37,12 +37,19 @@ class LdapParser extends PluginBase implements ParserInterface {
    * Implements FeedsParser::parse().
    */
   public function parse(FeedInterface $feed, FetcherResultInterface $fetcher_result, StateInterface $state) {
+    $result = new ParserResult();
+    error_log("fetcher_result");
+    error_log(print_r($fetcher_result, TRUE));
+    // No fetcher_result
+    $raw = $fetcher_result->getRaw();
+    error_log($raw);
+    // foreach something
+      // $result->addItem($item);
 
     // FIXME Disable parsing for now.
-    $result = new ParserResult();
     return $result;
 
-
+    // This is all D7
     $mappings = feeds_importer($this->id)->processor->config['mappings'];
     $ldap_entries = $fetcher_result->ldap_result;
     $parsed_items = array();
