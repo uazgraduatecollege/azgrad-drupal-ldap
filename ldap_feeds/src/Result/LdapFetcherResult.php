@@ -9,6 +9,8 @@ use Drupal\feeds\Result\FetcherResult;
  */
 class LdapFetcherResult extends FetcherResult implements LdapFetcherResultInterface {
 
+  public $results;
+
   /**
    * Constructs an LdapFetcherResult object.
    *
@@ -16,9 +18,11 @@ class LdapFetcherResult extends FetcherResult implements LdapFetcherResultInterf
    *   An array of results (users).
    */
   public function __construct(array $results) {
-    parent::__construct($file_path);
     $this->results = $results;
-    // $this->headers = array_change_key_case($headers);
+  }
+
+  public function getResults() {
+    return $this->results;
   }
 
 }

@@ -18,6 +18,7 @@ use Drupal\feeds\Result\ParserResult;
 use Drupal\feeds\StateInterface;
 use Zend\Feed\Reader\Exception\ExceptionInterface;
 use Zend\Feed\Reader\Reader;
+use Drupal\Component\Utility\Unicode;
 
 use Drupal\ldap_user\LdapUserConfAdmin;
 use Drupal\ldap_feeds\Feeds\Item\LdapUserItem;
@@ -38,20 +39,22 @@ class LdapParser extends PluginBase implements ParserInterface {
    * Implements FeedsParser::parse().
    */
   public function parse(FeedInterface $feed, FetcherResultInterface $fetcher_result, StateInterface $state) {
+
     $result = new ParserResult();
-    error_log("parse");
-    // error_log(print_r($fetcher_result, TRUE));
-    // No fetcher_result
-    // $raw = $fetcher_result->getRaw();
-    // error_log($raw);
-    $ldap_entries = $fetcher_result->results;
-    error_log(print_r($fetcher_result, TRUE));
-    foreach ( $ldap_entries as $ldap_entry ) {
-      error_log(print_r($ldap_entry, TRUE));
-      $parsed_item = array('dn' => (string) $ldap_entry['dn']);
-      foreach ($mappings as $j => $map) {
-        $source_lcase = drupal_strtolower($map['source']);
-        $source = $map['source'];
+
+    foreach ( $fetcher_result->getResults() as $ldap_entry ) {
+      $item = new LdapUserItem();
+      $item->set('dn', (string) $ldap_entry['dn']);
+
+      // Shouldn't really use getMappingSources. We should use the feed configuration.
+      foreach ($this->getMappingSources() as $j => $map) {
+        $source_lcase = Unicode::strtolower($map['label']);
+        $source = $map['label'];
+        $source_lcase = $this->sanitizeAttributeKey($source_lcase);
+        if ( empty($source_lcase) ) {
+          continue;
+        }
+
         if (isset($ldap_entry['attr'])) {
           // Exception need because of unconvential format of ldap data returned from $ldap_server->userUserNameToExistingLdapEntry.
           $ldap_attributes = $ldap_entry['attr'];
@@ -59,51 +62,22 @@ class LdapParser extends PluginBase implements ParserInterface {
         else {
           $ldap_attributes = $ldap_entry;
         }
+
         if ($source_lcase != 'dn' && isset($ldap_attributes[$source_lcase][0])) {
           if ($ldap_attributes[$source_lcase]['count'] == 1 && is_scalar($ldap_attributes[$source_lcase][0])) {
-            $parsed_item[$source] = (string) $ldap_attributes[$source_lcase][0];
+            $item->set($source, (string) $ldap_attributes[$source_lcase][0]);
           }
         }
       }
-      $item = new LdapUserItem;
       $result->addItem($item);
     }
-    // foreach something
-      // $result->addItem($item);
 
-    // FIXME Disable parsing for now.
-    return $result;
+    // Report progress.
+    $state->total = filesize($fetcher_result->getFilePath());
+    $state->pointer = $parser->lastLinePos();
+    $state->progress($state->total, $state->pointer);
 
-    // This is all D7
-    /*
-    $mappings = feeds_importer($this->id)->processor->config['mappings'];
-    $ldap_entries = $fetcher_result->ldap_result;
-    $parsed_items = array();
-    for ($i = 0; $i < $ldap_entries['count']; $i++) {
-      $ldap_entry = $ldap_entries[$i];
-      $parsed_item = array('dn' => (string) $ldap_entry['dn']);
-      foreach ($mappings as $j => $map) {
-        $source_lcase = drupal_strtolower($map['source']);
-        $source = $map['source'];
-        if (isset($ldap_entry['attr'])) {
-          // Exception need because of unconvential format of ldap data returned from $ldap_server->userUserNameToExistingLdapEntry.
-          $ldap_attributes = $ldap_entry['attr'];
-        }
-        else {
-          $ldap_attributes = $ldap_entry;
-        }
-        if ($source_lcase != 'dn' && isset($ldap_attributes[$source_lcase][0])) {
-          if ($ldap_attributes[$source_lcase]['count'] == 1 && is_scalar($ldap_attributes[$source_lcase][0])) {
-            $parsed_item[$source] = (string) $ldap_attributes[$source_lcase][0];
-          }
-        }
-      }
-      $parsed_items[] = $parsed_item;
-    }
-    $result = new ParserResult();
-    $result->items = $parsed_items;
     return $result;
-    */
   }
 
   /**
@@ -141,6 +115,13 @@ class LdapParser extends PluginBase implements ParserInterface {
       }
     }
     return $sources;
+  }
+
+  private function sanitizeAttributeKey($key) {
+    $key = trim($key);
+    $key = ltrim($key, '[');
+    $key = rtrim($key, ']');
+    return $key;
   }
 
 }
