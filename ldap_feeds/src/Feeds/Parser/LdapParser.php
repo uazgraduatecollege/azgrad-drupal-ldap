@@ -20,6 +20,7 @@ use Zend\Feed\Reader\Exception\ExceptionInterface;
 use Zend\Feed\Reader\Reader;
 
 use Drupal\ldap_user\LdapUserConfAdmin;
+use Drupal\ldap_feeds\Feeds\Item\LdapUserItem;
 /**
  * Defines an RSS and Atom feed parser.
  *
@@ -38,11 +39,35 @@ class LdapParser extends PluginBase implements ParserInterface {
    */
   public function parse(FeedInterface $feed, FetcherResultInterface $fetcher_result, StateInterface $state) {
     $result = new ParserResult();
-    error_log("fetcher_result");
-    error_log(print_r($fetcher_result, TRUE));
+    error_log("parse");
+    // error_log(print_r($fetcher_result, TRUE));
     // No fetcher_result
-    $raw = $fetcher_result->getRaw();
-    error_log($raw);
+    // $raw = $fetcher_result->getRaw();
+    // error_log($raw);
+    $ldap_entries = $fetcher_result->results;
+    error_log(print_r($fetcher_result, TRUE));
+    foreach ( $ldap_entries as $ldap_entry ) {
+      error_log(print_r($ldap_entry, TRUE));
+      $parsed_item = array('dn' => (string) $ldap_entry['dn']);
+      foreach ($mappings as $j => $map) {
+        $source_lcase = drupal_strtolower($map['source']);
+        $source = $map['source'];
+        if (isset($ldap_entry['attr'])) {
+          // Exception need because of unconvential format of ldap data returned from $ldap_server->userUserNameToExistingLdapEntry.
+          $ldap_attributes = $ldap_entry['attr'];
+        }
+        else {
+          $ldap_attributes = $ldap_entry;
+        }
+        if ($source_lcase != 'dn' && isset($ldap_attributes[$source_lcase][0])) {
+          if ($ldap_attributes[$source_lcase]['count'] == 1 && is_scalar($ldap_attributes[$source_lcase][0])) {
+            $parsed_item[$source] = (string) $ldap_attributes[$source_lcase][0];
+          }
+        }
+      }
+      $item = new LdapUserItem;
+      $result->addItem($item);
+    }
     // foreach something
       // $result->addItem($item);
 
@@ -50,6 +75,7 @@ class LdapParser extends PluginBase implements ParserInterface {
     return $result;
 
     // This is all D7
+    /*
     $mappings = feeds_importer($this->id)->processor->config['mappings'];
     $ldap_entries = $fetcher_result->ldap_result;
     $parsed_items = array();
@@ -77,6 +103,7 @@ class LdapParser extends PluginBase implements ParserInterface {
     $result = new ParserResult();
     $result->items = $parsed_items;
     return $result;
+    */
   }
 
   /**
