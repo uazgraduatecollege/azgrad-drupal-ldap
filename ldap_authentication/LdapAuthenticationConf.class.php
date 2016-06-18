@@ -6,7 +6,8 @@
  * It is extended by LdapAuthenticationConfAdmin for configuration and other admin functions.
  */
 
-module_load_include('php', 'ldap_user', 'LdapUserConf.class');
+use Drupal\ldap_user\LdapUserConf;
+
 /**
  *
  */
@@ -242,7 +243,7 @@ class LdapAuthenticationConf {
       $this->inDatabase = FALSE;
     }
 
-    $this->ldapUser = new \LdapUserConf();
+    $this->ldapUser = new LdapUserConf();
     $this->ssoEnabled = \Drupal::moduleHandler()->moduleExists('ldap_sso');
     $this->apiPrefs['requireHttps'] = Drupal::config('ldap_servers.settings')->get('require_ssl_for_credentials');
     $this->apiPrefs['encryption'] = Drupal::config('ldap_servers.settings')->get('encryption');

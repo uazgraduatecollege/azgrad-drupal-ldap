@@ -6,10 +6,12 @@
  * It is extended by LdapUserConfAdmin for configuration and other admin functions.
  */
 
+namespace Drupal\ldap_user;
+
+use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\Component\Utility\Unicode;
 use Drupal\user\Entity\User;
 
-require_once 'ldap_user.module';
 /**
  *
  */
@@ -507,7 +509,7 @@ class LdapUserConf {
   /**
    * Given a drupal account, provision an ldap entry if none exists.  if one exists do nothing.
    *
-   * @param User $account
+   * @param object $account
    *   drupal account object with minimum of name property
    * @param array $ldap_user
    *   as prepopulated ldap entry.  usually not provided
@@ -519,7 +521,7 @@ class LdapUserConf {
    *     array('existing' => existing ldap entry),
    *     array('description' = > blah blah)
    */
-  public function provisionLdapEntry(User $account, $ldap_user = NULL, $test_query = FALSE) {
+  public function provisionLdapEntry($account, $ldap_user = NULL, $test_query = FALSE) {
     // debug('provisionLdapEntry account'); //debug($account);
     $watchdog_tokens = array();
     $result = array(
@@ -546,6 +548,7 @@ class LdapUserConf {
       // Do not provision or synch user 1.
       return $result;
     }
+
     if ($account == FALSE || $account->isAnonymous()) {
       $result['status'] = 'fail';
       $result['error_description'] = 'can not provision ldap user unless corresponding drupal account exists first.';
@@ -938,7 +941,7 @@ class LdapUserConf {
   /**
    * Populate ldap entry array for provisioning.
    *
-   * @param \Drupal\user\Entity\User $account
+   * @param User $account
    *   drupal account
    * @param object $ldap_server
    * @param array $params
@@ -950,7 +953,7 @@ class LdapUserConf {
    *   'direction' => LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY || LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER
    * @param null $ldap_user_entry
    *
-   * @return array (ldap entry, $result)
+   * @return array(ldap entry, $result)
    *   In ldap extension array format. THIS IS NOT THE ACTUAL LDAP ENTRY.
    */
   function drupalUserToLdapEntry(User $account, $ldap_server, $params, $ldap_user_entry = NULL) {

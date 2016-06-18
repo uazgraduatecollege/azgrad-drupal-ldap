@@ -5,6 +5,8 @@
  * Status file for ldaphelp module.
  */
 
+use Drupal\ldap_user\LdapUserConfAdmin;
+
 /**
  *
  */
@@ -375,8 +377,7 @@ function ldap_help_get_ldap_authentication() {
  *
  */
 function ldap_help_get_ldap_user() {
-  ldap_servers_module_load_include('php', 'ldap_user', 'LdapUserConfAdmin.class');
-  $conf = new LdapUserConfAdmin();
+  $conf = new LdapUserConfAdmin;
   $form = $conf->drupalForm();
 
   $items['drupal_accounts']['loginConflictResolve'] = 'radios';

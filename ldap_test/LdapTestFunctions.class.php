@@ -7,6 +7,8 @@
  * @todo could be moved into LdapTestCase.class.php
  */
 
+use Drupal\ldap_user\LdapUserConfAdmin;
+
 require_once 'ldap_servers.conf.inc';
 require_once 'ldap_user.conf.inc';
 require_once 'ldap_authentication.conf.inc';
@@ -99,7 +101,6 @@ class LdapTestFunctions {
    *
    */
   function configureLdapUser($ldap_user_test_conf_id) {
-    module_load_include('php', 'ldap_user', 'LdapUserConfAdmin.class');
     $ldapUserConfAdmin = new LdapUserConfAdmin();
     $options = $this->data['ldap_user'][$ldap_user_test_conf_id];
     foreach ($ldapUserConfAdmin->saveable as $prop_name) {
@@ -116,6 +117,7 @@ class LdapTestFunctions {
   function prepConsumerConf($consumer_confs) {
     // Create consumer authorization configuration.
     foreach ($consumer_confs as $consumer_type => $consumer_conf) {
+      // @FIXME: Function does not exist
       $consumer_obj = ldap_authorization_get_consumer_object($consumer_type);
       $consumer_conf_admin = new LdapAuthorizationConsumerConfAdmin($consumer_obj, TRUE);
       foreach ($consumer_conf as $property_name => $property_value) {

@@ -14,7 +14,6 @@ use Drupal\Core\Form\FormState;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Url;
 use Drupal\ldap_user\LdapUserConf;
-use Drupal\ldap_user\LdapUserConfAdmin;
 use Drupal\user\Entity\User;
 
 define('LDAP_USER_DRUPAL_HELP_URL', 'http://drupal.org/node/997082');
@@ -272,9 +271,11 @@ function ldap_user_conf($type = NULL, $reset = FALSE) {
   static $ldap_user_conf_admin;
 
   if ($type == 'admin' && ($reset || !is_object($ldap_user_conf_admin))) {
+    ldap_servers_module_load_include('php', 'ldap_user', 'LdapUserConfAdmin.class');
     $ldap_user_conf_admin = new LdapUserConfAdmin();
   }
   elseif ($type != 'admin' && ($reset || !is_object($ldap_user_conf))) {
+    ldap_servers_module_load_include('php', 'ldap_user', 'LdapUserConf.class');
     $ldap_user_conf = new LdapUserConf();
   }
 

@@ -5,6 +5,8 @@
  * collection of functions related to ldap tokens
  */
 
+use Drupal\ldap_user\LdapUserConf;
+
 /**
  * @param string $attr_name such 'field_user_lname', 'name', 'mail', 'dn'
  * @param string $attr_type such as 'field', 'property', etc.  NULL for ldap attributes
@@ -372,7 +374,7 @@ function ldap_servers_token_tokenize_user_account($user_account, $token_keys = '
         // field or property with no value, so no token can be generated
       }
     }
-    $ldap_user_conf_admin = new LdapUserConfAdmin();
+    $ldap_user_conf = new LdapUserConf();
     if ($ldap_user_conf->setsLdapPassword) {
       $token_keys[] = 'password.random';
       $token_keys[] = 'password.user-random';

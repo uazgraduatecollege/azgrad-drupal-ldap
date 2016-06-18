@@ -17,6 +17,8 @@
  */
 
 use Drupal\Component\Utility\SafeMarkup;
+use Drupal\ldap_user\LdapUserConf;
+
 /**
  *
  */
@@ -47,7 +49,7 @@ function ldap_user_ws($action, $direction_tag, $drupal_user_name_or_dn, $key) {
 
   $action = SafeMarkup::checkPlain($action);
   $key = urldecode($key);
-
+  $ldap_user_conf = new LdapUserConf();
   if (!$ldap_user_conf->wsEnabled) {
     return ldap_user_ws_out(array(0, t('Webservice Not Enabled')));
   }
@@ -82,7 +84,6 @@ function ldap_user_ws($action, $direction_tag, $drupal_user_name_or_dn, $key) {
     $drupal_user_name = ($ldap_server) ? $ldap_server->userUsernameFromDn($drupal_user_name_or_dn) : FALSE;
   }
 
-  ldap_servers_module_load_include('php', 'ldap_user', 'LdapUserConfAdmin.class');
   $ldap_user_conf = new LdapUserConf();
 
   $drupal_user = ($action == 'create' || $drupal_user_name === FALSE) ? FALSE : user_load_by_name($drupal_user_name);
@@ -121,6 +122,7 @@ function ldap_user_ws($action, $direction_tag, $drupal_user_name_or_dn, $key) {
       if ($direction = LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER) {
         $drupal_user->status = 0;
         $edit = array('status' => 0);
+        // @FIXME: user_save is gone
         $saved_account = user_save($drupal_user, array('status' => 0));
         return ldap_user_ws_out(array((boolean) ($saved_account), 'Disabled Account ' . $drupal_user_name));
       }

@@ -5,8 +5,10 @@
  * This class extends LdapUserConf for configuration and other admin functions.
  */
 
-module_load_include('php', 'ldap_user', 'LdapUserConf.class');
+namespace Drupal\ldap_user;
+
 module_load_include('inc', 'user', 'user.pages');
+
 /**
  *
  */
