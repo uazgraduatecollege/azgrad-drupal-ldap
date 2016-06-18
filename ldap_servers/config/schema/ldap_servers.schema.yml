@@ -1,12 +1,15 @@
 ldap_servers.settings:
-  type: mapping
-  label: Settings
+  type: config_object
   mapping:
     encryption:
       type: integer
       label: 'Encryption cypher'
     encrypt_key:
       type: boolean
+      label: 'Encryption key'
     require_ssl_for_credentials:
       type: boolean
       label: 'Require HTTPS on credential pages'
+    langcode:
+      type: string
+      label: 'Default language'

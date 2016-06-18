@@ -1,6 +1,5 @@
 ldap_user.settings:
-  type: mapping
-  label: Settings
+  type: config_object
   mapping:
     ldap_user_cron_last_uid_checked:
       type: integer
@@ -10,3 +9,33 @@ ldap_user.settings:
         drupalAcctProvisionServer:
           label: 'drupalAcctProvisionServer'
           type: string
+        ldapEntryProvisionServer:
+          label: 'ldapEntryProvisionServer'
+          type: string
+        drupalAcctProvisionTriggers:
+          label: 'drupalAcctProvisionTriggers'
+          type: sequence
+        ldapEntryProvisionTriggers:
+          label: 'ldapEntryProvisionTriggers'
+          type: sequence
+        orphanedDrupalAcctBehavior:
+          label: 'orphanedDrupalAcctBehavior'
+          type: string
+        orphanedCheckQty:
+          label: 'orphanedCheckQty'
+          type: integer
+        userConflictResolve:
+          label: 'userConflictResolve'
+          type: integer
+        manualAccountConflict:
+          label: 'manualAccountConflict'
+          type: integer
+        acctCreation:
+          label: 'acctCreation'
+          type: integer
+        ldapUserSynchMappings:
+          label: 'ldapUserSynchMappings'
+          type: mapping
+    langcode:
+      type: string
+      label: 'Default language'
