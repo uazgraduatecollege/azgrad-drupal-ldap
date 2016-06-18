@@ -489,45 +489,40 @@ class ServerForm extends EntityForm {
    * {@inheritdoc}
    */
   public function save(array $form, FormStateInterface $form_state) {
-    $server = $this->entity;
+    $new_configuration = $this->entity;
 
     // Handle the password as the form is empty
     // If there is a new password encrypt it.
     if (NULL !== $form_state->getValue('bindpw') && $form_state->getValue('bindpw')) {
-      $server->set('bindpw', ldap_servers_encrypt($form_state->getValue('bindpw')));
-    }
-    // What does bindpw_new do?
-    elseif ($form_state->getValue('bindpw_new')) {
-      $server->set('bindpw_new', ldap_servers_encrypt($form_state->getValue('bindpw_new')));
-      $server->set('bindpw', ldap_servers_encrypt($form_state->getValue('bindpw_new')));
+      $new_configuration->set('bindpw', ldap_servers_encrypt($form_state->getValue('bindpw')));
     }
     // If the bindpw_clear is checked clear the password from the database.
     elseif ($form_state->getValue('bindpw_clear')) {
-      $server->set('bindpw', NULL);
+      $new_configuration->set('bindpw', NULL);
     }
     // If there isn't a password then load the existing one (unless this an anonymous bind server)
     elseif ($form_state->getValue('bind_method') != LDAP_SERVERS_BIND_METHOD_ANON || $form_state->getValue('bind_method') != LDAP_SERVERS_BIND_METHOD_ANON_USER) {
-      $entity = ldap_servers_get_servers($server->id());
-      if ($server->get('bindpw')) {
-        $server->set('bindpw', $entity->get('bindpw'));
+      $existing_configuration = ldap_servers_get_servers($new_configuration->id());
+      if ($existing_configuration->get('bindpw')) {
+        $new_configuration->set('bindpw', $existing_configuration->get('bindpw'));
       }
     }
 
-    $status = $server->save();
+    $status = $new_configuration->save();
 
     switch ($status) {
       case SAVED_NEW:
         drupal_set_message($this->t('Created the %label Server.', [
-          '%label' => $server->label(),
+          '%label' => $new_configuration->label(),
         ]));
         break;
 
       default:
         drupal_set_message($this->t('Saved the %label Server.', [
-          '%label' => $server->label(),
+          '%label' => $new_configuration->label(),
         ]));
     }
-    $form_state->setRedirectUrl($server->urlInfo('collection'));
+    $form_state->setRedirectUrl($new_configuration->urlInfo('collection'));
   }
 
 }
