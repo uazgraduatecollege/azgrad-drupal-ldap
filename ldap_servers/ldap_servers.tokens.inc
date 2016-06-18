@@ -2,15 +2,20 @@
 
 /**
  * @file
- * collection of functions related to ldap tokens
+ * Collection of functions related to ldap tokens.
  */
 
+use Drupal\Component\Utility\SafeMarkup;
+use Drupal\Component\Utility\Unicode;
 use Drupal\ldap_user\LdapUserConf;
 
 /**
- * @param string $attr_name such 'field_user_lname', 'name', 'mail', 'dn'
- * @param string $attr_type such as 'field', 'property', etc.  NULL for ldap attributes
- * @param string $attr_ordinal 0, 1, 2, etc.  not used in general
+ * @param string $attr_name
+ *   such 'field_user_lname', 'name', 'mail', 'dn'
+ * @param string $attr_type
+ *   such as 'field', 'property', etc.  NULL for ldap attributes
+ * @param string $attr_ordinal
+ *   0, 1, 2, etc.  not used in general
  *
  * @return string such as 'field.field_user_lname', 'samaccountname', etc.
  */
@@ -33,7 +38,8 @@ function ldap_servers_make_token($attr_name, $attr_type = NULL, $ordinal = NULL)
  * @return array array($attr_type, $attr_name, $attr_ordinal) such as array('field','field_user_lname', NULL)
  */
 function ldap_servers_parse_user_attr_name($user_attr_key) {
-  $user_attr_key = trim($user_attr_key, LDAP_SERVERS_TOKEN_PRE . LDAP_SERVERS_TOKEN_POST); // make sure no [] are on attribute
+  // Make sure no [] are on attribute.
+  $user_attr_key = trim($user_attr_key, LDAP_SERVERS_TOKEN_PRE . LDAP_SERVERS_TOKEN_POST);
   $parts = explode('.', $user_attr_key);
   $attr_type = $parts[0];
   $attr_name = (isset($parts[1])) ? $parts[1] : FALSE;
@@ -51,48 +57,56 @@ function ldap_servers_parse_user_attr_name($user_attr_key) {
 
 /**
  * @param array $ldap_entry
- * @param string $text such as "[dn]", "[cn]@my.org", "[displayName] [sn]", "Drupal Provisioned"
+ * @param string $text
+ *   such as "[dn]", "[cn]@my.org", "[displayName] [sn]", "Drupal Provisioned"
  * @return string $text with tokens replaced or NULL if replacement not available
  */
-
-function ldap_servers_token_replace($resource, $text, $resource_type = 'ldap_entry') { // user_account
-
-  $desired_tokens = ldap_servers_token_tokens_needed_for_template($text);  // desired tokens are of form "cn","mail", etc.
+function ldap_servers_token_replace($resource, $text, $resource_type = 'ldap_entry') {
+  // user_account.
+  // Desired tokens are of form "cn","mail", etc.
+  $desired_tokens = ldap_servers_token_tokens_needed_for_template($text);
 
   if (empty($desired_tokens)) {
-    return $text; // if no tokens exist in text, return text itself.  It is literal value
+    // If no tokens exist in text, return text itself.  It is literal value.
+    return $text;
   }
 
   switch ($resource_type) {
     case 'ldap_entry':
-    $tokens = ldap_servers_token_tokenize_entry($resource, $desired_tokens, LDAP_SERVERS_TOKEN_PRE, LDAP_SERVERS_TOKEN_POST);
-    break;
+      $tokens = ldap_servers_token_tokenize_entry($resource, $desired_tokens, LDAP_SERVERS_TOKEN_PRE, LDAP_SERVERS_TOKEN_POST);
+      break;
 
     case 'user_account':
-    $tokens = ldap_servers_token_tokenize_user_account($resource, $desired_tokens, LDAP_SERVERS_TOKEN_PRE, LDAP_SERVERS_TOKEN_POST);
-    break;
+      $tokens = ldap_servers_token_tokenize_user_account($resource, $desired_tokens, LDAP_SERVERS_TOKEN_PRE, LDAP_SERVERS_TOKEN_POST);
+      break;
   }
 
-  // add lowercase tokens to avoid case sensitivity
+  // Add lowercase tokens to avoid case sensitivity.
   foreach ($tokens as $attribute => $value) {
-    $tokens[\Drupal\Component\Utility\Unicode::strtolower($attribute)] = $value;
+    $tokens[Unicode::strtolower($attribute)] = $value;
   }
 
-  $attributes = array_keys($tokens); //array of attributes (sn, givenname, etc)
-  $values = array_values($tokens); //array of attribute values (Lincoln, Abe, etc)
+  // Array of attributes (sn, givenname, etc)
+  $attributes = array_keys($tokens);
+  // Array of attribute values (Lincoln, Abe, etc)
+  $values = array_values($tokens);
   $result = str_replace($attributes, $values, $text);
 
-  $result = preg_replace('/\[[^\]]*>/', '', $result);  // strip out any unreplace tokens
-  return ($result == '') ? NULL : $result; // return NULL if $result is empty, else $result
+  // Strip out any unreplace tokens.
+  $result = preg_replace('/\[[^\]]*>/', '', $result);
+  // Return NULL if $result is empty, else $result.
+  return ($result == '') ? NULL : $result;
 }
 
 /**
- * @param array $attributes array of attributes passed by reference
- * @param string $text with tokens in it
+ * @param array $attributes
+ *   array of attributes passed by reference
+ * @param string $text
+ *   with tokens in it
  *
- * by reference return add ldap attribute triplet $attribute_maps[<attr_name>] = (<attr_name>, <ordinal>, <data_type>) to $attributes
+ *   by reference return add ldap attribute triplet $attribute_maps[<attr_name>] = (<attr_name>, <ordinal>, <data_type>) to $attributes
  */
-function ldap_servers_token_extract_attributes(&$attribute_maps,  $text) {
+function ldap_servers_token_extract_attributes(&$attribute_maps, $text) {
   $tokens = ldap_servers_token_tokens_needed_for_template($text);
   foreach ($tokens as $token) {
     $token = str_replace(array(LDAP_SERVERS_TOKEN_PRE, LDAP_SERVERS_TOKEN_POST), array('', ''), $token);
@@ -114,7 +128,8 @@ function ldap_servers_token_extract_attributes(&$attribute_maps,  $text) {
 }
 
 /**
- * @param string $token or token expression with singular token in it, eg. [dn], [dn;binary], [titles:0;binary] [cn]@mycompany.com
+ * @param string $token
+ *   or token expression with singular token in it, eg. [dn], [dn;binary], [titles:0;binary] [cn]@mycompany.com
  *
  *
  *
@@ -137,54 +152,52 @@ function ldap_servers_token_extract_parts($token) {
 
 }
 
-
-
 /**
- * Turn an ldap entry into a token array suitable for the t() function
- * @param ldap entry array $ldap_entry
- * @param string prefix token prefix such as !,%,[
- * @param string suffix token suffix such as ]
- * @param $token_keys either an array of key names such as array('cn', 'dn') or string 'all' to return all tokens.
- * @return token array suitable for t() functions of with lowercase keys as exemplified below
-
-
-$ldap_entry should be in form of single entry returned from ldap_search() function:
-
-    'dn' => 'cn=jdoe,ou=campus accounts,ou=toledo campus,dc=ad,dc=myuniversity,dc=edu',
-    'mail' => array( 0 => 'jdoe@myuniversity.edu', 'count' => 1),
-    'sAMAccountName' => array( 0 => 'jdoe', 'count' => 1),
-
-should return tokens such as:
-
-    -- from dn attribute
-    [cn] = jdoe
-    [cn:0] = jdoe
-    [cn:last] => jdoe
-    [ou] = campus accounts
-    [ou:0] = campus accounts
-    [ou:1] = toledo campus
-    [ou:last] = toledo campus
-    [dc] = ad
-    [dc:0] = ad
-    [dc:1] = myuniversity
-    [dc:2] = edu
-    [dc:last] = edu
-
-    -- from other attributes
-    [mail] = jdoe@myuniversity.edu
-    [mail:0] = jdoe@myuniversity.edu
-    [mail:last] = jdoe@myuniversity.edu
-    [samaccountname] = jdoe
-    [samaccountname:0] = jdoe
-    [samaccountname:last] = jdoe
-
-    [guid:0;base64_encode] = apply base64_encode() function to value
-    [guid:0;bin2hex] = apply bin2hex() function to value
-    [guid:0;msguid] = apply ldap_servers_msguid() function to value
-    [guid:0;binary] = apply ldap_servers_binary() function to value. this is the most generic binary function
-
+ * Turn an ldap entry into a token array suitable for the t() function.
+ *
+ * @param array $ldap_entry
+ * @param string $token_keys
+ *   Either an array of key names such as array('cn', 'dn') or string 'all' to return all tokens.
+ * @param string $pre
+ *   Prefix token prefix such as !,%,[
+ * @param string $post
+ *   Suffix token suffix such as ]
+ *
+ * @return array
+ *   Token array suitable for t() functions of with lowercase keys as exemplified below
+ *
+ * $ldap_entry should be in form of single entry returned from ldap_search() function:
+ *
+ *   'dn' => 'cn=jdoe,ou=campus accounts,ou=toledo campus,dc=ad,dc=myuniversity,dc=edu',
+ *   'mail' => array( 0 => 'jdoe@myuniversity.edu', 'count' => 1),
+ *   'sAMAccountName' => array( 0 => 'jdoe', 'count' => 1),
+ *
+ * Should return tokens such as:
+ *
+ *   From dn attribute:
+ *     [cn] = jdoe
+ *     [cn:0] = jdoe
+ *     [cn:last] => jdoe
+ *     [ou] = campus accounts
+ *     [ou:0] = campus accounts
+ *     [ou:1] = toledo campus
+ *     [ou:last] = toledo campus
+ *     [dc] = ad
+ *     [dc:0] = ad
+ *     [dc:1] = myuniversity
+ *     [dc:2] = edu
+ *     [dc:last] = edu
+ *   From other attributes:
+ *     [mail] = jdoe@myuniversity.edu
+ *     [mail:0] = jdoe@myuniversity.edu
+ *     [mail:last] = jdoe@myuniversity.edu
+ *     [samaccountname] = jdoe
+ *     [samaccountname:0] = jdoe
+ *     [samaccountname:last] = jdoe
+ *     [guid:0;base64_encode] = apply base64_encode() function to value
+ *     [guid:0;bin2hex] = apply bin2hex() function to value
+ *     [guid:0;msguid] = apply ldap_servers_msguid() function to value
  */
-
 function ldap_servers_token_tokenize_entry($ldap_entry, $token_keys = 'all', $pre = LDAP_SERVERS_TOKEN_PRE, $post = LDAP_SERVERS_TOKEN_POST) {
 
   $detailed_watchdog_log = \Drupal::config('ldap_help.settings')->get('watchdog_detail');
@@ -197,16 +210,18 @@ function ldap_servers_token_tokenize_entry($ldap_entry, $token_keys = 'all', $pr
     if ($detailed_watchdog_log) {
       \Drupal::logger('ldap_servers')->debug('skipped tokenization of ldap entry because no ldap entry provided when called from %calling_function.', []);
     }
-    return $tokens; // empty array
+    // Empty array.
+    return $tokens;
   }
-      
-  // add lowercase keyed entries to ldap array
+
+  // Add lowercase keyed entries to ldap array.
   foreach ($ldap_entry as $key => $values) {
-    $ldap_entry[\Drupal\Component\Utility\Unicode::strtolower($key)] = $values;
+    $ldap_entry[Unicode::strtolower($key)] = $values;
   }
 
   // 1. tokenize dn
-  $dn_parts = ldap_explode_dn($ldap_entry['dn'], 0); // escapes attribute values, need to be unescaped later.
+  // escapes attribute values, need to be unescaped later.
+  $dn_parts = ldap_explode_dn($ldap_entry['dn'], 0);
   unset($dn_parts['count']);
   $parts_count = array();
   $parts_last_value = array();
@@ -214,20 +229,21 @@ function ldap_servers_token_tokenize_entry($ldap_entry, $token_keys = 'all', $pr
     list($attr_name, $attr_value) = explode('=', $pair);
     $attr_value = ldap_pear_unescape_dn_value($attr_value);
     try {
-      $attr_value = \Drupal\Component\Utility\SafeMarkup::checkPlain($attr_value);
+      $attr_value = SafeMarkup::checkPlain($attr_value);
     }
     catch (Exception $e) {
       if ($detailed_watchdog_log) {
         $watchdog_tokens['%attr_name'] = $attr_name;
         \Drupal::logger('ldap_servers')->debug('skipped tokenization of attribute %attr_name because the value would not pass check_plain function.', []);
       }
-      continue; // don't tokenize data that can't pass check_plain
+      // don't tokenize data that can't pass check_plain.
+      continue;
     }
     if (!isset($parts_count[$attr_name])) {
       $tokens[$pre . ldap_server_massage_text($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . $post] = $attr_value;
       $parts_count[$attr_name] = 0;
     }
-    $tokens[$pre . ldap_server_massage_text($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . LDAP_SERVERS_TOKEN_DEL . (int)$parts_count[$attr_name] . $post] = $attr_value;
+    $tokens[$pre . ldap_server_massage_text($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . LDAP_SERVERS_TOKEN_DEL . (int) $parts_count[$attr_name] . $post] = $attr_value;
 
     $parts_last_value[$attr_name] = $attr_value;
     $parts_count[$attr_name]++;
@@ -237,27 +253,27 @@ function ldap_servers_token_tokenize_entry($ldap_entry, $token_keys = 'all', $pr
     $tokens[$pre . ldap_server_massage_text($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . LDAP_SERVERS_TOKEN_DEL . 'last' . $post] = $parts_last_value[$attr_name];
   }
 
-  // tokenize other attributes
+  // Tokenize other attributes.
   if ($token_keys == 'all') {
     $token_keys = array_keys($ldap_entry);
     $token_keys = array_filter($token_keys, "is_string");
     foreach ($token_keys as $attr_name) {
       $attr_value = $ldap_entry[$attr_name];
       if (is_array($attr_value) && is_scalar($attr_value[0]) && $attr_value['count'] == 1) {
-        $tokens[$pre . ldap_server_massage_text($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . $post] = \Drupal\Component\Utility\SafeMarkup::checkPlain($attr_value[0]);
-        $tokens[$pre . ldap_server_massage_text($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . LDAP_SERVERS_TOKEN_DEL . '0' . $post] = \Drupal\Component\Utility\SafeMarkup::checkPlain($attr_value[0]);
-        $tokens[$pre . ldap_server_massage_text($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . LDAP_SERVERS_TOKEN_DEL . 'last' . $post] = \Drupal\Component\Utility\SafeMarkup::checkPlain($attr_value[0]);
+        $tokens[$pre . ldap_server_massage_text($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . $post] = SafeMarkup::checkPlain($attr_value[0]);
+        $tokens[$pre . ldap_server_massage_text($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . LDAP_SERVERS_TOKEN_DEL . '0' . $post] = SafeMarkup::checkPlain($attr_value[0]);
+        $tokens[$pre . ldap_server_massage_text($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . LDAP_SERVERS_TOKEN_DEL . 'last' . $post] = SafeMarkup::checkPlain($attr_value[0]);
       }
       elseif (is_array($attr_value) && $attr_value['count'] > 1) {
-        $tokens[$pre . ldap_server_massage_text($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . LDAP_SERVERS_TOKEN_DEL . 'last' . $post] = \Drupal\Component\Utility\SafeMarkup::checkPlain($attr_value[$attr_value['count']-1]);
-        for ($i=0; $i<$attr_value['count']; $i++) {
-          $tokens[$pre . ldap_server_massage_text($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . LDAP_SERVERS_TOKEN_DEL . $i . $post] = \Drupal\Component\Utility\SafeMarkup::checkPlain($attr_value[$i]);
+        $tokens[$pre . ldap_server_massage_text($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . LDAP_SERVERS_TOKEN_DEL . 'last' . $post] = SafeMarkup::checkPlain($attr_value[$attr_value['count'] - 1]);
+        for ($i = 0; $i < $attr_value['count']; $i++) {
+          $tokens[$pre . ldap_server_massage_text($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . LDAP_SERVERS_TOKEN_DEL . $i . $post] = SafeMarkup::checkPlain($attr_value[$i]);
         }
       }
       elseif (is_scalar($attr_value)) {
-        $tokens[$pre . ldap_server_massage_text($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . $post] = \Drupal\Component\Utility\SafeMarkup::checkPlain($attr_value);
-        $tokens[$pre . ldap_server_massage_text($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . LDAP_SERVERS_TOKEN_DEL . '0' . $post] = \Drupal\Component\Utility\SafeMarkup::checkPlain($attr_value);
-        $tokens[$pre . ldap_server_massage_text($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . LDAP_SERVERS_TOKEN_DEL . 'last' . $post] = \Drupal\Component\Utility\SafeMarkup::checkPlain($attr_value);
+        $tokens[$pre . ldap_server_massage_text($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . $post] = SafeMarkup::checkPlain($attr_value);
+        $tokens[$pre . ldap_server_massage_text($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . LDAP_SERVERS_TOKEN_DEL . '0' . $post] = SafeMarkup::checkPlain($attr_value);
+        $tokens[$pre . ldap_server_massage_text($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . LDAP_SERVERS_TOKEN_DEL . 'last' . $post] = SafeMarkup::checkPlain($attr_value);
       }
     }
   }
@@ -277,11 +293,12 @@ function ldap_servers_token_tokenize_entry($ldap_entry, $token_keys = 'all', $pr
       }
 
       $parts = explode(LDAP_SERVERS_TOKEN_DEL, $token_key);
-      $attr_name = \Drupal\Component\Utility\Unicode::strtolower($parts[0]);
+      $attr_name = Unicode::strtolower($parts[0]);
       $ordinal_key = isset($parts[1]) ? $parts[1] : 0;
       $i = NULL;
 
-      if ($attr_name == 'dn' || !isset($ldap_entry[$attr_name])) { // don't use empty() since a 0, "", etc value may be a desired value
+      // don't use empty() since a 0, "", etc value may be a desired value.
+      if ($attr_name == 'dn' || !isset($ldap_entry[$attr_name])) {
         continue;
       }
       else {
@@ -294,7 +311,8 @@ function ldap_servers_token_tokenize_entry($ldap_entry, $token_keys = 'all', $pr
           $value = $ldap_entry[$attr_name][$ordinal_key];
         }
         else {
-          continue;  // don't add token if case not covered
+          // don't add token if case not covered.
+          continue;
         }
       }
 
@@ -319,59 +337,59 @@ function ldap_servers_token_tokenize_entry($ldap_entry, $token_keys = 'all', $pr
         }
       }
 
-
-      $tokens[$pre . $full_token_key . $post] = \Drupal\Component\Utility\SafeMarkup::checkPlain($value);
-      if ($full_token_key != \Drupal\Component\Utility\Unicode::strtolower($full_token_key)) {
-        $tokens[$pre . \Drupal\Component\Utility\Unicode::strtolower($full_token_key) . $post] = \Drupal\Component\Utility\SafeMarkup::checkPlain($value);
+      $tokens[$pre . $full_token_key . $post] = SafeMarkup::checkPlain($value);
+      if ($full_token_key != Unicode::strtolower($full_token_key)) {
+        $tokens[$pre . Unicode::strtolower($full_token_key) . $post] = SafeMarkup::checkPlain($value);
       }
     }
   }
 
-  // include the dn.  it will not be handled correctly by previous loops
-  $tokens[$pre . 'dn' . $post] = \Drupal\Component\Utility\SafeMarkup::checkPlain($ldap_entry['dn']);
+  // Include the dn.  it will not be handled correctly by previous loops.
+  $tokens[$pre . 'dn' . $post] = SafeMarkup::checkPlain($ldap_entry['dn']);
   return $tokens;
 }
 
 /**
  *
  * @param drupal user object $user_account
- * @param array or 'all' $token_keys 'all' signifies return
+ * @param array or 'all' $token_keys
+ *   'all' signifies return
  *   all token/value pairs available; otherwise array lists
  *   token keys (e.g. property.name ...NOT [property.name])
- * @param string $pre prefix of token
- * @param string $post suffix of token
+ * @param string $pre
+ *   prefix of token
+ * @param string $post
+ *   suffix of token
  *
  *
  * @return should return token/value pairs in array such as
  *   'status' => 1
  *   'uid' => 17
  */
-
 function ldap_servers_token_tokenize_user_account($user_account, $token_keys = 'all', $pre = LDAP_SERVERS_TOKEN_PRE, $post = LDAP_SERVERS_TOKEN_POST) {
 
   $detailed_watchdog_log = \Drupal::config('ldap_help.settings')->get('watchdog_detail');
   $tokens = array();
 
-  $user_entered_password_available = (boolean)ldap_user_ldap_provision_pwd('get');
-  // ldapUserPwd((property_exists($user_account, 'ldapUserPwd') && $user_account->ldapUserPwd));
-
+  $user_entered_password_available = (boolean) ldap_user_ldap_provision_pwd('get');
+  // ldapUserPwd((property_exists($user_account, 'ldapUserPwd') && $user_account->ldapUserPwd));.
   if ($token_keys == 'all') {
-    // add lowercase keyed entries to ldap array
-    foreach ((array)$user_account as $property_name => $value) {
+    // Add lowercase keyed entries to ldap array.
+    foreach ((array) $user_account as $property_name => $value) {
       if (is_scalar($value) && $property_name != 'password') {
         $token_keys[] = 'property.' . $property_name;
-        if (\Drupal\Component\Utility\Unicode::strtolower($property_name) != $property_name) {
-          $token_keys[] = 'property.' . \Drupal\Component\Utility\Unicode::strtolower($property_name);
+        if (Unicode::strtolower($property_name) != $property_name) {
+          $token_keys[] = 'property.' . Unicode::strtolower($property_name);
         }
       }
       elseif (isset($user_account->{$attr_name}['und'][0]['value']) && is_scalar($user_account->{$attr_name}['und'][0]['value'])) {
         $token_keys[] = 'field.' . $property_name;
-        if (\Drupal\Component\Utility\Unicode::strtolower($property_name) != $property_name) {
-          $token_keys[] = 'field.' . \Drupal\Component\Utility\Unicode::strtolower($property_name);
+        if (Unicode::strtolower($property_name) != $property_name) {
+          $token_keys[] = 'field.' . Unicode::strtolower($property_name);
         }
       }
       else {
-        // field or property with no value, so no token can be generated
+        // Field or property with no value, so no token can be generated.
       }
     }
     $ldap_user_conf = new LdapUserConf();
@@ -392,11 +410,11 @@ function ldap_servers_token_tokenize_user_account($user_account, $token_keys = '
     switch ($attr_type) {
       case 'field':
         $value = @is_scalar($user_account->{$attr_name}['und'][0]['value']) ? $user_account->{$attr_name}['und'][0]['value'] : '';
-      break;
+        break;
 
       case 'property':
         $value = @is_scalar($user_account->{$attr_name}) ? $user_account->{$attr_name} : '';
-      break;
+        break;
 
       case 'password':
 
@@ -419,7 +437,7 @@ function ldap_servers_token_tokenize_user_account($user_account, $token_keys = '
         if (empty($value)) {
           $skip = TRUE;
         }
-      break;
+        break;
     }
 
     if (!$skip) {
@@ -434,13 +452,13 @@ function ldap_servers_token_tokenize_user_account($user_account, $token_keys = '
           break;
 
         case 'to-lowercase':
-          $value = \Drupal\Component\Utility\Unicode::strtolower($value);
+          $value = Unicode::strtolower($value);
           break;
       }
 
-      $tokens[$pre . $token_key . $post] = \Drupal\Component\Utility\SafeMarkup::checkPlain($value);
-      if ($token_key != \Drupal\Component\Utility\Unicode::strtolower($token_key)) {
-        $tokens[$pre . \Drupal\Component\Utility\Unicode::strtolower($token_key) . $post] = \Drupal\Component\Utility\SafeMarkup::checkPlain($value);
+      $tokens[$pre . $token_key . $post] = SafeMarkup::checkPlain($value);
+      if ($token_key != Unicode::strtolower($token_key)) {
+        $tokens[$pre . Unicode::strtolower($token_key) . $post] = SafeMarkup::checkPlain($value);
       }
     }
   }
@@ -448,7 +466,8 @@ function ldap_servers_token_tokenize_user_account($user_account, $token_keys = '
 }
 
 /**
- * @param string $template in form [cn]@myuniversity.edu
+ * @param string $template
+ *   in form [cn]@myuniversity.edu
  * @return array of all tokens in the template such as array('cn')
  */
 function ldap_servers_token_tokens_needed_for_template($template, $pre = LDAP_SERVERS_TOKEN_PRE, $post = LDAP_SERVERS_TOKEN_POST) {
@@ -462,11 +481,14 @@ function ldap_servers_token_tokens_needed_for_template($template, $pre = LDAP_SE
 
 }
 
+/**
+ *
+ */
 function ldap_servers_token_show_sample_user_tokens($sid) {
 
   $ldap_server = ldap_servers_get_servers($sid, 'all', TRUE);
   $test_username = $ldap_server->testingDrupalUsername;
-  if (!$test_username || ! (
+  if (!$test_username || !(
     $ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT ||
     $ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_ANON
       )
@@ -481,7 +503,7 @@ function ldap_servers_token_show_sample_user_tokens($sid) {
       'entry' => $ldap_user['attr'],
       'username' => $test_username,
       'dn' => $ldap_user['dn'],
-      ));
+    ));
   }
   else {
     $table = '<p>' . t('No sample user data found') . '</p>';

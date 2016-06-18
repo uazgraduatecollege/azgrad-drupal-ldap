@@ -9,12 +9,12 @@ use Drupal\ldap_test\LdapServerTest;
 use Drupal\ldap_test\LdapTestCase;
 
 /**
- *
+ * Tests covering ldap_server module.
  */
 class LdapServersTestCase extends LdapTestCase {
 
   /**
-   *
+   * {@inheritdoc}
    */
   public static function getInfo() {
     return array(
@@ -27,7 +27,7 @@ class LdapServersTestCase extends LdapTestCase {
   }
 
   /**
-   *
+   * {@inheritdoc}
    */
   function __construct($test_id = NULL) {
     parent::__construct($test_id);

@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * This class extends LdapUserConf for configuration and other admin functions.
- */
-
 namespace Drupal\ldap_user;
 
 module_load_include('inc', 'user', 'user.pages');
@@ -65,6 +60,7 @@ class LdapUserConfAdmin extends LdapUserConf {
     \Drupal::configFactory()->getEditable('ldap_user.settings')->set('ldap_user_conf', $save)->save();
     ldap_user_conf_cache_clear();
   }
+
 
   /**
    *

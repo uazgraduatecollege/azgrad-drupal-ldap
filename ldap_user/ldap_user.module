@@ -15,7 +15,6 @@ use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Url;
 use Drupal\ldap_user\LdapUserConf;
 use Drupal\ldap_user\LdapUserConfAdmin;
-use Drupal\user\Entity\User;
 
 define('LDAP_USER_DRUPAL_HELP_URL', 'http://drupal.org/node/997082');
 
@@ -764,12 +763,11 @@ function ldap_user_form_register_form_submit2(&$form, FormState $form_state) {
   // Either LDAP provision (above) has said "associate" or the person creating
   // the account has said "associate" or the LDAP user settings says
   // "Associate manually created Drupal accounts with related LDAP Account if one exists.".
-
   /* @var LdapUserConf $ldap_user_conf */
   $ldap_user_conf = ldap_user_conf();
   if ($ldap_user_association_set ||
     @$values['ldap_user_association'] == LDAP_USER_MANUAL_ACCT_CONFLICT_LDAP_ASSOCIATE ||
-    @$ldap_user_conf->manualAccountConflict == LDAP_USER_MANUAL_ACCT_CONFLICT_LDAP_ASSOCIATE ) {
+    @$ldap_user_conf->manualAccountConflict == LDAP_USER_MANUAL_ACCT_CONFLICT_LDAP_ASSOCIATE) {
     $ldap_user_conf->ldapAssociateDrupalAccount($values['name']);
   }
 
@@ -851,6 +849,7 @@ function ldap_user_is_ldap_associated($account, $direction = NULL) {
 /**
  * Api function for synching
  * note: does no checking if synching is enabled or configured for a given context.
+ *
  * @param $username
  * @param int $prov_event
  * @param null $ldap_user
@@ -997,7 +996,7 @@ function ldap_user_user_login(UserInterface $account) {
   // don't synch if just provisioned.
   if (
     $ldap_user_conf->provisionsLdapEntriesFromDrupalUsers
-    && ldap_user_ldap_provision_semaphore('synch', 'get' , $account->getUsername()) === FALSE
+    && ldap_user_ldap_provision_semaphore('synch', 'get', $account->getUsername()) === FALSE
     && $provision_result['status'] != 'success'
     && $ldap_user_conf->provisionEnabled(LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY, LDAP_USER_LDAP_ENTRY_PROV_ON_AUTHENTICATE)
     ) {
@@ -1034,9 +1033,10 @@ function ldap_user_user_insert(UserInterface $account) {
   }
 
   if (is_object($account) && $account->getUsername()) {
-    $new_account_request = (boolean)(\Drupal::currentUser()->isAnonymous() && $account->isNew()); // check for first time user
-    $already_provisioned_to_ldap = ldap_user_ldap_provision_semaphore('provision', 'get' , $account->getUsername());
-    $already_synched_to_ldap = ldap_user_ldap_provision_semaphore('synch', 'user_action_query' , $account->getUsername());
+    // Check for first time user.
+    $new_account_request = (boolean) (\Drupal::currentUser()->isAnonymous() && $account->isNew());
+    $already_provisioned_to_ldap = ldap_user_ldap_provision_semaphore('provision', 'get', $account->getUsername());
+    $already_synched_to_ldap = ldap_user_ldap_provision_semaphore('synch', 'user_action_query', $account->getUsername());
     if ($already_provisioned_to_ldap || $already_synched_to_ldap || $new_account_request) {
       return;
     }
@@ -1091,8 +1091,8 @@ function ldap_user_user_update(UserInterface $account) {
   if ($ldap_user_conf->provisionsLdapEntriesFromDrupalUsers &&
       $ldap_user_conf->provisionEnabled(LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY, LDAP_USER_LDAP_ENTRY_PROV_ON_USER_UPDATE_CREATE)) {
 
-    $already_provisioned_to_ldap = ldap_user_ldap_provision_semaphore('provision', 'get' , $account->getUsername());
-    $already_synched_to_ldap = ldap_user_ldap_provision_semaphore('synch', 'get' , $account->getUsername());
+    $already_provisioned_to_ldap = ldap_user_ldap_provision_semaphore('provision', 'get', $account->getUsername());
+    $already_synched_to_ldap = ldap_user_ldap_provision_semaphore('synch', 'get', $account->getUsername());
     if ($already_provisioned_to_ldap || $already_synched_to_ldap) {
       return;
     }
@@ -1128,6 +1128,7 @@ function ldap_user_user_update(UserInterface $account) {
  *
  * @FIXME hook_user_presave has gone away (Core).
  * @FIXME $user_edit is deprecated (LDAP).
+ *
  * @FIXME: Removed checking for new users in ldap_user_ldap_exclude(). Do we need that?
  */
 function ldap_user_user_presave(UserInterface $account) {
@@ -1279,6 +1280,7 @@ function ldap_user_token_tokenize_entry($account, $token_keys, $pre = LDAP_SERVE
  *   is 'username' or 'uid'
  *
  *   return array $account and $user_entity
+ *
  * @return array
  */
 function ldap_user_load_user_acct_and_entity($user_id, $user_id_type = 'username') {

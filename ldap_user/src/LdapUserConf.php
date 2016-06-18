@@ -1,19 +1,12 @@
 <?php
 
-/**
- * @file
- * This class represents a ldap_user module's configuration
- * It is extended by LdapUserConfAdmin for configuration and other admin functions.
- */
-
 namespace Drupal\ldap_user;
 
-use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\Component\Utility\Unicode;
 use Drupal\user\Entity\User;
 
 /**
- *
+ *  The entry-point to working with users by loading their configuration.
  */
 class LdapUserConf {
 
