@@ -342,7 +342,7 @@ function ldap_authentication_show_reset_pwd($user = NULL) {
 
   if ($user->uid == 0) {
     // hide reset password for anonymous users if ldap only authentication and password updates are disabled, otherwise show
-    if ($auth_conf->authenticationMode != LDAP_AUTHENTICATION_EXCLUSIVE) {
+    if ($auth_conf->authenticationMode == LDAP_AUTHENTICATION_EXCLUSIVE) {
       if ($auth_conf->passwordOption == LDAP_AUTHENTICATION_PASSWORD_FIELD_ALLOW) {
         return TRUE;
       }
