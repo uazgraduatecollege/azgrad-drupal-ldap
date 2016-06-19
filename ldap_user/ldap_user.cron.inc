@@ -134,7 +134,7 @@ function _ldap_user_orphans($ldap_user_conf) {
             'ldap server %sid had error while querying to
             deal with orphaned ldap user entries.  Please check that the ldap
             server is configured correctly.  Query; %query',
-            array('%sid' => $sid, '%query' => $query),
+            array('%sid' => $sid, '%query' => serialize($query)),
             WATCHDOG_ERROR);
           continue;
         }
