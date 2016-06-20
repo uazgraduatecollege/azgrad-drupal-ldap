@@ -190,9 +190,9 @@ Representations of groups derived from LDAP might initially look like:
   }
 
   /**
-   *
+   * Contains examples for how groups are derived as markup.
    */
-  public function buildRowDescription() {
+  public function buildRowDescription(array $form, FormStateInterface $form_state) {
     return '
       Representations of groups derived from LDAP might initially look like:
       <ul>
