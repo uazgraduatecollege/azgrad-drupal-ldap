@@ -131,6 +131,9 @@ function _ldap_authentication_form_user_profile_form_alter(&$form, $form_state) 
   */
 function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
 
+  if (empty($form_state['values']['pass']) || empty ($form_state['values']['name'])) {
+    return FALSE;
+  }
   $detailed_watchdog_log = variable_get('ldap_help_watchdog_detail', 0);
   $authname = $form_state['values']['name']; // $name = $form_state['values']['name']; // patch 1599632
   $pass = $form_state['values']['pass'];
@@ -445,8 +448,8 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
      *       for external authentication modules
      */
     ldap_server_module_load_include('inc', 'ldap_servers', 'ldap_servers.functions');
-    
-    $status = 1; 
+
+    $status = 1;
     $user_register = variable_get('user_register', USER_REGISTER_VISITORS_ADMINISTRATIVE_APPROVAL);
     if ($auth_conf->acctCreation == LDAP_AUTHENTICATION_ACCT_CREATION_USER_SETTINGS_FOR_LDAP && $user_register == USER_REGISTER_VISITORS_ADMINISTRATIVE_APPROVAL) {
       $status = 0; // if admin approval required, set status to 1.
@@ -492,7 +495,7 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
           drupal_set_message(t('Your e-mail has been updated to match your LDAP account (@mail).', $watchdog_tokens), 'status');
       }
     }
-    
+
      // If this is previous Drupal account being authenticated on LDAP for the first time
     // we need to set the authentication init data
     if (empty($account->data['ldap_authentication']['init']['sid'])) {
