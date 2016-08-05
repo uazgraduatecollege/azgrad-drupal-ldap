@@ -118,6 +118,9 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state, $re
   // $authname is the name the user is authenticated with from the logon form // patch 1599632.
   $authname = trim($form_state->getValue('name'));
 
+  if (!($form_state->getValue('pass')) || !($form_state->getValue('name'))) {
+    return FALSE;
+  }
   /*
    * SSO passes a fake form state into this function let us know that we are not
    * authenticating with a password, but instead just looking up a username/dn
