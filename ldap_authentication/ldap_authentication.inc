@@ -156,18 +156,19 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state, $re
 
   // Default to name
   $entered_name = $form_state['values']['name'];
-  $authname_drupal_property = 'name';
+  $authname_drupal_property = $form_field_name = 'name';
 
   // Email registration module populates name even though user entered email
   if (!empty($form_state['values']['email'])) {
     $entered_name = $form_state['values']['email'];
     $authname_drupal_property = 'mail';
+    $form_field_name = 'email';
   }
 
   // $authname is the name the user is authenticated with from the logon form // patch 1599632
   $authname = $entered_name;
 
-  if (empty($form_state['values']['pass']) || empty ($form_state['values'][$authname_drupal_property])) {
+  if (empty($form_state['values']['pass']) || empty ($form_state['values'][$form_field_name])) {
     return FALSE;
   }
   /*
