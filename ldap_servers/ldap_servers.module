@@ -89,7 +89,9 @@ define('LDAP_INVALID_DN_SYNTAX', 0x22);
 
 define('LDAP_IS_LEAF', 0x23);
 define('LDAP_ALIAS_DEREF_PROBLEM', 0x24);
-define('LDAP_DEREF_NEVER', 0x25);
+if (!defined('LDAP_DEREF_NEVER')) {
+  define('LDAP_DEREF_NEVER', 0x25);
+}
 
 define('LDAP_INAPPROPRIATE_AUTH', 0x30);
 define('LDAP_INVALID_CREDENTIALS', 0x31);
