@@ -245,12 +245,11 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
 
     // #2 BIND TO SERVER
     $bind_success = FALSE;
-    if ($ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT ||
-        $ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_ANON_USER
-        ) {
+    if ($ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT) {
       $bind_success = ($ldap_server->bind(NULL, NULL, FALSE) == LDAP_SUCCESS);
     }
-    elseif ($ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_ANON) {
+    elseif ($ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_ANON ||
+        $ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_ANON_USER) {
       $bind_success = ($ldap_server->bind(NULL, NULL, TRUE) == LDAP_SUCCESS);
     }
     elseif ($sso_login) {
@@ -263,7 +262,7 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state) {
         $transformname = $ldap_server->drupalToLdapNameTransform($authname, $watchdog_tokens);
         $replace = array($basedn, $transformname);
         $userdn = str_replace($search, $replace, $ldap_server->user_dn_expression);
-        $bind_success = ($ldap_server->bind($userdn, $password, FALSE) == LDAP_SUCCESS);
+        $bind_success = ($ldap_server->bind($userdn, $pass, FALSE) == LDAP_SUCCESS);
         if ($bind_success) {
           break;
         }
