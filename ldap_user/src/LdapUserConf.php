@@ -1210,6 +1210,7 @@ class LdapUserConf {
         $account->set('ldap_user_current_dn', $ldap_user['dn']);
         // @TODO Shouldn't we set the "last checked" date?
         $account->set('ldap_user_last_checked', time());
+        $account->set('ldap_user_ldap_exclude', 0);
         $account->save();
         return (boolean) $account;
       }
@@ -1217,6 +1218,25 @@ class LdapUserConf {
     else {
       return FALSE;
     }
+  }
+
+  /**
+   * Set flag to exclude user from LDAP association
+   *
+   * @param string $drupal_username
+   *
+   * @return boolean TRUE on success, FALSE on error or failure because of invalid user
+   */
+  function ldapExcludeDrupalAccount($drupal_username) {
+    $account = user_load_by_name($drupal_username);
+    if (!$account) {
+      \Drupal::logger('ldap_user')->error('Failed to exclude user from LDAP associatino because drupal account %drupal_username was not found', array('%drupal_username' => $drupal_username));
+      return FALSE;
+    }
+
+    $account->set('ldap_user_ldap_exclude', 1);
+    $account->save();
+    return (boolean) $account;
   }
 
   /**

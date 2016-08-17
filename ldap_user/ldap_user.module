@@ -704,7 +704,7 @@ function ldap_user_form_register_form_validate($form, &$form_state) {
   $drupal_username = $values['name'];
 
   if ($values['ldap_user_association'] == LDAP_USER_MANUAL_ACCT_CONFLICT_NO_LDAP_ASSOCIATE) {
-    $form_state['values']['ldap_user_ldap_exclude']['und'][0]['value'] = 1;
+    $form_state->set('ldap_user_ldap_exclude', 1);
   }
 
   // If corresponding ldap account doesn't exist and provision not selected and make ldap associated is selected, throw error.
@@ -760,14 +760,17 @@ function ldap_user_form_register_form_submit2(&$form, FormState $form_state) {
     }
   }
 
-  // Either LDAP provision (above) has said "associate" or the person creating
-  // the account has said "associate" or the LDAP user settings says
-  // "Associate manually created Drupal accounts with related LDAP Account if one exists.".
-  /* @var LdapUserConf $ldap_user_conf */
   $ldap_user_conf = ldap_user_conf();
-  if ($ldap_user_association_set ||
+  if ($values['ldap_user_association'] == LDAP_USER_MANUAL_ACCT_CONFLICT_NO_LDAP_ASSOCIATE) {
+    $ldap_user_conf->ldapExcludeDrupalAccount($values['name']);
+  }
+  else if ($ldap_user_association_set ||
     @$values['ldap_user_association'] == LDAP_USER_MANUAL_ACCT_CONFLICT_LDAP_ASSOCIATE ||
     @$ldap_user_conf->manualAccountConflict == LDAP_USER_MANUAL_ACCT_CONFLICT_LDAP_ASSOCIATE) {
+    // Either LDAP provision (above) has said "associate" or the person creating
+    // the account has said "associate" or the LDAP user settings says
+    // "Associate manually created Drupal accounts with related LDAP Account if one exists.".
+    /* @var LdapUserConf $ldap_user_conf */
     $ldap_user_conf->ldapAssociateDrupalAccount($values['name']);
   }
 
@@ -791,8 +794,7 @@ function ldap_user_ldap_exclude(UserInterface $account = NULL) {
   }
 
   // Exclude users who have the field ldap_user_ldap_exclude set to 1.
-  if (is_object($account) && !empty($account->ldap_user_ldap_exclude->first())
-    && $account->ldap_user_ldap_exclude->first()->getValue() == 1) {
+  if (is_object($account) && $account->ldap_user_ldap_exclude->value == 1) {
     return TRUE;
   }
 
