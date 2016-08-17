@@ -41,7 +41,7 @@ function _ldap_authentication_login_form_alter(&$form, &$form_state, $form_id) {
   }
 
   if ($form_id == 'user_login_block') {
-    $user_register = config('user.settings')->get('register');
+    $user_register = \Drupal::config('user.settings')->get('register');
     $vars = array(
       'show_reset_pwd' => ldap_authentication_show_reset_pwd(),
       'auth_conf' => $auth_conf,
@@ -328,7 +328,7 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state, $re
      */
 
     if ($auth_conf->ldapUser->acctCreation == LDAP_AUTHENTICATION_ACCT_CREATION_USER_SETTINGS_FOR_LDAP &&
-        config('user.settings')->get('register') == USER_REGISTER_VISITORS_ADMINISTRATIVE_APPROVAL) {
+        \Drupal::config('user.settings')->get('register') == USER_REGISTER_VISITORS_ADMINISTRATIVE_APPROVAL) {
       // If admin approval required, set status to 0.
       $user_edit = array('name' => $drupal_accountname, 'status' => 0);
     }
