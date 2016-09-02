@@ -1293,8 +1293,7 @@ function ldap_user_load_user_acct_and_entity($user_id, $user_id_type = 'username
     $account = \Drupal::entityManager()->getStorage('user')->load($user_id);
   }
   if ($account) {
-    $user_entities = \Drupal::entityManager()->getStorage('user', array($account->uid));
-    $user_entity = $user_entities[$account->uid];
+    $user_entity = \Drupal::entityManager()->getStorage('user')->load($account->id());
   }
   else {
     $user_entity = NULL;

@@ -533,7 +533,7 @@ class LdapUserConf {
 
     /* @var \Drupal\user\Entity\user $account */
     /* @var \Drupal\user\Entity\user $user_entity */
-    list($account, $user_entity) = ldap_user_load_user_acct_and_entity($account->name);
+    list($account, $user_entity) = ldap_user_load_user_acct_and_entity($account->getUsername());
 
     if (is_object($account) && property_exists($account, 'uid') && $account->uid == 1) {
       $result['status'] = 'fail';
