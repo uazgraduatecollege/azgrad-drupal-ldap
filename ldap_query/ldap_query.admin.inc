@@ -69,7 +69,7 @@ function ldap_query_admin_form_validate($form, &$form_state) {
 
   $errors = $server->drupalFormValidate($op, $form_state['values']);
   foreach ($errors as $error_name => $error_text) {
-    form_set_error($error_name, t($error_text));
+    $form_state->setErrorByName($error_name, t($error_text));
   }
   // $warnings = $server->drupalFormWarnings($op, $form_state['values']);
   // foreach ($warnings as $warning_name => $warning_text) {
@@ -102,7 +102,7 @@ function ldap_query_admin_form_submit($form, &$form_state) {
     // }.
   }
   else {
-    form_set_error($server->errorName(), $server->errorMsg());
+    $form_state->setErrorByName($server->errorName(), $server->errorMsg());
     $server->clearError();
   }
   ldap_query_cache_clear();

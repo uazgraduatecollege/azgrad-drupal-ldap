@@ -176,10 +176,10 @@ function ldap_servers_test_form($form, &$form_state, $op = NULL, $sid = NULL) {
 function ldap_servers_test_form_validate($form, &$form_state) {
   $values = $form_state['values'];
   if (!$values['sid']) {
-    form_set_error(NULL, t('No server id found in form'));
+    $form_state->setErrorByName(NULL, t('No server id found in form'));
   }
   elseif (!$ldap_server = ldap_servers_get_servers($values['sid'], 'all', TRUE)) {
-    form_set_error(NULL, t('Failed to create server object for server with server id=%sid', array('%sid' => $values['sid'])));
+    $form_state->setErrorByName(NULL, t('Failed to create server object for server with server id=%sid', array('%sid' => $values['sid'])));
   }
 }
 

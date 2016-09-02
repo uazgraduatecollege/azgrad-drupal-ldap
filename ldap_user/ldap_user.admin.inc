@@ -25,7 +25,7 @@ function ldap_user_admin_form_validate($form, &$form_state) {
   $ldap_user_conf_admin = ldap_user_conf('admin');
   list($errors, $warnings) = $ldap_user_conf_admin->drupalFormValidate($form_state['values'], $form['#storage']);
   foreach ($errors as $error_name => $error_text) {
-    form_set_error($error_name, t($error_text));
+    $form_state->setErrorByName($error_name, t($error_text));
   }
   foreach ($warnings as $warning_name => $warning_text) {
     drupal_set_message($warning_text, 'warning');
@@ -47,7 +47,7 @@ function ldap_user_admin_form_submit($form, &$form_state) {
     return new RedirectResponse(\Drupal::url('ldap_user.admin_form'));
   }
   else {
-    form_set_error($conf->errorName, $conf->errorMsg);
+    $form_state->setErrorByName($conf->errorName, $conf->errorMsg);
     $ldap_user_conf->clearError();
   }
 

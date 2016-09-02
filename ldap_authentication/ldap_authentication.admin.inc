@@ -28,7 +28,7 @@ function ldap_authentication_admin_form_validate($form, &$form_state) {
   $auth_conf = new \LdapAuthenticationConfAdmin();
   $errors = $auth_conf->drupalFormValidate($form_state['values']);
   foreach ($errors as $error_name => $error_text) {
-    form_set_error($error_name, t($error_text));
+    $form_state->setErrorByName($error_name, t($error_text));
   }
 
 }
@@ -52,7 +52,7 @@ function ldap_authentication_admin_form_submit($form, &$form_state) {
     return new RedirectResponse(\Drupal::url('ldap_user.admin_form'));
   }
   else {
-    form_set_error($auth_conf->errorName, $auth_conf->errorMsg);
+    $form_state->setErrorByName($auth_conf->errorName, $auth_conf->errorMsg);
     $auth_conf->clearError();
   }
 

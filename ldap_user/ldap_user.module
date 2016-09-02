@@ -713,7 +713,7 @@ function ldap_user_form_register_form_validate($form, &$form_state) {
     $ldap_user = ldap_servers_get_user_ldap_data($drupal_username, $ldap_user_conf->ldapEntryProvisionServer, 'ldap_user_prov_to_drupal');
     if (!$ldap_user) {
 
-      form_set_error('ldap_user_association', t('User %name does not have a corresponding LDAP Entry (dn).
+      $form_state->setErrorByName('ldap_user_association', t('User %name does not have a corresponding LDAP Entry (dn).
         Under LDAP options, you may NOT select "Make this an LDAP Associated Account"', array('%name' => $drupal_username)));
     }
   }
@@ -724,7 +724,7 @@ function ldap_user_form_register_form_validate($form, &$form_state) {
     $ldap_user = ldap_servers_get_user_ldap_data($drupal_username, $ldap_user_conf->ldapEntryProvisionServer, 'ldap_user_prov_to_ldap');
     if ($ldap_user) {
       $tokens = array('%dn' => $ldap_user['dn'], '%name' => $drupal_username);
-      form_set_error('ldap_user_create_ldap_acct', t('User %name already has a corresponding LDAP Entry (%dn).
+      $form_state->setErrorByName('ldap_user_create_ldap_acct', t('User %name already has a corresponding LDAP Entry (%dn).
         Uncheck "Create corresponding LDAP entry" to allow this Drupal user to be created.  Select
         "Make this an LDAP associated account" to associate this account with the ldap entry.', $tokens));
     }

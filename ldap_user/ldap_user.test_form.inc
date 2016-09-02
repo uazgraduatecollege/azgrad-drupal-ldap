@@ -79,7 +79,7 @@ function ldap_user_test_form($form, &$form_state, $op = NULL) {
 function ldap_user_test_form_validate($form, &$form_state) {
   if ($form_state['values']['test_mode'] == 'execute'  &&
     count(array_filter($form_state['values']['action'])) > 1) {
-    form_set_error('test_mode', t('Only one action may be selected for "Execute Action" testing mode.'));
+    $form_state->setErrorByName('test_mode', t('Only one action may be selected for "Execute Action" testing mode.'));
   }
 
 }
