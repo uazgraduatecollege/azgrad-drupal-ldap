@@ -596,7 +596,7 @@ EOT;
         }
       }
       if ($to_ldap_entries_mappings_exist && !isset($mappings['dn'])) {
-        $errors['mappings__' . $synch_direction] = t('Mapping rows exist for provisioning to LDAP, but no LDAP attribute is targetted for [dn].
+        $errors['mappings__' . $synch_direction] = t('Mapping rows exist for provisioning to LDAP, but no LDAP attribute is targeted for [dn].
           One row must map to [dn].  This row will have a user token like cn=[property.name],ou=users,dc=ldap,dc=mycompany,dc=com');
       }
     }
