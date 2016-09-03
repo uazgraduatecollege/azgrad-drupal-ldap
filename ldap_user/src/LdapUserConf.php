@@ -651,24 +651,24 @@ class LdapUserConf {
 
     $tokens = array(
       '%dn' => isset($result['proposed']['dn']) ? $result['proposed']['dn'] : NULL,
-      '%sid' => (isset($result['ldap_server']) && $result['ldap_server']) ? $result['ldap_server']->sid : 0,
-      '%username' => @$account->name,
-      '%uid' => @$account->uid,
+      '%sid' => (isset($result['ldap_server']) && $result['ldap_server']) ? $result['ldap_server']->id() : 0,
+      '%username' => @$account->getUsername(),
+      '%uid' => @$account->id(),
       '%description' => @$result['description'],
     );
     if (!$test_query && isset($result['status'])) {
       if ($result['status'] == 'success') {
         if ($this->detailedWatchdog) {
-          \Drupal::logger('ldap_user')->info('LDAP entry on server %sid created dn=%dn.  %description. username=%username, uid=%uid', []);
+          \Drupal::logger('ldap_user')->info('LDAP entry on server %sid created dn=%dn.  %description. username=%username, uid=%uid', $tokens);
         }
       }
       elseif ($result['status'] == 'conflict') {
         if ($this->detailedWatchdog) {
-          \Drupal::logger('ldap_user')->warning('LDAP entry on server %sid not created because of existing ldap entry. %description. username=%username, uid=%uid', []);
+          \Drupal::logger('ldap_user')->warning('LDAP entry on server %sid not created because of existing ldap entry. %description. username=%username, uid=%uid', $tokens);
         }
       }
       elseif ($result['status'] == 'fail') {
-        \Drupal::logger('ldap_user')->error('LDAP entry on server %sid not created because error.  %description. username=%username, uid=%uid', []);
+        \Drupal::logger('ldap_user')->error('LDAP entry on server %sid not created because of error. %description. username=%username, uid=%uid, proposed dn=%dn', $tokens);
       }
     }
     return $result;

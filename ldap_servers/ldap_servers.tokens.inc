@@ -409,11 +409,11 @@ function ldap_servers_token_tokenize_user_account($user_account, $token_keys = '
 
     switch ($attr_type) {
       case 'field':
-        $value = @is_scalar($user_account->{$attr_name}['und'][0]['value']) ? $user_account->{$attr_name}['und'][0]['value'] : '';
+        $value = @is_scalar($user_account->get($attr_name)->value) ? $user_account->get($attr_name)->value : '';
         break;
 
       case 'property':
-        $value = @is_scalar($user_account->{$attr_name}) ? $user_account->{$attr_name} : '';
+        $value = @is_scalar($user_account->get($attr_name)->value) ? $user_account->get($attr_name)->value : '';
         break;
 
       case 'password':

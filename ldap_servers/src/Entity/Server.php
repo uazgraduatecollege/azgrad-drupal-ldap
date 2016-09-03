@@ -258,10 +258,10 @@ class Server extends ConfigEntityBase implements ServerInterface {
 
     $result = @ldap_add($this->connection, $dn, $attributes);
     if (!$result) {
-      $error = "LDAP Server ldap_add(%dn) Error Server ID = %sid, LDAP Err No: %ldap_errno LDAP Err Message: %ldap_err2str ";
+      $error = "LDAP Server ldap_add(%dn) Error Server ID = %id, LDAP Err No: %ldap_errno LDAP Err Message: %ldap_err2str ";
       $tokens = array('%dn' => $dn, '%id' => $this->id(), '%ldap_errno' => ldap_errno($this->connection), '%ldap_err2str' => ldap_err2str(ldap_errno($this->connection)));
       debug(t($error, $tokens));
-      \Drupal::logger('ldap_server')->error($error, []);
+      \Drupal::logger('ldap_server')->error($error, $tokens);
     }
 
     return $result;
