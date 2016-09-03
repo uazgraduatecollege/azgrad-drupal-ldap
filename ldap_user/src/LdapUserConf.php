@@ -536,6 +536,7 @@ class LdapUserConf {
     list($account, $user_entity) = ldap_user_load_user_acct_and_entity($account->getUsername());
 
     if (is_object($account) && property_exists($account, 'uid') && $account->uid == 1) {
+    if (is_object($account) && $account->id() == 1) {
       $result['status'] = 'fail';
       $result['error_description'] = 'can not provision drupal user 1';
       // Do not provision or synch user 1.
@@ -962,7 +963,7 @@ class LdapUserConf {
       return array(NULL, LDAP_USER_PROV_RESULT_BAD_PARAMS);
     }
     $watchdog_tokens = array(
-      '%drupal_username' => $account->name,
+      '%drupal_username' => $account->getUsername(),
     );
     $include_count = (isset($params['include_count']) && $params['include_count']);
 

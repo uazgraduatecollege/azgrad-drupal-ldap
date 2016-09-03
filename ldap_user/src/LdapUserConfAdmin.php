@@ -595,8 +595,8 @@ EOT;
           }
         }
       }
-      if ($to_ldap_entries_mappings_exist && !isset($mappings['[dn]'])) {
-        $errors['mappings__' . $synch_direction] = t('Mapping rows exist for provisioning to ldap, but no ldap attribute is targetted for [dn].
+      if ($to_ldap_entries_mappings_exist && !isset($mappings['dn'])) {
+        $errors['mappings__' . $synch_direction] = t('Mapping rows exist for provisioning to LDAP, but no LDAP attribute is targetted for [dn].
           One row must map to [dn].  This row will have a user token like cn=[property.name],ou=users,dc=ldap,dc=mycompany,dc=com');
       }
     }
@@ -977,7 +977,18 @@ EOT;
       );
       // Change the visibility rules for LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY.
       if ($direction == LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY) {
-        $ldap_attr['#states'] = array(
+        $user_tokens = array(
+          '#type' => 'textfield',
+          '#title' => 'User tokens',
+          '#title_display' => 'invisible',
+          '#default_value' => isset($mapping['user_tokens']) ? $mapping['user_tokens'] : '',
+          '#size' => 20,
+          '#maxlength' => 255,
+          '#disabled' => ($action == 'nonconfigurable'),
+          '#attributes' => array('class' => array('tokens')),
+        );
+
+        $user_tokens['#states'] = array(
           'visible' => array(
             'select[name="' . $user_attr_input_id . '"]' => array('value' => 'user_tokens'),
           ),
@@ -1013,26 +1024,14 @@ EOT;
     // Get the order of the columns correctly.
     if ($direction == LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY) {
       $result['user_attr'] = $user_attr;
-      $result['ldap_attr'] = $ldap_attr;
+      $result['user_tokens'] = $user_tokens;
       $result['convert'] = $convert;
+      $result['ldap_attr'] = $ldap_attr;
     }
     else {
       $result['ldap_attr'] = $ldap_attr;
       $result['convert'] = $convert;
       $result['user_attr'] = $user_attr;
-    }
-
-    if ($direction == LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY) {
-      $result['user_tokens'] = array(
-        '#type' => 'textfield',
-        '#title' => 'User tokens',
-        '#title_display' => 'invisible',
-        '#default_value' => isset($mapping['user_tokens']) ? $mapping['user_tokens'] : '',
-        '#size' => 20,
-        '#maxlength' => 255,
-        '#disabled' => ($action == 'nonconfigurable'),
-        '#attributes' => array('class' => array('tokens')),
-      );
     }
 
     $result['#storage']['synch_mapping_fields'][$direction] = array(
