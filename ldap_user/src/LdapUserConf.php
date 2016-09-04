@@ -406,7 +406,6 @@ class LdapUserConf {
       case 'ldap_user_insert_drupal_user':
       case 'ldap_user_update_drupal_user':
       case 'ldap_authentication_authenticate':
-      case 'ldap_user_insert_drupal_user':
       case 'ldap_user_disable_drupal_user':
         $result = LDAP_USER_PROV_DIRECTION_ALL;
         break;
@@ -535,7 +534,6 @@ class LdapUserConf {
     /* @var \Drupal\user\Entity\user $user_entity */
     list($account, $user_entity) = ldap_user_load_user_acct_and_entity($account->getUsername());
 
-    if (is_object($account) && property_exists($account, 'uid') && $account->uid == 1) {
     if (is_object($account) && $account->id() == 1) {
       $result['status'] = 'fail';
       $result['error_description'] = 'can not provision drupal user 1';
@@ -616,27 +614,26 @@ class LdapUserConf {
         $result['ldap_server'] = $ldap_server;
 
         // Need to store <sid>|<dn> in ldap_user_prov_entries field, which may contain more than one.
-        $ldap_user_prov_entry = $ldap_server->sid . '|' . $proposed_ldap_entry['dn'];
-        if (!isset($user_entity->ldap_user_prov_entries['und'])) {
-          $user_entity->ldap_user_prov_entries = array('und' => array());
+        $ldap_user_prov_entry = $ldap_server->id() . '|' . $proposed_ldap_entry['dn'];
+        if (null !== $user_entity->get('ldap_user_prov_entries')) {
+          $user_entity->set('ldap_user_prov_entries', array());
         }
         $ldap_user_prov_entry_exists = FALSE;
-        foreach ($user_entity->ldap_user_prov_entries['und'] as $i => $field_value_instance) {
+        foreach ($user_entity->get('ldap_user_prov_entries')->value as $i => $field_value_instance) {
           if ($field_value_instance == $ldap_user_prov_entry) {
             $ldap_user_prov_entry_exists = TRUE;
           }
         }
         if (!$ldap_user_prov_entry_exists) {
-          $user_entity->ldap_user_prov_entries['und'][] = array(
+          // @TODO Serialise?
+          $prov_entries = $user_entity->get('ldap_user_prov_entries')->value;
+          $prov_entries[] = array(
             'value' => $ldap_user_prov_entry,
             'format' => NULL,
             'save_value' => $ldap_user_prov_entry,
           );
-          $edit = array(
-            'ldap_user_prov_entries' => $user_entity->ldap_user_prov_entries,
-          );
-          $account = \Drupal::entityManager()->getStorage('user')->load($account->uid);
-          $account = user_save($account, $edit);
+          $user_entity->set('ldap_user_prov_entries', $prov_entries);
+          $user_entity->save();
         }
 
       }

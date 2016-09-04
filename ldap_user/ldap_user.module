@@ -155,7 +155,7 @@ function ldap_user_preprocess_table(&$variables) {
         $cell['attributes']['aria-hidden'] = 'true';
         $cell['tag'] = 'span';
       }
-      if (in_array('header', $row['attributes']['class'])) {
+      if (is_array($row['attributes']['class']) && in_array('header', $row['attributes']['class'])) {
         $cell['tag'] = 'th';
       }
     }
