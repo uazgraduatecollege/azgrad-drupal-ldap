@@ -64,19 +64,6 @@ function ldap_user_uninstall() {
 }
 
 /**
- * Converts default_file_main variable to config.
- *
- * @ingroup config_upgrade
- */
-function ldap_user_update_8001() {
-  if (function_exists('update_variables_to_config')) {
-    update_variables_to_config('ldap_user.settings', array(
-      'ldap_user_cron_last_uid_checked' => 'cron_last_uid_checked',
-    ));
-  }
-}
-
-/**
  * Convert ldap_user_identities table to authmap.
  */
 function ldap_user_update_8301(&$sandbox) {

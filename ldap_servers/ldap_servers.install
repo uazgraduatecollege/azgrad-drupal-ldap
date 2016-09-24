@@ -57,17 +57,3 @@ function ldap_servers_requirements($phase) {
   // Check that ldapauth not installed.
   return $requirements;
 }
-
-/**
- * Converts default_file_main variable to config.
- *
- * @ingroup config_upgrade
- */
-function ldap_servers_update_8000() {
-  if (function_exists('update_variables_to_config')) {
-    update_variables_to_config('ldap_servers.settings', array(
-      'ldap_servers_encryption' => 'encryption',
-      'ldap_servers_require_ssl_for_credentials' => 'require_ssl_for_credentials',
-    ));
-  }
-}

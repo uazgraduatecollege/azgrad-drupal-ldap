@@ -12,18 +12,3 @@ function ldap_help_uninstall() {
   // $result = db_query('DELETE FROM {variables} WHERE name like "ldap_authentication_%"');.
   \Drupal::service('config.factory')->getEditable('ldap_help')->delete();
 }
-
-/**
- * Converts default_file_main variable to config.
- *
- * @ingroup config_upgrade
- */
-function ldap_help_update_8000() {
-  if (function_exists('update_variables_to_config')) {
-    update_variables_to_config('ldap_help.settings', array(
-      'ldap_help_watchdog_detail' => 'watchdog_detail',
-      'ldap_help_user_data_clear' => 'user_data_clear',
-      'ldap_help_user_data_clear_set_date' => 'user_data_clear_set_date',
-    ));
-  }
-}
