@@ -492,9 +492,8 @@ class ServerForm extends EntityForm {
     $new_configuration = $this->entity;
 
     // Handle the password as the form is empty
-    // If there is a new password encrypt it.
     if (NULL !== $form_state->getValue('bindpw') && $form_state->getValue('bindpw')) {
-      $new_configuration->set('bindpw', ldap_servers_encrypt($form_state->getValue('bindpw')));
+      $new_configuration->set('bindpw', $form_state->getValue('bindpw'));
     }
     // If the bindpw_clear is checked clear the password from the database.
     elseif ($form_state->getValue('bindpw_clear')) {

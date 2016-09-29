@@ -775,30 +775,6 @@ function ldap_servers_ldap_extension_loaded() {
 /**
  *
  */
-function ldap_servers_encrypt($text, $encryption = NULL) {
-  ldap_servers_module_load_include('inc', 'ldap_servers', 'ldap_servers.encryption');
-  return _ldap_servers_encrypt($text, $encryption);
-}
-
-/**
- *
- */
-function ldap_servers_encrypt_types($category = 'all') {
-  ldap_servers_module_load_include('inc', 'ldap_servers', 'ldap_servers.encryption');
-  return _ldap_servers_encrypt_types($category);
-}
-
-/**
- *
- */
-function ldap_servers_decrypt($encrypted, $encryption = NULL) {
-  ldap_servers_module_load_include('inc', 'ldap_servers', 'ldap_servers.encryption');
-  return _ldap_servers_decrypt($encrypted, $encryption);
-}
-
-/**
- *
- */
 function ldap_servers_help($path, $arg) {
 
   $servers_help = '<p>' . t('LDAP Servers store "LDAP server configurations" so other modules can connect to them and leverage their data.') . ' ';
@@ -814,8 +790,6 @@ function ldap_servers_help($path, $arg) {
       $servers_help .= '<dl>';
       $servers_help .= '<dt>' . t('REQUIRE HTTPS ON CREDENTIAL PAGES') . '</dt>';
       $servers_help .= '<dd>' . t('If checked, modules using LDAP will not allow credentials to be entered on or submitted to HTTP pages, only HTTPS. This option should be used with an approach to get all logon forms to be HTTPS.') . '</dd>';
-      $servers_help .= '<dt>' . t('ENCRYPTION') . '</dt>';
-      $servers_help .= '<dd>' . t('With encryption enabled, passwords will be stored in encrypted form. This is two way encryption because the actual password needs to used to bind to LDAP. So it offers minimal defense if someone gets in the filespace. It mainly helps avoid the accidental discovery of a clear text password.') . '</dd>';
       $servers_help .= '<dt>' . t('LOG DETAILED LDAP ACTIONS') . '</dt>';
       $servers_help .= '<dd>' . t('Enables LDAP logging to the Drupal Watchdog system') . '</dd>';
       $servers_help .= '</dl>';

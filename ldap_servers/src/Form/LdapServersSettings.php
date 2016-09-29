@@ -22,16 +22,9 @@ class LdapServersSettings extends ConfigFormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $values = $form_state->getValues();
-    $encryption = $values['encryption'] ? $values['encryption'] : LDAP_SERVERS_ENC_TYPE_CLEARTEXT;
     $this->config('ldap_servers.settings')
       ->set('require_ssl_for_credentials', $values['require_ssl_for_credentials'])
-      ->set('encryption', $encryption)
-      // ->set('previous_encryption', $values['previous_encryption'])
       ->save();
-
-    if (method_exists($this, '_submitForm')) {
-      $this->_submitForm($form, $form_state);
-    }
   }
 
   /**
@@ -73,71 +66,8 @@ class LdapServersSettings extends ConfigFormBase {
       '#default_value' => \Drupal::config('ldap_servers.settings')->get('require_ssl_for_credentials'),
     );
 
-    $options = ldap_servers_encrypt_types('encrypt');
-    // @FIXME
-    // Could not extract the default value because it is either indeterminate, or
-    // not scalar. You'll need to provide a default value in
-    // config/install/ldap_servers.settings.yml and config/schema/ldap_servers.schema.yml.
-    /**  when this is changed, need to decrypt and possibly encrypt pwd in newly selected format
-     *   ... thus default needs to be "No Encryption" to avoid confusion.
-     */
-    $form['previous_encryption'] = [
-      '#type' => 'text',
-      '#default_value' => \Drupal::config('ldap_servers.settings')->get('encryption'),
-    ];
-    $form['encryption'] = ['#type' => 'details', '#title' => t('Encryption')];
-    // @FIXME
-    // Could not extract the default value because it is either indeterminate, or
-    // not scalar. You'll need to provide a default value in
-    // config/install/ldap_servers.settings.yml and config/schema/ldap_servers.schema.yml.
-    $form['encryption']['encryption'] = [
-      '#type' => 'select',
-      '#options' => $options,
-      '#title' => t('Encrypt Stored LDAP Passwords?'),
-      '#default_value' => \Drupal::config('ldap_servers.settings')->get('encryption'),
-      '#description' => t('With encryption, passwords will be stored in encrypted form.
-    This is two way encryption because the actual password needs to used to bind to LDAP.
-    So it offers minimal defense if someone gets in the filespace.  It mainly helps avoid the accidental
-    discovery of a clear text password.'),
-    ];
-
-    // $options will be empty if server does not support mcrypt.
-    // Disable the form field and explain this to the user.
-    if (empty($options)) {
-      $form['encryption']['encryption']['#options'] = [
-        LDAP_SERVERS_ENC_TYPE_CLEARTEXT => t('Not available.'),
-      ];
-      $form['encryption']['encryption']['#disabled'] = TRUE;
-      $form['encryption']['encryption']['#description'] .= ' <strong>' . t('Encryption is not supported on this web server.') . '</strong>';
-    }
-
     $form = parent::buildForm($form, $form_state);
     return $form;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function _submitForm(array &$form, FormStateInterface $form_state) {
-    if ($form_state->isSubmitted()) {
-      $new_encryption = $form_state->getValue(['encryption']);
-      $old_encryption = $form_state->getValue(['previous_encryption']);
-
-      if ($new_encryption != $old_encryption) {
-        $servers = ldap_servers_get_servers();
-        foreach ($servers as $id => $server) {
-          if ($server->bindpw != '') {
-            $decrypted_bind_pwd = ldap_servers_decrypt($server->get('bindpw'), $old_encryption);
-            $rencrypted = ldap_servers_encrypt($decrypted_bind_pwd, $new_encryption);
-          }
-          else {
-            $rencrypted = '';
-          }
-          $server->set('bindpw', $rencrypted);
-          $server->save();
-        }
-      }
-    }
   }
 
 }

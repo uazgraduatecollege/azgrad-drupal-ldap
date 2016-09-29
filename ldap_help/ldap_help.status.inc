@@ -133,11 +133,6 @@ function ldap_help_get_server($phpinfo, &$info) {
   }
 
   $status[] = array(
-    'title' => 'mcrypt extension loaded',
-    'value' => (extension_loaded('mcrypt')) ? "yes" : "no",
-  );
-
-  $status[] = array(
     'title' => 'open ssl extension loaded',
     'value' => extension_loaded('openssl') ? "yes" : "no",
   );
@@ -292,12 +287,7 @@ function ldap_help_get_ldap_servers() {
   ldap_servers_module_load_include('inc', 'ldap_servers', 'ldap_servers.settings');
   ldap_servers_module_load_include('inc', 'ldap_servers', 'ldap_servers.admin');
 
-  $selected = \Drupal::config('ldap_servers.settings')->get('encryption');
-  $options = ldap_servers_encrypt_types('encrypt');
-  $status[] = array(
-    'title' => 'encryption',
-    'value' => @$options[$selected],
-  );
+  $status = [];
 
   $servers_objects = ldap_servers_get_servers(NULL, 'all');
   $servers = array();

@@ -246,8 +246,6 @@ class LdapAuthenticationConf {
     $this->ldapUser = new LdapUserConf();
     $this->ssoEnabled = \Drupal::moduleHandler()->moduleExists('ldap_sso');
     $this->apiPrefs['requireHttps'] = Drupal::config('ldap_servers.settings')->get('require_ssl_for_credentials');
-    $this->apiPrefs['encryption'] = Drupal::config('ldap_servers.settings')->get('encryption');
-
   }
 
   /**

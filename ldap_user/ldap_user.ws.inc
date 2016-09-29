@@ -53,7 +53,6 @@ function ldap_user_ws($action, $direction_tag, $drupal_user_name_or_dn, $key) {
   if (!$ldap_user_conf->wsEnabled) {
     return ldap_user_ws_out(array(0, t('Webservice Not Enabled')));
   }
-  // ldap_servers_encrypt($ldap_user_conf->wsKey, LDAP_SERVERS_ENC_TYPE_BLOWFISH)
   elseif ($key != $ldap_user_conf->wsKey) {
     return ldap_user_ws_out(array(0, t('Bad Webservice Key')));
   }

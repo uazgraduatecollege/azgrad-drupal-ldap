@@ -160,16 +160,12 @@ class LdapServersTestCase extends LdapTestCase {
     foreach ($install_tables as $table) {
       $this->assertTrue(db_table_exists($table), $table . ' table creates', $group);
     }
-    $this->assertTrue(TRUE, 'ldap_servers_encryption variable initialized', $group);
-    $this->assertTrue(config('ldap_server.settings')->get('encrypt_key'), 'ldap_servers_encrypt_key variable initialized', $group);
 
     // Unistall dependent modules.
     $module_installer->uninstall($modules, TRUE);
     foreach ($install_tables as $table) {
       $this->assertFalse(db_table_exists($table), $table . ' table removed', $group);
     }
-    $this->assertFalse(\Drupal::config('ldap_server.settings')->get('encryption'), 'ldap_servers_encryption variable removed', $group);
-    $this->assertFalse(\Drupal::config('ldap_server.settings')->get('encrypt_key'), 'ldap_servers_encrypt_key variable removed', $group);
 
     // Test tokens, see http://drupal.org/node/1245736
     $ldap_entry = array(
