@@ -347,7 +347,6 @@ function ldap_help_get_ldap_authentication() {
   $items['logon']['authenticationServers'] = 'checkbox';
   $items['restrictions']['allowOnlyIfTextInDn'] = 'string';
   $items['restrictions']['excludeIfTextInDn'] = 'string';
-  $items['restrictions']['allowTestPhp'] = 'string';
   $items['restrictions']['excludeIfNoAuthorizations '] = 'checkbox';
   $items['drupal_accounts']['loginConflictResolve'] = 'radios';
   $items['drupal_accounts']['acctCreation'] = 'radios';

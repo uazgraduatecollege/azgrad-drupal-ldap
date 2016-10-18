@@ -6,6 +6,7 @@
  * It is extended by LdapAuthenticationConfAdmin for configuration and other admin functions.
  */
 
+use Drupal\Core\Url;
 use Drupal\ldap_user\LdapUserConf;
 
 /**
@@ -158,14 +159,6 @@ class LdapAuthenticationConf {
   public $excludeIfTextInDn = array();
 
   /**
-   * Code that prints 1 or 0 signifying if user is allowed
-   *   should not start with <?php.
-   *
-   * @var string of php
-   */
-  public $allowTestPhp = NULL;
-
-  /**
    * If at least 1 ldap authorization must exist for user to be allowed
    *   True signfies disallow if no authorizations.
    *   False signifies don't consider authorizations.
@@ -186,7 +179,6 @@ class LdapAuthenticationConf {
     'passwordOption',
     'allowOnlyIfTextInDn',
     'excludeIfTextInDn',
-    'allowTestPhp',
     'excludeIfNoAuthorizations',
     'ssoRemoteUserStripDomainName',
     'ssoExcludedPaths',
@@ -278,34 +270,6 @@ class LdapAuthenticationConf {
     foreach ($this->excludeIfTextInDn as $test) {
       if (stripos($ldap_user['dn'], $test) !== FALSE) {
         // If a match, return FALSE;.
-        return FALSE;
-      }
-    }
-
-    /**
-     * evaluate php if it exists
-     */
-
-    if ($this->allowTestPhp) {
-      if (\Drupal::moduleHandler()->moduleExists('php')) {
-        global $_name, $_ldap_user_entry;
-        $_name = $name;
-        $_ldap_user_entry = $ldap_user;
-        $code = '<?php ' . "global \$_name; \n  global \$_ldap_user_entry; \n" . $this->allowTestPhp . ' ?>';
-        $code_result = php_eval($code);
-        $_name = NULL;
-        $_ldap_user_entry = NULL;
-        if ((boolean) ($code_result) == FALSE) {
-          return FALSE;
-        }
-      }
-      else {
-        drupal_set_message(t(LDAP_AUTHENTICATION_DISABLED_FOR_BAD_CONF_MSG), 'warning');
-        $url = Url::fromRoute('ldap_authentication.admin_form');
-        $internal_link = \Drupal::l(t('LDAP Authentication Configuration'), $url);
-        $tokens = array('!ldap_authentication_config' => $internal_link);
-
-        \Drupal::logger('ldap_authentication')->notice('LDAP Authentication is configured to deny users based on php execution with php_eval function, but php module is not enabled. Please enable php module or remove php code at !ldap_authentication_config .', []);
         return FALSE;
       }
     }

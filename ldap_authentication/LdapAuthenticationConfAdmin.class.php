@@ -63,14 +63,6 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
       Enter one per line such as <pre>ou=evil') . "\n" . t('cn=bad</pre> This test will be case insensitive.');
 
     // @FIXME
-    // $values['allowTestPhpDescription'] = t('PHP code which should print 1
-    //     for allowing ldap authentication or 0 for not allowed.  Available variables are:
-    //     $_name and $_ldap_user_entry  See readme.txt for more info.');
-    $values['allowTestPhpDescription'] = 'PHP code which should print 1
-        for allowing ldap authentication or 0 for not allowed.  Available variables are:
-        $_name and $_ldap_user_entry  See readme.txt for more info.';
-
-    // @FIXME
     // $values['excludeIfNoAuthorizationsDescription'] = t('If the user is not granted any drupal roles,
     //   organic groups, etc. by LDAP Authorization, login will be denied.  LDAP Authorization must be
     //   enabled for this to work.');
@@ -399,20 +391,6 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
       '#description' => t($this->excludeIfTextInDnDescription, $tokens),
     );
 
-    $form['restrictions']['allowTestPhp'] = array(
-      '#type' => 'textarea',
-      '#title' => t('PHP to Test for Allowed LDAP Users'),
-      '#default_value' => $this->allowTestPhp,
-      '#cols' => 50,
-      '#rows' => 3,
-      '#description' => t($this->allowTestPhpDescription, $tokens),
-      '#disabled' => (boolean) (!\Drupal::moduleHandler()->moduleExists('php')),
-    );
-
-    if (!\Drupal::moduleHandler()->moduleExists('php')) {
-      $form['restrictions']['allowTestPhp']['#title'] .= ' <em>' . t('php module currently disabled') . '</em>';
-    }
-
     $form['restrictions']['excludeIfNoAuthorizations'] = array(
       '#type' => 'checkbox',
       '#title' => t('Deny access to users without Ldap Authorization Module
@@ -591,7 +569,6 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
     $this->sids = $values['authenticationServers'];
     $this->allowOnlyIfTextInDn = $this->linesToArray($values['allowOnlyIfTextInDn']);
     $this->excludeIfTextInDn = $this->linesToArray($values['excludeIfTextInDn']);
-    $this->allowTestPhp = $values['allowTestPhp'];
     $this->loginUIUsernameTxt = ($values['loginUIUsernameTxt']) ? (string) $values['loginUIUsernameTxt'] : NULL;
     $this->loginUIPasswordTxt = ($values['loginUIPasswordTxt']) ? (string) $values['loginUIPasswordTxt'] : NULL;
     $this->ldapUserHelpLinkUrl = ($values['ldapUserHelpLinkUrl']) ? (string) $values['ldapUserHelpLinkUrl'] : NULL;

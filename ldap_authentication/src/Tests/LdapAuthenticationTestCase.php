@@ -537,55 +537,7 @@ class LdapAuthenticationTestCase extends LdapTestCase {
     * prep LDAP_authen.WL.php
     */
     $authenticationConf = new \LdapAuthenticationConfAdmin();
-    $authenticationConf->allowTestPhp = "\n
-      //exclude users with dumb in email address \n
-      if (strpos(\$_ldap_user_entry['attr']['mail'][0], 'dumb') === FALSE) {\n
-        print 1;\n
-      }\n
-      else {
-        print 0;\n
-      }
-      ";
 
-    $authenticationConf->save();
-    $authenticationConf = ldap_authentication_get_valid_conf(TRUE);
-    /**
-    * LDAP_authen.WL.php.php disabled -- desired result: authenticate fail with warning the authentication disabled
-    */
-    //@FIXME: php module no longer exists
-    //module_disable(array('php'));
-    $this->AttemptLogonNewUser('adumbledore');
-    $this->assertText(
-      LDAP_AUTHENTICATION_DISABLED_FOR_BAD_CONF_MSG,
-      'With php disabled and php code in whitelist, refuse authentication. (allowTestPhp).',
-      $testid
-    );
-
-    // @FIXME: php module no longer exists
-    //module_enable(array('php'));
-
-    /**
-    * LDAP_authen.WL.php.true -- desired result: authenticate success
-    */
-    $this->AttemptLogonNewUser('hpotter');
-    $this->assertText(t('Member for'), 'Able to authenticate because php returned true (allowTestPhp).', $testid);
-
-    /**
-    *  LDAP_authen.WL.php.false-- desired result: authenticate fail
-    */
-
-    $this->AttemptLogonNewUser('adumbledore');
-    $this->assertText(
-      t('User disallowed'),
-      'User unable to authenticate because php returned false (allowTestPhp).',
-      $testid
-    );
-
-    /**
-    * clear LDAP_authen.WL.php
-    */
-    $authenticationConf = new \LdapAuthenticationConfAdmin();
-    $authenticationConf->allowTestPhp = '';
     $authenticationConf->save();
     $authenticationConf = ldap_authentication_get_valid_conf(TRUE);
 
@@ -802,13 +754,6 @@ class LdapAuthenticationTestCase extends LdapTestCase {
           LDAP_AUTHENTICATION_EMAIL_UPDATE_ON_LDAP_CHANGE_DISABLE,
         ),
         'required' => TRUE,
-      ),
-      'allowTestPhp' => array(
-        'property' => 'allowTestPhp',
-        'values' => array(
-          'pretend php',
-          'pretend php',
-        ),
       ),
     );
 
