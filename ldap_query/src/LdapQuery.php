@@ -8,6 +8,7 @@
 namespace Drupal\ldap_query;
 
 use Drupal\ldap_servers\Entity\Server;
+use Drupal\ldap_servers\LdapProtocol;
 
 /**
  * LDAP Server Class.
@@ -17,7 +18,7 @@ use Drupal\ldap_servers\Entity\Server;
  *
  * @todo make bindpw protected
  */
-class LdapQuery {
+class LdapQuery implements LdapProtocol  {
   // LDAP Settings.
   public $query_numeric_id;
   public $qid;

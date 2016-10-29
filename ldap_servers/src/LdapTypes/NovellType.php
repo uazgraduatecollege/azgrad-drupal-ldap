@@ -24,7 +24,7 @@ class NovellType extends AbstractType {
 
   public $groupObjectClassDefault = 'groupOfNames';
 
-  public $groupDerivationModelDefault = LDAP_SERVERS_DERIVE_GROUP_FROM_ENTRY;
+  public $groupDerivationModelDefault = self::DERIVE_GROUP_FROM_ENTRY;
 
   public $groupUserMembershipsAttrExistsEntryAttrDefault = 'members';
   public $groupUserMembershipsAttrExistsEntryUserIdDefault = 'dn';

@@ -427,7 +427,6 @@ class LdapAuthenticationTestCase extends LdapTestCase {
    *
    */
   public function testAuthenticationWhitelistTests() {
-    require_once drupal_get_path('module', 'ldap_authentication') . '/LdapAuthenticationConfAdmin.php';
 
     $sid = 'activedirectory1';
     $testid = 'WL3';
@@ -454,10 +453,10 @@ class LdapAuthenticationTestCase extends LdapTestCase {
 
     $user1 = \Drupal::entityManager()->getStorage('user')->load(1);
     $password = $this->randomString(20);
-    require_once \Drupal::root() . '/includes/password.inc';
+    $password_hasher = \Drupal::service('password');
     $account = array(
       'name' => $user1->name,
-      'pass' => user_hash_password(trim($password)),
+      'pass' => $password_hasher->hash(trim($password)),
     );
     db_update('users')
       ->fields($account)

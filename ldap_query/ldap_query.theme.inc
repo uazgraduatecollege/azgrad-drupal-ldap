@@ -6,6 +6,7 @@
  */
 use Drupal\ldap_query\LdapQuery;
 use Drupal\ldap_query\LdapQueryAdmin;
+use Drupal\ldap_servers\MassageFunctions;
 
 /**
  * Returns HTML for ldap servers list.
@@ -143,7 +144,8 @@ function theme_ldap_query_results($variables) {
     $row = array($entry['dn']);
     foreach ($attributes_display as $i => $attr_name) {
       // drupal_strtolower($attr_name);
-      $attr_name = ldap_server_massage_text($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_QUERY_ARRAY);
+      $massager = new MassageFunctions();
+      $attr_name = $massager->massage_text($attr_name, 'attr_name', $massager::$query_array);
       if (!isset($entry[$attr_name])) {
         $row[] = 'no data';
       }

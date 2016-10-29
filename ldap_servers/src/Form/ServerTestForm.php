@@ -4,12 +4,13 @@ namespace Drupal\ldap_servers\Form;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Entity\EntityForm;
+use Drupal\ldap_servers\TokenFunctions;
 
 /**
  * Use Drupal\Core\Form\FormBase;.
  */
 class ServerTestForm extends EntityForm {
-
+  use TokenFunctions;
   /**
    * {@inheritdoc}
    */
@@ -397,7 +398,7 @@ class ServerTestForm extends EntityForm {
         ]),
       ];
       $result = $ldap_server->bind($ldap_user['dn'], $values['testing_drupal_userpw'], FALSE);
-      if ($result == LDAP_SUCCESS) {
+      if ($result == $ldap_server::LDAP_SUCCESS) {
         $results_tables['basic'][] = [t('Successfully bound to server'), t('PASS')];
       }
       else {
@@ -409,9 +410,10 @@ class ServerTestForm extends EntityForm {
     }
 
     // @FIXME: The following subsesction is disabled until fixed.
-    if (FALSE && !$has_errors && isset($values['grp_test_grp_dn'])) {
+    if (!$has_errors && isset($values['grp_test_grp_dn'])) {
       $group_dn = $values['grp_test_grp_dn'];
 
+      /*
       $result = @ldap_read($ldap_server->connection, $group_dn, 'objectClass=*');
       $group_entry = ldap_get_entries($ldap_server->connection, $result);
       $user = isset($values['testing_drupal_username']) ? $values['testing_drupal_username'] : NULL;
@@ -449,7 +451,7 @@ class ServerTestForm extends EntityForm {
             $result,
           ];
 
-          if ($ldap_server->groupUserMembershipsConfigured) {
+          if ($ldap_server->groupUserMembershipsConfigured()) {
             $groupusermembershipsfromuserattr = $ldap_server->groupUserMembershipsFromUserAttr($user, $nested);
             $count = count($groupusermembershipsfromuserattr);
             // @FIXME
@@ -467,6 +469,7 @@ class ServerTestForm extends EntityForm {
               '#type' => 'ul',
             );
             $result = drupal_render($settings);
+
           }
           else {
             $groupusermembershipsfromuserattr = [];
@@ -477,7 +480,7 @@ class ServerTestForm extends EntityForm {
             $result,
           ];
 
-          if ($ldap_server->groupGroupEntryMembershipsConfigured) {
+          if ($ldap_server->groupGroupEntryMembershipsConfigured()) {
             $groupusermembershipsfromentry = $ldap_server->groupUserMembershipsFromEntry($user, $nested);
             // @FIXME
             // theme() has been renamed to _theme() and should NEVER be called directly.
@@ -571,12 +574,12 @@ class ServerTestForm extends EntityForm {
         $results_tables['groupfromDN'][] = array("Groups from DN", $result);
 
       }
-
+*/
     }
 
     list($has_errors, $more_results, $ldap_user) = $ldap_server->testUserMapping($values['testing_drupal_username']);
 
-    $tokens = ($ldap_user && isset($ldap_user['attr'])) ? ldap_servers_token_tokenize_entry($ldap_user['attr'], 'all') : [];
+    $tokens = ($ldap_user && isset($ldap_user['attr'])) ? $this->ldap_servers_token_tokenize_entry($ldap_user['attr'], 'all') : [];
     foreach ($tokens as $key => $value) {
       $results_tables['tokens'][] = [$key, $value];
     }

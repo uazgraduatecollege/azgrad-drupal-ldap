@@ -45,7 +45,7 @@ class ActiveDirectoryType extends AbstractType {
   public $groupObjectClassDefault = 'group';
 
   // ldap_authorization configuration.
-  public $groupDerivationModelDefault = LDAP_SERVERS_DERIVE_GROUP_FROM_ATTRIBUTE;
+  public $groupDerivationModelDefault = self::DERIVE_GROUP_FROM_ATTRIBUTE;
   public $deriveFromAttr = TRUE;
   public $groupUserMembershipsAttr = 'memberOf';
 

@@ -67,7 +67,9 @@ function _ldap_user_orphans($ldap_user_conf) {
     \Drupal::configFactory()->getEditable('ldap_user.settings')->set('ldap_user_cron_last_uid_checked', $uids[count($uids) - 1])->save();
   }
 
-  $batches = floor($user_count / LDAP_SERVERS_MAXFILTER_ORS) + 1;
+  $maxfilter_ors = 30;
+
+  $batches = floor($user_count / $maxfilter_ors) + 1;
   // e.g. 175 users and  50 max ldap query ors will yield 4 batches
   // e.g. 1,2,3,4.
   for ($batch = 1; $batch <= $batches; $batch++) {
@@ -81,9 +83,9 @@ function _ldap_user_orphans($ldap_user_conf) {
      *       4th batch   $i=150; $i<175; $i++
      */
     // e.g 0, 50, 100.
-    $start = ($batch - 1) * LDAP_SERVERS_MAXFILTER_ORS;
+    $start = ($batch - 1) * $maxfilter_ors;
     // e.g. 50, 100, 150.
-    $end_plus_1 = min(($batch) * LDAP_SERVERS_MAXFILTER_ORS, $user_count);
+    $end_plus_1 = min(($batch) * $maxfilter_ors, $user_count);
     // e.g. 50, 50; 100, 50.
     $batch_uids = array_slice($uids, $start, ($end_plus_1 - $start));
     $accounts = \Drupal::entityManager()->getStorage('user');

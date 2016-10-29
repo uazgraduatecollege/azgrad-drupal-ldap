@@ -4,151 +4,31 @@
  * @file
  */
 
-define('LDAP_SERVER_LDAP_QUERY_CHUNK', 50);
-define('LDAP_SERVERS_MAXFILTER_ORS', 30);
-define('LDAP_SERVER_LDAP_QUERY_RECURSION_LIMIT', 10);
-
+// FIXME: Dependency in ldap_query
 define('LDAP_SCOPE_BASE', 1);
 define('LDAP_SCOPE_ONELEVEL', 2);
 define('LDAP_SCOPE_SUBTREE', 3);
 
-define('LDAP_TEST_QUERY_CONTEXT', 999);
-
-define('LDAP_SERVERS_PROJECT_TAG', 'ldap');
-define('LDAP_SERVERS_MENU_BASE_PATH', 'admin/config/people/ldap');
-define('LDAP_SERVERS_INDEX_BASE_PATH', 'admin/config/people/ldap/servers');
-// For argument offsets.
-define('LDAP_SERVERS_MENU_BASE_PATH_PARTS', 4);
-define('LDAP_SERVERS_DRUPAL_HELP_URL', 'http://drupal.org/node/997082');
-
-define('LDAP_SERVERS_TOKEN_PRE', '[');
-define('LDAP_SERVERS_TOKEN_POST', ']');
-define('LDAP_SERVERS_TOKEN_DEL', ':');
-define('LDAP_SERVERS_TOKEN_MODIFIER_DEL', ';');
-
+// FIXME: Various dependencies.
 define('LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT', 1);
 define('LDAP_SERVERS_BIND_METHOD_USER', 2);
 define('LDAP_SERVERS_BIND_METHOD_ANON', 3);
 define('LDAP_SERVERS_BIND_METHOD_ANON_USER', 4);
 define('LDAP_SERVERS_BIND_METHOD_DEFAULT', 1);
 
-define('LDAP_SERVERS_DERIVE_GROUP_FROM_DN', 1);
-define('LDAP_SERVERS_DERIVE_GROUP_FROM_ATTRIBUTE', 2);
-define('LDAP_SERVERS_DERIVE_GROUP_FROM_ENTRY', 4);
-
-// ... value is being displayed in UI.
-define('LDAP_SERVER_MASSAGE_DISPLAY', 1);
-// ... value is about to be used to generate token (e.g. [...] to be replaced.
-define('LDAP_SERVER_MASSAGE_TOKEN_REPLACE', 2);
-
-// ...value is about to be used in ldap query.
-define('LDAP_SERVER_MASSAGE_QUERY_LDAP', 5);
-// ...value is about to be in an sql query.
-define('LDAP_SERVER_MASSAGE_QUERY_DB', 6);
-// ...value is about to be found in array values.
-define('LDAP_SERVER_MASSAGE_QUERY_ARRAY', 7);
-// ...value is about to be found in object property values.
-define('LDAP_SERVER_MASSAGE_QUERY_PROPERTY', 8);
-
-// ...value is about to be stored in ldap entry.
-define('LDAP_SERVER_MASSAGE_STORE_LDAP', 13);
-// ...value is about to be stored in db.
-define('LDAP_SERVER_MASSAGE_STORE_DB', 14);
-// ...value is about to be stored in array.
-define('LDAP_SERVER_MASSAGE_STORE_ARRAY', 15);
-// ...value is about to be stored in object property.
-define('LDAP_SERVER_MASSAGE_STORE_PROPERTY', 16);
-
-define('LDAP_SERVER_GROUPS_RECURSE_DEPTH', 20);
-
-define('LDAP_FAIL', -1);
-
-define('LDAP_SUCCESS', 0x00);
-define('LDAP_OPERATIONS_ERROR', 0x01);
-define('LDAP_PROTOCOL_ERROR', 0x02);
-define('LDAP_TIMELIMIT_EXCEEDED', 0x03);
-define('LDAP_SIZELIMIT_EXCEEDED', 0x04);
-define('LDAP_COMPARE_FALSE', 0x05);
-define('LDAP_COMPARE_TRUE', 0x06);
-define('LDAP_AUTH_METHOD_NOT_SUPPORTED', 0x07);
-define('LDAP_STRONG_AUTH_REQUIRED', 0x08);
-// NotusedinLDAPv3);.
-define('LDAP_PARTIAL_RESULTS', 0x09);
-
-// Next5newinLDAPv3);.
-define('LDAP_REFERRAL', 0x0a);
-define('LDAP_ADMINLIMIT_EXCEEDED', 0x0b);
-define('LDAP_UNAVAILABLE_CRITICAL_EXTENSION', 0x0c);
-define('LDAP_CONFIDENTIALITY_REQUIRED', 0x0d);
-define('LDAP_SASL_BIND_INPROGRESS', 0x0e);
-
-define('LDAP_NO_SUCH_ATTRIBUTE', 0x10);
-define('LDAP_UNDEFINED_TYPE', 0x11);
-define('LDAP_INAPPROPRIATE_MATCHING', 0x12);
-define('LDAP_CONSTRAINT_VIOLATION', 0x13);
-define('LDAP_TYPE_OR_VALUE_EXISTS', 0x14);
-define('LDAP_INVALID_SYNTAX', 0x15);
-
-define('LDAP_NO_SUCH_OBJECT', 0x20);
-define('LDAP_ALIAS_PROBLEM', 0x21);
-define('LDAP_INVALID_DN_SYNTAX', 0x22);
-
-define('LDAP_IS_LEAF', 0x23);
-define('LDAP_ALIAS_DEREF_PROBLEM', 0x24);
-
-define('LDAP_INAPPROPRIATE_AUTH', 0x30);
-define('LDAP_INVALID_CREDENTIALS', 0x31);
-define('LDAP_INSUFFICIENT_ACCESS', 0x32);
-define('LDAP_BUSY', 0x33);
-define('LDAP_UNAVAILABLE', 0x34);
-define('LDAP_UNWILLING_TO_PERFORM', 0x35);
-define('LDAP_LOOP_DETECT', 0x36);
-
-define('LDAP_SORT_CONTROL_MISSING', 0x3C);
-define('LDAP_INDEX_RANGE_ERROR', 0x3D);
-
-define('LDAP_NAMING_VIOLATION', 0x40);
-define('LDAP_OBJECT_CLASS_VIOLATION', 0x41);
-define('LDAP_NOT_ALLOWED_ON_NONLEAF', 0x42);
-define('LDAP_NOT_ALLOWED_ON_RDN', 0x43);
-define('LDAP_ALREADY_EXISTS', 0x44);
-define('LDAP_NO_OBJECT_CLASS_MODS', 0x45);
-define('LDAP_RESULTS_TOO_LARGE', 0x46);
-// NexttwoforLDAPv3);.
-define('LDAP_AFFECTS_MULTIPLE_DSAS', 0x47);
-define('LDAP_OTHER', 0x50);
-
-// UsedbysomeAPIs);.
-define('LDAP_SERVER_DOWN', 0x51);
-define('LDAP_LOCAL_ERROR', 0x52);
-define('LDAP_ENCODING_ERROR', 0x53);
-define('LDAP_DECODING_ERROR', 0x54);
-define('LDAP_TIMEOUT', 0x55);
-define('LDAP_AUTH_UNKNOWN', 0x56);
-define('LDAP_FILTER_ERROR', 0x57);
-define('LDAP_USER_CANCELLED', 0x58);
-define('LDAP_PARAM_ERROR', 0x59);
-define('LDAP_NO_MEMORY', 0x5a);
-
-// PreliminaryLDAPv3codes);.
-define('LDAP_CONNECT_ERROR', 0x5b);
-define('LDAP_NOT_SUPPORTED', 0x5c);
-define('LDAP_CONTROL_NOT_FOUND', 0x5d);
-define('LDAP_NO_RESULTS_RETURNED', 0x5e);
-define('LDAP_MORE_RESULTS_TO_RETURN', 0x5f);
-define('LDAP_CLIENT_LOOP', 0x60);
-define('LDAP_REFERRAL_LIMIT_EXCEEDED', 0x61);
-
-// FIXME: Remove these dependencies
-require_once 'ldap_servers.functions.inc';
-require_once 'ldap_servers.tokens.inc';
 
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Session\AccountProxy;
+use Drupal\ldap_servers\ConversionHelper;
 use \Drupal\ldap_servers\Entity\Server;
 use Drupal\Core\Url;
 use Drupal\ldap_servers\LdapTypes\AbstractType;
 use Drupal\ldap_test\TestServer;
+
+class TokenHelper {
+  use \Drupal\ldap_servers\TokenFunctions;
+  // Temporary helper since TokenFunctions are a trait.
+}
 
 /**
  * Advertise the current ldap api version.
@@ -189,7 +69,7 @@ function ldap_server_find_key($key, $array) {
  * Implements hook_ldap_attributes_needed_alter().
  */
 function ldap_servers_ldap_attributes_needed_alter(&$attributes, $params) {
-
+  $token_helper = new TokenHelper();
   // Force this data type.
   $attributes['dn'] = ldap_servers_set_attribute_map(@$attributes['dn'], 'ldap_dn');
 
@@ -212,10 +92,11 @@ function ldap_servers_ldap_attributes_needed_alter(&$attributes, $params) {
       $attributes[$ldap_server->get('unique_persistent_attr')] = ldap_servers_set_attribute_map();
     }
     if ($ldap_server->get('user_dn_expression')) {
-      ldap_servers_token_extract_attributes($attributes, $ldap_server->get('user_dn_expression'), TRUE);
+      // @FIXME: Parameters don't match
+      $token_helper->ldap_servers_token_extract_attributes($attributes, $ldap_server->get('user_dn_expression'), TRUE);
     }
     if ($ldap_server->get('mail_template')) {
-      ldap_servers_token_extract_attributes($attributes, $ldap_server->get('mail_template'));
+      $token_helper->ldap_servers_token_extract_attributes($attributes, $ldap_server->get('mail_template'));
     }
     if (!isset($attributes[$ldap_server->get('user_attr')])) {
       $attributes[$ldap_server->get('user_attr')] = ldap_servers_set_attribute_map();
@@ -229,6 +110,7 @@ function ldap_servers_ldap_attributes_needed_alter(&$attributes, $params) {
 function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$params) {
   // debug('ldap_servers_ldap_user_attrs_list_alter'); debug($available_user_attrs); debug($params);
   if (isset($params['ldap_server']) && $params['ldap_server']) {
+    /* @var Server $ldap_server */
     $ldap_server = $params['ldap_server'];
   }
   else {
@@ -387,8 +269,8 @@ function ldap_servers_flush_server_cache() {
 /**
  * Return ldap server conf objects.
  *
- * @param alphanum $sid
- * @param enum $type
+ * @param string $sid
+ * @param string $type
  *   'all', 'enabled',.
  * @param bool $flatten
  *   signifies if array or single object returned.  Only works if sid is specified.
@@ -681,7 +563,8 @@ function ldap_servers_set_attribute_map($attribute = NULL, $conversion = NULL, $
  *   as value to be converted.
  * @param string $conversion
  *   such as base64_encode, bin2hex, msguid, md5.
- * @return converted $value
+ *
+ * @return string
  */
 function ldap_servers_convert_attribute($value, $conversion = NULL) {
 
@@ -717,7 +600,8 @@ function ldap_servers_convert_attribute($value, $conversion = NULL) {
 /**
  * Disable a logon form if ldap preferences exclude http logon forms.
  *
- * @param drupal logon form array $form
+ * @param array $form
+ *    drupal logon form.
  */
 function ldap_servers_disable_http_check(&$form) {
 
@@ -817,7 +701,8 @@ function ldap_servers_help($path, $arg) {
 }
 
 /**
- * @return list of ldap configuration classes and names
+ * @return array
+ *   List of ldap configuration classes and names.
  */
 function ldap_servers_ldap_servers_types() {
 
@@ -889,7 +774,8 @@ function ldap_servers_get_first_rdn_value_from_dn($dn, $rdn) {
   foreach ($pairs as $p) {
     $pair = explode('=', $p);
     if (Unicode::strtolower(trim($pair[0])) == $rdn) {
-      $rdn_value = ldap_pear_unescape_dn_value(trim($pair[1]));
+      $helper = new ConversionHelper();
+      $rdn_value = $helper->unescape_dn_value(trim($pair[1]));
       break;
     }
   }
@@ -915,7 +801,8 @@ function ldap_servers_get_all_rdn_values_from_dn($dn, $rdn) {
   foreach ($pairs as $p) {
     $pair = explode('=', $p);
     if (Unicode::strtolower(trim($pair[0])) == $rdn) {
-      $rdn_values[] = ldap_pear_unescape_dn_value(trim($pair[1]));
+      $helper = new ConversionHelper();
+      $rdn_values[] = $helper->unescape_dn_value(trim($pair[1]));
       break;
     }
   }

@@ -6,6 +6,7 @@ use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Form\FormStateInterface;
 
 use Drupal\authorization\Provider\ProviderPluginBase;
+use Drupal\ldap_servers\ConversionHelper;
 
 /**
  * @AuthorizationProvider(
@@ -300,7 +301,8 @@ Representations of groups derived from LDAP might initially look like:
         if (count($attr_parts) > 0) {
           $first_part = explode('=', $attr_parts[0]);
           if (count($first_part) > 1) {
-            $authorization_id = ldap_pear_unescape_dn_value(trim($first_part[1]));
+            $helper = new ConversionHelper();
+            $authorization_id = $helper->unescape_dn_value(trim($first_part[1]));
           }
         }
         $new_key = Unicode::strtolower($authorization_id);

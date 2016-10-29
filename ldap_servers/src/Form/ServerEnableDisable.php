@@ -79,7 +79,8 @@ class LdapServersAdminEnableDisable extends ContentEntityConfirmFormBase {
 
       // Return confirm_form($form, t('Are you sure you want to') . t($action) . ' ' . t('the LDAP server named <em><strong>%name</strong></em>?', [
       //   '%name' => $ldap_server->name
-      //   ]), LDAP_SERVERS_MENU_BASE_PATH . '/servers/list', t('<p></p>'), t($action), t('Cancel'));.
+
+      //   ]), 'admin/config/people/ldap/servers/list', t('<p></p>'), t($action), t('Cancel'));.
     }
 
   }
@@ -95,7 +96,7 @@ class LdapServersAdminEnableDisable extends ContentEntityConfirmFormBase {
 
     if ($values['confirm'] && $sid) {
 
-      $form_state->set(['redirect'], LDAP_SERVERS_MENU_BASE_PATH . '/servers');
+      $form_state->set(['redirect'], '/admin/config/people/ldap/servers/list');
       //FIXME: Incomplete port
       $ldap_server = new LdapServerAdmin($sid);
 

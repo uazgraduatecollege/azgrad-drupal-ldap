@@ -3,12 +3,15 @@
 namespace Drupal\ldap_user;
 
 use Drupal\Component\Utility\Unicode;
+use Drupal\ldap_servers\TokenFunctions;
 use Drupal\user\Entity\User;
 
 /**
  * The entry-point to working with users by loading their configuration.
  */
 class LdapUserConf {
+
+  use TokenFunctions;
 
   /**
    * Server providing Drupal account provisioning.
@@ -266,7 +269,7 @@ class LdapUserConf {
    *   LDAP_USER_PROV_DIRECTION_* constant.
    * @param array $prov_events
    *
-   * @return arraybool
+   * @return array|bool
    *   Array of mappings (may be empty array)
    */
   public function getSynchMappings($direction = LDAP_USER_PROV_DIRECTION_ALL, $prov_events = NULL) {
@@ -354,7 +357,7 @@ class LdapUserConf {
         if (count(array_intersect($prov_events, $detail['prov_events']))) {
           // Add the attribute to our array.
           if ($detail['ldap_attr']) {
-            ldap_servers_token_extract_attributes($required_attributes, $detail['ldap_attr']);
+            $this->ldap_servers_token_extract_attributes($required_attributes, $detail['ldap_attr']);
           }
         }
       }
@@ -526,7 +529,7 @@ class LdapUserConf {
 
     if (is_scalar($account)) {
       $username = $account;
-      $account = new stdClass();
+      $account = new \stdClass();
       $account->name = $username;
     }
 
@@ -791,8 +794,9 @@ class LdapUserConf {
    * @param bool $save
    *   indicating if drupal user should be saved.  generally depends on where function is called from.
    *
-   * @return result of user_save() function is $save is true, otherwise return TRUE
-   *   $user_edit data returned by reference
+   * @return User|bool
+   *   Result of user_save() function is $save is true, otherwise return TRUE
+   *   $user_edit data returned by reference.
    */
   public function synchToDrupalAccount($drupal_user, &$user_edit, $prov_event = LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER, $ldap_user = NULL, $save = FALSE) {
 
@@ -973,7 +977,7 @@ class LdapUserConf {
     // Loop over the mappings.
     foreach ($mappings as $field_key => $field_detail) {
       // trim($field_key, '[]');.
-      list($ldap_attr_name, $ordinal, $conversion) = ldap_servers_token_extract_parts($field_key, TRUE);
+      list($ldap_attr_name, $ordinal, $conversion) = $this->ldap_servers_token_extract_parts($field_key, TRUE);
       $ordinal = (!$ordinal) ? 0 : $ordinal;
       if ($ldap_user_entry && isset($ldap_user_entry[$ldap_attr_name]) && is_array($ldap_user_entry[$ldap_attr_name]) && isset($ldap_user_entry[$ldap_attr_name][$ordinal])) {
         // don't override values passed in;.
@@ -984,7 +988,7 @@ class LdapUserConf {
       // debug("isSynched $field_key: $synched");.
       if ($synched) {
         $token = ($field_detail['user_attr'] == 'user_tokens') ? $field_detail['user_tokens'] : $field_detail['user_attr'];
-        $value = ldap_servers_token_replace($account, $token, 'user_account');
+        $value = $this->ldap_servers_token_replace($account, $token, 'user_account');
 
         // Deal with empty/unresolved password.
         if (substr($token, 0, 10) == '[password.' && (!$value || $value == $token)) {
@@ -1344,8 +1348,8 @@ class LdapUserConf {
       if ($field_detail['convert'] && strpos($field_detail['ldap_attr'], ';') === FALSE) {
         $field_detail['ldap_attr'] = str_replace(']', ';binary]', $field_detail['ldap_attr']);
       }
-      $value = ldap_servers_token_replace($ldap_user['attr'], $field_detail['ldap_attr'], 'ldap_entry');
-      list($value_type, $value_name, $value_instance) = ldap_servers_parse_user_attr_name($user_attr_key);
+      $value = $this->ldap_servers_token_replace($ldap_user['attr'], $field_detail['ldap_attr'], 'ldap_entry');
+      list($value_type, $value_name, $value_instance) = $this->ldap_servers_parse_user_attr_name($user_attr_key);
 
       // $value_instance not used, may have future use case.
       // Are we dealing with a field?
@@ -1359,6 +1363,7 @@ class LdapUserConf {
       }
     }
 
+    // @FIXME: Incorrect parameter count
     // Allow other modules to have a say.
     \Drupal::moduleHandler()->alter('ldap_user_edit_user', $account, $ldap_user, $ldap_server, $prov_events);
     // don't let empty 'name' value pass for user.
@@ -1380,6 +1385,8 @@ class LdapUserConf {
    *   e.g. array(LDAP_USER_EVENT_CREATE_DRUPAL_USER).  typically array with 1 element.
    * @param scalar $direction
    *   LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER or LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY.
+   *
+   * @return bool
    */
   public function isSynched($attr_token, $prov_events, $direction) {
     $result = (boolean) (
@@ -1397,4 +1404,4 @@ class LdapUserConf {
     return $result;
   }
 
-} // end LdapUserConf class
+}

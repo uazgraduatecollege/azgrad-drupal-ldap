@@ -31,7 +31,7 @@ class OpenLdapType extends AbstractType {
   public $groupObjectClassDefault = 'groupofnames';
 
   // ldap_authorization configuration.
-  public $groupDerivationModelDefault = LDAP_SERVERS_DERIVE_GROUP_FROM_ENTRY;
+  public $groupDerivationModelDefault = self::DERIVE_GROUP_FROM_ENTRY;
   public $groupMembershipsAttr = 'member';
   public $groupMembershipsAttrMatchingUserAttr = 'dn';
 

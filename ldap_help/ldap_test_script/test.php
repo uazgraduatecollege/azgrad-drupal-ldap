@@ -41,10 +41,12 @@ foreach ($config['servers'] as $sid => $server) {
   ldap_help_display('connect result', $results[1]);
   ldap_help_display('connect context', join("", array("server: ", $server['server_address'], ", port: ", $server['server_port'], ", tls= $tls")));
   $con = FALSE;
-  if ($results[0] == LDAP_SUCCESS) {
+  $protocol = new ProtocolPlaceholder();
+
+  if ($results[0] == $protocol::LDAP_SUCCESS) {
     $con = $results[2];
   }
-  elseif ($results[0] == LDAP_OTHER) {
+  elseif ($results[0] == $protocol::LDAP_OTHER) {
     $con = $results[2];
   }
   else {
@@ -69,13 +71,13 @@ foreach ($config['servers'] as $sid => $server) {
       $results = array(ldap_errno($con), "LDAP bind failure for user " . $server['server_bind_dn'] . "." . ldap_help_show_error($con));
     }
     else {
-      $results = array(LDAP_SUCCESS, "LDAP bind success.");
+      $results = array($protocol::LDAP_SUCCESS, "LDAP bind success.");
     }
   }
 
   ldap_help_display('bind result', $results[1]);
   ldap_help_display('bind dn', $server['server_bind_dn']);
-  if ($results[0] != LDAP_SUCCESS) {
+  if ($results[0] != $protocol::LDAP_SUCCESS) {
     continue;
   }
 

@@ -86,7 +86,7 @@ class TestServer extends Server {
 
     if (!isset($this->entries[$userdn])) {
       // 0x20 or 32.
-      $ldap_errno = LDAP_NO_SUCH_OBJECT;
+      $ldap_errno = self::LDAP_NO_SUCH_OBJECT;
       if (function_exists('ldap_err2str')) {
         $ldap_error = ldap_err2str($ldap_errno);
       }
@@ -95,7 +95,7 @@ class TestServer extends Server {
       }
     }
     elseif (isset($this->entries[$userdn]['password'][0]) && $this->entries[$userdn]['password'][0] == $pass && $pass) {
-      return LDAP_SUCCESS;
+      return self::LDAP_SUCCESS;
     }
     else {
       if (!$pass) {
@@ -104,7 +104,7 @@ class TestServer extends Server {
       if (!isset($this->entries[$userdn]['password'][0])) {
         debug("Simpletest failure for $userdn.  No password in entry to test for bind"); debug($this->entries[$userdn]);
       }
-      $ldap_errno = LDAP_INVALID_CREDENTIALS;
+      $ldap_errno = self::LDAP_INVALID_CREDENTIALS;
       if (function_exists('ldap_err2str')) {
         $ldap_error = ldap_err2str($ldap_errno);
       }
@@ -112,7 +112,7 @@ class TestServer extends Server {
         $ldap_error = "Credentials for $userdn failed in LdapServerTest.class.php";
       }
     }
-
+    //@FIXME: watchdog
     $watchdog_tokens = array('%user' => $userdn, '%errno' => $ldap_errno, '%error' => $ldap_error);
     watchdog('ldap', "LDAP bind failure for user %user. Error %errno: %error", $watchdog_tokens);
     return $ldap_errno;

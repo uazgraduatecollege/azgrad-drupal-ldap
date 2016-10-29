@@ -34,6 +34,9 @@ abstract class AbstractType {
   // Can be removed in 2.0 branch.
   public $groupMembershipsAttrMatchingUserAttr = FALSE;
 
+  const DERIVE_GROUP_FROM_ENTRY = 4;
+  const DERIVE_GROUP_FROM_ATTRIBUTE = 2;
+
   /**
    * Constructor Method.
    */

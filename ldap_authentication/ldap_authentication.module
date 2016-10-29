@@ -8,6 +8,7 @@
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\ldap_authentication\LdapAuthenticationConf;
+use Drupal\ldap_servers\MassageFunctions;
 
 /**
  * @todo fix advanced help for ../ldap/authentication settings page
@@ -55,6 +56,9 @@ define('LDAP_AUTHENTICATION_HELP_LINK_TEXT_DEFAULT', 'Logon Help');
 
 define('LDAP_AUTHENTICATION_DISABLED_FOR_BAD_CONF_MSG', 'The site logon is currently not working due to a configuration error.  Please see logs for additional details.');
 define('LDAP_AUTHENTICATION_COOKIE_EXPIRE', 0);
+
+// For argument offsets.
+define('LDAP_SERVERS_DRUPAL_HELP_URL', 'http://drupal.org/node/997082');
 
 // Use \Drupal\ldap_authentication\Entity\Authentication;.
 /**
@@ -565,8 +569,9 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state, $re
    * V. if account_name_attr is set, drupal username is different than authname
    */
   if ($ldap_server_authenticated_on->get('account_name_attr') != '') {
+    $massager = new MassageFunctions();
     $watchdog_tokens['%account_name_attr'] = $ldap_server_authenticated_on->get('account_name_attr');
-    $drupal_accountname = $ldap_user['attr'][ldap_server_massage_text($ldap_server_authenticated_on->get('account_name_attr'), 'attr_name', LDAP_SERVER_MASSAGE_QUERY_ARRAY)][0];
+    $drupal_accountname = $ldap_user['attr'][$massager->massage_text($ldap_server_authenticated_on->get('account_name_attr'), 'attr_name', $massager::$query_array)][0];
     if (!$drupal_accountname) {
       \Drupal::logger('ldap_authentication')->error('Derived drupal username from attribute %account_name_attr returned no username for authname %authname.', $watchdog_tokens);
       return;
@@ -789,7 +794,7 @@ function ldap_authentication_test_credentials($auth_conf, $sso_login, $authname,
     // #1 CONNECT TO SERVER.
     $authentication_result = LDAP_AUTHENTICATION_RESULT_FAIL_GENERIC;
     $result = $ldap_server->connect();
-    if ($result != LDAP_SUCCESS) {
+    if ($result != $ldap_server::LDAP_SUCCESS) {
       $authentication_result = LDAP_AUTHENTICATION_RESULT_FAIL_CONNECT;
       $watchdog_tokens['%err_msg'] = $ldap_server->errorMsg('ldap');
       if ($detailed_watchdog_log) {
@@ -825,11 +830,11 @@ function ldap_authentication_test_credentials($auth_conf, $sso_login, $authname,
 
     $bind_success = FALSE;
     if ($ldap_server->get('bind_method') == LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT) {
-      $bind_success = ($ldap_server->bind(NULL, NULL, FALSE) == LDAP_SUCCESS);
+      $bind_success = ($ldap_server->bind(NULL, NULL, FALSE) == $ldap_server::LDAP_SUCCESS);
     }
     elseif ($ldap_server->get('bind_method') == LDAP_SERVERS_BIND_METHOD_ANON ||
       $ldap_server->get('bind_method') == LDAP_SERVERS_BIND_METHOD_ANON_USER) {
-      $bind_success = ($ldap_server->bind(NULL, NULL, TRUE) == LDAP_SUCCESS);
+      $bind_success = ($ldap_server->bind(NULL, NULL, TRUE) == $ldap_server::LDAP_SUCCESS);
     }
     elseif ($sso_login) {
       \Drupal::logger('ldap_authentication')->error('Trying to use SSO with LDAP_SERVERS_BIND_METHOD_USER bind method.', $watchdog_tokens);
@@ -840,7 +845,7 @@ function ldap_authentication_test_credentials($auth_conf, $sso_login, $authname,
         $search = array('%basedn', '%username');
         $replace = array($basedn, $authname);
         $userdn = str_replace($search, $replace, $ldap_server->get('user_dn_expression'));
-        $bind_success = ($ldap_server->bind($userdn, $password, FALSE) == LDAP_SUCCESS);
+        $bind_success = ($ldap_server->bind($userdn, $password, FALSE) == $ldap_server::LDAP_SUCCESS);
         if ($bind_success) {
           break;
         }
@@ -856,6 +861,7 @@ function ldap_authentication_test_credentials($auth_conf, $sso_login, $authname,
         \Drupal::logger('ldap_authentication')->debug('%username : Trying server %id where bind_method = %bind_method.  Error: %err_text', $watchdog_tokens);
         $watchdog_tokens['%err_text'] = NULL;
       }
+      // @FIXME: bind_method not defined
       $authentication_result = ($ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_USER) ? LDAP_AUTHENTICATION_RESULT_FAIL_CREDENTIALS : LDAP_AUTHENTICATION_RESULT_FAIL_BIND;
       // If bind fails, onto next server.
       continue;
@@ -899,7 +905,7 @@ function ldap_authentication_test_credentials($auth_conf, $sso_login, $authname,
     /**
      * #4 CHECK ALLOWED AND EXCLUDED LIST AND PHP FOR ALLOWED USERS
      */
-
+    // @FIXME: Method allowUser not defined
     if (!$auth_conf->allowUser($authname, $ldap_user)) {
       $authentication_result = LDAP_AUTHENTICATION_RESULT_FAIL_DISALLOWED;
       // Regardless of how many servers, disallowed user fails.
@@ -924,7 +930,7 @@ function ldap_authentication_test_credentials($auth_conf, $sso_login, $authname,
       $credentials_pass = (boolean) ($ldap_user);
     }
     else {
-      $credentials_pass = ($ldap_server->bind($ldap_user['dn'], $password, FALSE) == LDAP_SUCCESS);
+      $credentials_pass = ($ldap_server->bind($ldap_user['dn'], $password, FALSE) == $ldap_server::LDAP_SUCCESS);
     }
     if (!$credentials_pass) {
       if ($detailed_watchdog_log) {
@@ -938,6 +944,7 @@ function ldap_authentication_test_credentials($auth_conf, $sso_login, $authname,
     }
     else {
       $authentication_result = LDAP_AUTHENTICATION_RESULT_SUCCESS;
+      // @FIXME: bind_method not defined
       if ($ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_ANON_USER) {
         // After successful bind, lookup user again to get private attributes.
         $ldap_user = $ldap_server->userUserNameToExistingLdapEntry($authname);

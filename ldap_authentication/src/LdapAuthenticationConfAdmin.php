@@ -530,7 +530,6 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
     $this->populateFromDrupalForm($values);
 
     $errors = $this->validate();
-
     return $errors;
   }
 
@@ -549,7 +548,7 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
             LDAP_SERVERS_BIND_METHOD_ANON_USER => 'Anonymous Bind for search, then Bind with Users Credentials',
           );
           $tokens = array(
-            '!edit' => l($enabled_servers[$sid]->name, LDAP_SERVERS_INDEX_BASE_PATH . '/edit/' . $sid),
+            '%edit' => \Drupal::l($enabled_servers[$sid]->name,  Url::fromUri('/admin/config/people/ldap/servers/edit/' . $sid)),
             '%sid' => $sid,
             '%bind_method' => $methods[$enabled_servers[$sid]->bind_method],
           );

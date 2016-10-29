@@ -503,7 +503,7 @@ EOT;
           $tokens['!row_descriptor'] = $row_descriptor;
           $ldap_attribute_maps_in_token = array();
           // debug('calling ldap_servers_token_extract_attributes from validate, mapping='); debug($mapping['ldap_attr']);.
-          ldap_servers_token_extract_attributes($ldap_attribute_maps_in_token, $mapping['ldap_attr']);
+          $this->ldap_servers_token_extract_attributes($ldap_attribute_maps_in_token, $mapping['ldap_attr']);
 
           if ($mapping['direction'] == LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER) {
             $row_id = $map_index[$mapping['user_attr']];
@@ -602,9 +602,11 @@ EOT;
    *    'sid' => $sid,
    *    'action' => 'add',
    *   );
+   *
+   * @return array
+   *   Returns the relevant mappings.
    */
   private function synchMappingsFromForm($values, $storage) {
-
     $mappings = array();
     foreach ($values as $field_name => $value) {
 
@@ -619,8 +621,6 @@ EOT;
         if ($row_descriptor == 'second-header') {
           continue;
         }
-
-        $action = $storage['synch_mapping_fields'][$direction][$row_descriptor]['action'];
 
         $key = ($direction == LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER) ? _ldap_user_sanitise($columns['user_attr']) : _ldap_user_sanitise($columns['ldap_attr']);
         // Only save if its configurable and has an ldap and drupal attributes. The others are optional.

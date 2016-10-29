@@ -22,7 +22,7 @@ class LdapServersTestCase extends LdapTestCase {
       'description' => 'Test ldap servers.  Servers module is primarily a storage
         tool for ldap server configuration, so most of testing is just form and db testing.
         there are some api like functions that are also tested.',
-      'group' => 'LDAP Servers',
+      'group' => 'LDAP',
     );
   }
 
