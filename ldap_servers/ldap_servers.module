@@ -18,6 +18,7 @@ define('LDAP_SERVERS_BIND_METHOD_DEFAULT', 1);
 
 
 use Drupal\Component\Utility\Unicode;
+use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Session\AccountProxy;
 use Drupal\ldap_servers\ConversionHelper;
 use \Drupal\ldap_servers\Entity\Server;
@@ -606,14 +607,19 @@ function ldap_servers_convert_attribute($value, $conversion = NULL) {
 function ldap_servers_disable_http_check(&$form) {
 
   if (\Drupal::config('ldap_servers.settings')->get('ldap_servers_require_ssl_for_credentials') == 1 && @$_SERVER['HTTPS'] != 'on') {
-
     $tokens = array(
-      'site_name' => \Drupal::config('system.site')->get('name'),
-      'site_mail' => \Drupal::config('system.site')->get('mail'),
+      '%site_name' => \Drupal::config('system.site')->get('name'),
+      '%site_contact_link' => \Drupal::config('system.site')->get('mail'),
     );
 
-    // drupal_set_message(t(theme('ldap_servers_https_required', $tokens)), 'error');.
-    drupal_set_message(t(_theme('ldap_servers_https_required', $tokens)), 'error');
+    if (empty($tokens['%site_contact_link'])) {
+      $tokens['%site_contact_link'] = 'the site admin';
+    }
+    drupal_set_message(t('You are accessing %site_name using an unencrypted connection. For your security,
+     %site_name only supports account logins using a secure protocol such as HTTPS. You can switch
+     to HTTPS by trying to view this page again after changing the URL in your browser \'s
+     location bar to begin with "https" instead of "http". Please contact
+      %site_contact_link for help if this error continues.', $tokens), 'error');
     $form['#disabled'] = TRUE;
   }
 }
@@ -634,19 +640,17 @@ function ldap_servers_ldap_extension_loaded() {
 }
 
 /**
- *
+ * Implements hook_help().
  */
-function ldap_servers_help($path, $arg) {
-
+function ldap_servers_help($route_name, RouteMatchInterface $route_match) {
   $servers_help = '<p>' . t('LDAP Servers store "LDAP server configurations" so other modules can connect to them and leverage their data.') . ' ';
   $servers_help .= t('LDAP Authentication and LDAP Authorization are two such modules. Generally, only one LDAP Server configuration is needed.') . ' ' . '</p>';
   $servers_help .= '<p>' . t('When multiple LDAP server configurations are needed, each is not necessarily a separate physical LDAP server; they may have different binding users or some other configuration difference.') . ' </p>';
 
-  switch ($path) {
-    case 'admin/config/people/ldap/servers':
-      return $servers_help;
-
-    case 'admin/help#ldap_servers':
+  switch ($route_name) {
+    case 'ldap_servers.settings':
+       return $servers_help;
+    case 'help.page.ldap_servers':
       $servers_help .= '<h3>' . t('Configuration - Settings') . '</h3>';
       $servers_help .= '<dl>';
       $servers_help .= '<dt>' . t('REQUIRE HTTPS ON CREDENTIAL PAGES') . '</dt>';
@@ -692,11 +696,11 @@ function ldap_servers_help($path, $arg) {
       $servers_help .= '<dd>' . t('DN of Testing Username -') . ' </dd>';
       $servers_help .= '</dl>';
       return $servers_help;
-
-    case 'admin/config/people/ldap/servers/add':
+    case 'entity.ldap_server.collection':
       $output = '<p>' . t('Setup an LDAP server configuration to be used by other modules such as LDAP Authentication, LDAP Authorization, etc.') . '</p>';
       $output .= '<p>' . t('More than one LDAP server configuration can exist for a physical LDAP server. Multiple configurations for the same physical ldap server are useful in cases such as: (1) different base dn\'s for authentication and authorization and (2) service accounts with different privileges for different purposes.') . '</p>';
       return $output;
+    default:
   }
 }
 
