@@ -7,8 +7,6 @@
  * Should only contain saveable properties of ldapUserConf class.
  */
 
-require_once dirname(__FILE__) . '/../ldap_user/ldap_user.module';
-
 /**
  *
  */

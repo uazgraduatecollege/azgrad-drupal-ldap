@@ -11,6 +11,7 @@ namespace Drupal\ldap_test;
 
 use Drupal\Component\Utility\Unicode;
 use Drupal\ldap_authentication\LdapAuthenticationConfAdmin;
+use Drupal\ldap_servers\LdapProtocol;
 use Drupal\ldap_user\LdapUserConfAdmin;
 
 require_once dirname(__FILE__) . '/../ldap_servers.conf.inc';
@@ -20,7 +21,7 @@ require_once dirname(__FILE__) . '/../ldap_authorization.conf.inc';
 /**
  *
  */
-class LdapTestFunctions {
+class LdapTestFunctions implements LdapProtocol {
 
   public $data = array();
   // Data in ldap array format, but keyed on dn.

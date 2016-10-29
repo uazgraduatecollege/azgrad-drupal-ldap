@@ -6,6 +6,7 @@
  */
 
 /**
+ * @FIXME: Unported, not a priority.
  * The goal of this function is to illustrate samples from various ldap
  * implementations (AD, openldap, etc) alongside default/common
  * ldap module configurations.  The data for the ldaps and the configuration

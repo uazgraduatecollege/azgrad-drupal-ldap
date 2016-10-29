@@ -4,6 +4,7 @@
  * @file
  */
 
+use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\ldap_query\LdapQuery;
 use Drupal\ldap_query\LdapQueryAdmin;
 
@@ -149,24 +150,19 @@ function ldap_query_fields() {
 }
 
 /**
- *
+ * Implements hook_help().
  */
-function ldap_query_help($path, $arg) {
+function ldap_query_help($route_name, RouteMatchInterface $route_match) {
 
   $help = '<h3>' . t('LDAP Query Module') . '</h3><p>' .
   t('This module does nothing in and of itself.  It should only be
     enabled and configured if another module requires it.') . '</p>';
 
-  switch ($path) {
-    case 'admin/config/people/ldap/query':
-      $output = '<p>' . $help . '</p>';
-      return $output;
-
-    case 'admin/help#ldap_query':
+  switch ($route_name) {
+    case 'ldap_query.admin_form':
       $output = '<p>' . $help . '</p>';
       return $output;
   }
-
 }
 
 /**

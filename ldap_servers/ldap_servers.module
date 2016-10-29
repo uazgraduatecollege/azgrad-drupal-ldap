@@ -760,60 +760,6 @@ function ldap_servers_get_ldap_type_object($ldap_conf) {
 }
 
 /**
- * Given a dn (such as cn=jdoe,ou=people)
- * and an rdn (such as cn)
- * determine that rdn value (such as jdoe)
- *
- * @param string $dn
- * @param string $rdn
- *
- * @return string value of rdn
- */
-function ldap_servers_get_first_rdn_value_from_dn($dn, $rdn) {
-  // Escapes attribute values, need to be unescaped later.
-  $pairs = ldap_explode_dn($dn, 0);
-  $count = array_shift($pairs);
-  $rdn = Unicode::strtolower($rdn);
-  $rdn_value = FALSE;
-  foreach ($pairs as $p) {
-    $pair = explode('=', $p);
-    if (Unicode::strtolower(trim($pair[0])) == $rdn) {
-      $helper = new ConversionHelper();
-      $rdn_value = $helper->unescape_dn_value(trim($pair[1]));
-      break;
-    }
-  }
-  return $rdn_value;
-}
-
-/**
- * Given a dn (such as cn=jdoe,ou=people)
- * and an rdn (such as cn)
- * determine that rdn value (such as jdoe)
- *
- * @param string $dn
- * @param string $rdn
- *
- * @return array of all values of rdn
- */
-function ldap_servers_get_all_rdn_values_from_dn($dn, $rdn) {
-  // Escapes attribute values, need to be unescaped later.
-  $pairs = ldap_explode_dn($dn, 0);
-  $count = array_shift($pairs);
-  $rdn = Unicode::strtolower($rdn);
-  $rdn_values = array();
-  foreach ($pairs as $p) {
-    $pair = explode('=', $p);
-    if (Unicode::strtolower(trim($pair[0])) == $rdn) {
-      $helper = new ConversionHelper();
-      $rdn_values[] = $helper->unescape_dn_value(trim($pair[1]));
-      break;
-    }
-  }
-  return $rdn_values;
-}
-
-/**
  *
  */
 function ldap_servers_no_enabled_servers_msg($action) {

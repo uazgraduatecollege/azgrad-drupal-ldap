@@ -4,6 +4,7 @@ namespace Drupal\ldap_servers\Entity;
 
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
+use Drupal\ldap_servers\ConversionHelper;
 use Drupal\ldap_servers\LdapProtocol;
 use Drupal\ldap_servers\MassageFunctions;
 use Drupal\ldap_servers\ServerInterface;
@@ -296,7 +297,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
    * @return array
    *    Ldap entry with no values that have NOT changed.
    */
-  static public function removeUnchangedAttributes($new_entry, $old_entry) {
+  public static function removeUnchangedAttributes($new_entry, $old_entry) {
 
     foreach ($new_entry as $key => $new_val) {
       $old_value = FALSE;
@@ -348,7 +349,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
       if (!$result) {
         $error = "LDAP Server ldap_read(%dn) in LdapServer::modifyLdapEntry() Error Server ID = %sid, LDAP Err No: %ldap_errno LDAP Err Message: %ldap_err2str ";
         $tokens = array('%dn' => $dn, '%id' => $this->id(), '%ldap_errno' => ldap_errno($this->connection), '%ldap_err2str' => ldap_err2str(ldap_errno($this->connection)));
-        \Drupal::logger('ldap_server')->error($error, []);
+        \Drupal::logger('ldap_server')->error($error, $tokens);
         return FALSE;
       }
 
@@ -379,7 +380,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
         if (!$result) {
           $error = "LDAP Server ldap_mod_del(%dn) in LdapServer::modifyLdapEntry() Error Server ID = %sid, LDAP Err No: %ldap_errno LDAP Err Message: %ldap_err2str ";
           $tokens = array('%dn' => $dn, '%id' => $this->id(), '%ldap_errno' => ldap_errno($this->connection), '%ldap_err2str' => ldap_err2str(ldap_errno($this->connection)));
-          \Drupal::logger('ldap_server')->error($error, []);
+          \Drupal::logger('ldap_server')->error($error, $tokens);
           return FALSE;
         }
       }
@@ -847,8 +848,6 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
     }
     // Template is of form [cn]@illinois.edu.
     elseif ($ldap_entry && $this->get('mail_template')) {
-      // FIXME: Inject properly
-      module_load_include('inc', 'ldap_servers', 'ldap_servers.functions');
       return $this->ldap_servers_token_replace($ldap_entry, $this->get('mail_template'), 'ldap_entry');
     }
     else {
@@ -1531,7 +1530,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
           $member_value = $member_group_dn;
         }
         else {
-          $member_value = ldap_servers_get_first_rdn_value_from_dn($member_group_dn, $this->groupMembershipsAttrMatchingUserAttr());
+          $member_value = $this->getFirstRDNValueFromDN($member_group_dn, $this->groupMembershipsAttrMatchingUserAttr());
         }
         $ors[] = $this->groupMembershipsAttr() . '=' . $member_value;
       }
@@ -1661,7 +1660,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
       }
       // Maybe cn, uid, etc is held.
       else {
-        $member_id = ldap_servers_get_first_rdn_value_from_dn($group_entry['dn'], $this->groupMembershipsAttrMatchingUserAttr());
+        $member_id = $this->getFirstRDNValueFromDN($group_entry['dn'], $this->groupMembershipsAttrMatchingUserAttr());
       }
 
       if ($member_id && !in_array($member_id, $tested_group_ids)) {
@@ -1675,8 +1674,8 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
     if (count($ors)) {
       $count = count($ors);
       // Only 50 or so per query.
-      for ($i = 0; $i < $count; $i = $i + LDAP_SERVER_LDAP_QUERY_CHUNK) {
-        $current_ors = array_slice($ors, $i, LDAP_SERVER_LDAP_QUERY_CHUNK);
+      for ($i = 0; $i < $count; $i = $i + self::LDAP_SERVER_LDAP_QUERY_CHUNK) {
+        $current_ors = array_slice($ors, $i, self::LDAP_SERVER_LDAP_QUERY_CHUNK);
         // e.g. (|(cn=group1)(cn=group2)) or   (|(dn=cn=group1,ou=blah...)(dn=cn=group2,ou=blah...))
         $or = '(|(' . join(")(", $current_ors) . '))';
         $query_for_parent_groups = '(&(objectClass=' . $this->groupObjectClass() . ')' . $or . ')';
@@ -1713,7 +1712,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
       return FALSE;
     }
     elseif ($user_ldap_entry = $this->userUserToExistingLdapEntry($user)) {
-      return ldap_servers_get_all_rdn_values_from_dn($user_ldap_entry['dn'], $this->groupDeriveFromDnAttr());
+      return $this->getAllRDNValuesFromDN($user_ldap_entry['dn'], $this->groupDeriveFromDnAttr());
     }
     else {
       return FALSE;
@@ -1943,6 +1942,60 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
   public function groupGroupEntryMembershipsConfigured() {
     // $this->groupGroupEntryMembershipsConfigured = ($this->groupMembershipsAttrMatchingUserAttr && $this->groupMembershipsAttr);.
     return $this->groupMembershipsAttrMatchingUserAttr() && $this->groupMembershipsAttr();
+  }
+
+  /**
+   * Given a dn (such as cn=jdoe,ou=people)
+   * and an rdn (such as cn)
+   * determine that rdn value (such as jdoe)
+   *
+   * @param string $dn
+   * @param string $rdn
+   *
+   * @return string value of rdn
+   */
+  private function getFirstRDNValueFromDN($dn, $rdn) {
+    // Escapes attribute values, need to be unescaped later.
+    $pairs = ldap_explode_dn($dn, 0);
+    $count = array_shift($pairs);
+    $rdn = Unicode::strtolower($rdn);
+    $rdn_value = FALSE;
+    foreach ($pairs as $p) {
+      $pair = explode('=', $p);
+      if (Unicode::strtolower(trim($pair[0])) == $rdn) {
+        $helper = new ConversionHelper();
+        $rdn_value = $helper->unescape_dn_value(trim($pair[1]));
+        break;
+      }
+    }
+    return $rdn_value;
+  }
+
+  /**
+   * Given a dn (such as cn=jdoe,ou=people)
+   * and an rdn (such as cn)
+   * determine that rdn value (such as jdoe)
+   *
+   * @param string $dn
+   * @param string $rdn
+   *
+   * @return array of all values of rdn
+   */
+  private function getAllRDNValuesFromDN($dn, $rdn) {
+    // Escapes attribute values, need to be unescaped later.
+    $pairs = ldap_explode_dn($dn, 0);
+    $count = array_shift($pairs);
+    $rdn = Unicode::strtolower($rdn);
+    $rdn_values = array();
+    foreach ($pairs as $p) {
+      $pair = explode('=', $p);
+      if (Unicode::strtolower(trim($pair[0])) == $rdn) {
+        $helper = new ConversionHelper();
+        $rdn_values[] = $helper->unescape_dn_value(trim($pair[1]));
+        break;
+      }
+    }
+    return $rdn_values;
   }
 
 }

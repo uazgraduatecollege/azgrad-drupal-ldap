@@ -82,7 +82,7 @@ class LdapQuery implements LdapProtocol  {
 
     // Special properties that don't map directly from storage and defaults.
     $this->inDatabase = TRUE;
-    $this->detailedWatchdogLog = config('ldap_help.settings')->get('watchdog_detail');
+    $this->detailedWatchdogLog = \Drupal::config('ldap_help.settings')->get('watchdog_detail');
 
     $this->baseDn = $this->linesToArray($this->base_dn_str);
     $this->attributes = ($this->attributes_str) ? $this->csvToArray($this->attributes_str, TRUE) : array();

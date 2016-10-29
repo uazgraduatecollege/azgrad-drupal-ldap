@@ -94,7 +94,7 @@ class LdapAuthenticationConf {
    * @var string
    */
   public $ldapUserHelpLinkUrl;
-  public $ldapUserHelpLinkText = LDAP_AUTHENTICATION_HELP_LINK_TEXT_DEFAULT;
+  public $ldapUserHelpLinkText = 'Logon Help';
 
   /**
    * Email handling option
@@ -133,7 +133,7 @@ class LdapAuthenticationConf {
   public $ssoExcludedHosts = NULL;
   public $seamlessLogin = FALSE;
   public $ldapImplementation = FALSE;
-  public $cookieExpire = LDAP_AUTHENTICATION_COOKIE_EXPIRE;
+  public $cookieExpire = 0;
 
   public $apiPrefs = array();
 

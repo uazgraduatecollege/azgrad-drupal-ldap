@@ -5,7 +5,7 @@
  */
 
 /**
- *
+ * @FIXME: Unported code, unconnected. Check 7.x branch.
  */
 function ldap_severs_user_data_setup_batch($consumer_type = NULL) {
 
