@@ -1023,28 +1023,34 @@ class LdapUserConf {
   }
 
   /**
-   * Given a drupal account, query ldap and get all user fields and save user account
-   * (note: parameters are in odd order to match synchDrupalAccount handle)
+   * Provision a Drupal user account.
    *
-   * @param array $account
-   *   drupal account object or null
+   * Given a drupal account, query LDAP and get all user fields and save the
+   * user account. Nnote: parameters are in odd order to match
+   * synchDrupalAccount handle.
+   *
+   * @param User|boolean $account
+   *   Drupal account object or null.
+   *   Todo: Fix default value of false or correct comment.
    * @param array $user_edit
-   *   drupal edit array in form user_save($account, $user_edit) would take.
+   *   Drupal edit array in form user_save($account, $user_edit) would take.
    * @param array $ldap_user
-   *   as user's ldap entry.  passed to avoid requerying ldap in cases where already present
+   *   User's ldap entry. Passed to avoid requerying ldap in cases where already
+   *   present.
    * @param bool $save
-   *   indicating if drupal user should be saved.  generally depends on where function is called from and if the
+   *   Indicating if Drupal user should be saved. Generally depends on where
+   *   function is called from and if the result of the save is true.
+   *   Todo: Fix architecture here.
    *
-   * @return result of user_save() function is $save is true, otherwise return TRUE on success or FALSE on any problem
-   *   $user_edit data returned by reference
+   * @return boolean
+   *   Return TRUE on success or FALSE on any problem.
    */
   public function provisionDrupalAccount($account = FALSE, &$user_edit, $ldap_user = NULL, $save = TRUE) {
 
     $watchdog_tokens = array();
     /**
-     * @todo
-     * -- add error catching for conflicts, conflicts should be checked before calling this function.
-     *
+     * @TODO: Add error catching for conflicts.
+     * Conflicts should be checked before calling this function.
      */
 
     if (!$account) {
@@ -1073,10 +1079,10 @@ class LdapUserConf {
     }
 
     // If we don't have an account name already we should set one.
-    if (!$account->label()) {
+    if (!$account->getUsername()) {
       $ldap_server = ldap_servers_get_servers($this->drupalAcctProvisionServer, 'enabled', TRUE);
       $account->set('name', $ldap_user[$ldap_server->get('user_attr')]);
-      $watchdog_tokens['%username'] = $account->label();
+      $watchdog_tokens['%username'] = $account->getUsername();
     }
 
     // Can we get details from an LDAP server?
@@ -1098,6 +1104,7 @@ class LdapUserConf {
 
       // Look for existing drupal account with same puid.  if so update username and attempt to synch in current context.
       $puid = $ldap_server->userPuidFromLdapEntry($ldap_user['attr']);
+      // FIXME: The entire account2 operation is broken.
       $account2 = ($puid) ? $ldap_server->userUserEntityFromPuid($puid) : FALSE;
 
       // Synch drupal account, since drupal account exists.
@@ -1107,7 +1114,7 @@ class LdapUserConf {
         $account = $account2;
         $account->save();
         // Update the identifier table.
-        ldap_user_set_identifier($account, $account->label());
+        ldap_user_set_identifier($account, $account->getUsername());
 
         // 2. attempt synch if appropriate for current context.
         // @FIXME $user_edit is deprecated (LDAP)
@@ -1121,7 +1128,7 @@ class LdapUserConf {
         $this->entryToUserEdit($ldap_user, $account, $ldap_server, LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, array(LDAP_USER_EVENT_CREATE_DRUPAL_USER));
         if ($save) {
           $watchdog_tokens = array('%drupal_username' => $account->get('name'));
-          if (empty($account->label())) {
+          if (empty($account->getUsername())) {
             drupal_set_message(t('User account creation failed because of invalid, empty derived Drupal username.'), 'error');
             \Drupal::logger('ldap_user')->error('Failed to create Drupal account %drupal_username because drupal username could not be derived.', []);
             return FALSE;
@@ -1145,8 +1152,9 @@ class LdapUserConf {
             drupal_set_message(t('User account creation failed because of system problems.'), 'error');
           }
           else {
-            ldap_user_set_identifier($account, $account->label());
+            ldap_user_set_identifier($account, $account->getUsername());
             if (!empty($user_data)) {
+              // FIXME: Undefined function.
               ldap_user_identities_data_update($account, $user_data);
             }
           }
@@ -1272,7 +1280,7 @@ class LdapUserConf {
       }
     }
 
-    if ($this->isSynched('[property.name]', $prov_events, $direction) && !$account->label() && $drupal_username) {
+    if ($this->isSynched('[property.name]', $prov_events, $direction) && !$account->getUsername() && $drupal_username) {
       $account->set('name', $drupal_username);
     }
 
@@ -1354,7 +1362,7 @@ class LdapUserConf {
     // Allow other modules to have a say.
     \Drupal::moduleHandler()->alter('ldap_user_edit_user', $account, $ldap_user, $ldap_server, $prov_events);
     // don't let empty 'name' value pass for user.
-    if (empty($account->label())) {
+    if (empty($account->getUsername())) {
       $account->set('name', $ldap_user[$ldap_server->get('user_attr')]);
     }
 
