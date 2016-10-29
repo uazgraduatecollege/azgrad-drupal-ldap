@@ -468,8 +468,7 @@ function ldap_authentication_test_credentials($auth_conf, $sso_login, $authname,
       // With sso enabled this method of binding isn't valid.
       foreach ($ldap_server->getBasedn() as $basedn) {
         $search = array('%basedn', '%username');
-        $transformname = $ldap_server->userUsernameToLdapNameTransform($authname, $watchdog_tokens);
-        $replace = array($basedn, $transformname);
+        $replace = array($basedn, $authname);
         $userdn = str_replace($search, $replace, $ldap_server->get('user_dn_expression'));
         $bind_success = ($ldap_server->bind($userdn, $password, FALSE) == LDAP_SUCCESS);
         if ($bind_success) {
