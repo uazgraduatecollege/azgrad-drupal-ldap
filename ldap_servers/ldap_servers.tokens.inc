@@ -11,11 +11,11 @@ use Drupal\ldap_user\LdapUserConf;
 
 /**
  * @param string $attr_name
- *   such 'field_user_lname', 'name', 'mail', 'dn'
+ *   such 'field_user_lname', 'name', 'mail', 'dn'.
  * @param string $attr_type
- *   such as 'field', 'property', etc.  NULL for ldap attributes
+ *   such as 'field', 'property', etc.  NULL for ldap attributes.
  * @param string $attr_ordinal
- *   0, 1, 2, etc.  not used in general
+ *   0, 1, 2, etc.  not used in general.
  *
  * @return string such as 'field.field_user_lname', 'samaccountname', etc.
  */
@@ -58,7 +58,7 @@ function ldap_servers_parse_user_attr_name($user_attr_key) {
 /**
  * @param array $ldap_entry
  * @param string $text
- *   such as "[dn]", "[cn]@my.org", "[displayName] [sn]", "Drupal Provisioned"
+ *   such as "[dn]", "[cn]@my.org", "[displayName] [sn]", "Drupal Provisioned".
  * @return string $text with tokens replaced or NULL if replacement not available
  */
 function ldap_servers_token_replace($resource, $text, $resource_type = 'ldap_entry') {
@@ -100,11 +100,11 @@ function ldap_servers_token_replace($resource, $text, $resource_type = 'ldap_ent
 
 /**
  * @param array $attributes
- *   array of attributes passed by reference
+ *   array of attributes passed by reference.
  * @param string $text
  *   with tokens in it
  *
- *   by reference return add ldap attribute triplet $attribute_maps[<attr_name>] = (<attr_name>, <ordinal>, <data_type>) to $attributes
+ *   by reference return add ldap attribute triplet $attribute_maps[<attr_name>] = (<attr_name>, <ordinal>, <data_type>) to $attributes.
  */
 function ldap_servers_token_extract_attributes(&$attribute_maps, $text) {
   $tokens = ldap_servers_token_tokens_needed_for_template($text);
@@ -129,7 +129,7 @@ function ldap_servers_token_extract_attributes(&$attribute_maps, $text) {
 
 /**
  * @param string $token
- *   or token expression with singular token in it, eg. [dn], [dn;binary], [titles:0;binary] [cn]@mycompany.com
+ *   or token expression with singular token in it, eg. [dn], [dn;binary], [titles:0;binary] [cn]@mycompany.com.
  *
  *
  *
@@ -159,20 +159,20 @@ function ldap_servers_token_extract_parts($token) {
  * @param string $token_keys
  *   Either an array of key names such as array('cn', 'dn') or string 'all' to return all tokens.
  * @param string $pre
- *   Prefix token prefix such as !,%,[
+ *   Prefix token prefix such as !,%,[.
  * @param string $post
- *   Suffix token suffix such as ]
+ *   Suffix token suffix such as ].
  *
  * @return array
  *   Token array suitable for t() functions of with lowercase keys as exemplified below
  *
- * $ldap_entry should be in form of single entry returned from ldap_search() function:
+ *   $ldap_entry should be in form of single entry returned from ldap_search() function:
  *
  *   'dn' => 'cn=jdoe,ou=campus accounts,ou=toledo campus,dc=ad,dc=myuniversity,dc=edu',
  *   'mail' => array( 0 => 'jdoe@myuniversity.edu', 'count' => 1),
  *   'sAMAccountName' => array( 0 => 'jdoe', 'count' => 1),
  *
- * Should return tokens such as:
+ *   Should return tokens such as:
  *
  *   From dn attribute:
  *     [cn] = jdoe
@@ -357,9 +357,9 @@ function ldap_servers_token_tokenize_entry($ldap_entry, $token_keys = 'all', $pr
  *   all token/value pairs available; otherwise array lists
  *   token keys (e.g. property.name ...NOT [property.name])
  * @param string $pre
- *   prefix of token
+ *   prefix of token.
  * @param string $post
- *   suffix of token
+ *   suffix of token.
  *
  *
  * @return should return token/value pairs in array such as
@@ -467,7 +467,7 @@ function ldap_servers_token_tokenize_user_account($user_account, $token_keys = '
 
 /**
  * @param string $template
- *   in form [cn]@myuniversity.edu
+ *   in form [cn]@myuniversity.edu.
  * @return array of all tokens in the template such as array('cn')
  */
 function ldap_servers_token_tokens_needed_for_template($template, $pre = LDAP_SERVERS_TOKEN_PRE, $post = LDAP_SERVERS_TOKEN_POST) {

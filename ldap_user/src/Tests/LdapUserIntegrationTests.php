@@ -63,7 +63,7 @@ class LdapUserIntegrationTests extends LdapTestCase {
   /**
    * Integration tests for provisioning to ldap.
    */
-  function testProvisionToLdap() {
+  public function testProvisionToLdap() {
 
     // Just to give warning if setup doesn't succeed.  may want to take these out at some point.
     /* @FIXME
@@ -416,7 +416,7 @@ class LdapUserIntegrationTests extends LdapTestCase {
    *    - run cron
    *    - test for drupal accounts being dealt with correctly and or email sent.
    */
-  function testDrupalAccountsOrphaned() {
+  public function testDrupalAccountsOrphaned() {
     // Just to give warning if setup doesn't succeed.  may want to take these out at some point.
     /** @FIXME
     * This looks like another module's variable. You'll need to rewrite this call
@@ -614,7 +614,7 @@ class LdapUserIntegrationTests extends LdapTestCase {
   /**
    *
    */
-  function createLdapIdentifiedDrupalAccount($ldap_user_conf, $name, $sid) {
+  public function createLdapIdentifiedDrupalAccount($ldap_user_conf, $name, $sid) {
 
     $account = NULL;
     $user_edit = array('name' => $name);

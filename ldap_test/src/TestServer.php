@@ -31,7 +31,7 @@ class TestServer extends Server {
    * Can take array of form property_name => property_value
    * or $sid, where sid is used to derive the include file.
    */
-  function __construct($sid) {
+  public function __construct($sid) {
     if (!is_scalar($sid)) {
       $test_data = $sid;
       $sid = $test_data['sid'];
@@ -66,21 +66,21 @@ class TestServer extends Server {
   /**
    * Destructor Method.
    */
-  function __destruct() {
+  public function __destruct() {
     // If alterations to server configuration must be maintained throughout simpletest, variable_set('ldap_authorization_test_server__'. $sid, array());
   }
 
   /**
    * Connect Method.
    */
-  function connect() {
+  public function connect() {
     return $this->methodResponses['connect'];
   }
 
   /**
    *
    */
-  function bind($userdn = NULL, $pass = NULL, $anon_bind = FALSE) {
+  public function bind($userdn = NULL, $pass = NULL, $anon_bind = FALSE) {
     $userdn = ($userdn != NULL) ? $userdn : $this->binddn;
     $pass = ($pass != NULL) ? $pass : $this->bindpw;
 
@@ -122,7 +122,7 @@ class TestServer extends Server {
   /**
    * Disconnect (unbind) from an active LDAP server.
    */
-  function disconnect() {
+  public function disconnect() {
 
   }
 
@@ -130,9 +130,9 @@ class TestServer extends Server {
    * Perform an LDAP search.
    *
    * @param string $filter
-   *   The search filter. such as sAMAccountName=jbarclay
+   *   The search filter. such as sAMAccountName=jbarclay.
    * @param string $basedn
-   *   The search base. If NULL, we use $this->basedn
+   *   The search base. If NULL, we use $this->basedn.
    * @param array $attributes
    *   List of desired attributes. If omitted, we only return "dn".
    *
@@ -140,7 +140,7 @@ class TestServer extends Server {
    *   An array of matching entries->attributes, or FALSE if the search is
    *   empty.
    */
-  function search($base_dn = NULL, $filter, $attributes = array(), $attrsonly = 0, $sizelimit = 0, $timelimit = 0, $deref = LDAP_DEREF_NEVER, $scope = LDAP_SCOPE_SUBTREE) {
+  public function search($base_dn = NULL, $filter, $attributes = array(), $attrsonly = 0, $sizelimit = 0, $timelimit = 0, $deref = LDAP_DEREF_NEVER, $scope = LDAP_SCOPE_SUBTREE) {
 
     // debug("ldap test server search base_dn=$base_dn, filter=$filter");.
     $lcase_attribute = array();
@@ -349,11 +349,11 @@ class TestServer extends Server {
    *
    * @param string $dn
    * @param enum $return
-   *   = 'boolean' or 'ldap_entry'
+   *   = 'boolean' or 'ldap_entry'.
    *
    * @param return FALSE or ldap entry array
    */
-  function dnExists($find_dn, $return = 'boolean', $attributes = array('objectclass')) {
+  public function dnExists($find_dn, $return = 'boolean', $attributes = array('objectclass')) {
     $this->refreshFakeData();
     $test_data = variable_get('ldap_test_server__' . $this->sid, array());
     foreach ($this->entries as $entry_dn => $entry) {
@@ -434,7 +434,7 @@ class TestServer extends Server {
   /**
    *
    */
-  function modifyLdapEntry($dn, $attributes = NULL, $old_attributes = FALSE) {
+  public function modifyLdapEntry($dn, $attributes = NULL, $old_attributes = FALSE) {
     if (!$attributes) {
       $attributes = array();
     }

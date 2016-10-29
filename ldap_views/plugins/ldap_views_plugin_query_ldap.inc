@@ -23,7 +23,7 @@ class ldap_views_plugin_query_ldap extends views_plugin_query {
   /**
    * Builds the necessary info to execute the query.
    */
-  function build(&$view) {
+  public function build(&$view) {
     $view->init_pager($view);
 
     // Let the pager modify the query to add limits.
@@ -33,7 +33,7 @@ class ldap_views_plugin_query_ldap extends views_plugin_query {
   /**
    *
    */
-  function add_field($table, $field, $alias = '', $params = array()) {
+  public function add_field($table, $field, $alias = '', $params = array()) {
     // We check for this specifically because it gets a special alias.
     if ($table == $this->base_table && $field == $this->base_field && empty($alias)) {
       $alias = $this->base_field;
@@ -77,7 +77,7 @@ class ldap_views_plugin_query_ldap extends views_plugin_query {
   /**
    *
    */
-  function add_orderby($table, $field, $order, $alias = '', $params = array()) {
+  public function add_orderby($table, $field, $order, $alias = '', $params = array()) {
     $this->orderby[] = array(
       'field' => $field,
       'direction' => drupal_strtoupper($order),
@@ -87,14 +87,14 @@ class ldap_views_plugin_query_ldap extends views_plugin_query {
   /**
    *
    */
-  function add_basedn($basedn) {
+  public function add_basedn($basedn) {
     $this->basedn = !empty($this->basedn) ? $this->basedn : $basedn;
   }
 
   /**
    *
    */
-  function add_filter($filter) {
+  public function add_filter($filter) {
     if (empty($filter)) {
       return;
     }
@@ -123,7 +123,7 @@ class ldap_views_plugin_query_ldap extends views_plugin_query {
    *
    * @see QueryConditionInterface::condition()
    */
-  function add_where($group, $field, $value = NULL, $operator = NULL) {
+  public function add_where($group, $field, $value = NULL, $operator = NULL) {
     // Ensure all variants of 0 are actually 0. Thus '', 0 and NULL are all
     // the default group.
     if (empty($group)) {
@@ -149,7 +149,7 @@ class ldap_views_plugin_query_ldap extends views_plugin_query {
    * @param $where
    *   'where' or 'having'.
    */
-  function build_condition() {
+  public function build_condition() {
     $operator = array('AND' => '&', 'OR' => '|');
     $main_group = '';
     if (!isset($this->where)) {
@@ -172,14 +172,14 @@ class ldap_views_plugin_query_ldap extends views_plugin_query {
   /**
    *
    */
-  function build_ldap_basedn($basedn) {
+  public function build_ldap_basedn($basedn) {
     return !empty($this->basedn) ? array($this->basedn) : $basedn;
   }
 
   /**
    *
    */
-  function build_contextual_filter() {
+  public function build_contextual_filter() {
     $contextual_filter = '';
     foreach ($this->filter as $condition) {
       $contextual_filter .= drupal_substr($condition, 0, 1) != '(' ? "($condition)" : $condition;
@@ -190,7 +190,7 @@ class ldap_views_plugin_query_ldap extends views_plugin_query {
   /**
    *
    */
-  function build_ldap_filter($filter) {
+  public function build_ldap_filter($filter) {
     $condition     = $this->build_condition();
     $contextual    = $this->build_contextual_filter();
     $search_filter = !empty($contextual) && !empty($condition) ? '(&' . $condition . $contextual . ')' : $condition . $contextual;
@@ -215,7 +215,7 @@ class ldap_views_plugin_query_ldap extends views_plugin_query {
    *   The alias used to refer to this specific table, or NULL if the table
    *   cannot be ensured.
    */
-  function ensure_table($table, $relationship = NULL, $join = NULL) {
+  public function ensure_table($table, $relationship = NULL, $join = NULL) {
     return $table;
   }
 
@@ -228,7 +228,7 @@ class ldap_views_plugin_query_ldap extends views_plugin_query {
    *
    * $view->result should contain an array of objects.
    */
-  function execute(&$view) {
+  public function execute(&$view) {
     $start       = microtime();
     $entries     = array();
     $num_entries = 0;
@@ -372,7 +372,7 @@ class ldap_views_plugin_query_ldap extends views_plugin_query {
   /**
    *
    */
-  function option_definition() {
+  public function option_definition() {
     $options = parent::option_definition();
     $options['qid'] = array('default' => '');
 
@@ -382,7 +382,7 @@ class ldap_views_plugin_query_ldap extends views_plugin_query {
   /**
    *
    */
-  function options_form(&$form, &$form_state) {
+  public function options_form(&$form, &$form_state) {
     /**
  * $ldap_data = entity_load('ldap_data', FALSE);
  * $options   = array();
@@ -412,7 +412,7 @@ class ldap_views_plugin_query_ldap extends views_plugin_query {
   /**
    * Let modules modify the query just prior to finalizing it.
    */
-  function alter(&$view) {
+  public function alter(&$view) {
     foreach (module_implements('views_query_alter') as $module) {
       $function = $module . '_views_query_alter';
       $function($view, $this);

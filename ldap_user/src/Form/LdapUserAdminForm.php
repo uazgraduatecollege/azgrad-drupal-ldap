@@ -16,7 +16,7 @@ class LdapUserAdminForm extends ConfigFormBase {
   protected $ldap_user_conf_admin;
 
   /**
-   *
+   * {@inheritdoc}
    */
   public function __construct(ConfigFactoryInterface $config_factory) {
     parent::__construct($config_factory);
@@ -38,7 +38,7 @@ class LdapUserAdminForm extends ConfigFormBase {
   }
 
   /**
-   *
+   * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
     $form = $this->ldap_user_conf_admin->drupalForm();
@@ -46,7 +46,7 @@ class LdapUserAdminForm extends ConfigFormBase {
   }
 
   /**
-   *
+   * {@inheritdoc}
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
     list($errors, $warnings) = $this->ldap_user_conf_admin->drupalFormValidate($form_state->getValues(), $form['#storage']);
@@ -60,7 +60,7 @@ class LdapUserAdminForm extends ConfigFormBase {
   }
 
   /**
-   *
+   * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     // Add form data to object and save or create.
@@ -71,7 +71,7 @@ class LdapUserAdminForm extends ConfigFormBase {
       return new RedirectResponse(\Drupal::url('ldap_user.admin_form'));
     }
     else {
-      $form_state->setErrorByName($conf->errorName, $conf->errorMsg);
+      $form_state->setErrorByName($this->ldap_user_conf_admin->errorName, $this->ldap_user_conf_admin->errorMsg);
       $this->ldap_user_conf_admin->clearError();
     }
   }

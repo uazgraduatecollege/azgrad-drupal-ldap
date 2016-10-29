@@ -5,10 +5,13 @@
  * Status file for ldaphelp module.
  */
 
+use Drupal\ldap_authentication\LdapAuthenticationConfAdmin;
 use Drupal\ldap_user\LdapUserConfAdmin;
 
 /**
  * Helper functions to generate markup for ldap_help.
+ *
+ * FIXME: Unported.
  */
 function ldap_help_status($return = 'html') {
 
@@ -284,9 +287,6 @@ function ldap_help_get_ldap_servers() {
     return FALSE;
   }
 
-  ldap_servers_module_load_include('inc', 'ldap_servers', 'ldap_servers.settings');
-  ldap_servers_module_load_include('inc', 'ldap_servers', 'ldap_servers.admin');
-
   $status = [];
 
   $servers_objects = ldap_servers_get_servers(NULL, 'all');
@@ -338,8 +338,6 @@ function ldap_help_get_ldap_servers() {
  *
  */
 function ldap_help_get_ldap_authentication() {
-
-  ldap_servers_module_load_include('php', 'ldap_authentication', 'LdapAuthenticationConfAdmin.class');
   $auth_conf = new LdapAuthenticationConfAdmin();
   $conf_form = $auth_conf->drupalForm();
 
@@ -382,9 +380,6 @@ function ldap_help_get_ldap_user() {
  */
 function ldap_help_get_ldap_authorization() {
   $status = array();
-  ldap_servers_module_load_include('php', 'ldap_authorization', 'LdapAuthorizationConsumerConfAdmin.class');
-  ldap_servers_module_load_include('inc', 'ldap_servers', 'ldap_servers.settings');
-  ldap_servers_module_load_include('inc', 'ldap_servers', 'ldap_servers.admin');
 
   $servers = ldap_servers_get_servers(NULL, 'enabled');
   $consumers = ldap_authorization_get_consumers();

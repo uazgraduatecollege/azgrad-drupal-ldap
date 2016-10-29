@@ -7,11 +7,12 @@
  * See http://msdn.microsoft.com/en-us/library/windows/desktop/ms675085(v=vs.85).aspx.
  */
 
-module_load_include('php', 'ldap_servers', 'ldap_types/LdapTypeAbstract.class');
+namespace Drupal\ldap_servers\LdapTypes;
+
 /**
  *
  */
-class LdapTypeActiveDirectory extends LdapTypeAbstract {
+class ActiveDirectoryType extends AbstractType {
 
   // Generic properties.
   public $name = 'Active Directory LDAP';

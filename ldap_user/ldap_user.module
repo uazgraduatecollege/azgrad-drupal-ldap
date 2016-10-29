@@ -69,52 +69,6 @@ define('LDAP_USER_PROV_RESULT_BAD_PARAMS', 2);
 // Need to avoid conflicting with server ids.
 define('LDAP_USER_NO_SERVER_SID', 0);
 define('LDAP_USER_TEST_FORM_PATH', 'admin/config/people/ldap/user/test');
-define('LDAP_USER_WS_USER_PATH', 'ldap/user/ws');
-
-/**
- * Implements hook_menu().
- */
-function ldap_user_menu() {
-  $items = array();
-
-  $items['admin/config/people/ldap/user'] = array(
-    'title' => '3. User',
-    'description' => 'Settings related to user provisioning and data synching between ldap and drupal users.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('ldap_user_admin_form'),
-    'access arguments' => array('administer site configuration'),
-    'type' => MENU_LOCAL_TASK,
-    'weight' => 2,
-    'file' => 'ldap_user.admin.inc',
-  );
-
-  $items[LDAP_USER_TEST_FORM_PATH] = array(
-    'title' => 'Test LDAP User Functionality for a given user.',
-    'description' => '',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('ldap_user_test_form'),
-    'access arguments' => array('administer site configuration'),
-    'file' => 'ldap_user.test_form.inc',
-    'type' => MENU_LOCAL_ACTION,
-  );
-
-  // $ws_arg_start = count(explode('/', LDAP_USER_WS_USER_PATH));
-  // $items[LDAP_USER_WS_USER_PATH] = array(
-  //   'title' => 'Webservice Path',
-  //   'page callback' => 'ldap_user_ws',
-  //   'page arguments' => array($ws_arg_start, $ws_arg_start + 1, $ws_arg_start + 2, $ws_arg_start + 3),
-  //   'access arguments' => array('view content'),
-  //   'file' => 'ldap_user.ws.inc',
-  // );.
-  return $items;
-}
-
-/**
- * Function ldap_user_ws_urls_item_list() {
- *   module_load_include('inc', 'ldap_user', 'ldap_user.ws');
- *   return _ldap_user_ws_urls_item_list();
- * }.
- */
 
 /**
  * Implements hook_init().
@@ -260,7 +214,7 @@ function ldap_user_conf_cache_clear() {
  * Get ldapUserConf or ldapUserConfAdmin object.
  *
  * @param enum $type
- *   is 'admin' for ldapUserConfAdmin object or NULL for ldapUserConf object
+ *   is 'admin' for ldapUserConfAdmin object or NULL for ldapUserConf object.
  * @param bool $resect
  *   clear static cache of object.
  *
@@ -764,7 +718,7 @@ function ldap_user_form_register_form_submit2(&$form, FormState $form_state) {
   if ($values['ldap_user_association'] == LDAP_USER_MANUAL_ACCT_CONFLICT_NO_LDAP_ASSOCIATE) {
     $ldap_user_conf->ldapExcludeDrupalAccount($values['name']);
   }
-  else if ($ldap_user_association_set ||
+  elseif ($ldap_user_association_set ||
     @$values['ldap_user_association'] == LDAP_USER_MANUAL_ACCT_CONFLICT_LDAP_ASSOCIATE ||
     @$ldap_user_conf->manualAccountConflict == LDAP_USER_MANUAL_ACCT_CONFLICT_LDAP_ASSOCIATE) {
     // Either LDAP provision (above) has said "associate" or the person creating
@@ -778,11 +732,11 @@ function ldap_user_form_register_form_submit2(&$form, FormState $form_state) {
 
 /**
  * @param object $account
- *   as drupal user object
+ *   as drupal user object.
  * @param array $edit
- *   is a drupal user edit array
+ *   is a drupal user edit array.
  * @param enum int $direction
- *   indicating which directions to test for association
+ *   indicating which directions to test for association.
  *
  *
  * @return boolean TRUE if user should be excluded from ldap provision/synching
@@ -805,12 +759,12 @@ function ldap_user_ldap_exclude(UserInterface $account = NULL) {
 
 /**
  * @param object $account
- *   as drupal user object
+ *   as drupal user object.
  * @param enum int $direction
  *   indicating which directions to test for association
  *   LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER signifies test if drupal account has been provisioned or synched from ldap
  *   LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY signifies test if ldap account has been provisioned or synched from drupal
- *   NULL signifies check for either direction
+ *   NULL signifies check for either direction.
  *
  * @return boolean if user is ldap associated
  */
@@ -891,9 +845,9 @@ function ldap_user_provision_to_drupal($ldap_user, $user_edit = array()) {
  *   and protect unencrypted user password from other modules.
  *
  * @param enum string $action
- *   'get' | 'set'
+ *   'get' | 'set'.
  * @param string | FALE $value
- *   as user entered password
+ *   as user entered password.
  */
 function ldap_user_ldap_provision_pwd($action, $value = NULL, $reset = FALSE) {
 
@@ -924,9 +878,9 @@ function ldap_user_ldap_provision_pwd($action, $value = NULL, $reset = FALSE) {
  * Function to avoid multiple synch or provision in same page load (if desired)
  *
  * @param enum string $action
- *   'synch' | 'provision' | 'set_page_load_key' | NULL
+ *   'synch' | 'provision' | 'set_page_load_key' | NULL.
  * @param enum string $op
- *   = 'set' or 'get'
+ *   = 'set' or 'get'.
  *
  * @value mixed value associate with $op.
  */
@@ -1230,7 +1184,7 @@ function ldap_user_token_replace($token, $account, $entity = NULL) {
  *
  * @param drupal user object $account
  * @param array $token_keys
- *   as list of token/value pairs to generate
+ *   as list of token/value pairs to generate.
  * @param string prefix token prefix such as !,%,[
  * @param string suffix token suffix such as ]
  *
@@ -1276,11 +1230,11 @@ function ldap_user_token_tokenize_entry($account, $token_keys, $pre = LDAP_SERVE
  * Load user $account and $entity, given uid or $username.
  *
  * @param string $user_id
- *   is username or uid
+ *   is username or uid.
  * @param string $user_id_type
  *   is 'username' or 'uid'
  *
- *   return array $account and $user_entity
+ *   return array $account and $user_entity.
  *
  * @return array
  */

@@ -1,4 +1,5 @@
 <?php
+
 namespace Drupal\ldap_user\EventSubscriber;
 
 use Symfony\Component\HttpKernel\KernelEvents;

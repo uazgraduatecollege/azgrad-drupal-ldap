@@ -1,6 +1,5 @@
 <?php
 
-
 namespace Drupal\ldap_servers\Tests;
 
 use Drupal\Component\Utility\Unicode;
@@ -30,7 +29,7 @@ class LdapServersTestCase extends LdapTestCase {
   /**
    * {@inheritdoc}
    */
-  function __construct($test_id = NULL) {
+  public function __construct($test_id = NULL) {
     parent::__construct($test_id);
   }
 
@@ -63,7 +62,6 @@ class LdapServersTestCase extends LdapTestCase {
 
       $group = "ldap_servers: functions: $ldap_type";
       // @FIXME $test_data = variable_get('ldap_test_server__' . $sid, array());
-      ldap_servers_module_load_include('php', 'ldap_test', 'LdapServerTest.class');
       $ldap_server = TestServer::getLdapServerObjects($sid, NULL, TRUE);
 
       // Check against csv data rather than ldap array to make sure csv to ldap conversion is correct.

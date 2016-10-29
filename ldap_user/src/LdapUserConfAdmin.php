@@ -2,8 +2,6 @@
 
 namespace Drupal\ldap_user;
 
-module_load_include('inc', 'user', 'user.pages');
-
 /**
  *
  */
@@ -60,7 +58,6 @@ class LdapUserConfAdmin extends LdapUserConf {
     \Drupal::configFactory()->getEditable('ldap_user.settings')->set('ldap_user_conf', $save)->save();
     ldap_user_conf_cache_clear();
   }
-
 
   /**
    *
@@ -232,59 +229,6 @@ class LdapUserConfAdmin extends LdapUserConf {
       '#description' => $this->ldapEntryProvisionTriggersDescription,
     );
 
-    /**
- *  $form['ws'] = array(
- *    '#type' => 'fieldset',
- *    '#title' => t('[Untested and Unfinished Code] REST Webservice for Provisioning and Synching.'),
- *    '#collapsible' => TRUE,
- *    '#collapsed' => !$this->wsEnabled,
- *    '#description' => t('Once configured, this webservice can be used to trigger creation, synching, deletion, etc of an LDAP associated Drupal account.'),
- *  ); *
- *  $form['ws']['wsEnabled'] = array(
- *    '#type' => 'checkbox',
- *    '#title' => t('Enable REST Webservice'),
- *    '#required' => FALSE,
- *    '#default_value' => $this->wsEnabled,
- *  ); *
- *  $form['ws']['wsUserIps'] = array(
- *    '#type' => 'textarea',
- *    '#title' => t('Allowed IP Addresses to request webservice.'),
- *    '#required' => FALSE,
- *    '#default_value' => join("\n", $this->wsUserIps),
- *    '#description' => t('One Per Line. The current server address is LOCAL_ADDR and the client ip requesting this page is REMOTE_ADDR .', $_SERVER),
- *    '#cols' => 20,
- *    '#rows' => 2,
- *    '#states' => array(
- *      'visible' => array(   // action to take.
- *        ':input[name="wsEnabled"]' => array('checked' => TRUE),
- *      ),
- *    ),
- *  ); *
- *  if (!$this->wsKey) {
- *    $urls = t('URLs are not available until a key is create a key and urls will be generated');
- *  }
- *  else {
- *    $urls = theme('item_list',
- *      array(
- *        'items' => ldap_user_ws_urls_item_list(),
- *        'title' => 'REST urls',
- *        'type' => 'ul',
- *      ));
- *  } *
- *  $form['ws']['wsKey'] = array(
- *    '#type' => 'textfield',
- *    '#title' => t('Key for webservice'),
- *    '#required' => FALSE,
- *    '#default_value' => $this->wsKey,
- *    '#description' => t('Any random string of characters.') . $urls,
- *    '#states' => array(
- *      'visible' => array(   // action to take.
- *        ':input[name="wsEnabled"]' => array('checked' => TRUE),
- *      ),
- *    ),
- *  );
- */
-
     $form['server_mapping_preamble'] = array(
       '#type' => 'markup',
       '#markup' => t('
@@ -436,9 +380,9 @@ EOT;
    * Validate submitted form.
    *
    * @param array $values
-   *   as $form_state['values'] from drupal form api
+   *   as $form_state['values'] from drupal form api.
    * @param array $storage
-   *   as $form_state['storage'] from drupal form api
+   *   as $form_state['storage'] from drupal form api.
    *
    * @return array in form array($errors, $warnings)to be thrown by form api
    */
@@ -494,7 +438,7 @@ EOT;
    * Validate object, not form.
    *
    * @param array $values
-   *   as $form_state['values'] from drupal form api
+   *   as $form_state['values'] from drupal form api.
    *
    * @return array in form array($errors, $warnings)to be thrown by form api
    *
@@ -607,9 +551,9 @@ EOT;
    * Populate object with data from form values.
    *
    * @param array $values
-   *   as $form_state['values'] from drupal form api
+   *   as $form_state['values'] from drupal form api.
    * @param array $storage
-   *   as $form_state['storage'] from drupal form api
+   *   as $form_state['storage'] from drupal form api.
    */
   protected function populateFromDrupalForm($values, $storage) {
     $this->drupalAcctProvisionServer = ($values['drupalAcctProvisionServer'] == 'none') ? 0 : $values['drupalAcctProvisionServer'];
@@ -623,12 +567,6 @@ EOT;
     $this->manualAccountConflict = $values['manualAccountConflict'];
     $this->userConflictResolve  = ($values['userConflictResolve']) ? (int) $values['userConflictResolve'] : NULL;
     $this->acctCreation  = ($values['acctCreation']) ? (int) $values['acctCreation'] : NULL;
-    // $this->wsKey  = ($values['wsKey']) ? $values['wsKey'] : NULL;.
-    // $this->wsUserIps  = ($values['wsUserIps']) ? explode("\n", $values['wsUserIps']) : array();
-    //  foreach ($this->wsUserIps as $i => $ip) {
-    //    $this->wsUserIps[$i] = trim($ip);
-    //  }
-    // $this->wsEnabled  = ($values['wsEnabled']) ? (int)$values['wsEnabled'] : 0;.
     $this->ldapUserSynchMappings = $this->synchMappingsFromForm($values, $storage);
 
   }
@@ -637,7 +575,7 @@ EOT;
    * Extract synch mappings array from mapping table in admin form.
    *
    * @param array $values
-   *   as $form_state['values'] from drupal form api
+   *   as $form_state['values'] from drupal form api.
    * @param array $storage
    *   as $form_state['storage'] from drupal form api
    *
@@ -714,11 +652,12 @@ EOT;
    * Method to respond to successfully validated form submit.
    *
    * @param array $values
-   *   as $form_state['values'] from drupal form api
+   *   as $form_state['values'] from drupal form api.
    * @param array $storage
-   *   as $form_state['storage'] from drupal form api
+   *   as $form_state['storage'] from drupal form api.
    *
-   * @return by reference to $form array
+   * @return bool|\Exception
+   *   FIXME:Report errors correctly
    */
   public function drupalFormSubmit($values, $storage) {
     $this->populateFromDrupalForm($values, $storage);
@@ -727,7 +666,7 @@ EOT;
       $save_result = $this->save();
       return TRUE;
     }
-    catch (Exception $e) {
+    catch (\Exception $e) {
       drupal_set_message('Failed to save object. Your form data was not saved.', 'error');
       return $e;
     }
@@ -931,17 +870,18 @@ EOT;
    *
    * @param drupal form array $form
    * @param string $action
-   *   is 'add', 'update', or 'nonconfigurable'
+   *   is 'add', 'update', or 'nonconfigurable'.
    * @param enum $direction
-   *   LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER or LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY
+   *   LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER or LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY.
    * @param array $mapping
-   *   is current setting for updates or nonconfigurable items
+   *   is current setting for updates or nonconfigurable items.
    * @param array $user_attr_options
-   *   of drupal user target options
+   *   of drupal user target options.
    * @param int $row
-   *   is current row in table
+   *   is current row in table.
    *
-   * @return a single row
+   * @return array
+   *   A single row
    */
   private function getSyncFormRow($action, $direction, $mapping, $user_attr_options, $row_id) {
 
@@ -1038,15 +978,16 @@ EOT;
       'action' => $action,
       'direction' => $direction,
     );
-    // FIXME: Is col used?
-    $col = ($direction == LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY) ? 5 : 4;
+    // FIXME: Add table selection / ordering back:
+    // $col and $row used to be paremeters to $result[$prov_event]. ID possible
+    // not need needed anymore. Row used to be a parameter to this function.
+    // $col = ($direction == LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY) ? 5 : 4;
     $synchEvents = ($direction == LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER) ? $this->provisionsDrupalEvents : $this->provisionsLdapEvents;
 
     foreach ($synchEvents as $prov_event => $prov_event_name) {
-      // FIXME: Is col used?
-      $col++;
-      // FIXME: $id never used.
-      $id = $id_prefix . join('__', array('sm', $prov_event, $row));
+      // See above.
+      // $col++;
+      // $id = $id_prefix . join('__', array('sm', $prov_event, $row));
       $result[$prov_event] = array(
         '#type' => 'checkbox',
         '#title' => $prov_event,
@@ -1073,9 +1014,9 @@ EOT;
    * @param array $mapping
    *   as mapping configuration for field, attribute, property, etc.
    * @param string $module
-   *   machine name such as ldap_user
+   *   machine name such as ldap_user.
    *
-   * @return boolean
+   * @return bool
    */
   private function isMappingConfigurable($mapping = NULL, $module = 'ldap_user') {
     $configurable = (
@@ -1101,9 +1042,11 @@ EOT;
    * @param array $mapping
    *   is array of mapping configuration.
    *
-   * @return boolean
+   * @return bool
    */
   private function provisionEventConfigurable($prov_event, $mapping = NULL) {
+
+    $configurable = FALSE;
 
     if ($mapping) {
       if ($prov_event == LDAP_USER_EVENT_CREATE_LDAP_ENTRY || $prov_event == LDAP_USER_EVENT_SYNCH_TO_LDAP_ENTRY) {

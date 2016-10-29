@@ -5,7 +5,9 @@
  * LDAP Query Admin Class.
  */
 
-module_load_include('php', 'ldap_query', 'LdapQuery.class');
+namespace Drupal\ldap_query;
+use Drupal\Core\Url;
+
 /**
  *
  */
@@ -13,7 +15,7 @@ class LdapQueryAdmin extends LdapQuery {
 
   /**
    * @param string $sid
-   *   either 'all' or the ldap server sid
+   *   either 'all' or the ldap server sid.
    * @param $type = 'all', 'enabled'
    */
   public static function getLdapQueryObjects($sid = 'all', $type = 'enabled', $class = 'LdapQuery') {
@@ -28,7 +30,7 @@ class LdapQueryAdmin extends LdapQuery {
           ->fields('ldap_query')
           ->execute();
       }
-      catch (Exception $e) {
+      catch (\Exception $e) {
         drupal_set_message(t('query index query failed. Message = %message, query= %query',
           array('%message' => $e->getMessage(), '%query' => $e->query_string)), 'error');
         return array();
@@ -51,7 +53,7 @@ class LdapQueryAdmin extends LdapQuery {
   /**
    *
    */
-  function __construct($qid) {
+  public function __construct($qid) {
     parent::__construct($qid);
   }
 
@@ -163,20 +165,20 @@ class LdapQueryAdmin extends LdapQuery {
   public function getActions() {
     $switch = ($this->status) ? 'disable' : 'enable';
     $actions = array();
-    $actions[] = l(t('edit'), LDAP_QUERY_MENU_BASE_PATH . '/query/edit/' . $this->qid);
+    $actions[] = \Drupal::l(t('edit'), Url::fromUri(LDAP_QUERY_MENU_BASE_PATH . '/query/edit/' . $this->qid));
     if (property_exists($this, 'type')) {
       if ($this->type == 'Overridden') {
-        $actions[] = l(t('revert'), LDAP_QUERY_MENU_BASE_PATH . '/query/delete/' . $this->qid);
+        $actions[] = \Drupal::l(t('revert'), Url::fromUri(LDAP_QUERY_MENU_BASE_PATH . '/query/delete/' . $this->qid));
       }
       if ($this->type == 'Normal') {
-        $actions[] = l(t('delete'), LDAP_QUERY_MENU_BASE_PATH . '/query/delete/' . $this->qid);
+        $actions[] = \Drupal::l(t('delete'), Url::fromUri(LDAP_QUERY_MENU_BASE_PATH . '/query/delete/' . $this->qid));
       }
     }
     else {
-      $actions[] = l(t('delete'), LDAP_QUERY_MENU_BASE_PATH . '/query/delete/' . $this->qid);
+      $actions[] = \Drupal::l(t('delete'), Url::fromUri(LDAP_QUERY_MENU_BASE_PATH . '/query/delete/' . $this->qid));
     }
-    $actions[] = l(t('test'), LDAP_QUERY_MENU_BASE_PATH . '/query/test/' . $this->qid);
-    $actions[] = l($switch, LDAP_QUERY_MENU_BASE_PATH . '/query/' . $switch . '/' . $this->qid);
+    $actions[] = \Drupal::l(t('test'), Url::fromUri(LDAP_QUERY_MENU_BASE_PATH . '/query/test/' . $this->qid));
+    $actions[] = \Drupal::l($switch, Url::fromUri(LDAP_QUERY_MENU_BASE_PATH . '/query/' . $switch . '/' . $this->qid));
     return $actions;
   }
 
@@ -303,7 +305,7 @@ class LdapQueryAdmin extends LdapQuery {
       try {
         $save_result = $this->save($op);
       }
-      catch (Exception $e) {
+      catch (\Exception $e) {
         $this->setError('Save Error',
           t('Failed to save object.  Your form data was not saved.'));
       }

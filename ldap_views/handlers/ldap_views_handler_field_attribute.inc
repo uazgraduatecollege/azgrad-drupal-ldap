@@ -15,7 +15,7 @@ class ldap_views_handler_field_attribute extends ldap_views_handler_field {
   /**
    *
    */
-  function option_definition() {
+  public function option_definition() {
     $options = parent::option_definition();
     $options['attribute_name'] = array('default' => '');
     return $options;
@@ -24,7 +24,7 @@ class ldap_views_handler_field_attribute extends ldap_views_handler_field {
   /**
    * Add the field for the LDAP Attribute.
    */
-  function options_form(&$form, &$form_state) {
+  public function options_form(&$form, &$form_state) {
     /**
  * $current_display = $this->view->display[$this->view->current_display];
  * $qid             = isset($current_display->display_options['query']['options']['qid']) ? $current_display->display_options['query']['options']['qid']
@@ -60,7 +60,7 @@ class ldap_views_handler_field_attribute extends ldap_views_handler_field {
   /**
    * Called to add the field to a query.
    */
-  function query() {
+  public function query() {
     $this->real_field = $this->options['attribute_name'];
     parent::query();
   }

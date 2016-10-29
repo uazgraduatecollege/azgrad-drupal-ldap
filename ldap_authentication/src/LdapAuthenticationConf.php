@@ -6,6 +6,8 @@
  * It is extended by LdapAuthenticationConfAdmin for configuration and other admin functions.
  */
 
+namespace Drupal\ldap_authentication;
+
 use Drupal\Core\Url;
 use Drupal\ldap_user\LdapUserConf;
 
@@ -26,7 +28,8 @@ class LdapAuthenticationConf {
   /**
    * Server configuration ids being used for authentication.
    *
-   * @var associative array of LdapServer objects keyed on sids
+   * @var array
+   *  Associative array of LdapServer objects keyed on sids.
    *
    * @see LdapServer::sid
    * @see LdapServer
@@ -37,7 +40,7 @@ class LdapAuthenticationConf {
   /**
    * LdapUser configuration object.
    *
-   * @var LdapUser object
+   * @var LdapUserConf object
    */
   // ldap_user configuration object.
   public $ldapUser = NULL;
@@ -45,14 +48,14 @@ class LdapAuthenticationConf {
   /**
    * Has current object been saved to the database?
    *
-   * @var boolean
+   * @var bool
    */
   public $inDatabase = FALSE;
 
   /**
    * Choice of authentication modes.
    *
-   * @var integer
+   * @var int
    *   LDAP_AUTHENTICATION_MODE_DEFAULT (LDAP_AUTHENTICATION_MIXED)
    *   LDAP_AUTHENTICATION_MIXED - signifies both LDAP and Drupal authentication are allowed
    *     Drupal authentication is attempted first.
@@ -163,7 +166,7 @@ class LdapAuthenticationConf {
    *   True signfies disallow if no authorizations.
    *   False signifies don't consider authorizations.
    *
-   * @var boolean.
+   * @var bool
    */
   public $excludeIfNoAuthorizations = LDAP_AUTHENTICATION_EXCL_IF_NO_AUTHZ_DEFAULT;
 
@@ -205,14 +208,14 @@ class LdapAuthenticationConf {
   /**
    *
    */
-  function __construct() {
+  public function __construct() {
     $this->load();
   }
 
   /**
    *
    */
-  function load() {
+  public function load() {
 
     if ($saved = \Drupal::config('ldap_authentication.settings')->get("ldap_authentication_conf")) {
       $this->inDatabase = TRUE;
@@ -237,21 +240,21 @@ class LdapAuthenticationConf {
 
     $this->ldapUser = new LdapUserConf();
     $this->ssoEnabled = \Drupal::moduleHandler()->moduleExists('ldap_sso');
-    $this->apiPrefs['requireHttps'] = Drupal::config('ldap_servers.settings')->get('require_ssl_for_credentials');
+    $this->apiPrefs['requireHttps'] = \Drupal::config('ldap_servers.settings')->get('require_ssl_for_credentials');
   }
 
   /**
    * Destructor Method.
    */
-  function __destruct() {}
+  public function __destruct() {}
 
   /**
    * Decide if a username is excluded or not.
    *
    * @param string $name
-   *   as proposed drupal username
+   *   as proposed drupal username.
    * @param array $ldap_user
-   *   where top level keys are 'dn','attr','mail'
+   *   where top level keys are 'dn','attr','mail'.
    *
    * @return boolean FALSE means NOT allow; TRUE means allow
    *
@@ -265,7 +268,7 @@ class LdapAuthenticationConf {
      */
     $ldap_user_conf = ldap_user_conf();
     // If user does not already exists and deferring to user settings AND user settings only allow.
-    $user_register = Drupal::config('user.settings')->get('register');
+    $user_register = \Drupal::config('user.settings')->get('register');
 
     foreach ($this->excludeIfTextInDn as $test) {
       if (stripos($ldap_user['dn'], $test) !== FALSE) {

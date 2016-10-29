@@ -13,7 +13,7 @@ class ldap_views_handler_sort_attribute extends ldap_views_handler_sort {
   /**
    *
    */
-  function option_definition() {
+  public function option_definition() {
     $options = parent::option_definition();
     $options['attribute_name'] = array('default' => '');
     return $options;
@@ -22,7 +22,7 @@ class ldap_views_handler_sort_attribute extends ldap_views_handler_sort {
   /**
    *
    */
-  function options_form(&$form, &$form_state) {
+  public function options_form(&$form, &$form_state) {
     /*
     $current_display = $this->view->display[$this->view->current_display];
     $did             = isset($current_display->display_options['query']['options']['did']) ? $current_display->display_options['query']['options']['did']
@@ -55,7 +55,7 @@ class ldap_views_handler_sort_attribute extends ldap_views_handler_sort {
   /**
    * Called to add the sort to a query.
    */
-  function query() {
+  public function query() {
     $this->query->add_orderby($this->table, $this->options['attribute_name'], $this->options['order']);
   }
 

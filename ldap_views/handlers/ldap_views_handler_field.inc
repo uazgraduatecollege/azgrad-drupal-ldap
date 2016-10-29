@@ -15,14 +15,14 @@ class ldap_views_handler_field extends views_handler_field {
   /**
    *
    */
-  function render($values) {
+  public function render($values) {
     return array_key_exists($this->field_alias, $values) ? check_plain($values[$this->field_alias]) : '';
   }
 
   /**
    *
    */
-  function element_type($none_supported = FALSE, $default_empty = FALSE, $inline = FALSE) {
+  public function element_type($none_supported = FALSE, $default_empty = FALSE, $inline = FALSE) {
     if (isset($this->definition['element type'])) {
       return $this->definition['element type'];
     }
@@ -33,7 +33,7 @@ class ldap_views_handler_field extends views_handler_field {
   /**
    *
    */
-  function option_definition() {
+  public function option_definition() {
     $options = parent::option_definition();
     $options['multivalue']      = array('default' => 'v-all');
     $options['value_separator'] = array('default' => '');
@@ -44,7 +44,7 @@ class ldap_views_handler_field extends views_handler_field {
   /**
    * Add the field for the LDAP Attribute.
    */
-  function options_form(&$form, &$form_state) {
+  public function options_form(&$form, &$form_state) {
     parent::options_form($form, $form_state);
     $form['multivalue'] = array(
     // It should be 'radios', but it makes #dependency not to work.

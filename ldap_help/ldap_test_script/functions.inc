@@ -1,6 +1,5 @@
 <?php
 
-
 /**
  * @file
  * Test script functions for testing ldap functionality outside of Drupal.

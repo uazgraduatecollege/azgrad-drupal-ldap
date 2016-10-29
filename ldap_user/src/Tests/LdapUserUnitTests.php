@@ -1,4 +1,5 @@
 <?php
+
 namespace Drupal\ldap_user\Tests;
 
 use Drupal\Component\Utility\Unicode;
@@ -6,7 +7,7 @@ use Drupal\ldap_test\LdapTestCase;
 use ReflectionFunction;
 
 /**
- * Unit tests for ldap_user
+ * Unit tests for ldap_user.
  *
  * @FIXME: Should not depend on a WebTestCase
  *
@@ -28,7 +29,7 @@ class LdapUserUnitTests extends LdapTestCase {
   /**
    *
    */
-  function __construct($test_id = NULL) {
+  public function __construct($test_id = NULL) {
     parent::__construct($test_id);
   }
 
@@ -66,7 +67,7 @@ class LdapUserUnitTests extends LdapTestCase {
   /**
    * Make sure install succeeds and ldap user functions/methods work.
    */
-  function testUnitTests() {
+  public function testUnitTests() {
 
     // Just to give warning if setup doesn't succeed.
     /* @FIXME
@@ -389,7 +390,7 @@ class LdapUserUnitTests extends LdapTestCase {
   /**
    *
    */
-  function testProvisionToDrupal() {
+  public function testProvisionToDrupal() {
     // @FIXME
     /* @FIXME
     // // This looks like another module's variable. You'll need to rewrite this call

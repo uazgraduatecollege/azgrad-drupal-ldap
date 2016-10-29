@@ -1,0 +1,7 @@
+ldap_query.admin_form:
+  path: admin/config/people/ldap/query
+  defaults:
+    _title: Query
+    _form: \Drupal\ldap_authentication\Form\LdapAuthenticationAdminForm
+  requirements:
+    _permission: 'administer site configuration'

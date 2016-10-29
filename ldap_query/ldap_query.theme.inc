@@ -4,6 +4,8 @@
  * @file
  * Theming functions for ldap_query module.
  */
+use Drupal\ldap_query\LdapQuery;
+use Drupal\ldap_query\LdapQueryAdmin;
 
 /**
  * Returns HTML for ldap servers list.
@@ -72,12 +74,12 @@ function theme_ldap_query($variables) {
   // $ldap_query, $actions, $type (see above)
   extract($variables);
 
-  ldap_servers_module_load_include('php', 'ldap_query', 'LdapQuery.class');
+  $ldap_query = new LdapQuery();
   $properties = array();
-  foreach (LdapQuery::fields() as $field_id => $field) {
+  foreach ($ldap_query->fields() as $field_id => $field) {
     $value = $ldap_query->{$field['property_name']};
     if (is_scalar($value)) {
-      // $value";.
+      // $value";
       $properties[] = $field_id . " = " . $value;
     }
   }

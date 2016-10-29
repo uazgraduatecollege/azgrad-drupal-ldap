@@ -4,18 +4,18 @@
  * @file
  * Administrative page callbacks for the ldap_authentication module.
  */
+use Drupal\ldap_authentication\LdapAuthenticationConfAdmin;
 
 /**
  * Form for adding, updating, and deleting a single ldap authorization mapping.
  *
- * @param <type> $form
- * @param <type> $form_state
+ * @param mixed $form
+ * @param mixed $form_state
  *
  * @return array drupal form array
  */
 function ldap_authentication_admin_form($form, &$form_state) {
-  ldap_servers_module_load_include('php', 'ldap_authentication', 'LdapAuthenticationConfAdmin.class');
-  $auth_conf = new \LdapAuthenticationConfAdmin();
+  $auth_conf = new LdapAuthenticationConfAdmin();
   return $auth_conf->drupalForm();
 }
 
@@ -23,9 +23,7 @@ function ldap_authentication_admin_form($form, &$form_state) {
  * Validate handler for the ldap_authentication_admin_form.
  */
 function ldap_authentication_admin_form_validate($form, &$form_state) {
-
-  ldap_servers_module_load_include('php', 'ldap_authentication', 'LdapAuthenticationConfAdmin.class');
-  $auth_conf = new \LdapAuthenticationConfAdmin();
+  $auth_conf = new LdapAuthenticationConfAdmin();
   $errors = $auth_conf->drupalFormValidate($form_state['values']);
   foreach ($errors as $error_name => $error_text) {
     $form_state->setErrorByName($error_name, t($error_text));
@@ -37,9 +35,7 @@ function ldap_authentication_admin_form_validate($form, &$form_state) {
  * Submit handler function for ldap_authentication_admin_form.
  */
 function ldap_authentication_admin_form_submit($form, &$form_state) {
-
-  ldap_servers_module_load_include('php', 'ldap_authentication', 'LdapAuthenticationConfAdmin.class');
-  $auth_conf = new \LdapAuthenticationConfAdmin();
+  $auth_conf = new LdapAuthenticationConfAdmin();
   // Add form data to object and save or create.
   $auth_conf->drupalFormSubmit($form_state['values']);
   if (!$auth_conf->hasEnabledAuthenticationServers()) {

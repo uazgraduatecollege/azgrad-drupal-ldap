@@ -5,6 +5,10 @@
  * Defines server classes and related functions.
  */
 
+namespace Drupal\ldap_query;
+
+use Drupal\ldap_servers\Entity\Server;
+
 /**
  * LDAP Server Class.
  *
@@ -39,7 +43,7 @@ class LdapQuery {
   /**
    * Constructor Method.
    */
-  function __construct($qid) {
+  public function __construct($qid) {
     if (!is_scalar($qid)) {
       return;
     }
@@ -87,23 +91,22 @@ class LdapQuery {
   /**
    * Destructor Method.
    */
-  function __destruct() {
+  public function __destruct() {
 
   }
 
   /**
    * Invoke Method.
    */
-  function __invoke() {
+  public function __invoke() {
 
   }
 
   /**
    * Function search($base_dn = NULL, $filter, $attributes = array(), $attrsonly = 0, $sizelimit = 0, $timelimit = 0, $deref = LDAP_DEREF_NEVER) {.
    */
-  function query() {
-    ldap_servers_module_load_include('php', 'ldap_servers', 'LdapServer.class');
-    $ldap_server = new LdapServer($this->sid);
+  public function query() {
+    $ldap_server = new Server($this->sid);
     $ldap_server->connect();
     $ldap_server->bind();
     $results = array();

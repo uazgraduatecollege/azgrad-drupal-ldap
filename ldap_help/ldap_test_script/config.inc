@@ -44,7 +44,7 @@ function ldap_help_config() {
         'server_address' => $server_address,
         'server_port'  => 389,
         'server_tls'  => FALSE,
-  // LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT OR LDAP_SERVERS_BIND_METHOD_ANON.
+    // LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT OR LDAP_SERVERS_BIND_METHOD_ANON.
         'server_bind_method'  => LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT,
         'server_base_dn' => $query_root,
         'server_bind_dn' => $bind_user,
@@ -61,7 +61,7 @@ function ldap_help_config() {
         'server_address' => $server_address,
         'server_port'  => 389,
         'server_tls'  => FALSE,
-  // LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT OR LDAP_SERVERS_BIND_METHOD_ANON.
+    // LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT OR LDAP_SERVERS_BIND_METHOD_ANON.
         'server_bind_method'  => LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT,
         'server_base_dn' => $provision_root,
         'server_bind_dn' => $bind_user,

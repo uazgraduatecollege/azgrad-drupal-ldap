@@ -356,7 +356,7 @@ class ServerForm extends EntityForm {
         'enabled' => array(
           ':input[name=grp_user_memb_attr_exists]' => array('checked' => TRUE),
         ),
-    // Action to take.
+      // Action to take.
         'visible' => array(
           ':input[name=grp_unused]' => array('checked' => FALSE),
         ),
@@ -418,7 +418,7 @@ class ServerForm extends EntityForm {
         'enabled' => array(
           ':input[name=grp_derive_from_dn]' => array('checked' => TRUE),
         ),
-    // Action to take.
+      // Action to take.
         'visible' => array(
           ':input[name=grp_unused]' => array('checked' => FALSE),
         ),
@@ -491,7 +491,7 @@ class ServerForm extends EntityForm {
   public function save(array $form, FormStateInterface $form_state) {
     $new_configuration = $this->entity;
 
-    // Handle the password as the form is empty
+    // Handle the password as the form is empty.
     if (NULL !== $form_state->getValue('bindpw') && $form_state->getValue('bindpw')) {
       $new_configuration->set('bindpw', $form_state->getValue('bindpw'));
     }

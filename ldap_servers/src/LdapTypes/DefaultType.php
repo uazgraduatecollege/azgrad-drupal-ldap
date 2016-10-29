@@ -5,11 +5,12 @@
  * Generic LDAP Implementation Details.
  */
 
-module_load_include('php', 'ldap_servers', 'ldap_types/LdapTypeAbstract.class');
+namespace Drupal\ldap_servers\LdapTypes;
+
 /**
  *
  */
-class LdapTypeDefault extends LdapTypeAbstract {
+class DefaultType extends AbstractType {
 
   public $name = 'Default LDAP';
   public $typeId = 'Default';
@@ -24,7 +25,7 @@ class LdapTypeDefault extends LdapTypeAbstract {
   /**
    * Constructor Method.
    */
-  function __construct($params = array()) {
+  public function __construct($params = array()) {
     foreach ($params as $k => $v) {
       if (property_exists($this, $k)) {
         $this->{$k} = $v;

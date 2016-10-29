@@ -1,5 +1,9 @@
 <?php
+
 namespace Drupal\ldap_authentication\Tests;
+
+use Drupal\Core\Password\PasswordInterface;
+use Drupal\ldap_authentication\LdapAuthenticationConfAdmin;
 use Drupal\ldap_test\LdapTestCase;
 
 /**
@@ -23,7 +27,7 @@ class LdapAuthenticationTestCase extends LdapTestCase {
   /**
    *
    */
-  function __construct($test_id = NULL) {
+  public function __construct($test_id = NULL) {
     parent::__construct($test_id);
   }
 
@@ -33,7 +37,7 @@ class LdapAuthenticationTestCase extends LdapTestCase {
   /**
    *
    */
-  function setUp() {
+  public function setUp() {
     parent::setUp(array(
       'ldap_authentication',
       'ldap_authorization',
@@ -43,30 +47,30 @@ class LdapAuthenticationTestCase extends LdapTestCase {
     ));
 
     // @FIXME: Schema issues, config cannot be found.
-    //\Drupal::service('config.factory')->getEditable('ldap_test.settings')->set('simpletest', 2)->save();
+    // \Drupal::service('config.factory')->getEditable('ldap_test.settings')->set('simpletest', 2)->save();
   }
 
   /**
    *
    */
-  function tearDown() {
+  public function tearDown() {
     parent::tearDown();
     // @FIXME: Schema issues, config cannot be found.
-   /* \Drupal::service('config.factory')
-      ->getEditable('ldap_help.settings')
-      ->clear('watchdog_detail')
-      ->save();
+    /* \Drupal::service('config.factory')
+    ->getEditable('ldap_help.settings')
+    ->clear('watchdog_detail')
+    ->save();
 
     \Drupal::service('config.factory')
-      ->getEditable('ldap_test.settings')
-      ->clear('simpletest')
-      ->save(); */
+    ->getEditable('ldap_test.settings')
+    ->clear('simpletest')
+    ->save(); */
   }
 
   /**
    * Difficult to test install and uninstall since setUp does module enabling and installing.
    */
-  function testInstall() {
+  public function testInstall() {
     $testid = $this->module_name . ': setup success';
     $setup_success = (
         \Drupal::moduleHandler()->moduleExists('ldap_authentication') &&
@@ -79,7 +83,7 @@ class LdapAuthenticationTestCase extends LdapTestCase {
   /**
    * LDAP Authentication Mixed Mode User Logon Test (ids = LDAP_authen.MM.ULT.*)
    */
-  function testMixedModeUserLogon() {
+  public function testMixedModeUserLogon() {
     $sid = 'activedirectory1';
     $testid = 'MixedModeUserLogon3';
     $sids = array($sid);
@@ -100,10 +104,10 @@ class LdapAuthenticationTestCase extends LdapTestCase {
 
     $user1 = \Drupal::entityManager()->getStorage('user')->load(1);
     $password = $this->randomString(20);
-    require_once \Drupal::root() . '/includes/password.inc';
+    $password_hasher = \Drupal::service('password');
     $account = array(
       'name' => $user1->name,
-      'pass' => user_hash_password(trim($password)),
+      'pass' => $password_hasher->hash(trim($password)),
     );
     db_update('users')
       ->fields($account)
@@ -194,7 +198,7 @@ class LdapAuthenticationTestCase extends LdapTestCase {
   /**
    * LDAP Authentication Exclusive Mode User Logon Test (ids = LDAP_authen.EM.ULT.*)
    */
-  function testExclusiveModeUserLogon() {
+  public function testExclusiveModeUserLogon() {
 
     $sid = 'activedirectory1';
     $testid = 'ExclusiveModeUserLogon3';
@@ -311,9 +315,9 @@ class LdapAuthenticationTestCase extends LdapTestCase {
    * Set mock server variables for sso tests.
    *
    * @param object $drupal_user
-   *   in drupal stdClass format
+   *   in drupal stdClass format.
    * @param array $ldap_user
-   *   array
+   *   array.
    * @param enum ldap implementation type
    */
   private function setSsoServerEnvironment(
@@ -327,7 +331,7 @@ class LdapAuthenticationTestCase extends LdapTestCase {
     ldap_servers_delete_globals('_SERVER', 'REMOTE_USER', TRUE);
     ldap_servers_delete_globals('_SERVER', 'REDIRECT_REMOTE_USER', TRUE);
 
-    $authenticationConf = new \LdapAuthenticationConfAdmin();
+    $authenticationConf = new LdapAuthenticationConfAdmin();
 
     $authenticationConf->ssoEnabled = TRUE;
     $authenticationConf->ssoRemoteUserStripDomainName = FALSE;
@@ -352,7 +356,7 @@ class LdapAuthenticationTestCase extends LdapTestCase {
   /**
    * LDAP Authentication Exclusive Mode User Logon Test (ids = LDAP_authen.EM.ULT.*)
    */
-  function testSSOUserLogon() {
+  public function testSSOUserLogon() {
     \Drupal::service('module_installer')->install(['ldap_sso']);
     \Drupal::service('module_installer')->install(['ldap_help']);
 
@@ -371,7 +375,7 @@ class LdapAuthenticationTestCase extends LdapTestCase {
     $this->drupalGet('user');
 
     // Just test that the setup works.
-    $authenticationConf = new \LdapAuthenticationConfAdmin();
+    $authenticationConf = new LdapAuthenticationConfAdmin();
     $this->assertTrue(ldap_servers_get_globals('_SERVER', 'REMOTE_USER', TRUE) == 'hpotter',
        '$_SERVER[REMOTE_USER] and $_SERVER[REDIRECT_REMOTE_USER] set properly for test with remote server ' . ldap_servers_get_globals('_SERVER', 'REMOTE_ADDR'), $testid);
 
@@ -422,8 +426,8 @@ class LdapAuthenticationTestCase extends LdapTestCase {
   /**
    *
    */
-  function testAuthenticationWhitelistTests() {
-    require_once drupal_get_path('module', 'ldap_authentication') . '/LdapAuthenticationConfAdmin.class.php';
+  public function testAuthenticationWhitelistTests() {
+    require_once drupal_get_path('module', 'ldap_authentication') . '/LdapAuthenticationConfAdmin.php';
 
     $sid = 'activedirectory1';
     $testid = 'WL3';
@@ -475,7 +479,7 @@ class LdapAuthenticationTestCase extends LdapTestCase {
     /**
      * prep LDAP_authen.WL.allow
      */
-    $authenticationConf = new \LdapAuthenticationConfAdmin();
+    $authenticationConf = new LdapAuthenticationConfAdmin();
     $authenticationConf->allowOnlyIfTextInDn = array('pot');
     $authenticationConf->save();
     $authenticationConf = ldap_authentication_get_valid_conf(TRUE);
@@ -498,14 +502,14 @@ class LdapAuthenticationTestCase extends LdapTestCase {
     * undo LDAP_authen.WL.allow settings
     */
 
-    $authenticationConf = new \LdapAuthenticationConfAdmin();
+    $authenticationConf = new LdapAuthenticationConfAdmin();
     $authenticationConf->allowOnlyIfTextInDn = array();
     $authenticationConf->save();
     $authenticationConf = ldap_authentication_get_valid_conf(TRUE);
     /**
     * prep LDAP_authen.WL.exclude
     */
-    $authenticationConf = new \LdapAuthenticationConfAdmin();
+    $authenticationConf = new LdapAuthenticationConfAdmin();
     $authenticationConf->excludeIfTextInDn = array('cn=ssnape');
     $authenticationConf->save();
     $authenticationConf = ldap_authentication_get_valid_conf(TRUE);
@@ -528,7 +532,7 @@ class LdapAuthenticationTestCase extends LdapTestCase {
     * undo LDAP_authen.WL.allow settings
     */
 
-    $authenticationConf = new \LdapAuthenticationConfAdmin();
+    $authenticationConf = new LdapAuthenticationConfAdmin();
     $authenticationConf->excludeIfTextInDn = array();
     $authenticationConf->save();
     $authenticationConf = ldap_authentication_get_valid_conf(TRUE);
@@ -536,7 +540,7 @@ class LdapAuthenticationTestCase extends LdapTestCase {
     /**
     * prep LDAP_authen.WL.php
     */
-    $authenticationConf = new \LdapAuthenticationConfAdmin();
+    $authenticationConf = new LdapAuthenticationConfAdmin();
 
     $authenticationConf->save();
     $authenticationConf = ldap_authentication_get_valid_conf(TRUE);
@@ -576,7 +580,7 @@ class LdapAuthenticationTestCase extends LdapTestCase {
     // These 2 modules are configured in setup, but disabled for most authentication tests.
     \Drupal::service('module_installer')->uninstall(['ldap_authorization_drupal_role']);
     \Drupal::service('module_installer')->uninstall(['ldap_authorization']);
-    $authenticationConf = new \LdapAuthenticationConfAdmin();
+    $authenticationConf = new LdapAuthenticationConfAdmin();
     $authenticationConf->excludeIfNoAuthorizations = 1;
     $authenticationConf->save();
     $authenticationConf = ldap_authentication_get_valid_conf(TRUE);
@@ -621,7 +625,7 @@ class LdapAuthenticationTestCase extends LdapTestCase {
       $testid
     );
 
-    $authenticationConf = new \LdapAuthenticationConfAdmin();
+    $authenticationConf = new LdapAuthenticationConfAdmin();
     $authenticationConf->excludeIfNoAuthorizations = 0;
     $authenticationConf->save();
     $authenticationConf = ldap_authentication_get_valid_conf(TRUE);
@@ -632,10 +636,9 @@ class LdapAuthenticationTestCase extends LdapTestCase {
   /**
    * Make sure user admin interface works.
    */
-  function testUI() {
-   // @FIXME: Broken due to schema issues.
-   // \Drupal::service('config.factory')->getEditable('ldap_test.settings')->set('simpletest', 2)->save();
-
+  public function testUI() {
+    // @FIXME: Broken due to schema issues.
+    // \Drupal::service('config.factory')->getEditable('ldap_test.settings')->set('simpletest', 2)->save();
     $setup_success = (
       \Drupal::moduleHandler()->moduleExists('ldap_user') &&
       \Drupal::moduleHandler()->moduleExists('ldap_servers') &&
@@ -757,8 +760,6 @@ class LdapAuthenticationTestCase extends LdapTestCase {
       ),
     );
 
-    // @FIXME: php module no longer exists
-    //module_enable(array('php'));
     foreach (array(0, 1) as $i) {
       $edit = array();
       foreach ($form_tests as $field_name => $conf) {

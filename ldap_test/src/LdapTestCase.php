@@ -19,7 +19,6 @@ use Drupal\simpletest\WebTestBase;
 
 /**
  * Primary test class for ldap.
- *
  */
 class LdapTestCase extends WebTestBase {
 
@@ -43,7 +42,7 @@ class LdapTestCase extends WebTestBase {
   /**
    *
    */
-  function __construct($test_id = NULL) {
+  public function __construct($test_id = NULL) {
     parent::__construct($test_id);
     $this->testFunctions = new LdapTestFunctions();
   }
@@ -51,7 +50,7 @@ class LdapTestCase extends WebTestBase {
   /**
    *
    */
-  function setUp() {
+  public function setUp() {
     parent::setUp();
     // variable_set('ldap_simpletest', 2);
     //  variable_set('ldap_help_watchdog_detail', 0);
@@ -61,7 +60,7 @@ class LdapTestCase extends WebTestBase {
   /**
    *
    */
-  function tearDown() {
+  public function tearDown() {
     parent::tearDown();
     // variable_del('ldap_help_watchdog_detail');
     // variable_del('ldap_simpletest');.
@@ -75,21 +74,21 @@ class LdapTestCase extends WebTestBase {
    *
    *   the following params are ids that indicate what config data in /ldap_test/<module_name>.conf.inc to use
    *   for example if $ldap_user_conf_id = 'ad_authentication', the array /ldap_test/ldap_user.conf.inc with the key
-   *   'ad_authentication' will be used for the user module cofiguration
+   *   'ad_authentication' will be used for the user module cofiguration.
    *
    * @param array $sids
-   *   to setup
+   *   to setup.
    * @param string $ldap_user_conf_id
    * @param string $ldap_authentication_conf_id
-   *   = NULL,
+   *   = NULL,.
    * @param string $ldap_authorization_conf_id
-   *   = NULL,
+   *   = NULL,.
    * @param string $ldap_feeds_conf_id
-   *   = NULL,
+   *   = NULL,.
    * @param string $ldap_query_conf_id
-   *   = NULL
+   *   = NULL.
    */
-  function prepTestData(
+  public function prepTestData(
       $test_ldap_id,
       $sids,
       $ldap_user_conf_id = NULL,
@@ -221,7 +220,7 @@ class LdapTestCase extends WebTestBase {
    * }
    * }
    */
-  function ldap_user_test_entity_fields() {
+  public function ldap_user_test_entity_fields() {
 
     $fields = array();
 

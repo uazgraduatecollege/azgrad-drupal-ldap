@@ -219,7 +219,6 @@ Representations of groups derived from LDAP might initially look like:
     // Server->groupMembershipsFromUser($user, 'group_dns')
     // So what does the 'query' do then? Is it the filter?
     // Configure this provider.
-
     // Do not continue if user should be excluded from LDAP authentication.
     if (ldap_user_ldap_exclude($user)) {
       return array();
@@ -276,7 +275,7 @@ Representations of groups derived from LDAP might initially look like:
             }
           }
         }
-        catch (Exception $e) {
+        catch (\Exception $e) {
           // @TODO log errors.
         }
       }

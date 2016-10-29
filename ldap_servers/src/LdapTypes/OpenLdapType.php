@@ -8,11 +8,12 @@
    *      http://www.openldap.org/doc/
    */
 
-  require_once drupal_get_path('module', 'ldap_servers') . '/ldap_types/LdapTypeAbstract.class.php';
+namespace Drupal\ldap_servers\LdapTypes;
+
 /**
  *
  */
-class LdapTypeOpenLdap extends LdapTypeAbstract {
+class OpenLdapType extends AbstractType {
 
   // Generic properties.
   public $documentation = '';

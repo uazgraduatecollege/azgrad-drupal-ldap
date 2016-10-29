@@ -46,11 +46,11 @@ function hook_ldap_servers_user_cron_needed() {
  *   $ldap_entries['cn=jkool,ou=guest accounts,dc=ad,dc=myuniversity,dc=edu'] = array(
  *    "attribute1" => array("value"),
  *    "attribute2" => array("value1", "value2"),
- *   );
+ *   );.
  *
  * @param LdapServer $ldap_server
  *   as ldap server configuration object that is
- *   performing provisioning
+ *   performing provisioning.
  *
  * @param array $context
  *   with the following key/values:
@@ -67,7 +67,7 @@ function hook_ldap_servers_user_cron_needed() {
  *
  *    'corresponding_drupal_data_type' => 'user', 'role', etc.
  *
- *   );
+ *   );.
  */
 function hook_ldap_entry_pre_provision_alter(&$ldap_entries, $ldap_server, $context) {
 
@@ -140,7 +140,7 @@ function hook_ldap_attributes_needed_alter(&$attributes, $params) {
  * Perform alterations of $ldap_user variable.
  *
  * @param array $ldap_user
- *   see README.developers.txt for structure
+ *   see README.developers.txt for structure.
  * @param array $params
  *   context array with some or all of the following key/values
  *   'account' => drupal account object,

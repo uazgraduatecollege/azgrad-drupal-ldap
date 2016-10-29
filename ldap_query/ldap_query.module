@@ -4,6 +4,9 @@
  * @file
  */
 
+use Drupal\ldap_query\LdapQuery;
+use Drupal\ldap_query\LdapQueryAdmin;
+
 define('LDAP_QUERY_MENU_BASE_PATH', 'admin/config/people/ldap');
 define('LDAP_QUERY_INDEX_BASE_PATH', 'admin/config/people/ldap/query');
 // For argument offsets.
@@ -13,6 +16,7 @@ define('LDAP_QUERY_MENU_BASE_PATH_PARTS', 4);
  *
  */
 function ldap_query_menu() {
+  //FIXME: Unported, placehoder for first form created.
   $menu_offset = 4;
 
   $items['admin/config/people/ldap/query'] = array(
@@ -116,20 +120,20 @@ function ldap_query_cache_clear() {
 /**
  * Return ldap query objects.
  *
- * @param alphanum $qid
- * @param enum $type
- *   'all', 'enabled',
+ * @param string $qid
+ * @param string $type
+ *   Either all or enabled.
  * @param bool $flatten
- *   signifies if array or single object returned.  Only works if sid is specified
+ *   signifies if array or single object returned.  Only works if sid is specified.
  * @param bool $reset
- *   do not use cached or static result
+ *   do not use cached or static result.
  *
- * @return - array of server conf object keyed on sid
- *         - single server conf object (if flatten == TRUE)
+ * @return array
+ *  Array of server conf object keyed on sid, single server conf object
+ *  (if flatten == TRUE).
  */
 function ldap_query_get_queries($qid = NULL, $type, $flatten = FALSE, $reset = FALSE) {
-  ldap_servers_module_load_include('inc', 'ldap_query', 'ldap_query');
-  if (config('ldap_test.settings')->get('simpletest')) {
+  if (\Drupal::config('ldap_test.settings')->get('simpletest')) {
     return _ldap_query_get_simpletest_queries($qid, $type, $flatten, $reset);
   }
   else {
@@ -141,7 +145,6 @@ function ldap_query_get_queries($qid = NULL, $type, $flatten = FALSE, $reset = F
  *
  */
 function ldap_query_fields() {
-  ldap_servers_module_load_include('php', 'ldap_query', 'LdapQuery.class');
   return LdapQuery::fields();
 }
 
@@ -164,4 +167,42 @@ function ldap_query_help($path, $arg) {
       return $output;
   }
 
+}
+
+/**
+ * See ldap_query_get_servers()
+ * @param $qid
+ * @param $type
+ * @param $flatten
+ * @param $reset
+ * @return bool|mixed
+ */
+function _ldap_query_get_queries($qid, $type, $flatten, $reset) {
+  static $queries;
+
+  if ($reset) {
+    $queries = array();
+  }
+  if (!isset($queries['all'])) {
+    $queries['all'] = LdapQueryAdmin::getLdapQueryObjects('all', 'all');
+  }
+  if (!isset($queries['enabled'])) {
+    $queries['enabled'] = array();
+    foreach ($queries['all'] as $_qid => $ldap_query) {
+      if ($ldap_query->status == 1) {
+        $queries['enabled'][$_qid] = $ldap_query;
+      }
+    }
+  }
+
+  if ($qid) {
+    if (!isset($queries[$type][$qid])) {
+      return FALSE;
+    }
+    return ($flatten) ? $queries[$type][$qid] : $queries[$type];
+  }
+
+  if (isset($queries[$type])) {
+    return $queries[$type];
+  }
 }

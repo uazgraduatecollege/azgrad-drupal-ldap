@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  */
@@ -6,10 +7,10 @@
 // @Fixme: Add back in when reliably loaded.
 // For og constants.
 // module_load_include('php', 'og', 'module');
-
 /**
  *
  */
+
 function ldap_test_ldap_authorization_data() {
 
   $empty_mappings = array(

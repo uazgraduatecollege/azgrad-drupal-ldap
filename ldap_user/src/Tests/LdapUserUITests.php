@@ -1,4 +1,5 @@
 <?php
+
 namespace Drupal\ldap_user\Tests;
 
 use Drupal\ldap_test\LdapTestCase;
@@ -56,7 +57,7 @@ class LdapUserUITests extends LdapTestCase {
   /**
    * Make sure user admin interface works.  (its a beast)
    */
-  function testUI() {
+  public function testUI() {
 
     // Just to give warning if setup doesn't succeed.  may want to take these out at some point.
     // @FIXME
@@ -97,8 +98,6 @@ class LdapUserUITests extends LdapTestCase {
       'orphanedCheckQty' => '50',
       'ldapEntryProvisionServer' => $sid,
     );
-    // 'wsEnabled' => TRUE, 'wsKey' => $wsKey,.
-    // 'wsUserIps' => join("\n", $wsUserIps),.
     $edit = $edit_direct_map + array(
       'drupalAcctProvisionTriggers[' . LDAP_USER_DRUPAL_USER_PROV_ON_AUTHENTICATE . ']' => TRUE,
       'drupalAcctProvisionTriggers[' . LDAP_USER_DRUPAL_USER_PROV_ON_USER_UPDATE_CREATE . ']' => TRUE,
@@ -149,9 +148,6 @@ class LdapUserUITests extends LdapTestCase {
       $this->assertTrue($ldap_user_conf->{$property} == $value, $property . ' ' . t('field set correctly'), $this->testId('user interface tests'));
     }
 
-    // $this->assertTrue(
-    //   ($ldap_user_conf->wsUserIps[0] == $wsUserIps[0] && $ldap_user_conf->wsUserIps[1] == $wsUserIps[1])
-    //  , t('webserice ips set correctly'), $this->testId('user interface tests'));.
     $this->assertTrue(
       isset($ldap_user_conf->drupalAcctProvisionTriggers[LDAP_USER_DRUPAL_USER_PROV_ON_AUTHENTICATE]) &&
       isset($ldap_user_conf->drupalAcctProvisionTriggers[LDAP_USER_DRUPAL_USER_PROV_ON_USER_UPDATE_CREATE]), t('drupal provision triggers set correctly'), $this->testId('user interface tests'));

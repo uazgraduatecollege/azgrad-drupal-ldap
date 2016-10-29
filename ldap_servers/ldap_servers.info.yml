@@ -5,14 +5,4 @@ core: 8.x
 package: 'Lightweight Directory Access Protocol'
 dependencies: {  }
 
-#files[] = LdapServer.class.php
-#files[] = LdapServerAdmin.class.php
-#files[] = ldap_servers.functions.inc
-#files[] = ldap_servers.inc
-#files[] = ldap_servers.install
-#files[] = ldap_servers.module
-#files[] = ldap_servers.settings.inc
-#files[] = ldap_servers.test_form.inc
-#files[] = ldap_servers.theme.inc
-#files[] = tests/ldap_servers.test
-#configure = admin/config/people/ldap/servers
+configure: ldap_servers.settings

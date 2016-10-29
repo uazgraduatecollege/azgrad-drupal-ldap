@@ -26,18 +26,6 @@ define('LDAP_SERVERS_TOKEN_POST', ']');
 define('LDAP_SERVERS_TOKEN_DEL', ':');
 define('LDAP_SERVERS_TOKEN_MODIFIER_DEL', ';');
 
-define('LDAP_SERVERS_ENC_TYPE_MD5', 1);
-define('LDAP_SERVERS_ENC_TYPE_CRYPT', 2);
-define('LDAP_SERVERS_ENC_TYPE_SALTED_CRYPT', 3);
-define('LDAP_SERVERS_ENC_TYPE_EXTENDED_DES', 4);
-define('LDAP_SERVERS_ENC_TYPE_MD5C', 5);
-define('LDAP_SERVERS_ENC_TYPE_BLOWFISH', 6);
-define('LDAP_SERVERS_ENC_TYPE_SALTED_MD5', 7);
-define('LDAP_SERVERS_ENC_TYPE_SHA', 8);
-define('LDAP_SERVERS_ENC_TYPE_SALTED_SHA', 9);
-define('LDAP_SERVERS_ENC_TYPE_CLEARTEXT', 10);
-define('LDAP_SERVERS_CYPHER_MODE', 'cfb', 12);
-
 define('LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT', 1);
 define('LDAP_SERVERS_BIND_METHOD_USER', 2);
 define('LDAP_SERVERS_BIND_METHOD_ANON', 3);
@@ -151,6 +139,7 @@ define('LDAP_MORE_RESULTS_TO_RETURN', 0x5f);
 define('LDAP_CLIENT_LOOP', 0x60);
 define('LDAP_REFERRAL_LIMIT_EXCEEDED', 0x61);
 
+// FIXME: Remove these dependencies
 require_once 'ldap_servers.functions.inc';
 require_once 'ldap_servers.tokens.inc';
 
@@ -158,6 +147,7 @@ use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Session\AccountProxy;
 use \Drupal\ldap_servers\Entity\Server;
 use Drupal\Core\Url;
+use Drupal\ldap_servers\LdapTypes\AbstractType;
 use Drupal\ldap_test\TestServer;
 
 /**
@@ -250,13 +240,13 @@ function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$param
 
   // @TO REMOVE
   // $tokens = array(
-  //   '!edit_link' => l($ldap_server->editPath, $ldap_server->editPath),
-  //   '!sid' => $ldap_server->sid,
+  //   '%edit_link' => l($ldap_server->editPath, $ldap_server->editPath),
+  //   '%sid' => $ldap_server->sid,
   // );
   $url = Url::fromRoute('entity.ldap_server.collection');
   $tokens = array(
-    '!edit_link' => \Drupal::l($url->toString(), $url),
-    '!sid' => $ldap_server->id(),
+    '%edit_link' => \Drupal::l($url->toString(), $url),
+    '%sid' => $ldap_server->id(),
   );
 
   $server_edit_path = 'admin/config/people/ldap/servers/edit/' . $ldap_server->id();
@@ -284,7 +274,7 @@ function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$param
         'name' => t('Field: sid providing PUID'),
         'configurable_to_drupal' => 0,
         'configurable_to_ldap' => 1,
-        'source' => t('!sid', $tokens),
+        'source' => t('%sid', $tokens),
         'notes' => 'not configurable',
         'direction' => LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER,
         'enabled' => TRUE,
@@ -395,29 +385,15 @@ function ldap_servers_flush_server_cache() {
 }
 
 /**
- * Function to replace module_load_include such that when
- * something is not included, drupal will exit instead
- * of attempting something half baked.
- */
-function ldap_servers_module_load_include($type, $module, $name = NULL) {
-  $result = module_load_include($type, $module, $name);
-  if ($result === FALSE) {
-    print "Failed to load file $name.$type in module $module";
-    // @FIXME
-    // drupal_exit();
-  }
-}
-
-/**
  * Return ldap server conf objects.
  *
  * @param alphanum $sid
  * @param enum $type
- *   'all', 'enabled',
+ *   'all', 'enabled',.
  * @param bool $flatten
- *   signifies if array or single object returned.  Only works if sid is specified
+ *   signifies if array or single object returned.  Only works if sid is specified.
  * @param bool $reset
- *   do not use cached or static result
+ *   do not use cached or static result.
  *
  * @return - array of server conf object keyed on sid
  *         - single server conf object (if flatten == TRUE)
@@ -432,7 +408,7 @@ function ldap_servers_get_servers($sid = NULL, $type = NULL, $flatten = FALSE, $
 }
 
 /**
- * See ldap_servers_get_servers()
+ * See ldap_servers_get_servers().
  */
 function _ldap_servers_get_servers($id, $type, $flatten, $reset) {
   if ($id) {
@@ -462,7 +438,7 @@ function _ldap_servers_get_servers($id, $type, $flatten, $reset) {
     if (!isset($servers[$type][$id])) {
       return FALSE;
     }
-    return ($flatten) ? $servers[$type][$id] : array($sid => $servers[$type][$id]);
+    return ($flatten) ? $servers[$type][$id] : array($id => $servers[$type][$id]);
   }
 
   if (isset($servers[$type])) {
@@ -481,7 +457,6 @@ function _ldap_servers_get_simpletest_servers($sid, $type = NULL, $flatten, $res
 
   // Two flavors of mock servers exist.  ultimately v2 will be used in all simpletests.
   if (\Drupal::config('ldap_test.settings')->get('simpletest') == 2) {
-    ldap_servers_module_load_include('php', 'ldap_test', 'LdapServerTest.class');
     $servers['all'] = TestServer::getLdapServerObjects(NULL, 'all', FALSE);
     foreach ($servers['all'] as $_sid => $ldap_server) {
       if ($ldap_server->status == 1) {
@@ -587,11 +562,13 @@ function ldap_servers_binary($value) {
  * page request.
  * Currently is called 12 times on user login using LDAP Authorization.
  *
- * @param std object $drupal_user
- *   is drupal $user object
- * @param string $sid
- *   is a server id
+ * @param User $drupal_user
+ *   is drupal $user object.
+ * @param string $id
+ *   is a server id.
  * @param scalar $ldap_context
+ *
+ * @return array|bool
  */
 function ldap_servers_get_user_ldap_data($drupal_user, $id = NULL, $ldap_context = NULL) {
   if (is_object($drupal_user) && property_exists($drupal_user, 'uid') && $authname = ldap_user_get_identifier_from_map($drupal_user->id())) {
@@ -632,7 +609,7 @@ function ldap_servers_get_user_ldap_data($drupal_user, $id = NULL, $ldap_context
   $ldap_server = ($id) ? ldap_servers_get_servers($id, 'enabled', TRUE) : FALSE;
 
   if ($ldap_server === FALSE) {
-    \Drupal::logger('ldap_servers')->error('Failed to load server object %sid in _ldap_servers_get_user_ldap_data', array('%sid' => $sid));
+    \Drupal::logger('ldap_servers')->error('Failed to load server object %sid in _ldap_servers_get_user_ldap_data', array('%sid' => $id));
     return FALSE;
   }
 
@@ -666,9 +643,9 @@ function ldap_servers_user_logout(AccountProxy $account) {
 
 /**
  * @param array $attribute_map
- *   for a given attribute in form array('values' => array(), 'data_type' => NULL) as outlined in ldap_user/README.developers.txt
+ *   for a given attribute in form array('values' => array(), 'data_type' => NULL) as outlined in ldap_user/README.developers.txt.
  * @param enum string $conversion
- *   as type of conversion to do @see ldap_servers_convert_attribute().  e.g. base64_encode, bin2hex, msguid, md5
+ *   as type of conversion to do @see ldap_servers_convert_attribute().  e.g. base64_encode, bin2hex, msguid, md5.
  * @param array $values
  *   in form array(<ordinal> => <value> | NULL) where NULL indicates value is needed for provisioning or other operations.
  *
@@ -701,9 +678,9 @@ function ldap_servers_set_attribute_map($attribute = NULL, $conversion = NULL, $
 
 /**
  * @param string $value
- *   as value to be converted
+ *   as value to be converted.
  * @param string $conversion
- *   such as base64_encode, bin2hex, msguid, md5
+ *   such as base64_encode, bin2hex, msguid, md5.
  * @return converted $value
  */
 function ldap_servers_convert_attribute($value, $conversion = NULL) {
@@ -712,23 +689,23 @@ function ldap_servers_convert_attribute($value, $conversion = NULL) {
 
     switch ($conversion) {
       case 'base64_encode':
-            $value = base64_encode($value);
+        $value = base64_encode($value);
         break;
 
       case 'bin2hex':
-            $value = bin2hex($value);
+        $value = bin2hex($value);
         break;
 
       case 'msguid':
-            $value = ldap_servers_msguid($value);
+        $value = ldap_servers_msguid($value);
         break;
 
       case 'binary':
-            $value = ldap_servers_binary($value);
+        $value = ldap_servers_binary($value);
         break;
 
       case 'md5':
-            $value = '{md5}' . base64_encode(pack('H*', md5($value)));
+        $value = '{md5}' . base64_encode(pack('H*', md5($value)));
         break;
     }
 
@@ -761,7 +738,7 @@ function ldap_servers_disable_http_check(&$form) {
  *
  */
 function ldap_servers_ldap_extension_summary($op = 'data') {
-  ldap_servers_module_load_include('inc', 'ldap_servers', 'ldap_servers.status');
+  // FIXME: Undefined function
   return _ldap_servers_ldap_extension_summary($op);
 }
 
@@ -844,36 +821,29 @@ function ldap_servers_help($path, $arg) {
  */
 function ldap_servers_ldap_servers_types() {
 
-  $path = drupal_get_path('module', 'ldap_servers') . '/ldap_types';
-
   $types['default'] = array(
-    'class' => t('LdapTypeDefault'),
-    'directory_path' => $path,
-    'name' => 'Default LDAP',
+    'class' => 'DefaultType',
+    'name' => t('Default LDAP'),
   );
 
   $types['ad'] = array(
-    'class' => t('LdapTypeActiveDirectory'),
-    'directory_path' => $path,
-    'name' => 'Active Directory',
+    'class' => 'ActiveDirectoryType',
+    'name' => t('Active Directory'),
   );
 
   $types['novell_edir'] = array(
-    'class' => t('LdapTypeNovell'),
-    'directory_path' => $path,
-    'name' => 'Novell',
+    'class' => 'NovellType',
+    'name' => t('Novell'),
   );
 
   $types['openldap'] = array(
-    'class' => t('LdapTypeOpenLdap'),
-    'directory_path' => $path,
-    'name' => 'Open LDAP',
+    'class' => 'OpenLdapType',
+    'name' => t('OpenLDAP'),
   );
 
   $types['opendir'] = array(
-    'class' => t('LdapTypeOpenDirectory'),
-    'directory_path' => $path,
-    'name' => 'Apple Open Directory',
+    'class' => 'OpenDirectoryType',
+    'name' => t('Apple Open Directory'),
   );
 
   \Drupal::moduleHandler()->alter('ldap_servers_ldap_types', $types);
@@ -882,8 +852,11 @@ function ldap_servers_ldap_servers_types() {
 }
 
 /**
- * @param string or array ldap type id or conf array
- * @return options for ldap type pulldown
+ * @param string|array
+ *  String or array ldap type id or conf array.
+ *
+ * @return AbstractType
+ *   Options for ldap type.
  */
 function ldap_servers_get_ldap_type_object($ldap_conf) {
 
@@ -892,7 +865,6 @@ function ldap_servers_get_ldap_type_object($ldap_conf) {
     $ldap_conf = $ldap_confs[$ldap_conf];
   }
 
-  require_once $ldap_conf['directory_path'] . '/' . $ldap_conf['class'] . 'class.php';
   $ldap_type_class = new $ldap_conf['class']();
   return $ldap_type_class;
 
@@ -948,52 +920,6 @@ function ldap_servers_get_all_rdn_values_from_dn($dn, $rdn) {
     }
   }
   return $rdn_values;
-}
-
-/**
- * @return options for ldap type pulldown
- */
-function ldap_servers_ldaps_option_array() {
-
-  $options = array();
-  foreach (ldap_servers_ldap_servers_types() as $ldap_id => $conf) {
-    $options[$ldap_id] = $conf['name'];
-  }
-  return $options;
-
-}
-
-/**
- * @param string $ldap_type
- *   indicating ldap type 'default','ad','novell_edir', 'openldap'
- * @param bool $reset
- *   clear static array
- * @param bool $flatted
- *   indicating if only one ldap type returned, skip top level array key
- *
- * @return one or more ldap type objects
- */
-function ldap_servers_get_types($ldap_type = NULL, $reset = FALSE, $flatten = FALSE) {
-  static $ldap_types;
-  if ($reset || !is_array($ldap_types)) {
-    $ldap_types = module_invoke_all('ldap_servers_type');
-    if ($ldap_type) {
-      require_once $ldap_types[$ldap_type]['directory_path'] . '/' . $ldap_types[$ldap_type]['class'] . '.class.php';
-      $ldap_types[$ldap_type] = new $ldap_types[$ldap_type]['class'] . '.class.php';
-    }
-    else {
-      foreach ($ldap_types as $ldap_type_id => $ldap_class_info) {
-        require_once $ldap_class_info['directory_path'] . '/' . $ldap_class_info['class'] . '.class.php';
-        $ldap_types[$ldap_type_id] = new $ldap_class_info['class'];
-      }
-    }
-  }
-  if ($flatten && $ldap_type) {
-    return $ldap_types[$ldap_type];
-  }
-  else {
-    return $ldap_types;
-  }
 }
 
 /**

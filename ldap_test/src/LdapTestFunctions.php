@@ -10,8 +10,8 @@ namespace Drupal\ldap_test;
  */
 
 use Drupal\Component\Utility\Unicode;
+use Drupal\ldap_authentication\LdapAuthenticationConfAdmin;
 use Drupal\ldap_user\LdapUserConfAdmin;
-use LdapAuthenticationConfAdmin;
 
 require_once dirname(__FILE__) . '/../ldap_servers.conf.inc';
 require_once dirname(__FILE__) . '/../ldap_user.conf.inc';
@@ -31,7 +31,7 @@ class LdapTestFunctions {
   /**
    *
    */
-  function __construct() {
+  public function __construct() {
     $this->data['ldap_servers'] = ldap_test_ldap_servers_data();
     $this->data['ldap_user'] = ldap_test_ldap_user_data();
     $this->data['ldap_authorization'] = ldap_test_ldap_authorization_data();
@@ -41,7 +41,7 @@ class LdapTestFunctions {
   /**
    *
    */
-  function configureLdapServers($sids, $feetures = FALSE, $feature_name = NULL) {
+  public function configureLdapServers($sids, $feetures = FALSE, $feature_name = NULL) {
     foreach ($sids as $i => $sid) {
       $current_sids[$sid] = $sid;
       // @FIXME variable_set('ldap_test_server__' . $sid, $this->data['ldap_servers'][$sid]);
@@ -52,7 +52,7 @@ class LdapTestFunctions {
   /**
    *
    */
-  function setFakeServerProperty($sid, $prop, $value) {
+  public function setFakeServerProperty($sid, $prop, $value) {
     // @FIXME  $test_data = variable_get('ldap_test_server__' . $sid, array());
     $test_data['properties'][$prop] = $value;
     // @FIXME  variable_set('ldap_test_server__' . $sid, $test_data);
@@ -61,7 +61,7 @@ class LdapTestFunctions {
   /**
    *
    */
-  function setFakeServerUserAttribute($sid, $dn, $attr_name, $attr_value, $i = 0) {
+  public function setFakeServerUserAttribute($sid, $dn, $attr_name, $attr_value, $i = 0) {
     $attr_name = Unicode::strtolower($attr_name);
     // @FIXME: $test_data = variable_get('ldap_test_server__' . $sid, array());
 
@@ -82,7 +82,7 @@ class LdapTestFunctions {
   /**
    *
    */
-  function configureLdapAuthentication($ldap_authentication_test_conf_id, $sids) {
+  public function configureLdapAuthentication($ldap_authentication_test_conf_id, $sids) {
     module_load_include('php', 'ldap_authentication', 'LdapAuthenticationConfAdmin.class');
     $options = $this->data['ldap_authentication'][$ldap_authentication_test_conf_id];
     foreach ($sids as $i => $sid) {
@@ -100,7 +100,7 @@ class LdapTestFunctions {
   /**
    *
    */
-  function configureLdapUser($ldap_user_test_conf_id) {
+  public function configureLdapUser($ldap_user_test_conf_id) {
     $ldapUserConfAdmin = new LdapUserConfAdmin();
     $options = $this->data['ldap_user'][$ldap_user_test_conf_id];
     foreach ($ldapUserConfAdmin->saveable as $prop_name) {
@@ -135,7 +135,7 @@ class LdapTestFunctions {
    * }
    * }
    */
-  function ldapUserIsAuthmapped($username) {
+  public function ldapUserIsAuthmapped($username) {
     $externalauth = \Drupal::service('externalauth.externalauth');
     $authmaps = $externalauth->load($username, 'ldap_user');
     // @FIXME: Wrong return values
@@ -145,7 +145,7 @@ class LdapTestFunctions {
   /**
    *
    */
-  function drupalLdapUpdateUser($edit = array(), $ldap_authenticated = FALSE, $user) {
+  public function drupalLdapUpdateUser($edit = array(), $ldap_authenticated = FALSE, $user) {
     if (count($edit)) {
       // FIXME:
       // $user = user_save($user, $edit);.
@@ -160,7 +160,7 @@ class LdapTestFunctions {
   /**
    * From http://www.midwesternmac.com/blogs/jeff-geerling/programmatically-adding-roles.
    */
-  function removeRoleFromUser($user, $role_name) {
+  public function removeRoleFromUser($user, $role_name) {
 
     if (is_numeric($user)) {
       $user = user_load($user);
@@ -198,7 +198,7 @@ class LdapTestFunctions {
    * Set variable with fake test data.
    *
    * @param string $test_ldap_id
-   *   eg. 'hogwarts'
+   *   eg. 'hogwarts'.
    * @param string $test_ldap_type
    *   e.g. openLdap, openLdapTest1, etc.
    *

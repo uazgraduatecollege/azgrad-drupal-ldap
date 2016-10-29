@@ -236,7 +236,6 @@ class ServerTestForm extends EntityForm {
     // Pass data back to form builder.
     $form_state->setRebuild(TRUE);
 
-    // ldap_servers_module_load_include('inc', 'ldap_servers', 'ldap_servers.functions');.
     $errors = FALSE;
     $has_errors = FALSE;
     $values = $form_state->getValues();
@@ -409,8 +408,8 @@ class ServerTestForm extends EntityForm {
       }
     }
 
-    //@FIXME: The following subsesction is disabled until fixed.
-    if (false && !$has_errors && isset($values['grp_test_grp_dn'])) {
+    // @FIXME: The following subsesction is disabled until fixed.
+    if (FALSE && !$has_errors && isset($values['grp_test_grp_dn'])) {
       $group_dn = $values['grp_test_grp_dn'];
 
       $result = @ldap_read($ldap_server->connection, $group_dn, 'objectClass=*');

@@ -1,4 +1,5 @@
 <?php
+
 namespace Drupal\ldap_authentication\Routing;
 
 use Drupal\Core\Routing\RouteSubscriberBase;

@@ -6,7 +6,7 @@ use Drupal\Component\Utility\Unicode;
 use Drupal\user\Entity\User;
 
 /**
- *  The entry-point to working with users by loading their configuration.
+ * The entry-point to working with users by loading their configuration.
  */
 class LdapUserConf {
 
@@ -81,7 +81,7 @@ class LdapUserConf {
   /**
    * Has current object been saved to the database?
    *
-   * @var boolean
+   * @var bool
    */
   public $inDatabase = FALSE;
 
@@ -186,7 +186,7 @@ class LdapUserConf {
   /**
    * 'wsKey','wsEnabled','wsUserIps',.
    */
-  function __construct() {
+  public function __construct() {
     $this->load();
 
     $this->provisionSidFromDirection[LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER] = $this->drupalAcctProvisionServer;
@@ -221,7 +221,7 @@ class LdapUserConf {
   /**
    *
    */
-  function load() {
+  public function load() {
 
     if ($saved = \Drupal::config('ldap_user.settings')->get("ldap_user_conf")) {
       $this->inDatabase = TRUE;
@@ -255,18 +255,18 @@ class LdapUserConf {
   /**
    * Destructor Method.
    */
-  function __destruct() {}
+  public function __destruct() {}
 
   /**
    * Util to fetch mappings for a given direction.
    *
    * @param string $sid
-   *   The server id
+   *   The server id.
    * @param string $direction
-   *   LDAP_USER_PROV_DIRECTION_* constant
+   *   LDAP_USER_PROV_DIRECTION_* constant.
    * @param array $prov_events
    *
-   * @return array/bool
+   * @return arraybool
    *   Array of mappings (may be empty array)
    */
   public function getSynchMappings($direction = LDAP_USER_PROV_DIRECTION_ALL, $prov_events = NULL) {
@@ -339,7 +339,7 @@ class LdapUserConf {
    * Util to fetch attributes required for this user conf, not other modules.
    *
    * @param enum $direction
-   *   LDAP_USER_PROV_DIRECTION_* constants
+   *   LDAP_USER_PROV_DIRECTION_* constants.
    * @param string $ldap_context
    */
   public function getLdapUserRequiredAttributes($direction = LDAP_USER_PROV_DIRECTION_ALL, $ldap_context = NULL) {
@@ -428,7 +428,7 @@ class LdapUserConf {
   /**
    * @todo change default to false after development
    */
-  function setSynchMapping($reset = TRUE) {
+  public function setSynchMapping($reset = TRUE) {
 
     $synch_mapping_cache = \Drupal::cache()->get('ldap_user_synch_mapping');
     if (!$reset && $synch_mapping_cache) {
@@ -460,18 +460,18 @@ class LdapUserConf {
    *   this is overall, not per field synching configuration.
    *
    * @param enum $direction
-   *   LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER or LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY
+   *   LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER or LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY.
    *
    * @param enum $prov_event
    *   LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER, LDAP_USER_EVENT_CREATE_DRUPAL_USER
    *   LDAP_USER_EVENT_SYNCH_TO_LDAP_ENTRY LDAP_USER_EVENT_CREATE_LDAP_ENTRY
    *   LDAP_USER_EVENT_LDAP_ASSOCIATE_DRUPAL_ACCT
-   *   LDAP_USER_EVENT_ALL
+   *   LDAP_USER_EVENT_ALL.
    *
    * @param enum $action
-   *   'synch', 'provision', 'delete_ldap_entry', 'delete_drupal_entry', 'cancel_drupal_entry'
+   *   'synch', 'provision', 'delete_ldap_entry', 'delete_drupal_entry', 'cancel_drupal_entry'.
    *
-   * @return boolean
+   * @return bool
    */
   public function provisionEnabled($direction, $provision_trigger) {
     $result = FALSE;
@@ -502,9 +502,9 @@ class LdapUserConf {
    * Given a drupal account, provision an ldap entry if none exists.  if one exists do nothing.
    *
    * @param object $account
-   *   drupal account object with minimum of name property
+   *   drupal account object with minimum of name property.
    * @param array $ldap_user
-   *   as prepopulated ldap entry.  usually not provided
+   *   as prepopulated ldap entry.  usually not provided.
    *
    * @return array of form:
    *     array('status' => 'success', 'fail', or 'conflict'),
@@ -615,7 +615,7 @@ class LdapUserConf {
 
         // Need to store <sid>|<dn> in ldap_user_prov_entries field, which may contain more than one.
         $ldap_user_prov_entry = $ldap_server->id() . '|' . $proposed_ldap_entry['dn'];
-        if (null !== $user_entity->get('ldap_user_prov_entries')) {
+        if (NULL !== $user_entity->get('ldap_user_prov_entries')) {
           $user_entity->set('ldap_user_prov_entries', array());
         }
         $ldap_user_prov_entry_exists = FALSE;
@@ -675,11 +675,11 @@ class LdapUserConf {
    * Given a drupal account, synch to related ldap entry.
    *
    * @param drupal user object $account.
-   *   Drupal user object
+   *   Drupal user object.
    * @param array $user_edit.
-   *   Edit array for user_save.  generally null unless user account is being created or modified in same synching
+   *   Edit array for user_save.  generally null unless user account is being created or modified in same synching.
    * @param array $ldap_user.
-   *   current ldap data of user. @see README.developers.txt for structure
+   *   current ldap data of user. @see README.developers.txt for structure.
    *
    * @return TRUE on success or FALSE on fail.
    */
@@ -782,12 +782,12 @@ class LdapUserConf {
    * Given a drupal account, query ldap and get all user fields and create user account.
    *
    * @param array $account
-   *   drupal account array with minimum of name
+   *   drupal account array with minimum of name.
    * @param array $user_edit
    *   drupal edit array in form user_save($account, $user_edit) would take,
-   *   generally empty unless overriding synchToDrupalAccount derived values
+   *   generally empty unless overriding synchToDrupalAccount derived values.
    * @param array $ldap_user
-   *   as user's ldap entry.  passed to avoid requerying ldap in cases where already present
+   *   as user's ldap entry.  passed to avoid requerying ldap in cases where already present.
    * @param bool $save
    *   indicating if drupal user should be saved.  generally depends on where function is called from.
    *
@@ -839,7 +839,7 @@ class LdapUserConf {
    * Given a drupal account, delete user account.
    *
    * @param string $username
-   *   drupal account name
+   *   drupal account name.
    *
    * @return TRUE or FALSE.  FALSE indicates failed or action not enabled in ldap user configuration
    */
@@ -894,7 +894,7 @@ class LdapUserConf {
    *   field attached to the user entity track each ldap entry provisioned.
    *
    * @param object $account
-   *   drupal account
+   *   drupal account.
    *
    * @return TRUE or FALSE.  FALSE indicates failed or action not enabled in ldap user configuration
    */
@@ -933,7 +933,7 @@ class LdapUserConf {
    * Populate ldap entry array for provisioning.
    *
    * @param User $account
-   *   drupal account
+   *   drupal account.
    * @param object $ldap_server
    * @param array $params
    *   with the following key values:
@@ -947,7 +947,7 @@ class LdapUserConf {
    * @return array(ldap entry, $result)
    *   In ldap extension array format. THIS IS NOT THE ACTUAL LDAP ENTRY.
    */
-  function drupalUserToLdapEntry(User $account, $ldap_server, $params, $ldap_user_entry = NULL) {
+  public function drupalUserToLdapEntry(User $account, $ldap_server, $params, $ldap_user_entry = NULL) {
     // debug('call to drupalUserToLdapEntry, account:'); //debug($account); //debug('ldap_server'); //debug($ldap_server);
     // debug('params'); //debug($params); //debug('ldap_user_entry');//debug($ldap_user_entry);
     $provision = (isset($params['function']) && $params['function'] == 'provisionLdapEntry');
@@ -1029,7 +1029,7 @@ class LdapUserConf {
    * user account. Nnote: parameters are in odd order to match
    * synchDrupalAccount handle.
    *
-   * @param User|boolean $account
+   * @param User|bool $account
    *   Drupal account object or null.
    *   Todo: Fix default value of false or correct comment.
    * @param array $user_edit
@@ -1042,7 +1042,7 @@ class LdapUserConf {
    *   function is called from and if the result of the save is true.
    *   Todo: Fix architecture here.
    *
-   * @return boolean
+   * @return bool
    *   Return TRUE on success or FALSE on any problem.
    */
   public function provisionDrupalAccount($account = FALSE, &$user_edit, $ldap_user = NULL, $save = TRUE) {
@@ -1172,7 +1172,7 @@ class LdapUserConf {
    *
    * @return boolean TRUE on success, FALSE on error or failure because of invalid user or LDAP accounts
    */
-  function ldapAssociateDrupalAccount($drupal_username) {
+  public function ldapAssociateDrupalAccount($drupal_username) {
     if ($this->drupalAcctProvisionServer) {
       $prov_events = array(LDAP_USER_EVENT_LDAP_ASSOCIATE_DRUPAL_ACCT);
       // $ldap_user['sid'].
@@ -1202,7 +1202,7 @@ class LdapUserConf {
           );
           $account->set('data', serialize($data));
         }
-        catch (Exception $e) {
+        catch (\Exception $e) {
           // Do nothing.
         }
 
@@ -1227,13 +1227,13 @@ class LdapUserConf {
   }
 
   /**
-   * Set flag to exclude user from LDAP association
+   * Set flag to exclude user from LDAP association.
    *
    * @param string $drupal_username
    *
    * @return boolean TRUE on success, FALSE on error or failure because of invalid user
    */
-  function ldapExcludeDrupalAccount($drupal_username) {
+  public function ldapExcludeDrupalAccount($drupal_username) {
     $account = user_load_by_name($drupal_username);
     if (!$account) {
       \Drupal::logger('ldap_user')->error('Failed to exclude user from LDAP associatino because drupal account %drupal_username was not found', array('%drupal_username' => $drupal_username));
@@ -1251,12 +1251,12 @@ class LdapUserConf {
    *
    * @param array ldap entry $ldap_user
    * @param User $account
-   *   see hook_user_save, hook_user_update, etc
+   *   see hook_user_save, hook_user_update, etc.
    * @param object $ldap_server
    * @param enum $direction
    * @param array $prov_events
    */
-  function entryToUserEdit($ldap_user, &$account, $ldap_server, $direction = LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, $prov_events = NULL) {
+  public function entryToUserEdit($ldap_user, &$account, $ldap_server, $direction = LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, $prov_events = NULL) {
 
     // Need array of user fields and which direction and when they should be synched.
     if (!$prov_events) {
@@ -1374,12 +1374,12 @@ class LdapUserConf {
    * Given configuration of synching, determine is a given synch should occur.
    *
    * @param string $attr_token
-   *   e.g. [property.mail], [field.ldap_user_puid_property]
+   *   e.g. [property.mail], [field.ldap_user_puid_property].
    * @param object $ldap_server
    * @param array $prov_events
-   *   e.g. array(LDAP_USER_EVENT_CREATE_DRUPAL_USER).  typically array with 1 element
+   *   e.g. array(LDAP_USER_EVENT_CREATE_DRUPAL_USER).  typically array with 1 element.
    * @param scalar $direction
-   *   LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER or LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY
+   *   LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER or LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY.
    */
   public function isSynched($attr_token, $prov_events, $direction) {
     $result = (boolean) (

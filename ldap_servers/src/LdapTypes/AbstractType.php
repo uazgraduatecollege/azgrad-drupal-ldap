@@ -6,10 +6,12 @@
  * such as active directory, open ldap, novell, etc.
  */
 
+namespace Drupal\ldap_servers\LdapTypes;
+
 /**
  *
  */
-abstract class LdapTypeAbstract {
+abstract class AbstractType {
 
   public $name;
   public $typeId;
@@ -35,7 +37,7 @@ abstract class LdapTypeAbstract {
   /**
    * Constructor Method.
    */
-  function __construct($params = array()) {
+  public function __construct($params = array()) {
     foreach ($params as $k => $v) {
       if (property_exists($this, $k)) {
         $this->{$k} = $v;

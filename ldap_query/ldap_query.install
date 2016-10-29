@@ -4,6 +4,7 @@
  * @file
  * Install, update and uninstall functions for the LDAP API module.
  */
+use Drupal\ldap_query\LdapQuery;
 
 /**
  * Implements hook_install().
@@ -52,7 +53,6 @@ function ldap_query_schema() {
     ),
   );
   module_load_include('module', 'ldap_servers');
-  ldap_servers_module_load_include('php', 'ldap_query', 'LdapQuery.class');
   $fields = LdapQuery::fields();
   foreach ($fields as $field_id => $field) {
     if (isset($field['schema'])) {

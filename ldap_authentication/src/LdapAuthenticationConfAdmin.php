@@ -2,12 +2,13 @@
 
 /**
  * @file
- * This classextends by LdapAuthenticationConf for configuration and other admin functions.
+ * This class extends LdapAuthenticationConf for configuration and other admin functions.
  */
+
+namespace Drupal\ldap_authentication;
 
 use Drupal\Core\Url;
 
-ldap_servers_module_load_include('php', 'ldap_authentication', 'LdapAuthenticationConf.class');
 /**
  *
  */
@@ -600,7 +601,7 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
     try {
       $save_result = $this->save();
     }
-    catch (Exception $e) {
+    catch (\Exception $e) {
       $this->errorName = 'Save Error';
       $this->errorMsg = t('Failed to save object.  Your form data was not saved.');
       $this->hasError = TRUE;

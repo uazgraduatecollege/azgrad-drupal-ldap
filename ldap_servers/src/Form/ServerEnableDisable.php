@@ -96,17 +96,18 @@ class LdapServersAdminEnableDisable extends ContentEntityConfirmFormBase {
     if ($values['confirm'] && $sid) {
 
       $form_state->set(['redirect'], LDAP_SERVERS_MENU_BASE_PATH . '/servers');
+      //FIXME: Incomplete port
       $ldap_server = new LdapServerAdmin($sid);
 
       $ldap_server->status = $status;
       $ldap_server->save('edit');
       $tokens = [
         '%name' => $values['name'],
-        '!sid' => $sid,
-        '!action' => t($values['action']) . 'd',
+        '%sid' => $sid,
+        '%action' => t($values['action']) . 'd',
       ];
-      drupal_set_message(t('LDAP Server Configuration %name (server id = !sid) has been !action.', $tokens));
-      $message = t('LDAP Server !action: %name (sid = !sid) ', $tokens);
+      drupal_set_message(t('LDAP Server Configuration %name (server id = %sid) has been !action.', $tokens));
+      $message = t('LDAP Server !action: %name (sid = %sid) ', $tokens);
       \Drupal::logger('ldap')->notice($message, []);
 
     }

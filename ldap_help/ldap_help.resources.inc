@@ -6,7 +6,7 @@
  */
 
 /**
- *  Template text for general help and resources.
+ * Template text for general help and resources.
  */
 function ldap_help_main() {
 

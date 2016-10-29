@@ -13,7 +13,7 @@ class ldap_views_handler_argument_attribute extends views_handler_argument {
   /**
    *
    */
-  function option_definition() {
+  public function option_definition() {
     $options = parent::option_definition();
     $options['attribute_name'] = array('default' => '');
     return $options;
@@ -22,7 +22,7 @@ class ldap_views_handler_argument_attribute extends views_handler_argument {
   /**
    *
    */
-  function options_form(&$form, &$form_state) {
+  public function options_form(&$form, &$form_state) {
     /**
  * $current_display = $this->view->display[$this->view->current_display];
  * $qid             = isset($current_display->display_options['query']['options']['qid']) ? $current_display->display_options['query']['options']['qid']
@@ -59,7 +59,7 @@ class ldap_views_handler_argument_attribute extends views_handler_argument {
   /**
    * Build the query.
    */
-  function query() {
+  public function query() {
     $this->query->add_where(0, $this->options['attribute_name'], $this->argument, '=');
   }
 

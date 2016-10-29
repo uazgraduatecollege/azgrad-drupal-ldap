@@ -4,6 +4,7 @@ namespace Drupal\ldap_authentication\Form;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\ConfigFormBase;
+use Drupal\ldap_authentication\LdapAuthenticationConfAdmin;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 
 /**
@@ -29,8 +30,7 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
    *
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-    ldap_servers_module_load_include('php', 'ldap_authentication', 'LdapAuthenticationConfAdmin.class');
-    $auth_conf = new \LdapAuthenticationConfAdmin();
+    $auth_conf = new LdapAuthenticationConfAdmin();
     return $auth_conf->drupalForm();
   }
 
@@ -38,9 +38,7 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
    *
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
-
-    ldap_servers_module_load_include('php', 'ldap_authentication', 'LdapAuthenticationConfAdmin.class');
-    $auth_conf = new \LdapAuthenticationConfAdmin();
+    $auth_conf = new LdapAuthenticationConfAdmin();
     $errors = $auth_conf->drupalFormValidate($form_state->getValues());
     foreach ($errors as $error_name => $error_text) {
       $form_state->setErrorByName($error_name, t($error_text));
@@ -52,9 +50,7 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
    *
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-
-    ldap_servers_module_load_include('php', 'ldap_authentication', 'LdapAuthenticationConfAdmin.class');
-    $auth_conf = new \LdapAuthenticationConfAdmin();
+    $auth_conf = new LdapAuthenticationConfAdmin();
     // Add form data to object and save or create.
     $auth_conf->drupalFormSubmit($form_state->getValues());
     if (!$auth_conf->hasEnabledAuthenticationServers()) {

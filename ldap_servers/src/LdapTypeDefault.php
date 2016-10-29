@@ -1,5 +1,7 @@
 <?php
+
 namespace Drupal\ldap_servers;
+
 /**
  *
  */
@@ -18,7 +20,7 @@ class LdapTypeDefault extends LdapTypeAbstract {
   /**
    * Constructor Method.
    */
-  function __construct($params = array()) {
+  public function __construct($params = array()) {
     foreach ($params as $k => $v) {
       if (property_exists($this, $k)) {
         $this->{$k} = $v;
