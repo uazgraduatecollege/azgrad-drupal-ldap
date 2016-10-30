@@ -6,6 +6,7 @@
  */
 
 use Drupal\ldap_authentication\LdapAuthenticationConfAdmin;
+use Drupal\ldap_servers\ServerFactory;
 use Drupal\ldap_user\LdapUserConfAdmin;
 
 /**
@@ -289,7 +290,9 @@ function ldap_help_get_ldap_servers() {
 
   $status = [];
 
-  $servers_objects = ldap_servers_get_servers(NULL, 'all');
+  $factory = new ServerFactory(NULL, 'all');
+  $servers_objects = $factory->servers;
+
   $servers = array();
   $field_to_properties = LdapServer::field_to_properties_map();
   // array('sid', 'name', 'status', 'ldap_type', 'port', 'tls', 'user_attr', 'mail_attr', 'user_dn_expression', 'ldap_to_drupal_user');.
@@ -381,7 +384,8 @@ function ldap_help_get_ldap_user() {
 function ldap_help_get_ldap_authorization() {
   $status = array();
 
-  $servers = ldap_servers_get_servers(NULL, 'enabled');
+  $factory = new ServerFactory(NULL, 'enabled');
+  $servers = $factory->servers;
   $consumers = ldap_authorization_get_consumers();
 
   if (count($servers) == 0) {

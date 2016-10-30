@@ -6,6 +6,8 @@
  */
 
 use Drupal\Core\Url;
+use Drupal\ldap_authentication\LdapAuthenticationConf;
+
 /**
  * Returns HTML for user login block links.
  *
@@ -46,7 +48,8 @@ function theme_ldap_authentication_user_login_block_links($variables) {
  */
 function theme_ldap_authentication_user_pass_message($variables) {
   extract($variables);
-  if ($auth_conf->authenticationMode == LDAP_AUTHENTICATION_EXCLUSIVE && $auth_conf->passwordOption != LDAP_AUTHENTICATION_PASSWORD_FIELD_ALLOW) {
+  //@FIXME: Missing auth_conf
+  if ($auth_conf->authenticationMode == LdapAuthenticationConf::$mode_exclusive && $auth_conf->passwordOption != LdapAuthenticationConf::$passwordFieldAllow) {
     $msg = t('This page is only useful for the site administrator.  All other users
       need to reset their passwords');
     if ($auth_conf->ldapUserHelpLinkUrl) {

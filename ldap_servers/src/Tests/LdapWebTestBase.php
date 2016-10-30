@@ -1,18 +1,11 @@
 <?php
 
-namespace Drupal\ldap_test;
+namespace Drupal\ldap_servers\tests;
 
 /**
  * @file
  * Simpletest class for LDAP simpletests.
  */
-
-/* @FIXME: Fix properly */
-// number of cloned drupal users (clone0, clone1, etc) to make for tests
-define('LDAP_TEST_USER_ORPHAN_CLONE_COUNT', 7);
-// Number of cloned drupal users to delete in orphan check.
-define('LDAP_TEST_USER_ORPHAN_CLONE_REMOVE_COUNT', 2);
-define('LDAP_TEST_LDAP_NAME', 'hogwarts');
 
 use Drupal\Component\Utility\Unicode;
 use Drupal\simpletest\WebTestBase;
@@ -20,7 +13,13 @@ use Drupal\simpletest\WebTestBase;
 /**
  * Primary test class for ldap.
  */
-class LdapTestCase extends WebTestBase {
+abstract class LdapWebTestBase extends WebTestBase {
+
+  // number of cloned drupal users (clone0, clone1, etc) to make for tests
+  public static $userOrphanCloneCount = 7;
+  // Number of cloned drupal users to delete in orphan check.
+  public static $userOrphanCloneRemoveCount = 2;
+  public static $ldapName = 'hogwarts';
 
   public $testFunctions;
   public $module_name;
@@ -112,7 +111,7 @@ class LdapTestCase extends WebTestBase {
     }
 
     if ($ldap_authorization_conf_id) {
-      $authorization_data = ldap_test_ldap_authorization_data();
+      $authorization_data = $this->testFunctions->ldap_test_ldap_authorization_data();
       if (!empty($authorization_data[$ldap_authorization_conf_id])) {
         $this->testFunctions->prepConsumerConf($authorization_data[$ldap_authorization_conf_id]);
         foreach ($authorization_data[$ldap_authorization_conf_id] as $consumer_type => $discard) {
@@ -180,7 +179,8 @@ class LdapTestCase extends WebTestBase {
     if (!empty($test_data['groups'][$group_dn]['attr']['member']) && in_array($group_dn, $test_data['groups'][$group_dn]['attr']['member'])) {
       $members = array_diff($test_data['groups'][$group_dn]['attr']['member'], array($group_dn));
       $test_data['groups'][$group_dn]['attr']['member'] = $members;
-      $test_data['groups'][$group_dn]['attr']['member'][$i]['count'] = count($members - 1);
+      // @Fixme: Incomplete declaration
+     // $test_data['groups'][$group_dn]['attr']['member'][$i]['count'] = count($members - 1);
     }
     // debug("removeUserFromGroup:debug test_data[groups][$group_dn]"); debug($test_data['groups'][$group_dn]);.
   }

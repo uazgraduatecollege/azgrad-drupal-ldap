@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\ldap_test;
+namespace Drupal\ldap_servers\tests;
 
 /**
  * LDAP Server Class.
@@ -10,6 +10,7 @@ namespace Drupal\ldap_test;
  *
  * @todo make bindpw protected
  */
+use Drupal\Component\Utility\Unicode;
 use Drupal\ldap_servers\Entity\Server;
 
 /**
@@ -32,6 +33,7 @@ class TestServer extends Server {
    * or $sid, where sid is used to derive the include file.
    */
   public function __construct($sid) {
+    parent::__construct($sid, 'ldap_server');
     if (!is_scalar($sid)) {
       $test_data = $sid;
       $sid = $test_data['sid'];
@@ -61,13 +63,6 @@ class TestServer extends Server {
       $this->{$property_name} = $property_value;
     }
     // $this->basedn = unserialize($this->basedn);.
-  }
-
-  /**
-   * Destructor Method.
-   */
-  public function __destruct() {
-    // If alterations to server configuration must be maintained throughout simpletest, variable_set('ldap_authorization_test_server__'. $sid, array());
   }
 
   /**
@@ -129,23 +124,30 @@ class TestServer extends Server {
   /**
    * Perform an LDAP search.
    *
+   * @param null $base_dn
    * @param string $filter
    *   The search filter. such as sAMAccountName=jbarclay.
-   * @param string $basedn
-   *   The search base. If NULL, we use $this->basedn.
    * @param array $attributes
    *   List of desired attributes. If omitted, we only return "dn".
    *
-   * @return
-   *   An array of matching entries->attributes, or FALSE if the search is
-   *   empty.
+   * @param int $attrsonly
+   * @param int $sizelimit
+   * @param int $timelimit
+   * @param int|null $deref
+   * @param null $scope
+   * @return array|bool An array of matching entries->attributes, or FALSE if the search is
+   * An array of matching entries->attributes, or FALSE if the search is
+   * empty.
+   * @internal param string $basedn The search base. If NULL, we use $this->basedn.*   The search base. If NULL, we use $this->basedn.
    */
-  public function search($base_dn = NULL, $filter, $attributes = array(), $attrsonly = 0, $sizelimit = 0, $timelimit = 0, $deref = LDAP_DEREF_NEVER, $scope = LDAP_SCOPE_SUBTREE) {
-
+  public function search($base_dn = NULL, $filter, $attributes = array(), $attrsonly = 0, $sizelimit = 0, $timelimit = 0, $deref = LDAP_DEREF_NEVER, $scope = NULL) {
+    if ($scope == NULL) {
+      $scope = Server::$scopeSubTree;
+    }
     // debug("ldap test server search base_dn=$base_dn, filter=$filter");.
     $lcase_attribute = array();
     foreach ($attributes as $i => $attribute_name) {
-      $lcase_attribute[] = drupal_strtolower($attribute_name);
+      $lcase_attribute[] = Unicode::strtolower($attribute_name);
     }
     $attributes = $lcase_attribute;
 
@@ -153,8 +155,8 @@ class TestServer extends Server {
     $filter = trim(str_replace(array("\n", "  "), array('', ''), $filter));
 
     if ($base_dn == NULL) {
-      if (count($this->basedn) == 1) {
-        $base_dn = $this->basedn[0];
+      if (count($this->getBasedn()) == 1) {
+        $base_dn = $this->getBasedn()[0];
       }
       else {
         // debug("fail basedn: ldap test server search base_dn=$base_dn, filter=$filter");.
@@ -185,7 +187,7 @@ class TestServer extends Server {
      * Search CASE 2: attempt to programmatically evaluate ldap filter
      * by looping through fake ldap entries
      */
-    $base_dn = drupal_strtolower($base_dn);
+    $base_dn = Unicode::strtolower($base_dn);
     $filter = trim($filter, "()");
     $subqueries = array();
     $operand = FALSE;
@@ -241,11 +243,11 @@ class TestServer extends Server {
 
     if ($operand == '|') {
       foreach ($subqueries as $i => $subquery) {
-        $filter_attribute = drupal_strtolower($subquery[0]);
+        $filter_attribute = Unicode::strtolower($subquery[0]);
         $filter_value = $subquery[1];
         // debug("filter_attribute=$filter_attribute, filter_value=$filter_value");.
         foreach ($this->entries as $dn => $entry) {
-          $dn_lcase = drupal_strtolower($dn);
+          $dn_lcase = Unicode::strtolower($dn);
 
           // If not in basedn, skip
           // eg. basedn ou=campus accounts,dc=ad,dc=myuniversity,dc=edu
@@ -263,13 +265,13 @@ class TestServer extends Server {
           // If doesn't filter attribute has no data, continue.
           $attr_value_to_compare = FALSE;
           foreach ($entry as $attr_name => $attr_value) {
-            if (drupal_strtolower($attr_name) == $filter_attribute) {
+            if (Unicode::strtolower($attr_name) == $filter_attribute) {
               $attr_value_to_compare = $attr_value;
               break;
             }
           }
           // debug("filter value=$filter_value, attr_value_to_compare="); debug($attr_value_to_compare);
-          if (!$attr_value_to_compare || drupal_strtolower($attr_value_to_compare[0]) != $filter_value) {
+          if (!$attr_value_to_compare || Unicode::strtolower($attr_value_to_compare[0]) != $filter_value) {
             continue;
           }
 
@@ -292,11 +294,11 @@ class TestServer extends Server {
     // Reverse the loops.
     elseif ($operand == '&') {
       foreach ($this->entries as $dn => $entry) {
-        $dn_lcase = drupal_strtolower($dn);
+        $dn_lcase = Unicode::strtolower($dn);
         // Until 1 subquery fails.
         $match = TRUE;
         foreach ($subqueries as $i => $subquery) {
-          $filter_attribute = drupal_strtolower($subquery[0]);
+          $filter_attribute = Unicode::strtolower($subquery[0]);
           $filter_value = $subquery[1];
 
           $substring = strrev(substr(strrev($dn_lcase), 0, strlen($base_dn)));
@@ -310,13 +312,13 @@ class TestServer extends Server {
           // If doesn't filter attribute has no data, continue.
           $attr_value_to_compare = FALSE;
           foreach ($entry as $attr_name => $attr_value) {
-            if (drupal_strtolower($attr_name) == $filter_attribute) {
+            if (Unicode::strtolower($attr_name) == $filter_attribute) {
               $attr_value_to_compare = $attr_value;
               break;
             }
           }
           // debug("filter value=$filter_value, attr_value_to_compare="); debug($attr_value_to_compare);
-          if (!$attr_value_to_compare || drupal_strtolower($attr_value_to_compare[0]) != $filter_value) {
+          if (!$attr_value_to_compare || Unicode::strtolower($attr_value_to_compare[0]) != $filter_value) {
             $match = FALSE;
             // Not in basedn.
             break;
@@ -486,8 +488,9 @@ class TestServer extends Server {
    * @param string $dn
    *
    * @return boolean result per ldap_delete
+   * @TODO: Might not be necessary anymore.
    */
-  public function delete($dn) {
+  public function ldapDelete($dn) {
 
     $test_data = variable_get('ldap_test_server__' . $this->sid, array());
     // debug("test ldap server, delete=$dn, test data="); debug(array_keys($test_data['users']));.

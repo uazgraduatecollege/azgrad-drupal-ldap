@@ -6,6 +6,7 @@
  */
 
 use Drupal\Core\Language\Language;
+use Drupal\ldap_servers\ServerFactory;
 use Drupal\ldap_user\LdapUserConf;
 
 /**
@@ -47,7 +48,8 @@ function _ldap_user_orphans($ldap_user_conf) {
   //   ->addMetaData('account', \Drupal::entityManager()->getStorage('user')->load(1)); // run the query as user 1
   // $result = $query->execute();
   $drupal_users = array();
-  $ldap_servers = ldap_servers_get_servers(NULL, 'enabled');
+  $factory = new ServerFactory(NULL, 'enabled');
+  $ldap_servers = $factory->servers;
   $watchdogs_sids_missing_watchdogged = array();
   /**
    * first produce array of form:

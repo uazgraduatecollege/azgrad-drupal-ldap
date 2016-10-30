@@ -3,15 +3,17 @@
 namespace Drupal\ldap_authentication\Tests;
 
 use Drupal\Core\Password\PasswordInterface;
+use Drupal\ldap_authentication\LdapAuthenticationConf;
 use Drupal\ldap_authentication\LdapAuthenticationConfAdmin;
-use Drupal\ldap_test\LdapTestCase;
+use Drupal\ldap_servers\ServerFactory;
+use Drupal\ldap_servers\tests\LdapWebTestBase;
 
 /**
  * Tests covering the ldap_autehentication module.
  *
  * @group ldap_authentication
  */
-class LdapAuthenticationTestCase extends LdapTestCase {
+class LdapAuthenticationWebTestBase extends LdapWebTestBase {
 
   /**
    *
@@ -88,14 +90,15 @@ class LdapAuthenticationTestCase extends LdapTestCase {
     $testid = 'MixedModeUserLogon3';
     $sids = array($sid);
     $this->prepTestData(
-      LDAP_TEST_LDAP_NAME,
+      self::$ldapName,
       $sids,
       'provisionToDrupal',
       'MixedModeUserLogon3',
       'drupal_role_authentication_test'
     );
 
-    $ldap_servers = ldap_servers_get_servers($sid, 'enabled');
+    $factory = new ServerFactory($sid, 'enabled');
+    $ldap_servers = $factory->servers;
     $this->assertTrue(count($ldap_servers) == 1, ' ldap_authentication test server setup successful', $testid);
 
     /**
@@ -204,14 +207,15 @@ class LdapAuthenticationTestCase extends LdapTestCase {
     $testid = 'ExclusiveModeUserLogon3';
     $sids = array($sid);
     $this->prepTestData(
-      LDAP_TEST_LDAP_NAME,
+      self::$ldapName,
       $sids,
       'ad_authentication',
       'ExclusiveModeUserLogon3',
       'drupal_role_authentication_test'
       );
 
-    $ldap_servers = ldap_servers_get_servers($sid, 'enabled');
+    $factory = new ServerFactory($sid, 'enabled');
+    $ldap_servers = $factory->servers;
     $this->assertTrue(count($ldap_servers) == 1, ' ldap_authentication test server setup successful', $testid);
 
     /**
@@ -364,7 +368,7 @@ class LdapAuthenticationTestCase extends LdapTestCase {
     $testid = 'SSOUserLogon3';
     $sids = array($sid);
     $this->prepTestData(
-      LDAP_TEST_LDAP_NAME,
+      self::$ldapName,
       $sids,
       'ad_authentication',
       'SSOUserLogon'
@@ -389,7 +393,8 @@ class LdapAuthenticationTestCase extends LdapTestCase {
       debug('authenticationConf'); debug($authenticationConf);
     }
 
-    $ldap_servers = ldap_servers_get_servers($sid, 'enabled');
+    $factory = new ServerFactory($sid, 'enabled');
+    $ldap_servers = $factory->servers;
     $this->assertTrue(count($ldap_servers) == 1, ' ldap_authentication test server setup successful', $testid);
     $hpotter_drupal = user_load_by_name('hpotter');
     $ldap_user_conf = ldap_user_conf('admin', TRUE);
@@ -440,7 +445,8 @@ class LdapAuthenticationTestCase extends LdapTestCase {
       );
 
     // debug($this->testFunctions);.
-    $ldap_servers = ldap_servers_get_servers($sid, 'enabled');
+    $factory = new ServerFactory($sid, 'enabled');
+    $ldap_servers = $factory->servers;
     $this->assertTrue(count($ldap_servers) == 1, ' ldap_authentication test server setup successful', $testid);
 
     // These 2 modules are configured in setup, but disabled for most authentication tests.
@@ -591,7 +597,7 @@ class LdapAuthenticationTestCase extends LdapTestCase {
 
     $this->AttemptLogonNewUser('hpotter');
     $this->assertText(
-      LDAP_AUTHENTICATION_DISABLED_FOR_BAD_CONF_MSG,
+      'The site logon is currently not working due to a configuration error.  Please see logs for additional details.',
       t('Authentication prohibited when excludeIfNoAuthorizations =
         true and LDAP Authorization disabled.
         LDAP_authen.WL1.excludeIfNoAuthorizations.failsafe'),
@@ -648,7 +654,7 @@ class LdapAuthenticationTestCase extends LdapTestCase {
 
     $sid = 'activedirectory1';
     $sids = array('activedirectory1');
-    $this->prepTestData(LDAP_TEST_LDAP_NAME, $sids, 'provisionToDrupal', 'default');
+    $this->prepTestData(self::$ldapName, $sids, 'provisionToDrupal', 'default');
 
     $this->privileged_user = $this->drupalCreateUser(array(
       'administer site configuration',
@@ -664,8 +670,8 @@ class LdapAuthenticationTestCase extends LdapTestCase {
       'authenticationMode' => array(
         'property' => 'authenticationMode',
         'values' => array(
-          LDAP_AUTHENTICATION_MIXED,
-          LDAP_AUTHENTICATION_EXCLUSIVE,
+          LdapAuthenticationConf::$mode_mixed,
+          LdapAuthenticationConf::$mode_exclusive,
         ),
         'required' => TRUE,
       ),
@@ -744,16 +750,16 @@ class LdapAuthenticationTestCase extends LdapTestCase {
       'emailOption' => array(
         'property' => 'emailOption',
         'values' => array(
-          LDAP_AUTHENTICATION_EMAIL_FIELD_REMOVE,
-          LDAP_AUTHENTICATION_EMAIL_FIELD_DISABLE,
+          LdapAuthenticationConf::$emailFieldRemove,
+          LdapAuthenticationConf::$emailFieldDisable,
         ),
         'required' => TRUE,
       ),
       'emailUpdate' => array(
         'property' => 'emailUpdate',
         'values' => array(
-          LDAP_AUTHENTICATION_EMAIL_UPDATE_ON_LDAP_CHANGE_ENABLE,
-          LDAP_AUTHENTICATION_EMAIL_UPDATE_ON_LDAP_CHANGE_DISABLE,
+          LdapAuthenticationConf::$emailUpdateOnLdapChangeEnable,
+          LdapAuthenticationConf::$emailUpdateOnLdapChangeDisable,
         ),
         'required' => TRUE,
       ),

@@ -61,10 +61,6 @@ function user_update_8004() {
     ));
 
 
-// default variables:
-encryption:  LDAP_SERVERS_ENC_TYPE_CLEARTEXT
-require_ssl_for_credentials: 0
-
 ====================================
 Post Migration Cleanup
 Tokens: Consisent user and ldap entry tokens

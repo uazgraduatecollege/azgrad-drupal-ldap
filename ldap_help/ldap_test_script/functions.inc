@@ -10,10 +10,6 @@ set_time_limit(0);
 ini_set("display_errors", 1);
 ini_set("max_execution_time", 0);
 
-define('LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT', 1);
-define('LDAP_SERVERS_BIND_METHOD_ANON', 3);
-
-
 class ProtocolPlaceholder implements \Drupal\ldap_servers\LdapProtocol {
   // This is a workaround for removing redundant definitions.
 }

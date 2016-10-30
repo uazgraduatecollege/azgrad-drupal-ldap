@@ -9,6 +9,7 @@ use Drupal\ldap_servers\LdapProtocol;
 use Drupal\ldap_servers\MassageFunctions;
 use Drupal\ldap_servers\ServerInterface;
 use Drupal\ldap_servers\TokenFunctions;
+use Drupal\ldap_user\LdapUserConf;
 use Drupal\user\Entity\User;
 
 /**
@@ -70,6 +71,17 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
   const LDAP_SERVER_LDAP_QUERY_CHUNK = 50;
   const LDAP_SERVER_LDAP_QUERY_RECURSION_LIMIT = 10;
 
+
+  public static $bindMethodServiceAccount = 1;
+  public static $bindMethodUser = 2;
+  public static $bindMethodAnon = 3;
+  public static $bindMethodAnonUser = 4;
+  // Attempt to remove this later.
+  public static $bindMethodDefault = 1;
+
+  public static $scopeBase = 1;
+  public static $scopeOneLevel = 2;
+  public static $scopeSubTree = 3;
 
   /**
    * Connect Method.
@@ -133,7 +145,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
       return self::LDAP_CONNECT_ERROR;
     }
 
-    if ($anon_bind !== FALSE && $userdn === NULL && $pass === NULL && $this->get('bind_method') == LDAP_SERVERS_BIND_METHOD_ANON) {
+    if ($anon_bind !== FALSE && $userdn === NULL && $pass === NULL && $this->get('bind_method') == Server::$bindMethodAnon) {
       $anon_bind = TRUE;
     }
     if ($anon_bind === TRUE) {
@@ -219,7 +231,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
       $params['attributes'] = $attributes;
     }
 
-    $result = $this->ldapQuery(LDAP_SCOPE_BASE, $params);
+    $result = $this->ldapQuery(Server::$scopeBase, $params);
     if ($result !== FALSE) {
       $entries = @ldap_get_entries($this->connection, $result);
       if ($entries !== FALSE && $entries['count'] > 0) {
@@ -435,15 +447,10 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
    * @remaining params mimick ldap_search() function params
    *
    */
-  public function searchAllBaseDns(
-    $filter,
-    $attributes = array(),
-    $attrsonly = 0,
-    $sizelimit = 0,
-    $timelimit = 0,
-    $deref = NULL,
-    $scope = LDAP_SCOPE_SUBTREE
-    ) {
+  public function searchAllBaseDns($filter, $attributes = array(), $attrsonly = 0, $sizelimit = 0, $timelimit = 0, $deref = NULL, $scope = NULL) {
+    if ($scope == NULL) {
+      $scope = Server::$scopeSubTree;
+    }
     $all_entries = array();
     // Need to search on all basedns one at a time.
     foreach ($this->getBasedn() as $base_dn) {
@@ -496,9 +503,10 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
    * @remaining params mimick ldap_search() function params
    *
    */
-  function search($base_dn = NULL, $filter, $attributes = array(),
-    $attrsonly = 0, $sizelimit = 0, $timelimit = 0, $deref = NULL, $scope = LDAP_SCOPE_SUBTREE) {
-
+  function search($base_dn = NULL, $filter, $attributes = array(), $attrsonly = 0, $sizelimit = 0, $timelimit = 0, $deref = NULL, $scope = NULL) {
+    if ($scope == NULL) {
+      $scope = Server::$scopeSubTree;
+    }
     /**
       * pagingation issues:
       * -- see documentation queue: http://markmail.org/message/52w24iae3g43ikix#query:+page:1+mid:bez5vpl6smgzmymy+state:results
@@ -690,7 +698,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
     $this->connectAndBindIfNotAlready();
 
     switch ($scope) {
-      case LDAP_SCOPE_SUBTREE:
+      case Server::$scopeSubTree:
         $result = @ldap_search($this->connection, $params['base_dn'], $params['filter'], $params['attributes'], $params['attrsonly'],
           $params['sizelimit'], $params['timelimit'], $params['deref']);
         if ($params['sizelimit'] && $this->ldapErrorNumber() == self::LDAP_SIZELIMIT_EXCEEDED) {
@@ -701,7 +709,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
         }
         break;
 
-      case LDAP_SCOPE_BASE:
+      case Server::$scopeBase:
         $result = @ldap_read($this->connection, $params['base_dn'], $params['filter'], $params['attributes'], $params['attrsonly'],
           $params['sizelimit'], $params['timelimit'], $params['deref']);
         if ($params['sizelimit'] && $this->ldapErrorNumber() == self::LDAP_SIZELIMIT_EXCEEDED) {
@@ -712,7 +720,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
         }
         break;
 
-      case LDAP_SCOPE_ONELEVEL:
+      case Server::$scopeOneLevel:
         $result = @ldap_list($this->connection, $params['base_dn'], $params['filter'], $params['attributes'], $params['attrsonly'],
           $params['sizelimit'], $params['timelimit'], $params['deref']);
         if ($params['sizelimit'] && $this->ldapErrorNumber() == self::LDAP_SIZELIMIT_EXCEEDED) {
@@ -1095,7 +1103,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
         $name_attr = Unicode::strtolower($name_attr);
       }
       else {
-        if ($this->get('bind_method') == LDAP_SERVERS_BIND_METHOD_ANON_USER) {
+        if ($this->get('bind_method') == Server::$bindMethodAnonUser) {
           $result = array(
             'dn' => $match['dn'],
             'mail' => $this->userEmailFromLdapEntry($match),
@@ -1832,8 +1840,11 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
    * @param null $ldap_context
    * @return array
    */
-  public function testUserMapping($drupal_username, $direction = LDAP_USER_PROV_DIRECTION_ALL, $ldap_context = NULL) {
-
+  public function testUserMapping($drupal_username, $direction = NULL, $ldap_context = NULL) {
+    if ($direction == NULL) {
+      $direction = LdapUserConf::$provisioningDirectionAll;
+      // TODO: Remove unused parameter, if really not needed.
+    }
     $ldap_user = self::userUserNameToExistingLdapEntry($drupal_username, $ldap_context);
 
     $errors = FALSE;

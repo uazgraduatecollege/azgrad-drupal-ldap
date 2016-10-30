@@ -5,6 +5,7 @@
  * Defines functions for administrative interface for servers.
  */
 use Drupal\ldap_query\LdapQueryAdmin;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 
 /**
  * @return index of ldap queries
@@ -96,7 +97,7 @@ function ldap_query_admin_form_submit($form, &$form_state) {
     // if there are warnings, want them to see form even if its been saved
     // }
     // else {.
-    drupal_goto(LDAP_QUERY_MENU_BASE_PATH . '/query');
+    return new RedirectResponse(LdapQueryAdmin::$base_path . '/query');
     // }.
   }
   else {
@@ -138,14 +139,14 @@ function ldap_query_admin_delete($form, &$form_state, $op = NULL, $qid = NULL) {
     return confirm_form(
       $form,
       'Delete Confirmation Form',
-      LDAP_QUERY_MENU_BASE_PATH . '/query/list',
+      LdapQueryAdmin::$base_path . '/query/list',
         '<p>' . t('Are you sure you want to delete the LDAP query named <em><strong>%name</strong></em> ?', array('%name' => $ldap_query->name)) . '</p><p>' .
         t('This action cannot be undone.') . '</p>',
       t('Delete'),
       t('Cancel')
     );
   }
-  drupal_goto(LDAP_QUERY_MENU_BASE_PATH . '/query/list');
+  drupal_goto(LdapQueryAdmin::$base_path . '/query/list');
 }
 
 /**
@@ -159,7 +160,7 @@ function ldap_query_admin_delete_submit($form, &$form_state) {
     if ($result = $ldap_query->delete($qid)) {
       $tokens = array('%name' => $ldap_query->name, '!qid' => $qid);
       drupal_set_message(t('LDAP Server %name (query id = !qid) has been deleted.', $tokens), 'status');
-      watchdog('ldap', 'LDAP Query deleted: %name (qid = !qid) ', $tokens);
+      \Drupal::logger('ldap_query')->notice('LDAP Query deleted: %name (qid = !qid) ', $tokens);
     }
     else {
       drupal_set_message(t('LDAP Query delete failed.'), 'warning');
@@ -169,7 +170,7 @@ function ldap_query_admin_delete_submit($form, &$form_state) {
     drupal_set_message(t('LDAP Query delete cancelled.'), 'status');
   }
   ldap_query_cache_clear();
-  drupal_goto(LDAP_QUERY_MENU_BASE_PATH . '/query/list');
+  return new RedirectResponse(LdapQueryAdmin::$base_path . '/query/list');
 }
 
 /**
@@ -208,7 +209,7 @@ function ldap_query_admin_enable_disable($form, &$form_state, $action = NULL, $q
     return confirm_form(
       $form,
       t('Are you sure you want to') . t($action) . ' ' . t('the LDAP query named <em><strong>%name</strong></em>?', array('%name' => $ldap_query->name)),
-      LDAP_QUERY_MENU_BASE_PATH . '/query/list',
+      LdapQueryAdmin::$base_path . '/query/list',
       t('<p></p>'),
       t($action),
       t('Cancel')
@@ -226,15 +227,14 @@ function ldap_query_admin_enable_disable_submit($form, &$form_state) {
   $status = ($values['action'] == 'enable') ? 1 : 0;
   if ($values['confirm'] && $qid) {
 
-    $form_state['redirect'] = LDAP_QUERY_MENU_BASE_PATH . '/query';
+    $form_state['redirect'] = LdapQueryAdmin::$base_path . '/query';
     $ldap_query = new LdapQueryAdmin($qid);
 
     $ldap_query->status = $status;
     $ldap_query->save('edit');
     $tokens = array('%name' => $values['name'], '!qid' => $qid, '!action' => t($values['action']) . 'd');
     drupal_set_message(t('LDAP Query Configuration %name (query id = !qid) has been !action.', $tokens));
-    $message = t('LDAP Query !action: %name (qid = !qid) ', $tokens);
-    watchdog('ldap', $message);
+    \Drupal::logger('ldap_query')->notice('LDAP Query !action: %name (qid = !qid) ', $tokens);
 
   }
 

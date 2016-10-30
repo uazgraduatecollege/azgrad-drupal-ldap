@@ -3,6 +3,7 @@
 /**
  * @file
  */
+use Drupal\ldap_servers\ServerFactory;
 
 /**
  * Implements hook_ctools_plugin_api().
@@ -154,7 +155,8 @@ function _ldap_feeds_query_legend($records, $field_name) {
 function ldap_feeds_drupal_user_legend(&$form, $importer) {
 
   $sources = array();
-  $servers = ldap_servers_get_servers(NULL, 'enabled');
+  $factory = new ServerFactory(NULL, 'enabled');
+  $servers = $factory->servers;
   $form['legendset']['#description'] = "";
   $drupal_user_attributes = $importer->config['fetcher']['config']['availableDrupalUserAttributes'];
 

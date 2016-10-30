@@ -9,6 +9,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\authorization\Provider\ProviderPluginBase;
 use Drupal\ldap_servers\ConversionHelper;
 use Drupal\ldap_servers\Entity\Server;
+use Drupal\ldap_servers\ServerFactory;
 use Drupal\ldap_user\LdapUserConf;
 
 /**
@@ -34,24 +35,23 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
 
   public $syncOnLogon = TRUE;
 
+  public $revokeProviderProvisioned;
+  public $regrantProviderProvisioned;
+
   /**
    *
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
     /* @var AuthorizationProfile $profile */
     $profile = $this->configuration['profile'];
-
     $tokens = $this->getTokens();
     $tokens += $profile->getTokens();
-    if ($profile->hasValidConsumer()) {
+    if ($profile->hasValidConsumer() && method_exists($profile->getConsumer(), 'getTokens')) {
       $tokens += $profile->getConsumer()->getTokens();
     }
 
-    $servers = ldap_servers_get_servers(NULL, 'enabled');
-    $server_options = array();
-    foreach ($servers as $id => $server) {
-      $server_options[$id] = $server->label() . ' (' . $server->address . ')';
-    }
+    $factory = new ServerFactory(NULL, 'enabled');
+    $servers = $factory->servers;
 
     $form['status'] = array(
       '#type' => 'fieldset',
@@ -60,7 +60,21 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
       '#collapsed' => FALSE,
     );
 
-    if (count($server_options)) {
+    if (count($servers) == 0) {
+      $form['status']['server'] = array(
+        '#type' => 'markup',
+        '#markup' => t('<strong>Warning</strong>: You must create an LDAP Server first.'),
+      );
+      drupal_set_message(t('You must create an LDAP Server first.'), 'warning');
+    } else {
+      $server_options = array();
+      foreach ($servers as $id => $server) {
+        /* @var Server $server */
+        $server_options[$id] = $server->label() . ' (' . $server->get('address') . ')';
+      }
+    }
+
+    if (!empty($server_options)) {
       if (count($server_options) == 1) {
         $this->configuration['server'] = key($server_options);
       }
@@ -68,28 +82,26 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
         '#type' => 'radios',
         '#title' => t('LDAP Server used in @profile_name configuration.', $tokens),
         '#required' => 1,
-        '#default_value' => $this->configuration['status']['server'],
+        //@FIXME: Not sure what this defaults to
+        '#default_value' => $this->configuration['server'],
+       // '#default_value' => 1,
         '#options' => $server_options,
       );
-    }
-    else {
-      $form['status']['server'] = array(
-        '#type' => 'markup',
-        '#markup' => t('<strong>Warning</strong>: You must create an LDAP Server first.'),
-      );
-      drupal_set_message(t('You must create an LDAP Server first.'), 'warning');
     }
 
     $form['status']['type'] = array(
       '#type' => 'hidden',
-      '#value' => $this->configuration['status']['type'],
+      //@FIXME: Not sure what this defaults to
+     // '#value' => $this->configuration['status']['type'],
+      '#value' => 1,
       '#required' => 1,
     );
 
     $form['status']['only_ldap_authenticated'] = array(
       '#type' => 'checkbox',
       '#title' => t('Only apply the following LDAP to @consumer_name configuration to users authenticated via LDAP.  On uncommon reason for disabling this is when you are using Drupal authentication, but want to leverage LDAP for authorization; for this to work the Drupal username still has to map to an LDAP entry.', $tokens),
-      '#default_value' => $this->configuration['status']['only_ldap_authenticated'],
+      //@FIXME: Not sure what this defaults to
+      // '#default_value' => $this->configuration['status']['only_ldap_authenticated'],
     );
 
     $form['filter_and_mappings'] = array(
@@ -97,22 +109,23 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
       '#title' => t('II. LDAP to @consumer_name mapping and filtering', $tokens),
       '#description' => t(self::$genericDescription . '<p><strong>Mappings are used to convert and filter these group representations to @consumer_namePlural.</strong></p> @consumer_mappingDirections', $tokens),
       '#collapsible' => TRUE,
-      '#collapsed' => !($this->mappings || $this->useMappingsAsFilter || $this->useFirstAttrAsGroupId),
+      //@FIXME: Not sure what this defaults to
+      //'#collapsed' => !($this->mappings || $this->useMappingsAsFilter || $this->useFirstAttrAsGroupId),
     );
 
     $form['filter_and_mappings']['use_first_attr_as_groupid'] = array(
       '#type' => 'checkbox',
       '#title' => t('Convert full dn to value of first attribute before mapping.  e.g.  <code>cn=students,ou=groups,dc=hogwarts,dc=edu</code> would be converted to <code>students</code>', $tokens),
-      '#default_value' => $this->configuration['filter_and_mappings']['use_first_attr_as_groupid'],
+      '#default_value' => \Drupal::config('authorization.provider.plugin.ldap_authorization')->get('use_first_attr_as_groupid'),
     );
 
     $form['filter_and_mappings']['use_filter'] = array(
       '#type' => 'checkbox',
       '#title' => t('Only grant @consumer_namePlural that match a filter below.', $tokens),
-      '#default_value' => $this->configuration['filter_and_mappings']['use_filter'],
-      '#description' => t('If enabled, only below mapped @consumer_namePlural will be assigned (e.g. students and administrator).
-        <strong>If not checked, @consumer_namePlural not mapped below also may be created and granted (e.g. gryffindor and probation students).  In some LDAPs this can lead to hundreds of @consumer_namePlural being created if "Create @consumer_namePlural if they do not exist" is enabled below.
-        </strong>', $tokens),
+      '#default_value' => \Drupal::config('authorization.provider.plugin.ldap_authorization')->get('use_filter'),
+      '#description' => t('If enabled, only below mapped @consumer_namePlural will be assigned (e.g. students and administrator).<br>
+        <strong>If not checked, @consumer_namePlural not mapped below also may be created and granted (e.g. gryffindor and probation students).  In some LDAPs this can lead to hundreds of @consumer_namePlural being created if "Create @consumer_namePlural if they do not exist" is enabled below.</strong>',
+        $tokens),
     );
 
     return $form;
@@ -123,10 +136,13 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
    */
   public function validateConfigurationForm(array &$form, FormStateInterface $form_state) {
     $values = $form_state->getValues();
-    $mappings = $values['filter_and_mappings']['mappings'];
-    $mappings = $this->normalizeMappings($this->pipeListToArray($mappings, TRUE));
-    $values['filter_and_mappings']['mappings'] = $mappings;
-    $form_state->setValues($values);
+    if (isset($values['filter_and_mappings']['mappings'])) {
+      // @FIXME: Mappings is never present, see if we can move this to authorization.
+      $mappings = $values['filter_and_mappings']['mappings'];
+      $mappings = $this->normalizeMappings($this->pipeListToArray($mappings, TRUE));
+      $values['filter_and_mappings']['mappings'] = $mappings;
+      $form_state->setValues($values);
+    }
   }
 
   /**

@@ -3,6 +3,7 @@
 namespace Drupal\ldap_user;
 
 use Drupal\Component\Utility\Unicode;
+use Drupal\ldap_servers\ServerFactory;
 use Drupal\ldap_servers\TokenFunctions;
 use Drupal\ldap_user\Exception\LdapBadParamsException;
 use Drupal\user\Entity\User;
@@ -14,6 +15,29 @@ class LdapUserConf {
 
   use TokenFunctions;
 
+
+  // Provisioning events (events are triggered by triggers).
+  public static $eventCreateDrupalUser = 1;
+  public static $eventSyncToDrupalUser = 2;
+  public static $eventCreateLdapEntry = 3;
+  public static $eventSyncToLdapEntry = 4;
+  public static $eventLdapAssociateDrupalAccount = 5;
+
+  public static $resultProvisionLdapEntryCreateFailed = 2;
+  public static $resultProvisionLdapEntrySyncFailed = 3;
+
+  public static $provisioningDirectionToDrupalUser = 1;
+  public static $provisioningDirectionToLDAPEntry = 2;
+  public static $provisioningDirectionNone = 3;
+  public static $provisioningDirectionAll = 4;
+  
+  public static $provisioningResultNoError = 0;
+  public static $provisioningResultNoPassword = 1;
+  public static $provisioningResultBadParameters = 2;
+
+  // Originally needed to avoid conflicting with server ids.
+  public static $noServerSID = 0;
+
   /**
    * Server providing Drupal account provisioning.
    *
@@ -21,7 +45,7 @@ class LdapUserConf {
    *
    * @see LdapServer::sid
    */
-  public $drupalAcctProvisionServer = LDAP_USER_NO_SERVER_SID;
+  public $drupalAcctProvisionServer;
 
   /**
    * Server providing LDAP entry provisioning.
@@ -30,39 +54,43 @@ class LdapUserConf {
    *
    * @see LdapServer::sid
    */
-  public $ldapEntryProvisionServer = LDAP_USER_NO_SERVER_SID;
+  public $ldapEntryProvisionServer;
 
   /**
    * Associative array mapping synch directions to ldap server instances.
    *
    * @var array
    */
-  public $provisionSidFromDirection = array(
-    LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER => LDAP_USER_NO_SERVER_SID,
-    LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY => LDAP_USER_NO_SERVER_SID,
-  );
+  public $provisionSidFromDirection;
+
+
+  // Configurable Drupal account provision triggers.
+  public static $provisionDrupalUserOnUserUpdateCreate = 1;
+  public static $provisionDrupalUserOnAuthentication = 2;
+  public static $provisionDrupalUserOnAllowingManualCreation = 3;
 
   /**
    * Array of events that trigger provisioning of Drupal Accounts
-   * Valid constants are:
-   *   LDAP_USER_DRUPAL_USER_PROV_ON_AUTHENTICATE
-   *   LDAP_USER_DRUPAL_USER_PROV_ON_USER_UPDATE_CREATE
-   *   LDAP_USER_DRUPAL_USER_PROV_ON_ALLOW_MANUAL_CREATE.
+   * Valid constants are: see above.
    *
    * @var array
    */
-  public $drupalAcctProvisionTriggers = array(LDAP_USER_DRUPAL_USER_PROV_ON_AUTHENTICATE, LDAP_USER_DRUPAL_USER_PROV_ON_USER_UPDATE_CREATE, LDAP_USER_DRUPAL_USER_PROV_ON_ALLOW_MANUAL_CREATE);
+  public $drupalAcctProvisionTriggers = [];
 
+  // Configurable ldap entry provision triggers.
+  public static $provisionLdapEntryOnUserUpdateCreate = 6;
+  public static $provisionLdapEntryOnUserAuthentication = 7;
+  public static $provisionLdapEntryOnUserDelete = 8;
   /**
    * Array of events that trigger provisioning of LDAP Entries
-   * Valid constants are:
-   *   LDAP_USER_LDAP_ENTRY_PROV_ON_USER_UPDATE_CREATE
-   *   LDAP_USER_LDAP_ENTRY_PROV_ON_AUTHENTICATE
-   *   LDAP_USER_LDAP_ENTRY_DELETE_ON_USER_DELETE.
+   * Valid constants are: see above.
    *
    * @var array
    */
-  public $ldapEntryProvisionTriggers = array();
+  public $ldapEntryProvisionTriggers = [];
+
+  public static $userConflictLog = 1;
+  public static $userConflictAttemptResolve = 2;
 
   /**
    * Server providing LDAP entry provisioning.
@@ -71,16 +99,18 @@ class LdapUserConf {
    *
    * @see LdapServer::sid
    */
-  public $userConflictResolve = LDAP_USER_CONFLICT_RESOLVE_DEFAULT;
+  public $userConflictResolve;
+
+  // Options for account creation behavior.
+  public static $accountCreationLdapBehaviour = 4;
+  public static $accountCreationUserSettingsForLdap = 1;
 
   /**
    * Drupal account creation model.
-   *
+   *   See above.
    * @var int
-   *   LDAP_USER_ACCT_CREATION_LDAP_BEHAVIOR   /admin/config/people/accounts/settings do not affect "LDAP Associated" Drupal accounts.
-   *   LDAP_USER_ACCT_CREATION_USER_SETTINGS_FOR_LDAP  use Account creation settings at /admin/config/people/accounts/settings
-   */
-  public $acctCreation = LDAP_USER_ACCT_CREATION_LDAP_BEHAVIOR_DEFAULT;
+    */
+  public $acctCreation;
 
   /**
    * Has current object been saved to the database?
@@ -89,14 +119,17 @@ class LdapUserConf {
    */
   public $inDatabase = FALSE;
 
+  public static $manualAccountConflictReject = 1;
+  public static $manualAccountConflictLdapAssociate = 2;
+  public static $manualAccountConflictShowOptionOnForm = 3;
+  public static $manualAccountConflictNoLdapAssociate = 4;
+
   /**
    * What to do when an ldap provisioned username conflicts with existing drupal user?
-   *
+   *  See above.
    * @var int
-   *   LDAP_USER_CONFLICT_LOG - log the conflict
-   *   LDAP_USER_CONFLICT_RESOLVE - LDAP associate the existing drupal user
-   */
-  public $manualAccountConflict = LDAP_USER_MANUAL_ACCT_CONFLICT_REJECT;
+    */
+  public $manualAccountConflict;
 
   // @todo default to FALSE and check for mapping to set to true
   public $setsLdapPassword = TRUE;
@@ -105,22 +138,18 @@ class LdapUserConf {
   /**
    * Array of field synch mappings provided by all modules (via hook_ldap_user_attrs_list_alter())
    * array of the form: array(
-   * LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER | LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY => array(
+   * self:: | s => array(
    *   <server_id> => array(
    *     'sid' => <server_id> (redundant)
    *     'ldap_attr' => e.g. [sn]
    *     'user_attr'  => e.g. [field.field_user_lname] (when this value is set to 'user_tokens', 'user_tokens' value is used.)
    *     'user_tokens' => e.g. [field.field_user_lname], [field.field_user_fname]
    *     'convert' => 1|0 boolean indicating need to covert from binary
-   *     'direction' => LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER | LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY (redundant)
+   *     'direction' => self::$provisioningDirectionToDrupalUser | self::$provisioningDirectionToLDAPEntry (redundant)
    *     'config_module' => 'ldap_user'
    *     'prov_module' => 'ldap_user'
    *     'enabled' => 1|0 boolean
-   *      prov_events' => array( of LDAP_USER_EVENT_* constants indicating during which synch actions field should be synched)
-   *         - four permutations available
-   *            to ldap:   LDAP_USER_EVENT_CREATE_LDAP_ENTRY,  LDAP_USER_EVENT_SYNCH_TO_LDAP_ENTRY,
-   *            to drupal: LDAP_USER_EVENT_CREATE_DRUPAL_USER, LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER
-   *    )
+   *      prov_events' => array( see events above )
    *  )
    */
   // Array of field synching directions for each operation.  should include ldapUserSynchMappings.
@@ -129,21 +158,17 @@ class LdapUserConf {
   /**
    * Synch mappings configured in ldap user module (not in other modules)
    *   array of the form: array(
-   * LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER | LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY => array(
+   * self::$provisioningDirectionToDrupalUser | self::$provisioningDirectionToLDAPEntry => array(
    * 'sid' => <server_id> (redundant)
    * 'ldap_attr' => e.g. [sn]
    * 'user_attr'  => e.g. [field.field_user_lname] (when this value is set to 'user_tokens', 'user_tokens' value is used.)
    * 'user_tokens' => e.g. [field.field_user_lname], [field.field_user_fname]
    * 'convert' => 1|0 boolean indicating need to covert from binary
-   * 'direction' => LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER | LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY (redundant)
+   * 'direction' => self::$provisioningDirectionToDrupalUser | self::$provisioningDirectionToLDAPEntry (redundant)
    * 'config_module' => 'ldap_user'
    * 'prov_module' => 'ldap_user'
    * 'enabled' => 1|0 boolean
-   * prov_events' => array( of LDAP_USER_EVENT_* constants indicating during which synch actions field should be synched)
-   * - four permutations available
-   * to ldap:   LDAP_USER_EVENT_CREATE_LDAP_ENTRY,  LDAP_USER_EVENT_SYNCH_TO_LDAP_ENTRY,
-   * to drupal: LDAP_USER_EVENT_CREATE_DRUPAL_USER, LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER
-   * )
+   * prov_events' => array( see events above )
    * )
    * )
    */
@@ -191,19 +216,39 @@ class LdapUserConf {
    * 'wsKey','wsEnabled','wsUserIps',.
    */
   public function __construct() {
+
+    $this->acctCreation = self::$accountCreationLdapBehaviour;
+    $this->manualAccountConflict = self::$manualAccountConflictReject;
+
+    $this->userConflictResolve = self::$userConflictAttemptResolve;
+
+    $this->drupalAcctProvisionTriggers = [
+      self::$provisionDrupalUserOnUserUpdateCreate,
+      self::$provisionDrupalUserOnAuthentication,
+      self::$provisionDrupalUserOnAllowingManualCreation,
+    ];
+    $this->ldapEntryProvisionTriggers = [
+      self::$provisionLdapEntryOnUserUpdateCreate,
+      self::$provisionLdapEntryOnUserAuthentication,
+      self::$provisionLdapEntryOnUserDelete,
+    ];
+
+    $this->provisionSidFromDirection[self::$provisioningDirectionToDrupalUser] = $this->drupalAcctProvisionServer;
+    $this->provisionSidFromDirection[self::$provisioningDirectionToLDAPEntry] = $this->ldapEntryProvisionServer;
+
+    $this->drupalAcctProvisionServer = self::$noServerSID;
+    $this->ldapEntryProvisionServer = self::$noServerSID;
+
     $this->load();
 
-    $this->provisionSidFromDirection[LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER] = $this->drupalAcctProvisionServer;
-    $this->provisionSidFromDirection[LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY] = $this->ldapEntryProvisionServer;
-
     $this->provisionsLdapEvents = array(
-      LDAP_USER_EVENT_CREATE_LDAP_ENTRY => t('On LDAP Entry Creation'),
-      LDAP_USER_EVENT_SYNCH_TO_LDAP_ENTRY => t('On Synch to LDAP Entry'),
+      self::$eventCreateLdapEntry => t('On LDAP Entry Creation'),
+      self::$eventSyncToLdapEntry => t('On Synch to LDAP Entry'),
     );
 
     $this->provisionsDrupalEvents = array(
-      LDAP_USER_EVENT_CREATE_DRUPAL_USER => t('On Drupal User Creation'),
-      LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER => t('On Synch to Drupal User'),
+      self::$eventCreateDrupalUser => t('On Drupal User Creation'),
+      self::$eventSyncToDrupalUser => t('On Synch to Drupal User'),
     );
 
     $this->provisionsDrupalAccountsFromLdap = (
@@ -242,7 +287,7 @@ class LdapUserConf {
     // @FIXME
     // $user_register = variable_get('user_register', USER_REGISTER_VISITORS_ADMINISTRATIVE_APPROVAL);.
     $user_register = \Drupal::config('user.settings')->get("register_no_approval_required");
-    if ($this->acctCreation == LDAP_USER_ACCT_CREATION_LDAP_BEHAVIOR_DEFAULT || $user_register == USER_REGISTER_VISITORS) {
+    if ($this->acctCreation == self::$accountCreationLdapBehaviour || $user_register == USER_REGISTER_VISITORS) {
       $this->createLDAPAccounts = TRUE;
       $this->createLDAPAccountsAdminApproval = FALSE;
     }
@@ -267,20 +312,22 @@ class LdapUserConf {
    * @param string $sid
    *   The server id.
    * @param string $direction
-   *   LDAP_USER_PROV_DIRECTION_* constant.
    * @param array $prov_events
    *
    * @return array|bool
    *   Array of mappings (may be empty array)
    */
-  public function getSynchMappings($direction = LDAP_USER_PROV_DIRECTION_ALL, $prov_events = NULL) {
+  public function getSynchMappings($direction = NULL, $prov_events = NULL) {
     if (!$prov_events) {
       $prov_events = ldap_user_all_events();
     }
+    if ($direction == NULL) {
+      $direction = LdapUserConf::$provisioningDirectionAll;
+    }
 
     $mappings = array();
-    if ($direction == LDAP_USER_PROV_DIRECTION_ALL) {
-      $directions = array(LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY);
+    if ($direction == self::$provisioningDirectionAll) {
+      $directions = array(self::$provisioningDirectionToDrupalUser, self::$provisioningDirectionToLDAPEntry);
     }
     else {
       $directions = array($direction);
@@ -291,10 +338,10 @@ class LdapUserConf {
           if (!empty($mapping['prov_events'])) {
             $result = count(array_intersect($prov_events, $mapping['prov_events']));
             if ($result) {
-              if ($direction == LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER && isset($mapping['user_attr'])) {
+              if ($direction == self::$provisioningDirectionToDrupalUser && isset($mapping['user_attr'])) {
                 $key = $mapping['user_attr'];
               }
-              elseif ($direction == LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY && isset($mapping['ldap_attr'])) {
+              elseif ($direction == self::$provisioningDirectionToLDAPEntry && isset($mapping['ldap_attr'])) {
                 $key = $mapping['ldap_attr'];
               }
               else {
@@ -346,8 +393,10 @@ class LdapUserConf {
    *   LDAP_USER_PROV_DIRECTION_* constants.
    * @param string $ldap_context
    */
-  public function getLdapUserRequiredAttributes($direction = LDAP_USER_PROV_DIRECTION_ALL, $ldap_context = NULL) {
-
+  public function getLdapUserRequiredAttributes($direction = NULL, $ldap_context = NULL) {
+    if ($direction == NULL) {
+      $direction = LdapUserConf::$provisioningDirectionAll;
+    }
     $attributes_map = array();
     $required_attributes = array();
     if ($this->drupalAcctProvisionServer) {
@@ -374,11 +423,18 @@ class LdapUserConf {
     switch ($ldap_context) {
 
       case 'ldap_user_prov_to_drupal':
-        $result = array(LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER, LDAP_USER_EVENT_CREATE_DRUPAL_USER, LDAP_USER_EVENT_LDAP_ASSOCIATE_DRUPAL_ACCT);
+        $result = [
+          LdapUserConf::$eventSyncToDrupalUser,
+          LdapUserConf::$eventCreateDrupalUser,
+          LdapUserConf::$eventLdapAssociateDrupalAccount,
+        ];
         break;
 
       case 'ldap_user_prov_to_ldap':
-        $result = array(LDAP_USER_EVENT_SYNCH_TO_LDAP_ENTRY, LDAP_USER_EVENT_CREATE_LDAP_ENTRY);
+        $result = [
+          LdapUserConf::$eventSyncToLdapEntry,
+          LdapUserConf::$eventCreateLdapEntry
+        ];
         break;
 
       default:
@@ -398,12 +454,12 @@ class LdapUserConf {
     switch ($ldap_context) {
 
       case 'ldap_user_prov_to_drupal':
-        $result = LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER;
+        $result = self::$provisioningDirectionToDrupalUser;
         break;
 
       case 'ldap_user_prov_to_ldap':
       case 'ldap_user_delete_drupal_user':
-        $result = LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY;
+        $result = self::$provisioningDirectionToLDAPEntry;
         break;
 
       // Provisioning is can hapen in both directions in most contexts.
@@ -411,11 +467,11 @@ class LdapUserConf {
       case 'ldap_user_update_drupal_user':
       case 'ldap_authentication_authenticate':
       case 'ldap_user_disable_drupal_user':
-        $result = LDAP_USER_PROV_DIRECTION_ALL;
+        $result = self::$provisioningDirectionAll;
         break;
 
       default:
-        $result = LDAP_USER_PROV_DIRECTION_ALL;
+        $result = self::$provisioningDirectionAll;
 
     }
 
@@ -440,10 +496,18 @@ class LdapUserConf {
     }
     else {
       $available_user_attrs = array();
-      foreach (array(LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY) as $direction) {
+      foreach (array(self::$provisioningDirectionToDrupalUser, self::$provisioningDirectionToLDAPEntry) as $direction) {
         $sid = $this->provisionSidFromDirection[$direction];
         $available_user_attrs[$direction] = array();
-        $ldap_server = ($sid) ? ldap_servers_get_servers($sid, NULL, TRUE) : FALSE;
+        $ldap_server = FALSE;
+        if ($sid) {
+          try {
+            $factory = new ServerFactory($sid, NULL, TRUE);
+            $ldap_server = $factory->servers;
+          } catch (\Exception $e) {
+            \Drupal::logger('ldap_user')->error('Missing server');
+          }
+        }
 
         $params = array(
           'ldap_server' => $ldap_server,
@@ -464,14 +528,10 @@ class LdapUserConf {
    *   this is overall, not per field synching configuration.
    *
    * @param int $direction
-   *   LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER or LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY.
+   *   self::$provisioningDirectionToDrupalUser or self::$provisioningDirectionToLDAPEntry.
    *
    * @param int $provision_trigger
-   *   Either
-   *   LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER, LDAP_USER_EVENT_CREATE_DRUPAL_USER
-   *   LDAP_USER_EVENT_SYNCH_TO_LDAP_ENTRY LDAP_USER_EVENT_CREATE_LDAP_ENTRY
-   *   LDAP_USER_EVENT_LDAP_ASSOCIATE_DRUPAL_ACCT
-   *   LDAP_USER_EVENT_ALL.
+   *   see events above.
    *   or
    *   'synch', 'provision', 'delete_ldap_entry', 'delete_drupal_entry', 'cancel_drupal_entry'.
    *   @FIXME: Documentation incomplete.
@@ -481,7 +541,7 @@ class LdapUserConf {
   public function provisionEnabled($direction, $provision_trigger) {
     $result = FALSE;
 
-    if ($direction == LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY) {
+    if ($direction == self::$provisioningDirectionToLDAPEntry) {
 
       if (!$this->ldapEntryProvisionServer) {
         $result = FALSE;
@@ -491,7 +551,7 @@ class LdapUserConf {
       }
 
     }
-    elseif ($direction == LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER) {
+    elseif ($direction == self::$provisioningDirectionToDrupalUser) {
       if (!$this->drupalAcctProvisionServer) {
         $result = FALSE;
       }
@@ -558,10 +618,11 @@ class LdapUserConf {
       return $result;
     }
 
-    $ldap_server = ldap_servers_get_servers($this->ldapEntryProvisionServer, NULL, TRUE);
+    $factory = new ServerFactory($this->ldapEntryProvisionServer, NULL, TRUE);
+    $ldap_server = $factory->servers;
     $params = [
-      'direction' => LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY,
-      'prov_events' => [LDAP_USER_EVENT_CREATE_LDAP_ENTRY],
+      'direction' => self::$provisioningDirectionToLDAPEntry,
+      'prov_events' => [self::$eventCreateLdapEntry],
       'module' => 'ldap_user',
       'function' => 'provisionLdapEntry',
       'include_count' => FALSE,
@@ -707,11 +768,12 @@ class LdapUserConf {
     $result = FALSE;
 
     if ($this->ldapEntryProvisionServer) {
-      $ldap_server = ldap_servers_get_servers($this->ldapEntryProvisionServer, NULL, TRUE);
+      $factory = new ServerFactory($this->ldapEntryProvisionServer, NULL, TRUE);
+      $ldap_server = $factory->servers;
 
       $params = array(
-        'direction' => LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY,
-        'prov_events' => array(LDAP_USER_EVENT_SYNCH_TO_LDAP_ENTRY),
+        'direction' => self::$provisioningDirectionToLDAPEntry,
+        'prov_events' => array(self::$eventSyncToLdapEntry),
         'module' => 'ldap_user',
         'function' => 'synchToLdapEntry',
         'include_count' => FALSE,
@@ -810,7 +872,10 @@ class LdapUserConf {
    * $user_edit data returned by reference.
    * @internal param array $account drupal account array with minimum of name.*   drupal account array with minimum of name.
    */
-  public function synchToDrupalAccount(User $drupal_user, &$user_edit, $prov_event = LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER, $ldap_user = NULL, $save = FALSE) {
+  public function synchToDrupalAccount(User $drupal_user, &$user_edit, $prov_event = NULL, $ldap_user = NULL, $save = FALSE) {
+    if ($prov_event == NULL) {
+      $prov_event = LdapUserConf::$eventSyncToDrupalUser;
+    }
 
     if (
         (!$ldap_user  && !isset($drupal_user->name)) ||
@@ -830,9 +895,10 @@ class LdapUserConf {
     }
 
     if ($this->drupalAcctProvisionServer) {
-      $ldap_server = ldap_servers_get_servers($this->drupalAcctProvisionServer, NULL, TRUE);
+      $factory = new ServerFactory($this->drupalAcctProvisionServer, NULL, TRUE);
+      $ldap_server = $factory->servers;
       // @FIXME $user_edit is deprecated.
-      $this->entryToUserEdit($ldap_user, $user_edit, $ldap_server, LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, array($prov_event));
+      $this->entryToUserEdit($ldap_user, $user_edit, $ldap_server, self::$provisioningDirectionToDrupalUser, array($prov_event));
     }
 
     if ($save) {
@@ -881,9 +947,10 @@ class LdapUserConf {
       return FALSE;
     }
     // $user_entity->ldap_user_prov_entries,.
-    $ldap_server = ldap_servers_get_servers($sid, NULL, TRUE);
+    $factory = new ServerFactory($sid, NULL, TRUE);
+    $ldap_server = $factory->servers;
     $params = [
-      'direction' => LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY,
+      'direction' => self::$provisioningDirectionToLDAPEntry,
       'prov_events' => $prov_events,
       'module' => 'ldap_user',
       'function' => 'getProvisionRelatedLdapEntry',
@@ -926,7 +993,8 @@ class LdapUserConf {
         if (count($parts) == 2) {
 
           list($sid, $dn) = $parts;
-          $ldap_server = ldap_servers_get_servers($sid, NULL, TRUE);
+          $factory = new ServerFactory($sid, NULL, TRUE);
+          $ldap_server = $factory->servers;
           if (is_object($ldap_server) && $dn) {
             $boolean_result = $ldap_server->delete($dn);
             $tokens = array('%sid' => $sid, '%dn' => $dn, '%username' => $account->name, '%uid' => $account->uid);
@@ -959,7 +1027,7 @@ class LdapUserConf {
    *   'module' => module calling function, e.g. 'ldap_user'
    *   'function' => function calling function, e.g. 'provisionLdapEntry'
    *   'include_count' => should 'count' array key be included
-   *   'direction' => LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY || LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER
+   *   'direction' => self::$provisioningDirectionToLDAPEntry || self::$provisioningDirectionToDrupalUser
    * @param null $ldap_user_entry
    *
    * @return array (ldap entry, $result)
@@ -979,12 +1047,13 @@ class LdapUserConf {
 
     $include_count = (isset($params['include_count']) && $params['include_count']);
 
-    $direction = isset($params['direction']) ? $params['direction'] : LDAP_USER_PROV_DIRECTION_ALL;
+    $direction = isset($params['direction']) ? $params['direction'] : self::$provisioningDirectionAll;
     $prov_events = empty($params['prov_events']) ? ldap_user_all_events() : $params['prov_events'];
 
     $mappings = $this->getSynchMappings($direction, $prov_events);
     // Loop over the mappings.
     foreach ($mappings as $field_key => $field_detail) {
+      // FIXME: Incorrect parameter count
       list($ldap_attr_name, $ordinal, $conversion) = $this->extractTokenParts($field_key, TRUE);
       $ordinal = (!$ordinal) ? 0 : $ordinal;
       if ($ldap_user_entry && isset($ldap_user_entry[$ldap_attr_name]) && is_array($ldap_user_entry[$ldap_attr_name]) && isset($ldap_user_entry[$ldap_attr_name][$ordinal])) {
@@ -992,7 +1061,7 @@ class LdapUserConf {
         continue;
       }
 
-      $synced = $this->isSynched($field_key, $params['prov_events'], LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY);
+      $synced = $this->isSynched($field_key, $params['prov_events'], self::$provisioningDirectionToLDAPEntry);
       if ($synced) {
         $token = ($field_detail['user_attr'] == 'user_tokens') ? $field_detail['user_tokens'] : $field_detail['user_attr'];
         $value = $this->tokenReplace($account, $token, 'user_account');
@@ -1091,7 +1160,8 @@ class LdapUserConf {
 
     // If we don't have an account name already we should set one.
     if (!$account->getUsername()) {
-      $ldap_server = ldap_servers_get_servers($this->drupalAcctProvisionServer, 'enabled', TRUE);
+      $factory = new ServerFactory($this->drupalAcctProvisionServer, 'enabled', TRUE);
+      $ldap_server = $factory->servers;
       $account->set('name', $ldap_user[$ldap_server->get('user_attr')]);
       $tokens['%username'] = $account->getUsername();
     }
@@ -1100,15 +1170,16 @@ class LdapUserConf {
     if ($this->drupalAcctProvisionServer) {
 
       // $ldap_user['sid'].
-      $ldap_server = ldap_servers_get_servers($this->drupalAcctProvisionServer, 'enabled', TRUE);
+      $factory = new ServerFactory($this->drupalAcctProvisionServer, 'enabled', TRUE);
+      $ldap_server = $factory->servers;
 
       $params = array(
         'account' => $account,
         'user_edit' => $user_edit,
-        'prov_event' => LDAP_USER_EVENT_CREATE_DRUPAL_USER,
+        'prov_event' => self::$eventCreateDrupalUser,
         'module' => 'ldap_user',
         'function' => 'provisionDrupalAccount',
-        'direction' => LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER,
+        'direction' => self::$provisioningDirectionToDrupalUser,
       );
 
       \Drupal::moduleHandler()->alter('ldap_entry', $ldap_user, $params);
@@ -1121,22 +1192,22 @@ class LdapUserConf {
       // Synch drupal account, since drupal account exists.
       if ($account2) {
         // 1. correct username and authmap.
-        $this->entryToUserEdit($ldap_user, $account2, $ldap_server, LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, array(LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER));
+        $this->entryToUserEdit($ldap_user, $account2, $ldap_server, self::$provisioningDirectionToDrupalUser, array(LdapUserConf::$eventSyncToDrupalUser));
         $account = $account2;
         $account->save();
         // Update the identifier table.
-        LdapUserConf::ldap_user_set_identifier($account, $account->getUsername());
+        self::ldap_user_set_identifier($account, $account->getUsername());
 
         // 2. attempt synch if appropriate for current context.
         // @FIXME $user_edit is deprecated (LDAP)
         if ($account) {
-          $account = $this->synchToDrupalAccount($account, $user_edit, LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER, $ldap_user, TRUE);
+          $account = $this->synchToDrupalAccount($account, $user_edit, LdapUserConf::$eventSyncToDrupalUser, $ldap_user, TRUE);
         }
         return $account;
       }
       // Create drupal account.
       else {
-        $this->entryToUserEdit($ldap_user, $account, $ldap_server, LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, array(LDAP_USER_EVENT_CREATE_DRUPAL_USER));
+        $this->entryToUserEdit($ldap_user, $account, $ldap_server, self::$provisioningDirectionToDrupalUser, array(self::$eventCreateDrupalUser));
         if ($save) {
           $tokens = array('%drupal_username' => $account->get('name'));
           if (empty($account->getUsername())) {
@@ -1163,7 +1234,7 @@ class LdapUserConf {
             drupal_set_message(t('User account creation failed because of system problems.'), 'error');
           }
           else {
-            LdapUserConf::ldap_user_set_identifier($account, $account->getUsername());
+            self::ldap_user_set_identifier($account, $account->getUsername());
             if (!empty($user_data)) {
               // FIXME: Undefined function.
               ldap_user_identities_data_update($account, $user_data);
@@ -1185,7 +1256,8 @@ class LdapUserConf {
    */
   public function ldapAssociateDrupalAccount($drupal_username) {
     if ($this->drupalAcctProvisionServer) {
-      $ldap_server = ldap_servers_get_servers($this->drupalAcctProvisionServer, 'enabled', TRUE);
+      $factory = new ServerFactory($this->drupalAcctProvisionServer, 'enabled', TRUE);
+      $ldap_server = $factory->servers;
       $account = user_load_by_name($drupal_username);
       if (!$account) {
         \Drupal::logger('ldap_user')->error('Failed to LDAP associate drupal account %drupal_username because account not found', array('%drupal_username' => $drupal_username));
@@ -1266,8 +1338,10 @@ class LdapUserConf {
    * @param int $direction
    * @param array $prov_events
    */
-  public function entryToUserEdit($ldap_user, &$account, $ldap_server, $direction = LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, $prov_events = NULL) {
-
+  public function entryToUserEdit($ldap_user, &$account, $ldap_server, $direction = NULL, $prov_events = NULL) {
+    if ($direction == NULL) {
+      $direction = self::$provisioningDirectionToDrupalUser;
+    }
     // Need array of user fields and which direction and when they should be synched.
     if (!$prov_events) {
       $prov_events = ldap_user_all_events();
@@ -1294,8 +1368,8 @@ class LdapUserConf {
       $account->set('name', $drupal_username);
     }
 
-    // Only fired on LDAP_USER_EVENT_CREATE_DRUPAL_USER. Shouldn't it respect the checkbox on the sync form?
-    if ($direction == LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER && in_array(LDAP_USER_EVENT_CREATE_DRUPAL_USER, $prov_events)) {
+    // Only fired on self::$eventCreateDrupalUser. Shouldn't it respect the checkbox on the sync form?
+    if ($direction == self::$provisioningDirectionToDrupalUser && in_array(self::$eventCreateDrupalUser, $prov_events)) {
       $derived_mail = $ldap_server->userEmailFromLdapEntry($ldap_user['attr']);
       if (!$account->getEmail()) {
         $account->set('mail', $derived_mail);
@@ -1387,9 +1461,9 @@ class LdapUserConf {
    * @param string $attr_token
    *   e.g. [property.mail], [field.ldap_user_puid_property].
    * @param array $prov_events
-   *   e.g. array(LDAP_USER_EVENT_CREATE_DRUPAL_USER).  typically array with 1 element.
+   *   e.g. array(self::$eventCreateDrupalUser).  typically array with 1 element.
    * @param int $direction
-   *   LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER or LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY.
+   *   self::$provisioningDirectionToDrupalUser or self::$provisioningDirectionToLDAPEntry.
    *
    * @return bool
    */
@@ -1403,7 +1477,7 @@ class LdapUserConf {
         // debug($this->synchMapping[$direction][$attr_token]);.
       }
       else {
-        // debug("$attr_token not in ldapUserConf::synchMapping");.
+        // debug("$attr_token not in self::synchMapping");.
       }
     }
     return $result;

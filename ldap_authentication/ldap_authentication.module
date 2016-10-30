@@ -8,6 +8,7 @@
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\ldap_authentication\LdapAuthenticationConf;
+use Drupal\ldap_servers\Entity\Server;
 use Drupal\ldap_servers\MassageFunctions;
 use Drupal\ldap_user\LdapUserConf;
 
@@ -15,47 +16,11 @@ use Drupal\ldap_user\LdapUserConf;
  * @todo fix advanced help for ../ldap/authentication settings page
  */
 
-define('LDAP_AUTHENTICATION_MIXED', 1);
-define('LDAP_AUTHENTICATION_EXCLUSIVE', 2);
-define('LDAP_AUTHENTICATION_MODE_DEFAULT', 1);
-
-define('LDAP_AUTHENTICATION_EXCL_IF_NO_AUTHZ_DEFAULT', 0);
-define('LDAP_AUTHENTICATION_CONFLICT_LOG', 1);
-define('LDAP_AUTHENTICATION_CONFLICT_RESOLVE', 2);
-define('LDAP_AUTHENTICATION_CONFLICT_RESOLVE_DEFAULT', 2);
-
-define('LDAP_AUTHENTICATION_EMAIL_UPDATE_ON_LDAP_CHANGE_ENABLE_NOTIFY', 1);
-define('LDAP_AUTHENTICATION_EMAIL_UPDATE_ON_LDAP_CHANGE_ENABLE', 2);
-define('LDAP_AUTHENTICATION_EMAIL_UPDATE_ON_LDAP_CHANGE_DISABLE', 3);
-define('LDAP_AUTHENTICATION_EMAIL_UPDATE_ON_LDAP_CHANGE_DEFAULT', 1);
-
-define('LDAP_AUTHENTICATION_EMAIL_FIELD_REMOVE', 2);
-define('LDAP_AUTHENTICATION_EMAIL_FIELD_DISABLE', 3);
-define('LDAP_AUTHENTICATION_EMAIL_FIELD_ALLOW', 4);
-define('LDAP_AUTHENTICATION_EMAIL_FIELD_DEFAULT', 3);
-
-define('LDAP_AUTHENTICATION_PASSWORD_FIELD_SHOW', 2);
-define('LDAP_AUTHENTICATION_PASSWORD_FIELD_HIDE', 3);
-define('LDAP_AUTHENTICATION_PASSWORD_FIELD_ALLOW', 4);
-define('LDAP_AUTHENTICATION_PASSWORD_FIELD_DEFAULT', 2);
-
-define('LDAP_AUTHENTICATION_RESULT_FAIL_CONNECT', 1);
-define('LDAP_AUTHENTICATION_RESULT_FAIL_BIND', 2);
-define('LDAP_AUTHENTICATION_RESULT_FAIL_FIND', 3);
-define('LDAP_AUTHENTICATION_RESULT_FAIL_DISALLOWED', 4);
-define('LDAP_AUTHENTICATION_RESULT_FAIL_CREDENTIALS', 5);
-define('LDAP_AUTHENTICATION_RESULT_SUCCESS', 6);
-define('LDAP_AUTHENTICATION_RESULT_FAIL_GENERIC', 7);
-define('LDAP_AUTHENTICATION_RESULT_FAIL_SERVER', 8);
-
-define('LDAP_AUTHENTICATION_ACCT_CREATION_USER_SETTINGS_FOR_LDAP', 1);
-
-define('LDAP_AUTHENTICATION_DISABLED_FOR_BAD_CONF_MSG', 'The site logon is currently not working due to a configuration error.  Please see logs for additional details.');
-
 /**
  * Implements hook_menu_alter().
  * since menu items are cached, only useful to add or alter callbacks
  * for ldap authentication driven menu items.
+ * @FIXME: Not in D8.
  */
 function ldap_authentication_menu_alter(&$items) {
   $items['user/password']['access callback'] = 'ldap_authentication_show_reset_pwd';
@@ -111,6 +76,7 @@ function ldap_authentication_theme() {
 
 /**
  * Implements hook_help().
+ * @FIXME: D7 Syntax.
  */
 function ldap_authentication_help($path, $arg) {
 
@@ -219,8 +185,8 @@ function ldap_authentication_show_reset_pwd($user = NULL) {
 
   if ($user->id() == 0) {
     // Hide reset password for anonymous users if ldap only authentication and password updates are disabled, otherwise show.
-    if ($auth_conf->authenticationMode != LDAP_AUTHENTICATION_EXCLUSIVE) {
-      if ($auth_conf->passwordOption == LDAP_AUTHENTICATION_PASSWORD_FIELD_ALLOW) {
+    if ($auth_conf->authenticationMode != $auth_conf::$mode_exclusive) {
+      if ($auth_conf->passwordOption == LdapAuthenticationConf::$passwordFieldAllow) {
         return TRUE;
       }
       return FALSE;
@@ -231,7 +197,7 @@ function ldap_authentication_show_reset_pwd($user = NULL) {
     // Authenticated user.  hide if ldap authenticated and updating password is
     // not allowed, otherwise show.
     if (ldap_authentication_ldap_authenticated($user)) {
-      if ($auth_conf->passwordOption == LDAP_AUTHENTICATION_PASSWORD_FIELD_ALLOW) {
+      if ($auth_conf->passwordOption == LdapAuthenticationConf::$passwordFieldAllow) {
         return TRUE;
       }
       return FALSE;
@@ -293,7 +259,7 @@ function ldap_authentication_user_pass_validate(FormStateInterface &$form_state)
     );
     $error = TRUE;
     if (is_object($vars['auth_conf'])) {
-      if ($vars['auth_conf']->passwordOption == LDAP_AUTHENTICATION_PASSWORD_FIELD_ALLOW) {
+      if ($vars['auth_conf']->passwordOption == LdapAuthenticationConf::$passwordFieldShow) {
         $error = FALSE;
       }
     }
@@ -319,21 +285,21 @@ function _ldap_authentication_form_user_profile_form_alter(&$form, $form_state) 
   // Keep in mind admin may be editing another users profile form.  don't assume current global $user.
   $auth_conf = ldap_authentication_get_valid_conf();
   if ($auth_conf && ldap_authentication_ldap_authenticated($form['#user'])) {
-    if ($auth_conf->emailOption == LDAP_AUTHENTICATION_EMAIL_FIELD_REMOVE) {
+    if ($auth_conf->emailOption == LdapAuthenticationConf::$emailFieldRemove) {
       $form['account']['mail']['#type'] = 'hidden';
     }
-    elseif ($auth_conf->emailOption == LDAP_AUTHENTICATION_EMAIL_FIELD_DISABLE) {
+    elseif ($auth_conf->emailOption == LdapAuthenticationConf::$emailFieldDisable) {
       $form['account']['mail']['#disabled'] = TRUE;
       $form['account']['mail']['#description'] = t('This email address is automatically set and may not be changed.');
     }
-    elseif ($auth_conf->emailOption == LDAP_AUTHENTICATION_EMAIL_FIELD_ALLOW) {
+    elseif ($auth_conf->emailOption == LdapAuthenticationConf::$emailFieldAllow) {
       // Email field is functional.
     }
 
     if (!ldap_authentication_show_reset_pwd($form['#user'])) {
       $form['account']['current_pass']['#disabled'] = TRUE;
       if ($auth_conf->ldapUserHelpLinkUrl) {
-        $form['account']['current_pass']['#description'] = l(t($auth_conf->ldapUserHelpLinkText), $auth_conf->ldapUserHelpLinkUrl);
+        $form['account']['current_pass']['#description'] = \Drupal::l(t($auth_conf->ldapUserHelpLinkText), Url::fromUri($auth_conf->ldapUserHelpLinkUrl));
       }
       else {
         $form['account']['current_pass']['#description'] = t('The password cannot be changed using this website');
@@ -371,14 +337,14 @@ function ldap_authentication_user_login_authenticate_validate($form, &$form_stat
  */
 function ldap_authentication_show_ldap_help_link($user = NULL) {
   $user = \Drupal::currentUser();
-
+  /* @var LdapAuthenticationConf $auth_conf */
   if (!$auth_conf = ldap_authentication_get_valid_conf()) {
     return FALSE;
   }
-  elseif ($auth_conf->authenticationMode == LDAP_AUTHENTICATION_MIXED) {
+  elseif ($auth_conf->authenticationMode == $auth_conf::$mode_mixed) {
     return (ldap_authentication_ldap_authenticated($user));
   }
-  elseif ($auth_conf->authenticationMode == LDAP_AUTHENTICATION_EXCLUSIVE) {
+  elseif ($auth_conf->authenticationMode == $auth_conf::$mode_exclusive) {
     if ($user->id() == 0 || ldap_authentication_ldap_authenticated($user)) {
       return TRUE;
     }
@@ -491,14 +457,14 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state, $re
    * - otherwise override other authenication by setting $form_state['uid'] = NULL
    */
   if (NULL !== $form_state->getValue('uid') && is_numeric($form_state->getValue('uid'))) {
-    if ($auth_conf->authenticationMode == LDAP_AUTHENTICATION_MIXED || $form_state->getValue('uid') == 1) {
+    if ($auth_conf->authenticationMode == $auth_conf::$mode_mixed || $form_state->getValue('uid') == 1) {
       if ($detailed_watchdog_log) {
         \Drupal::logger('ldap_authentication')->debug('%username : Previously authenticated in mixed mode or uid=1', $watchdog_tokens);
       }
       // Already passed a previous module's authentication validation.
       return;
     }
-    elseif ($auth_conf->authenticationMode == LDAP_AUTHENTICATION_EXCLUSIVE) {
+    elseif ($auth_conf->authenticationMode == $auth_conf::$mode_exclusive) {
       if ($detailed_watchdog_log) {
         \Drupal::logger('ldap_authentication')->debug('%username : Previously authenticated in exclusive mode or uid is not 1.  Clear uid in form_state and attempt ldap authentication.', $watchdog_tokens);
       }
@@ -531,7 +497,7 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state, $re
    * IV. test credentials and if available get corresponding ldap user and ldap server
    */
   list($authentication_result, $ldap_user, $ldap_server_authenticated_on) = ldap_authentication_test_credentials($auth_conf, $sso_login, $authname, $form_state->getValue('pass'), $watchdog_tokens);
-  if ($authentication_result != LDAP_AUTHENTICATION_RESULT_SUCCESS) {
+  if ($authentication_result != LdapAuthenticationConf::$authSuccess) {
     ldap_authentication_fail_response($authentication_result, $auth_conf, $detailed_watchdog_log, $watchdog_tokens);
     return;
   }
@@ -591,7 +557,7 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state, $re
 
   // Account already exists.
   if ($drupal_account_exists && !$drupal_account_is_authmapped) {
-    if ($auth_conf->ldapUser->loginConflictResolve == LDAP_USER_CONFLICT_LOG) {
+    if ($auth_conf->ldapUser->loginConflictResolve == LdapUserConf::$userConflictLog) {
       if ($account_with_same_email = user_load_by_mail($ldap_user['mail'])) {
         $watchdog_tokens['%conflict_name'] = $account_with_same_email->name;
         \Drupal::logger('ldap_authentication')->error('LDAP user with DN %dn has a naming conflict with a local drupal user %conflict_name', $watchdog_tokens);
@@ -615,15 +581,15 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state, $re
    *
    */
   if ($drupal_account_exists && $drupal_account->mail->value != $ldap_user['mail'] && (
-      $auth_conf->emailUpdate == LDAP_AUTHENTICATION_EMAIL_UPDATE_ON_LDAP_CHANGE_ENABLE_NOTIFY ||
-      $auth_conf->emailUpdate == LDAP_AUTHENTICATION_EMAIL_UPDATE_ON_LDAP_CHANGE_ENABLE
+      $auth_conf->emailUpdate == $auth_conf::$emailUpdateOnLdapChangeDefault ||
+      $auth_conf->emailUpdate == $auth_conf::$emailUpdateOnLdapChangeEnable
     )) {
     $drupal_account->set('mail', $ldap_user['mail']);
     $watchdog_tokens['%username'] = $drupal_account->name->value;
     if (!$updated_account = $drupal_account->save()) {
       \Drupal::logger('ldap_authentication')->error('Failed to make changes to user %username updated %changed.', $watchdog_tokens);
     }
-    elseif ($auth_conf->emailUpdate == LDAP_AUTHENTICATION_EMAIL_UPDATE_ON_LDAP_CHANGE_ENABLE_NOTIFY) {
+    elseif ($auth_conf->emailUpdate == $auth_conf::$emailUpdateOnLdapChangeEnableNotify) {
       if (isset($user_edit['mail'])) {
         $watchdog_tokens['%mail'] = $user_edit['mail'];
         drupal_set_message(t('Your e-mail has been updated to match your current account (%mail).', $watchdog_tokens), 'status');
@@ -655,7 +621,7 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state, $re
     }
 
     // VI.C.2 Do not provision Drupal account if provisioning disabled.
-    if (!$auth_conf->ldapUser->provisionEnabled(LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, LDAP_USER_DRUPAL_USER_PROV_ON_AUTHENTICATE)) {
+    if (!$auth_conf->ldapUser->provisionEnabled(LdapUserConf::$provisioningDirectionToLDAPEntry, LdapUserConf::$provisionDrupalUserOnAuthentication)) {
       \Drupal::logger('ldap_authentication')->error('Drupal account for authname=%authname account name=%account_name_attr does not exist and provisioning of Drupal accounts on authentication is not enabled', $watchdog_tokens);
       return;
     }
@@ -673,7 +639,7 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state, $re
      *       for external authentication modules
      */
 
-    if ($auth_conf->ldapUser->acctCreation == LDAP_AUTHENTICATION_ACCT_CREATION_USER_SETTINGS_FOR_LDAP &&
+    if ($auth_conf->ldapUser->acctCreation == TRUE &&
       \Drupal::config('user.settings')->get('register') == USER_REGISTER_VISITORS_ADMINISTRATIVE_APPROVAL) {
       // If admin approval required, set status to 0.
       $user_edit = array('name' => $drupal_accountname, 'status' => 0);
@@ -755,11 +721,12 @@ function ldap_authentication_corresponding_drupal_user($authname, $auth_conf, &$
  */
 function ldap_authentication_test_credentials($auth_conf, $sso_login, $authname, $password, &$watchdog_tokens) {
   $detailed_watchdog_log = \Drupal::config('ldap_help.settings')->get('watchdog_detail');
-  $authentication_result = LDAP_AUTHENTICATION_RESULT_FAIL_GENERIC;
+  /* @var LdapAuthenticationConf $auth_conf */
+  $authentication_result = $auth_conf::$authFailGeneric;
   $ldap_user = FALSE;
   $ldap_server = NULL;
 
-  /* @var \Drupal\ldap_servers\Entity\Server $ldap_server */
+  /* @var Server $ldap_server */
   foreach ($auth_conf->enabledAuthenticationServers as $id => $ldap_server) {
     $watchdog_tokens['%id'] = $id;
     $watchdog_tokens['%bind_method'] = $ldap_server->get('bind_method');
@@ -768,10 +735,10 @@ function ldap_authentication_test_credentials($auth_conf, $sso_login, $authname,
     }
 
     // #1 CONNECT TO SERVER.
-    $authentication_result = LDAP_AUTHENTICATION_RESULT_FAIL_GENERIC;
+    $authentication_result = $auth_conf::$authFailGeneric;
     $result = $ldap_server->connect();
     if ($result != $ldap_server::LDAP_SUCCESS) {
-      $authentication_result = LDAP_AUTHENTICATION_RESULT_FAIL_CONNECT;
+      $authentication_result = $auth_conf::$authFailConnect;
       $watchdog_tokens['%err_msg'] = $ldap_server->errorMsg('ldap');
       if ($detailed_watchdog_log) {
         \Drupal::logger('ldap_authentication')->debug('%username : Failed connecting to %id.  Error: %err_msg', $watchdog_tokens);
@@ -786,36 +753,36 @@ function ldap_authentication_test_credentials($auth_conf, $sso_login, $authname,
 
     /**
      *
-     * LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT => t('Service Account Bind.  Use credentials in following section to
+     * $bindMethodServiceAccount => t('Service Account Bind.  Use credentials in following section to
      * bind to ldap.  This option is usually a best practice. Service account is entered in next section.'),
      *
-     * LDAP_SERVERS_BIND_METHOD_USER => t('Bind with Users Credentials.  Use users\' entered credentials
+     * $bindMethodUser => t('Bind with Users Credentials.  Use users\' entered credentials
      * to bind to LDAP.  This is only useful for modules that work during user logon such
      * as ldap authentication and ldap authorization.  This option is not a best practice in most cases.
      * The users dn must be of the form "cn=[username],[base dn]" for this option to work.'),
      *
-     * LDAP_SERVERS_BIND_METHOD_ANON_USER => t('Anonymous Bind for search, then Bind with Users Credentials.
+     * $bindMethodAnon => t('Anonymous Bind for search, then Bind with Users Credentials.
      * Searches for user DN then uses users\' entered credentials to bind to LDAP.  This is only useful for
      * modules that work during user logon such as ldap authentication and ldap authorization.
      * The users dn must be discovered by an anonymous search for this option to work.'),
      *
-     * LDAP_SERVERS_BIND_METHOD_ANON => t('Anonymous Bind. Use no credentials to bind to ldap server.
+     * $bindMethodAnonUser => t('Anonymous Bind. Use no credentials to bind to ldap server.
      * Will not work on most ldaps.'),
      *
      */
 
     $bind_success = FALSE;
-    if ($ldap_server->get('bind_method') == LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT) {
+    if ($ldap_server->get('bind_method') == Server::$bindMethodServiceAccount) {
       $bind_success = ($ldap_server->bind(NULL, NULL, FALSE) == $ldap_server::LDAP_SUCCESS);
     }
-    elseif ($ldap_server->get('bind_method') == LDAP_SERVERS_BIND_METHOD_ANON ||
-      $ldap_server->get('bind_method') == LDAP_SERVERS_BIND_METHOD_ANON_USER) {
+    elseif ($ldap_server->get('bind_method') == Server::$bindMethodAnon ||
+      $ldap_server->get('bind_method') == Server::$bindMethodAnonUser) {
       $bind_success = ($ldap_server->bind(NULL, NULL, TRUE) == $ldap_server::LDAP_SUCCESS);
     }
     elseif ($sso_login) {
-      \Drupal::logger('ldap_authentication')->error('Trying to use SSO with LDAP_SERVERS_BIND_METHOD_USER bind method.', $watchdog_tokens);
+      \Drupal::logger('ldap_authentication')->error('Trying to use SSO with user bind method.', $watchdog_tokens);
     }
-    elseif ($ldap_server->get('bind_method') == LDAP_SERVERS_BIND_METHOD_USER && $sso_login == FALSE) {
+    elseif ($ldap_server->get('bind_method') == Server::$bindMethodUser && $sso_login == FALSE) {
       // With sso enabled this method of binding isn't valid.
       foreach ($ldap_server->getBasedn() as $basedn) {
         $search = array('%basedn', '%username');
@@ -837,14 +804,13 @@ function ldap_authentication_test_credentials($auth_conf, $sso_login, $authname,
         \Drupal::logger('ldap_authentication')->debug('%username : Trying server %id where bind_method = %bind_method.  Error: %err_text', $watchdog_tokens);
         $watchdog_tokens['%err_text'] = NULL;
       }
-      // @FIXME: bind_method not defined
-      $authentication_result = ($ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_USER) ? LDAP_AUTHENTICATION_RESULT_FAIL_CREDENTIALS : LDAP_AUTHENTICATION_RESULT_FAIL_BIND;
+      $authentication_result = ($ldap_server->get('bind_method') == Server::$bindMethodUser) ? $auth_conf::$authFailCredentials : $auth_conf::$authFailBind;
       // If bind fails, onto next server.
       continue;
     }
 
     // #3 DOES USER EXIST IN SERVER'S LDAP.
-    if ($ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_ANON_USER) {
+    if ($ldap_server->get('bind_method') == Server::$bindMethodAnonUser) {
       $ldap_user = $ldap_server->userUserNameToExistingLdapEntry($authname);
     }
     elseif ($sso_login) {
@@ -852,7 +818,7 @@ function ldap_authentication_test_credentials($auth_conf, $sso_login, $authname,
       if ($detailed_watchdog_log) {
         $watchdog_tokens['%result'] = var_export($result, TRUE);
         \Drupal::logger('ldap_authentication')->debug('%username : attempting single sign-on
-          login in bind_method of LDAP_SERVERS_BIND_METHOD_USER. Result of
+          login in user bind_method. Result of
           userUserNameToExistingLdapEntry: <pre>%result</pre>', $watchdog_tokens);
       }
     }
@@ -867,10 +833,10 @@ function ldap_authentication_test_credentials($auth_conf, $sso_login, $authname,
         $watchdog_tokens['%err_text'] = NULL;
       }
       if ($ldap_server->ldapErrorNumber()) {
-        $authentication_result = LDAP_AUTHENTICATION_RESULT_FAIL_SERVER;
+        $authentication_result = $auth_conf::$authFailServer;
         break;
       }
-      $authentication_result = LDAP_AUTHENTICATION_RESULT_FAIL_FIND;
+      $authentication_result = $auth_conf::$authFailFind;
       // Next server, please.
       continue;
     }
@@ -879,11 +845,11 @@ function ldap_authentication_test_credentials($auth_conf, $sso_login, $authname,
     $watchdog_tokens['%mail'] = $ldap_user['mail'];
 
     /**
-     * #4 CHECK ALLOWED AND EXCLUDED LIST AND PHP FOR ALLOWED USERS
+     * #4 CHECK ALLOWED AND EXCLUDED LIST FOR ALLOWED USERS
      */
     // @FIXME: Method allowUser not defined
     if (!$auth_conf->allowUser($authname, $ldap_user)) {
-      $authentication_result = LDAP_AUTHENTICATION_RESULT_FAIL_DISALLOWED;
+      $authentication_result = $auth_conf::$authFailDisallowed;
       // Regardless of how many servers, disallowed user fails.
       break;
     }
@@ -914,20 +880,20 @@ function ldap_authentication_test_credentials($auth_conf, $sso_login, $authname,
         \Drupal::logger('ldap_authentication')->debug('%username : Testing user credentials on server %id where bind_method = %bind_method.  Error: %err_text', $watchdog_tokens);
         $watchdog_tokens['%err_text'] = NULL;
       }
-      $authentication_result = LDAP_AUTHENTICATION_RESULT_FAIL_CREDENTIALS;
+      $authentication_result = $auth_conf::$authFailCredentials;
       // Next server, please.
       continue;
     }
     else {
-      $authentication_result = LDAP_AUTHENTICATION_RESULT_SUCCESS;
+      $authentication_result = $auth_conf::$authSuccess;
       // @FIXME: bind_method not defined
-      if ($ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_ANON_USER) {
+      if ($ldap_server->get('bind_method') == Server::$bindMethodAnonUser) {
         // After successful bind, lookup user again to get private attributes.
         $ldap_user = $ldap_server->userUserNameToExistingLdapEntry($authname);
         $watchdog_tokens['%mail'] = $ldap_user['mail'];
       }
-      if ($ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT ||
-        $ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_ANON_USER) {
+      if ($ldap_server->get('bind_method') == Server::$bindMethodServiceAccount ||
+        $ldap_server->get('bind_method') == Server::$bindMethodAnonUser) {
         $ldap_server->disconnect();
       }
       // Success.
@@ -952,10 +918,10 @@ function ldap_authentication_test_credentials($auth_conf, $sso_login, $authname,
 function ldap_authentication_fail_response($authentication_result, $auth_conf, $detailed_watchdog_log, &$watchdog_tokens) {
   $watchdog_tokens['%err_text'] = _ldap_authentication_err_text($authentication_result);
   // Fail scenario 1.  ldap auth exclusive and failed  throw error so no other authentication methods are allowed.
-  if ($auth_conf->authenticationMode == LDAP_AUTHENTICATION_EXCLUSIVE) {
+  if ($auth_conf->authenticationMode == $auth_conf::$mode_exclusive) {
     if ($detailed_watchdog_log) {
       \Drupal::logger('ldap_authentication')->debug('%username : setting error because failed at ldap and
-        LDAP_AUTHENTICATION_EXCLUSIVE is set to true.  So need to stop authentication of Drupal user that is not user 1.
+        exclusive authentication is set to true.  So need to stop authentication of Drupal user that is not user 1.
         error message: %err_text', $watchdog_tokens);
     }
     drupal_set_message(t('Error: @token', array('@token' => $watchdog_tokens['%err_text'])), "error");
@@ -976,7 +942,6 @@ function ldap_authentication_fail_response($authentication_result, $auth_conf, $
  * Get human readable authentication error string.
  *
  * @param int $error
- *   as LDAP_AUTHENTICATION_RESULT_* constant defined in ldap_authentication.module.
  *
  * @return string human readable error text
  */
@@ -984,31 +949,31 @@ function _ldap_authentication_err_text($error) {
 
   $msg = t('unknown error: ' . $error);
   switch ($error) {
-    case LDAP_AUTHENTICATION_RESULT_FAIL_CONNECT:
+    case LdapAuthenticationConf::$authFailConnect:
       $msg = t('Failed to connect to ldap server');
       break;
 
-    case LDAP_AUTHENTICATION_RESULT_FAIL_BIND:
+    case LdapAuthenticationConf::$authFailBind:
       $msg = t('Failed to bind to ldap server');
       break;
 
-    case LDAP_AUTHENTICATION_RESULT_FAIL_FIND:
+    case LdapAuthenticationConf::$authFailFind:
       $msg = t('Sorry, unrecognized username or password.');
       break;
 
-    case LDAP_AUTHENTICATION_RESULT_FAIL_DISALLOWED:
+    case LdapAuthenticationConf::$authFailDisallowed:
       $msg = t('User disallowed');
       break;
 
-    case LDAP_AUTHENTICATION_RESULT_FAIL_CREDENTIALS:
+    case LdapAuthenticationConf::$authFailCredentials:
       $msg = t('Sorry, unrecognized username or password.');
       break;
 
-    case LDAP_AUTHENTICATION_RESULT_FAIL_GENERIC:
+    case LdapAuthenticationConf::$authFailGeneric:
       $msg = t('Sorry, unrecognized username or password.');
       break;
 
-    case LDAP_AUTHENTICATION_RESULT_FAIL_SERVER:
+    case LdapAuthenticationConf::$authFailServer:
       $msg = t('Authentication Server or Configuration Error.');
       break;
 

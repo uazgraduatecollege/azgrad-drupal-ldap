@@ -2,7 +2,10 @@
 
 namespace Drupal\ldap_user\Tests;
 
-use Drupal\ldap_test\LdapTestCase;
+use Drupal\ldap_servers\Entity\Server;
+use Drupal\ldap_servers\ServerFactory;
+use Drupal\ldap_servers\tests\LdapWebTestBase;
+use Drupal\ldap_user\LdapUserConf;
 use Drupal\user\Entity\User;
 
 /**
@@ -10,7 +13,7 @@ use Drupal\user\Entity\User;
  *
  * @group ldap_user
  */
-class LdapUserIntegrationTests extends LdapTestCase {
+class LdapWebUserIntegrationTests extends LdapWebTestBase {
 
   /**
    *
@@ -101,7 +104,8 @@ class LdapUserIntegrationTests extends LdapTestCase {
       $user_acct->field_fname['und'][0]['value'] = 'Bercilak';
       $user_acct->field_lname['und'][0]['value'] = 'Hautdesert';
 
-      $servers = ldap_servers_get_servers(NULL, NULL, FALSE, TRUE);
+      $factory = new ServerFactory(NULL, NULL, FALSE, TRUE);
+      $servers = $factory->servers;
       $desired_dn = "cn=bhautdeser,ou=people,dc=hogwarts,dc=edu";
 
       $pre_entry = $servers[$test_sid]->dnExists($desired_dn, 'ldap_entry');
@@ -143,7 +147,8 @@ class LdapUserIntegrationTests extends LdapTestCase {
       $user_acct_post = user_load_by_name('bhautdeser');
 
       // Clear cache.
-      $servers = ldap_servers_get_servers(NULL, NULL, FALSE, TRUE);
+      $factory = new ServerFactory(NULL, NULL, FALSE, TRUE);
+      $servers = $factory->servers;
       $ldap_entry_post = $servers[$test_sid]->dnExists($desired_dn, 'ldap_entry');
 
       $ldap_entry_success = (
@@ -175,7 +180,9 @@ class LdapUserIntegrationTests extends LdapTestCase {
       $user_acct_post = user_load_by_name('bhautdeser');
 
       // Clear cache.
-      $servers = ldap_servers_get_servers(NULL, NULL, FALSE, TRUE);
+      $factory = new ServerFactory(NULL, NULL, FALSE, TRUE);
+      $servers = $factory->servers;
+      /* @var Server $servers[$test_sid] */
       $ldap_entry_post = $servers[$test_sid]->dnExists($desired_dn, 'ldap_entry');
 
       $ldap_entry_success = (
@@ -219,11 +226,11 @@ class LdapUserIntegrationTests extends LdapTestCase {
       $ldap_user_conf->drupalAcctProvisionServer = 0;
       $ldap_user_conf->ldapEntryProvisionServer = $test_sid;
       $ldap_user_conf->ldapEntryProvisionTriggers = array(
-        LDAP_USER_LDAP_ENTRY_PROV_ON_USER_UPDATE_CREATE,
-        LDAP_USER_LDAP_ENTRY_PROV_ON_AUTHENTICATE,
+        LdapUserConf::$provisionLdapEntryOnUserUpdateCreate,
+        LdapUserConf::$provisionLdapEntryOnUserAuthentication,
       );
 
-      $ldap_user_conf->ldapUserSynchMappings[LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY]['[password]'] = array(
+      $ldap_user_conf->ldapUserSynchMappings[LdapUserConf::$provisioningDirectionToLDAPEntry]['[password]'] = array(
         'sid' => $test_sid,
         'ldap_attr' => '[password]',
         'user_attr' => 'user_tokens',
@@ -232,7 +239,7 @@ class LdapUserIntegrationTests extends LdapTestCase {
         'config_module' => 'ldap_user',
         'synch_module' => 'ldap_user',
         'enabled' => 1,
-        'prov_events' => array(LDAP_USER_EVENT_CREATE_LDAP_ENTRY, LDAP_USER_EVENT_SYNCH_TO_LDAP_ENTRY),
+        'prov_events' => array(LdapUserConf::$eventCreateLdapEntry, LdapUserConf::$eventSyncToLdapEntry),
       );
 
       $ldap_user_conf->save();
@@ -303,7 +310,8 @@ class LdapUserIntegrationTests extends LdapTestCase {
         $this->drupalPost(NULL, $edit, t('Save'));
         $sstephens = user_load_by_name($username);
         // Clear cache.
-        $servers = ldap_servers_get_servers(NULL, NULL, FALSE, TRUE);
+        $factory = new ServerFactory(NULL, NULL, FALSE, TRUE);
+        $servers = $factory->servers;
         $desired_dn = "cn=$username,ou=people,dc=hogwarts,dc=edu";
         $ldap_entry_post = $servers[$test_sid]->dnExists($desired_dn, 'ldap_entry');
 
@@ -353,8 +361,8 @@ class LdapUserIntegrationTests extends LdapTestCase {
       // This will create the proper ldap_user configuration from ldap_test/ldap_user.conf.inc.
       $this->prepTestData('hogwarts', $sids, 'provisionToLdap_' . $test_sid);
       $ldap_user_conf = ldap_user_conf('admin', TRUE);
-      if (!in_array(LDAP_USER_LDAP_ENTRY_DELETE_ON_USER_DELETE, $ldap_user_conf->ldapEntryProvisionTriggers)) {
-        $ldap_user_conf->ldapEntryProvisionTriggers[] = LDAP_USER_LDAP_ENTRY_DELETE_ON_USER_DELETE;
+      if (!in_array(LdapUserConf::$provisionLdapEntryOnUserDelete, $ldap_user_conf->ldapEntryProvisionTriggers)) {
+        $ldap_user_conf->ldapEntryProvisionTriggers[] = LdapUserConf::$provisionLdapEntryOnUserDelete;
       }
       $ldap_user_conf->provisionsLdapEntriesFromDrupalUsers = TRUE;
       $ldap_user_conf->save();
@@ -374,7 +382,8 @@ class LdapUserIntegrationTests extends LdapTestCase {
       $user_acct->field_fname['und'][0]['value'] = 'Bercilak';
       $user_acct->field_lname['und'][0]['value'] = 'Hautdesert';
 
-      $servers = ldap_servers_get_servers(NULL, NULL, FALSE, TRUE);
+      $factory = new ServerFactory(NULL, NULL, FALSE, TRUE);
+      $servers = $factory->servers;
       $desired_dn = "cn=bhautdeser,ou=people,dc=hogwarts,dc=edu";
 
       $pre_entry = $servers[$test_sid]->dnExists($desired_dn, 'ldap_entry');
@@ -387,7 +396,8 @@ class LdapUserIntegrationTests extends LdapTestCase {
 
       // 2. test.
       $drupal_account->uid->delete();
-      $ldap_server = ldap_servers_get_servers($test_sid, 'all', TRUE, TRUE);
+      $factory = new ServerFactory($test_sid, 'all', TRUE, TRUE);
+      $ldap_server = $factory->servers;
       $ldap_entry_post_delete = $ldap_server->dnExists($desired_dn, 'ldap_entry');
 
       $success = (!$ldap_entry_post_delete);
@@ -436,7 +446,8 @@ class LdapUserIntegrationTests extends LdapTestCase {
     $drupal_form = $ldap_user_conf->drupalForm();
     $account_options = $drupal_form['basic_to_drupal']['orphanedDrupalAcctBehavior']['#options'];
     $cn_to_account = array();
-    $ldap_server = ldap_servers_get_servers('activedirectory1', NULL, TRUE, TRUE);
+    $factory = new ServerFactory('activedirectory1', NULL, TRUE, TRUE);
+    $ldap_server = $factory->servers;
 
     foreach ($account_options as $account_option => $account_option_text) {
       $sids = array('activedirectory1');
@@ -449,9 +460,9 @@ class LdapUserIntegrationTests extends LdapTestCase {
 
       // Create 70 drupal accounts (clone0 to clone69) based on corresponding ldap entries.
       $first_clone_username = 'clone0';
-      $last_clone_username = 'clone' . (LDAP_TEST_USER_ORPHAN_CLONE_COUNT - 1);
+      $last_clone_username = 'clone' . (self::$userOrphanCloneCount - 1);
       // 70.
-      for ($i = 0; $i < LDAP_TEST_USER_ORPHAN_CLONE_COUNT; $i++) {
+      for ($i = 0; $i < self::$userOrphanCloneCount; $i++) {
         $name = "clone" . $i;
         // debug("create clone $name, activedirectory1");.
         $account = $this->createLdapIdentifiedDrupalAccount(
@@ -475,7 +486,7 @@ class LdapUserIntegrationTests extends LdapTestCase {
       \Drupal::entityManager()->getStorage('user')->load($clone_last_uid);
 
       // debug("pre ldap delete, clone0 and cloneN $first_clone_username and $last_clone_username"); debug($clone_first);debug($clone_last); //debug($ldap_server->entries);.
-      $delete = LDAP_TEST_USER_ORPHAN_CLONE_COUNT - LDAP_TEST_USER_ORPHAN_CLONE_REMOVE_COUNT;
+      $delete = self::$userOrphanCloneCount - self::$userOrphanCloneRemoveCount;
       for ($i = 0; $i < $delete; $i++) {
         $name = "clone" . $i;
         $account = $cn_to_account[$name];
@@ -507,7 +518,7 @@ class LdapUserIntegrationTests extends LdapTestCase {
         case 'ldap_user_orphan_do_not_check':
           $test_uids = array();
           // 70.
-          for ($i = 0; $i < LDAP_TEST_USER_ORPHAN_CLONE_COUNT; $i++) {
+          for ($i = 0; $i < self::$userOrphanCloneCount; $i++) {
             $name = "clone" . $i;
             $test_uids[] = @$cn_to_account[$name]->uid;
 
@@ -588,7 +599,7 @@ class LdapUserIntegrationTests extends LdapTestCase {
           }
           $success = TRUE;
           $accounts = \Drupal::entityManager()->getStorage('user')->loadMultiple($test_uids);
-          $success = (count($accounts) == LDAP_TEST_USER_ORPHAN_CLONE_COUNT);
+          $success = (count($accounts) == self::$userOrphanCloneCount);
 
           if ($success) {
             // @FIXME
@@ -618,6 +629,7 @@ class LdapUserIntegrationTests extends LdapTestCase {
 
     $account = NULL;
     $user_edit = array('name' => $name);
+    // @FIXME Missing function
     $user = $ldap_user_conf->provisionDrupalAccount($account, $user_edit, NULL, TRUE);
 
     // @FIXME

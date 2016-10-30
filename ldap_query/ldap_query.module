@@ -8,16 +8,8 @@ use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\ldap_query\LdapQuery;
 use Drupal\ldap_query\LdapQueryAdmin;
 
-define('LDAP_QUERY_MENU_BASE_PATH', 'admin/config/people/ldap');
-define('LDAP_QUERY_INDEX_BASE_PATH', 'admin/config/people/ldap/query');
-// For argument offsets.
-define('LDAP_QUERY_MENU_BASE_PATH_PARTS', 4);
-
-/**
- *
- */
 function ldap_query_menu() {
-  //FIXME: Unported, placehoder for first form created.
+  // @FIXME: Unported, placehoder for first form created.
   $menu_offset = 4;
 
   $items['admin/config/people/ldap/query'] = array(
@@ -129,51 +121,11 @@ function ldap_query_cache_clear() {
  * @param bool $reset
  *   do not use cached or static result.
  *
- * @return array
+ * @return array|bool
  *  Array of server conf object keyed on sid, single server conf object
  *  (if flatten == TRUE).
  */
 function ldap_query_get_queries($qid = NULL, $type, $flatten = FALSE, $reset = FALSE) {
-  if (\Drupal::config('ldap_test.settings')->get('simpletest')) {
-    return _ldap_query_get_simpletest_queries($qid, $type, $flatten, $reset);
-  }
-  else {
-    return _ldap_query_get_queries($qid, $type, $flatten, $reset);
-  }
-}
-
-/**
- *
- */
-function ldap_query_fields() {
-  return LdapQuery::fields();
-}
-
-/**
- * Implements hook_help().
- */
-function ldap_query_help($route_name, RouteMatchInterface $route_match) {
-
-  $help = '<h3>' . t('LDAP Query Module') . '</h3><p>' .
-  t('This module does nothing in and of itself.  It should only be
-    enabled and configured if another module requires it.') . '</p>';
-
-  switch ($route_name) {
-    case 'ldap_query.admin_form':
-      $output = '<p>' . $help . '</p>';
-      return $output;
-  }
-}
-
-/**
- * See ldap_query_get_servers()
- * @param $qid
- * @param $type
- * @param $flatten
- * @param $reset
- * @return bool|mixed
- */
-function _ldap_query_get_queries($qid, $type, $flatten, $reset) {
   static $queries;
 
   if ($reset) {
@@ -200,5 +152,28 @@ function _ldap_query_get_queries($qid, $type, $flatten, $reset) {
 
   if (isset($queries[$type])) {
     return $queries[$type];
+  }
+}
+
+/**
+ *
+ */
+function ldap_query_fields() {
+  return LdapQuery::fields();
+}
+
+/**
+ * Implements hook_help().
+ */
+function ldap_query_help($route_name, RouteMatchInterface $route_match) {
+
+  $help = '<h3>' . t('LDAP Query Module') . '</h3><p>' .
+  t('This module does nothing in and of itself.  It should only be
+    enabled and configured if another module requires it.') . '</p>';
+
+  switch ($route_name) {
+    case 'ldap_query.admin_form':
+      $output = '<p>' . $help . '</p>';
+      return $output;
   }
 }

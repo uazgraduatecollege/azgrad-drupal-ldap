@@ -35,7 +35,7 @@ class LdapQuery implements LdapProtocol  {
   public $sizelimit = 0;
   public $timelimit = 0;
   public $deref = LDAP_DEREF_NEVER;
-  public $scope = LDAP_SCOPE_SUBTREE;
+  public $scope;
 
 
   public $inDatabase = FALSE;
@@ -45,6 +45,8 @@ class LdapQuery implements LdapProtocol  {
    * Constructor Method.
    */
   public function __construct($qid) {
+    $this->scope = Server::$scopeSubTree;
+
     if (!is_scalar($qid)) {
       return;
     }
@@ -453,7 +455,7 @@ class LdapQuery implements LdapProtocol  {
           'type' => 'int',
           'size' => 'tiny',
           'not null' => TRUE,
-          'default' => LDAP_SCOPE_SUBTREE,
+          'default' => Server::$scopeSubTree,
         ),
         'form' => array(
           'field_group' => 'query_advanced',
@@ -461,9 +463,9 @@ class LdapQuery implements LdapProtocol  {
           '#title' => t('Scope of search.'),
           '#required' => 1,
           '#options' => array(
-            LDAP_SCOPE_BASE => t('BASE. This value is used to indicate searching only the entry at the base DN, resulting in only that entry being returned (keeping in mind that it also has to meet the search filter criteria!).'),
-            LDAP_SCOPE_ONELEVEL => t('ONELEVEL. This value is used to indicate searching all entries one level under the base DN - but not including the base DN and not including any entries under that one level under the base DN.'),
-            LDAP_SCOPE_SUBTREE => t('SUBTREE. (default) This value is used to indicate searching of all entries at all levels under and including the specified base DN.'),
+            Server::$scopeBase => t('BASE. This value is used to indicate searching only the entry at the base DN, resulting in only that entry being returned (keeping in mind that it also has to meet the search filter criteria!).'),
+            Server::$scopeOneLevel => t('ONELEVEL. This value is used to indicate searching all entries one level under the base DN - but not including the base DN and not including any entries under that one level under the base DN.'),
+            Server::$scopeSubTree => t('SUBTREE. (default) This value is used to indicate searching of all entries at all levels under and including the specified base DN.'),
           ),
         ),
         'form_to_prop_functions' => array('trim'),

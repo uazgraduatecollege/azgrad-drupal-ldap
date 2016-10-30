@@ -9,6 +9,7 @@
 namespace Drupal\ldap_authentication;
 
 use Drupal\Core\Url;
+use Drupal\ldap_servers\ServerFactory;
 use Drupal\ldap_user\LdapUserConf;
 
 /**
@@ -52,16 +53,16 @@ class LdapAuthenticationConf {
    */
   public $inDatabase = FALSE;
 
+  // Signifies both LDAP and Drupal authentication are allowed.
+  // Drupal authentication is attempted first.
+  public static $mode_mixed = 1;
+  // Signifies only LDAP authentication is allowed.
+  public static $mode_exclusive = 2;
+
   /**
    * Choice of authentication modes.
-   *
-   * @var int
-   *   LDAP_AUTHENTICATION_MODE_DEFAULT (LDAP_AUTHENTICATION_MIXED)
-   *   LDAP_AUTHENTICATION_MIXED - signifies both LDAP and Drupal authentication are allowed
-   *     Drupal authentication is attempted first.
-   *   LDAP_AUTHENTICATION_EXCLUSIVE - signifies only LDAP authenication is allowed
    */
-  public $authenticationMode = LDAP_AUTHENTICATION_MODE_DEFAULT;
+  public $authenticationMode;
 
   /**
    * The following are used to alter the logon interface to direct users
@@ -96,36 +97,54 @@ class LdapAuthenticationConf {
   public $ldapUserHelpLinkUrl;
   public $ldapUserHelpLinkText = 'Logon Help';
 
-  /**
-   * Email handling option
-   *   LDAP_AUTHENTICATION_EMAIL_FIELD_REMOVE -- don't show email on user forms
-   *   LDAP_AUTHENTICATION_EMAIL_FIELD_DISABLE (default) -- disable email on user forms
-   *   LDAP_AUTHENTICATION_EMAIL_FIELD_ALLOW -- allow editing of email on user forms.
-   *
-   * @var int
-   */
-  public $emailOption = LDAP_AUTHENTICATION_EMAIL_FIELD_DEFAULT;
+  public static $authFailConnect = 1;
+  public static $authFailBind = 2;
+  public static $authFailFind = 3;
+  public static $authFailDisallowed = 4;
+  public static $authFailCredentials = 5;
+  public static $authSuccess = 6;
+  public static $authFailGeneric = 7;
+  public static $authFailServer = 8;
+
+  public static $emailFieldRemove = 2;
+  public static $emailFieldDisable = 3;
+  public static $emailFieldAllow = 4;
+  // Remove default later if possible, see also $emailOption.
+  public static $emailFieldDefault = 3;
 
   /**
    * Email handling option
-   *   LDAP_AUTHENTICATION_EMAIL_UPDATE_ON_LDAP_CHANGE_ENABLE_NOTIFY -- (default) Update stored email if LDAP email differs at login and notify user
-   *   LDAP_AUTHENTICATION_EMAIL_UPDATE_ON_LDAP_CHANGE_ENABLE  -- Update stored email if LDAP email differs at login but don\'t notify user
-   *   LDAP_AUTHENTICATION_EMAIL_UPDATE_ON_LDAP_CHANGE_DISABLE -- Don\'t update stored email if LDAP email differs at login.
-   *
+   *   See above for possible values.
    * @var int
    */
-  public $emailUpdate = LDAP_AUTHENTICATION_EMAIL_UPDATE_ON_LDAP_CHANGE_DEFAULT;
+  public $emailOption;
 
+
+  public static $emailUpdateOnLdapChangeEnableNotify = 1;
+  public static $emailUpdateOnLdapChangeEnable = 2;
+  public static $emailUpdateOnLdapChangeDisable = 3;
+  // Remove default later if possible, see also $emailUpdate.
+  public static $emailUpdateOnLdapChangeDefault = 1;
+
+  /**
+   * Email handling option
+   *   See above for possible values.
+   * @var int
+   */
+  public $emailUpdate;
+
+  public static $passwordFieldShow = 2;
+  public static $passwordFieldHide = 3;
+  public static $passwordFieldAllow = 4;
+  // Remove default later if possible, see also $passwordOption.
+  public static $passwordFieldDefault = 2;
 
   /**
    * Password handling option
-   *   LDAP_AUTHENTICATION_PASSWORD_FIELD_SHOW -- show field disabled on user forms
-   *   LDAP_AUTHENTICATION_PASSWORD_FIELD_HIDE (default) -- disable password on user forms
-   *   LDAP_AUTHENTICATION_PASSWORD_FIELD_ALLOW -- allow editing of password on user forms.
-   *
+   *   See above for possible values.
    * @var int
    */
-  public $passwordOption = LDAP_AUTHENTICATION_PASSWORD_FIELD_DEFAULT;
+  public $passwordOption;
 
   public $ssoEnabled = FALSE;
   public $ssoRemoteUserStripDomainName = FALSE;
@@ -168,7 +187,7 @@ class LdapAuthenticationConf {
    *
    * @var bool
    */
-  public $excludeIfNoAuthorizations = LDAP_AUTHENTICATION_EXCL_IF_NO_AUTHZ_DEFAULT;
+  public $excludeIfNoAuthorizations = FALSE;
 
   public $saveable = array(
     'sids',
@@ -209,6 +228,11 @@ class LdapAuthenticationConf {
    *
    */
   public function __construct() {
+    $this->authenticationMode = self::$mode_mixed;
+    $this->emailUpdate = self::$emailUpdateOnLdapChangeEnableNotify;
+    $this->emailOption = self::$emailFieldDisable;
+    $this->passwordOption = self::$passwordFieldHide;
+
     $this->load();
   }
 
@@ -226,7 +250,8 @@ class LdapAuthenticationConf {
       }
       // Reset in case reloading instantiated object.
       $this->enabledAuthenticationServers = array();
-      $enabled_ldap_servers = ldap_servers_get_servers(NULL, 'enabled');
+      $factory = new ServerFactory(NULL, 'enabled');
+      $enabled_ldap_servers = $factory->servers;
       foreach ($this->sids as $sid => $enabled) {
         if ($enabled && isset($enabled_ldap_servers[$sid])) {
           $this->enabledAuthenticationServers[$sid] = $enabled_ldap_servers[$sid];
@@ -294,7 +319,7 @@ class LdapAuthenticationConf {
     if ($this->excludeIfNoAuthorizations) {
 
       if (!\Drupal::moduleHandler()->moduleExists('ldap_authorization')) {
-        drupal_set_message(t(LDAP_AUTHENTICATION_DISABLED_FOR_BAD_CONF_MSG), 'warning');
+        drupal_set_message(t('The site logon is currently not working due to a configuration error.  Please see logs for additional details.'), 'warning');
         $url = Url::fromRoute('ldap_authentication.admin_form');
         $internal_link = \Drupal::l(t('LDAP Authentication Configuration'), $url);
         $tokens = array('!ldap_authentication_config' => $internal_link);
@@ -326,7 +351,7 @@ class LdapAuthenticationConf {
       }
 
       if (!$has_enabled_consumers) {
-        drupal_set_message(t(LDAP_AUTHENTICATION_DISABLED_FOR_BAD_CONF_MSG), 'warning');
+        drupal_set_message(t('The site logon is currently not working due to a configuration error.  Please see logs for additional details.'), 'warning');
         // @FIXME
         // $tokens = array('!ldap_consumer_config' => l(t('LDAP Authorization Configuration'), 'admin/config/people/ldap/authorization'));
         \Drupal::logger('ldap_authentication')->notice('LDAP Authentication is configured to deny users without LDAP Authorization mappings, but 0 LDAP Authorization consumers are configured:  !ldap_consumer_config .', []);

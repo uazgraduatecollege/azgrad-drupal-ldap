@@ -6,6 +6,8 @@
  */
 
 // Remove this line after moving out the scripts outside of drupal root.
+use Drupal\ldap_servers\Entity\Server;
+
 die('Move this script outside of Drupal and uncomment the die statement in config.inc to run.');
 
 /**
@@ -27,8 +29,8 @@ function ldap_help_config() {
         'server_address' => $server_address,
         'server_port'  => 389,
         'server_tls'  => FALSE,
-  // LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT OR LDAP_SERVERS_BIND_METHOD_ANON.
-        'server_bind_method'  => LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT,
+        // Service account or anon.
+        'server_bind_method'  => Server::$bindMethodServiceAccount,
         'server_base_dn' => $user_root,
         'server_bind_dn' => $bind_user,
         'server_bind_pw' => $bind_pwd,
@@ -44,8 +46,8 @@ function ldap_help_config() {
         'server_address' => $server_address,
         'server_port'  => 389,
         'server_tls'  => FALSE,
-    // LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT OR LDAP_SERVERS_BIND_METHOD_ANON.
-        'server_bind_method'  => LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT,
+        // Service account or anon.
+        'server_bind_method'  => Server::$bindMethodServiceAccount,
         'server_base_dn' => $query_root,
         'server_bind_dn' => $bind_user,
         'server_bind_pw' => $bind_pwd,
@@ -61,8 +63,8 @@ function ldap_help_config() {
         'server_address' => $server_address,
         'server_port'  => 389,
         'server_tls'  => FALSE,
-    // LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT OR LDAP_SERVERS_BIND_METHOD_ANON.
-        'server_bind_method'  => LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT,
+        // Service account or anon.
+        'server_bind_method'  => Server::$bindMethodServiceAccount,
         'server_base_dn' => $provision_root,
         'server_bind_dn' => $bind_user,
         'server_bind_pw' => $bind_pwd,

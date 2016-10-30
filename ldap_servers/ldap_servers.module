@@ -4,27 +4,13 @@
  * @file
  */
 
-// FIXME: Dependency in ldap_query
-define('LDAP_SCOPE_BASE', 1);
-define('LDAP_SCOPE_ONELEVEL', 2);
-define('LDAP_SCOPE_SUBTREE', 3);
-
-// FIXME: Various dependencies.
-define('LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT', 1);
-define('LDAP_SERVERS_BIND_METHOD_USER', 2);
-define('LDAP_SERVERS_BIND_METHOD_ANON', 3);
-define('LDAP_SERVERS_BIND_METHOD_ANON_USER', 4);
-define('LDAP_SERVERS_BIND_METHOD_DEFAULT', 1);
-
-
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Session\AccountProxy;
-use Drupal\ldap_servers\ConversionHelper;
-use \Drupal\ldap_servers\Entity\Server;
+use Drupal\ldap_servers\Entity\Server;
 use Drupal\Core\Url;
 use Drupal\ldap_servers\LdapTypes\AbstractType;
-use Drupal\ldap_test\TestServer;
+use Drupal\ldap_servers\ServerFactory;
 use Drupal\ldap_user\LdapUserConf;
 
 class TokenHelper {
@@ -78,7 +64,8 @@ function ldap_servers_ldap_attributes_needed_alter(&$attributes, $params) {
   // Puid attributes are server specific.
   if ($params['sid'] && $params['sid']) {
     if (is_scalar($params['sid'])) {
-      $ldap_server = ldap_servers_get_servers($params['sid'], 'enabled', TRUE);
+      $factory = new ServerFactory($params['sid'], 'enabled', TRUE);
+      $ldap_server = $factory->servers;
     }
     else {
       $ldap_server = $params['sid'];
@@ -135,7 +122,7 @@ function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$param
 
   $server_edit_path = 'admin/config/people/ldap/servers/edit/' . $ldap_server->id();
 
-  if ($direction == LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER) {
+  if ($direction == LdapUserConf::$provisioningDirectionToDrupalUser) {
 
     /** these 4 user fields indentify where in ldap and which ldap server they are associated with.
      * they are required for a Drupal account to be "ldap associated" regardless of if any other
@@ -160,9 +147,9 @@ function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$param
         'configurable_to_ldap' => 1,
         'source' => t('%sid', $tokens),
         'notes' => 'not configurable',
-        'direction' => LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER,
+        'direction' => LdapUserConf::$provisioningDirectionToDrupalUser,
         'enabled' => TRUE,
-        'prov_events' => array(LDAP_USER_EVENT_CREATE_DRUPAL_USER),
+        'prov_events' => array(LdapUserConf::$eventCreateDrupalUser),
         'config_module' => 'ldap_servers',
         'prov_module' => 'ldap_user',
       ) + $available_user_attrs['[field.ldap_user_puid_sid]'];
@@ -174,9 +161,9 @@ function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$param
         'source' => '[' . $ldap_server->get('unique_persistent_attr') . ']',
         'notes' => 'configure at ' . $server_edit_path,
         'convert' => $ldap_server->get('unique_persistent_attr_binary'),
-        'direction' => LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER,
+        'direction' => LdapUserConf::$provisioningDirectionToDrupalUser,
         'enabled' => TRUE,
-        'prov_events' => array(LDAP_USER_EVENT_CREATE_DRUPAL_USER),
+        'prov_events' => array(LdapUserConf::$eventCreateDrupalUser),
         'config_module' => 'ldap_servers',
         'prov_module' => 'ldap_user',
       ) + $available_user_attrs['[field.ldap_user_puid]'];
@@ -188,9 +175,9 @@ function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$param
         'configurable_to_ldap' => 1,
         'source' => $ldap_server->get('unique_persistent_attr') ,
         'notes' => 'configure at ' . $server_edit_path,
-        'direction' => LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER,
+        'direction' => LdapUserConf::$provisioningDirectionToDrupalUser,
         'enabled' => TRUE,
-        'prov_events' => array(LDAP_USER_EVENT_CREATE_DRUPAL_USER),
+        'prov_events' => array(LdapUserConf::$eventCreateDrupalUser),
         'config_module' => 'ldap_servers',
         'prov_module' => 'ldap_user',
       ) + $available_user_attrs['[field.ldap_user_puid_property]'];
@@ -207,9 +194,9 @@ function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$param
       'configurable_to_ldap' => 0,
       'source' => '[dn]',
       'notes' => 'not configurable',
-      'direction' => LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER,
+      'direction' => LdapUserConf::$provisioningDirectionToDrupalUser,
       'enabled' => TRUE,
-      'prov_events' => array(LDAP_USER_EVENT_CREATE_DRUPAL_USER, LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER),
+      'prov_events' => array(LdapUserConf::$eventCreateDrupalUser, LdapUserConf::$eventSyncToDrupalUser),
       'config_module' => 'ldap_servers',
       'prov_module' => 'ldap_user',
     ) + $available_user_attrs[$token];
@@ -221,9 +208,9 @@ function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$param
       $available_user_attrs['[property.name]'] = array(
         'name' => 'Property: Username',
         'source' => '[' . $ldap_server->get('user_attr') . ']',
-        'direction' => LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER,
+        'direction' => LdapUserConf::$provisioningDirectionToDrupalUser,
         'enabled' => TRUE,
-        'prov_events' => array(LDAP_USER_EVENT_CREATE_DRUPAL_USER, LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER),
+        'prov_events' => array(LdapUserConf::$eventCreateDrupalUser, LdapUserConf::$eventSyncToDrupalUser),
         'config_module' => 'ldap_servers',
         'prov_module' => 'ldap_user',
       ) + $available_user_attrs['[property.name]'];
@@ -234,9 +221,9 @@ function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$param
       $available_user_attrs['[property.mail]'] = array(
         'name' => 'Property: Email',
         'source' => ($ldap_server->get('mail_template')) ? $ldap_server->get('mail_template') : '[' . $ldap_server->get('mail_attr') . ']',
-        'direction' => LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER,
+        'direction' => LdapUserConf::$provisioningDirectionToDrupalUser,
         'enabled' => TRUE,
-        'prov_events' => array(LDAP_USER_EVENT_CREATE_DRUPAL_USER, LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER),
+        'prov_events' => array(LdapUserConf::$eventCreateDrupalUser, LdapUserConf::$eventSyncToDrupalUser),
         'config_module' => 'ldap_servers',
         'prov_module' => 'ldap_user',
       ) + $available_user_attrs['[property.mail]'];
@@ -248,9 +235,9 @@ function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$param
         $available_user_attrs['[property.picture]'] = array(
           'name' => 'Property: Picture',
           'source' => '[' . $ldap_server->get('picture_attr') . ']',
-          'direction' => LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER,
+          'direction' => LdapUserConf::$provisioningDirectionToDrupalUser,
           'enabled' => TRUE,
-          'prov_events' => array(LDAP_USER_EVENT_CREATE_DRUPAL_USER, LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER),
+          'prov_events' => array(LdapUserConf::$eventCreateDrupalUser, LdapUserConf::$eventSyncToDrupalUser),
           'config_module' => 'ldap_servers',
           'prov_module' => 'ldap_user',
         ) + $available_user_attrs['[property.picture]'];
@@ -265,119 +252,14 @@ function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$param
  */
 function ldap_servers_flush_server_cache() {
   // Flush server cache.
-  $discard = ldap_servers_get_servers(NULL, 'all', FALSE, TRUE);
-}
-
-/**
- * Return ldap server conf objects.
- *
- * @param string $sid
- * @param string $type
- *   'all', 'enabled',.
- * @param bool $flatten
- *   signifies if array or single object returned.  Only works if sid is specified.
- * @param bool $reset
- *   do not use cached or static result.
- *
- * @return - array of server conf object keyed on sid
- *         - single server conf object (if flatten == TRUE)
- */
-function ldap_servers_get_servers($sid = NULL, $type = NULL, $flatten = FALSE, $reset = FALSE) {
-  if (\Drupal::config('ldap_test.settings')->get('simpletest')) {
-    return _ldap_servers_get_simpletest_servers($sid, $type, $flatten, $reset);
-  }
-  else {
-    return _ldap_servers_get_servers($sid, $type, $flatten, $reset);
-  }
-}
-
-/**
- * See ldap_servers_get_servers().
- */
-function _ldap_servers_get_servers($id, $type, $flatten, $reset) {
-  if ($id) {
-    return Server::load($id);
-  }
-
-  $type = ($type) ? $type : 'all';
-  if ($reset) {
-    $servers = array();
-  }
-  if (!isset($servers['all'])) {
-    $query = \Drupal::entityQuery('ldap_server');
-    $ids = $query->execute();
-    $servers['all'] = Server::loadMultiple($ids);
-  }
-
-  if (!isset($servers['enabled'])) {
-    $servers['enabled'] = array();
-    foreach ($servers['all'] as $_id => $ldap_server) {
-      if ($ldap_server->get('status') == 1) {
-        $servers['enabled'][$_id] = $ldap_server;
-      }
-    }
-  }
-
-  if ($id) {
-    if (!isset($servers[$type][$id])) {
-      return FALSE;
-    }
-    return ($flatten) ? $servers[$type][$id] : array($id => $servers[$type][$id]);
-  }
-
-  if (isset($servers[$type])) {
-    return $servers[$type];
-  }
-}
-
-/**
- * See ldap_servers_get_servers()
- */
-function _ldap_servers_get_simpletest_servers($sid, $type = NULL, $flatten, $reset = TRUE) {
-
-  if (!$type) {
-    $type = 'all';
-  }
-
-  // Two flavors of mock servers exist.  ultimately v2 will be used in all simpletests.
-  if (\Drupal::config('ldap_test.settings')->get('simpletest') == 2) {
-    $servers['all'] = TestServer::getLdapServerObjects(NULL, 'all', FALSE);
-    foreach ($servers['all'] as $_sid => $ldap_server) {
-      if ($ldap_server->status == 1) {
-        $servers['enabled'][$_sid] = $ldap_server;
-      }
-    }
-  }
-
-  if ($sid) {
-    if (!isset($servers[$type][$sid])) {
-      return FALSE;
-    }
-    return ($flatten) ? $servers[$type][$sid] : array($sid => $servers[$type][$sid]);
-  }
-
-  if (isset($servers[$type])) {
-    return $servers[$type];
-  }
-}
-
-/**
- *
- */
-function ldap_servers_debug($variable) {
-  if (\Drupal::config('ldap_test.settings')->get('simpletest') && function_exists('dpm')) {
-    dpm($variable);
-  }
-  else {
-    debug($variable);
-  }
+  new ServerFactory(NULL, 'all', FALSE, TRUE);
 }
 
 /**
  *
  */
 function ldap_servers_cache_clear() {
-  $discard = ldap_servers_get_servers(NULL, 'all', FALSE, TRUE);
+  new ServerFactory(NULL, 'all', FALSE, TRUE);
   if (\Drupal::moduleHandler()->moduleExists('ctools')) {
     ctools_export_load_object_reset('ldap_servers');
   }
@@ -474,7 +356,8 @@ function ldap_servers_get_user_ldap_data($drupal_user, $id = NULL, $ldap_context
     }
   }
   elseif (!$id) {
-    $ldap_servers = ldap_servers_get_servers(NULL, 'enabled');
+    $factory = new ServerFactory(NULL, 'enabled');
+    $ldap_servers = $factory->servers;
     if (count($ldap_servers) == 1) {
       $ids = array_keys($ldap_servers);
       $id = $ids[0];
@@ -490,7 +373,8 @@ function ldap_servers_get_user_ldap_data($drupal_user, $id = NULL, $ldap_context
   }
 
   /* @var \Drupal\ldap_servers\Entity\Server $ldap_server*/
-  $ldap_server = ($id) ? ldap_servers_get_servers($id, 'enabled', TRUE) : FALSE;
+  $factory = new ServerFactory($id, 'enabled', TRUE);
+  $ldap_server = ($id) ? $factory->servers: FALSE;
 
   if ($ldap_server === FALSE) {
     \Drupal::logger('ldap_servers')->error('Failed to load server object %sid in _ldap_servers_get_user_ldap_data', array('%sid' => $id));
@@ -765,7 +649,8 @@ function ldap_servers_get_ldap_type_object($ldap_conf) {
  */
 function ldap_servers_no_enabled_servers_msg($action) {
 
-  $servers = ldap_servers_get_servers(NULL, 'enabled');
+  $factory = new ServerFactory(NULL, 'enabled');
+  $servers = $factory->servers;
   if (count($servers) == 0) {
 
     $url = Url::fromRoute('entity.ldap_server.collection');

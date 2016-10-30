@@ -33,7 +33,7 @@ Running the Script
         'server_address' => 'ad.mycollege.edu',
         'server_port'  => 389,
         'server_tls'  => FALSE,
-        'server_bind_method'  => LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT, 
+        'server_bind_method'  => Server::$bindMethodServiceAccount,
         'server_base_dn' => 'ou=people,dc=ad,dc=mycollege,dc=edu',
         'server_bind_dn' => 'cn=ldap-service-account,ou=service accounts,dc=ad,dc=mycollege,dc=edu',
         'server_bind_pw' => 'password_here',

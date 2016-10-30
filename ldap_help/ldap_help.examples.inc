@@ -4,6 +4,7 @@
  * @file
  * The ldap_help issues provides a filtered watchdog view for ldap issues.
  */
+use Drupal\ldap_servers\tests\LdapWebTestBase;
 
 /**
  * @FIXME: Unported, not a priority.
@@ -25,7 +26,8 @@ function ldap_help_examples() {
   foreach ($sample_ldaps as $ldap_type => $sample_ldap_id) {
 
     $sample_ldap_id = $sample_ldaps[$ldap_type];
-    $test_functions->populateFakeLdapServerData(LDAP_TEST_LDAP_NAME, $sample_ldap_id);
+    // @FIXME: Missing function
+    $test_functions->populateFakeLdapServerData(LdapWebTestBase::$ldapName, $sample_ldap_id);
     $data = $test_functions->data['ldap_servers'][$sample_ldap_id]['ldap'];
     $form[$sample_ldap_id] = array(
       '#type' => 'fieldset',

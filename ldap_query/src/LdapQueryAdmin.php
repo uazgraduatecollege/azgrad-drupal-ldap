@@ -7,11 +7,14 @@
 
 namespace Drupal\ldap_query;
 use Drupal\Core\Url;
+use Drupal\ldap_servers\ServerFactory;
 
 /**
  *
  */
 class LdapQueryAdmin extends LdapQuery {
+
+  public static $base_path = 'admin/config/people/ldap';
 
   /**
    * @param string $sid
@@ -165,20 +168,20 @@ class LdapQueryAdmin extends LdapQuery {
   public function getActions() {
     $switch = ($this->status) ? 'disable' : 'enable';
     $actions = array();
-    $actions[] = \Drupal::l(t('edit'), Url::fromUri(LDAP_QUERY_MENU_BASE_PATH . '/query/edit/' . $this->qid));
+    $actions[] = \Drupal::l(t('edit'), Url::fromUri(self::$base_path . '/query/edit/' . $this->qid));
     if (property_exists($this, 'type')) {
       if ($this->type == 'Overridden') {
-        $actions[] = \Drupal::l(t('revert'), Url::fromUri(LDAP_QUERY_MENU_BASE_PATH . '/query/delete/' . $this->qid));
+        $actions[] = \Drupal::l(t('revert'), Url::fromUri(self::$base_path . '/query/delete/' . $this->qid));
       }
       if ($this->type == 'Normal') {
-        $actions[] = \Drupal::l(t('delete'), Url::fromUri(LDAP_QUERY_MENU_BASE_PATH . '/query/delete/' . $this->qid));
+        $actions[] = \Drupal::l(t('delete'), Url::fromUri(self::$base_path . '/query/delete/' . $this->qid));
       }
     }
     else {
-      $actions[] = \Drupal::l(t('delete'), Url::fromUri(LDAP_QUERY_MENU_BASE_PATH . '/query/delete/' . $this->qid));
+      $actions[] = \Drupal::l(t('delete'), Url::fromUri(self::$base_path . '/query/delete/' . $this->qid));
     }
-    $actions[] = \Drupal::l(t('test'), Url::fromUri(LDAP_QUERY_MENU_BASE_PATH . '/query/test/' . $this->qid));
-    $actions[] = \Drupal::l($switch, Url::fromUri(LDAP_QUERY_MENU_BASE_PATH . '/query/' . $switch . '/' . $this->qid));
+    $actions[] = \Drupal::l(t('test'), Url::fromUri(self::$base_path . '/query/test/' . $this->qid));
+    $actions[] = \Drupal::l($switch, Url::fromUri(self::$base_path . '/query/' . $switch . '/' . $this->qid));
     return $actions;
   }
 
@@ -228,7 +231,8 @@ class LdapQueryAdmin extends LdapQuery {
 
     $form['basic']['qid']['#disabled'] = ($op == 'edit');
 
-    $servers = ldap_servers_get_servers(NULL, 'enabled');
+    $factory = new ServerFactory(NULL, 'enabled');
+    $servers = $factory->servers;
     if (count($servers) == 0) {
       drupal_set_message(t('No ldap servers configured.  Please configure a server before an ldap query.'), 'error');
     }

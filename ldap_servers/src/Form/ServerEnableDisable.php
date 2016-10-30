@@ -5,6 +5,7 @@ namespace Drupal\ldap_servers\Form;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Entity\ContentEntityConfirmFormBase;
 use Drupal\Core\Url;
+use Drupal\ldap_servers\ServerFactory;
 
 /**
  *
@@ -45,10 +46,10 @@ class LdapServersAdminEnableDisable extends ContentEntityConfirmFormBase {
    *
    */
   public function buildForm(array $form, FormStateInterface $form_state, $action = NULL, $sid = NULL) {
-
-    if ($ldap_server = ldap_servers_get_servers($sid, 'all', TRUE)) {
+    $factory = new ServerFactory($sid, 'all', TRUE);
+    if ($factory->servers) {
       $variables = [
-        'ldap_server' => $ldap_server,
+        'ldap_server' => $factory->servers,
         'actions' => FALSE,
         'type' => 'detail',
       ];
@@ -68,7 +69,7 @@ class LdapServersAdminEnableDisable extends ContentEntityConfirmFormBase {
       ];
       $form['name'] = [
         '#type' => 'hidden',
-        '#value' => $ldap_server->name,
+        '#value' => $factory->servers->name,
       ];
       $form['action'] = [
         '#type' => 'hidden',

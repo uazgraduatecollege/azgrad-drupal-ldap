@@ -6,6 +6,8 @@
  * see README.txt for instructions.
  */
 
+use Drupal\ldap_servers\Entity\Server;
+
 require_once 'functions.inc';
 
 $config = ldap_help_config();
@@ -34,7 +36,7 @@ foreach ($config['servers'] as $sid => $server) {
   $tls = ($server['server_tls']) ? 'yes' : 'no';
   ldap_help_display('tls', $tls);
 
-  $anon_bind = ($server['server_bind_method'] == LDAP_SERVERS_BIND_METHOD_ANON);
+  $anon_bind = ($server['server_bind_method'] == Server::$bindMethodAnon);
   $anon_bind_text = ($anon_bind) ? 'yes' : 'no';
   ldap_help_display('anonymous bind', $anon_bind_text);
 

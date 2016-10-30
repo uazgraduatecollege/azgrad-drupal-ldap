@@ -1,6 +1,7 @@
 <?php
 
 namespace Drupal\ldap_user;
+use Drupal\ldap_servers\ServerFactory;
 
 /**
  *
@@ -27,11 +28,10 @@ class LdapUserConfAdmin extends LdapUserConf {
    * 3. Drupal Account Provisioning and Syncing
    */
   public $userConflictResolveDescription;
-  public $userConflictResolveDefault = LDAP_USER_CONFLICT_RESOLVE_DEFAULT;
+  public $userConflictResolveDefault;
   public $userConflictOptions;
 
   public $acctCreationDescription = '';
-  public $acctCreationDefault = LDAP_USER_ACCT_CREATION_LDAP_BEHAVIOR_DEFAULT;
   public $acctCreationOptions;
 
 
@@ -71,10 +71,11 @@ class LdapUserConfAdmin extends LdapUserConf {
    */
   public function __construct() {
     parent::__construct();
-    $this->setTranslatableProperties();
 
-    if ($servers = ldap_servers_get_servers(NULL, 'enabled')) {
-      foreach ($servers as $sid => $ldap_server) {
+    $this->setTranslatableProperties();
+    $factory = new ServerFactory(NULL, 'enabled');
+    if ($factory->servers) {
+      foreach ($factory->servers as $sid => $ldap_server) {
         $enabled = ($ldap_server->get('status')) ? 'Enabled' : 'Disabled';
         $this->drupalAcctProvisionServerOptions[$sid] = $ldap_server->label() . ' (' . $ldap_server->get('address') . ') Status: ' . $enabled;
         $this->ldapEntryProvisionServerOptions[$sid] = $ldap_server->label() . ' (' . $ldap_server->get('address') . ') Status: ' . $enabled;
@@ -140,7 +141,7 @@ class LdapUserConfAdmin extends LdapUserConf {
       '#states' => array(
     // Action to take.
         'enabled' => array(
-          ':input[name=drupalAcctProvisionTriggers]' => array('value' => LDAP_USER_DRUPAL_USER_PROV_ON_AUTHENTICATE),
+          ':input[name=drupalAcctProvisionTriggers]' => array('value' => self::$provisionDrupalUserOnAuthentication),
         ),
       ),
     );
@@ -244,16 +245,17 @@ the top of this form.
 
     );
 
-    foreach (array(LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY) as $direction) {
+    foreach (array(self::$provisioningDirectionToDrupalUser, self::$provisioningDirectionToLDAPEntry) as $direction) {
       $sid = $this->provisionSidFromDirection[$direction];
-      $ldap_server = ($sid) ? ldap_servers_get_servers($sid, NULL, TRUE) : FALSE;
+      $factory = new ServerFactory($sid, NULL, TRUE);
+      $ldap_server = ($sid) ? $factory->servers : FALSE;
       $ldap_server_selected = (boolean) $ldap_server;
 
-      if ($direction == LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER) {
+      if ($direction == self::$provisioningDirectionToDrupalUser) {
         $parent_fieldset = 'basic_to_drupal';
         $description = t('Provisioning from LDAP to Drupal Mappings:');
       }
-      elseif ($direction == LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY) {
+      elseif ($direction == self::$provisioningDirectionToLDAPEntry) {
         $parent_fieldset = 'basic_to_ldap';
         $description = t('Provisioning from Drupal to LDAP Mappings:');
       }
@@ -329,7 +331,7 @@ by someone other that user.  Consider this when provisioning LDAP passwords.') .
 EOT;
 
       // Add some password notes.
-      if ($direction == LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY) {
+      if ($direction == self::$provisioningDirectionToLDAPEntry) {
         $form[$parent_fieldset]['password_notes'] = array(
           '#type' => 'fieldset',
           '#title' => t('Password Notes'),
@@ -353,14 +355,14 @@ EOT;
       }
     }
 
-    foreach (array('orphanedCheckQty', 'orphanedDrupalAcctBehavior', 'acctCreation', 'userConflictResolve', 'drupalAcctProvisionTriggers', 'mappings__' . LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER) as $input_name) {
+    foreach (array('orphanedCheckQty', 'orphanedDrupalAcctBehavior', 'acctCreation', 'userConflictResolve', 'drupalAcctProvisionTriggers', 'mappings__' . self::$provisioningDirectionToDrupalUser) as $input_name) {
       $form['basic_to_drupal'][$input_name]['#states']['invisible'] =
         array(
           ':input[name=drupalAcctProvisionServer]' => array('value' => 'none'),
         );
     }
 
-    foreach (array('ldapEntryProvisionTriggers', 'password_notes', 'source_drupal_token_notes', 'mappings__' . LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY) as $input_name) {
+    foreach (array('ldapEntryProvisionTriggers', 'password_notes', 'source_drupal_token_notes', 'mappings__' . self::$provisioningDirectionToLDAPEntry) as $input_name) {
       $form['basic_to_ldap'][$input_name]['#states']['invisible'] =
         array(
           ':input[name=ldapEntryProvisionServer]' => array('value' => 'none'),
@@ -416,7 +418,7 @@ EOT;
           $input_name = join('__', array('sm', 'direction', $i));
           $errors[$input_name] = t('No mapping direction given in !row_descriptor', $tokens);
         }
-        if ($direction == LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER && $row_mappings['user_attr'] == 'user_tokens') {
+        if ($direction == self::$provisioningDirectionToDrupalUser && $row_mappings['user_attr'] == 'user_tokens') {
           $input_name = join('__', array('sm', 'user_attr', $i));
           $errors[$input_name] = t('User tokens not allowed when mapping to Drupal user.  Location: !row_descriptor', $tokens);
         }
@@ -477,11 +479,11 @@ EOT;
         $to_ldap_entries_mappings_exist = FALSE;
 
         foreach ($mappings as $target_attr => $mapping) {
-          if ($mapping['direction'] == LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER) {
+          if ($mapping['direction'] == self::$provisioningDirectionToDrupalUser) {
             $attr_value = $mapping['user_attr'];
             $attr_name = 'user_attr';
           }
-          if ($mapping['direction'] == LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY) {
+          if ($mapping['direction'] == self::$provisioningDirectionToLDAPEntry) {
             $attr_value = $mapping['ldap_attr'];
             $attr_name = 'ldap_attr';
           }
@@ -505,11 +507,11 @@ EOT;
           // debug('calling ldap_servers_token_extract_attributes from validate, mapping='); debug($mapping['ldap_attr']);.
           $this->extractTokenAttributes($ldap_attribute_maps_in_token, $mapping['ldap_attr']);
 
-          if ($mapping['direction'] == LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER) {
+          if ($mapping['direction'] == self::$provisioningDirectionToDrupalUser) {
             $row_id = $map_index[$mapping['user_attr']];
             $to_drupal_user_mappings_exist = TRUE;
           }
-          if ($mapping['direction'] == LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY) {
+          if ($mapping['direction'] == self::$provisioningDirectionToLDAPEntry) {
             $row_id = $map_index[$mapping['ldap_attr']];
             $to_ldap_entries_mappings_exist = TRUE;
 
@@ -592,7 +594,7 @@ EOT;
    *   1__sm__1__5,
    *   1__sm__2__5,
    *   ...where
-   *    -- first arg is direction, eg 1 or 2 LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER or LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY
+   *    -- first arg is direction, eg 1 or 2 self::$provisioningDirectionToDrupalUser or self::$provisioningDirectionToLDAPEntry
    *    -- second arg is discarded ('sm')
    *    -- third part is field, e.g. user_attr
    *    -- fourth is the row in the configuration form, e.g. 5
@@ -622,7 +624,7 @@ EOT;
           continue;
         }
 
-        $key = ($direction == LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER) ? $this->sanitise_machine_name($columns['user_attr']) : $this->sanitise_machine_name($columns['ldap_attr']);
+        $key = ($direction == self::$provisioningDirectionToDrupalUser) ? $this->sanitise_machine_name($columns['user_attr']) : $this->sanitise_machine_name($columns['ldap_attr']);
         // Only save if its configurable and has an ldap and drupal attributes. The others are optional.
         if ($columns['configurable_to_drupal'] && $columns['ldap_attr'] && $columns['user_attr']) {
           $mappings[$direction][$key] = array(
@@ -636,7 +638,7 @@ EOT;
             'enabled'     => 1,
           );
 
-          $synchEvents = ($direction == LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER) ? $this->provisionsDrupalEvents : $this->provisionsLdapEvents;
+          $synchEvents = ($direction == self::$provisioningDirectionToDrupalUser) ? $this->provisionsDrupalEvents : $this->provisionsLdapEvents;
           foreach ($synchEvents as $prov_event => $discard) {
             if (isset($columns[$prov_event]) && $columns[$prov_event]) {
               $mappings[$direction][$key]['prov_events'][] = $prov_event;
@@ -679,7 +681,7 @@ EOT;
   private function getServerMappingHeader($direction) {
     $ldap_user_conf_admin = ldap_user_conf('admin');
 
-    if ($direction == LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER) {
+    if ($direction == self::$provisioningDirectionToDrupalUser) {
 
       $direction_text = 'todrupal';
 
@@ -803,13 +805,13 @@ EOT;
    *
    */
   private function getServerMappingFields($direction) {
-    if ($direction == LDAP_USER_PROV_DIRECTION_NONE) {
+    if ($direction == self::$provisioningDirectionNone) {
       return;
     }
 
     $rows = array();
 
-    $text = ($direction == LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER) ? 'target' : 'source';
+    $text = ($direction == self::$provisioningDirectionToDrupalUser) ? 'target' : 'source';
     $user_attr_options = array('0' => t('Select') . ' ' . $text);
 
     if (!empty($this->synchMapping[$direction])) {
@@ -818,9 +820,9 @@ EOT;
           continue;
         }
         if (
-          (isset($mapping['configurable_to_drupal']) && $mapping['configurable_to_drupal'] && $direction == LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER)
+          (isset($mapping['configurable_to_drupal']) && $mapping['configurable_to_drupal'] && $direction == self::$provisioningDirectionToDrupalUser)
           ||
-          (isset($mapping['configurable_to_ldap']) && $mapping['configurable_to_ldap']  && $direction == LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY)
+          (isset($mapping['configurable_to_ldap']) && $mapping['configurable_to_ldap']  && $direction == self::$provisioningDirectionToLDAPEntry)
           ) {
           $user_attr_options[$target_id] = substr($mapping['name'], 0, 25);
         }
@@ -837,7 +839,7 @@ EOT;
         continue;
       }
       // Is configurable by ldap_user module (not direction to ldap_user)
-      if (!$this->isMappingConfigurable($mapping, 'ldap_user') && ($mapping['direction'] == $direction || $mapping['direction'] == LDAP_USER_PROV_DIRECTION_ALL)) {
+      if (!$this->isMappingConfigurable($mapping, 'ldap_user') && ($mapping['direction'] == $direction || $mapping['direction'] == self::$provisioningDirectionAll)) {
         $rows[$row_id] = $this->getSyncFormRow('nonconfigurable', $direction, $mapping, $user_attr_options, $row_id);
         $row++;
       }
@@ -872,7 +874,7 @@ EOT;
    * @param string $action
    *   is 'add', 'update', or 'nonconfigurable'.
    * @param enum $direction
-   *   LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER or LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY.
+   *   self::$provisioningDirectionToDrupalUser or self::$provisioningDirectionToLDAPEntry.
    * @param array $mapping
    *   is current setting for updates or nonconfigurable items.
    * @param array $user_attr_options
@@ -915,8 +917,8 @@ EOT;
         '#maxlength' => 255,
         '#attributes' => array('class' => array('ldap-attr')),
       );
-      // Change the visibility rules for LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY.
-      if ($direction == LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY) {
+      // Change the visibility rules for self::$provisioningDirectionToLDAPEntry.
+      if ($direction == self::$provisioningDirectionToLDAPEntry) {
         $user_tokens = array(
           '#type' => 'textfield',
           '#title' => 'User tokens',
@@ -962,7 +964,7 @@ EOT;
     }
 
     // Get the order of the columns correctly.
-    if ($direction == LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY) {
+    if ($direction == self::$provisioningDirectionToLDAPEntry) {
       $result['user_attr'] = $user_attr;
       $result['user_tokens'] = $user_tokens;
       $result['convert'] = $convert;
@@ -981,8 +983,8 @@ EOT;
     // FIXME: Add table selection / ordering back:
     // $col and $row used to be paremeters to $result[$prov_event]. ID possible
     // not need needed anymore. Row used to be a parameter to this function.
-    // $col = ($direction == LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY) ? 5 : 4;
-    $synchEvents = ($direction == LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER) ? $this->provisionsDrupalEvents : $this->provisionsLdapEvents;
+    // $col = ($direction == self::$provisioningDirectionToLDAPEntry) ? 5 : 4;
+    $synchEvents = ($direction == self::$provisioningDirectionToDrupalUser) ? $this->provisionsDrupalEvents : $this->provisionsLdapEvents;
 
     foreach ($synchEvents as $prov_event => $prov_event_name) {
       // See above.
@@ -1049,10 +1051,10 @@ EOT;
     $configurable = FALSE;
 
     if ($mapping) {
-      if ($prov_event == LDAP_USER_EVENT_CREATE_LDAP_ENTRY || $prov_event == LDAP_USER_EVENT_SYNCH_TO_LDAP_ENTRY) {
+      if ($prov_event == self::$eventCreateLdapEntry || $prov_event == self::$eventSyncToLdapEntry) {
         $configurable = (boolean) (!isset($mapping['configurable_to_ldap']) || $mapping['configurable_to_ldap']);
       }
-      elseif ($prov_event == LDAP_USER_EVENT_CREATE_DRUPAL_USER || $prov_event == LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER) {
+      elseif ($prov_event == self::$eventCreateDrupalUser || $prov_event == self::$eventSyncToDrupalUser) {
         $configurable = (boolean) (!isset($mapping['configurable_to_drupal']) || $mapping['configurable_to_drupal']);
       }
     }
@@ -1076,9 +1078,9 @@ EOT;
       "Provisioning from LDAP to Drupal mappings" table below in the right two columns.');
 
     $values['drupalAccountProvisionEventsOptions'] = array(
-      LDAP_USER_DRUPAL_USER_PROV_ON_AUTHENTICATE => t('Create or Synch to Drupal user on successful authentication with LDAP
+      self::$provisionDrupalUserOnAuthentication => t('Create or Synch to Drupal user on successful authentication with LDAP
         credentials. (Requires LDAP Authentication module).'),
-      LDAP_USER_DRUPAL_USER_PROV_ON_USER_UPDATE_CREATE => t('Create or Synch to Drupal user anytime a Drupal user account
+      self::$provisionDrupalUserOnUserUpdateCreate => t('Create or Synch to Drupal user anytime a Drupal user account
         is created or updated. Requires a server with binding method of "Service Account Bind" or "Anonymous Bind".'),
     );
 
@@ -1086,11 +1088,11 @@ EOT;
       "Provisioning from Drupal to LDAP mappings" table below in the right two columns.');
 
     $values['ldapEntryProvisionTriggersOptions'] = array(
-      LDAP_USER_LDAP_ENTRY_PROV_ON_USER_UPDATE_CREATE => t('Create or Synch to LDAP entry when a Drupal account is created or updated.
+      self::$provisionLdapEntryOnUserUpdateCreate => t('Create or Synch to LDAP entry when a Drupal account is created or updated.
         Only applied to accounts with a status of approved.'),
-      LDAP_USER_LDAP_ENTRY_PROV_ON_AUTHENTICATE => t('Create or Synch to LDAP entry when a user authenticates.'),
-      LDAP_USER_LDAP_ENTRY_DELETE_ON_USER_DELETE => t('Delete LDAP entry when the corresponding Drupal Account is deleted.  This only applies when the LDAP entry was provisioned by Drupal by the LDAP User module.'),
-      LDAP_USER_DRUPAL_USER_PROV_ON_ALLOW_MANUAL_CREATE => t('Provide option on admin/people/create to create corresponding LDAP Entry.'),
+      self::$provisionLdapEntryOnUserAuthentication => t('Create or Synch to LDAP entry when a user authenticates.'),
+      self::$provisionLdapEntryOnUserDelete => t('Delete LDAP entry when the corresponding Drupal Account is deleted.  This only applies when the LDAP entry was provisioned by Drupal by the LDAP User module.'),
+      self::$provisionDrupalUserOnAllowingManualCreation => t('Provide option on admin/people/create to create corresponding LDAP Entry.'),
 
     );
 
@@ -1113,9 +1115,9 @@ EOT;
       '</ul>';
 
     $values['manualAccountConflictOptions'] = array(
-      LDAP_USER_MANUAL_ACCT_CONFLICT_REJECT => t('Reject manual creation of Drupal accounts that conflict with LDAP Accounts. This only applies to accounts created on user logon;  Account conflicts can still be generated by manually creating users that conflict with ldap users and these users will have their data synched with LDAP data.'),
-      LDAP_USER_MANUAL_ACCT_CONFLICT_LDAP_ASSOCIATE => t('Associate manually created Drupal accounts with related LDAP Account if one exists.'),
-      LDAP_USER_MANUAL_ACCT_CONFLICT_SHOW_OPTION_ON_FORM => t('Show option on user create form to determine how account conflict is resolved.'),
+      self::$manualAccountConflictReject => t('Reject manual creation of Drupal accounts that conflict with LDAP Accounts. This only applies to accounts created on user logon;  Account conflicts can still be generated by manually creating users that conflict with ldap users and these users will have their data synched with LDAP data.'),
+      self::$manualAccountConflictLdapAssociate => t('Associate manually created Drupal accounts with related LDAP Account if one exists.'),
+      self::$manualAccountConflictShowOptionOnForm => t('Show option on user create form to determine how account conflict is resolved.'),
     );
 
     /**
@@ -1123,15 +1125,15 @@ EOT;
     */
     $values['userConflictResolveDescription'] = 'What should be done if a local Drupal or other external user account already exists with the same login name.';
     $values['userConflictOptions'] = array(
-      LDAP_USER_CONFLICT_LOG => t('Don\'t associate Drupal account with LDAP.  Require user to use Drupal password. Log the conflict'),
-      LDAP_USER_CONFLICT_RESOLVE => t('Associate Drupal account with the LDAP entry.  This option
+      self::$userConflictLog => t('Don\'t associate Drupal account with LDAP.  Require user to use Drupal password. Log the conflict'),
+      self::$userConflictAttemptResolve => t('Associate Drupal account with the LDAP entry.  This option
       is useful for creating accounts and assigning roles before an LDAP user authenticates.'),
     );
 
     $values['acctCreationOptions'] = array(
-      LDAP_USER_ACCT_CREATION_LDAP_BEHAVIOR => t('Account creation settings at
+      self::$accountCreationLdapBehaviour => t('Account creation settings at
         /admin/config/people/accounts/settings do not affect "LDAP Associated" Drupal accounts.'),
-      LDAP_USER_ACCT_CREATION_USER_SETTINGS_FOR_LDAP => t('Account creation policy
+      self::$accountCreationUserSettingsForLdap => t('Account creation policy
          at /admin/config/people/accounts/settings applies to both Drupal and LDAP Authenticated users.
          "Visitors" option automatically creates and account when they successfully LDAP authenticate.
          "Admin" and "Admin with approval" do not allow user to authenticate until the account is approved.'),

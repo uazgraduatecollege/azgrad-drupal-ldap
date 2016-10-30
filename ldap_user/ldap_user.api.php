@@ -20,14 +20,10 @@
  *   'configurable_to_ldap' =>  0 | 1, is this configurable?
  *   'user_tokens' => <user_tokens>
  *   'convert' => 1 | 0 convert from binary to string for storage and comparison purposes
- *   'direction' => LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER or LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY leave empty if configurable
+ *   'direction' => LdapUserConf::$provisioningDirectionToDrupalUser or LdapUserConf::$provisioningDirectionToLDAPEntry leave empty if configurable
  *   'config_module' => module providing synching configuration.
  *   'prov_module' => module providing actual synching of attributes.
- *   'prov_events' => array( of LDAP_USER_EVENT_* constants indicating during which synch actions field should be synched)
- *         - four permutations available
- *            to ldap:   LDAP_USER_EVENT_CREATE_LDAP_ENTRY,  LDAP_USER_EVENT_SYNCH_TO_LDAP_ENTRY,
- *            to drupal: LDAP_USER_EVENT_CREATE_DRUPAL_USER, LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER
- *   )
+ *   'prov_events' => array( see LdapUserConf )
  *
  * where
  * 'field_type' is one of the following:

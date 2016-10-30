@@ -4,6 +4,8 @@ namespace Drupal\ldap_servers\Form;
 
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\ldap_servers\Entity\Server;
+use Drupal\ldap_servers\ServerFactory;
 
 /**
  * Class ServerForm.
@@ -97,24 +99,24 @@ class ServerForm extends EntityForm {
     );
 
     $form['bind']['bind_method'] = array(
-      '#default_value' => $server->get('bind_method') ? $server->get('bind_method') : LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT,
+      '#default_value' => $server->get('bind_method') ? $server->get('bind_method') : Server::$bindMethodServiceAccount,
       '#type' => 'radios',
       '#title' => t('Binding Method for Searches (such as finding user object or their group memberships)'),
       '#options' => array(
-        LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT => t('Service Account Bind: Use credentials in the
+        Server::$bindMethodServiceAccount => t('Service Account Bind: Use credentials in the
         <strong>Service Account</strong> field to bind to LDAP.  <em>This option is usually a best practice.</em>'),
 
-        LDAP_SERVERS_BIND_METHOD_USER => t('Bind with Users Credentials: Use user\'s entered credentials
+        Server::$bindMethodUser => t('Bind with Users Credentials: Use user\'s entered credentials
         to bind to LDAP.<br/> This is only useful for modules that execute during user logon such
         as LDAP Authentication and LDAP Authorization.  <em>This option is not a best practice in most cases.</em>
         The user\'s dn must be of the form "cn=[username],[base dn]" for this option to work.'),
 
-        LDAP_SERVERS_BIND_METHOD_ANON_USER => t('Anonymous Bind for search, then Bind with Users Credentials:
+        Server::$bindMethodAnonUser => t('Anonymous Bind for search, then Bind with Users Credentials:
         Searches for user dn then uses user\'s entered credentials to bind to LDAP.<br/> This is only useful for
         modules that work during user logon such as LDAP Authentication and LDAP Authorization.
         The user\'s dn must be discovered by an anonymous search for this option to work.'),
 
-        LDAP_SERVERS_BIND_METHOD_ANON => t('Anonymous Bind: Use no credentials to bind to LDAP server.<br/>
+        Server::$bindMethodAnon => t('Anonymous Bind: Use no credentials to bind to LDAP server.<br/>
         <em>This option will not work on most LDAPS connections.</em>'),
       ),
     );
@@ -137,7 +139,7 @@ class ServerForm extends EntityForm {
       '#states' => array(
     // Action to take.
         'enabled' => array(
-          ':input[name=bind_method]' => array('value' => strval(LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT)),
+          ':input[name=bind_method]' => array('value' => strval(Server::$bindMethodServiceAccount)),
         ),
       ),
     );
@@ -150,7 +152,7 @@ class ServerForm extends EntityForm {
       '#states' => array(
     // Action to take.
         'enabled' => array(
-          ':input[name=bind_method]' => array('value' => strval(LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT)),
+          ':input[name=bind_method]' => array('value' => strval(Server::$bindMethodServiceAccount)),
         ),
       ),
     );
@@ -500,8 +502,9 @@ class ServerForm extends EntityForm {
       $new_configuration->set('bindpw', NULL);
     }
     // If there isn't a password then load the existing one (unless this an anonymous bind server)
-    elseif ($form_state->getValue('bind_method') != LDAP_SERVERS_BIND_METHOD_ANON || $form_state->getValue('bind_method') != LDAP_SERVERS_BIND_METHOD_ANON_USER) {
-      $existing_configuration = ldap_servers_get_servers($new_configuration->id());
+    elseif ($form_state->getValue('bind_method') != Server::$bindMethodAnon || $form_state->getValue('bind_method') != Server::$bindMethodAnonUser) {
+      $factory = new ServerFactory($new_configuration->id());
+      $existing_configuration = $factory->servers;
       if ($existing_configuration && $existing_configuration->get('bindpw')) {
         $new_configuration->set('bindpw', $existing_configuration->get('bindpw'));
       }

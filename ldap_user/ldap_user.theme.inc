@@ -4,6 +4,7 @@
  * @file
  * Theme functions for ldap_user module.
  */
+use Drupal\ldap_user\LdapUserConf;
 
 /**
  * Turns array of variables to a form embedded in one table for each ldap server.
@@ -26,7 +27,7 @@ function theme_ldap_user_conf_form($variables) {
   $ldap_user_conf_admin = ldap_user_conf('admin');
 
   foreach ($tables as $direction => $table) {
-    if ($direction == LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER) {
+    if ($direction == LdapUserConf::$provisioningDirectionToDrupalUser) {
 
       $direction_text = 'todrupal';
 

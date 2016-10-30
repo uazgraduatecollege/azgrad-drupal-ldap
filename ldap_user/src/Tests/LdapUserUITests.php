@@ -2,14 +2,15 @@
 
 namespace Drupal\ldap_user\Tests;
 
-use Drupal\ldap_test\LdapTestCase;
+use Drupal\ldap_test\LdapWebTestBase;
+use Drupal\ldap_user\LdapUserConf;
 
 /**
  * UI tests for ldap_user.
  *
  * @group ldap_user
  */
-class LdapUserUITests extends LdapTestCase {
+class LdapWebUserUITests extends LdapWebTestBase {
 
   /**
    *
@@ -90,17 +91,17 @@ class LdapUserUITests extends LdapTestCase {
 
     $edit_direct_map = array(
 
-      'manualAccountConflict' => LDAP_USER_MANUAL_ACCT_CONFLICT_LDAP_ASSOCIATE,
+      'manualAccountConflict' => LdapUserConf::$manualAccountConflictLdapAssociate,
       'drupalAcctProvisionServer' => $sid,
-      'userConflictResolve' => LDAP_USER_CONFLICT_LOG,
-      'acctCreation' => LDAP_USER_ACCT_CREATION_LDAP_BEHAVIOR_DEFAULT,
+      'userConflictResolve' => LdapUserConf::$userConflictLog,
+      'acctCreation' => LdapUserConf::$accountCreationLdapBehaviour,
       'orphanedDrupalAcctBehavior' => 'ldap_user_orphan_email',
       'orphanedCheckQty' => '50',
       'ldapEntryProvisionServer' => $sid,
     );
     $edit = $edit_direct_map + array(
-      'drupalAcctProvisionTriggers[' . LDAP_USER_DRUPAL_USER_PROV_ON_AUTHENTICATE . ']' => TRUE,
-      'drupalAcctProvisionTriggers[' . LDAP_USER_DRUPAL_USER_PROV_ON_USER_UPDATE_CREATE . ']' => TRUE,
+      'drupalAcctProvisionTriggers[' . LdapUserConf::$provisionDrupalUserOnAuthentication . ']' => TRUE,
+      'drupalAcctProvisionTriggers[' . LdapUserConf::$provisionDrupalUserOnUserUpdateCreate . ']' => TRUE,
 
       '1__sm__ldap_attr__6' => '[sn]',
       '1__sm__convert__6' => FALSE,
@@ -114,9 +115,9 @@ class LdapUserUITests extends LdapTestCase {
       '1__sm__1__7' => TRUE,
       '1__sm__2__7' => TRUE,
 
-      'ldapEntryProvisionTriggers[' . LDAP_USER_LDAP_ENTRY_PROV_ON_USER_UPDATE_CREATE . ']' => TRUE,
-      'ldapEntryProvisionTriggers[' . LDAP_USER_LDAP_ENTRY_PROV_ON_AUTHENTICATE . ']' => TRUE,
-      'ldapEntryProvisionTriggers[' . LDAP_USER_LDAP_ENTRY_DELETE_ON_USER_DELETE . ']' => TRUE,
+      'ldapEntryProvisionTriggers[' . LdapUserConf::$provisionLdapEntryOnUserUpdateCreate . ']' => TRUE,
+      'ldapEntryProvisionTriggers[' . LdapUserConf::$provisionLdapEntryOnUserAuthentication . ']' => TRUE,
+      'ldapEntryProvisionTriggers[' . LdapUserConf::$provisionLdapEntryOnUserDelete . ']' => TRUE,
 
       '2__sm__user_attr__0' => 'user_tokens',
       '2__sm__user_tokens__0' => 'Drupal provisioned account for [property.uid]',
@@ -149,33 +150,33 @@ class LdapUserUITests extends LdapTestCase {
     }
 
     $this->assertTrue(
-      isset($ldap_user_conf->drupalAcctProvisionTriggers[LDAP_USER_DRUPAL_USER_PROV_ON_AUTHENTICATE]) &&
-      isset($ldap_user_conf->drupalAcctProvisionTriggers[LDAP_USER_DRUPAL_USER_PROV_ON_USER_UPDATE_CREATE]), t('drupal provision triggers set correctly'), $this->testId('user interface tests'));
+      isset($ldap_user_conf->drupalAcctProvisionTriggers[LdapUserConf::$provisionDrupalUserOnAuthentication]) &&
+      isset($ldap_user_conf->drupalAcctProvisionTriggers[LdapUserConf::$provisionDrupalUserOnUserUpdateCreate]), t('drupal provision triggers set correctly'), $this->testId('user interface tests'));
 
     $this->assertTrue(
-      isset($ldap_user_conf->ldapEntryProvisionTriggers[LDAP_USER_LDAP_ENTRY_PROV_ON_USER_UPDATE_CREATE]) &&
-      isset($ldap_user_conf->ldapEntryProvisionTriggers[LDAP_USER_LDAP_ENTRY_PROV_ON_AUTHENTICATE]) &&
-      isset($ldap_user_conf->ldapEntryProvisionTriggers[LDAP_USER_LDAP_ENTRY_DELETE_ON_USER_DELETE]), t('ldap provision triggers  set correctly'), $this->testId('user interface tests'));
+      isset($ldap_user_conf->ldapEntryProvisionTriggers[LdapUserConf::$provisionLdapEntryOnUserUpdateCreate]) &&
+      isset($ldap_user_conf->ldapEntryProvisionTriggers[LdapUserConf::$provisionLdapEntryOnUserAuthentication]) &&
+      isset($ldap_user_conf->ldapEntryProvisionTriggers[LdapUserConf::$provisionLdapEntryOnUserDelete]), t('ldap provision triggers  set correctly'), $this->testId('user interface tests'));
 
     $field_token = '[field.field_lname]';
     $field_lname_set_correctly = (
-      $ldap_user_conf->ldapUserSynchMappings[LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER][$field_token]['enabled'] == TRUE &&
+      $ldap_user_conf->ldapUserSynchMappings[LdapUserConf::$provisioningDirectionToDrupalUser][$field_token]['enabled'] == TRUE &&
 
-      $ldap_user_conf->ldapUserSynchMappings[LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER][$field_token]['ldap_attr'] == '[sn]');
+      $ldap_user_conf->ldapUserSynchMappings[LdapUserConf::$provisioningDirectionToDrupalUser][$field_token]['ldap_attr'] == '[sn]');
 
     $this->assertTrue($field_lname_set_correctly, t('Synch mapping for field.field_lname  field set correctly'), $this->testId('user interface tests'));
     if (!$field_lname_set_correctly) {
-      debug('ldap_user_conf->synchMapping[direction][field.field_lname]'); debug($ldap_user_conf->ldapUserSynchMappings[LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER]['field.field_lname']);
+      debug('ldap_user_conf->synchMapping[direction][field.field_lname]'); debug($ldap_user_conf->ldapUserSynchMappings[LdapUserConf::$provisioningDirectionToDrupalUser]['field.field_lname']);
     }
 
     $field_token = '[field.field_fname]';
-    $field_fname_set_correctly = ($ldap_user_conf->ldapUserSynchMappings[LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER][$field_token]['enabled'] == TRUE &&
-      $ldap_user_conf->ldapUserSynchMappings[LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER][$field_token]['direction'] == 1 &&
-      $ldap_user_conf->ldapUserSynchMappings[LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER][$field_token]['ldap_attr'] == '[givenname]');
+    $field_fname_set_correctly = ($ldap_user_conf->ldapUserSynchMappings[LdapUserConf::$provisioningDirectionToDrupalUser][$field_token]['enabled'] == TRUE &&
+      $ldap_user_conf->ldapUserSynchMappings[LdapUserConf::$provisioningDirectionToDrupalUser][$field_token]['direction'] == 1 &&
+      $ldap_user_conf->ldapUserSynchMappings[LdapUserConf::$provisioningDirectionToDrupalUser][$field_token]['ldap_attr'] == '[givenname]');
 
     $this->assertTrue($field_fname_set_correctly, t('Synch mapping for field.field_lname  field set correctly'), $this->testId('user interface tests'));
     if (!$field_fname_set_correctly) {
-      debug('ldap_user_conf->synchMapping[direction][field.field_lname]'); debug($ldap_user_conf->ldapUserSynchMappings[LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER]['field.field_lname']);
+      debug('ldap_user_conf->synchMapping[direction][field.field_lname]'); debug($ldap_user_conf->ldapUserSynchMappings[LdapUserConf::$provisioningDirectionToDrupalUser]['field.field_lname']);
     }
 
   }

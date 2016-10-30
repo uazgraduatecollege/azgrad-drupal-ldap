@@ -4,6 +4,8 @@ namespace Drupal\ldap_servers\Form;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Entity\EntityForm;
+use Drupal\ldap_servers\Entity\Server;
+use Drupal\ldap_servers\ServerFactory;
 use Drupal\ldap_servers\TokenFunctions;
 
 /**
@@ -106,8 +108,7 @@ class ServerTestForm extends EntityForm {
       '#description' => t('This is optional and used for testing this server\'s group configuration.'),
     ];
 
-    // If ($ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_ANON_USER) {.
-    if ($ldap_server->get('bind_method') == LDAP_SERVERS_BIND_METHOD_ANON_USER) {
+    if ($ldap_server->get('bind_method') == Server::$bindMethodAnonUser) {
       $form['testing_drupal_userpw'] = [
         '#type' => 'password',
         '#title' => t('Testing Drupal User Password'),
@@ -219,11 +220,12 @@ class ServerTestForm extends EntityForm {
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
     $values = $form_state->getValues();
+    $factory = new ServerFactory($values['id'], 'all', TRUE);
 
     if (!$values['id']) {
       $form_state->setErrorByName(NULL, t('No server id found in form'));
     }
-    elseif (!$ldap_server = ldap_servers_get_servers($values['id'], 'all', TRUE)) {
+    elseif (!$factory->servers ) {
       $form_state->setErrorByName(NULL, t('Failed to create server object for server with server id=%id', [
         '%id' => $values['id'],
       ]));
@@ -243,7 +245,8 @@ class ServerTestForm extends EntityForm {
     $values = $form_state->getValues();
     $id = $values['id'];
     /* @var \Drupal\ldap_servers\Entity\Server $ldap_server */
-    $ldap_server = ldap_servers_get_servers($id, 'all', TRUE);
+    $factory = new ServerFactory($id, 'all', TRUE);
+    $ldap_server = $factory->servers;
 
     // $result = t('<h1>Test of name </h2>',$server_conf);.
     $results = [];
@@ -257,7 +260,7 @@ class ServerTestForm extends EntityForm {
       $bindpw_type = t('stored in configuration');
     }
 
-    if ($ldap_server->get('bind_method') == LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT) {
+    if ($ldap_server->get('bind_method') == Server::$bindMethodServiceAccount) {
       $results_tables['basic'][] = [
         t('Binding with DN for non-anonymous search (%bind_dn).  Using password ', [
           '%bind_dn' => $ldap_server->get('binddn'),
@@ -369,8 +372,8 @@ class ServerTestForm extends EntityForm {
 
     $results = array_merge($results, $more_results);
 
-    if ($ldap_server->get('bind_method') == LDAP_SERVERS_BIND_METHOD_ANON_USER) {
-      drupal_set_message('LDAP_SERVERS_BIND_METHOD_ANON_USER');
+    if ($ldap_server->get('bind_method') == Server::$bindMethodAnonUser) {
+      drupal_set_message('Bind method anonymous, user.');
       list($has_errors, $more_results, $ldap_user) = $ldap_server->testUserMapping($values['testing_drupal_username']);
       $results = array_merge($results, $more_results);
       if (!$has_errors) {

@@ -10,6 +10,7 @@ namespace Drupal\ldap_servers;
 
 use Drupal\Component\Utility\SafeMarkup;
 use Drupal\Component\Utility\Unicode;
+use Drupal\ldap_servers\Entity\Server;
 use Drupal\ldap_user\LdapUserConf;
 use Drupal\user\Entity\User;
 
@@ -512,11 +513,14 @@ trait TokenFunctions {
    */
   public function showSampleUserTokens($sid) {
 
-    $ldap_server = ldap_servers_get_servers($sid, 'all', TRUE);
+    $factory = new ServerFactory($sid, 'all', TRUE);
+    /* @var Server $ldap_server */
+    $ldap_server = $factory->servers;
+    // @FIXME undefined function
     $test_username = $ldap_server->testingDrupalUsername;
     if (!$test_username || !(
-        $ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT ||
-        $ldap_server->bind_method == LDAP_SERVERS_BIND_METHOD_ANON
+        $ldap_server->get('bind_method') == Server::$bindMethodServiceAccount ||
+        $ldap_server->get('bind_method') == Server::$bindMethodAnon
       )
     ) {
       return FALSE;

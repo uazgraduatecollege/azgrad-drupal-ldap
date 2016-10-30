@@ -8,6 +8,9 @@
 namespace Drupal\ldap_authentication;
 
 use Drupal\Core\Url;
+use Drupal\ldap_servers\Entity\Server;
+use Drupal\ldap_servers\ServerFactory;
+use Drupal\ldap_user\LdapUserConf;
 
 /**
  *
@@ -24,8 +27,8 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
      */
 
     $values['authenticationModeOptions']  = array(
-      LDAP_AUTHENTICATION_MIXED => t('Mixed mode. Drupal authentication is tried first.  On failure, LDAP authentication is performed.'),
-      LDAP_AUTHENTICATION_EXCLUSIVE => t('Only LDAP Authentication is allowed except for user 1.
+      LdapAuthenticationConf::$mode_mixed => t('Mixed mode. Drupal authentication is tried first.  On failure, LDAP authentication is performed.'),
+      LdapAuthenticationConf::$mode_exclusive => t('Only LDAP Authentication is allowed except for user 1.
         If selected, (1) reset password links will be replaced with links to ldap end user documentation below.
         (2) The reset password form will be left available at user/password for user 1; but no links to it
         will be provided to anonymous users.
@@ -76,15 +79,15 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
     */
 
     $values['emailOptionOptions'] = array(
-      LDAP_AUTHENTICATION_EMAIL_FIELD_REMOVE => t('Don\'t show an email field on user forms.  LDAP derived email will be used for user and connot be changed by user'),
-      LDAP_AUTHENTICATION_EMAIL_FIELD_DISABLE => t('Show disabled email field on user forms with LDAP derived email.  LDAP derived email will be used for user and connot be changed by user'),
-      LDAP_AUTHENTICATION_EMAIL_FIELD_ALLOW => t('Leave email field on user forms enabled.  Generally used when provisioning to LDAP or not using email derived from LDAP.'),
+      LdapAuthenticationConf::$emailFieldRemove => t('Don\'t show an email field on user forms.  LDAP derived email will be used for user and connot be changed by user'),
+      LdapAuthenticationConf::$emailFieldDisable => t('Show disabled email field on user forms with LDAP derived email.  LDAP derived email will be used for user and connot be changed by user'),
+      LdapAuthenticationConf::$emailFieldAllow => t('Leave email field on user forms enabled.  Generally used when provisioning to LDAP or not using email derived from LDAP.'),
     );
 
     $values['emailUpdateOptions'] = array(
-      LDAP_AUTHENTICATION_EMAIL_UPDATE_ON_LDAP_CHANGE_ENABLE_NOTIFY => t('Update stored email if LDAP email differs at login and notify user.'),
-      LDAP_AUTHENTICATION_EMAIL_UPDATE_ON_LDAP_CHANGE_ENABLE => t('Update stored email if LDAP email differs at login but don\'t notify user.'),
-      LDAP_AUTHENTICATION_EMAIL_UPDATE_ON_LDAP_CHANGE_DISABLE => t('Don\'t update stored email if LDAP email differs at login.'),
+      LdapAuthenticationConf::$emailUpdateOnLdapChangeEnableNotify => t('Update stored email if LDAP email differs at login and notify user.'),
+      LdapAuthenticationConf::$emailUpdateOnLdapChangeEnable => t('Update stored email if LDAP email differs at login but don\'t notify user.'),
+      LdapAuthenticationConf::$emailUpdateOnLdapChangeDisable => t('Don\'t update stored email if LDAP email differs at login.'),
     );
 
     /**
@@ -92,9 +95,9 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
     */
 
     $values['passwordUpdateOptions'] = array(
-      LDAP_AUTHENTICATION_PASSWORD_FIELD_SHOW => t('Display password field disabled (Prevents password updates).'),
-      LDAP_AUTHENTICATION_PASSWORD_FIELD_HIDE => t('Don\'t show password field on user forms except login form.'),
-      LDAP_AUTHENTICATION_PASSWORD_FIELD_ALLOW => t('Display password field and allow updating it. In order to change password in LDAP, LDAP provisioning for this field must be enabled.'),
+      LdapAuthenticationConf::$passwordFieldShow => t('Display password field disabled (Prevents password updates).'),
+      LdapAuthenticationConf::$passwordFieldHide => t('Don\'t show password field on user forms except login form.'),
+      LdapAuthenticationConf::$passwordFieldAllow => t('Display password field and allow updating it. In order to change password in LDAP, LDAP provisioning for this field must be enabled.'),
     );
 
     /**
@@ -182,7 +185,7 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
   /**
    * 0.  Logon Options.
    */
-  public $authenticationModeDefault = LDAP_AUTHENTICATION_MIXED;
+  public $authenticationModeDefault;
   public $authenticationModeOptions;
 
   protected $authenticationServersDescription;
@@ -209,10 +212,10 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
    * 4. Email.
    */
 
-  public $emailOptionDefault = LDAP_AUTHENTICATION_EMAIL_FIELD_REMOVE;
+  public $emailOptionDefault;
   public $emailOptionOptions;
 
-  public $emailUpdateDefault = LDAP_AUTHENTICATION_EMAIL_UPDATE_ON_LDAP_CHANGE_ENABLE_NOTIFY;
+  public $emailUpdateDefault;
   public $emailUpdateOptions;
 
 
@@ -274,9 +277,14 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
    */
   public function __construct() {
     parent::__construct();
+    $this->emailUpdateDefault = self::$emailUpdateOnLdapChangeEnableNotify;
+    $this->emailOptionDefault = self::$emailFieldRemove;
+    $this->authenticationModeDefault = self::$mode_mixed;
+
     $this->setTranslatableProperties();
-    if ($servers = ldap_servers_get_servers(NULL, 'enabled')) {
-      foreach ($servers as $sid => $ldap_server) {
+    $factory = new ServerFactory(NULL, 'enabled');
+    if ($factory->servers) {
+      foreach ($factory->servers as $sid => $ldap_server) {
         $enabled = ($ldap_server->get('status')) ? 'Enabled' : 'Disabled';
         $this->authenticationServersOptions[$sid] = $ldap_server->get('label') . ' (' . $ldap_server->get('address') . ') Status: ' . $enabled;
       }
@@ -539,18 +547,19 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
   public function validate() {
     $errors = array();
 
-    $enabled_servers = ldap_servers_get_servers(NULL, 'enabled');
+    $factory = new ServerFactory(NULL, 'enabled');
+    $enabled_servers = $factory->servers;
     if ($this->ssoEnabled) {
       foreach ($this->sids as $sid => $discard) {
-        if ($enabled_servers[$sid]->bind_method == LDAP_SERVERS_BIND_METHOD_USER || $enabled_servers[$sid]->bind_method == LDAP_SERVERS_BIND_METHOD_ANON_USER) {
+        if ($enabled_servers[$sid]->get('bind_method') == Server::$bindMethodUser || $enabled_servers[$sid]->get('bind_method') == Server::$bindMethodAnonUser) {
           $methods = array(
-            LDAP_SERVERS_BIND_METHOD_USER => 'Bind with Users Credentials',
-            LDAP_SERVERS_BIND_METHOD_ANON_USER => 'Anonymous Bind for search, then Bind with Users Credentials',
+            Server::$bindMethodUser => 'Bind with Users Credentials',
+            Server::$bindMethodAnonUser => 'Anonymous Bind for search, then Bind with Users Credentials',
           );
           $tokens = array(
             '%edit' => \Drupal::l($enabled_servers[$sid]->name,  Url::fromUri('/admin/config/people/ldap/servers/edit/' . $sid)),
             '%sid' => $sid,
-            '%bind_method' => $methods[$enabled_servers[$sid]->bind_method],
+            '%bind_method' => $methods[$enabled_servers[$sid]->get('bind_method')],
           );
 
           $errors['ssoEnabled'] = t('Single Sign On is not valid with the server !edit (id=%sid) because that server configuration uses %bind_method.  Since the user\'s credentials are never available to this module with single sign on enabled, there is no way for the ldap module to bind to the ldap server with credentials.', $tokens);
