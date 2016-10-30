@@ -6,7 +6,7 @@ ldap_user.admin_form:
   requirements:
     _permission: 'administer site configuration'
 ldap_user.test_form:
-  path: /LDAP_USER_TEST_FORM_PATH
+  path: /admin/config/people/ldap/user/test
   defaults:
     _title: 'Test LDAP User Functionality for a given user.'
     _form: \Drupal\ldap_user\Form\LdapUserTestForm

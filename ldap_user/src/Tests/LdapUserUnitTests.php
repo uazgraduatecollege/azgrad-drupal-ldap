@@ -107,11 +107,12 @@ class LdapUserUnitTests extends LdapTestCase {
     $entity->house['und'][1]['value'] = 'Privet Drive';
     $account = new \stdClass();
     $account->mail = 'hpotter@hogwarts.edu';
-    $mail = ldap_user_token_replace('[property.mail]', $account, $entity);
+    $tokens = new \TokenHelper();
+    $mail = $tokens->tokenReplace('[property.mail]', $account, $entity);
     $this->assertTrue($mail == $account->mail, t('[property.mail] token worked on ldap_user_token_replace().'), $this->testId('tokens.property'));
-    $lname = ldap_user_token_replace('[field.lname]', $account, $entity);
+    $lname = $tokens->tokenReplace('[field.lname]', $account, $entity);
     $this->assertTrue($lname == $entity->lname['und'][0]['value'], t('[field.lname] token worked on ldap_user_token_replace().'), $this->testId('tokens.property.field'));
-    $house1 = ldap_user_token_replace('[field.house:1]', $account, $entity);
+    $house1 = $tokens->tokenReplace('[field.house:1]', $account, $entity);
     $this->assertTrue($house1 == $entity->house['und'][1]['value'], t('[field.house:1] token worked on ldap_user_token_replace().'), $this->testId('tokens.property.field.ordinal'));
     // @todo need tests for :last and a multivalued attribute.  see http://drupal.org/node/1245736
 

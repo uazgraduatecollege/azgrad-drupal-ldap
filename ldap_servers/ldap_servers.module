@@ -25,6 +25,7 @@ use \Drupal\ldap_servers\Entity\Server;
 use Drupal\Core\Url;
 use Drupal\ldap_servers\LdapTypes\AbstractType;
 use Drupal\ldap_test\TestServer;
+use Drupal\ldap_user\LdapUserConf;
 
 class TokenHelper {
   use \Drupal\ldap_servers\TokenFunctions;
@@ -94,10 +95,10 @@ function ldap_servers_ldap_attributes_needed_alter(&$attributes, $params) {
     }
     if ($ldap_server->get('user_dn_expression')) {
       // @FIXME: Parameters don't match
-      $token_helper->ldap_servers_token_extract_attributes($attributes, $ldap_server->get('user_dn_expression'), TRUE);
+      $token_helper->extractTokenAttributes($attributes, $ldap_server->get('user_dn_expression'), TRUE);
     }
     if ($ldap_server->get('mail_template')) {
-      $token_helper->ldap_servers_token_extract_attributes($attributes, $ldap_server->get('mail_template'));
+      $token_helper->extractTokenAttributes($attributes, $ldap_server->get('mail_template'));
     }
     if (!isset($attributes[$ldap_server->get('user_attr')])) {
       $attributes[$ldap_server->get('user_attr')] = ldap_servers_set_attribute_map();
@@ -454,7 +455,7 @@ function ldap_servers_binary($value) {
  * @return array|bool
  */
 function ldap_servers_get_user_ldap_data($drupal_user, $id = NULL, $ldap_context = NULL) {
-  if (is_object($drupal_user) && property_exists($drupal_user, 'uid') && $authname = ldap_user_get_identifier_from_map($drupal_user->id())) {
+  if (is_object($drupal_user) && property_exists($drupal_user, 'uid') && $authname = LdapUserConf::ldap_user_get_identifier_from_map($drupal_user->id())) {
     $drupal_username = $authname;
   }
   else {

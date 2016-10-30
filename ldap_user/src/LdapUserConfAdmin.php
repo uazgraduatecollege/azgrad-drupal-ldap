@@ -503,7 +503,7 @@ EOT;
           $tokens['!row_descriptor'] = $row_descriptor;
           $ldap_attribute_maps_in_token = array();
           // debug('calling ldap_servers_token_extract_attributes from validate, mapping='); debug($mapping['ldap_attr']);.
-          $this->ldap_servers_token_extract_attributes($ldap_attribute_maps_in_token, $mapping['ldap_attr']);
+          $this->extractTokenAttributes($ldap_attribute_maps_in_token, $mapping['ldap_attr']);
 
           if ($mapping['direction'] == LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER) {
             $row_id = $map_index[$mapping['user_attr']];
@@ -622,7 +622,7 @@ EOT;
           continue;
         }
 
-        $key = ($direction == LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER) ? _ldap_user_sanitise($columns['user_attr']) : _ldap_user_sanitise($columns['ldap_attr']);
+        $key = ($direction == LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER) ? $this->sanitise_machine_name($columns['user_attr']) : $this->sanitise_machine_name($columns['ldap_attr']);
         // Only save if its configurable and has an ldap and drupal attributes. The others are optional.
         if ($columns['configurable_to_drupal'] && $columns['ldap_attr'] && $columns['user_attr']) {
           $mappings[$direction][$key] = array(
@@ -832,7 +832,7 @@ EOT;
 
     // 1. non configurable mapping rows.
     foreach ($this->synchMapping[$direction] as $target_id => $mapping) {
-      $row_id = _ldap_user_sanitise($target_id);
+      $row_id = $this->sanitise_machine_name($target_id);
       if (isset($mapping['exclude_from_mapping_ui']) && $mapping['exclude_from_mapping_ui']) {
         continue;
       }
@@ -1141,6 +1141,15 @@ EOT;
     foreach ($values as $property => $default_value) {
       $this->$property = $default_value;
     }
+  }
+
+  /**
+   * Returns a config compatible machine name.
+   */
+  private function sanitise_machine_name($string) {
+    // Replace dots
+    // Replace square brackets.
+    return str_replace(['.', '[', ']'], ['-', '', ''], $string);
   }
 
 }

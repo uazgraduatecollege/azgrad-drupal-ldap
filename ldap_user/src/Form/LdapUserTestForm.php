@@ -10,11 +10,27 @@ use Drupal\Core\Form\FormBase;
  */
 class LdapUserTestForm extends FormBase {
 
+  private static $sync_trigger_options;
+
   /**
    * {@inheritdoc}
    */
   public function getFormId() {
     return 'ldap_user_test_form';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function __construct() {
+    $this::$sync_trigger_options = [
+      LDAP_USER_DRUPAL_USER_PROV_ON_USER_UPDATE_CREATE => t('On synch to Drupal user create or update. Requires a server with binding method of "Service Account Bind" or "Anonymous Bind".'),
+      LDAP_USER_DRUPAL_USER_PROV_ON_AUTHENTICATE => t('On create or synch to Drupal user when successfully authenticated with LDAP credentials. (Requires LDAP Authentication module).'),
+      LDAP_USER_DRUPAL_USER_PROV_ON_ALLOW_MANUAL_CREATE => t('On manual creation of Drupal user from admin/people/create and "Create corresponding LDAP entry" is checked'),
+      LDAP_USER_LDAP_ENTRY_PROV_ON_USER_UPDATE_CREATE => t('On creation or synch of an LDAP entry when a Drupal account is created or updated. Only applied to accounts with a status of approved.'),
+      LDAP_USER_LDAP_ENTRY_PROV_ON_AUTHENTICATE => t('On creation or synch of an LDAP entry when a user authenticates.'),
+      LDAP_USER_LDAP_ENTRY_DELETE_ON_USER_DELETE => t('On deletion of an LDAP entry when the corresponding Drupal Account is deleted.  This only applies when the LDAP entry was provisioned by Drupal by the LDAP User module.'),
+    ];
   }
 
   /**
@@ -50,15 +66,13 @@ class LdapUserTestForm extends FormBase {
       ],
     ];
 
-    $synch_trigger_options = ldap_user_synch_triggers_key_values();
-
     $selected_actions = isset($_SESSION['ldap_user_test_form']['action']) ? $_SESSION['ldap_user_test_form']['action'] : [];
     $form['action'] = [
       '#type' => 'checkboxes',
       '#title' => t('Actions/Event Handlers to Test'),
       '#required' => 0,
       '#default_value' => $selected_actions,
-      '#options' => $synch_trigger_options,
+      '#options' => self::$sync_trigger_options,
       '#states' => [
     // Action to take.
         'visible' => [
@@ -99,8 +113,6 @@ class LdapUserTestForm extends FormBase {
     $selected_actions = $form_state->getValue(['action']);
 
     if ($username && count($selected_actions) > 0) {
-
-      $synch_trigger_options = ldap_user_synch_triggers_key_values();
 
       $user_object = user_load_by_name($username);
       if ($user_object) {
@@ -152,7 +164,7 @@ class LdapUserTestForm extends FormBase {
       $user_edit = ['name' => $username];
 
       foreach (array_filter($selected_actions) as $i => $synch_trigger) {
-        $synch_trigger_description = $synch_trigger_options[$synch_trigger];
+        $synch_trigger_description = self::$sync_trigger_options[$synch_trigger];
         foreach ([
           LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER,
           LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY,
@@ -179,7 +191,7 @@ class LdapUserTestForm extends FormBase {
       }
       // Do all synchs second, in case logic of form changes to allow executing mulitple events.
       foreach (array_filter($selected_actions) as $i => $synch_trigger) {
-        $synch_trigger_description = $synch_trigger_options[$synch_trigger];
+        $synch_trigger_description = self::$sync_trigger_options[$synch_trigger];
         foreach ([
           LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER,
           LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY,
@@ -219,7 +231,7 @@ class LdapUserTestForm extends FormBase {
     $_SESSION['ldap_user_test_form']['test_mode'] = $form_state->getValue(['test_mode']);
     $_SESSION['ldap_user_test_form']['testing_drupal_username'] = $username;
 
-    $form_state->set(['redirect'], LDAP_USER_TEST_FORM_PATH);
+    $form_state->set(['redirect'], 'admin/config/people/ldap/user/test');
 
   }
 

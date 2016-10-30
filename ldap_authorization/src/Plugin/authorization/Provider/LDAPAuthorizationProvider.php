@@ -2,11 +2,14 @@
 
 namespace Drupal\ldap_authorization\Plugin\authorization\provider;
 
+use Drupal\authorization\Entity\AuthorizationProfile;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Form\FormStateInterface;
 
 use Drupal\authorization\Provider\ProviderPluginBase;
 use Drupal\ldap_servers\ConversionHelper;
+use Drupal\ldap_servers\Entity\Server;
+use Drupal\ldap_user\LdapUserConf;
 
 /**
  * @AuthorizationProvider(
@@ -20,12 +23,22 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
   public $providerType = 'ldap';
   public $handlers = array('ldap', 'ldap_authentication');
 
-  public $synchOnLogon = TRUE;
+  public static $genericDescription = 'Representations of groups derived from LDAP might initially look like:
+  <ul>
+  <li><code>cn=students,ou=groups,dc=hogwarts,dc=edu</code></li>
+  <li><code>cn=gryffindor,ou=groups,dc=hogwarts,dc=edu</code></li>
+  <li><code>cn=faculty,ou=groups,dc=hogwarts,dc=edu</code></li>
+  <li><code>cn=probation students,ou=groups,dc=hogwarts,dc=edu</code></li>
+  </ul>'
+  ;
+
+  public $syncOnLogon = TRUE;
 
   /**
    *
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
+    /* @var AuthorizationProfile $profile */
     $profile = $this->configuration['profile'];
 
     $tokens = $this->getTokens();
@@ -79,34 +92,10 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
       '#default_value' => $this->configuration['status']['only_ldap_authenticated'],
     );
 
-    if (method_exists($this->consumer, 'mappingExamples')) {
-      $tokens['@examples'] = '<fieldset class="collapsible collapsed form-wrapper" id="authorization-mappings">
-<legend><span class="fieldset-legend">' . t('Examples based on current @profile_namePlural', $tokens) . '</span></legend>
-<div class="fieldset-wrapper">' . $this->consumer->mappingExamples($tokens) . '<div class="fieldset-wrapper">
-</fieldset>';
-    }
-    else {
-      $tokens['@examples'] = '';
-    }
     $form['filter_and_mappings'] = array(
       '#type' => 'fieldset',
       '#title' => t('II. LDAP to @consumer_name mapping and filtering', $tokens),
-      '#description' => t('
-Representations of groups derived from LDAP might initially look like:
-<ul>
-<li><code>cn=students,ou=groups,dc=hogwarts,dc=edu</code></li>
-<li><code>cn=gryffindor,ou=groups,dc=hogwarts,dc=edu</code></li>
-<li><code>cn=faculty,ou=groups,dc=hogwarts,dc=edu</code></li>
-<li><code>cn=probation students,ou=groups,dc=hogwarts,dc=edu</code></li>
-</ul>
-
-<p><strong>Mappings are used to convert and filter these group representations to @consumer_namePlural.</strong></p>
-
-@consumer_mappingDirections
-
-@examples
-
-', $tokens),
+      '#description' => t(self::$genericDescription . '<p><strong>Mappings are used to convert and filter these group representations to @consumer_namePlural.</strong></p> @consumer_mappingDirections', $tokens),
       '#collapsible' => TRUE,
       '#collapsed' => !($this->mappings || $this->useMappingsAsFilter || $this->useFirstAttrAsGroupId),
     );
@@ -194,17 +183,7 @@ Representations of groups derived from LDAP might initially look like:
    * Contains examples for how groups are derived as markup.
    */
   public function buildRowDescription(array $form, FormStateInterface $form_state) {
-    return '
-      Representations of groups derived from LDAP might initially look like:
-      <ul>
-        <li><code>cn=students,ou=groups,dc=hogwarts,dc=edu</code></li>
-        <li><code>cn=gryffindor,ou=groups,dc=hogwarts,dc=edu</code></li>
-        <li><code>cn=faculty,ou=groups,dc=hogwarts,dc=edu</code></li>
-        <li><code>cn=probation students,ou=groups,dc=hogwarts,dc=edu</code></li>
-      </ul>
-      Also supports regular expressions. For example:
-        <code>cn=.*,ou=groups,dc=hogwarts,dc=edu</code>
-      ';
+    return self::$genericDescription;
   }
 
   /**
@@ -221,16 +200,17 @@ Representations of groups derived from LDAP might initially look like:
     // So what does the 'query' do then? Is it the filter?
     // Configure this provider.
     // Do not continue if user should be excluded from LDAP authentication.
-    if (ldap_user_ldap_exclude($user)) {
+    if (LdapUserConf::excludeUser($user)) {
       return array();
     }
+    /* @var AuthorizationProfile $profile */
     $profile = $this->configuration['profile'];
     $config = $profile->getProviderConfig();
 
     // Load the correct server.
     $server_id = $config['status']['server'];
+    /* @var Server $ldap_server */
     $ldap_server = \Drupal::entityManager()->getStorage('ldap_server')->load($server_id);
-
     // Get user data.
     $ldap_user = ldap_servers_get_user_ldap_data($user, $server_id);
     // Get user groups from DN.
@@ -256,6 +236,7 @@ Representations of groups derived from LDAP might initially look like:
    */
   public function filterProposals($proposed_ldap_authorizations, $op = NULL, $provider_mapping) {
     // Configure this provider.
+    /* @var AuthorizationProfile $profile */
     $profile = $this->configuration['profile'];
     $config = $profile->getProviderConfig();
 
@@ -292,6 +273,7 @@ Representations of groups derived from LDAP might initially look like:
    */
   public function sanitizeProposals($proposals, $op = NULL) {
     // Configure this provider.
+    /* @var AuthorizationProfile $profile */
     $profile = $this->configuration['profile'];
     $config = $profile->getProviderConfig();
 
@@ -357,7 +339,7 @@ Representations of groups derived from LDAP might initially look like:
       $new_mapping['from'] = $mapping[0];
       $new_mapping['normalized'] = $mapping[1];
       $new_mapping['simplified'] = $mapping[1];
-      $new_mapping['valid'] = (boolean) (!$create_consumers && !empty($roles_by_name[$mapping[1]]));
+      $new_mapping['valid'] = (boolean) (!empty($roles_by_name[$mapping[1]]));
       $new_mapping['error_message'] = ($new_mapping['valid']) ? '' : t("Role %role_name does not exist and role creation is not enabled.", array('%role' => $mapping[1]));
       $new_mappings[] = $new_mapping;
     }

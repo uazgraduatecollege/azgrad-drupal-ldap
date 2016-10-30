@@ -6,6 +6,8 @@
  */
 
 use Drupal\Core\Language\Language;
+use Drupal\ldap_user\LdapUserConf;
+
 /**
  * Function to respond to ldap associated drupal accounts which no
  * longer have a related LDAP entry.

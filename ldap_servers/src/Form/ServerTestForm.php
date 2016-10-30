@@ -141,16 +141,16 @@ class ServerTestForm extends EntityForm {
                 continue;
               }
               elseif ($i == 0 && $count == 1) {
-                $token = LDAP_SERVERS_TOKEN_PRE . $key . LDAP_SERVERS_TOKEN_POST;
+                $token = self::$token_pre . $key . self::$token_post;
               }
               elseif ($i == 0 && $count > 1) {
-                $token = LDAP_SERVERS_TOKEN_PRE . $key . LDAP_SERVERS_TOKEN_DEL . '0' . LDAP_SERVERS_TOKEN_POST;
+                $token = self::$token_pre . $key . self::$token_del . '0' . self::$token_post;
               }
               elseif (($i == $count - 1) && $count > 1) {
-                $token = LDAP_SERVERS_TOKEN_PRE . $key . LDAP_SERVERS_TOKEN_DEL . 'last' . LDAP_SERVERS_TOKEN_POST;
+                $token = self::$token_pre . $key . self::$token_del . 'last' . self::$token_post;
               }
               elseif ($count > 1) {
-                $token = LDAP_SERVERS_TOKEN_PRE . $key . LDAP_SERVERS_TOKEN_DEL . $i . LDAP_SERVERS_TOKEN_POST;
+                $token = self::$token_pre . $key . self::$token_del . $i . self::$token_post;
               }
               else {
                 $token = "";
@@ -206,6 +206,7 @@ class ServerTestForm extends EntityForm {
             dpm($user_entity);
           }
           dpm("Test Group LDAP Entry");
+          //@FIXME: group_entry is undefined.
           dpm($test_data['group_entry'][0]);
         }
       }
@@ -579,7 +580,7 @@ class ServerTestForm extends EntityForm {
 
     list($has_errors, $more_results, $ldap_user) = $ldap_server->testUserMapping($values['testing_drupal_username']);
 
-    $tokens = ($ldap_user && isset($ldap_user['attr'])) ? $this->ldap_servers_token_tokenize_entry($ldap_user['attr'], 'all') : [];
+    $tokens = ($ldap_user && isset($ldap_user['attr'])) ? $this->tokenizeEntry($ldap_user['attr'], 'all') : [];
     foreach ($tokens as $key => $value) {
       $results_tables['tokens'][] = [$key, $value];
     }

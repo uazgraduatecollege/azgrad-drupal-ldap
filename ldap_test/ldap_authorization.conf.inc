@@ -70,7 +70,7 @@ function ldap_test_ldap_authorization_data() {
 
     'useMappingsAsFilter' => 1,
 
-    'synchOnLogon' => 1,
+    'syncOnLogon' => 1,
 
     'revokeLdapProvisioned' => 1,
     'createConsumerTargets' => 0,
@@ -157,7 +157,7 @@ function ldap_test_ldap_authorization_data() {
 
     'useMappingsAsFilter' => 0,
 
-    'synchOnLogon' => 1,
+    'syncOnLogon' => 1,
 
     'revokeLdapProvisioned' => 1,
     'createConsumerTargets' => 1,
@@ -202,7 +202,7 @@ function ldap_test_ldap_authorization_data() {
 
     'useMappingsAsFilter' => 1,
 
-    'synchOnLogon' => 1,
+    'syncOnLogon' => 1,
 
     'revokeLdapProvisioned' => 1,
     'createConsumerTargets' => 1,

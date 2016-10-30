@@ -9,6 +9,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\ldap_authentication\LdapAuthenticationConf;
 use Drupal\ldap_servers\MassageFunctions;
+use Drupal\ldap_user\LdapUserConf;
 
 /**
  * @todo fix advanced help for ../ldap/authentication settings page
@@ -601,7 +602,7 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state, $re
     // LDAP_authen.AC.disallow.ldap.drupal.
     else {
       // Add ldap_authentication authmap to user. account name is fine here, though cn could be used.
-      ldap_user_set_identifier($drupal_account, $authname);
+      LdapUserConf::ldap_user_set_identifier($drupal_account, $authname);
       $drupal_account_is_authmapped = TRUE;
       if ($detailed_watchdog_log) {
         \Drupal::logger('ldap_authentication')->debug('set authmap for %username authname_ldap_user', $watchdog_tokens);
@@ -712,16 +713,21 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state, $re
 
 /**
  * Given authname, determine if corresponding drupal account exists and is authmapped.
+ *
+ * @param $authname
+ * @param $auth_conf
+ * @param $watchdog_tokens
+ * @return array
  */
 function ldap_authentication_corresponding_drupal_user($authname, $auth_conf, &$watchdog_tokens) {
   $detailed_watchdog_log = \Drupal::config('ldap_help.settings')->get('watchdog_detail');
   if (!($drupal_account = user_load_by_name($authname))) {
-    $uid = ldap_user_get_uid_from_map($authname);
+    $uid = LdapUserConf::ldap_user_get_uid_from_map($authname);
     $drupal_account = $uid ? user_load($uid) : FALSE;
   }
 
   if (is_object($drupal_account)) {
-    $drupal_account_is_authmapped = ldap_user_get_identifier_from_map($drupal_account->id());
+    $drupal_account_is_authmapped = LdapUserConf::ldap_user_get_identifier_from_map($drupal_account->id());
     if ($drupal_account->id() == 1 && $detailed_watchdog_log) {
       \Drupal::logger('ldap_authentication')->debug('%username : Drupal username maps to user 1, so do not authenticate with ldap', $watchdog_tokens);
     }

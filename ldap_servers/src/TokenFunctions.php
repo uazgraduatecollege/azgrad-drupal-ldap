@@ -30,7 +30,7 @@ trait TokenFunctions {
    *
    * @return string such as 'field.field_user_lname', 'samaccountname', etc.
    */
-  public function ldap_servers_make_token($attr_name, $attr_type = NULL, $ordinal = NULL) {
+  public function createTokens($attr_name, $attr_type = NULL, $ordinal = NULL) {
     $inner_token = $attr_name;
     if ($attr_type) {
       $inner_token .= '.' . $attr_type;
@@ -48,7 +48,7 @@ trait TokenFunctions {
    *
    * @return array array($attr_type, $attr_name, $attr_ordinal) such as array('field','field_user_lname', NULL)
    */
-  public function ldap_servers_parse_user_attr_name($user_attr_key) {
+  public function parseUserAttributeNames($user_attr_key) {
     // Make sure no [] are on attribute.
     $user_attr_key = trim($user_attr_key, self::$token_pre . self::$token_post);
     $parts = explode('.', $user_attr_key);
@@ -72,7 +72,7 @@ trait TokenFunctions {
    *   such as "[dn]", "[cn]@my.org", "[displayName] [sn]", "Drupal Provisioned".
    * @return string $text with tokens replaced or NULL if replacement not available
    */
-  public function ldap_servers_token_replace($resource, $text, $resource_type = 'ldap_entry') {
+  public function tokenReplace($resource, $text, $resource_type = 'ldap_entry') {
     // user_account.
     // Desired tokens are of form "cn","mail", etc.
     $desired_tokens = $this->ldap_servers_token_tokens_needed_for_template($text);
@@ -84,11 +84,11 @@ trait TokenFunctions {
 
     switch ($resource_type) {
       case 'ldap_entry':
-        $tokens = $this->ldap_servers_token_tokenize_entry($resource, $desired_tokens, self::$token_pre, self::$token_post);
+        $tokens = $this->tokenizeEntry($resource, $desired_tokens, self::$token_pre, self::$token_post);
         break;
 
       case 'user_account':
-        $tokens = $this->ldap_servers_token_tokenize_user_account($resource, $desired_tokens, self::$token_pre, self::$token_post);
+        $tokens = $this->tokenizeUserAccount($resource, $desired_tokens, self::$token_pre, self::$token_post);
         break;
     }
 
@@ -117,7 +117,7 @@ trait TokenFunctions {
    *
    *   by reference return add ldap attribute triplet $attribute_maps[<attr_name>] = (<attr_name>, <ordinal>, <data_type>) to $attributes.
    */
-  public function ldap_servers_token_extract_attributes(&$attribute_maps, $text) {
+  public function extractTokenAttributes(&$attribute_maps, $text) {
     $tokens = $this->ldap_servers_token_tokens_needed_for_template($text);
     foreach ($tokens as $token) {
       $token = str_replace(array(self::$token_pre, self::$token_post), array('', ''), $token);
@@ -146,9 +146,9 @@ trait TokenFunctions {
    *
    * @return array(<attr_name>, <ordinal>, <conversion>)
    */
-  public function ldap_servers_token_extract_parts($token) {
+  public function extractTokenParts($token) {
     $attributes = array();
-    $this->ldap_servers_token_extract_attributes($attributes, $token);
+    $this->extractTokenAttributes($attributes, $token);
     if (is_array($attributes)) {
       $keys = array_keys($attributes);
       $attr_name = $keys[0];
@@ -209,7 +209,7 @@ trait TokenFunctions {
    *     [guid:0;bin2hex] = apply bin2hex() function to value
    *     [guid:0;msguid] = apply ldap_servers_msguid() function to value
    */
-  public function ldap_servers_token_tokenize_entry($ldap_entry, $token_keys = 'all', $pre = NULL, $post = NULL) {
+  public function tokenizeEntry($ldap_entry, $token_keys = 'all', $pre = NULL, $post = NULL) {
     if ($pre == NULL) {
       $pre = self::$token_pre;
     }
@@ -386,7 +386,7 @@ trait TokenFunctions {
    *   Should return token/value pairs in array such as 'status' => 1,
    *   'uid' => 17.
    */
-  public function ldap_servers_token_tokenize_user_account($user_account, $token_keys = 'all', $pre = NULL, $post = NULL) {
+  public function tokenizeUserAccount($user_account, $token_keys = 'all', $pre = NULL, $post = NULL) {
     if ($pre == NULL) {
       $pre = self::$token_pre;
     }
@@ -394,7 +394,6 @@ trait TokenFunctions {
       $pre = self::$token_post;
     }
 
-    $detailed_watchdog_log = \Drupal::config('ldap_help.settings')->get('watchdog_detail');
     $tokens = array();
 
     $user_entered_password_available = (boolean) ldap_user_ldap_provision_pwd('get');
@@ -408,6 +407,7 @@ trait TokenFunctions {
             $token_keys[] = 'property.' . Unicode::strtolower($property_name);
           }
         }
+        //@FIXME: Legacy syntax
         elseif (isset($user_account->{$attr_name}['und'][0]['value']) && is_scalar($user_account->{$attr_name}['und'][0]['value'])) {
           $token_keys[] = 'field.' . $property_name;
           if (Unicode::strtolower($property_name) != $property_name) {
@@ -510,7 +510,7 @@ trait TokenFunctions {
   /**
    *
    */
-  public function ldap_servers_token_show_sample_user_tokens($sid) {
+  public function showSampleUserTokens($sid) {
 
     $ldap_server = ldap_servers_get_servers($sid, 'all', TRUE);
     $test_username = $ldap_server->testingDrupalUsername;

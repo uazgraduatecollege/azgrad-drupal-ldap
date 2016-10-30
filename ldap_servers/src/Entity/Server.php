@@ -848,7 +848,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
     }
     // Template is of form [cn]@illinois.edu.
     elseif ($ldap_entry && $this->get('mail_template')) {
-      return $this->ldap_servers_token_replace($ldap_entry, $this->get('mail_template'), 'ldap_entry');
+      return $this->tokenReplace($ldap_entry, $this->get('mail_template'), 'ldap_entry');
     }
     else {
       return FALSE;
