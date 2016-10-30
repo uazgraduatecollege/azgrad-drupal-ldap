@@ -621,7 +621,7 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state, $re
     }
 
     // VI.C.2 Do not provision Drupal account if provisioning disabled.
-    if (!$auth_conf->ldapUser->provisionEnabled(LdapUserConf::$provisioningDirectionToLDAPEntry, LdapUserConf::$provisionDrupalUserOnAuthentication)) {
+    if (!$auth_conf->ldapUser->provisionEnabled(LdapUserConf::$provisioningDirectionToDrupalUser, LdapUserConf::$provisionDrupalUserOnAuthentication)) {
       \Drupal::logger('ldap_authentication')->error('Drupal account for authname=%authname account name=%account_name_attr does not exist and provisioning of Drupal accounts on authentication is not enabled', $watchdog_tokens);
       return;
     }

@@ -173,6 +173,7 @@ function ldap_user_conf_cache_clear() {
  *   clear static cache of object.
  *
  * @return object ldapUserConf or ldapUserConfAdmin object
+ * @TODO: Get rid of this function.
  */
 function ldap_user_conf($type = NULL, $reset = FALSE) {
   static $ldap_user_conf;
