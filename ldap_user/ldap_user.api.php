@@ -14,15 +14,15 @@
  * return array with elements of the form:
  * [<field_type>.<field_name>] => array(
  *   'name' => string for user friendly name for the UI,
- *   'source' => ldap attribute (even if target of synch.  this should be refactored at some point to avoid confusion)
+ *   'source' => ldap attribute (even if target of sync.  this should be refactored at some point to avoid confusion)
  *   'configurable' =>
  *   'configurable_to_drupal'  0 | 1, is this configurable?
  *   'configurable_to_ldap' =>  0 | 1, is this configurable?
  *   'user_tokens' => <user_tokens>
  *   'convert' => 1 | 0 convert from binary to string for storage and comparison purposes
  *   'direction' => LdapUserConf::$provisioningDirectionToDrupalUser or LdapUserConf::$provisioningDirectionToLDAPEntry leave empty if configurable
- *   'config_module' => module providing synching configuration.
- *   'prov_module' => module providing actual synching of attributes.
+ *   'config_module' => module providing syncing configuration.
+ *   'prov_module' => module providing actual syncing of attributes.
  *   'prov_events' => array( see LdapUserConf )
  *
  * where
@@ -37,7 +37,7 @@ function hook_ldap_user_attrs_list_alter(&$available_user_attrs, &$params) {
 
   /** search for _ldap_user_attrs_list_alter for good examples
   * the general trick to implementing this hook is:
-  *   make sure to specify config and synch module
+  *   make sure to specify config and sync module
   *   if its configurable by ldap_user module, don't specify convert, user_tokens, direction.  these will be set by UI and stored values
   *   be sure to merge with existing values as ldap_user configured values will already exist in $available_user_attrs
   */

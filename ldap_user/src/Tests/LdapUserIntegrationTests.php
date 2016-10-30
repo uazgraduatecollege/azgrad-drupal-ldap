@@ -21,7 +21,7 @@ class LdapWebUserIntegrationTests extends LdapWebTestBase {
   public static function getInfo() {
     return array(
       'name' => 'LDAP User Integration Tests',
-      'description' => 'Test provisioning and synching in real contexts such as account creation on logon, synching on user edit, etc.',
+      'description' => 'Test provisioning and syncing in real contexts such as account creation on logon, syncing on user edit, etc.',
       'group' => 'LDAP User',
     );
   }
@@ -134,7 +134,7 @@ class LdapWebUserIntegrationTests extends LdapWebTestBase {
       // Need to reset for simpletests.
       ldap_user_ldap_provision_semaphore(NULL, NULL, NULL, TRUE);
 
-      // Change lastname and first name (in drupal) and save user to test ldapSynch event handler
+      // Change lastname and first name (in drupal) and save user to test ldapSync event handler
       // confirm that appropriate attributes were changed in ldap entry.
       $ldap_entry_pre = $servers[$test_sid]->dnExists($desired_dn, 'ldap_entry');
       $user_acct_pre = user_load_by_name('bhautdeser');
@@ -157,7 +157,7 @@ class LdapWebUserIntegrationTests extends LdapWebTestBase {
         && $ldap_entry_post['sn'][0] == 'Hautdesert'
       );
 
-      $this->assertTrue($ldap_entry_success, t("synch to ldap entry on user save succeeded for " . $username), $this->testId());
+      $this->assertTrue($ldap_entry_success, t("sync to ldap entry on user save succeeded for " . $username), $this->testId());
       if (!$ldap_entry_success) {
         debug("dn=$desired_dn");
         debug('drupal_account pre'); debug($user_acct_pre);
@@ -167,7 +167,7 @@ class LdapWebUserIntegrationTests extends LdapWebTestBase {
         debug('ldap_user_conf'); debug($ldap_user_conf);
       }
 
-      // Change username and first name (in drupal) and save user to test ldapSynch event handler
+      // Change username and first name (in drupal) and save user to test ldapSync event handler
       // confirm that appropriate attributes were changed in ldap entry.
       $ldap_entry_pre = $servers[$test_sid]->dnExists($desired_dn, 'ldap_entry');
       $user_acct_pre = user_load_by_name('bhautdeser');
@@ -191,7 +191,7 @@ class LdapWebUserIntegrationTests extends LdapWebTestBase {
         && $ldap_entry_post['sn'][0] == 'Hautdesert'
       );
 
-      $this->assertTrue($ldap_entry_success, t("synch to ldap entry on user save succeeded for " . $username), $this->testId());
+      $this->assertTrue($ldap_entry_success, t("sync to ldap entry on user save succeeded for " . $username), $this->testId());
       if (!$ldap_entry_success) {
         debug("dn=$desired_dn");
         debug('drupal_account pre'); debug($user_acct_pre);
@@ -230,14 +230,14 @@ class LdapWebUserIntegrationTests extends LdapWebTestBase {
         LdapUserConf::$provisionLdapEntryOnUserAuthentication,
       );
 
-      $ldap_user_conf->ldapUserSynchMappings[LdapUserConf::$provisioningDirectionToLDAPEntry]['[password]'] = array(
+      $ldap_user_conf->ldapUserSyncMappings[LdapUserConf::$provisioningDirectionToLDAPEntry]['[password]'] = array(
         'sid' => $test_sid,
         'ldap_attr' => '[password]',
         'user_attr' => 'user_tokens',
         'convert' => 0,
         'user_tokens' => $password_token,
         'config_module' => 'ldap_user',
-        'synch_module' => 'ldap_user',
+        'sync_module' => 'ldap_user',
         'enabled' => 1,
         'prov_events' => array(LdapUserConf::$eventCreateLdapEntry, LdapUserConf::$eventSyncToLdapEntry),
       );

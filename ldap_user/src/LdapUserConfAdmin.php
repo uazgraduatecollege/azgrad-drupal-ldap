@@ -22,7 +22,7 @@ class LdapUserConfAdmin extends LdapUserConf {
   protected $ldapEntryProvisionTriggersDescription;
   protected $ldapEntryProvisionTriggersOptions = array();
 
-  protected $synchFormRow = 0;
+  protected $syncFormRow = 0;
 
   /*
    * 3. Drupal Account Provisioning and Syncing
@@ -393,15 +393,15 @@ EOT;
     list($errors, $warnings) = $this->validate($values);
 
     // @TODO these form fields aren't named like this anymore
-    // since failed mapping rows in form, don't populate ->ldapUserSynchMappings, need to validate these from values
+    // since failed mapping rows in form, don't populate ->ldapUserSyncMappings, need to validate these from values
     foreach ($values as $field => $value) {
       $parts = explode('__', $field);
-      // Since synch mapping fields are in n-tuples, process entire n-tuple at once (on field == configurable_to_drupal)
+      // Since sync mapping fields are in n-tuples, process entire n-tuple at once (on field == configurable_to_drupal)
       if (count($parts) != 4 || $parts[1] !== 'sm' || $parts[2] != 'configurable_to_drupal') {
         continue;
       }
       list($direction, $discard, $column_name, $i) = $parts;
-      $action = $storage['synch_mapping_fields'][$direction][$i]['action'];
+      $action = $storage['sync_mapping_fields'][$direction][$i]['action'];
       $tokens = array();
       $row_mappings = array();
       foreach (array('remove', 'configurable_to_drupal', 'configurable_to_ldap', 'convert', 'direction', 'ldap_attr', 'user_attr', 'user_tokens') as $column_name) {
@@ -458,7 +458,7 @@ EOT;
       $warnings['drupalAcctProvisionServer'] = t('No Servers are enabled to provide provisioning to Drupal, but Drupal Account Provisioning Options are selected.', $tokens);
     }
     if ($has_drupal_acct_prov_servers && !$has_drupal_acct_prov_settings_options) {
-      $warnings['drupalAcctProvisionTriggers'] = t('Servers are enabled to provide provisioning to Drupal, but no Drupal Account Provisioning Options are selected.  This will result in no synching happening.', $tokens);
+      $warnings['drupalAcctProvisionTriggers'] = t('Servers are enabled to provide provisioning to Drupal, but no Drupal Account Provisioning Options are selected.  This will result in no syncing happening.', $tokens);
     }
 
     $has_ldap_prov_servers = (boolean) ($this->ldapEntryProvisionServer);
@@ -467,12 +467,12 @@ EOT;
       $warnings['ldapEntryProvisionServer'] = t('No Servers are enabled to provide provisioning to ldap, but LDAP Entry Options are selected.', $tokens);
     }
     if ($has_ldap_prov_servers && !$has_ldap_prov_settings_options) {
-      $warnings['ldapEntryProvisionTriggers'] = t('Servers are enabled to provide provisioning to ldap, but no LDAP Entry Options are selected.  This will result in no synching happening.', $tokens);
+      $warnings['ldapEntryProvisionTriggers'] = t('Servers are enabled to provide provisioning to ldap, but no LDAP Entry Options are selected.  This will result in no syncing happening.', $tokens);
     }
 
-    if (isset($this->ldapUserSynchMappings)) {
+    if (isset($this->ldapUserSyncMappings)) {
       $to_ldap_entries_mappings_exist = FALSE;
-      foreach ($this->ldapUserSynchMappings as $synch_direction => $mappings) {
+      foreach ($this->ldapUserSyncMappings as $sync_direction => $mappings) {
         $map_index = array();
         $tokens['%sid'] = $this->drupalAcctProvisionServer;
         $to_drupal_user_mappings_exist = FALSE;
@@ -542,7 +542,7 @@ EOT;
         }
       }
       if ($to_ldap_entries_mappings_exist && !isset($mappings['dn'])) {
-        $errors['mappings__' . $synch_direction] = t('Mapping rows exist for provisioning to LDAP, but no LDAP attribute is targeted for [dn].
+        $errors['mappings__' . $sync_direction] = t('Mapping rows exist for provisioning to LDAP, but no LDAP attribute is targeted for [dn].
           One row must map to [dn].  This row will have a user token like cn=[property.name],ou=users,dc=ldap,dc=mycompany,dc=com');
       }
     }
@@ -569,12 +569,12 @@ EOT;
     $this->manualAccountConflict = $values['manualAccountConflict'];
     $this->userConflictResolve  = ($values['userConflictResolve']) ? (int) $values['userConflictResolve'] : NULL;
     $this->acctCreation  = ($values['acctCreation']) ? (int) $values['acctCreation'] : NULL;
-    $this->ldapUserSynchMappings = $this->synchMappingsFromForm($values, $storage);
+    $this->ldapUserSyncMappings = $this->syncMappingsFromForm($values, $storage);
 
   }
 
   /**
-   * Extract synch mappings array from mapping table in admin form.
+   * Extract sync mappings array from mapping table in admin form.
    *
    * @param array $values
    *   as $form_state['values'] from drupal form api.
@@ -599,8 +599,8 @@ EOT;
    *    -- third part is field, e.g. user_attr
    *    -- fourth is the row in the configuration form, e.g. 5
    *
-   *   where additiond data is in $form['#storage'][<direction>]['synch_mapping_fields'][N]
-   *   $form['#storage']['synch_mapping_fields'][<direction>][N] = array(
+   *   where additiond data is in $form['#storage'][<direction>]['sync_mapping_fields'][N]
+   *   $form['#storage']['sync_mapping_fields'][<direction>][N] = array(
    *    'sid' => $sid,
    *    'action' => 'add',
    *   );
@@ -608,7 +608,7 @@ EOT;
    * @return array
    *   Returns the relevant mappings.
    */
-  private function synchMappingsFromForm($values, $storage) {
+  private function syncMappingsFromForm($values, $storage) {
     $mappings = array();
     foreach ($values as $field_name => $value) {
 
@@ -638,8 +638,8 @@ EOT;
             'enabled'     => 1,
           );
 
-          $synchEvents = ($direction == self::$provisioningDirectionToDrupalUser) ? $this->provisionsDrupalEvents : $this->provisionsLdapEvents;
-          foreach ($synchEvents as $prov_event => $discard) {
+          $syncEvents = ($direction == self::$provisioningDirectionToDrupalUser) ? $this->provisionsDrupalEvents : $this->provisionsLdapEvents;
+          foreach ($syncEvents as $prov_event => $discard) {
             if (isset($columns[$prov_event]) && $columns[$prov_event]) {
               $mappings[$direction][$key]['prov_events'][] = $prov_event;
             }
@@ -814,8 +814,8 @@ EOT;
     $text = ($direction == self::$provisioningDirectionToDrupalUser) ? 'target' : 'source';
     $user_attr_options = array('0' => t('Select') . ' ' . $text);
 
-    if (!empty($this->synchMapping[$direction])) {
-      foreach ($this->synchMapping[$direction] as $target_id => $mapping) {
+    if (!empty($this->syncMapping[$direction])) {
+      foreach ($this->syncMapping[$direction] as $target_id => $mapping) {
         if (!isset($mapping['name']) || isset($mapping['exclude_from_mapping_ui']) && $mapping['exclude_from_mapping_ui']) {
           continue;
         }
@@ -833,7 +833,7 @@ EOT;
     $row = 0;
 
     // 1. non configurable mapping rows.
-    foreach ($this->synchMapping[$direction] as $target_id => $mapping) {
+    foreach ($this->syncMapping[$direction] as $target_id => $mapping) {
       $row_id = $this->sanitise_machine_name($target_id);
       if (isset($mapping['exclude_from_mapping_ui']) && $mapping['exclude_from_mapping_ui']) {
         continue;
@@ -846,10 +846,10 @@ EOT;
     }
 
     // 2. existing configurable mappings rows.
-    if (!empty($this->ldapUserSynchMappings[$direction])) {
+    if (!empty($this->ldapUserSyncMappings[$direction])) {
       // Key could be ldap attribute name or user attribute name.
-      foreach ($this->ldapUserSynchMappings[$direction] as $target_attr_token => $mapping) {
-        if (isset($mapping['enabled']) && $mapping['enabled'] && $this->isMappingConfigurable($this->synchMapping[$direction][$target_attr_token], 'ldap_user')) {
+      foreach ($this->ldapUserSyncMappings[$direction] as $target_attr_token => $mapping) {
+        if (isset($mapping['enabled']) && $mapping['enabled'] && $this->isMappingConfigurable($this->syncMapping[$direction][$target_attr_token], 'ldap_user')) {
           $row_id = 'row-' . $row;
           $rows[$row_id] = $this->getSyncFormRow('update', $direction, $mapping, $user_attr_options, $row_id);
           $row++;
@@ -976,7 +976,7 @@ EOT;
       $result['user_attr'] = $user_attr;
     }
 
-    $result['#storage']['synch_mapping_fields'][$direction] = array(
+    $result['#storage']['sync_mapping_fields'][$direction] = array(
       'action' => $action,
       'direction' => $direction,
     );
@@ -984,9 +984,9 @@ EOT;
     // $col and $row used to be paremeters to $result[$prov_event]. ID possible
     // not need needed anymore. Row used to be a parameter to this function.
     // $col = ($direction == self::$provisioningDirectionToLDAPEntry) ? 5 : 4;
-    $synchEvents = ($direction == self::$provisioningDirectionToDrupalUser) ? $this->provisionsDrupalEvents : $this->provisionsLdapEvents;
+    $syncEvents = ($direction == self::$provisioningDirectionToDrupalUser) ? $this->provisionsDrupalEvents : $this->provisionsLdapEvents;
 
-    foreach ($synchEvents as $prov_event => $prov_event_name) {
+    foreach ($syncEvents as $prov_event => $prov_event_name) {
       // See above.
       // $col++;
       // $id = $id_prefix . join('__', array('sm', $prov_event, $row));
@@ -996,7 +996,7 @@ EOT;
         '#title_display' => 'invisible',
         '#default_value' => isset($mapping['prov_events']) ? (int) (in_array($prov_event, $mapping['prov_events'])) : '',
         '#disabled' => (!$this->provisionEventConfigurable($prov_event, $mapping) || ($action == 'nonconfigurable')),
-        '#attributes' => array('class' => array('synch-method')),
+        '#attributes' => array('class' => array('sync-method')),
       );
     }
 
@@ -1037,7 +1037,7 @@ EOT;
   }
 
   /**
-   * Is a particular synch method viable for a given mapping?
+   * Is a particular sync method viable for a given mapping?
    * That is, Can it be enabled in the UI by admins?
    *
    * @param int $prov_event
@@ -1074,23 +1074,23 @@ EOT;
       in provisioning Drupal users and their user fields.');
     $values['ldapEntryProvisionServerDescription'] = t('Check ONE LDAP server configuration to create LDAP entries on.');
 
-    $values['drupalAccountProvisionEventsDescription'] = t('Which user fields and properties are synched on create or synch is determined in the
+    $values['drupalAccountProvisionEventsDescription'] = t('Which user fields and properties are synced on create or sync is determined in the
       "Provisioning from LDAP to Drupal mappings" table below in the right two columns.');
 
     $values['drupalAccountProvisionEventsOptions'] = array(
-      self::$provisionDrupalUserOnAuthentication => t('Create or Synch to Drupal user on successful authentication with LDAP
+      self::$provisionDrupalUserOnAuthentication => t('Create or Sync to Drupal user on successful authentication with LDAP
         credentials. (Requires LDAP Authentication module).'),
-      self::$provisionDrupalUserOnUserUpdateCreate => t('Create or Synch to Drupal user anytime a Drupal user account
+      self::$provisionDrupalUserOnUserUpdateCreate => t('Create or Sync to Drupal user anytime a Drupal user account
         is created or updated. Requires a server with binding method of "Service Account Bind" or "Anonymous Bind".'),
     );
 
-    $values['ldapEntryProvisionTriggersDescription'] = t('Which LDAP attributes are synched on create or synch is determined in the
+    $values['ldapEntryProvisionTriggersDescription'] = t('Which LDAP attributes are synced on create or sync is determined in the
       "Provisioning from Drupal to LDAP mappings" table below in the right two columns.');
 
     $values['ldapEntryProvisionTriggersOptions'] = array(
-      self::$provisionLdapEntryOnUserUpdateCreate => t('Create or Synch to LDAP entry when a Drupal account is created or updated.
+      self::$provisionLdapEntryOnUserUpdateCreate => t('Create or Sync to LDAP entry when a Drupal account is created or updated.
         Only applied to accounts with a status of approved.'),
-      self::$provisionLdapEntryOnUserAuthentication => t('Create or Synch to LDAP entry when a user authenticates.'),
+      self::$provisionLdapEntryOnUserAuthentication => t('Create or Sync to LDAP entry when a user authenticates.'),
       self::$provisionLdapEntryOnUserDelete => t('Delete LDAP entry when the corresponding Drupal Account is deleted.  This only applies when the LDAP entry was provisioned by Drupal by the LDAP User module.'),
       self::$provisionDrupalUserOnAllowingManualCreation => t('Provide option on admin/people/create to create corresponding LDAP Entry.'),
 
@@ -1115,13 +1115,13 @@ EOT;
       '</ul>';
 
     $values['manualAccountConflictOptions'] = array(
-      self::$manualAccountConflictReject => t('Reject manual creation of Drupal accounts that conflict with LDAP Accounts. This only applies to accounts created on user logon;  Account conflicts can still be generated by manually creating users that conflict with ldap users and these users will have their data synched with LDAP data.'),
+      self::$manualAccountConflictReject => t('Reject manual creation of Drupal accounts that conflict with LDAP Accounts. This only applies to accounts created on user logon;  Account conflicts can still be generated by manually creating users that conflict with ldap users and these users will have their data synced with LDAP data.'),
       self::$manualAccountConflictLdapAssociate => t('Associate manually created Drupal accounts with related LDAP Account if one exists.'),
       self::$manualAccountConflictShowOptionOnForm => t('Show option on user create form to determine how account conflict is resolved.'),
     );
 
     /**
-    *  Drupal Account Provisioning and Synching
+    *  Drupal Account Provisioning and Syncing
     */
     $values['userConflictResolveDescription'] = 'What should be done if a local Drupal or other external user account already exists with the same login name.';
     $values['userConflictOptions'] = array(

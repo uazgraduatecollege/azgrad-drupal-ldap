@@ -128,3 +128,17 @@ function ldap_user_update_8302(&$sandbox) {
     drupal_set_message("Couldn't drop the table 'ldap_user_identities'. Maybe it's been dropped aleady?", "warning");
   }
 }
+
+/**
+ * Updates the ldapUserSyncMappings name.
+ */
+function ldap_user_update_8303() {
+  $config_factory = \Drupal::configFactory();
+  $config = $config_factory->getEditable('ldap_user.settings');
+  $existing_value = $config->get('ldap_user_conf.ldapUserSynchMappings');
+  if ($existing_value) {
+    $config->set('ldap_user_conf.ldapUserSyncMappings', $existing_value);
+    $config->clear('ldap_user_conf.ldapUserSynchMappings');
+    $config->save(TRUE);
+  }
+}

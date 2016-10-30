@@ -404,7 +404,7 @@ function ldap_help_get_ldap_authorization() {
   // $items['filter_and_mappings']['mappings'] = 'string';.
   $items['use_filter']['mappings'] = 'string';
 
-  $items['misc_settings']['allow_synch_both_directions'] = 'string';
+  $items['misc_settings']['allow_sync_both_directions'] = 'string';
   $items['misc_settings']['synchronization_modes'] = 'string';
   $items['misc_settings']['synchronization_actions'] = 'string';
 

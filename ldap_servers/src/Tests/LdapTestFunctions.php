@@ -951,7 +951,7 @@ class LdapTestFunctions implements LdapProtocol {
       'ldapEntryProvisionTriggers' => array(),
       'userConflictResolve' => LdapUserConf::$userConflictLog,
       'acctCreation'  => LdapUserConf::$accountCreationLdapBehaviour,
-      'ldapUserSynchMappings' => array(
+      'ldapUserSyncMappings' => array(
         LdapUserConf::$provisioningDirectionToDrupalUser => array(),
         LdapUserConf::$provisioningDirectionToLDAPEntry => array(),
       ),
@@ -973,7 +973,7 @@ class LdapTestFunctions implements LdapProtocol {
       'ldapEntryProvisionTriggers' => array(),
       'userConflictResolve' => LdapUserConf::$userConflictLog,
       'acctCreation'  => LdapUserConf::$accountCreationLdapBehaviour,
-      'ldapUserSynchMappings' => array(
+      'ldapUserSyncMappings' => array(
         LdapUserConf::$provisioningDirectionToDrupalUser => array(),
         LdapUserConf::$provisioningDirectionToLDAPEntry => array(),
       ),
@@ -992,7 +992,7 @@ class LdapTestFunctions implements LdapProtocol {
       'userConflictResolve' => LdapUserConf::$userConflictLog,
       'acctCreation'  => LdapUserConf::$accountCreationLdapBehaviour,
 
-      'ldapUserSynchMappings' => array(
+      'ldapUserSyncMappings' => array(
         LdapUserConf::$provisioningDirectionToDrupalUser => array(),
         LdapUserConf::$provisioningDirectionToLDAPEntry => array(),
       ),
@@ -1010,7 +1010,7 @@ class LdapTestFunctions implements LdapProtocol {
       'ldapEntryProvisionTriggers' => array(),
       'userConflictResolve' => LdapUserConf::$userConflictLog,
       'acctCreation'  => LdapUserConf::$accountCreationLdapBehaviour,
-      'ldapUserSynchMappings' => array(
+      'ldapUserSyncMappings' => array(
         LdapUserConf::$provisioningDirectionToDrupalUser => array(),
         LdapUserConf::$provisioningDirectionToLDAPEntry => array(),
       ),
@@ -1030,7 +1030,7 @@ class LdapTestFunctions implements LdapProtocol {
       ),
       'userConflictResolve' => LdapUserConf::$userConflictLog,
       'acctCreation'  => LdapUserConf::$accountCreationLdapBehaviour,
-      'ldapUserSynchMappings' => array(
+      'ldapUserSyncMappings' => array(
         LdapUserConf::$provisioningDirectionToDrupalUser => array(
           '[field.field_display_name]' => array(
             'sid' => 'activedirectory1',
@@ -1040,7 +1040,7 @@ class LdapTestFunctions implements LdapProtocol {
             'direction' => LdapUserConf::$provisioningDirectionToLDAPEntry,
             'user_tokens' => '[field.field_display_name]',
             'config_module' => 'ldap_user',
-            'synch_module' => 'ldap_user',
+            'sync_module' => 'ldap_user',
             'enabled' => 1,
             'prov_events' => array(LdapUserConf::$eventCreateDrupalUser, LdapUserConf::$eventSyncToDrupalUser),
           ),
@@ -1052,7 +1052,7 @@ class LdapTestFunctions implements LdapProtocol {
             'direction' => LdapUserConf::$provisioningDirectionToLDAPEntry,
             'user_tokens' => '[field.field_lname]',
             'config_module' => 'ldap_user',
-            'synch_module' => 'ldap_user',
+            'sync_module' => 'ldap_user',
             'enabled' => 1,
             'prov_events' => array(LdapUserConf::$eventCreateDrupalUser, LdapUserConf::$eventSyncToDrupalUser),
           ),
@@ -1064,7 +1064,7 @@ class LdapTestFunctions implements LdapProtocol {
             'direction' => LdapUserConf::$provisioningDirectionToLDAPEntry,
             'user_tokens' => '[field.field_fname]',
             'config_module' => 'ldap_user',
-            'synch_module' => 'ldap_user',
+            'sync_module' => 'ldap_user',
             'enabled' => 1,
             'prov_events' => array(LdapUserConf::$eventCreateDrupalUser, LdapUserConf::$eventSyncToDrupalUser),
           ),
@@ -1076,7 +1076,7 @@ class LdapTestFunctions implements LdapProtocol {
             'direction' => LdapUserConf::$provisioningDirectionToLDAPEntry,
             'user_tokens' => '[field.field_department]',
             'config_module' => 'ldap_user',
-            'synch_module' => 'ldap_user',
+            'sync_module' => 'ldap_user',
             'enabled' => 1,
             'prov_events' => array(LdapUserConf::$eventCreateDrupalUser, LdapUserConf::$eventSyncToDrupalUser),
           ),
@@ -1098,7 +1098,7 @@ class LdapTestFunctions implements LdapProtocol {
       'userConflictResolve' => LdapUserConf::$userConflictLog,
       'acctCreation'  => LdapUserConf::$accountCreationLdapBehaviour,
       'manualAccountConflict' => LdapUserConf::$manualAccountConflictShowOptionOnForm,
-      'ldapUserSynchMappings' => array(
+      'ldapUserSyncMappings' => array(
         LdapUserConf::$provisioningDirectionToDrupalUser => array(),
         LdapUserConf::$provisioningDirectionToLDAPEntry => array(
           '[dn]' => array(
@@ -1109,7 +1109,7 @@ class LdapTestFunctions implements LdapProtocol {
             'direction' => LdapUserConf::$provisioningDirectionToLDAPEntry,
             'user_tokens' => 'cn=[property.name],ou=people,dc=hogwarts,dc=edu',
             'config_module' => 'ldap_user',
-            'synch_module' => 'ldap_user',
+            'sync_module' => 'ldap_user',
             'enabled' => 1,
             'prov_events' => array(LdapUserConf::$eventCreateLdapEntry, LdapUserConf::$eventSyncToLdapEntry),
           ),
@@ -1121,7 +1121,7 @@ class LdapTestFunctions implements LdapProtocol {
             'direction' => LdapUserConf::$provisioningDirectionToLDAPEntry,
             'user_tokens' => '',
             'config_module' => 'ldap_user',
-            'synch_module' => 'ldap_user',
+            'sync_module' => 'ldap_user',
             'enabled' => 1,
             'prov_events' => array(LdapUserConf::$eventCreateLdapEntry, LdapUserConf::$eventSyncToLdapEntry),
           ),
@@ -1133,7 +1133,7 @@ class LdapTestFunctions implements LdapProtocol {
             'direction' => LdapUserConf::$provisioningDirectionToLDAPEntry,
             'user_tokens' => '[field.field_fname] [field.field_lname]',
             'config_module' => 'ldap_user',
-            'synch_module' => 'ldap_user',
+            'sync_module' => 'ldap_user',
             'enabled' => 1,
             'prov_events' => array(LdapUserConf::$eventCreateLdapEntry, LdapUserConf::$eventSyncToLdapEntry),
           ),
@@ -1145,7 +1145,7 @@ class LdapTestFunctions implements LdapProtocol {
             'direction' => LdapUserConf::$provisioningDirectionToLDAPEntry,
             'user_tokens' => '',
             'config_module' => 'ldap_user',
-            'synch_module' => 'ldap_user',
+            'sync_module' => 'ldap_user',
             'prov_events' => array(LdapUserConf::$eventCreateLdapEntry),
           ),
           '[sn]' => array(
@@ -1156,7 +1156,7 @@ class LdapTestFunctions implements LdapProtocol {
             'direction' => LdapUserConf::$provisioningDirectionToLDAPEntry,
             'user_tokens' => '',
             'config_module' => 'ldap_user',
-            'synch_module' => 'ldap_user',
+            'sync_module' => 'ldap_user',
             'enabled' => 1,
             'prov_events' => array(LdapUserConf::$eventCreateLdapEntry, LdapUserConf::$eventSyncToLdapEntry),
           ),
@@ -1168,7 +1168,7 @@ class LdapTestFunctions implements LdapProtocol {
             'direction' => LdapUserConf::$provisioningDirectionToLDAPEntry,
             'user_tokens' => '',
             'config_module' => 'ldap_user',
-            'synch_module' => 'ldap_user',
+            'sync_module' => 'ldap_user',
             'enabled' => 1,
             'prov_events' => array(LdapUserConf::$eventCreateLdapEntry, LdapUserConf::$eventSyncToLdapEntry),
           ),
@@ -1180,7 +1180,7 @@ class LdapTestFunctions implements LdapProtocol {
             'direction' => LdapUserConf::$provisioningDirectionToLDAPEntry,
             'user_tokens' => '151',
             'config_module' => 'ldap_user',
-            'synch_module' => 'ldap_user',
+            'sync_module' => 'ldap_user',
             'enabled' => 1,
             'prov_events' => array(LdapUserConf::$eventCreateLdapEntry),
           ),
@@ -1192,7 +1192,7 @@ class LdapTestFunctions implements LdapProtocol {
             'direction' => LdapUserConf::$provisioningDirectionToLDAPEntry,
             'user_tokens' => 'drupal.hogwarts.edu',
             'config_module' => 'ldap_user',
-            'synch_module' => 'ldap_user',
+            'sync_module' => 'ldap_user',
             'enabled' => 1,
             'prov_events' => array(LdapUserConf::$eventCreateLdapEntry),
           ),
@@ -1211,7 +1211,7 @@ class LdapTestFunctions implements LdapProtocol {
       'userConflictResolve' => LdapUserConf::$userConflictLog,
       'acctCreation'  => LdapUserConf::$accountCreationLdapBehaviour,
       'manualAccountConflict' => LdapUserConf::$manualAccountConflictShowOptionOnForm,
-      'ldapUserSynchMappings' => array(
+      'ldapUserSyncMappings' => array(
         LdapUserConf::$provisioningDirectionToDrupalUser => array(),
         LdapUserConf::$provisioningDirectionToLDAPEntry => array(
           '[dn]' => array(
@@ -1222,7 +1222,7 @@ class LdapTestFunctions implements LdapProtocol {
             'direction' => LdapUserConf::$provisioningDirectionToLDAPEntry,
             'user_tokens' => 'cn=[property.name],ou=people,dc=hogwarts,dc=edu',
             'config_module' => 'ldap_user',
-            'synch_module' => 'ldap_user',
+            'sync_module' => 'ldap_user',
             'enabled' => 1,
             'prov_events' => array(LdapUserConf::$eventCreateLdapEntry, LdapUserConf::$eventSyncToLdapEntry),
           ),
@@ -1234,7 +1234,7 @@ class LdapTestFunctions implements LdapProtocol {
             'direction' => LdapUserConf::$provisioningDirectionToLDAPEntry,
             'user_tokens' => '[field.field_fname] [field.field_lname]',
             'config_module' => 'ldap_user',
-            'synch_module' => 'ldap_user',
+            'sync_module' => 'ldap_user',
             'enabled' => 1,
             'prov_events' => array(LdapUserConf::$eventCreateLdapEntry, LdapUserConf::$eventSyncToLdapEntry),
           ),
@@ -1246,7 +1246,7 @@ class LdapTestFunctions implements LdapProtocol {
             'direction' => LdapUserConf::$provisioningDirectionToLDAPEntry,
             'user_tokens' => '',
             'config_module' => 'ldap_user',
-            'synch_module' => 'ldap_user',
+            'sync_module' => 'ldap_user',
             'prov_events' => array(LdapUserConf::$eventCreateLdapEntry),
           ),
           '[sn]' => array(
@@ -1257,7 +1257,7 @@ class LdapTestFunctions implements LdapProtocol {
             'direction' => LdapUserConf::$provisioningDirectionToLDAPEntry,
             'user_tokens' => '',
             'config_module' => 'ldap_user',
-            'synch_module' => 'ldap_user',
+            'sync_module' => 'ldap_user',
             'enabled' => 1,
             'prov_events' => array(LdapUserConf::$eventCreateLdapEntry, LdapUserConf::$eventSyncToLdapEntry),
           ),
@@ -1269,7 +1269,7 @@ class LdapTestFunctions implements LdapProtocol {
             'direction' => LdapUserConf::$provisioningDirectionToLDAPEntry,
             'user_tokens' => '',
             'config_module' => 'ldap_user',
-            'synch_module' => 'ldap_user',
+            'sync_module' => 'ldap_user',
             'enabled' => 1,
             'prov_events' => array(LdapUserConf::$eventCreateLdapEntry, LdapUserConf::$eventSyncToLdapEntry),
           ),
@@ -1281,7 +1281,7 @@ class LdapTestFunctions implements LdapProtocol {
             'direction' => LdapUserConf::$provisioningDirectionToLDAPEntry,
             'user_tokens' => '151',
             'config_module' => 'ldap_user',
-            'synch_module' => 'ldap_user',
+            'sync_module' => 'ldap_user',
             'enabled' => 1,
             'prov_events' => array(LdapUserConf::$eventCreateLdapEntry),
           ),
@@ -1293,7 +1293,7 @@ class LdapTestFunctions implements LdapProtocol {
             'direction' => LdapUserConf::$provisioningDirectionToLDAPEntry,
             'user_tokens' => 'drupal.hogwarts.edu',
             'config_module' => 'ldap_user',
-            'synch_module' => 'ldap_user',
+            'sync_module' => 'ldap_user',
             'enabled' => 1,
             'prov_events' => array(LdapUserConf::$eventCreateLdapEntry),
           ),

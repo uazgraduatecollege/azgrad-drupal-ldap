@@ -52,8 +52,8 @@ move data into ldap_user module structure
 
 - X bring ldap_provision code into module
 - bring ldap_profile code into module
-- X allow rules for each field [sych on intitail provision, synch on logon, synch on periodic update, push to ldap entry]
-- X implement drupal user -> ldap entry synching
+- X allow rules for each field [sych on initial provision, sync on logon, sync on periodic update, push to ldap entry]
+- X implement drupal user -> ldap entry syncing
 
 tests
 - make sure install creates fields

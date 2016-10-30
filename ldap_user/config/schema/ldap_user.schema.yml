@@ -33,8 +33,8 @@ ldap_user.settings:
         acctCreation:
           label: 'acctCreation'
           type: integer
-        ldapUserSynchMappings:
-          label: 'ldapUserSynchMappings'
+        ldapUserSyncMappings:
+          label: 'ldapUserSyncMappings'
           type: mapping
     langcode:
       type: string

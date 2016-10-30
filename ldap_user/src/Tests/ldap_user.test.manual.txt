@@ -52,23 +52,23 @@ Tests for LDAP Entry ==> Drupal User Provisioning (simpletest: ldap_user/tests/l
 6.A. Setup: Configure LDAP User for Provisioning Drupal Account from LDAP Entry (admin/config/people/ldap/user)
     -- analogous simpletest configuration is in ldap_test/ldap_user.conf.inc in $conf['provisionToDrupalWithMappings']
     A. LDAP Servers Providing Provisioning Data: Select enabled server
-    B. Drupal Account Provisioning Events: [x] Create or Synch to Drupal user anytime a Drupal user account is created or updated.
+    B. Drupal Account Provisioning Events: [x] Create or Sync to Drupal user anytime a Drupal user account is created or updated.
     C. Existing Drupal User Account Conflict: [x] Associate Drupal account with LDAP Entry
     D. Application of Drupal Account settings to LDAP Authenticated Users: [x] Account Creating Settings ... do not affect...
     E. Basic Provisioning to LDAP Settings: for server, select "none"
     F. Rest Webservice: leave disabled
     G. Server mappings section. Provisioning from LDAP to Drupal mappings. (Source LDAP Tokens will vary from ldap to ldap)
-       i. [givenname] -- to drupal user -> Field: First Name [x] on drupal user creation [x] on synch...
-       ii. [sn:0] -- to drupal user -> Field: Last Name [x] on drupal user creation [x] on synch...
-       iii. [givenname] [sn] -- to drupal user -> Field: Display Name [x] on drupal user creation [ ] on synch...
-       iv. Physics -- to drupal user -> Field: Department [x] on drupal user creation [ ] on synch...
+       i. [givenname] -- to drupal user -> Field: First Name [x] on drupal user creation [x] on sync...
+       ii. [sn:0] -- to drupal user -> Field: Last Name [x] on drupal user creation [x] on sync...
+       iii. [givenname] [sn] -- to drupal user -> Field: Display Name [x] on drupal user creation [ ] on sync...
+       iv. Physics -- to drupal user -> Field: Department [x] on drupal user creation [ ] on sync...
    
-6.B. Event: Drupal user create provision/synching.
+6.B. Event: Drupal user create provision/syncing.
     A. Create new user via admin/people/create [drush user-create jdoe --mail=test@test.com --password="sdfw3452352se"]
     B. field_lname, field_fname, field_dept, and field_display_name should be visible and populated
     C. goto admin/config/people/ldap/user/test enter the username and hit the test button.  this will show the user object and entity
        [drush user-information jdoe --full]
-       if the devel module is enabled. In "user object (before provisioning or synching)"
+       if the devel module is enabled. In "user object (before provisioning or syncing)"
        i.     user object->ldap_user_puid_sid should be the id of the server
        ii.    user object->ldap_user_puid should be the value of the puid attribute
        iii.   user object->ldap_user_puid_property  should be the name of the puid attribute
@@ -150,7 +150,7 @@ Test ldap entry provisioning workflow: User requests account -> email verificati
      -- as user, click on first time logon button
      -- desired result: ldap entry should be created, but ldap entry password will be none or random.
      -- as user, set password and whatever initial user profile or fields you want
-     -- desired result: check that ldap entry has correct password and altered fields are correctly synched to ldap
+     -- desired result: check that ldap entry has correct password and altered fields are correctly synced to ldap
                
   
 
@@ -170,7 +170,7 @@ Test ldap entry provisioning workflow: User requests account -> email verificati
     B. at admin/people/create select "Make this an ldap associated account".
     C. Success: in ldap user,
        fields: ldap_user_puid_sid, ldap_user_current_dn, ldap_user_puid, ldap_user_puid_property should be populated if in use
-       other synch and provision fields should not be synched
+       other sync and provision fields should not be synced
        in the database in the authmaps table, a record should exist with module=ldap_user and authname=<username tested>
     
   8.3 Test manual selection of ldap associate AND "Create corresponding LDAP Entry" in admin/people/create form

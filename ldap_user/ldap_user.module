@@ -84,7 +84,7 @@ function template_preprocess_ldap_user_conf_mapping_table(&$variables) {
 
     foreach ($row as $key => &$col) {
       // There is an empty column which needs to go.
-      // @TODO Don't have an empty row in the first place. See getSynchFormRow in LdapUserConfAdmin.class.php
+      // @TODO Don't have an empty row in the first place. See getSyncFormRow in LdapUserConfAdmin.class.php
       if (!array_key_exists('#col', $col)) {
         unset($row[$key]);
       }
@@ -387,9 +387,9 @@ function ldap_user_ldap_user_attrs_list_alter(&$available_user_attrs, &$params) 
   }
 
   // This is where need to be added to arrays.
-  if (!empty($ldap_user_conf->ldapUserSynchMappings[$direction])) {
+  if (!empty($ldap_user_conf->ldapUserSyncMappings[$direction])) {
 
-    foreach ($ldap_user_conf->ldapUserSynchMappings[$direction] as $target_token => $mapping) {
+    foreach ($ldap_user_conf->ldapUserSyncMappings[$direction] as $target_token => $mapping) {
       if ($direction == LdapUserConf::$provisioningDirectionToDrupalUser && isset($mapping['user_attr'])) {
         $key = $mapping['user_attr'];
       }
@@ -423,7 +423,7 @@ function ldap_user_ldap_user_attrs_list_alter(&$available_user_attrs, &$params) 
 function ldap_user_help($route_name, RouteMatchInterface $route_match) {
   $ldap_user_help = t('LDAP user configuration determines how and when
      Drupal accounts are created based on LDAP data and which user fields
-     are derived and synched to and from LDAP. See @helplink.',
+     are derived and synced to and from LDAP. See @helplink.',
     array(
       '@helplink' => \Drupal::l('the drupal.org handbook page', Url::fromUri('http://drupal.org/node/997082')),
     ));
@@ -640,8 +640,8 @@ function ldap_user_form_register_form_submit2(&$form, FormState $form_state) {
  *   as drupal user object.
  * @param enum int $direction
  *   indicating which directions to test for association
- *   LdapUserConf::$provisioningDirectionToDrupalUser signifies test if drupal account has been provisioned or synched from ldap
- *   LdapUserConf::$provisioningDirectionToLDAPEntry signifies test if ldap account has been provisioned or synched from drupal
+ *   LdapUserConf::$provisioningDirectionToDrupalUser signifies test if drupal account has been provisioned or synced from ldap
+ *   LdapUserConf::$provisioningDirectionToLDAPEntry signifies test if ldap account has been provisioned or synced from drupal
  *   NULL signifies check for either direction.
  *
  * @return boolean if user is ldap associated
@@ -716,10 +716,10 @@ function ldap_user_ldap_provision_pwd($action, $value = NULL, $reset = FALSE) {
 }
 
 /**
- * Function to avoid multiple synch or provision in same page load (if desired)
+ * Function to avoid multiple sync or provision in same page load (if desired)
  *
  * @param enum string $action
- *   'synch' | 'provision' | 'set_page_load_key' | NULL.
+ *   'sync' | 'provision' | 'set_page_load_key' | NULL.
  * @param enum string $op
  *   = 'set' or 'get'.
  *
@@ -744,7 +744,7 @@ function ldap_user_ldap_provision_semaphore($action, $op, $value = NULL, $reset 
     $intialized = TRUE;
   }
 
-  // Mark that the given drupal user has had ldap entry synched or provisioned on this page load.
+  // Mark that the given drupal user has had ldap entry synced or provisioned on this page load.
   if ($op == 'set') {
     if ($action && $value) {
       $ldap_accts[$action][$value] = TRUE;
@@ -753,7 +753,7 @@ function ldap_user_ldap_provision_semaphore($action, $op, $value = NULL, $reset 
     return;
   }
 
-  // Has the given drupal user x action (synch or provision) been executed.
+  // Has the given drupal user x action (sync or provision) been executed.
   if ($op == 'get') {
     if ($action && $value && isset($ldap_accts[$action][$value])) {
       return $ldap_accts[$action][$value];
@@ -777,7 +777,7 @@ function ldap_user_user_login(UserInterface $account) {
     return;
   }
 
-  // Provision or synch to ldap, not both.
+  // Provision or sync to ldap, not both.
   $provision_result = array('status' => 'none');
 
   // Provision to ldap
@@ -794,17 +794,17 @@ function ldap_user_user_login(UserInterface $account) {
       ldap_user_ldap_provision_semaphore('provision', 'set', $account->getUsername());
     }
   }
-  // don't synch if just provisioned.
+  // don't sync if just provisioned.
   if (
     $ldap_user_conf->provisionsLdapEntriesFromDrupalUsers
-    && ldap_user_ldap_provision_semaphore('synch', 'get', $account->getUsername()) === FALSE
+    && ldap_user_ldap_provision_semaphore('sync', 'get', $account->getUsername()) === FALSE
     && $provision_result['status'] != 'success'
     && $ldap_user_conf->provisionEnabled(LdapUserConf::$provisioningDirectionToLDAPEntry, LdapUserConf::$provisionLdapEntryOnUserAuthentication)
     ) {
     // @FIXME $user_edit is deprecated.
-    $bool_result = $ldap_user_conf->synchToLdapEntry($account);
+    $bool_result = $ldap_user_conf->syncToLdapEntry($account);
     if ($bool_result) {
-      ldap_user_ldap_provision_semaphore('synch', 'set', $account->getUsername());
+      ldap_user_ldap_provision_semaphore('sync', 'set', $account->getUsername());
     }
   }
 
@@ -838,8 +838,8 @@ function ldap_user_user_insert(UserInterface $account) {
     // Check for first time user.
     $new_account_request = (boolean) (\Drupal::currentUser()->isAnonymous() && $account->isNew());
     $already_provisioned_to_ldap = ldap_user_ldap_provision_semaphore('provision', 'get', $account->getUsername());
-    $already_synched_to_ldap = ldap_user_ldap_provision_semaphore('synch', 'user_action_query', $account->getUsername());
-    if ($already_provisioned_to_ldap || $already_synched_to_ldap || $new_account_request) {
+    $already_synced_to_ldap = ldap_user_ldap_provision_semaphore('sync', 'user_action_query', $account->getUsername());
+    if ($already_provisioned_to_ldap || $already_synced_to_ldap || $new_account_request) {
       return;
     }
   }
@@ -848,12 +848,12 @@ function ldap_user_user_insert(UserInterface $account) {
   $ldap_user_conf = ldap_user_conf();
   /**
    * in hook_user_insert, account is already created, so never call provisionDrupalAccount(), just
-   * synchToDrupalAccount(), even if action is 'provision'
+   * syncToDrupalAccount(), even if action is 'provision'
    */
   $empty_user_edit = array();
   $user_name = $account->getUsername();
   if ($account->isActive() && $ldap_user_conf->provisionEnabled(LdapUserConf::$provisioningDirectionToDrupalUser, LdapUserConf::$provisionDrupalUserOnUserUpdateCreate)) {
-    $ldap_user_conf->synchToDrupalAccount($user_name, $empty_user_edit, LdapUserConf::$eventCreateDrupalUser, NULL, TRUE);
+    $ldap_user_conf->syncToDrupalAccount($user_name, $empty_user_edit, LdapUserConf::$eventCreateDrupalUser, NULL, TRUE);
   }
 
   if ($ldap_user_conf->provisionsLdapEntriesFromDrupalUsers) {
@@ -868,9 +868,9 @@ function ldap_user_user_insert(UserInterface $account) {
       }
       elseif ($ldap_provision_entry) {
         // @FIXME $user_edit is deprecated
-        $bool_result = $ldap_user_conf->synchToLdapEntry($account);
+        $bool_result = $ldap_user_conf->syncToLdapEntry($account);
         if ($bool_result) {
-          ldap_user_ldap_provision_semaphore('synch', 'set', $account->getUsername());
+          ldap_user_ldap_provision_semaphore('sync', 'set', $account->getUsername());
         }
       }
     }
@@ -896,8 +896,8 @@ function ldap_user_user_update(UserInterface $account) {
       $ldap_user_conf->provisionEnabled(LdapUserConf::$provisioningDirectionToLDAPEntry, LdapUserConf::$provisionLdapEntryOnUserUpdateCreate)) {
 
     $already_provisioned_to_ldap = ldap_user_ldap_provision_semaphore('provision', 'get', $account->getUsername());
-    $already_synched_to_ldap = ldap_user_ldap_provision_semaphore('synch', 'get', $account->getUsername());
-    if ($already_provisioned_to_ldap || $already_synched_to_ldap) {
+    $already_synced_to_ldap = ldap_user_ldap_provision_semaphore('sync', 'get', $account->getUsername());
+    if ($already_provisioned_to_ldap || $already_synced_to_ldap) {
       return;
     }
 
@@ -911,15 +911,15 @@ function ldap_user_user_update(UserInterface $account) {
         ldap_user_ldap_provision_semaphore('provision', 'set', $account->getUsername());
       }
     }
-    // Synch if not just provisioned and enabled.
+    // Sync if not just provisioned and enabled.
     if ($provision_result['status'] != 'success') {
       // Always check if provisioing to ldap has already occurred this page load.
       $provision_enabled = $ldap_user_conf->provisionEnabled(LdapUserConf::$provisioningDirectionToLDAPEntry, LdapUserConf::$provisionLdapEntryOnUserUpdateCreate);
       $ldap_entry = $ldap_user_conf->getProvisionRelatedLdapEntry($account);
       if ($provision_enabled && $ldap_entry) {
-        $bool_result = $ldap_user_conf->synchToLdapEntry($account);
+        $bool_result = $ldap_user_conf->syncToLdapEntry($account);
         if ($bool_result) {
-          ldap_user_ldap_provision_semaphore('synch', 'set', $account->getUsername());
+          ldap_user_ldap_provision_semaphore('sync', 'set', $account->getUsername());
         }
       }
     }
@@ -951,7 +951,7 @@ function ldap_user_user_presave(UserInterface $account) {
 
 
 
-  // Check for provisioning to drupal and override synched user fields/props.
+  // Check for provisioning to drupal and override synced user fields/props.
   if ($ldap_user_conf->provisionsDrupalAccountsFromLdap && in_array(LdapUserConf::$eventSyncToDrupalUser, array_keys($ldap_user_conf->provisionsDrupalEvents))) {
     if (ldap_user_is_ldap_associated($account, LdapUserConf::$provisioningDirectionToDrupalUser)) {
       $ldap_user = ldap_servers_get_user_ldap_data($drupal_username, $ldap_user_conf->drupalAcctProvisionServer, 'ldap_user_prov_to_drupal');
@@ -1053,7 +1053,7 @@ function ldap_user_entity_base_field_info(EntityTypeInterface $entity_type) {
       ->setCardinality(FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED);
 
     $fields['ldap_user_last_checked'] = BaseFieldDefinition::create('timestamp')
-      ->setLabel('Unix timestamp of when Drupal user was compared to ldap entry. This could be for purposes of synching, deleteing drupal account, etc.')
+      ->setLabel('Unix timestamp of when Drupal user was compared to ldap entry. This could be for purposes of syncing, deleteing drupal account, etc.')
       ->setDescription('This field should not be edited.');
 
     $fields['ldap_user_ldap_exclude'] = BaseFieldDefinition::create('boolean')

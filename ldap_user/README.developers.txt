@@ -1,5 +1,5 @@
 
-provisioning = creating or synching ... to drupal or to ldap
+provisioning = creating or syncing ... to drupal or to ldap
 
 
 
@@ -117,12 +117,12 @@ see LdapUserConf
 2. hook_user_* functions (and elsewere such as ldap_authentication) will check if appropriate triggers are enabled and initiate calls to ldapUserConf methods:
 
 ldapUserConf::provisionDrupalAccount()
-ldapUserConf::synchToDrupalAccount()
+ldapUserConf::syncToDrupalAccount()
 ldapUserConf::ldapAssociateDrupalAccount()
 ldapUserConf::deleteDrupalAccount()
 
 ldapUserConf::provisionLdapEntry()
-ldapUserConf::synchToLdapEntry()
+ldapUserConf::syncToLdapEntry()
 ldapUserConf::deleteProvisionedLdapEntries()
 
 3. to get mappings and determine which attributes are needed "ldap_contexts" and "prov_events" are passed into 
@@ -156,10 +156,10 @@ ldapUserConf::ldapEntryProvisionTriggers (see "Drupal Account Provisioning Optio
 ------------
 4.C  Field Level: Does provisioning occur for a given field and ldap server for a given "prov_event" and "ldap _context"?
 
-ldapUserConf::isSynched($field, $prov_event, $direction)
+ldapUserConf::isSynced($field, $prov_event, $direction)
 
 This depends on: 
-ldapUserConf::synchMapping[$direction][$field]['prov_events']
+ldapUserConf::syncMapping[$direction][$field]['prov_events']
 which is populated by various ldap and possibly other modules.
 
 "ldap_contexts" (any module can provide its own context which is just a string)

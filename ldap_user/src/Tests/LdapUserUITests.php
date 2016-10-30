@@ -160,23 +160,23 @@ class LdapWebUserUITests extends LdapWebTestBase {
 
     $field_token = '[field.field_lname]';
     $field_lname_set_correctly = (
-      $ldap_user_conf->ldapUserSynchMappings[LdapUserConf::$provisioningDirectionToDrupalUser][$field_token]['enabled'] == TRUE &&
+      $ldap_user_conf->ldapUserSyncMappings[LdapUserConf::$provisioningDirectionToDrupalUser][$field_token]['enabled'] == TRUE &&
 
-      $ldap_user_conf->ldapUserSynchMappings[LdapUserConf::$provisioningDirectionToDrupalUser][$field_token]['ldap_attr'] == '[sn]');
+      $ldap_user_conf->ldapUserSyncMappings[LdapUserConf::$provisioningDirectionToDrupalUser][$field_token]['ldap_attr'] == '[sn]');
 
-    $this->assertTrue($field_lname_set_correctly, t('Synch mapping for field.field_lname  field set correctly'), $this->testId('user interface tests'));
+    $this->assertTrue($field_lname_set_correctly, t('Sync mapping for field.field_lname  field set correctly'), $this->testId('user interface tests'));
     if (!$field_lname_set_correctly) {
-      debug('ldap_user_conf->synchMapping[direction][field.field_lname]'); debug($ldap_user_conf->ldapUserSynchMappings[LdapUserConf::$provisioningDirectionToDrupalUser]['field.field_lname']);
+      debug('ldap_user_conf->syncMapping[direction][field.field_lname]'); debug($ldap_user_conf->ldapUserSyncMappings[LdapUserConf::$provisioningDirectionToDrupalUser]['field.field_lname']);
     }
 
     $field_token = '[field.field_fname]';
-    $field_fname_set_correctly = ($ldap_user_conf->ldapUserSynchMappings[LdapUserConf::$provisioningDirectionToDrupalUser][$field_token]['enabled'] == TRUE &&
-      $ldap_user_conf->ldapUserSynchMappings[LdapUserConf::$provisioningDirectionToDrupalUser][$field_token]['direction'] == 1 &&
-      $ldap_user_conf->ldapUserSynchMappings[LdapUserConf::$provisioningDirectionToDrupalUser][$field_token]['ldap_attr'] == '[givenname]');
+    $field_fname_set_correctly = ($ldap_user_conf->ldapUserSyncMappings[LdapUserConf::$provisioningDirectionToDrupalUser][$field_token]['enabled'] == TRUE &&
+      $ldap_user_conf->ldapUserSyncMappings[LdapUserConf::$provisioningDirectionToDrupalUser][$field_token]['direction'] == 1 &&
+      $ldap_user_conf->ldapUserSyncMappings[LdapUserConf::$provisioningDirectionToDrupalUser][$field_token]['ldap_attr'] == '[givenname]');
 
-    $this->assertTrue($field_fname_set_correctly, t('Synch mapping for field.field_lname  field set correctly'), $this->testId('user interface tests'));
+    $this->assertTrue($field_fname_set_correctly, t('Sync mapping for field.field_lname  field set correctly'), $this->testId('user interface tests'));
     if (!$field_fname_set_correctly) {
-      debug('ldap_user_conf->synchMapping[direction][field.field_lname]'); debug($ldap_user_conf->ldapUserSynchMappings[LdapUserConf::$provisioningDirectionToDrupalUser]['field.field_lname']);
+      debug('ldap_user_conf->syncMapping[direction][field.field_lname]'); debug($ldap_user_conf->ldapUserSyncMappings[LdapUserConf::$provisioningDirectionToDrupalUser]['field.field_lname']);
     }
 
   }

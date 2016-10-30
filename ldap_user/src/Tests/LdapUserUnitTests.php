@@ -85,7 +85,7 @@ class LdapWebUserUnitTests extends LdapWebTestBase {
      */
     $api_functions = array(
       'ldap_user_conf' => array(2, 0),
-      'ldap_user_synch_to_drupal' => array(3, 1),
+      'ldap_user_sync_to_drupal' => array(3, 1),
       'ldap_user_provision_to_drupal' => array(2, 1),
       'ldap_user_ldap_provision_semaphore' => array(4, 2),
       'ldap_user_token_replace' => array(3, 2),
@@ -214,7 +214,7 @@ class LdapWebUserUnitTests extends LdapWebTestBase {
       debug('ldapUserConf::entryToUserEdit failed.  resulting user edit array:'); debug($user_edit); debug('desired result:'); debug($desired_result); debug('array_diff:'); debug($array_diff);
     }
 
-    $is_synched_tests = array(
+    $is_synced_tests = array(
       LdapUserConf::$eventCreateDrupalUser => array(
         0 => array('[property.fake]', '[property.data]', '[property.uid]'),
         1 => array('[property.mail]', '[property.name]', '[field.ldap_user_puid]', '[field.ldap_user_puid_property]', '[field.ldap_user_puid_sid]', '[field.ldap_user_current_dn]'),
@@ -227,24 +227,24 @@ class LdapWebUserUnitTests extends LdapWebTestBase {
 
     $debug = array();
     $fail = FALSE;
-    foreach ($is_synched_tests as $prov_event => $tests) {
+    foreach ($is_synced_tests as $prov_event => $tests) {
       foreach ($tests as $boolean_result => $attribute_tokens) {
         foreach ($attribute_tokens as $attribute_token) {
-          $is_synched = $ldap_user_conf->isSynched($attribute_token, array($prov_event), LdapUserConf::$provisioningDirectionToDrupalUser);
-          // debug("is_synched_tests: is_synched=$is_synched, attribute_token=$attribute_token, prov_event=$prov_event");.
-          if ((int) $is_synched !== (int) $boolean_result) {
+          $is_synced = $ldap_user_conf->isSynced($attribute_token, array($prov_event), LdapUserConf::$provisioningDirectionToDrupalUser);
+          // debug("is_synced_tests: is_synced=$is_synced, attribute_token=$attribute_token, prov_event=$prov_event");.
+          if ((int) $is_synced !== (int) $boolean_result) {
             $fail = TRUE;
             $direction = LdapUserConf::$provisioningDirectionToDrupalUser;
-            $debug[$attribute_token] = "isSynched($attribute_token, array($prov_event),
-             ($direction) returned $is_synched when it should have returned " . (int) $boolean_result;
+            $debug[$attribute_token] = "isSynced($attribute_token, array($prov_event),
+             ($direction) returned $is_synced when it should have returned " . (int) $boolean_result;
           }
         }
       }
     }
 
-    $this->assertFalse($fail, t('ldapUserConf::isSynched works'), $this->testId('ldapUserConf::isSynched'));
+    $this->assertFalse($fail, t('ldapUserConf::isSynced works'), $this->testId('ldapUserConf::isSynced'));
     if ($fail) {
-      debug('ldapUserConf::isSynched failures:'); debug($debug);
+      debug('ldapUserConf::isSynced failures:'); debug($debug);
     }
 
     $this->assertTrue($ldap_user_conf->isDrupalAcctProvisionServer('activedirectory1'), t('isDrupalAcctProvisionServer works'), $this->testId('isDrupalAcctProvisionServer'));
@@ -311,13 +311,13 @@ class LdapWebUserUnitTests extends LdapWebTestBase {
     );
     $this->assertTrue(count($data_diff) == 0, t('user->data array correctly populated for hpotter'), $this->testId());
     // Test account exists with correct username, mail, fname, puid, puidfield, dn
-    // Change some user mock ldap data first, (mail and fname) then synch.
+    // Change some user mock ldap data first, (mail and fname) then sync.
     $account = user_load_by_name('hpotter');
 
     $user_edit = NULL;
-    $ldap_user_conf->ldapUserSynchMappings = array();
+    $ldap_user_conf->ldapUserSyncMappings = array();
     $sid = 'activedirectory1';
-    $ldap_user_conf->ldapUserSynchMappings[LdapUserConf::$provisioningDirectionToDrupalUser]['[property.mail]'] = array(
+    $ldap_user_conf->ldapUserSyncMappings[LdapUserConf::$provisioningDirectionToDrupalUser]['[property.mail]'] = array(
       'sid' => $sid,
       'ldap_attr' => '[mail]',
       'user_attr' => '[property.mail]',
@@ -337,15 +337,15 @@ class LdapWebUserUnitTests extends LdapWebTestBase {
     // Clear server cache;.
     $factory = new ServerFactory('activedirectory1', NULL, TRUE, TRUE);
     $ldap_server = $factory->servers;
-    $user = $ldap_user_conf->synchToDrupalAccount($account, $user_edit, LdapUserConf::$eventSyncToDrupalUser, NULL, TRUE);
+    $user = $ldap_user_conf->syncToDrupalAccount($account, $user_edit, LdapUserConf::$eventSyncToDrupalUser, NULL, TRUE);
 
     $hpotter = user_load_by_name('hpotter');
     $hpotter_uid = $hpotter->uid;
     $success = ($hpotter->mail == 'hpotter@owlcarriers.com');
 
-    $this->assertTrue($success, t('synchToDrupalAccount worked for property (mail) for hpotter'), $this->testId());
+    $this->assertTrue($success, t('syncToDrupalAccount worked for property (mail) for hpotter'), $this->testId());
     if (!$success) {
-      debug("hpotter mail after synchToDrupalAccount :" . $hpotter->mail);
+      debug("hpotter mail after syncToDrupalAccount :" . $hpotter->mail);
       $factory = new ServerFactory($sid, NULL, TRUE, TRUE);
       $ldap_server = $factory->servers;
       debug('ldap_server'); debug($ldap_server);
@@ -365,7 +365,7 @@ class LdapWebUserUnitTests extends LdapWebTestBase {
 
     $this->testFunctions->setFakeServerUserAttribute('activedirectory1', 'cn=hpotter,ou=people,dc=hogwarts,dc=edu', 'samaccountname', 'hpotter', 0);
     $pass = (is_object($hpottergranger) && is_object($hpotter) && $hpotter->uid == $hpottergranger->uid);
-    $this->assertTrue($pass, t('provisionDrupalAccount recognized PUID conflict and synched instead of creating a conflicted drupal account.'), $this->testId('provisionDrupalAccount function test with existing user with same puid'));
+    $this->assertTrue($pass, t('provisionDrupalAccount recognized PUID conflict and synced instead of creating a conflicted drupal account.'), $this->testId('provisionDrupalAccount function test with existing user with same puid'));
     if (!$pass) {
       debug('hpotter'); debug($hpotter); debug('hpottergranger'); debug($hpottergranger);
     }
@@ -405,7 +405,7 @@ class LdapWebUserUnitTests extends LdapWebTestBase {
     // // This looks like another module's variable. You'll need to rewrite this call
     // // to ensure that it uses the correct configuration object.
     // /**
-    //      * test that $ldap_user_conf->synchToDrupalAccount() works for various contexts.
+    //      * test that $ldap_user_conf->syncToDrupalAccount() works for various contexts.
     //      * make sure changing when a given field/property is flagged for a particular context, everything works
     //      * tests one property (property.mail) and one field (field.field_lname) as well as username, puid
     //      */
@@ -430,7 +430,7 @@ class LdapWebUserUnitTests extends LdapWebTestBase {
       'user' => 'hpotter',
       'field_name' => 'field_lname',
       'field_values' => array(array('sn' => 'Potter'), array('sn' => 'Pottery-Chard')),
-    // First value is what is desired on synch, second if no sycn.
+    // First value is what is desired on sync, second if no sycn.
       'field_results' => array('Potter', 'Pottery-Chard'),
       'mapping' => array(
         'sid' => $sid,
@@ -580,7 +580,7 @@ class LdapWebUserUnitTests extends LdapWebTestBase {
       'administer users',
     ));
 
-    /** Tests for various synch contexts **/
+    /** Tests for various sync contexts **/
     foreach ($tests as $j => $test) {
 
       $field_name = isset($test['field_name']) ? $test['field_name'] : FALSE;
@@ -607,7 +607,7 @@ class LdapWebUserUnitTests extends LdapWebTestBase {
               0);
           }
           $property_token = '[property.' . $property_name . ']';
-          $ldap_user_conf->ldapUserSynchMappings[$direction][$property_token] = $test['mapping'];
+          $ldap_user_conf->ldapUserSyncMappings[$direction][$property_token] = $test['mapping'];
         }
         if ($field_name) {
           $token_attributes = array();
@@ -622,12 +622,12 @@ class LdapWebUserUnitTests extends LdapWebTestBase {
               0);
           }
           $field_token = '[field.' . $field_name . ']';
-          $ldap_user_conf->ldapUserSynchMappings[$direction][$field_token] = $test['mapping'];
+          $ldap_user_conf->ldapUserSyncMappings[$direction][$field_token] = $test['mapping'];
         }
 
         $ldap_user_conf->save();
         $ldap_user_conf = ldap_user_conf('admin', TRUE);
-        // debug("ldap_user_conf in prep field_token=$field_token"); debug($ldap_user_conf->synchMapping); debug($ldap_user_conf->ldapUserSynchMappings);.
+        // debug("ldap_user_conf in prep field_token=$field_token"); debug($ldap_user_conf->syncMapping); debug($ldap_user_conf->ldapUserSyncMappings);.
         ldap_user_ldap_provision_semaphore(NULL, NULL, NULL, TRUE);
         ldap_servers_flush_server_cache();
 
@@ -646,8 +646,8 @@ class LdapWebUserUnitTests extends LdapWebTestBase {
         $result = $ldap_user_conf->provisionDrupalAccount($account, $user_edit, NULL, TRUE);
         list($user_object, $user_entity) = ldap_user_load_user_acct_and_entity($username);
         if ($property_name) {
-          // If intended to synch.
-          if (in_array($prov_event, $ldap_user_conf->ldapUserSynchMappings[$direction][$property_token]['prov_events'])) {
+          // If intended to sync.
+          if (in_array($prov_event, $ldap_user_conf->ldapUserSyncMappings[$direction][$property_token]['prov_events'])) {
             $property_success = ($user_object->{$property_name} == $test['property_results'][0]);
             $this->assertTrue($property_success, t("provisionDrupalAccount worked for property $property_name"), $this->testId(":provisionDrupalAccount.i=$j.prov_event=$prov_event"));
             if (!$property_success) {
@@ -660,9 +660,9 @@ class LdapWebUserUnitTests extends LdapWebTestBase {
           }
         }
         if ($field_name) {
-          // debug("property_name=$property_name, prov_event=$prov_event, direction=$direction, field_token=$field_token, sid=$sid, ldap_user_conf->ldapUserSynchMappings $direction - $sid"); debug($ldap_user_conf->ldapUserSynchMappings[$direction][$sid]);.
-          // If intended to synch.
-          if (in_array($prov_event, $ldap_user_conf->ldapUserSynchMappings[$direction][$field_token]['prov_events'])) {
+          // debug("property_name=$property_name, prov_event=$prov_event, direction=$direction, field_token=$field_token, sid=$sid, ldap_user_conf->ldapUserSyncMappings $direction - $sid"); debug($ldap_user_conf->ldapUserSyncMappings[$direction][$sid]);.
+          // If intended to sync.
+          if (in_array($prov_event, $ldap_user_conf->ldapUserSyncMappings[$direction][$field_token]['prov_events'])) {
             $field_success = isset($user_entity->{$field_name}['und'][0]['value']) &&
               $user_entity->{$field_name}['und'][0]['value'] == $test['field_results'][0];
             $this->assertTrue($field_success, t("provisionDrupalAccount worked for field $field_name"), $this->testId(":provisionDrupalAccount.i=$j.prov_event=$prov_event"));

@@ -2,7 +2,7 @@
 
 LDAP User Module
 
-The core functionality of this module is provisioning and storage of an ldap identified Drupal user based on ldap attributes.  In Drupal 6 this functionality was in ldap_synch, ldap_provision, ldap_profile, etc. This has been moved to one module centered on the Drupal User - LDAP User Entry data.
+The core functionality of this module is provisioning and storage of an ldap identified Drupal user based on ldap attributes.  In Drupal 6 this functionality was in ldap_sync, ldap_provision, ldap_profile, etc. This has been moved to one module centered on the Drupal User - LDAP User Entry data.
 
 -----------------
 hooks relating ldap_user entities and drupal user entities
@@ -22,7 +22,7 @@ Provide interface for manually working with LDAP identified user data.
 - associate existing user with ldap (add prepopulate link from user page to create ldap_user page.)
 
 
-Populate/Synch/Create/Update/Remove LDAP identified Drupal users via batch, hook responses, webservices
+Populate/Sync/Create/Update/Remove LDAP identified Drupal users via batch, hook responses, webservices
 
 
 ----------------------

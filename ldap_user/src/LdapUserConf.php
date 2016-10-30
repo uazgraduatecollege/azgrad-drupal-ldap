@@ -57,7 +57,7 @@ class LdapUserConf {
   public $ldapEntryProvisionServer;
 
   /**
-   * Associative array mapping synch directions to ldap server instances.
+   * Associative array mapping sync directions to ldap server instances.
    *
    * @var array
    */
@@ -136,7 +136,7 @@ class LdapUserConf {
 
   public $loginConflictResolve = FALSE;
   /**
-   * Array of field synch mappings provided by all modules (via hook_ldap_user_attrs_list_alter())
+   * Array of field sync mappings provided by all modules (via hook_ldap_user_attrs_list_alter())
    * array of the form: array(
    * self:: | s => array(
    *   <server_id> => array(
@@ -152,11 +152,11 @@ class LdapUserConf {
    *      prov_events' => array( see events above )
    *  )
    */
-  // Array of field synching directions for each operation.  should include ldapUserSynchMappings.
-  public $synchMapping = NULL;
+  // Array of field syncing directions for each operation.  should include ldapUserSyncMappings.
+  public $syncMapping = NULL;
   // Keyed on direction => property, ldap, or field token such as '[field.field_lname] with brackets in them.
   /**
-   * Synch mappings configured in ldap user module (not in other modules)
+   * Sync mappings configured in ldap user module (not in other modules)
    *   array of the form: array(
    * self::$provisioningDirectionToDrupalUser | self::$provisioningDirectionToLDAPEntry => array(
    * 'sid' => <server_id> (redundant)
@@ -172,7 +172,7 @@ class LdapUserConf {
    * )
    * )
    */
-  public $ldapUserSynchMappings = NULL;
+  public $ldapUserSyncMappings = NULL;
   // Keyed on property, ldap, or field token such as '[field.field_lname] with brackets in them.
   public $detailedWatchdog = FALSE;
   public $provisionsDrupalAccountsFromLdap = FALSE;
@@ -209,7 +209,7 @@ class LdapUserConf {
     'userConflictResolve',
     'manualAccountConflict',
     'acctCreation',
-    'ldapUserSynchMappings',
+    'ldapUserSyncMappings',
   );
 
   /**
@@ -243,12 +243,12 @@ class LdapUserConf {
 
     $this->provisionsLdapEvents = array(
       self::$eventCreateLdapEntry => t('On LDAP Entry Creation'),
-      self::$eventSyncToLdapEntry => t('On Synch to LDAP Entry'),
+      self::$eventSyncToLdapEntry => t('On Sync to LDAP Entry'),
     );
 
     $this->provisionsDrupalEvents = array(
       self::$eventCreateDrupalUser => t('On Drupal User Creation'),
-      self::$eventSyncToDrupalUser => t('On Synch to Drupal User'),
+      self::$eventSyncToDrupalUser => t('On Sync to Drupal User'),
     );
 
     $this->provisionsDrupalAccountsFromLdap = (
@@ -263,7 +263,7 @@ class LdapUserConf {
       && (count(array_filter(array_values($this->ldapEntryProvisionTriggers))) > 0)
       );
 
-    $this->setSynchMapping(TRUE);
+    $this->setSyncMapping(TRUE);
     $this->detailedWatchdog = \Drupal::config('ldap_help.settings')->get('watchdog_detail');
   }
 
@@ -317,7 +317,7 @@ class LdapUserConf {
    * @return array|bool
    *   Array of mappings (may be empty array)
    */
-  public function getSynchMappings($direction = NULL, $prov_events = NULL) {
+  public function getSyncMappings($direction = NULL, $prov_events = NULL) {
     if (!$prov_events) {
       $prov_events = ldap_user_all_events();
     }
@@ -333,8 +333,8 @@ class LdapUserConf {
       $directions = array($direction);
     }
     foreach ($directions as $direction) {
-      if (!empty($this->ldapUserSynchMappings[$direction])) {
-        foreach ($this->ldapUserSynchMappings[$direction] as $attribute => $mapping) {
+      if (!empty($this->ldapUserSyncMappings[$direction])) {
+        foreach ($this->ldapUserSyncMappings[$direction] as $attribute => $mapping) {
           if (!empty($mapping['prov_events'])) {
             $result = count(array_intersect($prov_events, $mapping['prov_events']));
             if ($result) {
@@ -401,7 +401,7 @@ class LdapUserConf {
     $required_attributes = array();
     if ($this->drupalAcctProvisionServer) {
       $prov_events = $this->ldapContextToProvEvents($ldap_context);
-      $attributes_map = $this->getSynchMappings($direction, $prov_events);
+      $attributes_map = $this->getSyncMappings($direction, $prov_events);
       $required_attributes = array();
       foreach ($attributes_map as $detail) {
         if (count(array_intersect($prov_events, $detail['prov_events']))) {
@@ -482,17 +482,17 @@ class LdapUserConf {
    * Derive mapping array from ldap user configuration and other configurations.
    * if this becomes a resource hungry function should be moved to ldap_user functions
    * and stored with static variable. should be cached also.
-   *    * This should be cached and modules implementing ldap_user_synch_mapping_alter
+   *    * This should be cached and modules implementing ldap_user_sync_mapping_alter
    * should know when to invalidate cache.   *    .*/
 
   /**
    * @todo change default to false after development
    */
-  public function setSynchMapping($reset = TRUE) {
+  public function setSyncMapping($reset = TRUE) {
 
-    $synch_mapping_cache = \Drupal::cache()->get('ldap_user_synch_mapping');
-    if (!$reset && $synch_mapping_cache) {
-      $this->synchMapping = $synch_mapping_cache->data;
+    $sync_mapping_cache = \Drupal::cache()->get('ldap_user_sync_mapping');
+    if (!$reset && $sync_mapping_cache) {
+      $this->syncMapping = $sync_mapping_cache->data;
     }
     else {
       $available_user_attrs = array();
@@ -518,14 +518,14 @@ class LdapUserConf {
         \Drupal::moduleHandler()->alter('ldap_user_attrs_list', $available_user_attrs[$direction], $params);
       }
     }
-    $this->synchMapping = $available_user_attrs;
+    $this->syncMapping = $available_user_attrs;
 
-    \Drupal::cache()->set('ldap_user_synch_mapping', $this->synchMapping);
+    \Drupal::cache()->set('ldap_user_sync_mapping', $this->syncMapping);
   }
 
   /**
    * Given a $prov_event determine if ldap user configuration supports it.
-   *   this is overall, not per field synching configuration.
+   *   this is overall, not per field syncing configuration.
    *
    * @param int $direction
    *   self::$provisioningDirectionToDrupalUser or self::$provisioningDirectionToLDAPEntry.
@@ -533,7 +533,7 @@ class LdapUserConf {
    * @param int $provision_trigger
    *   see events above.
    *   or
-   *   'synch', 'provision', 'delete_ldap_entry', 'delete_drupal_entry', 'cancel_drupal_entry'.
+   *   'sync', 'provision', 'delete_ldap_entry', 'delete_drupal_entry', 'cancel_drupal_entry'.
    *   @FIXME: Documentation incomplete.
    *
    * @return bool
@@ -602,7 +602,7 @@ class LdapUserConf {
     if (is_object($account) && $account->id() == 1) {
       $result['status'] = 'fail';
       $result['error_description'] = 'can not provision drupal user 1';
-      // Do not provision or synch user 1.
+      // Do not provision or sync user 1.
       return $result;
     }
 
@@ -747,21 +747,21 @@ class LdapUserConf {
   }
 
   /**
-   * Given a drupal account, synch to related ldap entry.
+   * Given a drupal account, sync to related ldap entry.
    *
    * @param drupal user object $account.
    *   Drupal user object.
    * @param array $user_edit.
-   *   Edit array for user_save.  generally null unless user account is being created or modified in same synching.
+   *   Edit array for user_save.  generally null unless user account is being created or modified in same syncing.
    * @param array $ldap_user.
    *   current ldap data of user. @see README.developers.txt for structure.
    *
    * @return TRUE on success or FALSE on fail.
    */
-  public function synchToLdapEntry($account, $user_edit = NULL, $ldap_user = array(), $test_query = FALSE) {
+  public function syncToLdapEntry($account, $user_edit = NULL, $ldap_user = array(), $test_query = FALSE) {
 
     if (is_object($account) && property_exists($account, 'uid') && $account->uid == 1) {
-      // Do not provision or synch user 1.
+      // Do not provision or sync user 1.
       return FALSE;
     }
 
@@ -775,7 +775,7 @@ class LdapUserConf {
         'direction' => self::$provisioningDirectionToLDAPEntry,
         'prov_events' => array(self::$eventSyncToLdapEntry),
         'module' => 'ldap_user',
-        'function' => 'synchToLdapEntry',
+        'function' => 'syncToLdapEntry',
         'include_count' => FALSE,
       );
 
@@ -845,10 +845,10 @@ class LdapUserConf {
     ];
 
     if ($result) {
-      \Drupal::logger('ldap_user')->info('LDAP entry on server %sid synched dn=%dn. username=%username, uid=%uid', $tokens);
+      \Drupal::logger('ldap_user')->info('LDAP entry on server %sid synced dn=%dn. username=%username, uid=%uid', $tokens);
     }
     else {
-      \Drupal::logger('ldap_user')->error('LDAP entry on server %sid not synched because error. username=%username, uid=%uid', $tokens);
+      \Drupal::logger('ldap_user')->error('LDAP entry on server %sid not synced because error. username=%username, uid=%uid', $tokens);
     }
 
     return $result;
@@ -861,7 +861,7 @@ class LdapUserConf {
    * @param User $drupal_user
    * @param array $user_edit
    *   Drupal edit array in form user_save($account, $user_edit) would take,
-   *   generally empty unless overriding synchToDrupalAccount derived values.
+   *   generally empty unless overriding syncToDrupalAccount derived values.
    * @param int $prov_event
    * @param array $ldap_user
    *   A user's ldap entry. Passed to avoid re-querying LDAP in cases where already present.
@@ -872,7 +872,7 @@ class LdapUserConf {
    * $user_edit data returned by reference.
    * @internal param array $account drupal account array with minimum of name.*   drupal account array with minimum of name.
    */
-  public function synchToDrupalAccount(User $drupal_user, &$user_edit, $prov_event = NULL, $ldap_user = NULL, $save = FALSE) {
+  public function syncToDrupalAccount(User $drupal_user, &$user_edit, $prov_event = NULL, $ldap_user = NULL, $save = FALSE) {
     if ($prov_event == NULL) {
       $prov_event = LdapUserConf::$eventSyncToDrupalUser;
     }
@@ -1050,7 +1050,7 @@ class LdapUserConf {
     $direction = isset($params['direction']) ? $params['direction'] : self::$provisioningDirectionAll;
     $prov_events = empty($params['prov_events']) ? ldap_user_all_events() : $params['prov_events'];
 
-    $mappings = $this->getSynchMappings($direction, $prov_events);
+    $mappings = $this->getSyncMappings($direction, $prov_events);
     // Loop over the mappings.
     foreach ($mappings as $field_key => $field_detail) {
       // FIXME: Incorrect parameter count
@@ -1061,7 +1061,7 @@ class LdapUserConf {
         continue;
       }
 
-      $synced = $this->isSynched($field_key, $params['prov_events'], self::$provisioningDirectionToLDAPEntry);
+      $synced = $this->isSynced($field_key, $params['prov_events'], self::$provisioningDirectionToLDAPEntry);
       if ($synced) {
         $token = ($field_detail['user_attr'] == 'user_tokens') ? $field_detail['user_tokens'] : $field_detail['user_attr'];
         $value = $this->tokenReplace($account, $token, 'user_account');
@@ -1069,7 +1069,7 @@ class LdapUserConf {
         // Deal with empty/unresolved password.
         if (substr($token, 0, 10) == '[password.' && (!$value || $value == $token)) {
           if (!$provision) {
-            // Don't overwrite password on synch if no value provided.
+            // Don't overwrite password on sync if no value provided.
             continue;
           }
         }
@@ -1107,7 +1107,7 @@ class LdapUserConf {
    *
    * Given a drupal account, query LDAP and get all user fields and save the
    * user account. Nnote: parameters are in odd order to match
-   * synchDrupalAccount handle.
+   * syncDrupalAccount handle.
    *
    * @param User|bool $account
    *   Drupal account object or null.
@@ -1184,12 +1184,12 @@ class LdapUserConf {
 
       \Drupal::moduleHandler()->alter('ldap_entry', $ldap_user, $params);
 
-      // Look for existing drupal account with same puid.  if so update username and attempt to synch in current context.
+      // Look for existing drupal account with same puid.  if so update username and attempt to sync in current context.
       $puid = $ldap_server->userPuidFromLdapEntry($ldap_user['attr']);
       // FIXME: The entire account2 operation is broken.
       $account2 = ($puid) ? $ldap_server->userUserEntityFromPuid($puid) : FALSE;
 
-      // Synch drupal account, since drupal account exists.
+      // Sync drupal account, since drupal account exists.
       if ($account2) {
         // 1. correct username and authmap.
         $this->entryToUserEdit($ldap_user, $account2, $ldap_server, self::$provisioningDirectionToDrupalUser, array(LdapUserConf::$eventSyncToDrupalUser));
@@ -1198,10 +1198,10 @@ class LdapUserConf {
         // Update the identifier table.
         self::ldap_user_set_identifier($account, $account->getUsername());
 
-        // 2. attempt synch if appropriate for current context.
+        // 2. attempt sync if appropriate for current context.
         // @FIXME $user_edit is deprecated (LDAP)
         if ($account) {
-          $account = $this->synchToDrupalAccount($account, $user_edit, LdapUserConf::$eventSyncToDrupalUser, $ldap_user, TRUE);
+          $account = $this->syncToDrupalAccount($account, $user_edit, LdapUserConf::$eventSyncToDrupalUser, $ldap_user, TRUE);
         }
         return $account;
       }
@@ -1342,12 +1342,12 @@ class LdapUserConf {
     if ($direction == NULL) {
       $direction = self::$provisioningDirectionToDrupalUser;
     }
-    // Need array of user fields and which direction and when they should be synched.
+    // Need array of user fields and which direction and when they should be synced.
     if (!$prov_events) {
       $prov_events = ldap_user_all_events();
     }
-    $mail_synched = $this->isSynched('[property.mail]', $prov_events, $direction);
-    if (!$account->getEmail() && $mail_synched) {
+    $mail_synced = $this->isSynced('[property.mail]', $prov_events, $direction);
+    if (!$account->getEmail() && $mail_synced) {
       $derived_mail = $ldap_server->userEmailFromLdapEntry($ldap_user['attr']);
       if ($derived_mail) {
         $account->set('mail', $derived_mail);
@@ -1355,7 +1355,7 @@ class LdapUserConf {
     }
 
     $drupal_username = $ldap_server->userUsernameFromLdapEntry($ldap_user['attr']);
-    if ($this->isSynched('[property.picture]', $prov_events, $direction)) {
+    if ($this->isSynced('[property.picture]', $prov_events, $direction)) {
 
       $picture = $ldap_server->userPictureFromLdapEntry($ldap_user['attr'], $drupal_username);
 
@@ -1364,7 +1364,7 @@ class LdapUserConf {
       }
     }
 
-    if ($this->isSynched('[property.name]', $prov_events, $direction) && !$account->getUsername() && $drupal_username) {
+    if ($this->isSynced('[property.name]', $prov_events, $direction) && !$account->getUsername() && $drupal_username) {
       $account->set('name', $drupal_username);
     }
 
@@ -1395,30 +1395,30 @@ class LdapUserConf {
     /**
      * basic $user ldap fields
      */
-    if ($this->isSynched('[field.ldap_user_puid]', $prov_events, $direction)) {
+    if ($this->isSynced('[field.ldap_user_puid]', $prov_events, $direction)) {
       $ldap_user_puid = $ldap_server->userPuidFromLdapEntry($ldap_user['attr']);
       if ($ldap_user_puid) {
         $account->set('ldap_user_puid', $ldap_user_puid);
       }
     }
-    if ($this->isSynched('[field.ldap_user_puid_property]', $prov_events, $direction)) {
+    if ($this->isSynced('[field.ldap_user_puid_property]', $prov_events, $direction)) {
       $account->set('ldap_user_puid_property', $ldap_server->unique_persistent_attr);
     }
-    if ($this->isSynched('[field.ldap_user_puid_sid]', $prov_events, $direction)) {
+    if ($this->isSynced('[field.ldap_user_puid_sid]', $prov_events, $direction)) {
       $account->set('ldap_user_puid_sid', $ldap_server->id());
     }
-    if ($this->isSynched('[field.ldap_user_current_dn]', $prov_events, $direction)) {
+    if ($this->isSynced('[field.ldap_user_current_dn]', $prov_events, $direction)) {
       $account->set('ldap_user_current_dn', $ldap_user['dn']);
     }
 
     // Get any additional mappings.
-    $mappings = $this->getSynchMappings($direction, $prov_events);
+    $mappings = $this->getSyncMappings($direction, $prov_events);
 
     // Loop over the mappings.
     foreach ($mappings as $user_attr_key => $field_detail) {
 
       // Make sure this mapping is relevant to the sync context.
-      if (!$this->isSynched($user_attr_key, $prov_events, $direction)) {
+      if (!$this->isSynced($user_attr_key, $prov_events, $direction)) {
         continue;
       }
       /**
@@ -1456,7 +1456,7 @@ class LdapUserConf {
   }
 
   /**
-   * Given configuration of synching, determine is a given synch should occur.
+   * Given configuration of syncing, determine is a given sync should occur.
    *
    * @param string $attr_token
    *   e.g. [property.mail], [field.ldap_user_puid_property].
@@ -1467,17 +1467,17 @@ class LdapUserConf {
    *
    * @return bool
    */
-  public function isSynched($attr_token, $prov_events, $direction) {
+  public function isSynced($attr_token, $prov_events, $direction) {
     $result = (boolean) (
-      isset($this->synchMapping[$direction][$attr_token]['prov_events']) &&
-      count(array_intersect($prov_events, $this->synchMapping[$direction][$attr_token]['prov_events']))
+      isset($this->syncMapping[$direction][$attr_token]['prov_events']) &&
+      count(array_intersect($prov_events, $this->syncMapping[$direction][$attr_token]['prov_events']))
     );
     if (!$result) {
-      if (isset($this->synchMapping[$direction][$attr_token])) {
-        // debug($this->synchMapping[$direction][$attr_token]);.
+      if (isset($this->syncMapping[$direction][$attr_token])) {
+        // debug($this->syncMapping[$direction][$attr_token]);.
       }
       else {
-        // debug("$attr_token not in self::synchMapping");.
+        // debug("$attr_token not in self::syncMapping");.
       }
     }
     return $result;
@@ -1526,7 +1526,7 @@ class LdapUserConf {
    * @param User $account
    *   A drupal user object.
    *
-   * @return boolean TRUE if user should be excluded from ldap provision/synching
+   * @return boolean TRUE if user should be excluded from ldap provision/syncing
    */
   public static function excludeUser($account = NULL) {
     // Always exclude user 1.
