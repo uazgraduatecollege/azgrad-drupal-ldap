@@ -72,7 +72,6 @@ function ldap_user_preprocess_table(&$variables) {
  * https://www.drupal.org/node/1876710.
  */
 function template_preprocess_ldap_user_conf_mapping_table(&$variables) {
-  kint($variables);
 
   foreach ($variables['rows'] as &$row) {
     // @TODO Sort the cols on their #col attribute
@@ -164,8 +163,6 @@ function ldap_user_conf_cache_clear() {
  */
 function ldap_user_ldap_attributes_needed_alter(&$attributes, $params) {
 
-  kint($attributes);
-  kint($params);
   // Puid attributes are server specific.
   if (isset($params['sid']) && $params['sid']) {
     if (is_scalar($params['sid'])) {
