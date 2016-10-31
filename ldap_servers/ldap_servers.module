@@ -124,7 +124,7 @@ function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$param
 
   if ($direction == LdapUserConf::$provisioningDirectionToDrupalUser) {
 
-    /** these 4 user fields indentify where in ldap and which ldap server they are associated with.
+    /** these 4 user fields identify where in ldap and which ldap server they are associated with.
      * they are required for a Drupal account to be "ldap associated" regardless of if any other
      * fields/properties are provisioned or synced
     */

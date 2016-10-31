@@ -872,17 +872,15 @@ class LdapUserConf {
    * $user_edit data returned by reference.
    * @internal param array $account drupal account array with minimum of name.*   drupal account array with minimum of name.
    */
-  public function syncToDrupalAccount(User $drupal_user, &$user_edit, $prov_event = NULL, $ldap_user = NULL, $save = FALSE) {
+  public function syncToDrupalAccount($drupal_user, &$user_edit, $prov_event = NULL, $ldap_user = NULL, $save = FALSE) {
     if ($prov_event == NULL) {
       $prov_event = LdapUserConf::$eventSyncToDrupalUser;
     }
 
-    if (
-        (!$ldap_user  && !isset($drupal_user->name)) ||
+    if ((!$ldap_user  && !isset($drupal_user->name)) ||
         (!$drupal_user && $save) ||
-        ($ldap_user && !isset($ldap_user['sid']))
-    ) {
-      // Should throw watchdog error also.
+        ($ldap_user && !isset($ldap_user['sid']))) {
+      \Drupal::logger('ldap_user')->notice('Invalid selection passed to syncToDrupalAccount.');
       return FALSE;
     }
 
