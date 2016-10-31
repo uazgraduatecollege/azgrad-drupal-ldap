@@ -7,6 +7,7 @@ use Drupal\ldap_authentication\LdapAuthenticationConf;
 use Drupal\ldap_authentication\LdapAuthenticationConfAdmin;
 use Drupal\ldap_servers\ServerFactory;
 use Drupal\ldap_servers\tests\LdapWebTestBase;
+use Drupal\ldap_user\LdapUserConf;
 
 /**
  * Tests covering the ldap_autehentication module.
@@ -397,7 +398,8 @@ class LdapAuthenticationWebTestBase extends LdapWebTestBase {
     $ldap_servers = $factory->servers;
     $this->assertTrue(count($ldap_servers) == 1, ' ldap_authentication test server setup successful', $testid);
     $hpotter_drupal = user_load_by_name('hpotter');
-    $ldap_user_conf = ldap_user_conf('admin', TRUE);
+    // @TODO: Verify that nothing from LdapUserConfAdmin missing.
+    $ldap_user_conf = new LdapUserConf();
     $hpotter_ldap = $ldap_user_conf->getProvisionRelatedLdapEntry($hpotter_drupal);
     debug('hpotter ldap entry'); debug($hpotter_drupal);
 

@@ -7,10 +7,10 @@ ldap_user.settings:
       type: mapping
       mapping:
         drupalAcctProvisionServer:
-          label: 'drupalAcctProvisionServer'
+          label: 'LDAP server providing provisioning data'
           type: string
         ldapEntryProvisionServer:
-          label: 'ldapEntryProvisionServer'
+          label: 'LDAP server to provision LDAP entries on'
           type: string
         drupalAcctProvisionTriggers:
           label: 'drupalAcctProvisionTriggers'
@@ -31,7 +31,7 @@ ldap_user.settings:
           label: 'manualAccountConflict'
           type: integer
         acctCreation:
-          label: 'acctCreation'
+          label: 'Application of Drupal account settings to LDAP authenticated users'
           type: integer
         ldapUserSyncMappings:
           label: 'ldapUserSyncMappings'

@@ -123,12 +123,14 @@ class LdapWebUserUnitTests extends LdapWebTestBase {
     $this->prepTestData('hogwarts', $sids, 'default');
     $factory = new ServerFactory('activedirectory1', NULL, TRUE, TRUE);
     $ldap_server = $factory->servers;
-    $ldap_user_conf = ldap_user_conf('admin', TRUE);
+    // Fixme: Test broken since LdapUserConfAdmin gone.
+    $ldap_user_conf = new LdapUserConf();
 
     $this->assertTrue(is_object($ldap_user_conf), t('ldap_conf class instantiated'), $this->testId('construct ldapUserConf object'));
+    $config = \Drupal::config('ldap_user.settings')->get('ldap_user_conf');
 
     $user_edit = array();
-    $ldap_user = ldap_servers_get_user_ldap_data('hpotter', $ldap_user_conf->drupalAcctProvisionServer, 'ldap_user_prov_to_drupal');
+    $ldap_user = ldap_servers_get_user_ldap_data('hpotter', $config['drupalAcctProvisionServer'], 'ldap_user_prov_to_drupal');
 
     $desired_result = array(
       'dn' => 'cn=hpotter,ou=people,dc=hogwarts,dc=edu',
@@ -142,7 +144,7 @@ class LdapWebUserUnitTests extends LdapWebTestBase {
     if (count($array_diff) != 0) {
       debug('ldap_servers_get_user_ldap_data failed.  resulting ldap data array:'); debug($ldap_user); debug('desired result:'); debug($desired_result); debug('array_diff:'); debug($array_diff);
     }
-    $factory = new ServerFactory($ldap_user_conf->drupalAcctProvisionServer, 'all', TRUE);
+    $factory = new ServerFactory($config['drupalAcctProvisionServer'], 'all', TRUE);
     $ldap_todrupal_prov_server = $factory->servers;
     $ldap_user_conf->entryToUserEdit($ldap_user, $user_edit, $ldap_todrupal_prov_server);
 
@@ -594,7 +596,8 @@ class LdapWebUserUnitTests extends LdapWebTestBase {
         $factory = new ServerFactory('activedirectory1', 'enabled', TRUE);
         $ldap_server = $factory->servers;
         $this->prepTestData('hogwarts', $sids, 'provisionToDrupal', 'default');
-        $ldap_user_conf = ldap_user_conf('admin', TRUE);
+        // Fixme: Test broken since LdapUserConfAdmin gone.
+        $ldap_user_conf = new LdapUserConf();
         if ($property_name) {
           $token_attributes = array();
           ldap_servers_token_extract_attributes($token_attributes, $test['mapping']['ldap_attr']);
@@ -626,7 +629,8 @@ class LdapWebUserUnitTests extends LdapWebTestBase {
         }
 
         $ldap_user_conf->save();
-        $ldap_user_conf = ldap_user_conf('admin', TRUE);
+        // Fixme: Test broken since LdapUserConfAdmin gone.
+        $ldap_user_conf = new LdapUserConf();
         // debug("ldap_user_conf in prep field_token=$field_token"); debug($ldap_user_conf->syncMapping); debug($ldap_user_conf->ldapUserSyncMappings);.
         ldap_user_ldap_provision_semaphore(NULL, NULL, NULL, TRUE);
         ldap_servers_flush_server_cache();

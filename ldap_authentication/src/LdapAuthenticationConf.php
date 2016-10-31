@@ -286,7 +286,7 @@ class LdapAuthenticationConf {
     /**
      * do one of the exclude attribute pairs match
      */
-    $ldap_user_conf = ldap_user_conf();
+    $ldap_user_conf = new LdapUserConf();
     // If user does not already exists and deferring to user settings AND user settings only allow.
     $user_register = \Drupal::config('user.settings')->get('register');
 

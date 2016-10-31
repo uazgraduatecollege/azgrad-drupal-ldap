@@ -5,6 +5,7 @@ namespace Drupal\ldap_user\Form;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\ldap_user\LdapUserConf;
+use PDO;
 
 /**
  *
@@ -126,17 +127,19 @@ class LdapUserTestForm extends FormBase {
         $user_entity = NULL;
       }
 
-      $ldap_user_conf = ldap_user_conf();
+      $ldap_user_conf = new LdapUserConf();
+      $config = \Drupal::config('ldap_user.settings')->get('ldap_user_conf');
+
       $test_servers = [];
       $user_ldap_entry = FALSE;
-      if ($ldap_user_conf->drupalAcctProvisionServer) {
-        $test_servers[LdapUserConf::$provisioningDirectionToDrupalUser] = $ldap_user_conf->drupalAcctProvisionServer;
-        $user_ldap_entry = ldap_servers_get_user_ldap_data($username, $ldap_user_conf->drupalAcctProvisionServer);
+      if ($config['drupalAcctProvisionServer']) {
+        $test_servers[LdapUserConf::$provisioningDirectionToDrupalUser] = $config['drupalAcctProvisionServer'];
+        $user_ldap_entry = ldap_servers_get_user_ldap_data($username, $config['drupalAcctProvisionServer']);
       }
-      if ($ldap_user_conf->ldapEntryProvisionServer) {
-        $test_servers[LdapUserConf::$provisioningDirectionToLDAPEntry] = $ldap_user_conf->ldapEntryProvisionServer;
+      if ($config['ldapEntryProvisionServer']) {
+        $test_servers[LdapUserConf::$provisioningDirectionToLDAPEntry] = $config['ldapEntryProvisionServer'];
         if (!$user_ldap_entry) {
-          $user_ldap_entry = ldap_servers_get_user_ldap_data($username, $ldap_user_conf->ldapEntryProvisionServer);
+          $user_ldap_entry = ldap_servers_get_user_ldap_data($username, $config['ldapEntryProvisionServer']);
         }
       }
       $results = [];
@@ -154,7 +157,7 @@ class LdapUserTestForm extends FormBase {
       else {
         $authmaps = 'No authmaps available.  Authmaps only shown if user account exists beforehand';
         // Need for testing.
-        $user_object = new stdClass();
+        $user_object = new \stdClass();
         $user_object->name = $username;
       }
       $results['User Authmap'] = $authmaps;

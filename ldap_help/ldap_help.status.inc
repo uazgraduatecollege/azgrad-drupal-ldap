@@ -7,7 +7,7 @@
 
 use Drupal\ldap_authentication\LdapAuthenticationConfAdmin;
 use Drupal\ldap_servers\ServerFactory;
-use Drupal\ldap_user\LdapUserConfAdmin;
+use Drupal\ldap_user\LdapUserConf;
 
 /**
  * Helper functions to generate markup for ldap_help.
@@ -367,7 +367,8 @@ function ldap_help_get_ldap_authentication() {
  *
  */
 function ldap_help_get_ldap_user() {
-  $conf = new LdapUserConfAdmin();
+  // @FIXME: Broke this by removing LdapUserConfAdmin
+  $conf = new LdapUserConf();
   $form = $conf->drupalForm();
 
   $items['drupal_accounts']['loginConflictResolve'] = 'radios';

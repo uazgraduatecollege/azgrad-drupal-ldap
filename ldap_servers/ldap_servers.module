@@ -97,7 +97,6 @@ function ldap_servers_ldap_attributes_needed_alter(&$attributes, $params) {
  * Implements hook_ldap_user_attrs_list_alter().
  */
 function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$params) {
-  // debug('ldap_servers_ldap_user_attrs_list_alter'); debug($available_user_attrs); debug($params);
   if (isset($params['ldap_server']) && $params['ldap_server']) {
     /* @var Server $ldap_server */
     $ldap_server = $params['ldap_server'];
@@ -244,7 +243,6 @@ function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$param
       }
     }
   }
-  // debug('available_user_attrs2'); debug($available_user_attrs);
 }
 
 /**
@@ -280,32 +278,6 @@ function ldap_servers_msguid($value) {
   substr($hex_string, 16, 4) . '-' . substr($hex_string, 20, 12));
 
   return $value;
-}
-
-/**
- * Create a "binary safe" string for use in LDAP filters.
- *
- * @param $value
- *
- * @return string
- */
-function ldap_servers_binary_filter($value) {
-  $match = '';
-  if (preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i', $value)) {
-    // Reconstruct proper "memory" order from (MS?) GUID string.
-    $hex_string = str_replace('-', '', $value);
-    $value = substr($hex_string, 6, 2) . substr($hex_string, 4, 2) .
-      substr($hex_string, 2, 2) . substr($hex_string, 0, 2) .
-      substr($hex_string, 10, 2) . substr($hex_string, 8, 2) .
-      substr($hex_string, 14, 2) . substr($hex_string, 12, 2) .
-      substr($hex_string, 16, 4) . substr($hex_string, 20, 12);
-  }
-
-  for ($i = 0; $i < strlen($value); $i = $i + 2) {
-    $match .= '\\' . substr($value, $i, 2);
-  }
-
-  return $match;
 }
 
 /**
@@ -351,8 +323,7 @@ function ldap_servers_get_user_ldap_data($drupal_user, $id = NULL, $ldap_context
       $id = $drupal_user->ldap_user_puid_sid['und'][0]['value'];
     }
     else {
-      $ldap_user_conf = ldap_user_conf();
-      $id = $ldap_user_conf->drupalAcctProvisionServer;
+      \Drupal::config('ldap_user.settings')->get('ldap_user_conf.drupalAcctProvisionServer');
     }
   }
   elseif (!$id) {

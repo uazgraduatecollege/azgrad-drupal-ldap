@@ -639,7 +639,7 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state, $re
      *       for external authentication modules
      */
 
-    if ($auth_conf->ldapUser->acctCreation == LdapUserConf::$accountCreationUserSettingsForLdap &&
+    if (\Drupal::config('ldap_user.settings')->get('ldap_user_conf.acctCreation') == LdapUserConf::$accountCreationUserSettingsForLdap &&
       \Drupal::config('user.settings')->get('register') == USER_REGISTER_VISITORS_ADMINISTRATIVE_APPROVAL) {
       // If admin approval required, set status to 0.
       $user_edit = array('name' => $drupal_accountname, 'status' => 0);

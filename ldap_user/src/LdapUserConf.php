@@ -14,29 +14,12 @@ use Drupal\user\Entity\User;
 class LdapUserConf {
 
   use TokenFunctions;
+  use LdapUserConfigurationValues;
 
-
-  // Provisioning events (events are triggered by triggers).
-  public static $eventCreateDrupalUser = 1;
-  public static $eventSyncToDrupalUser = 2;
-  public static $eventCreateLdapEntry = 3;
-  public static $eventSyncToLdapEntry = 4;
-  public static $eventLdapAssociateDrupalAccount = 5;
-
-  public static $resultProvisionLdapEntryCreateFailed = 2;
-  public static $resultProvisionLdapEntrySyncFailed = 3;
-
-  public static $provisioningDirectionToDrupalUser = 1;
-  public static $provisioningDirectionToLDAPEntry = 2;
-  public static $provisioningDirectionNone = 3;
-  public static $provisioningDirectionAll = 4;
-  
-  public static $provisioningResultNoError = 0;
-  public static $provisioningResultNoPassword = 1;
-  public static $provisioningResultBadParameters = 2;
-
-  // Originally needed to avoid conflicting with server ids.
-  public static $noServerSID = 0;
+  public $createLDAPAccounts;
+  // TODO: Unused variable
+  public $createLDAPAccountsAdminApproval;
+  protected $syncFormRow = 0;
 
   /**
    * Server providing Drupal account provisioning.
@@ -63,34 +46,22 @@ class LdapUserConf {
    */
   public $provisionSidFromDirection;
 
-
-  // Configurable Drupal account provision triggers.
-  public static $provisionDrupalUserOnUserUpdateCreate = 1;
-  public static $provisionDrupalUserOnAuthentication = 2;
-  public static $provisionDrupalUserOnAllowingManualCreation = 3;
-
   /**
    * Array of events that trigger provisioning of Drupal Accounts
-   * Valid constants are: see above.
+   * Valid constants are: see LdapUserConfigurationValues
    *
    * @var array
    */
   public $drupalAcctProvisionTriggers = [];
 
-  // Configurable ldap entry provision triggers.
-  public static $provisionLdapEntryOnUserUpdateCreate = 6;
-  public static $provisionLdapEntryOnUserAuthentication = 7;
-  public static $provisionLdapEntryOnUserDelete = 8;
+
   /**
    * Array of events that trigger provisioning of LDAP Entries
-   * Valid constants are: see above.
+   * Valid constants are: see LdapUserConfigurationValues
    *
    * @var array
    */
   public $ldapEntryProvisionTriggers = [];
-
-  public static $userConflictLog = 1;
-  public static $userConflictAttemptResolve = 2;
 
   /**
    * Server providing LDAP entry provisioning.
@@ -100,29 +71,6 @@ class LdapUserConf {
    * @see LdapServer::sid
    */
   public $userConflictResolve;
-
-  // Options for account creation behavior.
-  public static $accountCreationLdapBehaviour = 4;
-  public static $accountCreationUserSettingsForLdap = 1;
-
-  /**
-   * Drupal account creation model.
-   *   See above.
-   * @var int
-    */
-  public $acctCreation;
-
-  /**
-   * Has current object been saved to the database?
-   *
-   * @var bool
-   */
-  public $inDatabase = FALSE;
-
-  public static $manualAccountConflictReject = 1;
-  public static $manualAccountConflictLdapAssociate = 2;
-  public static $manualAccountConflictShowOptionOnForm = 3;
-  public static $manualAccountConflictNoLdapAssociate = 4;
 
   /**
    * What to do when an ldap provisioned username conflicts with existing drupal user?
@@ -199,25 +147,13 @@ class LdapUserConf {
   public $provisionsLdapEvents = array();
   public $provisionsDrupalEvents = array();
 
-  public $saveable = array(
-    'drupalAcctProvisionServer',
-    'ldapEntryProvisionServer',
-    'drupalAcctProvisionTriggers',
-    'ldapEntryProvisionTriggers',
-    'orphanedDrupalAcctBehavior',
-    'orphanedCheckQty',
-    'userConflictResolve',
-    'manualAccountConflict',
-    'acctCreation',
-    'ldapUserSyncMappings',
-  );
+  public $config;
 
-  /**
-   * 'wsKey','wsEnabled','wsUserIps',.
-   */
+
   public function __construct() {
 
-    $this->acctCreation = self::$accountCreationLdapBehaviour;
+    $this->config = \Drupal::config('ldap_user.settings')->get("ldap_user_conf");
+
     $this->manualAccountConflict = self::$manualAccountConflictReject;
 
     $this->userConflictResolve = self::$userConflictAttemptResolve;
@@ -233,13 +169,13 @@ class LdapUserConf {
       self::$provisionLdapEntryOnUserDelete,
     ];
 
-    $this->provisionSidFromDirection[self::$provisioningDirectionToDrupalUser] = $this->drupalAcctProvisionServer;
-    $this->provisionSidFromDirection[self::$provisioningDirectionToLDAPEntry] = $this->ldapEntryProvisionServer;
-
     $this->drupalAcctProvisionServer = self::$noServerSID;
     $this->ldapEntryProvisionServer = self::$noServerSID;
 
     $this->load();
+
+    $this->provisionSidFromDirection[self::$provisioningDirectionToDrupalUser] = $this->drupalAcctProvisionServer;
+    $this->provisionSidFromDirection[self::$provisioningDirectionToLDAPEntry] = $this->ldapEntryProvisionServer;
 
     $this->provisionsLdapEvents = array(
       self::$eventCreateLdapEntry => t('On LDAP Entry Creation'),
@@ -272,39 +208,29 @@ class LdapUserConf {
    */
   public function load() {
 
+    // TODO: load() needs to be removed, once defaults are properly set.
+    $saveable = array(
+      'drupalAcctProvisionServer',
+      'ldapEntryProvisionServer',
+      'drupalAcctProvisionTriggers',
+      'ldapEntryProvisionTriggers',
+      'orphanedDrupalAcctBehavior',
+      'orphanedCheckQty',
+      'userConflictResolve',
+      'manualAccountConflict',
+      'ldapUserSyncMappings',
+    );
+
     if ($saved = \Drupal::config('ldap_user.settings')->get("ldap_user_conf")) {
-      $this->inDatabase = TRUE;
-      foreach ($this->saveable as $property) {
+      foreach ($saveable as $property) {
         if (isset($saved[$property])) {
           $this->{$property} = $saved[$property];
         }
       }
     }
-    else {
-      $this->inDatabase = FALSE;
-    }
-    // Determine account creation configuration.
-    // @FIXME
-    // $user_register = variable_get('user_register', USER_REGISTER_VISITORS_ADMINISTRATIVE_APPROVAL);.
-    $user_register = \Drupal::config('user.settings')->get("register_no_approval_required");
-    if ($this->acctCreation == self::$accountCreationLdapBehaviour || $user_register == USER_REGISTER_VISITORS) {
-      $this->createLDAPAccounts = TRUE;
-      $this->createLDAPAccountsAdminApproval = FALSE;
-    }
-    elseif ($user_register == USER_REGISTER_VISITORS_ADMINISTRATIVE_APPROVAL) {
-      $this->createLDAPAccounts = FALSE;
-      $this->createLDAPAccountsAdminApproval = TRUE;
-    }
-    else {
-      $this->createLDAPAccounts = FALSE;
-      $this->createLDAPAccountsAdminApproval = FALSE;
-    }
-  }
+    $this->activeUserAuthentication();
 
-  /**
-   * Destructor Method.
-   */
-  public function __destruct() {}
+  }
 
   /**
    * Util to fetch mappings for a given direction.
@@ -322,7 +248,7 @@ class LdapUserConf {
       $prov_events = ldap_user_all_events();
     }
     if ($direction == NULL) {
-      $direction = LdapUserConf::$provisioningDirectionAll;
+      $direction = self::$provisioningDirectionAll;
     }
 
     $mappings = array();
@@ -495,10 +421,10 @@ class LdapUserConf {
       $this->syncMapping = $sync_mapping_cache->data;
     }
     else {
-      $available_user_attrs = array();
+      $available_user_attributes = array();
       foreach (array(self::$provisioningDirectionToDrupalUser, self::$provisioningDirectionToLDAPEntry) as $direction) {
         $sid = $this->provisionSidFromDirection[$direction];
-        $available_user_attrs[$direction] = array();
+        $available_user_attributes[$direction] = array();
         $ldap_server = FALSE;
         if ($sid) {
           try {
@@ -515,10 +441,10 @@ class LdapUserConf {
           'direction' => $direction,
         );
 
-        \Drupal::moduleHandler()->alter('ldap_user_attrs_list', $available_user_attrs[$direction], $params);
+        \Drupal::moduleHandler()->alter('ldap_user_attrs_list', $available_user_attributes[$direction], $params);
       }
     }
-    $this->syncMapping = $available_user_attrs;
+    $this->syncMapping = $available_user_attributes;
 
     \Drupal::cache()->set('ldap_user_sync_mapping', $this->syncMapping);
   }
@@ -1538,6 +1464,23 @@ class LdapUserConf {
     }
     // Everyone else is fine.
     return FALSE;
+  }
+
+  private function activeUserAuthentication() {
+    $user_register = \Drupal::config('user.settings')
+      ->get("register_no_approval_required");
+    if ($this->config['acctCreation'] == self::$accountCreationLdapBehaviour || $user_register == USER_REGISTER_VISITORS) {
+      $this->createLDAPAccounts = TRUE;
+      $this->createLDAPAccountsAdminApproval = FALSE;
+    }
+    elseif ($user_register == USER_REGISTER_VISITORS_ADMINISTRATIVE_APPROVAL) {
+      $this->createLDAPAccounts = FALSE;
+      $this->createLDAPAccountsAdminApproval = TRUE;
+    }
+    else {
+      $this->createLDAPAccounts = FALSE;
+      $this->createLDAPAccountsAdminApproval = FALSE;
+    }
   }
 
 }

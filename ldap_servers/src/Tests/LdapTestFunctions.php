@@ -16,7 +16,6 @@ use Drupal\ldap_servers\Entity\Server;
 use Drupal\ldap_servers\LdapProtocol;
 use Drupal\ldap_servers\ServerFactory;
 use Drupal\ldap_user\LdapUserConf;
-use Drupal\ldap_user\LdapUserConfAdmin;
 
 /**
  *
@@ -103,15 +102,16 @@ class LdapTestFunctions implements LdapProtocol {
    *
    */
   public function configureLdapUser($ldap_user_test_conf_id) {
-    $ldapUserConfAdmin = new LdapUserConfAdmin();
+    // @FIXME: Broken due to removed LdapUserConfAdmin
+    $ldapUserConf = new LdapUserConf();
     $options = $this->data['ldap_user'][$ldap_user_test_conf_id];
-    foreach ($ldapUserConfAdmin->saveable as $prop_name) {
+    foreach ($ldapUserConf->saveable as $prop_name) {
       if (isset($options[$prop_name])) {
-        $ldapUserConfAdmin->{$prop_name} = $options[$prop_name];
+        $ldapUserConf->{$prop_name} = $options[$prop_name];
       }
     }
     // @FIXME: Format not up-to-date
-    // $ldapUserConfAdmin->save();
+    // $ldapUserConf->save();
   }
 
   function prepConsumerConf($consumer_confs) {

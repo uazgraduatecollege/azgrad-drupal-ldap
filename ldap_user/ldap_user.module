@@ -7,6 +7,7 @@
 
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\ldap_servers\OrphanProcessor;
 use Drupal\ldap_servers\ServerFactory;
 use Drupal\user\UserInterface;
 use Drupal\Core\Form\FormStateInterface;
@@ -15,7 +16,6 @@ use Drupal\Core\Form\FormState;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Url;
 use Drupal\ldap_user\LdapUserConf;
-use Drupal\ldap_user\LdapUserConfAdmin;
 
 class LdapUserTokenHelper {
   use \Drupal\ldap_servers\TokenFunctions;
@@ -84,7 +84,7 @@ function template_preprocess_ldap_user_conf_mapping_table(&$variables) {
 
     foreach ($row as $key => &$col) {
       // There is an empty column which needs to go.
-      // @TODO Don't have an empty row in the first place. See getSyncFormRow in LdapUserConfAdmin.class.php
+      // @TODO Don't have an empty row in the first place. See getSyncFormRow
       if (!array_key_exists('#col', $col)) {
         unset($row[$key]);
       }
@@ -119,13 +119,10 @@ function template_preprocess_ldap_user_conf_mapping_table(&$variables) {
  * Implements hook_cron().
  */
 function ldap_user_cron() {
-
-  /* @var LdapUserConf $ldap_user_conf */
-  $ldap_user_conf = ldap_user_conf();
-
-  if ($ldap_user_conf->orphanedDrupalAcctBehavior != 'ldap_user_orphan_do_not_check') {
-    module_load_include('inc', 'ldap_user', 'ldap_user.cron');
-    $result = _ldap_user_orphans($ldap_user_conf);
+  $check_orphans = \Drupal::config('ldap_user.settings')->get('ldap_user_conf.orphanedDrupalAcctBehavior');
+  if ($check_orphans != 'ldap_user_orphan_do_not_check') {
+    $processer = new OrphanProcessor();
+    $result = $processer->checkOrphans();
     if ($result !== TRUE) {
       \Drupal::logger('ldap_user')->error('LDAP User check for orphaned ldap provisioned Drupal accounts failed', array());
     }
@@ -159,34 +156,7 @@ function ldap_user_ldap_derived_user_name_alter(&$name, $ldap_user) {
  *
  */
 function ldap_user_conf_cache_clear() {
-  $discard = ldap_user_conf('admin', TRUE);
-  $discard = ldap_user_conf(NULL, TRUE);
   ldap_user_ldap_provision_semaphore(NULL, NULL, NULL, TRUE);
-}
-
-/**
- * Get ldapUserConf or ldapUserConfAdmin object.
- *
- * @param string $type
- *   Is 'admin' for ldapUserConfAdmin object or NULL for ldapUserConf object.
- * @param bool $resect
- *   clear static cache of object.
- *
- * @return object ldapUserConf or ldapUserConfAdmin object
- * @TODO: Get rid of this function.
- */
-function ldap_user_conf($type = NULL, $reset = FALSE) {
-  static $ldap_user_conf;
-  static $ldap_user_conf_admin;
-
-  if ($type == 'admin' && ($reset || !is_object($ldap_user_conf_admin))) {
-    $ldap_user_conf_admin = new LdapUserConfAdmin();
-  }
-  elseif ($type != 'admin' && ($reset || !is_object($ldap_user_conf))) {
-    $ldap_user_conf = new LdapUserConf();
-  }
-
-  return ($type == 'admin') ? $ldap_user_conf_admin : $ldap_user_conf;
 }
 
 /**
@@ -194,6 +164,8 @@ function ldap_user_conf($type = NULL, $reset = FALSE) {
  */
 function ldap_user_ldap_attributes_needed_alter(&$attributes, $params) {
 
+  kint($attributes);
+  kint($params);
   // Puid attributes are server specific.
   if (isset($params['sid']) && $params['sid']) {
     if (is_scalar($params['sid'])) {
@@ -209,7 +181,7 @@ function ldap_user_ldap_attributes_needed_alter(&$attributes, $params) {
       return;
     }
 
-    $ldap_user_conf = ldap_user_conf();
+    $ldap_user_conf = new LdapUserConf();
     if (!isset($attributes['dn'])) {
       $attributes['dn'] = array();
     }
@@ -335,8 +307,6 @@ function ldap_user_ldap_user_attrs_list_alter(&$available_user_attrs, &$params) 
   );
 
   // 2. Drupal user fields.
-  // @FIXME
-  // $user_fields = field_info_instances('user', 'user');.
   $user_fields = \Drupal::entityManager()->getFieldStorageDefinitions('user');
 
   foreach ($user_fields as $field_name => $field_instance) {
@@ -495,8 +465,8 @@ function ldap_user_form_user_register_form_alter(&$form, $form_state) {
   if (!\Drupal::currentUser()->hasPermission('administer users')) {
     return;
   }
-  /* @var LdapUserConf $ldap_user_conf */
-  $ldap_user_conf = ldap_user_conf();
+
+  $ldap_user_conf = new LdapUserConf();
 
   $ldap_fieldset = array();
   $options = array(
@@ -557,6 +527,7 @@ function ldap_user_form_user_register_form_alter(&$form, $form_state) {
  * Implements hook_form_validate().
  */
 function ldap_user_form_register_form_validate($form, &$form_state) {
+  $config =  \Drupal::config('ldap_user.settings');
 
   $values = $form_state->getValues();
   $user_ldap_entry = NULL;
@@ -568,8 +539,7 @@ function ldap_user_form_register_form_validate($form, &$form_state) {
 
   // If corresponding ldap account doesn't exist and provision not selected and make ldap associated is selected, throw error.
   if (!@$values['ldap_user_create_ldap_acct'] && @$values['ldap_user_association'] == LdapUserConf::$manualAccountConflictLdapAssociate) {
-    $ldap_user_conf = ldap_user_conf();
-    $ldap_user = ldap_servers_get_user_ldap_data($drupal_username, $ldap_user_conf->ldapEntryProvisionServer, 'ldap_user_prov_to_drupal');
+    $ldap_user = ldap_servers_get_user_ldap_data($drupal_username, $config->get('ldap_user_conf.ldapEntryProvisionServer'), 'ldap_user_prov_to_drupal');
     if (!$ldap_user) {
 
       $form_state->setErrorByName('ldap_user_association', t('User %name does not have a corresponding LDAP Entry (dn).
@@ -579,8 +549,7 @@ function ldap_user_form_register_form_validate($form, &$form_state) {
 
   // If trying to provision an LDAP account and one already exists, throw error.
   if (@$values['ldap_user_create_ldap_acct']) {
-    $ldap_user_conf = ldap_user_conf();
-    $ldap_user = ldap_servers_get_user_ldap_data($drupal_username, $ldap_user_conf->ldapEntryProvisionServer, 'ldap_user_prov_to_ldap');
+    $ldap_user = ldap_servers_get_user_ldap_data($drupal_username, $config->get('ldap_user_conf.ldapEntryProvisionServer'), 'ldap_user_prov_to_ldap');
     if ($ldap_user) {
       $tokens = array('%dn' => $ldap_user['dn'], '%name' => $drupal_username);
       $form_state->setErrorByName('ldap_user_create_ldap_acct', t('User %name already has a corresponding LDAP Entry (%dn).
@@ -602,8 +571,7 @@ function ldap_user_form_register_form_submit2(&$form, FormState $form_state) {
   if (@$values['ldap_user_create_ldap_acct']) {
     if ($account = user_load_by_name($values['name'])) {
 
-      /* @var LdapUserConf $ldap_user_conf */
-      $ldap_user_conf = ldap_user_conf();
+      $ldap_user_conf = new LdapUserConf();
 
       $ldap_provision_entry = $ldap_user_conf->getProvisionRelatedLdapEntry($account);
       // Does the LDAP user exist? If not then create it.
@@ -620,7 +588,7 @@ function ldap_user_form_register_form_submit2(&$form, FormState $form_state) {
     }
   }
 
-  $ldap_user_conf = ldap_user_conf();
+  $ldap_user_conf = new LdapUserConf();
   if ($values['ldap_user_association'] == LdapUserConf::$manualAccountConflictNoLdapAssociate) {
     $ldap_user_conf->ldapExcludeDrupalAccount($values['name']);
   }
@@ -771,8 +739,7 @@ function ldap_user_ldap_provision_semaphore($action, $op, $value = NULL, $reset 
  */
 function ldap_user_user_login(UserInterface $account) {
 
-  /* @var LdapUserConf $ldap_user_conf */
-  $ldap_user_conf = ldap_user_conf();
+  $ldap_user_conf = new LdapUserConf();
 
   if ($ldap_user_conf->excludeUser($account)) {
     return;
@@ -809,10 +776,12 @@ function ldap_user_user_login(UserInterface $account) {
     }
   }
 
-  if ($ldap_user_conf->provisionsDrupalAccountsFromLdap && in_array(LdapUserConf::$eventSyncToDrupalUser, array_keys($ldap_user_conf->provisionsDrupalEvents))) {
-    $ldap_user = ldap_servers_get_user_ldap_data($account, $ldap_user_conf->drupalAcctProvisionServer, 'ldap_user_prov_to_drupal');
+  $config = \Drupal::config('ldap_user.settings')->get('ldap_user_conf');
+
+  if ($ldap_user_conf->provisionsDrupalAccountsFromLdap  && in_array(LdapUserConf::$eventSyncToDrupalUser, array_keys($ldap_user_conf->provisionsDrupalEvents))) {
+    $ldap_user = ldap_servers_get_user_ldap_data($account, $config['drupalAcctProvisionServer'], 'ldap_user_prov_to_drupal');
     if ($ldap_user) {
-      $factory = new ServerFactory($ldap_user_conf->drupalAcctProvisionServer, NULL, TRUE);
+      $factory = new ServerFactory($config['drupalAcctProvisionServer'], NULL, TRUE);
       $ldap_server = $factory->servers;
       $ldap_user_conf->entryToUserEdit($ldap_user, $account, $ldap_server, LdapUserConf::$provisioningDirectionToDrupalUser, array(LdapUserConf::$eventSyncToDrupalUser));
     }
@@ -845,8 +814,7 @@ function ldap_user_user_insert(UserInterface $account) {
     }
   }
 
-  /* @var LdapUserConf $ldap_user_conf */
-  $ldap_user_conf = ldap_user_conf();
+  $ldap_user_conf = new LdapUserConf();
   /**
    * in hook_user_insert, account is already created, so never call provisionDrupalAccount(), just
    * syncToDrupalAccount(), even if action is 'provision'
@@ -885,8 +853,8 @@ function ldap_user_user_insert(UserInterface $account) {
  * @FIXME $user_edit is deprecated (LDAP).
  */
 function ldap_user_user_update(UserInterface $account) {
-  /* @var LdapUserConf $ldap_user_conf */
-  $ldap_user_conf = ldap_user_conf();
+
+   $ldap_user_conf = new LdapUserConf();
 
   if ($ldap_user_conf->excludeUser($account)) {
     return;
@@ -937,8 +905,7 @@ function ldap_user_user_update(UserInterface $account) {
  * @FIXME: Removed checking for new users in ldap_user_ldap_exclude(). Do we need that?
  */
 function ldap_user_user_presave(UserInterface $account) {
-  /* @var LdapUserConf $ldap_user_conf */
-  $ldap_user_conf = ldap_user_conf();
+  $ldap_user_conf = new LdapUserConf();
 
   if ($ldap_user_conf->excludeUser($account)) {
     return;
@@ -951,12 +918,13 @@ function ldap_user_user_presave(UserInterface $account) {
   }
 
 
+  $config = \Drupal::config('ldap_user.settings')->get('ldap_user_conf');
 
   // Check for provisioning to drupal and override synced user fields/props.
   if ($ldap_user_conf->provisionsDrupalAccountsFromLdap && in_array(LdapUserConf::$eventSyncToDrupalUser, array_keys($ldap_user_conf->provisionsDrupalEvents))) {
     if (ldap_user_is_ldap_associated($account, LdapUserConf::$provisioningDirectionToDrupalUser)) {
-      $ldap_user = ldap_servers_get_user_ldap_data($drupal_username, $ldap_user_conf->drupalAcctProvisionServer, 'ldap_user_prov_to_drupal');
-      $factory = new ServerFactory($ldap_user_conf->drupalAcctProvisionServer, NULL, TRUE);
+      $ldap_user = ldap_servers_get_user_ldap_data($drupal_username, $config['drupalAcctProvisionServer'], 'ldap_user_prov_to_drupal');
+      $factory = new ServerFactory($config['drupalAcctProvisionServer'], NULL, TRUE);
       $ldap_server = $factory->servers;
       $ldap_user_conf->entryToUserEdit($ldap_user, $account, $ldap_server, LdapUserConf::$provisioningDirectionToDrupalUser, array(LdapUserConf::$eventSyncToDrupalUser));
     }
@@ -969,7 +937,7 @@ function ldap_user_user_presave(UserInterface $account) {
  */
 function ldap_user_user_delete(UserInterface $account) {
   // Drupal user account is about to be deleted.
-  $ldap_user_conf = ldap_user_conf();
+  $ldap_user_conf = new LdapUserConf();
   if (
       $ldap_user_conf->provisionsLdapEntriesFromDrupalUsers
       && $ldap_user_conf->provisionEnabled(LdapUserConf::$provisioningDirectionToLDAPEntry, LdapUserConf::$provisionLdapEntryOnUserDelete)

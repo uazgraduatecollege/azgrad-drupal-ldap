@@ -1,1 +1,18 @@
 ldap_user_cron_last_uid_checked: 1
+ldap_user_conf:
+  drupalAcctProvisionServer: '0'
+  ldapEntryProvisionServer: '0'
+  drupalAcctProvisionTriggers:
+    2: 0
+    1: 0
+  ldapEntryProvisionTriggers:
+    6: 0
+    7: 0
+    8: 0
+    3: 0
+  orphanedDrupalAcctBehavior: ldap_user_orphan_email
+  orphanedCheckQty: 100
+  userConflictResolve: 2
+  manualAccountConflict: 1
+  acctCreation: 4
+  ldapUserSyncMappings: {  }

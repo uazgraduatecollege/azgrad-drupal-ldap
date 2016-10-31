@@ -129,9 +129,9 @@ function hook_ldap_attributes_needed_alter(&$attributes, $params) {
           // Set default values for an attribute, force data_type.
           $attributes[$ldap_server->mail_attr] = ldap_servers_set_attribute_map();
         }
-
-        ldap_servers_token_extract_attributes($attributes, $ldap_server_obj->mail_template);
-        $attributes[$ldap_server->unique_persistent_attr] = ldap_servers_set_attribute_map(@$attributes[$ldap_server->unique_persistent_attr]);
+        // Todo: Update example below
+        //ldap_servers_token_extract_attributes($attributes, $ldap_server_obj->mail_template);
+        //$attributes[$ldap_server->unique_persistent_attr] = ldap_servers_set_attribute_map(@$attributes[$ldap_server->unique_persistent_attr]);
 
         break;
     }

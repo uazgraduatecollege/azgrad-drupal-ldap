@@ -85,7 +85,7 @@ class LdapWebUserIntegrationTests extends LdapWebTestBase {
       $sids = array($test_sid);
       // This will create the proper ldap_user configuration from ldap_test/ldap_user.conf.inc.
       $this->prepTestData('hogwarts', $sids, 'provisionToLdap_' . $test_sid);
-      $ldap_user_conf = ldap_user_conf('default', TRUE);
+      $ldap_user_conf = new LdapUserConf();
 
       // 9.B. Create and approve new user, populating first and last name.
       $username = 'bhautdeser';
@@ -221,14 +221,17 @@ class LdapWebUserIntegrationTests extends LdapWebTestBase {
        */
       // This will create the proper ldap_user configuration from ldap_test/ldap_user.conf.inc.
       $this->prepTestData('hogwarts', $sids, 'provisionToLdap_' . $test_sid);
-      $ldap_user_conf = ldap_user_conf('admin', TRUE);
+      // Fixme: Test broken since LdapUserConfAdmin gone.
+      $ldap_user_conf = new LdapUserConf();
       // Turn off provisioning to drupal.
-      $ldap_user_conf->drupalAcctProvisionServer = 0;
-      $ldap_user_conf->ldapEntryProvisionServer = $test_sid;
-      $ldap_user_conf->ldapEntryProvisionTriggers = array(
-        LdapUserConf::$provisionLdapEntryOnUserUpdateCreate,
-        LdapUserConf::$provisionLdapEntryOnUserAuthentication,
-      );
+      $config = \Drupal::service('config.factory')->getEditable('ldap_user.settings');
+      $config->set('drupalAcctProvisionServer', 0)
+        ->set('ldapEntryProvisionServer', $test_id)
+        ->set('ldapEntryProvisionTriggers', [
+          LdapUserConf::$provisionLdapEntryOnUserUpdateCreate,
+          LdapUserConf::$provisionLdapEntryOnUserAuthentication,
+        ])
+        ->save();
 
       $ldap_user_conf->ldapUserSyncMappings[LdapUserConf::$provisioningDirectionToLDAPEntry]['[password]'] = array(
         'sid' => $test_sid,
@@ -243,7 +246,7 @@ class LdapWebUserIntegrationTests extends LdapWebTestBase {
       );
 
       $ldap_user_conf->save();
-      $ldap_user_conf = ldap_user_conf('default', TRUE);
+      $ldap_user_conf = new LdapUserConf();
       // debug('ldap_user_conf after provisionToLdapEmailVerification setup'); debug($ldap_user_conf);
       // @FIXME
       // // @FIXME
@@ -360,7 +363,8 @@ class LdapWebUserIntegrationTests extends LdapWebTestBase {
       $sids = array($test_sid);
       // This will create the proper ldap_user configuration from ldap_test/ldap_user.conf.inc.
       $this->prepTestData('hogwarts', $sids, 'provisionToLdap_' . $test_sid);
-      $ldap_user_conf = ldap_user_conf('admin', TRUE);
+      // Fixme: Test broken since LdapUserConfAdmin gone.
+      $ldap_user_conf = new LdapUserConf();
       if (!in_array(LdapUserConf::$provisionLdapEntryOnUserDelete, $ldap_user_conf->ldapEntryProvisionTriggers)) {
         $ldap_user_conf->ldapEntryProvisionTriggers[] = LdapUserConf::$provisionLdapEntryOnUserDelete;
       }
@@ -442,7 +446,8 @@ class LdapWebUserIntegrationTests extends LdapWebTestBase {
     $sids = array('activedirectory1');
     $this->prepTestData('hogwarts', $sids, 'provisionToDrupal', 'default');
 
-    $ldap_user_conf = ldap_user_conf('admin');
+    // Fixme: Test broken since LdapUserConfAdmin gone.
+    $ldap_user_conf = new LdapUserConf();
     $drupal_form = $ldap_user_conf->drupalForm();
     $account_options = $drupal_form['basic_to_drupal']['orphanedDrupalAcctBehavior']['#options'];
     $cn_to_account = array();
