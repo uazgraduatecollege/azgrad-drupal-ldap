@@ -2,6 +2,7 @@
 
 namespace Drupal\ldap_authorization\Plugin\authorization\provider;
 
+use Drupal\authorization\AuthorizationSkipAuthorization;
 use Drupal\authorization\Entity\AuthorizationProfile;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Form\FormStateInterface;
@@ -229,6 +230,13 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
     $ldap_server = \Drupal::entityManager()->getStorage('ldap_server')->load($server_id);
     // Get user data.
     $ldap_user = ldap_servers_get_user_ldap_data($user, $server_id);
+
+    // Get user data.
+    $ldap_user = ldap_servers_get_user_ldap_data($user, $server_id);
+    if (!$ldap_user && $this->configuration['status']['only_ldap_authenticated'] == TRUE) {
+      throw new AuthorizationSkipAuthorization();
+    }
+
     // Get user groups from DN.
     $derive_from_dn_authorizations = $ldap_server->groupUserMembershipsFromDn($user);
     if (!$derive_from_dn_authorizations) {
