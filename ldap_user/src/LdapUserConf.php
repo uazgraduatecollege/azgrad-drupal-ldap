@@ -685,7 +685,7 @@ class LdapUserConf {
    */
   public function syncToLdapEntry($account, $ldap_user = array(), $test_query = FALSE) {
 
-    if (is_object($account) && property_exists($account, 'uid') && $account->uid == 1) {
+    if (is_object($account) && $account->id() == 1) {
       // Do not provision or sync user 1.
       return FALSE;
     }
@@ -767,7 +767,7 @@ class LdapUserConf {
       '%dn' => isset($result['proposed']['dn']) ? $result['proposed']['dn'] : NULL,
       '%sid' => $this->config['ldapEntryProvisionServer'],
       '%username' => $account->name,
-      '%uid' => ($test_query || !property_exists($account, 'uid')) ? '' : $account->uid,
+      '%uid' => ($test_query || !method_exists($account,'id') || empty($account->id())) ? '' : $account->id(),
     ];
 
     if ($result) {
@@ -896,8 +896,8 @@ class LdapUserConf {
    *   normally this will be 0 or 1 entry, but the ldap_user_provisioned_ldap_entries
    *   field attached to the user entity track each ldap entry provisioned.
    *
-   * @param object $account
-   *   drupal account.
+   * @param User $account
+   *   Drupal user account.
    *
    * @return TRUE or FALSE.  FALSE indicates failed or action not enabled in ldap user configuration
    */
@@ -915,12 +915,12 @@ class LdapUserConf {
           $ldap_server = $factory->servers;
           if (is_object($ldap_server) && $dn) {
             $boolean_result = $ldap_server->delete($dn);
-            $tokens = array('%sid' => $sid, '%dn' => $dn, '%username' => $account->name, '%uid' => $account->uid);
+            $tokens = array('%sid' => $sid, '%dn' => $dn, '%username' => $account->getUsername(), '%uid' => $account->id());
             if ($boolean_result) {
-              \Drupal::logger('ldap_user')->info('LDAP entry on server %sid deleted dn=%dn. username=%username, uid=%uid', []);
+              \Drupal::logger('ldap_user')->info('LDAP entry on server %sid deleted dn=%dn. username=%username, uid=%uid', $tokens);
             }
             else {
-              \Drupal::logger('ldap_user')->error('LDAP entry on server %sid not deleted because error. username=%username, uid=%uid', []);
+              \Drupal::logger('ldap_user')->error('LDAP entry on server %sid not deleted because error. username=%username, uid=%uid', $tokens);
             }
           }
           else {

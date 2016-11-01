@@ -164,7 +164,7 @@ class OrphanProcessor {
         foreach ($puids as $puid => $user_data) {
           // FIXME: Unported.
           /* $account = $accounts[$user_data['uid']];
-          $user_edit['ldap_user_last_checked'][Language::LANGCODE_NOT_SPECIFIED][0]['value'] = $check_time;
+          $user_edit['ldap_user_last_checked'][0]['value'] = $check_time;
           $account = user_save($account, $user_edit, 'ldap_user');
           if (!$user_data['exists']) {
           /**
