@@ -959,11 +959,7 @@ class LdapTestFunctions implements LdapProtocol {
       'orphanedCheckQty' => 50,
       'manualAccountConflict' => LdapUserConf::$manualAccountConflictShowOptionOnForm,
     );
-    /**
-     *    'wsEnabled'  => 0,
-     * 'wsUserIps' => array('1.2.3.4'),
-     * 'wsKey'  => 'sdafjlksjadsdafjkksdafjsdfsdjfsdf',
-     */
+
     $conf['ad_authentication'] = array(
       'drupalAcctProvisionServer' => 'activedirectory1',
       'ldapEntryProvisionServer' => LdapUserConf::$noServerSID,

@@ -468,57 +468,50 @@ EOT;
 
       $direction_text = 'todrupal';
 
-      $header = array(
-        array(
+      $header = [
+        [
           'data' => t('Remove'),
           'rowspan' => 1,
-          'class' => 'mixedcase',
-        ),
-        array(
+        ],
+        [
           'data' => t('Source LDAP tokens') ,
-          'class' => 'mixedcase',
           'rowspan' => 1,
           'colspan' => 2,
-        ),
-        array(
+        ],
+        [
           'data' => t('Target Drupal attribute'),
           'rowspan' => 1,
-          'class' => 'mixedcase',
-        ),
-        array(
+        ],
+        [
           'data' => t('Synchronization event'),
           'colspan' => count($this->LdapUserConfAdmin->provisionsDrupalEvents),
           'rowspan' => 1,
-          'class' => 'mixedcase',
-        ),
+        ],
 
-      );
+      ];
 
-      $second_header = array(
-        array(
-          'data' => t(''),
+      $second_header = [
+        [
+          'data' => '',
           'header' => TRUE,
-          'class' => 'mixedcase',
-        ),
-        array(
+        ],
+        [
           'data' => t('Examples:<ul><li>[sn]</li><li>[mail:0]</li><li>[ou:last]</li><li>[sn], [givenName]</li></ul>
                 Constants such as <em>17</em> or <em>imported</em> should not be enclosed in [].'),
           'header' => TRUE,
-          'class' => 'mixedcase',
-        ),
-        array(
+        ],
+        [
           'data' => t('Convert from binary'),
-          'class' => 'mixedcase',
           'header' => TRUE,
-        ),
-        array(
-          'data' => "",
+        ],
+        [
+          'data' => '',
           'header' => TRUE,
-        ),
-      );
+        ],
+      ];
 
       foreach ($this->LdapUserConfAdmin->provisionsDrupalEvents as $col_id => $col_name) {
-        $second_header[] = array('data' => $col_name, 'header' => TRUE, 'class' => 'mixedcase');
+        $second_header[] = array('data' => $col_name, 'header' => TRUE, 'class' => 'header-provisioning');
       }
     }
     // To ldap.
@@ -526,59 +519,51 @@ EOT;
 
       $direction_text = 'toldap';
 
-      $header = array(
-        array(
+      $header = [
+        [
           'data' => t('Remove'),
           'rowspan' => 1,
-          'class' => 'mixedcase',
-        ),
-        array(
+        ],
+        [
           'data' => t('Source Drupal user attribute') ,
-          'class' => 'mixedcase',
           'rowspan' => 1,
           'colspan' => 3,
-        ),
-        array(
+        ],
+        [
           'data' => t('Target LDAP token'),
           'rowspan' => 1,
-          'class' => 'mixedcase',
-        ),
-        array(
+        ],
+        [
           'data' => t('Synchronization event'),
           'colspan' => count($this->LdapUserConfAdmin->provisionsLdapEvents),
           'rowspan' => 1,
-          'class' => 'mixedcase',
-        ),
-      );
+        ],
+      ];
 
-      $second_header = array(
-        array(
-          'data' => t(''),
+      $second_header = [
+        [
+          'data' => '',
           'header' => TRUE,
-        ),
-        array(
+        ],
+        [
           'data' => t('Note: Select <em>user tokens</em> to use token field.'),
           'header' => TRUE,
-          'class' => 'mixedcase',
-        ),
-        array(
+        ],
+        [
           'data' => t('Source Drupal user tokens such as: <ul><li>[property.name]</li><li>[field.field_fname]</li><li>[field.field_lname]</li></ul> Constants such as <em>from_drupal</em> or <em>18</em> should not be enclosed in [].'),
           'header' => TRUE,
-          'class' => 'mixedcase',
-        ),
-        array(
+        ],
+        [
           'data' => t('Convert From binary'),
           'header' => TRUE,
-          'class' => 'mixedcase',
-        ),
-        array(
+        ],
+        [
           'data' => t('Use singular token format such as: <ul><li>[sn]</li><li>[givenName]</li></ul>'),
           'header' => TRUE,
-          'class' => 'mixedcase',
-        ),
-      );
+        ],
+      ];
       foreach ($this->LdapUserConfAdmin->provisionsLdapEvents as $col_id => $col_name) {
-        $second_header[] = array('data' => $col_name, 'header' => TRUE, 'class' => 'mixedcase');
+        $second_header[] = array('data' => $col_name, 'header' => TRUE, 'class' => 'header-provisioning');
       }
     }
     return ['header' => $header, 'second_header' => $second_header];

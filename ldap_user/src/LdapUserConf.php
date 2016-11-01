@@ -142,9 +142,6 @@ class LdapUserConf {
 
   public $orphanedCheckQty = 100;
 
-  // Public $wsKey = NULL;
-  //  public $wsEnabled = 0;
-  //  public $wsUserIps = array();
   public $provisionsLdapEvents = array();
   public $provisionsDrupalEvents = array();
 
@@ -172,10 +169,8 @@ class LdapUserConf {
       self::$provisionLdapEntryOnUserDelete,
     ];
 
-    $this->config['drupalAcctProvisionServer'] = self::$noServerSID;
-    $this->config['ldapEntryProvisionServer'] = self::$noServerSID;
-
     $this->load();
+    $this->activeUserAuthentication();
 
     $this->provisionSidFromDirection[self::$provisioningDirectionToDrupalUser] = $this->config['drupalAcctProvisionServer'];
     $this->provisionSidFromDirection[self::$provisioningDirectionToLDAPEntry] = $this->config['ldapEntryProvisionServer'];
@@ -229,8 +224,6 @@ class LdapUserConf {
         }
       }
     }
-    $this->activeUserAuthentication();
-
   }
 
   /**

@@ -75,14 +75,6 @@ class LdapUserTestForm extends FormBase {
       '#required' => 0,
       '#default_value' => $selected_actions,
       '#options' => self::$sync_trigger_options,
-      '#states' => [
-    // Action to take.
-        'visible' => [
-          ':input[name="wsEnabled"]' => [
-            'checked' => TRUE,
-          ],
-        ],
-      ],
     ];
 
     $form['submit'] = [
