@@ -2,6 +2,7 @@
 
 namespace Drupal\ldap_servers\Form;
 
+use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Entity\EntityForm;
 use Drupal\ldap_servers\Entity\Server;
@@ -14,6 +15,9 @@ use Drupal\ldap_servers\TokenFunctions;
 class ServerTestForm extends EntityForm {
   use TokenFunctions;
 
+  /* @var Server $ldapServer */
+  protected $ldapServer;
+
   /**
    * {@inheritdoc}
    */
@@ -25,35 +29,22 @@ class ServerTestForm extends EntityForm {
    *
    */
   public function buildForm(array $form, FormStateInterface $form_state, $ldap_server = NULL) {
-    // @FIXME
-    // drupal_set_title() has been removed. There are now a few ways to set the title
-    // dynamically, depending on the situation.
-    //
-    //
-    // @see https://www.drupal.org/node/2067859
-    // drupal_set_title(t('Test LDAP Server Configuration: !server', array('!server' => $ldap_server->name)));
+    if ($ldap_server) {
+      $this->ldapServer = $ldap_server;
+    }
+
+    $form['#title'] = t('Test LDAP Server Configuration: @server', array('@server' => $this->ldapServer->label()));
+
     $form['#prefix'] = t('This form tests an LDAP configuration to see if
     it can bind and basic user and group functions.  It also shows token examples
     and a sample user.  The only data this function will modify is the test LDAP group, which will be deleted and added');
 
-    $variables = [
-      'ldap_server' => $ldap_server,
-      'actions' => FALSE,
-      'type' => 'detail',
-    ];
-
-    // This used to be done by ldap_servers_server
-    // Iterate over Entity fields.
-    $entity_type_id = 'ldap_server';
     $properties = array();
 
-    // Foreach (\Drupal::entityManager()->getFieldDefinitions($entity_type_id) as $field_name => $field_definition) {
-    //   $properties[] = "$field_name = " . print_r($ldap_server->$field_name->value, TRUE);
-    // }.
     $settings = array(
       '#theme' => 'item_list',
       '#items' => $properties,
-      '#type' => 'ul',
+      '#list_type' => 'ul',
     );
     $form['server_variables'] = array(
       '#markup' => drupal_render($settings),
@@ -62,7 +53,7 @@ class ServerTestForm extends EntityForm {
     $form['id'] = [
       '#type' => 'hidden',
       '#title' => t('Machine name for this server'),
-      '#default_value' => $ldap_server->id(),
+      '#default_value' => $this->ldapServer->id(),
     ];
 
     $form['binding']['bindpw'] = [
@@ -76,7 +67,7 @@ class ServerTestForm extends EntityForm {
     $form['testing_drupal_username'] = [
       '#type' => 'textfield',
       '#title' => t('Testing Drupal Username'),
-      '#default_value' => $ldap_server->get('testing_drupal_username'),
+      '#default_value' => $this->ldapServer->get('testing_drupal_username'),
       '#size' => 30,
       '#maxlength' => 255,
       '#description' => t('This is optional and used for testing this server\'s configuration against an actual username.  The user need not exist in Drupal and testing will not affect the user\'s LDAP or Drupal Account.'),
@@ -85,7 +76,7 @@ class ServerTestForm extends EntityForm {
     $form['testing_drupal_user_dn'] = [
       '#type' => 'textfield',
       '#title' => t('Testing Drupal DN'),
-      '#default_value' => $ldap_server->get('testing_drupal_user_dn'),
+      '#default_value' => $this->ldapServer->get('testing_drupal_user_dn'),
       '#size' => 120,
       '#maxlength' => 255,
       '#description' => t('This is optional and used for testing this server\'s configuration against an actual username.  The user need not exist in Drupal and testing will not affect the user\'s LDAP or Drupal Account.'),
@@ -94,7 +85,7 @@ class ServerTestForm extends EntityForm {
     $form['grp_test_grp_dn'] = [
       '#type' => 'textfield',
       '#title' => t('Testing Group DN'),
-      '#default_value' => $ldap_server->get('grp_test_grp_dn'),
+      '#default_value' => $this->ldapServer->get('grp_test_grp_dn'),
       '#size' => 120,
       '#maxlength' => 255,
       '#description' => t('This is optional and used for testing this server\'s group configuration.'),
@@ -103,13 +94,13 @@ class ServerTestForm extends EntityForm {
     $form['grp_test_grp_dn_writeable'] = [
       '#type' => 'textfield',
       '#title' => t('Testing Group DN that is writeable. Warning!  In test, this group will be deleted, created, have members added to it!'),
-      '#default_value' => $ldap_server->get('grp_test_grp_dn_writeable'),
+      '#default_value' => $this->ldapServer->get('grp_test_grp_dn_writeable'),
       '#size' => 120,
       '#maxlength' => 255,
       '#description' => t('This is optional and used for testing this server\'s group configuration.'),
     ];
 
-    if ($ldap_server->get('bind_method') == Server::$bindMethodAnonUser) {
+    if ($this->ldapServer->get('bind_method') == Server::$bindMethodAnonUser) {
       $form['testing_drupal_userpw'] = [
         '#type' => 'password',
         '#title' => t('Testing Drupal User Password'),
@@ -157,7 +148,7 @@ class ServerTestForm extends EntityForm {
               else {
                 $token = "";
               }
-              $rows[] = array('data' => array($key, $i, $value2, $token));
+              $rows[] = array('data' => array($key, $i, $this->binaryCheck($value2), $token));
             }
           }
         }
@@ -168,7 +159,9 @@ class ServerTestForm extends EntityForm {
           '#rows' => $rows,
         );
 
-        $form['#prefix']  = '<div class="content"><h2>' . t('LDAP Entry for %username (dn: %dn)', array('%dn' => $test_data['ldap_user']['dn'], '%username' => $test_data['username'])) . '</h2>' . drupal_render($settings) . '</div>';
+        $form['#suffix']  = '<div class="content">
+        <h2>' . t('LDAP Entry for %username (dn: %dn)', array('%dn' => $test_data['ldap_user']['dn'], '%username' => $test_data['username'])) . '</h2>'
+          . drupal_render($settings) . '</div>';
       }
 
       $titles = [
@@ -180,21 +173,12 @@ class ServerTestForm extends EntityForm {
       ];
 
       foreach ($test_data['results_tables'] as $table_name => $table_data) {
-        // @FIXME
-        // theme() has been renamed to _theme() and should NEVER be called directly.
-        // Calling _theme() directly can alter the expected output and potentially
-        // introduce security issues (see https://www.drupal.org/node/2195739). You
-        // should use renderable arrays instead.
-        //
-        //
-        // @see https://www.drupal.org/node/2195739
-        // $form['#prefix'] .= '<h2>' . $titles[$table_name] . '</h2>' . theme('table', array('header' => array('Test', 'Result'), 'rows' => $table_data));
-        $settings = array(
+       $settings = array(
           '#type' => 'table',
           '#header' => array('Test', 'Result'),
           '#rows' => $table_data,
         );
-        $form['#prefix'] .= '<h2>' . $titles[$table_name] . '</h2>' . drupal_render($settings);
+        $form['#suffix'] .= '<h2>' . $titles[$table_name] . '</h2>' . drupal_render($settings);
       }
 
       if (function_exists('dpm') && !empty($test_data['username'])) {
@@ -221,12 +205,12 @@ class ServerTestForm extends EntityForm {
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
     $values = $form_state->getValues();
-    $factory = new ServerFactory($values['id'], 'all', TRUE);
+    $server = Server::load($values['id']);
 
     if (!$values['id']) {
       $form_state->setErrorByName(NULL, t('No server id found in form'));
     }
-    elseif (!$factory->servers) {
+    elseif (!$server) {
       $form_state->setErrorByName(NULL, t('Failed to create server object for server with server id=%id', [
         '%id' => $values['id'],
       ]));
@@ -245,9 +229,7 @@ class ServerTestForm extends EntityForm {
     $has_errors = FALSE;
     $values = $form_state->getValues();
     $id = $values['id'];
-    /* @var \Drupal\ldap_servers\Entity\Server $ldap_server */
-    $factory = new ServerFactory($id, 'all', TRUE);
-    $ldap_server = $factory->servers;
+    $this->ldapServer = Server::load($id);
 
     // $result = t('<h1>Test of name </h2>',$server_conf);.
     $results = [];
@@ -261,10 +243,10 @@ class ServerTestForm extends EntityForm {
       $bindpw_type = t('stored in configuration');
     }
 
-    if ($ldap_server->get('bind_method') == Server::$bindMethodServiceAccount) {
+    if ($this->ldapServer->get('bind_method') == Server::$bindMethodServiceAccount) {
       $results_tables['basic'][] = [
         t('Binding with DN for non-anonymous search (%bind_dn).  Using password ', [
-          '%bind_dn' => $ldap_server->get('binddn'),
+          '%bind_dn' => $this->ldapServer->get('binddn'),
         ]) . ' ' . $bindpw_type . '.',
         '',
       ];
@@ -281,20 +263,21 @@ class ServerTestForm extends EntityForm {
       $group_create_test_dn = $values['grp_test_grp_dn_writeable'];
       $group_create_test_attr = [
         'objectClass' => [
-          $ldap_server->get('grp_object_cat'),
+          $this->ldapServer->get('grp_object_cat'),
           'top',
         ],
       ];
 
       // 1. delete test group if it exists.
-      if ($ldap_server->dnExists($group_create_test_dn, 'ldap_entry', [
+      if ($this->ldapServer->dnExists($group_create_test_dn, 'ldap_entry', [
         'cn',
         'member',
-      ])) {
-        $result = $ldap_server->groupRemoveGroup($group_create_test_dn, FALSE);
+      ])
+      ) {
+        $result = $this->ldapServer->groupRemoveGroup($group_create_test_dn, FALSE);
       }
 
-      $group_exists = $ldap_server->dnExists($group_create_test_dn, 'ldap_entry', [
+      $group_exists = $this->ldapServer->dnExists($group_create_test_dn, 'ldap_entry', [
         'cn',
         'member',
       ]);
@@ -305,7 +288,7 @@ class ServerTestForm extends EntityForm {
       ];
 
       // 2. make sure call to members in empty group returns false.
-      $result = $ldap_server->groupAllMembers($group_create_test_dn);
+      $result = $this->ldapServer->groupAllMembers($group_create_test_dn);
       $result = ($result === FALSE) ? "PASS" : 'FAIL';
       $results_tables['group1'][] = [
         "LdapServer::groupAllMembers($group_create_test_dn) call on nonexistent group returns FALSE",
@@ -313,7 +296,7 @@ class ServerTestForm extends EntityForm {
       ];
 
       // 3. add group.
-      $result = $ldap_server->groupAddGroup($group_create_test_dn, $group_create_test_attr);
+      $result = $this->ldapServer->groupAddGroup($group_create_test_dn, $group_create_test_attr);
       $result = ($result) ? "PASS" : 'FAIL';
       $attr = serialize($group_create_test_attr);
       $results_tables['group1'][] = [
@@ -322,7 +305,7 @@ class ServerTestForm extends EntityForm {
       ];
 
       // 4. call to all members in an empty group returns emtpy array, not FALSE.
-      $result = $ldap_server->groupAllMembers($group_create_test_dn);
+      $result = $this->ldapServer->groupAllMembers($group_create_test_dn);
       $result = (is_array($result) && count($result) == 0) ? 'PASS' : 'FAIL';
       $results_tables['group1'][] = [
         "LdapServer::groupAllMembers($group_create_test_dn) returns empty array for empty group ",
@@ -330,8 +313,8 @@ class ServerTestForm extends EntityForm {
       ];
 
       // 5. add member to group.
-      $result = $ldap_server->groupAddMember($group_create_test_dn, $user_test_dn);
-      $result = is_array($ldap_server->groupAllMembers($group_create_test_dn)) ? 'PASS' : 'FAIL';
+      $result = $this->ldapServer->groupAddMember($group_create_test_dn, $user_test_dn);
+      $result = is_array($this->ldapServer->groupAllMembers($group_create_test_dn)) ? 'PASS' : 'FAIL';
       $results_tables['group1'][] = [
         "LdapServer::groupAddMember($group_create_test_dn, $user_test_dn)",
         $result,
@@ -339,7 +322,7 @@ class ServerTestForm extends EntityForm {
 
       // 6. try to remove group with member in it.
       $only_if_group_empty = TRUE;
-      $result = $ldap_server->groupRemoveGroup($group_create_test_dn, $only_if_group_empty);
+      $result = $this->ldapServer->groupRemoveGroup($group_create_test_dn, $only_if_group_empty);
       $result = ($result) ? 'FAIL' : 'PASS';
       $results_tables['group1'][] = [
         "LdapServer::groupRemoveGroup($group_create_test_dn, $only_if_group_empty)",
@@ -347,8 +330,8 @@ class ServerTestForm extends EntityForm {
       ];
 
       // 7. remove group member.
-      $result = $ldap_server->groupRemoveMember($group_create_test_dn, $user_test_dn);
-      $result = $ldap_server->groupAllMembers($group_create_test_dn);
+      $result = $this->ldapServer->groupRemoveMember($group_create_test_dn, $user_test_dn);
+      $result = $this->ldapServer->groupAllMembers($group_create_test_dn);
       $result = (is_array($result) && count($result) == 0) ? 'PASS' : 'FAIL';
       $results_tables['group1'][] = [
         "LdapServer::groupRemoveMember($group_create_test_dn, $user_test_dn)",
@@ -356,8 +339,8 @@ class ServerTestForm extends EntityForm {
       ];
 
       $only_if_group_empty = TRUE;
-      $result = $ldap_server->groupRemoveGroup($group_create_test_dn, $only_if_group_empty);
-      $result = ($ldap_server->dnExists($group_create_test_dn, 'ldap_entry', [
+      $result = $this->ldapServer->groupRemoveGroup($group_create_test_dn, $only_if_group_empty);
+      $result = ($this->ldapServer->dnExists($group_create_test_dn, 'ldap_entry', [
         'cn',
         'member',
       ])) ? "FAIL" : 'PASS';
@@ -369,13 +352,13 @@ class ServerTestForm extends EntityForm {
 
     // Connect to ldap.
     // @FIXME: testBindingCredentials call function bind and throw an error (no error log)
-    list($has_errors, $more_results) = $ldap_server->testBindingCredentials($bindpw, $results_tables);
+    list($has_errors, $more_results) = $this->ldapServer->testBindingCredentials($bindpw, $results_tables);
 
     $results = array_merge($results, $more_results);
 
-    if ($ldap_server->get('bind_method') == Server::$bindMethodAnonUser) {
+    if ($this->ldapServer->get('bind_method') == Server::$bindMethodAnonUser) {
       drupal_set_message('Bind method anonymous, user.');
-      list($has_errors, $more_results, $ldap_user) = $ldap_server->testUserMapping($values['testing_drupal_username']);
+      list($has_errors, $more_results, $ldap_user) = $this->ldapServer->testUserMapping($values['testing_drupal_username']);
       $results = array_merge($results, $more_results);
       if (!$has_errors) {
         $mapping[] = "dn = " . $ldap_user['dn'];
@@ -386,11 +369,11 @@ class ServerTestForm extends EntityForm {
         }
 
         $item_list = array(
-          'type' => 'ul',
+          '#list_type' => 'ul',
           '#theme' => 'item_list',
           '#items' => $mapping,
           '#title' => t('Attributes available to anonymous search', [
-            '%bind_dn' => $ldap_server->get('binddn'),
+            '%bind_dn' => $this->ldapServer->get('binddn'),
           ]),
         );
         $results_tables['basic'][] = [
@@ -402,191 +385,30 @@ class ServerTestForm extends EntityForm {
           '%bind_dn' => $ldap_user['dn'],
         ]),
       ];
-      $result = $ldap_server->bind($ldap_user['dn'], $values['testing_drupal_userpw'], FALSE);
-      if ($result == $ldap_server::LDAP_SUCCESS) {
-        $results_tables['basic'][] = [t('Successfully bound to server'), t('PASS')];
+      $result = $this->ldapServer->bind($ldap_user['dn'], $values['testing_drupal_userpw'], FALSE);
+      if ($result == Server::LDAP_SUCCESS) {
+        $results_tables['basic'][] = [
+          t('Successfully bound to server'),
+          t('PASS')
+        ];
       }
       else {
         $results_tables['basic'][] = [
-          t('Failed to bind to server. ldap error #') . $result . ' ' . $ldap_server->errorMsg('ldap'),
+          t('Failed to bind to server. ldap error #') . $result . ' ' . $this->ldapServer->errorMsg('ldap'),
           t('FAIL'),
         ];
       }
     }
 
-    // @FIXME: The following subsesction is disabled until fixed.
     if (!$has_errors && isset($values['grp_test_grp_dn'])) {
-      $group_dn = $values['grp_test_grp_dn'];
-
-      /*
-      $result = @ldap_read($ldap_server->connection, $group_dn, 'objectClass=*');
-      $group_entry = ldap_get_entries($ldap_server->connection, $result);
-      $user = isset($values['testing_drupal_username']) ? $values['testing_drupal_username'] : NULL;
-
-      foreach ([FALSE, TRUE] as $nested) {
-      // FALSE.
-      $nested_display = ($nested) ? 'Yes' : 'No';
-      if ($user) {
-      // This is the parent function that will call FromUserAttr or FromEntry.
-      $memberships = $ldap_server->groupMembershipsFromUser($user, 'group_dns', $nested);
-      // @FIXME
-      // theme() has been renamed to _theme() and should NEVER be called directly.
-      // Calling _theme() directly can alter the expected output and potentially
-      // introduce security issues (see https://www.drupal.org/node/2195739). You
-      // should use renderable arrays instead.
-      //
-      //
-      // @see https://www.drupal.org/node/2195739
-      // $result = theme('item_list', array('items' => $memberships, 'type' => 'ul'));
-      $settings = array(
-      '#theme' => 'item_list',
-      '#items' => $memberships,
-      '#type' => 'ul',
-      );
-      $result = drupal_render($settings);
-
-      $results_tables['group2'][] = [
-      "ldap_server->groupMembershipsFromUser($user, 'group_dns', nested=$nested_display)<br>count=" . count($memberships),
-      $result,
-      ];
-
-      $result = ($ldap_server->groupIsMember($group_dn, $user, $nested)) ? 'Yes' : 'No';
-      $group_results[] = [
-      "ldap_server->groupIsMember($group_dn, $user, nested=$nested_display)",
-      $result,
-      ];
-
-      if ($ldap_server->groupUserMembershipsConfigured()) {
-      $groupusermembershipsfromuserattr = $ldap_server->groupUserMembershipsFromUserAttr($user, $nested);
-      $count = count($groupusermembershipsfromuserattr);
-      // @FIXME
-      // theme() has been renamed to _theme() and should NEVER be called directly.
-      // Calling _theme() directly can alter the expected output and potentially
-      // introduce security issues (see https://www.drupal.org/node/2195739). You
-      // should use renderable arrays instead.
-      //
-      //
-      // @see https://www.drupal.org/node/2195739
-      // $result = theme('item_list', array('items' => $groupusermembershipsfromuserattr, 'type' => 'ul'));
-      $settings = array(
-      '#theme' => 'item_list',
-      '#items' => $groupusermembershipsfromuserattr,
-      '#type' => 'ul',
-      );
-      $result = drupal_render($settings);
-
-      }
-      else {
-      $groupusermembershipsfromuserattr = [];
-      $result = "'A user LDAP attribute such as memberOf exists that contains a list of their group' is not configured.";
-      }
-      $results_tables['group2'][] = [
-      "ldap_server->groupUserMembershipsFromUserAttr($user, nested=$nested_display)<br> count=" . count($groupusermembershipsfromuserattr),
-      $result,
-      ];
-
-      if ($ldap_server->groupGroupEntryMembershipsConfigured()) {
-      $groupusermembershipsfromentry = $ldap_server->groupUserMembershipsFromEntry($user, $nested);
-      // @FIXME
-      // theme() has been renamed to _theme() and should NEVER be called directly.
-      // Calling _theme() directly can alter the expected output and potentially
-      // introduce security issues (see https://www.drupal.org/node/2195739). You
-      // should use renderable arrays instead.
-      //
-      //
-      // @see https://www.drupal.org/node/2195739
-      // $result = theme('item_list', array('items' => $groupusermembershipsfromentry, 'type' => 'ul'));
-      $settings = array(
-      '#theme' => 'item_list',
-      '#items' => $groupusermembershipsfromentry,
-      '#type' => 'ul',
-      );
-      $result = drupal_render($settings);
-
-      }
-      else {
-      $groupusermembershipsfromentry = [];
-      $result = "Groups by entry not configured.";
-      }
-      $results_tables['group2'][] = [
-      "ldap_server->groupUserMembershipsFromEntry($user, nested=$nested_display)<br>count=" . count($groupusermembershipsfromentry),
-      $result,
-      ];
-
-      if (count($groupusermembershipsfromentry) && count($groupusermembershipsfromuserattr)) {
-      $diff1 = array_diff($groupusermembershipsfromuserattr, $groupusermembershipsfromentry);
-      $diff2 = array_diff($groupusermembershipsfromentry, $groupusermembershipsfromuserattr);
-      // @FIXME
-      // theme() has been renamed to _theme() and should NEVER be called directly.
-      // Calling _theme() directly can alter the expected output and potentially
-      // introduce security issues (see https://www.drupal.org/node/2195739). You
-      // should use renderable arrays instead.
-      //
-      //
-      // @see https://www.drupal.org/node/2195739
-      // $result1 = theme('item_list', array('items' => $diff1, 'type' => 'ul'));
-      $settings = array(
-      '#theme' => 'item_list',
-      '#items' => $diff1,
-      '#type' => 'ul',
-      );
-      $result1 = drupal_render($settings);
-
-      // @FIXME
-      // theme() has been renamed to _theme() and should NEVER be called directly.
-      // Calling _theme() directly can alter the expected output and potentially
-      // introduce security issues (see https://www.drupal.org/node/2195739). You
-      // should use renderable arrays instead.
-      //
-      //
-      // @see https://www.drupal.org/node/2195739
-      // $result2 = theme('item_list', array('items' => $diff2, 'type' => 'ul'));
-      $settings = array(
-      '#theme' => 'item_list',
-      '#items' => $diff2,
-      '#type' => 'ul',
-      );
-      $result2 = drupal_render($settings);
-
-      $results_tables['group2'][] = [
-      "groupUserMembershipsFromEntry and FromUserAttr Diff)",
-      $result1,
-      ];
-      $results_tables['group2'][] = [
-      "FromUserAttr and groupUserMembershipsFromEntry Diff)",
-      $result2,
-      ];
-      }
-      }
-      }
-
-      if ($groups_from_dn = $ldap_server->groupUserMembershipsFromDn($user)) {
-      // @FIXME
-      // theme() has been renamed to _theme() and should NEVER be called directly.
-      // Calling _theme() directly can alter the expected output and potentially
-      // introduce security issues (see https://www.drupal.org/node/2195739). You
-      // should use renderable arrays instead.
-      //
-      //
-      // @see https://www.drupal.org/node/2195739
-      // $results_tables['groupfromDN'][] = array("Groups from DN", theme('item_list', array('items' => $groups_from_dn, 'type' => 'ul')));
-      $settings = array(
-      '#theme' => 'item_list',
-      '#items' => $groups_from_dn,
-      '#type' => 'ul',
-      );
-      $result = drupal_render($settings);
-      $results_tables['groupfromDN'][] = array("Groups from DN", $result);
-
-      }
-       */
+      list($group_entry, $values, $results_tables) = $this->testGroupDN($values, $results_tables);
     }
 
-    list($has_errors, $more_results, $ldap_user) = $ldap_server->testUserMapping($values['testing_drupal_username']);
+    list($has_errors, $more_results, $ldap_user) = $this->ldapServer->testUserMapping($values['testing_drupal_username']);
 
-    $tokens = ($ldap_user && isset($ldap_user['attr'])) ? $this->tokenizeEntry($ldap_user['attr'], 'all') : [];
+    $tokens = ($ldap_user && isset($ldap_user['attr'])) ? $this->tokenizeEntry($ldap_user['attr'], 'all', Server::$token_pre, Server::$token_post) : [];
     foreach ($tokens as $key => $value) {
-      $results_tables['tokens'][] = [$key, $value];
+      $results_tables['tokens'][] = [$key, $this->binaryCheck($value)];
     }
     $form_state->set(['ldap_server_test_data'], [
       'username' => $values['testing_drupal_username'],
@@ -601,6 +423,133 @@ class ServerTestForm extends EntityForm {
       $form_state->set(['ldap_server_test_data', 'group_entry'], $group_entry);
     }
 
+  }
+
+  /**
+   * @param $values
+   * @param $results_tables
+   * @return array
+   */
+  private function testGroupDN($values, $results_tables) {
+    $group_dn = $values['grp_test_grp_dn'];
+
+    // @TODO: This query is not yet tested, previous version:
+    // $result = @ldap_read($ldap_server->connection, $group_dn, 'objectClass=*');
+    // $group_entry = ldap_get_entries($ldap_server->connection, $result);
+    $group_entry = $this->ldapServer->search($group_dn, 'objectClass=*');
+    $user = isset($values['testing_drupal_username']) ? $values['testing_drupal_username'] : NULL;
+
+    foreach ([FALSE, TRUE] as $nested) {
+      // FALSE.
+      $nested_display = ($nested) ? 'Yes' : 'No';
+      if ($user) {
+        // This is the parent function that will call FromUserAttr or FromEntry.
+        $memberships = $this->ldapServer->groupMembershipsFromUser($user, 'group_dns', $nested);
+        $settings = array(
+          '#type' => 'item_list',
+          '#items' => $memberships,
+          '#list_type' => 'ul',
+        );
+        $result = drupal_render($settings);
+
+        $results_tables['group2'][] = [
+          "ldap_server->groupMembershipsFromUser($user, 'group_dns', nested=$nested_display)<br>count=" . count($memberships),
+          $result,
+        ];
+
+        $result = ($this->ldapServer->groupIsMember($group_dn, $user, $nested)) ? 'Yes' : 'No';
+        $group_results = [];
+        $group_results[] = [
+          "ldap_server->groupIsMember($group_dn, $user, nested=$nested_display)",
+          $result
+        ];
+
+        if ($this->ldapServer->groupUserMembershipsConfigured()) {
+          $groupUserMembershipsFromUserAttributes = $this->ldapServer->groupUserMembershipsFromUserAttr($user, $nested);
+          $count = count($groupUserMembershipsFromUserAttributes);
+          $settings = array(
+            '#type' => 'item_list',
+            '#items' => $groupUserMembershipsFromUserAttributes,
+            '#list_type' => 'ul',
+          );
+          $result = drupal_render($settings);
+
+        }
+        else {
+          $groupUserMembershipsFromUserAttributes = [];
+          $result = "'A user LDAP attribute such as memberOf exists that contains a list of their group' is not configured.";
+        }
+        $results_tables['group2'][] = [
+          "ldap_server->groupUserMembershipsFromUserAttr($user, nested=$nested_display)<br> count=" . count($groupUserMembershipsFromUserAttributes),
+          $result,
+        ];
+
+        if ($this->ldapServer->groupGroupEntryMembershipsConfigured()) {
+          $groupUserMembershipsFromEntry = $this->ldapServer->groupUserMembershipsFromEntry($user, $nested);
+          $settings = array(
+            '#theme' => 'item_list',
+            '#items' => $groupUserMembershipsFromEntry,
+            '#list_type' => 'ul',
+          );
+          $result = drupal_render($settings);
+
+        }
+        else {
+          $groupUserMembershipsFromEntry = [];
+          $result = "Groups by entry not configured.";
+        }
+        $results_tables['group2'][] = [
+          "ldap_server->groupUserMembershipsFromEntry($user, nested=$nested_display)<br>count=" . count($groupUserMembershipsFromEntry),
+          $result,
+        ];
+
+        if (count($groupUserMembershipsFromEntry) && count($groupUserMembershipsFromUserAttributes)) {
+          $diff1 = array_diff($groupUserMembershipsFromUserAttributes, $groupUserMembershipsFromEntry);
+          $diff2 = array_diff($groupUserMembershipsFromEntry, $groupUserMembershipsFromUserAttributes);
+          $settings = array(
+            '#theme' => 'item_list',
+            '#items' => $diff1,
+            '#list_type' => 'ul',
+          );
+          $result1 = drupal_render($settings);
+
+          $settings = array(
+            '#theme' => 'item_list',
+            '#items' => $diff2,
+            '#list_type' => 'ul',
+          );
+          $result2 = drupal_render($settings);
+
+          $results_tables['group2'][] = [
+            "groupUserMembershipsFromEntry and FromUserAttr Diff)",
+            $result1,
+          ];
+          $results_tables['group2'][] = [
+            "FromUserAttr and groupUserMembershipsFromEntry Diff)",
+            $result2,
+          ];
+        }
+      }
+    }
+
+    if ($groups_from_dn = $this->ldapServer->groupUserMembershipsFromDn($user)) {
+      $settings = array(
+        '#theme' => 'item_list',
+        '#items' => $groups_from_dn,
+        '#list_type' => 'ul',
+      );
+    }
+    $result = drupal_render($settings);
+    $results_tables['groupfromDN'][] = array("Groups from DN", $result);
+    return array($group_entry, $values, $results_tables);
+  }
+
+  private function binaryCheck($input) {
+    if (preg_match('~[^\x20-\x7E\t\r\n]~', $input) > 0) {
+      return t('Binary (excerpt): @excerpt', array('@excerpt' => Unicode::truncate($input, 120, FALSE, TRUE)));
+    } else {
+      return $input;
+    }
   }
 
 }
