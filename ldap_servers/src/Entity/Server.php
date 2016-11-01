@@ -23,7 +23,8 @@ use Drupal\ldap_user\LdapUserConf;
  *       "add" = "Drupal\ldap_servers\Form\ServerForm",
  *       "edit" = "Drupal\ldap_servers\Form\ServerForm",
  *       "delete" = "Drupal\ldap_servers\Form\ServerDeleteForm",
- *       "test" = "Drupal\ldap_servers\Form\ServerTestForm"
+ *       "test" = "Drupal\ldap_servers\Form\ServerTestForm",
+ *       "enable_disable" = "Drupal\ldap_servers\Form\ServerEnableDisableForm"
  *     }
  *   },
  *   config_prefix = "server",

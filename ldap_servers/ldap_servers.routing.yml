@@ -57,13 +57,12 @@ entity.ldap_server.test_form:
   options:
     _admin_route: TRUE
 
-entity.ldap_server.enable_disable:
-  path: '/admin/config/people/ldap/server/enable_disable/{id}/{action}'
+entity.ldap_server.enable_disable_form:
+  path: '/admin/config/people/ldap/server/{ldap_server}/enable_disable'
   defaults:
-    action: null
-    sid: null
-    _title: 'Enable/Disable LDAP Server'
-    # _form: \Drupal\ldap_servers\Form\LdapServersAdminEnableDisable
     _entity_form: 'ldap_server.enable_disable'
+    _title: 'Enable/Disable LDAP Server'
   requirements:
     _permission: 'administer site configuration'
+  options:
+    _admin_route: TRUE

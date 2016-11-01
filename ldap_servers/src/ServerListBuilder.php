@@ -55,14 +55,14 @@ class ServerListBuilder extends ConfigEntityListBuilder {
       $operations['disable'] = array(
         'title' => $this->t('Disable'),
         'weight' => 15,
-        'url' => Url::fromRoute('entity.ldap_server.enable_disable', ['action' => 'disable', 'id' => $entity->id()]),
+        'url' => Url::fromRoute('entity.ldap_server.enable_disable_form', ['ldap_server' => $entity->id()]),
       );
     }
     else {
       $operations['enable'] = array(
         'title' => $this->t('Enable'),
         'weight' => 15,
-        'url' => Url::fromRoute('entity.ldap_server.enable_disable', ['action' => 'enable', 'id' => $entity->id()]),
+        'url' => Url::fromRoute('entity.ldap_server.enable_disable_form', ['ldap_server' => $entity->id()]),
       );
     }
     return $operations;

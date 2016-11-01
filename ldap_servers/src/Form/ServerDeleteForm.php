@@ -21,7 +21,7 @@ class ServerDeleteForm extends EntityConfirmFormBase {
   /**
    * {@inheritdoc}
    */
-  public function getCancelURL() {
+  public function getCancelUrl() {
     return new Url('entity.ldap_server.collection');
   }
 
