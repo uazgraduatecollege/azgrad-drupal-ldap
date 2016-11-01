@@ -153,7 +153,7 @@ class LdapUserConf {
 
   public function __construct() {
 
-    $this->config = \Drupal::config('ldap_user.settings')->get("ldap_user_conf");
+    $this->config = \Drupal::config('ldap_user.settings')->get('ldap_user_conf');
 
     $this->manualAccountConflict = self::$manualAccountConflictReject;
 
@@ -170,13 +170,13 @@ class LdapUserConf {
       self::$provisionLdapEntryOnUserDelete,
     ];
 
-    $this->drupalAcctProvisionServer = self::$noServerSID;
-    $this->ldapEntryProvisionServer = self::$noServerSID;
+    $this->config['drupalAcctProvisionServer'] = self::$noServerSID;
+    $this->config['ldapEntryProvisionServer'] = self::$noServerSID;
 
     $this->load();
 
-    $this->provisionSidFromDirection[self::$provisioningDirectionToDrupalUser] = $this->drupalAcctProvisionServer;
-    $this->provisionSidFromDirection[self::$provisioningDirectionToLDAPEntry] = $this->ldapEntryProvisionServer;
+    $this->provisionSidFromDirection[self::$provisioningDirectionToDrupalUser] = $this->config['drupalAcctProvisionServer'];
+    $this->provisionSidFromDirection[self::$provisioningDirectionToLDAPEntry] = $this->config['ldapEntryProvisionServer'];
 
     $this->provisionsLdapEvents = array(
       self::$eventCreateLdapEntry => t('On LDAP Entry Creation'),
@@ -189,14 +189,14 @@ class LdapUserConf {
     );
 
     $this->provisionsDrupalAccountsFromLdap = (
-      $this->drupalAcctProvisionServer &&
-      $this->drupalAcctProvisionServer &&
+      $this->config['drupalAcctProvisionServer'] &&
+      $this->config['drupalAcctProvisionServer'] &&
       (count(array_filter(array_values($this->drupalAcctProvisionTriggers))) > 0)
     );
 
     $this->provisionsLdapEntriesFromDrupalUsers = (
-      $this->ldapEntryProvisionServer
-      && $this->ldapEntryProvisionServer
+      $this->config['ldapEntryProvisionServer']
+      && $this->config['ldapEntryProvisionServer']
       && (count(array_filter(array_values($this->ldapEntryProvisionTriggers))) > 0)
       );
 
@@ -211,8 +211,6 @@ class LdapUserConf {
 
     // TODO: load() needs to be removed, once defaults are properly set.
     $saveable = array(
-      'drupalAcctProvisionServer',
-      'ldapEntryProvisionServer',
       'drupalAcctProvisionTriggers',
       'ldapEntryProvisionTriggers',
       'orphanedDrupalAcctBehavior',
@@ -287,10 +285,10 @@ class LdapUserConf {
    *
    */
   public function isDrupalAcctProvisionServer($sid) {
-    if (!$sid || !$this->drupalAcctProvisionServer) {
+    if (!$sid || !$this->config['drupalAcctProvisionServer']) {
       return FALSE;
     }
-    elseif ($this->ldapEntryProvisionServer == $sid) {
+    elseif ($this->config['ldapEntryProvisionServer'] == $sid) {
       return TRUE;
     }
     else {
@@ -302,10 +300,10 @@ class LdapUserConf {
    *
    */
   public function isLdapEntryProvisionServer($sid) {
-    if (!$sid || !$this->ldapEntryProvisionServer) {
+    if (!$sid || !$this->config['ldapEntryProvisionServer']) {
       return FALSE;
     }
-    elseif ($this->ldapEntryProvisionServer == $sid) {
+    elseif ($this->config['ldapEntryProvisionServer'] == $sid) {
       return TRUE;
     }
     else {
@@ -319,6 +317,8 @@ class LdapUserConf {
    * @param enum $direction
    *   LDAP_USER_PROV_DIRECTION_* constants.
    * @param string $ldap_context
+   *
+   * @return array
    */
   public function getLdapUserRequiredAttributes($direction = NULL, $ldap_context = NULL) {
     if ($direction == NULL) {
@@ -326,7 +326,7 @@ class LdapUserConf {
     }
     $attributes_map = array();
     $required_attributes = array();
-    if ($this->drupalAcctProvisionServer) {
+    if ($this->config['drupalAcctProvisionServer']) {
       $prov_events = $this->ldapContextToProvEvents($ldap_context);
       $attributes_map = $this->getSyncMappings($direction, $prov_events);
       $required_attributes = array();
@@ -471,7 +471,7 @@ class LdapUserConf {
 
     if ($direction == self::$provisioningDirectionToLDAPEntry) {
 
-      if (!$this->ldapEntryProvisionServer) {
+      if (!$this->config['ldapEntryProvisionServer']) {
         $result = FALSE;
       }
       else {
@@ -480,7 +480,7 @@ class LdapUserConf {
 
     }
     elseif ($direction == self::$provisioningDirectionToDrupalUser) {
-      if (!$this->drupalAcctProvisionServer) {
+      if (!$this->config['drupalAcctProvisionServer']) {
         $result = FALSE;
       }
       else {
@@ -540,13 +540,13 @@ class LdapUserConf {
       return $result;
     }
 
-    if (!$this->ldapEntryProvisionServer || !$this->ldapEntryProvisionServer) {
+    if (!$this->config['ldapEntryProvisionServer'] || !$this->config['ldapEntryProvisionServer']) {
       $result['status'] = 'fail';
       $result['error_description'] = 'no provisioning server enabled';
       return $result;
     }
 
-    $factory = new ServerFactory($this->ldapEntryProvisionServer, NULL, TRUE);
+    $factory = new ServerFactory($this->config['ldapEntryProvisionServer'], NULL, TRUE);
     $ldap_server = $factory->servers;
     $params = [
       'direction' => self::$provisioningDirectionToLDAPEntry,
@@ -693,8 +693,8 @@ class LdapUserConf {
 
     $result = FALSE;
 
-    if ($this->ldapEntryProvisionServer) {
-      $factory = new ServerFactory($this->ldapEntryProvisionServer, NULL, TRUE);
+    if ($this->config['ldapEntryProvisionServer']) {
+      $factory = new ServerFactory($this->config['ldapEntryProvisionServer'], NULL, TRUE);
       $ldap_server = $factory->servers;
 
       $params = array(
@@ -765,7 +765,7 @@ class LdapUserConf {
 
     $tokens = [
       '%dn' => isset($result['proposed']['dn']) ? $result['proposed']['dn'] : NULL,
-      '%sid' => $this->ldapEntryProvisionServer,
+      '%sid' => $this->config['ldapEntryProvisionServer'],
       '%username' => $account->name,
       '%uid' => ($test_query || !property_exists($account, 'uid')) ? '' : $account->uid,
     ];
@@ -806,16 +806,16 @@ class LdapUserConf {
       return FALSE;
     }
 
-    if (!$ldap_user && $this->drupalAcctProvisionServer) {
-      $ldap_user = ldap_servers_get_user_ldap_data($account, $this->drupalAcctProvisionServer, 'ldap_user_prov_to_drupal');
+    if (!$ldap_user && $this->config['drupalAcctProvisionServer']) {
+      $ldap_user = ldap_servers_get_user_ldap_data($account, $this->config['drupalAcctProvisionServer'], 'ldap_user_prov_to_drupal');
     }
 
     if (!$ldap_user) {
       return FALSE;
     }
 
-    if ($this->drupalAcctProvisionServer) {
-      $factory = new ServerFactory($this->drupalAcctProvisionServer, NULL, TRUE);
+    if ($this->config['drupalAcctProvisionServer']) {
+      $factory = new ServerFactory($this->config['drupalAcctProvisionServer'], NULL, TRUE);
       $ldap_server = $factory->servers;
       $this->applyAttributesToAccount($ldap_user, $account, $ldap_server, self::$provisioningDirectionToDrupalUser, array($prov_event));
     }
@@ -859,7 +859,7 @@ class LdapUserConf {
     if (!$prov_events) {
       $prov_events = ldap_user_all_events();
     }
-    $sid = $this->ldapEntryProvisionServer;
+    $sid = $this->config['ldapEntryProvisionServer'];
     // debug("ldapEntryProvisionServer:$sid");.
     if (!$sid) {
       return FALSE;
@@ -1063,8 +1063,8 @@ class LdapUserConf {
     // Get an LDAP user from the LDAP server.
     if (!$ldap_user) {
       $tokens['%username'] = $user_values['name'];
-      if ($this->drupalAcctProvisionServer) {
-        $ldap_user = ldap_servers_get_user_ldap_data($user_values['name'], $this->drupalAcctProvisionServer, 'ldap_user_prov_to_drupal');
+      if ($this->config['drupalAcctProvisionServer']) {
+        $ldap_user = ldap_servers_get_user_ldap_data($user_values['name'], $this->config['drupalAcctProvisionServer'], 'ldap_user_prov_to_drupal');
       }
       // Still no LDAP user.
       if (!$ldap_user) {
@@ -1077,17 +1077,17 @@ class LdapUserConf {
 
     // If we don't have an account name already we should set one.
     if (!$account->getUsername()) {
-      $factory = new ServerFactory($this->drupalAcctProvisionServer, 'enabled', TRUE);
+      $factory = new ServerFactory($this->config['drupalAcctProvisionServer'], 'enabled', TRUE);
       $ldap_server = $factory->servers;
       $account->set('name', $ldap_user[$ldap_server->get('user_attr')]);
       $tokens['%username'] = $account->getUsername();
     }
 
     // Can we get details from an LDAP server?
-    if ($this->drupalAcctProvisionServer) {
+    if ($this->config['drupalAcctProvisionServer']) {
 
       // $ldap_user['sid'].
-      $factory = new ServerFactory($this->drupalAcctProvisionServer, 'enabled', TRUE);
+      $factory = new ServerFactory($this->config['drupalAcctProvisionServer'], 'enabled', TRUE);
       $ldap_server = $factory->servers;
 
       $params = array(
@@ -1171,8 +1171,8 @@ class LdapUserConf {
    * @return boolean TRUE on success, FALSE on error or failure because of invalid user or LDAP accounts
    */
   public function ldapAssociateDrupalAccount($drupal_username) {
-    if ($this->drupalAcctProvisionServer) {
-      $factory = new ServerFactory($this->drupalAcctProvisionServer, 'enabled', TRUE);
+    if ($this->config['drupalAcctProvisionServer']) {
+      $factory = new ServerFactory($this->config['drupalAcctProvisionServer'], 'enabled', TRUE);
       $ldap_server = $factory->servers;
       $account = user_load_by_name($drupal_username);
       if (!$account) {
@@ -1180,7 +1180,7 @@ class LdapUserConf {
         return FALSE;
       }
 
-      $ldap_user = ldap_servers_get_user_ldap_data($account, $this->drupalAcctProvisionServer, 'ldap_user_prov_to_drupal');
+      $ldap_user = ldap_servers_get_user_ldap_data($account, $this->config['drupalAcctProvisionServer'], 'ldap_user_prov_to_drupal');
       if (!$ldap_user) {
         \Drupal::logger('ldap_user')->error('Failed to LDAP associate drupal account %drupal_username because corresponding LDAP entry not found', array('%drupal_username' => $drupal_username));
         return FALSE;

@@ -751,7 +751,7 @@ function ldap_user_user_login(UserInterface $account) {
       $ldap_user_conf->provisionsLdapEntriesFromDrupalUsers
       && ldap_user_ldap_provision_semaphore('provision', 'get', $account->getUsername()) === FALSE
       && !$ldap_user_conf->getProvisionRelatedLdapEntry($account)
-      && $ldap_user_conf->ldapEntryProvisionServer
+      && \Drupal::config('ldap_user.settings')->get('ldap_user_conf.ldapEntryProvisionServer')
       && $ldap_user_conf->provisionEnabled(LdapUserConf::$provisioningDirectionToLDAPEntry, LdapUserConf::$provisionLdapEntryOnUserAuthentication)
       ) {
     $provision_result = $ldap_user_conf->provisionLdapEntry($account);
