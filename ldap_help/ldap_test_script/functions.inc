@@ -18,9 +18,6 @@ class ProtocolPlaceholder implements LdapProtocol {
   // This is a workaround for removing redundant definitions.
 }
 
-// error_reporting(E_ALL  &  ~E_NOTICE);.
-define('LDAP_SCRIPTS_COMMAND_LINE_WARNING', "Warning: PHP from the command line may have different PHP versions, php.ini files, and security context than running in a webserver context. This may produce false test results since Drupal LDAP Modules are run in the web server context.");
-
 require_once 'config.inc';
 
 /**

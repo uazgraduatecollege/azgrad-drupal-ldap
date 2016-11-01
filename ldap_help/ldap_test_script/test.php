@@ -13,7 +13,7 @@ require_once 'functions.inc';
 $config = ldap_help_config();
 
 ldap_help_display(NULL, "------------------------------------------\n");
-ldap_help_display(NULL, LDAP_SCRIPTS_COMMAND_LINE_WARNING . "\n");
+ldap_help_display(NULL, "Warning: PHP from the command line may have different PHP versions, php.ini files, and security context than running in a webserver context. This may produce false test results since Drupal LDAP Modules are run in the web server context." . "\n");
 
 ldap_help_display(NULL, "------------------------------------------\nldap extension test\n------------------------------------------");
 ldap_help_display("PHP Version", phpversion());

@@ -7,8 +7,6 @@
 
 use Drupal\Core\Url;
 
-define('LDAP_FEEDS_DRUPAL_USER_FETCHER_FILTER_AUTHENTICATED', FALSE);
-define('LDAP_FEEDS_DRUPAL_USER_FETCHER_FILTER_ROLES', FALSE);
 /**
  *
  */
@@ -23,8 +21,8 @@ class FeedsDrupalUserLdapEntryFetcherResult extends FeedsFetcherResult {
    */
   public function __construct($source_config) {
     $this->availableDrupalUserAttributes = ldap_feeds_drupal_user_attributes();
-    $this->filterLdapAuthenticated = isset($source_config['filterLdapAuthenticated']) ? $source_config['filterLdapAuthenticated'] : LDAP_FEEDS_DRUPAL_USER_FETCHER_FILTER_AUTHENTICATED;
-    $this->filterRoles = isset($source_config['filterRoles']) ? $source_config['filterRoles'] : LDAP_FEEDS_DRUPAL_USER_FETCHER_FILTER_ROLES;
+    $this->filterLdapAuthenticated = isset($source_config['filterLdapAuthenticated']) ? $source_config['filterLdapAuthenticated'] : FALSE;
+    $this->filterRoles = isset($source_config['filterRoles']) ? $source_config['filterRoles'] : FALSE;
 
     parent::__construct('');
     $this->ldap_result = $this->getRaw();
