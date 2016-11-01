@@ -5,6 +5,7 @@ namespace Drupal\ldap_servers;
 use Drupal\Core\Url;
 use Drupal\Core\Config\Entity\ConfigEntityListBuilder;
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\ldap_servers\Entity\Server;
 
 /**
  * Provides a listing of Server entities.
@@ -24,6 +25,7 @@ class ServerListBuilder extends ConfigEntityListBuilder {
     $header['type'] = $this->t('Type');
     $header['status'] = $this->t('Enabled');
     $header['address'] = $this->t('Server address');
+    $header['current_status'] = $this->t('Server reachable');
     return $header + parent::buildHeader();
   }
 
@@ -36,7 +38,25 @@ class ServerListBuilder extends ConfigEntityListBuilder {
     $row['type'] = $entity->get('type');
     $row['status'] = $entity->get('status') ? 'Yes' : 'No';
     $row['address'] = $entity->get('address');
+    $row['current_status'] = $this->checkStatus($entity->id());
     return $row + parent::buildRow($entity);
+  }
+
+  private function checkStatus($server_id) {
+    $server = Server::load($server_id);
+    $connection_result = $server->connect();
+    if ($server->get('status')) {
+      if ($connection_result == Server::LDAP_SUCCESS) {
+        $bind_result = $server->bind();
+        if ($bind_result  == Server::LDAP_SUCCESS) {
+          return t('Server available');
+        } else {
+          return t('Connection successful, bind failed.');
+        }
+      } else {
+        return t('Cannot connect');
+      }
+    }
   }
 
   /**
