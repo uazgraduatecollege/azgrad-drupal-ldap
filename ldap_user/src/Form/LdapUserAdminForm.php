@@ -14,7 +14,7 @@ use Drupal\ldap_user\LdapUserConf;
  */
 class LdapUserAdminForm extends ConfigFormBase {
 
-  protected $LdapUserConfAdmin;
+  protected $LdapUserConfHelper;
 
   protected $drupalAcctProvisionServerOptions;
   protected $ldapEntryProvisionServerOptions;
@@ -25,7 +25,7 @@ class LdapUserAdminForm extends ConfigFormBase {
   public function __construct(ConfigFactoryInterface $config_factory) {
     parent::__construct($config_factory);
 
-    $this->LdapUserConfAdmin = new LdapUserConf();
+    $this->LdapUserConfHelper = new LdapUserConf();
     $factory = new ServerFactory(NULL, 'enabled');
     if ($factory->servers) {
       foreach ($factory->servers as $sid => $ldap_server) {
@@ -233,7 +233,7 @@ the top of this form.
     );
 
     foreach (array(LdapUserConf::$provisioningDirectionToDrupalUser, LdapUserConf::$provisioningDirectionToLDAPEntry) as $direction) {
-      $sid = $this->LdapUserConfAdmin->provisionSidFromDirection[$direction];
+      $sid = $this->LdapUserConfHelper->provisionSidFromDirection[$direction];
       $factory = new ServerFactory($sid, NULL, TRUE);
       $ldap_server = ($sid) ? $factory->servers : FALSE;
       $ldap_server_selected = (boolean) $ldap_server;
@@ -484,7 +484,7 @@ EOT;
         ],
         [
           'data' => t('Synchronization event'),
-          'colspan' => count($this->LdapUserConfAdmin->provisionsDrupalEvents),
+          'colspan' => count($this->LdapUserConfHelper->provisionsDrupalEvents),
           'rowspan' => 1,
         ],
 
@@ -510,7 +510,7 @@ EOT;
         ],
       ];
 
-      foreach ($this->LdapUserConfAdmin->provisionsDrupalEvents as $col_id => $col_name) {
+      foreach ($this->LdapUserConfHelper->provisionsDrupalEvents as $col_id => $col_name) {
         $second_header[] = array('data' => $col_name, 'header' => TRUE, 'class' => 'header-provisioning');
       }
     }
@@ -535,7 +535,7 @@ EOT;
         ],
         [
           'data' => t('Synchronization event'),
-          'colspan' => count($this->LdapUserConfAdmin->provisionsLdapEvents),
+          'colspan' => count($this->LdapUserConfHelper->provisionsLdapEvents),
           'rowspan' => 1,
         ],
       ];
@@ -562,7 +562,7 @@ EOT;
           'header' => TRUE,
         ],
       ];
-      foreach ($this->LdapUserConfAdmin->provisionsLdapEvents as $col_id => $col_name) {
+      foreach ($this->LdapUserConfHelper->provisionsLdapEvents as $col_id => $col_name) {
         $second_header[] = array('data' => $col_name, 'header' => TRUE, 'class' => 'header-provisioning');
       }
     }
@@ -582,8 +582,8 @@ EOT;
     $text = ($direction == LdapUserConf::$provisioningDirectionToDrupalUser) ? 'target' : 'source';
     $user_attr_options = array('0' => t('Select') . ' ' . $text);
 
-    if (!empty($this->LdapUserConfAdmin->syncMapping[$direction])) {
-      foreach ($this->LdapUserConfAdmin->syncMapping[$direction] as $target_id => $mapping) {
+    if (!empty($this->LdapUserConfHelper->syncMapping[$direction])) {
+      foreach ($this->LdapUserConfHelper->syncMapping[$direction] as $target_id => $mapping) {
 
         if (!isset($mapping['name']) || isset($mapping['exclude_from_mapping_ui']) && $mapping['exclude_from_mapping_ui']) {
           continue;
@@ -602,7 +602,7 @@ EOT;
     $row = 0;
 
     // 1. non configurable mapping rows.
-    foreach ($this->LdapUserConfAdmin->syncMapping[$direction] as $target_id => $mapping) {
+    foreach ($this->LdapUserConfHelper->syncMapping[$direction] as $target_id => $mapping) {
       $row_id = $this->sanitise_machine_name($target_id);
       if (isset($mapping['exclude_from_mapping_ui']) && $mapping['exclude_from_mapping_ui']) {
         continue;
@@ -615,10 +615,10 @@ EOT;
     }
 
     // 2. existing configurable mappings rows.
-    if (!empty($this->LdapUserConfAdmin->ldapUserSyncMappings[$direction])) {
+    if (!empty($this->LdapUserConfHelper->ldapUserSyncMappings[$direction])) {
       // Key could be ldap attribute name or user attribute name.
-      foreach ($this->LdapUserConfAdmin->ldapUserSyncMappings[$direction] as $target_attr_token => $mapping) {
-        if (isset($mapping['enabled']) && $mapping['enabled'] && $this->isMappingConfigurable($this->LdapUserConfAdmin->syncMapping[$direction][$mapping['user_attr']], 'ldap_user')) {
+      foreach ($this->LdapUserConfHelper->ldapUserSyncMappings[$direction] as $target_attr_token => $mapping) {
+        if (isset($mapping['enabled']) && $mapping['enabled'] && $this->isMappingConfigurable($this->LdapUserConfHelper->syncMapping[$direction][$mapping['user_attr']], 'ldap_user')) {
           $row_id = 'row-' . $row;
           $rows[$row_id] = $this->getSyncFormRow('update', $direction, $mapping, $user_attr_options, $row_id);
           $row++;
@@ -753,7 +753,7 @@ EOT;
     // $col and $row used to be paremeters to $result[$prov_event]. ID possible
     // not need needed anymore. Row used to be a parameter to this function.
     // $col = ($direction == LdapUserConf::$provisioningDirectionToLDAPEntry) ? 5 : 4;.
-    $syncEvents = ($direction == LdapUserConf::$provisioningDirectionToDrupalUser) ? $this->LdapUserConfAdmin->provisionsDrupalEvents : $this->LdapUserConfAdmin->provisionsLdapEvents;
+    $syncEvents = ($direction == LdapUserConf::$provisioningDirectionToDrupalUser) ? $this->LdapUserConfHelper->provisionsDrupalEvents : $this->LdapUserConfHelper->provisionsLdapEvents;
 
     foreach ($syncEvents as $prov_event => $prov_event_name) {
       // See above.
@@ -909,7 +909,7 @@ EOT;
             'enabled'     => 1,
           );
 
-          $syncEvents = ($direction == LdapUserConf::$provisioningDirectionToDrupalUser) ? $this->LdapUserConfAdmin->provisionsDrupalEvents : $this->LdapUserConfAdmin->provisionsLdapEvents;
+          $syncEvents = ($direction == LdapUserConf::$provisioningDirectionToDrupalUser) ? $this->LdapUserConfHelper->provisionsDrupalEvents : $this->LdapUserConfHelper->provisionsLdapEvents;
           foreach ($syncEvents as $prov_event => $discard) {
             if (isset($columns[$prov_event]) && $columns[$prov_event]) {
               $mappings[$direction][$key]['prov_events'][] = $prov_event;
@@ -941,7 +941,7 @@ EOT;
       $has_drupal_acct_prov_servers = TRUE;
     };
 
-    $has_drupal_acct_prov_settings_options  = (count(array_filter($this->LdapUserConfAdmin->drupalAcctProvisionTriggers)) > 0);
+    $has_drupal_acct_prov_settings_options  = (count(array_filter($this->LdapUserConfHelper->drupalAcctProvisionTriggers)) > 0);
 
     if (!$has_drupal_acct_prov_servers && $has_drupal_acct_prov_settings_options) {
       $warnings['drupalAcctProvisionServer'] = t('No Servers are enabled to provide provisioning to Drupal, but Drupal Account Provisioning Options are selected.', $tokens);
@@ -955,7 +955,7 @@ EOT;
       $has_ldap_prov_servers = TRUE;
     };
 
-    $has_ldap_prov_settings_options = (count(array_filter($this->LdapUserConfAdmin->ldapEntryProvisionTriggers)) > 0);
+    $has_ldap_prov_settings_options = (count(array_filter($this->LdapUserConfHelper->ldapEntryProvisionTriggers)) > 0);
     if (!$has_ldap_prov_servers && $has_ldap_prov_settings_options) {
       $warnings['ldapEntryProvisionServer'] = t('No Servers are enabled to provide provisioning to ldap, but LDAP Entry Options are selected.', $tokens);
     }
@@ -997,8 +997,7 @@ EOT;
           $row_descriptor = t("server %sid row mapping to ldap attribute %ldap_attr", $tokens);
           $tokens['!row_descriptor'] = $row_descriptor;
           $ldap_attribute_maps_in_token = array();
-          // debug('calling ldap_servers_token_extract_attributes from validate, mapping='); debug($mapping['ldap_attr']);.
-          $this->LdapUserConfAdmin->extractTokenAttributes($ldap_attribute_maps_in_token, $mapping['ldap_attr']);
+          $this->LdapUserConfHelper->extractTokenAttributes($ldap_attribute_maps_in_token, $mapping['ldap_attr']);
 
           if ($mapping['direction'] == LdapUserConf::$provisioningDirectionToDrupalUser) {
             $row_id = $map_index[$mapping['user_attr']];

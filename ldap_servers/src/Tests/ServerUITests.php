@@ -192,12 +192,10 @@ class ServerUITests extends LdapWebTestBase {
     foreach ($data as $field_id => $values) {
       $field_id = Unicode::strtolower($field_id);
       if (!isset($map[$field_id])) {
-        // debug("no mapping for field: $field_id in item_id $item_id");.
         continue;
       }
       $property = $map[$field_id];
       if (!property_exists($object, $property) && !property_exists($object, Unicode::strtolower($property))) {
-        // debug("property $property does not exist in object in item_id $item_id");.
         continue;
       }
       $property_value = $object->{$property};

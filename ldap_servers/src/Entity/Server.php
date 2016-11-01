@@ -92,7 +92,10 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
     $con = ldap_connect($address, $port);
 
     if (!$con) {
-      \Drupal::logger('user')->notice('LDAP Connect failure to ' . $address . ':' . $port, []);
+      \Drupal::logger('user')->notice(
+        'LDAP Connect failure to @address on port @port.',
+        ['@address' => $address, '@port' => $port]
+      );
       return self::LDAP_CONNECT_ERROR;
     }
 
@@ -103,20 +106,19 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
     if (self::get('tls')) {
       ldap_get_option($con, LDAP_OPT_PROTOCOL_VERSION, $vers);
       if ($vers == -1) {
-        \Drupal::logger('user')->notice('Could not get LDAP protocol version.', []);
+        \Drupal::logger('user')->notice('Could not get LDAP protocol version.');
         return self::LDAP_PROTOCOL_ERROR;
       }
       if ($vers != 3) {
-        \Drupal::logger('user')->notice('Could not start TLS, only supported by LDAP v3.', []);
+        \Drupal::logger('user')->notice('Could not start TLS, only supported by LDAP v3.');
         return self::LDAP_CONNECT_ERROR;
       }
       elseif (!function_exists('ldap_start_tls')) {
-        \Drupal::logger('user')->notice('Could not start TLS. It does not seem to be supported by this PHP setup.', []);
+        \Drupal::logger('user')->notice('Could not start TLS. It does not seem to be supported by this PHP setup.');
         return self::LDAP_CONNECT_ERROR;
       }
       elseif (!ldap_start_tls($con)) {
-        $msg = t("Could not start TLS. (Error %errno: %error).", array('%errno' => ldap_errno($con), '%error' => ldap_error($con)));
-        \Drupal::logger('user')->notice($msg, []);
+        \Drupal::logger('user')->notice('Could not start TLS. (Error @errno: @error).', ['@errno' => ldap_errno($con), '@error' => ldap_error($con)]);
         return self::LDAP_CONNECT_ERROR;
       }
     }
@@ -610,7 +612,8 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
    */
   public function pagedLdapQuery($ldap_query_params) {
     if (!$this->get('search_pagination')) {
-      \Drupal::logger('ldap')->notice("LDAP server pagedLdapQuery() called when functionality not enabled in ldap server configuration.  error. basedn: %basedn| filter: %filter| attributes: %attributes| errmsg: %errmsg| ldap err no: %errno|", []);
+      \Drupal::logger('ldap')
+        ->notice('LDAP server pagedLdapQuery() called when functionality not enabled in LDAP server configuration.');
       return FALSE;
     }
 
@@ -1181,8 +1184,6 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
    */
   public function groupAddGroup($group_dn, $attributes = array()) {
 
-    // debug("this->dnExists(   $group_dn, boolean)"); debug($this->dnExists($group_dn, 'boolean'));
-    // debug("this->dnExists(   $group_dn, boolean)"); debug($this->dnExists($group_dn));
     if ($this->dnExists($group_dn, 'boolean')) {
       return FALSE;
     }
@@ -1316,7 +1317,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
    *   FALSE on error otherwise array of group members (could be users or groups).
    */
   public function groupAllMembers($group_dn) {
-    // debug("groupAllMembers $group_dn, this->groupMembershipsAttr=". $this->groupMembershipsAttr . 'this->groupGroupEntryMembershipsConfigured=' . $this->groupGroupEntryMembershipsConfigured);.
+
     if (!$this->groupGroupEntryMembershipsConfigured()) {
       return FALSE;
     }
@@ -1556,7 +1557,6 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
 
         // Need to search on all basedns one at a time.
         foreach ($this->getBasedn() as $base_dn) {
-          // debug("query for parent groups, base_dn=$base_dn, $query_for_parent_groups");
           // no attributes, just dns needed.
           $group_entries = $this->search($base_dn, $query_for_parent_groups);
           if ($group_entries !== FALSE  && $level < self::LDAP_SERVER_LDAP_QUERY_RECURSION_LIMIT) {

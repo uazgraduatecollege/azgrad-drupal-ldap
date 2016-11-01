@@ -445,7 +445,6 @@ class LdapAuthenticationWebTestBase extends LdapWebTestBase {
       'drupal_role_authentication_test'
       );
 
-    // debug($this->testFunctions);.
     $factory = new ServerFactory($sid, 'enabled');
     $ldap_servers = $factory->servers;
     $this->assertTrue(count($ldap_servers) == 1, ' ldap_authentication test server setup successful', $testid);
@@ -772,9 +771,7 @@ class LdapAuthenticationWebTestBase extends LdapWebTestBase {
         $value = $conf['values'][$i];
         $property = isset($conf['property']) ? $conf['property'] : $field_name;
         $edit[$field_name] = $value;
-        // debug("$field_name $value"); debug($conf);debug($edit);
       }
-      // debug($edit);
       $this->drupalPost('admin/config/people/ldap/authentication', $edit, t('Save'));
       $ldap_authentication_conf_post = ldap_authentication_get_valid_conf(TRUE);
 

@@ -233,7 +233,6 @@ class LdapWebUserUnitTests extends LdapWebTestBase {
       foreach ($tests as $boolean_result => $attribute_tokens) {
         foreach ($attribute_tokens as $attribute_token) {
           $is_synced = $ldap_user_conf->isSynced($attribute_token, array($prov_event), LdapUserConf::$provisioningDirectionToDrupalUser);
-          // debug("is_synced_tests: is_synced=$is_synced, attribute_token=$attribute_token, prov_event=$prov_event");.
           if ((int) $is_synced !== (int) $boolean_result) {
             $fail = TRUE;
             $direction = LdapUserConf::$provisioningDirectionToDrupalUser;
@@ -267,11 +266,10 @@ class LdapWebUserUnitTests extends LdapWebTestBase {
     $ldap_user_conf->provisionEnabled(LdapUserConf::$provisioningDirectionToDrupalUser, LdapUserConf::$provisionLdapEntryOnUserUpdateCreate));
     $this->assertFalse($provision_enabled_false, t('provisionEnabled works'), $this->testId('provisionEnabled.2'));
 
-    $account = new stdClass();
+    $account = new \stdClass();
     $account->name = 'hpotter';
     $params = array('ldap_context' => 'ldap_user_prov_to_drupal', 'direction' => LdapUserConf::$provisioningDirectionToDrupalUser);
     list($ldap_entry, $error) = $ldap_user_conf->drupalUserToLdapEntry($account, 'activedirectory1', $params);
-    // debug('ldap_entry'); debug($ldap_entry);
     $account = NULL;
     $user_edit = array('name' => 'hpotter');
 
@@ -615,7 +613,6 @@ class LdapWebUserUnitTests extends LdapWebTestBase {
         if ($field_name) {
           $token_attributes = array();
           ldap_servers_token_extract_attributes($token_attributes, $test['mapping']['ldap_attr']);
-          // debug('token_attributes'); debug($token_attributes);
           foreach ($token_attributes as $attr_name => $attr_parts) {
             $this->testFunctions->setFakeServerUserAttribute(
               'activedirectory1',
@@ -631,7 +628,6 @@ class LdapWebUserUnitTests extends LdapWebTestBase {
         $ldap_user_conf->save();
         // Fixme: Test broken since LdapUserConfAdmin gone.
         $ldap_user_conf = new LdapUserConf();
-        // debug("ldap_user_conf in prep field_token=$field_token"); debug($ldap_user_conf->syncMapping); debug($ldap_user_conf->ldapUserSyncMappings);.
         ldap_user_ldap_provision_semaphore(NULL, NULL, NULL, TRUE);
         ldap_servers_flush_server_cache();
 
@@ -655,23 +651,17 @@ class LdapWebUserUnitTests extends LdapWebTestBase {
             $property_success = ($user_object->{$property_name} == $test['property_results'][0]);
             $this->assertTrue($property_success, t("provisionDrupalAccount worked for property $property_name"), $this->testId(":provisionDrupalAccount.i=$j.prov_event=$prov_event"));
             if (!$property_success) {
-              // debug($user_entity);
               debug('field fail,' . $property_name); debug($user_entity->{$property_name}); debug($test['property_results'][0]);
             }
           }
-          else {
-            // debug("property_name=$property_name not configured to provisionDrupalAccount on drupal user create for direction=$direction and prov_event=$prov_event");.
-          }
         }
         if ($field_name) {
-          // debug("property_name=$property_name, prov_event=$prov_event, direction=$direction, field_token=$field_token, sid=$sid, ldap_user_conf->ldapUserSyncMappings $direction - $sid"); debug($ldap_user_conf->ldapUserSyncMappings[$direction][$sid]);.
           // If intended to sync.
           if (in_array($prov_event, $ldap_user_conf->ldapUserSyncMappings[$direction][$field_token]['prov_events'])) {
             $field_success = isset($user_entity->{$field_name}['und'][0]['value']) &&
               $user_entity->{$field_name}['und'][0]['value'] == $test['field_results'][0];
             $this->assertTrue($field_success, t("provisionDrupalAccount worked for field $field_name"), $this->testId(":provisionDrupalAccount.i=$j.prov_event=$prov_event"));
             if (!$field_success) {
-              // debug($user_entity);
               debug('field fail,' . $field_name); debug($user_entity->{$field_name}); debug($test['field_results'][0]);
             }
           }

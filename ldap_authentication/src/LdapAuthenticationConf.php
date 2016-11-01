@@ -320,7 +320,7 @@ class LdapAuthenticationConf {
         $url = Url::fromRoute('ldap_authentication.admin_form');
         $internal_link = \Drupal::l(t('LDAP Authentication Configuration'), $url);
         $tokens = array('!ldap_authentication_config' => $internal_link);
-        \Drupal::logger('ldap_authentication')->notice('LDAP Authentication is configured to deny users without LDAP Authorization mappings, but LDAP Authorization module is not enabled.  Please enable and configure LDAP Authorization or disable this option at !ldap_authentication_config .', []);
+        \Drupal::logger('ldap_authentication')->notice('LDAP Authentication is configured to deny users without LDAP Authorization mappings, but LDAP Authorization module is not enabled.  Please enable and configure LDAP Authorization or disable this option at !ldap_authentication_config .');
         return FALSE;
       }
 
@@ -349,9 +349,7 @@ class LdapAuthenticationConf {
 
       if (!$has_enabled_consumers) {
         drupal_set_message(t('The site logon is currently not working due to a configuration error.  Please see logs for additional details.'), 'warning');
-        // @FIXME
-        // $tokens = array('!ldap_consumer_config' => l(t('LDAP Authorization Configuration'), 'admin/config/people/ldap/authorization'));
-        \Drupal::logger('ldap_authentication')->notice('LDAP Authentication is configured to deny users without LDAP Authorization mappings, but 0 LDAP Authorization consumers are configured:  !ldap_consumer_config .', []);
+        \Drupal::logger('ldap_authentication')->notice('LDAP Authentication is configured to deny users without LDAP Authorization mappings, but 0 LDAP Authorization consumers are configured.');
         return FALSE;
       }
       elseif (!$has_ldap_authorizations) {

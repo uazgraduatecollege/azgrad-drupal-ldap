@@ -83,7 +83,6 @@ class LdapWebUserUITests extends LdapWebTestBase {
     $this->drupalLogin($this->privileged_user);
 
     $ldap_user_conf = new LdapUserConf();
-    // debug('ldap_user_conf before form submission'); debug($ldap_user_conf);
     $this->drupalGet('admin/config/people/ldap/user');
 
     // Populate the field settings with new settings.
@@ -144,7 +143,6 @@ class LdapWebUserUITests extends LdapWebTestBase {
     $this->drupalPost('admin/config/people/ldap/user', $edit, t('Save'));
 
     $ldap_user_conf = new LdapUserConf();
-    // debug('edit'); debug($edit); debug('user conf object after save'); debug($ldap_user_conf);
     foreach ($edit_direct_map as $property => $value) {
       $this->assertTrue($ldap_user_conf->{$property} == $value, $property . ' ' . t('field set correctly'), $this->testId('user interface tests'));
     }

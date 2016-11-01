@@ -858,7 +858,6 @@ class LdapUserConf {
       $prov_events = ldap_user_all_events();
     }
     $sid = $this->config['ldapEntryProvisionServer'];
-    // debug("ldapEntryProvisionServer:$sid");.
     if (!$sid) {
       return FALSE;
     }
@@ -1249,7 +1248,7 @@ class LdapUserConf {
    *    Ldap entry.
    * @param UserInterface $account
    *   see hook_user_save, hook_user_update, etc.
-   * @param object $ldap_server
+   * @param Server $ldap_server
    * @param int $direction
    * @param array $prov_events
    */
@@ -1387,14 +1386,6 @@ class LdapUserConf {
       isset($this->syncMapping[$direction][$attr_token]['prov_events']) &&
       count(array_intersect($prov_events, $this->syncMapping[$direction][$attr_token]['prov_events']))
     );
-    if (!$result) {
-      if (isset($this->syncMapping[$direction][$attr_token])) {
-        // debug($this->syncMapping[$direction][$attr_token]);.
-      }
-      else {
-        // debug("$attr_token not in self::syncMapping");.
-      }
-    }
     return $result;
   }
 

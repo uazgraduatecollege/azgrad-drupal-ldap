@@ -124,7 +124,6 @@ class LdapWebUserIntegrationTests extends LdapWebTestBase {
       $this->assertTrue($ldap_entry_success, t("provision of ldap entry on user create succeeded for " . $username), $this->testId("test for provision to ldap on drupal acct create"));
       if (!$ldap_entry_success) {
         // @FIXME: See above
-        // debug('drupal_account'); debug($drupal_account);
         debug("desired_dn=$desired_dn, ldap_entry_post=");
         debug($ldap_entry_post);
         debug('ldap_user_conf'); debug($ldap_user_conf);
@@ -246,7 +245,6 @@ class LdapWebUserIntegrationTests extends LdapWebTestBase {
 
       $ldap_user_conf->save();
       $ldap_user_conf = new LdapUserConf();
-      // debug('ldap_user_conf after provisionToLdapEmailVerification setup'); debug($ldap_user_conf);
       // @FIXME
       // // @FIXME
       // // This looks like another module's variable. You'll need to rewrite this call
@@ -468,7 +466,7 @@ class LdapWebUserIntegrationTests extends LdapWebTestBase {
       // 70.
       for ($i = 0; $i < self::$userOrphanCloneCount; $i++) {
         $name = "clone" . $i;
-        // debug("create clone $name, activedirectory1");.
+
         $account = $this->createLdapIdentifiedDrupalAccount(
           $ldap_user_conf,
           $name,
@@ -489,12 +487,10 @@ class LdapWebUserIntegrationTests extends LdapWebTestBase {
       // To reset the user cache, use EntityStorageInterface::resetCache().
       \Drupal::entityManager()->getStorage('user')->load($clone_last_uid);
 
-      // debug("pre ldap delete, clone0 and cloneN $first_clone_username and $last_clone_username"); debug($clone_first);debug($clone_last); //debug($ldap_server->entries);.
       $delete = self::$userOrphanCloneCount - self::$userOrphanCloneRemoveCount;
       for ($i = 0; $i < $delete; $i++) {
         $name = "clone" . $i;
         $account = $cn_to_account[$name];
-        // debug("delete ldap entry: ". $account->ldap_user_current_dn['und'][0]['value']);
         //  ?? is it possible the ldap delete hook is causing the drupal user to get populated with empty values?
         $ldap_server->delete($account->ldap_user_current_dn['und'][0]['value']);
       }
@@ -507,7 +503,6 @@ class LdapWebUserIntegrationTests extends LdapWebTestBase {
       $clone_last =
       // To reset the user cache, use EntityStorageInterface::resetCache().
       \Drupal::entityManager()->getStorage('user')->load($clone_last_uid);
-      // debug("post ldap delete and pre cron, clone0 and cloneN"); debug($clone_first->status);debug($clone_last->status);// debug($ldap_server->entries);.
       \Drupal::service("cron")->run();
       // @FIXME
       $clone_first =
@@ -525,12 +520,9 @@ class LdapWebUserIntegrationTests extends LdapWebTestBase {
           for ($i = 0; $i < self::$userOrphanCloneCount; $i++) {
             $name = "clone" . $i;
             $test_uids[] = @$cn_to_account[$name]->uid;
-
-            // debug($account);
           }
           $success = TRUE;
           $accounts = \Drupal::entityManager()->getStorage('user')->loadMultiple($test_uids);
-          // debug("accounts for $test_id"); debug($accounts);
           foreach ($accounts as $uid => $account) {
             if ($account->status != 1) {
               $success = FALSE;
@@ -539,15 +531,11 @@ class LdapWebUserIntegrationTests extends LdapWebTestBase {
           }
           if ($success) {
             $success = ($clone_last && $clone_last->status == 1);
-            if (!$success) {
-              // debug("success = $success, status=" . $clone_last->status);.
-            }
           }
 
           break;
 
         case 'ldap_user_orphan_email':
-          // debug('ldap_user_orphan_email');
           // test is if email has 10 users and was sent.
           $emails = $this->drupalGetMails();
           if (count($emails)) {
@@ -563,7 +551,6 @@ class LdapWebUserIntegrationTests extends LdapWebTestBase {
 
         case 'user_cancel_block':
         case 'user_cancel_block_unpublish':
-          // debug('user_cancel_block');
           // test is if clone0-clone9 have a status of 0
           // and clone12,11... have a status of 1.
           $test_uids = array();
@@ -598,8 +585,6 @@ class LdapWebUserIntegrationTests extends LdapWebTestBase {
           for ($i = 0; $i < $delete; $i++) {
             $name = "clone" . $i;
             $test_uids[] = @$cn_to_account[$name]->uid;
-
-            // debug($account);
           }
           $success = TRUE;
           $accounts = \Drupal::entityManager()->getStorage('user')->loadMultiple($test_uids);
