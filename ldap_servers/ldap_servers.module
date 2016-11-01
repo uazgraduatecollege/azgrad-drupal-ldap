@@ -12,6 +12,7 @@ use Drupal\Core\Url;
 use Drupal\ldap_servers\LdapTypes\AbstractType;
 use Drupal\ldap_servers\ServerFactory;
 use Drupal\ldap_user\LdapUserConf;
+use Drupal\user\UserInterface;
 
 class TokenHelper {
   use \Drupal\ldap_servers\TokenFunctions;
@@ -300,27 +301,28 @@ function ldap_servers_binary($value) {
  * page request.
  * Currently is called 12 times on user login using LDAP Authorization.
  *
- * @param User $drupal_user
+ * @param UserInterface|string $account
  *   is drupal $user object.
  * @param string $id
  *   is a server id.
- * @param scalar $ldap_context
+ * @param string $ldap_context
  *
  * @return array|bool
  */
-function ldap_servers_get_user_ldap_data($drupal_user, $id = NULL, $ldap_context = NULL) {
-  if (is_object($drupal_user) && property_exists($drupal_user, 'uid') && $authname = LdapUserConf::ldap_user_get_identifier_from_map($drupal_user->id())) {
+function ldap_servers_get_user_ldap_data($account, $id = NULL, $ldap_context = NULL) {
+  if (is_object($account) && method_exists($account, 'id') && $authname = LdapUserConf::ldap_user_get_identifier_from_map($account->id())) {
     $drupal_username = $authname;
   }
   else {
-    $drupal_username = (is_object($drupal_user)) ? $drupal_user->getUsername() : $drupal_user;
+    $drupal_username = (is_object($account)) ? $account->getUsername() : $account;
   }
   // If no explicit $id, find most appropriate one.
+  // FIXME: Wrong definition of fields
   if (\Drupal::moduleHandler()->moduleExists('ldap_user')) {
-    if (property_exists($drupal_user, 'ldap_user_puid_sid') &&
-        !empty($drupal_user->ldap_user_puid_sid['und'][0]['value'])
+    if (property_exists($account, 'ldap_user_puid_sid') &&
+        !empty($account->ldap_user_puid_sid['und'][0]['value'])
       ) {
-      $id = $drupal_user->ldap_user_puid_sid['und'][0]['value'];
+      $id = $account->ldap_user_puid_sid['und'][0]['value'];
     }
     else {
       \Drupal::config('ldap_user.settings')->get('ldap_user_conf.drupalAcctProvisionServer');

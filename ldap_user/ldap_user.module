@@ -766,7 +766,6 @@ function ldap_user_user_login(UserInterface $account) {
     && $provision_result['status'] != 'success'
     && $ldap_user_conf->provisionEnabled(LdapUserConf::$provisioningDirectionToLDAPEntry, LdapUserConf::$provisionLdapEntryOnUserAuthentication)
     ) {
-    // @FIXME $user_edit is deprecated.
     $bool_result = $ldap_user_conf->syncToLdapEntry($account);
     if ($bool_result) {
       ldap_user_ldap_provision_semaphore('sync', 'set', $account->getUsername());
@@ -780,7 +779,7 @@ function ldap_user_user_login(UserInterface $account) {
     if ($ldap_user) {
       $factory = new ServerFactory($config['drupalAcctProvisionServer'], NULL, TRUE);
       $ldap_server = $factory->servers;
-      $ldap_user_conf->entryToUserEdit($ldap_user, $account, $ldap_server, LdapUserConf::$provisioningDirectionToDrupalUser, array(LdapUserConf::$eventSyncToDrupalUser));
+      $ldap_user_conf->applyAttributesToAccount($ldap_user, $account, $ldap_server, LdapUserConf::$provisioningDirectionToDrupalUser, array(LdapUserConf::$eventSyncToDrupalUser));
     }
     $account->save();
   }
@@ -788,10 +787,7 @@ function ldap_user_user_login(UserInterface $account) {
 }
 
 /**
- * Implements hook_user_insert().
- *
- * @FIXME hook_user_insert has gone away (Core).
- * @FIXME $user_edit is deprecated (LDAP).
+ * Implements hook_ENTITY_TYPE_insert().
  */
 function ldap_user_user_insert(UserInterface $account) {
 
@@ -816,10 +812,8 @@ function ldap_user_user_insert(UserInterface $account) {
    * in hook_user_insert, account is already created, so never call provisionDrupalAccount(), just
    * syncToDrupalAccount(), even if action is 'provision'
    */
-  $empty_user_edit = array();
-  $user_name = $account->getUsername();
   if ($account->isActive() && $ldap_user_conf->provisionEnabled(LdapUserConf::$provisioningDirectionToDrupalUser, LdapUserConf::$provisionDrupalUserOnUserUpdateCreate)) {
-    $ldap_user_conf->syncToDrupalAccount($user_name, $empty_user_edit, LdapUserConf::$eventCreateDrupalUser, NULL, TRUE);
+    $ldap_user_conf->syncToDrupalAccount($account, LdapUserConf::$eventCreateDrupalUser, NULL, TRUE);
   }
 
   if ($ldap_user_conf->provisionsLdapEntriesFromDrupalUsers) {
@@ -833,7 +827,6 @@ function ldap_user_user_insert(UserInterface $account) {
         }
       }
       elseif ($ldap_provision_entry) {
-        // @FIXME $user_edit is deprecated
         $bool_result = $ldap_user_conf->syncToLdapEntry($account);
         if ($bool_result) {
           ldap_user_ldap_provision_semaphore('sync', 'set', $account->getUsername());
@@ -844,10 +837,7 @@ function ldap_user_user_insert(UserInterface $account) {
 }
 
 /**
- * Implements hook_user_update()
- * hook_user_update has gone away (Core).
- *
- * @FIXME $user_edit is deprecated (LDAP).
+ * Implements hook_ENTITY_TYPE_update().
  */
 function ldap_user_user_update(UserInterface $account) {
 
@@ -894,43 +884,33 @@ function ldap_user_user_update(UserInterface $account) {
 }
 
 /**
- * Implements hook_user_presave()
- *
- * @FIXME hook_user_presave has gone away (Core).
- * @FIXME $user_edit is deprecated (LDAP).
+ * Implements hook_ENTITY_TYPE_presave()
  *
  * @FIXME: Removed checking for new users in ldap_user_ldap_exclude(). Do we need that?
  */
 function ldap_user_user_presave(UserInterface $account) {
   $ldap_user_conf = new LdapUserConf();
 
-  if ($ldap_user_conf->excludeUser($account)) {
+  if ($ldap_user_conf->excludeUser($account) || !$account->getUsername()) {
     return;
   }
-  if ($account->getUsername()) {
-    $drupal_username = $account->getUsername();
-  }
-  else {
-    return;
-  }
-
 
   $config = \Drupal::config('ldap_user.settings')->get('ldap_user_conf');
 
   // Check for provisioning to drupal and override synced user fields/props.
   if ($ldap_user_conf->provisionsDrupalAccountsFromLdap && in_array(LdapUserConf::$eventSyncToDrupalUser, array_keys($ldap_user_conf->provisionsDrupalEvents))) {
     if (ldap_user_is_ldap_associated($account, LdapUserConf::$provisioningDirectionToDrupalUser)) {
-      $ldap_user = ldap_servers_get_user_ldap_data($drupal_username, $config['drupalAcctProvisionServer'], 'ldap_user_prov_to_drupal');
+      $ldap_user = ldap_servers_get_user_ldap_data($account, $config['drupalAcctProvisionServer'], 'ldap_user_prov_to_drupal');
       $factory = new ServerFactory($config['drupalAcctProvisionServer'], NULL, TRUE);
       $ldap_server = $factory->servers;
-      $ldap_user_conf->entryToUserEdit($ldap_user, $account, $ldap_server, LdapUserConf::$provisioningDirectionToDrupalUser, array(LdapUserConf::$eventSyncToDrupalUser));
+      $ldap_user_conf->applyAttributesToAccount($ldap_user, $account, $ldap_server, LdapUserConf::$provisioningDirectionToDrupalUser, array(LdapUserConf::$eventSyncToDrupalUser));
     }
   }
 
 }
 
 /**
- * Implements hook_user_delete().
+ * Implements hook_ENTITY_TYPE_delete().
  */
 function ldap_user_user_delete(UserInterface $account) {
   // Drupal user account is about to be deleted.

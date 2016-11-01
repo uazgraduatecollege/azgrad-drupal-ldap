@@ -7,6 +7,7 @@ use Drupal\ldap_servers\ServerFactory;
 use Drupal\ldap_servers\TokenFunctions;
 use Drupal\ldap_user\Exception\LdapBadParamsException;
 use Drupal\user\Entity\User;
+use Drupal\user\UserInterface;
 
 /**
  * The entry-point to working with users by loading their configuration.
@@ -408,8 +409,9 @@ class LdapUserConf {
    * Derive mapping array from ldap user configuration and other configurations.
    * if this becomes a resource hungry function should be moved to ldap_user functions
    * and stored with static variable. should be cached also.
-   *    * This should be cached and modules implementing ldap_user_sync_mapping_alter
-   * should know when to invalidate cache.   *    .*/
+   * This should be cached and modules implementing ldap_user_sync_mapping_alter
+   * should know when to invalidate cache.
+   */
 
   /**
    * @todo change default to false after development
@@ -677,14 +679,12 @@ class LdapUserConf {
    *
    * @param drupal user object $account.
    *   Drupal user object.
-   * @param array $user_edit.
-   *   Edit array for user_save.  generally null unless user account is being created or modified in same syncing.
    * @param array $ldap_user.
    *   current ldap data of user. @see README.developers.txt for structure.
    *
    * @return TRUE on success or FALSE on fail.
    */
-  public function syncToLdapEntry($account, $user_edit = NULL, $ldap_user = array(), $test_query = FALSE) {
+  public function syncToLdapEntry($account, $ldap_user = array(), $test_query = FALSE) {
 
     if (is_object($account) && property_exists($account, 'uid') && $account->uid == 1) {
       // Do not provision or sync user 1.
@@ -784,34 +784,30 @@ class LdapUserConf {
   /**
    * Given a drupal account, query ldap and get all user fields and create user account.
    *
-   * @param User $drupal_user
-   * @param array $user_edit
-   *   Drupal edit array in form user_save($account, $user_edit) would take,
-   *   generally empty unless overriding syncToDrupalAccount derived values.
+   * @param UserInterface $account
    * @param int $prov_event
    * @param array $ldap_user
    *   A user's ldap entry. Passed to avoid re-querying LDAP in cases where already present.
    * @param bool $save
    *   Indicating if drupal user should be saved.  generally depends on where function is called from.
-   * @return bool|User
-   * Result of user_save() function is $save is true, otherwise return TRUE
-   * $user_edit data returned by reference.
-   * @internal param array $account drupal account array with minimum of name.*   drupal account array with minimum of name.
+   *
+   * @return bool|UserInterface
+   *   User account if $save is true, otherwise return TRUE.
    */
-  public function syncToDrupalAccount($drupal_user, &$user_edit, $prov_event = NULL, $ldap_user = NULL, $save = FALSE) {
+  public function syncToDrupalAccount($account, $prov_event = NULL, $ldap_user = NULL, $save = FALSE) {
     if ($prov_event == NULL) {
       $prov_event = LdapUserConf::$eventSyncToDrupalUser;
     }
 
-    if ((!$ldap_user  && !isset($drupal_user->name)) ||
-        (!$drupal_user && $save) ||
+    if ((!$ldap_user && method_exists($account,'getUsername')) ||
+        (!$account && $save) ||
         ($ldap_user && !isset($ldap_user['sid']))) {
       \Drupal::logger('ldap_user')->notice('Invalid selection passed to syncToDrupalAccount.');
       return FALSE;
     }
 
     if (!$ldap_user && $this->drupalAcctProvisionServer) {
-      $ldap_user = ldap_servers_get_user_ldap_data($drupal_user->name, $this->drupalAcctProvisionServer, 'ldap_user_prov_to_drupal');
+      $ldap_user = ldap_servers_get_user_ldap_data($account, $this->drupalAcctProvisionServer, 'ldap_user_prov_to_drupal');
     }
 
     if (!$ldap_user) {
@@ -821,14 +817,12 @@ class LdapUserConf {
     if ($this->drupalAcctProvisionServer) {
       $factory = new ServerFactory($this->drupalAcctProvisionServer, NULL, TRUE);
       $ldap_server = $factory->servers;
-      // @FIXME $user_edit is deprecated.
-      $this->entryToUserEdit($ldap_user, $user_edit, $ldap_server, self::$provisioningDirectionToDrupalUser, array($prov_event));
+      $this->applyAttributesToAccount($ldap_user, $account, $ldap_server, self::$provisioningDirectionToDrupalUser, array($prov_event));
     }
 
     if ($save) {
-      $account = \Drupal::entityManager()->getStorage('user')->load($drupal_user->uid);
-      $result = user_save($account, $user_edit, 'ldap_user');
-      return $result;
+      $account->save();
+      return $account;
     }
     else {
       return TRUE;
@@ -1030,14 +1024,13 @@ class LdapUserConf {
    * Provision a Drupal user account.
    *
    * Given a drupal account, query LDAP and get all user fields and save the
-   * user account. Nnote: parameters are in odd order to match
-   * syncDrupalAccount handle.
+   * user account.
    *
    * @param User|bool $account
    *   Drupal account object or null.
    *   Todo: Fix default value of false or correct comment.
-   * @param array $user_edit
-   *   Drupal edit array in form user_save($account, $user_edit) would take.
+   * @param array $user_values
+   *   A keyed array normally containing 'name' and optionally more.
    * @param array $ldap_user
    *   User's ldap entry. Passed to avoid requerying ldap in cases where already
    *   present.
@@ -1049,7 +1042,7 @@ class LdapUserConf {
    * @return bool
    *   Return TRUE on success or FALSE on any problem.
    */
-  public function provisionDrupalAccount($account = FALSE, &$user_edit, $ldap_user = NULL, $save = TRUE) {
+  public function provisionDrupalAccount($account = FALSE, &$user_values, $ldap_user = NULL, $save = TRUE) {
 
     $tokens = array();
     /**
@@ -1058,20 +1051,20 @@ class LdapUserConf {
      */
 
     if (!$account) {
-      $account = \Drupal::entityManager()->getStorage('user')->create($user_edit);
+      $account = \Drupal::entityManager()->getStorage('user')->create($user_values);
     }
     $account->enforceIsNew();
 
     // Should pass in an LDAP record or a username.
-    if (!$ldap_user && !isset($user_edit['name'])) {
+    if (!$ldap_user && !isset($user_values['name'])) {
       return FALSE;
     }
 
     // Get an LDAP user from the LDAP server.
     if (!$ldap_user) {
-      $tokens['%username'] = $user_edit['name'];
+      $tokens['%username'] = $user_values['name'];
       if ($this->drupalAcctProvisionServer) {
-        $ldap_user = ldap_servers_get_user_ldap_data($user_edit['name'], $this->drupalAcctProvisionServer, 'ldap_user_prov_to_drupal');
+        $ldap_user = ldap_servers_get_user_ldap_data($user_values['name'], $this->drupalAcctProvisionServer, 'ldap_user_prov_to_drupal');
       }
       // Still no LDAP user.
       if (!$ldap_user) {
@@ -1099,7 +1092,7 @@ class LdapUserConf {
 
       $params = array(
         'account' => $account,
-        'user_edit' => $user_edit,
+        'user_values' => $user_values,
         'prov_event' => self::$eventCreateDrupalUser,
         'module' => 'ldap_user',
         'function' => 'provisionDrupalAccount',
@@ -1116,22 +1109,21 @@ class LdapUserConf {
       // Sync drupal account, since drupal account exists.
       if ($account2) {
         // 1. correct username and authmap.
-        $this->entryToUserEdit($ldap_user, $account2, $ldap_server, self::$provisioningDirectionToDrupalUser, array(LdapUserConf::$eventSyncToDrupalUser));
+        $this->applyAttributesToAccount($ldap_user, $account2, $ldap_server, self::$provisioningDirectionToDrupalUser, array(LdapUserConf::$eventSyncToDrupalUser));
         $account = $account2;
         $account->save();
         // Update the identifier table.
         self::ldap_user_set_identifier($account, $account->getUsername());
 
         // 2. attempt sync if appropriate for current context.
-        // @FIXME $user_edit is deprecated (LDAP)
         if ($account) {
-          $account = $this->syncToDrupalAccount($account, $user_edit, LdapUserConf::$eventSyncToDrupalUser, $ldap_user, TRUE);
+          $account = $this->syncToDrupalAccount($account, LdapUserConf::$eventSyncToDrupalUser, $ldap_user, TRUE);
         }
         return $account;
       }
       // Create drupal account.
       else {
-        $this->entryToUserEdit($ldap_user, $account, $ldap_server, self::$provisioningDirectionToDrupalUser, array(self::$eventCreateDrupalUser));
+        $this->applyAttributesToAccount($ldap_user, $account, $ldap_server, self::$provisioningDirectionToDrupalUser, array(self::$eventCreateDrupalUser));
         if ($save) {
           $tokens = array('%drupal_username' => $account->get('name'));
           if (empty($account->getUsername())) {
@@ -1252,17 +1244,17 @@ class LdapUserConf {
 
   /**
    * Populate $user edit array (used in hook_user_save, hook_user_update, etc)
-   * ... should not assume all attribues are present in ldap entry.
+   * ... should not assume all attributes are present in ldap entry.
    *
    * @param array $ldap_user
    *    Ldap entry.
-   * @param User $account
+   * @param UserInterface $account
    *   see hook_user_save, hook_user_update, etc.
    * @param object $ldap_server
    * @param int $direction
    * @param array $prov_events
    */
-  public function entryToUserEdit($ldap_user, &$account, $ldap_server, $direction = NULL, $prov_events = NULL) {
+  public function applyAttributesToAccount($ldap_user, &$account, $ldap_server, $direction = NULL, $prov_events = NULL) {
     if ($direction == NULL) {
       $direction = self::$provisioningDirectionToDrupalUser;
     }

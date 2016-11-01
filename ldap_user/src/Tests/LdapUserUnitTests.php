@@ -146,7 +146,7 @@ class LdapWebUserUnitTests extends LdapWebTestBase {
     }
     $factory = new ServerFactory($config['drupalAcctProvisionServer'], 'all', TRUE);
     $ldap_todrupal_prov_server = $factory->servers;
-    $ldap_user_conf->entryToUserEdit($ldap_user, $user_edit, $ldap_todrupal_prov_server);
+    $ldap_user_conf->applyAttributesToAccount($ldap_user, $user_edit, $ldap_todrupal_prov_server);
 
     unset($user_edit['pass']);
     $desired_result = array(
@@ -339,7 +339,7 @@ class LdapWebUserUnitTests extends LdapWebTestBase {
     // Clear server cache;.
     $factory = new ServerFactory('activedirectory1', NULL, TRUE, TRUE);
     $ldap_server = $factory->servers;
-    $user = $ldap_user_conf->syncToDrupalAccount($account, $user_edit, LdapUserConf::$eventSyncToDrupalUser, NULL, TRUE);
+    $user = $ldap_user_conf->syncToDrupalAccount($account, LdapUserConf::$eventSyncToDrupalUser, NULL, TRUE);
 
     $hpotter = user_load_by_name('hpotter');
     $hpotter_uid = $hpotter->uid;

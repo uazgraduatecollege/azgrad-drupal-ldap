@@ -537,14 +537,15 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state, $re
    *  and needs to be saved in Drupal account
    *
    */
+  // @FIXME: Unported.
   if (!$drupal_account_exists && $ldap_server_authenticated_on) {
     $puid = $ldap_server_authenticated_on->userPuidFromLdapEntry($ldap_user['attr']);
     if ($puid) {
       $drupal_account = $ldap_server_authenticated_on->userUserEntityFromPuid($puid);
       if ($drupal_account) {
         $drupal_account_exists = TRUE;
-        $user_edit = array('name' => $drupal_accountname);
-        $drupal_account = user_save($drupal_account, $user_edit, 'ldap_user');
+        $user_values = array('name' => $drupal_accountname);
+        $drupal_account = user_save($drupal_account, $user_values, 'ldap_user');
         user_set_authmaps($drupal_account, array("authname_ldap_user" => $authname));
         $drupal_account_is_authmapped = TRUE;
       }
@@ -592,12 +593,12 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state, $re
       \Drupal::logger('ldap_authentication')->error('Failed to make changes to user %username updated %changed.', $watchdog_tokens);
     }
     elseif ($auth_conf->emailUpdate == $auth_conf::$emailUpdateOnLdapChangeEnableNotify) {
-      if (isset($user_edit['mail'])) {
-        $watchdog_tokens['%mail'] = $user_edit['mail'];
+      if (isset($user_values['mail'])) {
+        $watchdog_tokens['%mail'] = $user_values['mail'];
         drupal_set_message(t('Your e-mail has been updated to match your current account (%mail).', $watchdog_tokens), 'status');
       }
-      if (isset($user_edit['name'])) {
-        $watchdog_tokens['%new_username'] = $user_edit['name'];
+      if (isset($user_values['name'])) {
+        $watchdog_tokens['%new_username'] = $user_values['name'];
         drupal_set_message(t('Your old account username %username has been updated to %new_username.', $watchdog_tokens), 'status');
       }
     }
@@ -644,15 +645,15 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state, $re
     if (\Drupal::config('ldap_user.settings')->get('ldap_user_conf.acctCreation') == LdapUserConf::$accountCreationUserSettingsForLdap &&
       \Drupal::config('user.settings')->get('register') == USER_REGISTER_VISITORS_ADMINISTRATIVE_APPROVAL) {
       // If admin approval required, set status to 0.
-      $user_edit = array('name' => $drupal_accountname, 'status' => 0);
+      $user_values = array('name' => $drupal_accountname, 'status' => 0);
     }
     else {
-      $user_edit = array('name' => $drupal_accountname, 'status' => 1);
+      $user_values = array('name' => $drupal_accountname, 'status' => 1);
     }
 
-    // don't pass in ldap user to provisionDrupalAccount, because want to requery with correct attributes needed
+    // don't pass in ldap user to provisionDrupalAccount, because want to re-query with correct attributes needed
     // this may be a case where efficiency dictates querying for all attributes.
-    $drupal_account = $auth_conf->ldapUser->provisionDrupalAccount(NULL, $user_edit, NULL, TRUE);
+    $drupal_account = $auth_conf->ldapUser->provisionDrupalAccount(NULL, $user_values, NULL, TRUE);
 
     if ($drupal_account === FALSE) {
       \Drupal::logger('ldap_user')->error('Failed to find or create %drupal_accountname on logon.', $watchdog_tokens);

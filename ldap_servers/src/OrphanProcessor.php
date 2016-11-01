@@ -158,7 +158,8 @@ class OrphanProcessor {
     foreach ($drupal_users as $sid => $puid_x_puid_attrs) {
       foreach ($puid_x_puid_attrs as $puid_attr => $puids) {
         foreach ($puids as $puid => $user_data) {
-          $account = $accounts[$user_data['uid']];
+          // FIXME: Unported.
+         /* $account = $accounts[$user_data['uid']];
           $user_edit['ldap_user_last_checked'][Language::LANGCODE_NOT_SPECIFIED][0]['value'] = $check_time;
           $account = user_save($account, $user_edit, 'ldap_user');
           if (!$user_data['exists']) {
@@ -168,13 +169,14 @@ class OrphanProcessor {
              *     user_cancel_block, user_cancel_block_unpublish,
              *     user_cancel_reassign, user_cancel_delete
              */
-            if ($this->ldapUserConf->orphanedDrupalAcctBehavior == 'ldap_user_orphan_email') {
+           /*   if ($this->ldapUserConf->orphanedDrupalAcctBehavior == 'ldap_user_orphan_email') {
               $email_list[] = $account->name . "," . $account->mail . "," . $base_url . "/user/$uid/edit";
             }
+
             else {
               _user_cancel(array(), $account, $this->ldapUserConf->orphanedDrupalAcctBehavior);
             }
-          }
+          }*/
         }
       }
     }

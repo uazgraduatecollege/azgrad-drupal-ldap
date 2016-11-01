@@ -165,7 +165,7 @@ class LdapUserTestForm extends FormBase {
 
       $save = ($form_state->getValue(['test_mode']) == 'execute');
       $test_query = ($form_state->getValue(['test_mode']) != 'execute');
-      $user_edit = ['name' => $username];
+      $account = ['name' => $username];
 
       foreach (array_filter($selected_actions) as $i => $sync_trigger) {
         $sync_trigger_description = self::$sync_trigger_options[$sync_trigger];
@@ -175,8 +175,8 @@ class LdapUserTestForm extends FormBase {
         ] as $direction) {
           if ($ldap_user_conf->provisionEnabled($direction, $sync_trigger)) {
             if ($direction == LdapUserConf::$provisioningDirectionToDrupalUser) {
-              $discard = $ldap_user_conf->provisionDrupalAccount(NULL, $user_edit, NULL, $save);
-              $results['provisionDrupalAccount method results']["context = $sync_trigger_description"]['proposed'] = $user_edit;
+              $discard = $ldap_user_conf->provisionDrupalAccount(NULL, $account, NULL, $save);
+              $results['provisionDrupalAccount method results']["context = $sync_trigger_description"]['proposed'] = $account;
             }
             else {
               $provision_result = $ldap_user_conf->provisionLdapEntry($user_object, NULL, $test_query);
@@ -202,12 +202,12 @@ class LdapUserTestForm extends FormBase {
         ] as $direction) {
           if ($ldap_user_conf->provisionEnabled($direction, $sync_trigger)) {
             if ($direction == LdapUserConf::$provisioningDirectionToDrupalUser) {
-              $discard = $ldap_user_conf->syncToDrupalAccount(NULL, $user_edit, NULL, $test_query);
-              $results['syncToDrupalAccount method results']["context = $sync_trigger_description"]['proposed'] = $user_edit;
+              $discard = $ldap_user_conf->syncToDrupalAccount($account, NULL, $test_query);
+              $results['syncToDrupalAccount method results']["context = $sync_trigger_description"]['proposed'] = $account;
             }
             else {
               // To ldap.
-              $provision_result = $ldap_user_conf->syncToLdapEntry($user_object, $user_edit, [], $test_query);
+              $provision_result = $ldap_user_conf->syncToLdapEntry($account, [], $test_query);
               $results['syncToLdapEntry method results']["context = $sync_trigger_description"] = $provision_result;
             }
           }
