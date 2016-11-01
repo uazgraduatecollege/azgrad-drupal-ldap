@@ -4,12 +4,15 @@ namespace Drupal\ldap_servers\Entity;
 
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
+use Drupal\file\Entity\File;
+use Drupal\file\Plugin\Field\FieldType\FileFieldItemList;
 use Drupal\ldap_servers\ConversionHelper;
 use Drupal\ldap_servers\LdapProtocol;
 use Drupal\ldap_servers\MassageFunctions;
 use Drupal\ldap_servers\ServerInterface;
 use Drupal\ldap_servers\TokenFunctions;
 use Drupal\ldap_user\LdapUserConf;
+use Drupal\user\Entity\User;
 
 /**
  * Defines the Server entity.
@@ -869,78 +872,36 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
   /**
    * @param array $ldap_entry
    *   The LDAP entry.
-   *
-   * @return File|bool
-   *   Drupal file object image user's thumbnail or FALSE if none present or ERROR happens.
+   * @param User $account
+   * @return bool|\Drupal\ldap_servers\Entity\File Drupal file object image user's thumbnail or FALSE if none present or ERROR happens.
+   * Drupal file object image user's thumbnail or FALSE if none present or ERROR happens.
    */
-  public function userPictureFromLdapEntry($ldap_entry, $drupal_username = FALSE) {
-    // FIXME: Image handling is broken.
+  public function userPictureFromLdapEntry($ldap_entry, $account) {
     if ($ldap_entry && $this->get('picture_attr')) {
       // Check if ldap entry has been provisioned.
-      $thumb = isset($ldap_entry[$this->get('picture_attr')][0]) ? $ldap_entry[$this->get('picture_attr')][0] : FALSE;
-      if (!$thumb) {
-        return FALSE;
-      }
-
-      // Create md5 check.
-      $md5thumb = md5($thumb);
-
-      /**
-       * If existing account already has picture check if it has changed if so remove old file and create the new one
-       * If picture is not set but account has md5 something is wrong exit.
-       */
-      if ($drupal_username && $account = user_load_by_name($drupal_username)) {
-        if ($account->uid == 0 || $account->uid == 1) {
-          return FALSE;
-        }
-        if (isset($account->picture)) {
-          // Check if image has changed.
-          if (isset($account->data['ldap_user']['init']['thumb5md']) && $md5thumb === $account->data['ldap_user']['init']['thumb5md']) {
-            // No change return same image.
-            return $account->picture;
-          }
-          else {
-            // Image is different check wether is obj/str and remove fileobject.
-            if (is_object($account->picture)) {
-              file_delete($account->picture, TRUE);
-            }
-            elseif (is_string($account->picture)) {
-              $file = file_load(intval($account->picture));
-              file_delete($file, TRUE);
-            }
-          }
-        }
-        elseif (isset($account->data['ldap_user']['init']['thumb5md'])) {
-          \Drupal::logger('ldap_server')->notice("Some error happened during thumbnailPhoto sync", []);
-          return FALSE;
-        }
-      }
-      // Create tmp file to get image format.
-      $filename = uniqid();
-      $fileuri = file_directory_temp() . '/' . $filename;
-      $size = file_put_contents($fileuri, $thumb);
-      $info = image_get_info($fileuri);
-      unlink($fileuri);
-      // Create file object.
-      // @todo needs to change to reflect new approach to user picture: http://drupal.org/node/1851200
-      $file = file_save_data($thumb, 'public://' . variable_get('user_picture_path') . '/' . $filename . '.' . $info['extension']);
-      $file->md5Sum = $md5thumb;
-      // Standard Drupal validators for user pictures.
-      // @todo needs to change to reflect new approach to user picture: http://drupal.org/node/1851200
-      $validators = array(
-        'file_validate_is_image' => array(),
-        'file_validate_image_resolution' => array(variable_get('user_picture_dimensions', '85x85')),
-        'file_validate_size' => array(variable_get('user_picture_file_size', '30') * 1024),
-      );
-      $errors = file_validate($file, $validators);
-      if (empty($errors)) {
-        return $file;
+      if (isset($ldap_entry[$this->get('picture_attr')][0])) {
+        $LdapUserPicture = $ldap_entry[$this->get('picture_attr')][0];
       }
       else {
-        foreach ($errors as $err => $err_val) {
-          \Drupal::logger('ldap_server')->error("Error storing picture: %error", ['%error' => $err]);
-        }
+        // No picture present.
         return FALSE;
+      }
+
+      if (!$account || $account->isAnonymous() || $account->id() == 1) {
+        return FALSE;
+      }
+      $currentUserPicture = $account->get('user_picture')->getValue();
+      if (empty($currentUserPicture)) {
+        return $this->saveUserPicture($account->get('user_picture'), $LdapUserPicture);
+      } else {
+        $file = File::load($currentUserPicture[0]['target_id']);
+        if ($file && md5(file_get_contents($file->getFileUri())) ==  md5($LdapUserPicture)) {
+          // Same image, do nothing.
+          return FALSE;
+        }
+        else {
+          return $this->saveUserPicture($account->get('user_picture'), $LdapUserPicture);
+        }
       }
     }
   }
@@ -2011,4 +1972,36 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
     return $rdn_values;
   }
 
+  /**
+   * @param FileFieldItemList $field
+   * @param $LdapUserPicture
+   * @return array|bool
+   */
+  private function saveUserPicture($field, $LdapUserPicture) {
+    // Create tmp file to get image format and derive extension.
+    $file_name = uniqid();
+    $unmanaged_file = file_directory_temp() . '/' . $file_name;
+    file_put_contents($unmanaged_file,  $LdapUserPicture);
+    $image_type = exif_imagetype($unmanaged_file);
+    $extension = image_type_to_extension($image_type, false);
+    unlink($unmanaged_file);
+    $fieldSettings = $field->getFieldDefinition()->getItemDefinition()->getSettings();
+    $token_service = \Drupal::token();
+    $directory = $token_service->replace($fieldSettings['file_directory']);
+
+    $managed_file = file_save_data($LdapUserPicture, 'public://' . $directory . '/' . $file_name . '.' . $extension);
+
+    $validators = array(
+      'file_validate_is_image' => array(),
+      'file_validate_image_resolution' => array($fieldSettings['max_resolution']),
+      'file_validate_size' => array($fieldSettings['max_filesize']),
+    );
+
+    if (file_validate($managed_file, $validators)) {
+      return ['target_id' => $managed_file->id()];
+    } else {
+      // Uploaded and unfit files will be automatically garbage collected.
+      return FALSE;
+    }
+  }
 }

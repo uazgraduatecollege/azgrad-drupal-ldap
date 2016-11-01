@@ -3,10 +3,12 @@
 namespace Drupal\ldap_user;
 
 use Drupal\Component\Utility\Unicode;
+use Drupal\ldap_servers\Entity\Server;
 use Drupal\ldap_servers\ServerFactory;
 use Drupal\ldap_servers\TokenFunctions;
 use Drupal\ldap_user\Exception\LdapBadParamsException;
 use Drupal\user\Entity\User;
+use Drupal\user\UserInterface;
 
 /**
  * The entry-point to working with users by loading their configuration.
@@ -674,7 +676,7 @@ class LdapUserConf {
   /**
    * Given a drupal account, sync to related ldap entry.
    *
-   * @param drupal user object $account.
+   * @param User $account.
    *   Drupal user object.
    * @param array $ldap_user.
    *   current ldap data of user. @see README.developers.txt for structure.
@@ -1271,10 +1273,10 @@ class LdapUserConf {
     $drupal_username = $ldap_server->userUsernameFromLdapEntry($ldap_user['attr']);
     if ($this->isSynced('[property.picture]', $prov_events, $direction)) {
 
-      $picture = $ldap_server->userPictureFromLdapEntry($ldap_user['attr'], $drupal_username);
+      $picture = $ldap_server->userPictureFromLdapEntry($ldap_user['attr'], $account);
 
       if ($picture) {
-        $account->set('picture', $picture);
+        $account->set('user_picture', $picture);
       }
     }
 

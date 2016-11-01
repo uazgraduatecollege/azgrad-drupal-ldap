@@ -6,6 +6,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use \Drupal\Core\Config\ConfigFactoryInterface;
 
+use Drupal\ldap_servers\Entity\Server;
 use Drupal\ldap_servers\ServerFactory;
 use Drupal\ldap_user\LdapUserConf;
 
