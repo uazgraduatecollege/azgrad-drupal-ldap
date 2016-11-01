@@ -136,6 +136,7 @@ class ServerForm extends EntityForm {
       '#type' => 'textfield',
       '#title' => t('DN for non-anonymous search'),
       '#size' => 80,
+      '#maxlength' => 512,
       '#states' => array(
     // Action to take.
         'enabled' => array(
