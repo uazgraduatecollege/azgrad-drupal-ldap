@@ -2,7 +2,6 @@
 
 namespace Drupal\ldap_user\Tests;
 
-use Drupal\ldap_servers\Entity\Server;
 use Drupal\ldap_servers\ServerFactory;
 use Drupal\ldap_servers\tests\LdapWebTestBase;
 use Drupal\ldap_user\LdapUserConf;

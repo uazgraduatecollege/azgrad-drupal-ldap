@@ -5,12 +5,16 @@
  * Test script functions for testing ldap functionality outside of Drupal.
  */
 
+use Drupal\ldap_servers\LdapProtocol;
+
 error_reporting(E_ALL | E_STRICT);
 set_time_limit(0);
 ini_set("display_errors", 1);
 ini_set("max_execution_time", 0);
-
-class ProtocolPlaceholder implements \Drupal\ldap_servers\LdapProtocol {
+/**
+ *
+ */
+class ProtocolPlaceholder implements LdapProtocol {
   // This is a workaround for removing redundant definitions.
 }
 

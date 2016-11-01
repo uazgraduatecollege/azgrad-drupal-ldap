@@ -1,15 +1,19 @@
 <?php
 
-
 namespace Drupal\ldap_servers;
 
-use Drupal\Core\Language\Language;
 use Drupal\ldap_user\LdapUserConf;
 
+/**
+ *
+ */
 class OrphanProcessor {
 
   protected $ldapUserConf;
 
+  /**
+   *
+   */
   public function __construct() {
     $this->ldapUserConf = new LdapUserConf();
   }
@@ -22,7 +26,7 @@ class OrphanProcessor {
    *
    * @todo need to avoid sending repeated emails
    */
-  function checkOrphans() {
+  public function checkOrphans() {
 
     // Return TRUE; // this is untested code.
     if (!$this->ldapUserConf->orphanedDrupalAcctBehavior ||
@@ -159,23 +163,23 @@ class OrphanProcessor {
       foreach ($puid_x_puid_attrs as $puid_attr => $puids) {
         foreach ($puids as $puid => $user_data) {
           // FIXME: Unported.
-         /* $account = $accounts[$user_data['uid']];
+          /* $account = $accounts[$user_data['uid']];
           $user_edit['ldap_user_last_checked'][Language::LANGCODE_NOT_SPECIFIED][0]['value'] = $check_time;
           $account = user_save($account, $user_edit, 'ldap_user');
           if (!$user_data['exists']) {
-            /**
-             * $this->ldapUserConf->orphanedDrupalAcctBehavior will either be
-             *  'ldap_user_orphan_email' or one of the user module options:
-             *     user_cancel_block, user_cancel_block_unpublish,
-             *     user_cancel_reassign, user_cancel_delete
-             */
-           /*   if ($this->ldapUserConf->orphanedDrupalAcctBehavior == 'ldap_user_orphan_email') {
-              $email_list[] = $account->name . "," . $account->mail . "," . $base_url . "/user/$uid/edit";
-            }
+          /**
+           * $this->ldapUserConf->orphanedDrupalAcctBehavior will either be
+           *  'ldap_user_orphan_email' or one of the user module options:
+           *     user_cancel_block, user_cancel_block_unpublish,
+           *     user_cancel_reassign, user_cancel_delete
+           */
+          /*   if ($this->ldapUserConf->orphanedDrupalAcctBehavior == 'ldap_user_orphan_email') {
+          $email_list[] = $account->name . "," . $account->mail . "," . $base_url . "/user/$uid/edit";
+          }
 
-            else {
-              _user_cancel(array(), $account, $this->ldapUserConf->orphanedDrupalAcctBehavior);
-            }
+          else {
+          _user_cancel(array(), $account, $this->ldapUserConf->orphanedDrupalAcctBehavior);
+          }
           }*/
         }
       }
@@ -224,4 +228,5 @@ class OrphanProcessor {
 
     return $match;
   }
+
 }

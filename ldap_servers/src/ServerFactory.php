@@ -2,10 +2,12 @@
 
 namespace Drupal\ldap_servers;
 
-
 use Drupal\ldap_servers\Entity\Server;
 use Drupal\ldap_servers\tests\TestServer;
 
+/**
+ *
+ */
 class ServerFactory {
 
   public $servers;
@@ -37,10 +39,12 @@ class ServerFactory {
 
   /**
    * See new ServerFactory().
+   *
    * @param $id
    * @param $type
    * @param $flatten
    * @param $reset
+   *
    * @return array|bool|mixed
    */
   private function getServers($id, $type, $flatten, $reset) {
@@ -113,4 +117,5 @@ class ServerFactory {
       return $servers[$type];
     }
   }
+
 }

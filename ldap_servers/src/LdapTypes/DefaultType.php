@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Generic LDAP Implementation Details.
- */
-
 namespace Drupal\ldap_servers\LdapTypes;
 
 /**

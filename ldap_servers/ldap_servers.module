@@ -7,13 +7,13 @@
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Session\AccountProxy;
-use Drupal\ldap_servers\Entity\Server;
 use Drupal\Core\Url;
-use Drupal\ldap_servers\LdapTypes\AbstractType;
 use Drupal\ldap_servers\ServerFactory;
 use Drupal\ldap_user\LdapUserConf;
-use Drupal\user\UserInterface;
 
+/**
+ *
+ */
 class TokenHelper {
   use \Drupal\ldap_servers\TokenFunctions;
   // Temporary helper since TokenFunctions are a trait.
@@ -317,7 +317,7 @@ function ldap_servers_get_user_ldap_data($account, $id = NULL, $ldap_context = N
     $drupal_username = (is_object($account)) ? $account->getUsername() : $account;
   }
   // If no explicit $id, find most appropriate one.
-  // FIXME: Wrong definition of fields
+  // FIXME: Wrong definition of fields.
   if (\Drupal::moduleHandler()->moduleExists('ldap_user')) {
     if (property_exists($account, 'ldap_user_puid_sid') &&
         !empty($account->ldap_user_puid_sid['und'][0]['value'])
@@ -347,7 +347,7 @@ function ldap_servers_get_user_ldap_data($account, $id = NULL, $ldap_context = N
 
   /* @var \Drupal\ldap_servers\Entity\Server $ldap_server*/
   $factory = new ServerFactory($id, 'enabled', TRUE);
-  $ldap_server = ($id) ? $factory->servers: FALSE;
+  $ldap_server = ($id) ? $factory->servers : FALSE;
 
   if ($ldap_server === FALSE) {
     \Drupal::logger('ldap_servers')->error('Failed to load server object %sid in _ldap_servers_get_user_ldap_data', array('%sid' => $id));
@@ -396,7 +396,7 @@ function ldap_servers_user_logout(AccountProxy $account) {
  *      1 => 'johnny'
  *      )
  *   );
- * ))
+ *   ))
  */
 function ldap_servers_set_attribute_map($attribute = NULL, $conversion = NULL, $values = NULL) {
 
@@ -486,7 +486,7 @@ function ldap_servers_disable_http_check(&$form) {
  *
  */
 function ldap_servers_ldap_extension_summary($op = 'data') {
-  // FIXME: Undefined function
+  // FIXME: Undefined function.
   return _ldap_servers_ldap_extension_summary($op);
 }
 
@@ -507,7 +507,8 @@ function ldap_servers_help($route_name, RouteMatchInterface $route_match) {
 
   switch ($route_name) {
     case 'ldap_servers.settings':
-       return $servers_help;
+      return $servers_help;
+
     case 'help.page.ldap_servers':
       $servers_help .= '<h3>' . t('Configuration - Settings') . '</h3>';
       $servers_help .= '<dl>';
@@ -554,10 +555,12 @@ function ldap_servers_help($route_name, RouteMatchInterface $route_match) {
       $servers_help .= '<dd>' . t('DN of Testing Username -') . ' </dd>';
       $servers_help .= '</dl>';
       return $servers_help;
+
     case 'entity.ldap_server.collection':
       $output = '<p>' . t('Setup an LDAP server configuration to be used by other modules such as LDAP Authentication, LDAP Authorization, etc.') . '</p>';
       $output .= '<p>' . t('More than one LDAP server configuration can exist for a physical LDAP server. Multiple configurations for the same physical ldap server are useful in cases such as: (1) different base dn\'s for authentication and authorization and (2) service accounts with different privileges for different purposes.') . '</p>';
       return $output;
+
     default:
   }
 }
@@ -600,7 +603,7 @@ function ldap_servers_ldap_servers_types() {
 
 /**
  * @param string|array
- *  String or array ldap type id or conf array.
+ *   String or array ldap type id or conf array.
  *
  * @return AbstractType
  *   Options for ldap type.

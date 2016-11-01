@@ -107,7 +107,7 @@ class TestServer extends Server {
         $ldap_error = "Credentials for $userdn failed in LdapServerTest.class.php";
       }
     }
-    //@FIXME: watchdog
+    // @FIXME: watchdog
     $watchdog_tokens = array('%user' => $userdn, '%errno' => $ldap_errno, '%error' => $ldap_error);
     watchdog('ldap', "LDAP bind failure for user %user. Error %errno: %error", $watchdog_tokens);
     return $ldap_errno;
@@ -135,9 +135,11 @@ class TestServer extends Server {
    * @param int $timelimit
    * @param int|null $deref
    * @param null $scope
+   *
    * @return array|bool An array of matching entries->attributes, or FALSE if the search is
-   * An array of matching entries->attributes, or FALSE if the search is
-   * empty.
+   *   An array of matching entries->attributes, or FALSE if the search is
+   *   empty.
+   *
    * @internal param string $basedn The search base. If NULL, we use $this->basedn.*   The search base. If NULL, we use $this->basedn.
    */
   public function search($base_dn = NULL, $filter, $attributes = array(), $attrsonly = 0, $sizelimit = 0, $timelimit = 0, $deref = LDAP_DEREF_NEVER, $scope = NULL) {
@@ -410,7 +412,7 @@ class TestServer extends Server {
    *   entry array: http://us.php.net/manual/en/function.ldap-add.php
    *   $attributes["attribute1"] = "value";
    *   $attributes["attribute2"][0] = "value1";
-   *   $attributes["attribute2"][1] = "value2";
+   *   $attributes["attribute2"][1] = "value2";.
    *
    * @return boolean result
    */
@@ -488,6 +490,7 @@ class TestServer extends Server {
    * @param string $dn
    *
    * @return boolean result per ldap_delete
+   *
    * @TODO: Might not be necessary anymore.
    */
   public function ldapDelete($dn) {

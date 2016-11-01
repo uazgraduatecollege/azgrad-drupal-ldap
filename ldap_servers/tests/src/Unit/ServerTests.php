@@ -11,6 +11,9 @@ use Drupal\Tests\UnitTestCase;
  */
 class ServerTests extends UnitTestCase {
 
+  /**
+   *
+   */
   public function testSearchAllBaseDns() {
 
     $stub = $this->getMockBuilder(Server::class)
@@ -27,20 +30,23 @@ class ServerTests extends UnitTestCase {
             'count' => 4,
             '0' => 'organizationalPerson',
             '1' => 'Person',
-            '2' => 'inetOrgPerson'
-          ]
-        ]
+            '2' => 'inetOrgPerson',
+          ],
+        ],
       ]);
     // TODO: Figure out the correct format to pass to searchAllBaseDns and compare them.
-    //$stub->searchAllBaseDns('*');
+    // $stub->searchAllBaseDns('*');.
     $this->assertTrue(TRUE);
   }
 
+  /**
+   *
+   */
   public function testRemoveUnchangedAttributes() {
 
     $existing_data = [
       'count' => 1,
-      ['organizationalPerson', 'Person', 'inetOrgPerson']
+      ['organizationalPerson', 'Person', 'inetOrgPerson'],
     ];
 
     $new_data = [
@@ -48,7 +54,7 @@ class ServerTests extends UnitTestCase {
       1 => 'Person',
     ];
     // TODO: Figure out the correct format to RemoveUnchangedAttributes and compare them.
-    // $result = Server::removeUnchangedAttributes($new_data, $existing_data);
+    // $result = Server::removeUnchangedAttributes($new_data, $existing_data);.
     $this->assertTrue(TRUE);
   }
 

@@ -1,9 +1,10 @@
 <?php
 
-
 namespace Drupal\ldap_user;
 
-
+/**
+ *
+ */
 trait LdapUserConfigurationValues {
 
   // Provisioning events (events are triggered by triggers).

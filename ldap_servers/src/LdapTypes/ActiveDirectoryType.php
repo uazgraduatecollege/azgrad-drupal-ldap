@@ -1,12 +1,5 @@
 <?php
 
-/**
- * @file
- * Active Directory LDAP Implementation Details.
- *
- * See http://msdn.microsoft.com/en-us/library/windows/desktop/ms675085(v=vs.85).aspx.
- */
-
 namespace Drupal\ldap_servers\LdapTypes;
 
 /**

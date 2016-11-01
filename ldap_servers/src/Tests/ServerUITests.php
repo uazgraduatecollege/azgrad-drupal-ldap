@@ -12,7 +12,7 @@ use Drupal\ldap_servers\TokenFunctions;
  * @group ldap
  */
 class ServerUITests extends LdapWebTestBase {
-  
+
   use TokenFunctions;
 
   /**
@@ -47,7 +47,6 @@ class ServerUITests extends LdapWebTestBase {
     return;
 
     // The tests below are disabled due to significant structural mismatch.
-
     foreach (array(1) as $ctools_enabled) {
       $this->ldapTestId = "testUIForms.ctools.$ctools_enabled";
       if ($ctools_enabled) {

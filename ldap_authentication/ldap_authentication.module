@@ -20,6 +20,7 @@ use Drupal\ldap_user\LdapUserConf;
  * Implements hook_menu_alter().
  * since menu items are cached, only useful to add or alter callbacks
  * for ldap authentication driven menu items.
+ *
  * @FIXME: Not in D8.
  */
 function ldap_authentication_menu_alter(&$items) {
@@ -76,12 +77,14 @@ function ldap_authentication_theme() {
 
 /**
  * Implements hook_help().
+ *
  * @FIXME: D7 Syntax.
  */
 function ldap_authentication_help($path, $arg) {
 
   $authentication_help = t('LDAP authentication allows authentication against an LDAP server. It may be used alongside other authentication means such as built in Drupal authentication, OpenID, etc.  More detailed help is available on drupal.org at !helplink.', array(
-    '%helplink' => \Drupal::l('http://drupal.org/node/997082', Url::fromUri('http://drupal.org/node/997082')),)
+    '%helplink' => \Drupal::l('http://drupal.org/node/997082', Url::fromUri('http://drupal.org/node/997082')),
+  )
   );
   switch ($path) {
     case 'admin/config/people/ldap/authentication':
@@ -112,7 +115,7 @@ function ldap_authentication_info($field = 0) {
  *
  * @param int|\User $user
  * @return bool true
- * true if user is recorded as ldap authenticated and identified (ldap_authentified)
+ *   true if user is recorded as ldap authenticated and identified (ldap_authentified)
  */
 function ldap_authentication_ldap_authenticated($user) {
   if (is_numeric($user)) {
@@ -686,6 +689,7 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state, $re
  * @param $authname
  * @param $auth_conf
  * @param $watchdog_tokens
+ *
  * @return array
  */
 function ldap_authentication_corresponding_drupal_user($authname, $auth_conf, &$watchdog_tokens) {

@@ -10,7 +10,7 @@ use Drupal\ldap_servers\TokenFunctions;
  * @group ldap
  */
 class ServerAPITests extends LdapWebTestBase {
-  
+
   use TokenFunctions;
 
   /**
@@ -55,7 +55,6 @@ class ServerAPITests extends LdapWebTestBase {
     return;
 
     // The tests below are disabled due to significant structural mismatch.
-
     // , 'activedirectory1'.
     foreach (array('openldap1', 'activedirectory1') as $sid) {
       $ldap_type = ($sid == 'openldap1') ? 'Open Ldap' : 'Active Directory';
@@ -150,7 +149,6 @@ class ServerAPITests extends LdapWebTestBase {
     return;
 
     // Unclear what this test event attemps to show. Disabling until ported.
-
     $install_tables = array('ldap_servers');
     // disable, uninstall, and enable/install module.
     $modules = array($this->module_name);

@@ -114,11 +114,13 @@ class LdapTestFunctions implements LdapProtocol {
     // $ldapUserConf->save();
   }
 
-  function prepConsumerConf($consumer_confs) {
+  /**
+   *
+   */
+  public function prepConsumerConf($consumer_confs) {
     // @ FIXME: Just a placeholder
     return $consumer_confs;
   }
-
 
   /**
    * Function prepConsumerConf($consumer_confs) {
@@ -452,7 +454,7 @@ class LdapTestFunctions implements LdapProtocol {
   /**
    *
    */
-  function ldap_test_ldap_authentication_data() {
+  public function ldap_test_ldap_authentication_data() {
 
     $auth_conf = new LdapAuthenticationConfAdmin();
 
@@ -480,7 +482,7 @@ class LdapTestFunctions implements LdapProtocol {
     $conf['ExclusiveModeUserLogon']['authenticationMode'] = $auth_conf::$mode_exclusive;
 
     $conf['SSOUserLogon'] = $conf['default'];
-    $conf['SSOUserLogon']['authenticationMode'] =  $auth_conf::$mode_exclusive;
+    $conf['SSOUserLogon']['authenticationMode'] = $auth_conf::$mode_exclusive;
     $conf['SSOUserLogon']['ssoEnabled'] = TRUE;
     $conf['SSOUserLogon']['ssoRemoteUserStripDomainName'] = FALSE;
     // -- 0, 3600, 86400, 604800, 2592000, 31536000, 315360000.
@@ -490,14 +492,14 @@ class LdapTestFunctions implements LdapProtocol {
 
     $conf['ExclusiveModeUserLogon3'] = $conf['default'];
     $conf['ExclusiveModeUserLogon3']['sids'] = array('activedirectory1' => 'activedirectory1');
-    $conf['ExclusiveModeUserLogon3']['authenticationMode'] =  $auth_conf::$mode_exclusive;
+    $conf['ExclusiveModeUserLogon3']['authenticationMode'] = $auth_conf::$mode_exclusive;
 
     $conf['WL1'] = $conf['default'];
-    $conf['WL1']['authenticationMode'] =  $auth_conf::$mode_exclusive;
+    $conf['WL1']['authenticationMode'] = $auth_conf::$mode_exclusive;
 
     $conf['WL3'] = $conf['default'];
     $conf['WL3']['sids'] = array('activedirectory1' => 'activedirectory1');
-    $conf['WL3']['authenticationMode'] =  $auth_conf::$mode_exclusive;
+    $conf['WL3']['authenticationMode'] = $auth_conf::$mode_exclusive;
 
     // Single sign on tests.
     $conf['MixedModeUserLogonSSO'] = $conf['MixedModeUserLogon'];
@@ -519,7 +521,7 @@ class LdapTestFunctions implements LdapProtocol {
   /**
    * Activedirectory is default Active Directory server config .
    */
-  function ldap_test_ldap_servers_data() {
+  public function ldap_test_ldap_servers_data() {
 
     $servers['ldapauthor1']['properties']  = array(
       'sid' => 'openldap1',
@@ -734,8 +736,7 @@ class LdapTestFunctions implements LdapProtocol {
   /**
    *
    */
-
-  function ldap_test_ldap_authorization_data() {
+  public function ldap_test_ldap_authorization_data() {
 
     $empty_mappings = array(
       'from' => '',
@@ -939,7 +940,7 @@ class LdapTestFunctions implements LdapProtocol {
   /**
    *
    */
-  function ldap_test_ldap_user_data() {
+  public function ldap_test_ldap_user_data() {
 
     $conf['default']  = array(
       'drupalAcctProvisionServer' => 'activedirectory1',

@@ -1,11 +1,7 @@
 <?php
 
-/**
- * @file
- * LDAP Query Admin Class.
- */
-
 namespace Drupal\ldap_query;
+
 use Drupal\Core\Url;
 use Drupal\ldap_servers\ServerFactory;
 

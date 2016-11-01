@@ -4,6 +4,7 @@
  * @file
  * Hooks provided by ldap_servers module.
  */
+
 use Drupal\ldap_servers\ServerFactory;
 
 /**
@@ -107,7 +108,7 @@ function hook_ldap_entry_post_provision(&$ldap_entries, $ldap_server, $context) 
  *   context array with some or all of the following key/values
  *   'sid' => drupal account object,
  *   'ldap_context' => ,
- *   'direction' =>
+ *   'direction' =>.
  */
 function hook_ldap_attributes_needed_alter(&$attributes, $params) {
 
@@ -130,9 +131,8 @@ function hook_ldap_attributes_needed_alter(&$attributes, $params) {
           $attributes[$ldap_server->mail_attr] = ldap_servers_set_attribute_map();
         }
         // Todo: Update example below
-        //ldap_servers_token_extract_attributes($attributes, $ldap_server_obj->mail_template);
-        //$attributes[$ldap_server->unique_persistent_attr] = ldap_servers_set_attribute_map(@$attributes[$ldap_server->unique_persistent_attr]);
-
+        // ldap_servers_token_extract_attributes($attributes, $ldap_server_obj->mail_template);
+        // $attributes[$ldap_server->unique_persistent_attr] = ldap_servers_set_attribute_map(@$attributes[$ldap_server->unique_persistent_attr]);.
         break;
     }
   }
@@ -148,7 +148,7 @@ function hook_ldap_attributes_needed_alter(&$attributes, $params) {
  *   'account' => drupal account object,
  *   'ldap_context' => ,
  *   'module' =>  module calling alter, e.g. 'ldap_user',
- *   'function' => function calling alter, e.g. 'provisionLdapEntry'
+ *   'function' => function calling alter, e.g. 'provisionLdapEntry'.
  */
 function hook_ldap_user_alter(&$ldap_entry, $params) {
 

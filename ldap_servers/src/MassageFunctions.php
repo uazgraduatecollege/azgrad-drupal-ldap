@@ -1,21 +1,19 @@
 <?php
 
-/**
- * @file
- * Collection of functions that don't belong in server object.
- */
-
 namespace Drupal\ldap_servers;
 
 use Drupal\Component\Utility\Unicode;
 
+/**
+ *
+ */
 class MassageFunctions {
 
   // ... value is being displayed in UI.
   public static $display = 1;
   // ... value is about to be used to generate token (e.g. [...] to be replaced.
   public static $token_replace = 2;
-  
+
   // ...value is about to be used in ldap query.
   public static $query_ldap = 5;
 
@@ -44,15 +42,16 @@ class MassageFunctions {
    * across ldap modules.
    *
    * @param mixed $value
-   *   to be massaged
+   *   to be massaged.
    * @param string $value_type
-   *   = 'attr_name' or 'attr_value;
-   * @param string $context ...see
-   *   MassageFunction constants
+   *   = 'attr_name' or 'attr_value;.
+   * @param string $context
+   *   ...see
+   *   MassageFunction constants.
    *
    * @return array|mixed|string
    */
-  function massage_text($value, $value_type, $context) {
+  public function massage_text($value, $value_type, $context) {
     $helper = new ConversionHelper();
     $scalar = is_scalar($value);
 

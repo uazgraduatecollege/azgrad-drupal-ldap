@@ -4,6 +4,7 @@
  * @file
  * FeedsLdapQueryFetcher.
  */
+
 use Drupal\Core\Url;
 
 /**

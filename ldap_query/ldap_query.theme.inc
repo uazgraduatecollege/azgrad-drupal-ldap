@@ -4,6 +4,7 @@
  * @file
  * Theming functions for ldap_query module.
  */
+
 use Drupal\ldap_query\LdapQuery;
 use Drupal\ldap_query\LdapQueryAdmin;
 use Drupal\ldap_servers\MassageFunctions;
@@ -80,7 +81,7 @@ function theme_ldap_query($variables) {
   foreach ($ldap_query->fields() as $field_id => $field) {
     $value = $ldap_query->{$field['property_name']};
     if (is_scalar($value)) {
-      // $value";
+      // $value";.
       $properties[] = $field_id . " = " . $value;
     }
   }

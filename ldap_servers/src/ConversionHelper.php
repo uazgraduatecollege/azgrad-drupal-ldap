@@ -2,7 +2,11 @@
 
 namespace Drupal\ldap_servers;
 
+/**
+ *
+ */
 class ConversionHelper {
+
   /**
    * From pear net_ldap2-2.0.11.
    *
@@ -13,7 +17,7 @@ class ConversionHelper {
    * backslash followed by two hex digits representing the hexadecimal value of the character.
    *
    * @param array $values
-   *   Array of values to escape
+   *   Array of values to escape.
    *
    * @static
    *
@@ -65,7 +69,7 @@ class ConversionHelper {
    * Converts any sequences of a backslash followed by two hex digits into the corresponding character.
    *
    * @param array $values
-   *   Array of values to escape
+   *   Array of values to escape.
    *
    * @static
    *
@@ -95,7 +99,7 @@ class ConversionHelper {
    * Finally all leading and trailing spaces are converted to sequences of \20.
    *
    * @param array $values
-   *   An array containing the DN values that should be escaped
+   *   An array containing the DN values that should be escaped.
    *
    * @static
    *
@@ -152,7 +156,7 @@ class ConversionHelper {
    * will be transformed back to the corresponding character.
    *
    * @param array $values
-   *   Array of DN Values
+   *   Array of DN Values.
    *
    * @return array Same as $values, but unescaped
    *
@@ -191,7 +195,7 @@ class ConversionHelper {
    * Update taken from zendframework/zf1
    *
    * @param string $string
-   *   String to convert
+   *   String to convert.
    *
    * @static
    *
@@ -214,7 +218,7 @@ class ConversionHelper {
    * Converts all ASCII chars < 32 to "\HEX".
    *
    * @param string $string
-   *   String to convert
+   *   String to convert.
    *
    * @static
    *
@@ -233,4 +237,5 @@ class ConversionHelper {
     }
     return $string;
   }
+
 }

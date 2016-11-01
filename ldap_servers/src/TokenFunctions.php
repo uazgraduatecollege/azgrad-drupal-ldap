@@ -1,19 +1,15 @@
 <?php
 
-
-/**
- * @file
- * Collection of functions related to ldap tokens.
- */
-
 namespace Drupal\ldap_servers;
 
 use Drupal\Component\Utility\SafeMarkup;
 use Drupal\Component\Utility\Unicode;
 use Drupal\ldap_servers\Entity\Server;
 use Drupal\ldap_user\LdapUserConf;
-use Drupal\user\Entity\User;
 
+/**
+ *
+ */
 trait TokenFunctions {
 
   public static $token_pre = '[';
@@ -375,7 +371,7 @@ trait TokenFunctions {
    *
    * @param User $user_account
    * @param array|string $token_keys
-   *  'all' signifies return
+   *   'all' signifies return
    *   all token/value pairs available; otherwise array lists
    *   token keys (e.g. property.name ...NOT [property.name]).
    * @param string $pre
@@ -408,7 +404,7 @@ trait TokenFunctions {
             $token_keys[] = 'property.' . Unicode::strtolower($property_name);
           }
         }
-        //@FIXME: Legacy syntax
+        // @FIXME: Legacy syntax
         elseif (isset($user_account->{$attr_name}['und'][0]['value']) && is_scalar($user_account->{$attr_name}['und'][0]['value'])) {
           $token_keys[] = 'field.' . $property_name;
           if (Unicode::strtolower($property_name) != $property_name) {
@@ -541,4 +537,5 @@ trait TokenFunctions {
 
     return $table;
   }
+
 }

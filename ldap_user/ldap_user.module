@@ -17,6 +17,9 @@ use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Url;
 use Drupal\ldap_user\LdapUserConf;
 
+/**
+ *
+ */
 class LdapUserTokenHelper {
   use \Drupal\ldap_servers\TokenFunctions;
   // Temporary helper since TokenFunctions are a trait.
@@ -69,7 +72,7 @@ function ldap_user_preprocess_table(&$variables) {
 }
 
 /**
- * https://www.drupal.org/node/1876710.
+ * Https://www.drupal.org/node/1876710.
  */
 function template_preprocess_ldap_user_conf_mapping_table(&$variables) {
 
@@ -451,7 +454,6 @@ function ldap_user_grab_password_validate($form, FormState &$form_state) {
   }
 }
 
-
 /**
  * Implements hook_form_FORM_ID_alter(). for user_register_form.
  */
@@ -524,7 +526,7 @@ function ldap_user_form_user_register_form_alter(&$form, $form_state) {
  * Implements hook_form_validate().
  */
 function ldap_user_form_register_form_validate($form, &$form_state) {
-  $config =  \Drupal::config('ldap_user.settings');
+  $config = \Drupal::config('ldap_user.settings');
 
   $values = $form_state->getValues();
   $user_ldap_entry = NULL;
@@ -657,7 +659,8 @@ function ldap_user_is_ldap_associated($account, $direction = NULL) {
  *   as user entered password.
  *
  * @return bool|null|string
- *   @FIXME: Inconsistent return types.
+ *
+ * @FIXME: Inconsistent return types.
  */
 function ldap_user_ldap_provision_pwd($action, $value = NULL, $reset = FALSE) {
 
@@ -841,7 +844,7 @@ function ldap_user_user_insert(UserInterface $account) {
  */
 function ldap_user_user_update(UserInterface $account) {
 
-   $ldap_user_conf = new LdapUserConf();
+  $ldap_user_conf = new LdapUserConf();
 
   if ($ldap_user_conf->excludeUser($account)) {
     return;

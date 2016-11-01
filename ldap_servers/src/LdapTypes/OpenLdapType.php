@@ -1,13 +1,5 @@
 <?php
 
-  /**
-   * @file
-   * OpenLDAP LDAP Implementation Details.
-   *
-   * See: http://www.zytrax.com/books/ldap/
-   *      http://www.openldap.org/doc/
-   */
-
 namespace Drupal\ldap_servers\LdapTypes;
 
 /**

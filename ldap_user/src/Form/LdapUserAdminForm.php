@@ -6,7 +6,6 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use \Drupal\Core\Config\ConfigFactoryInterface;
 
-use Drupal\ldap_servers\Entity\Server;
 use Drupal\ldap_servers\ServerFactory;
 use Drupal\ldap_user\LdapUserConf;
 
@@ -19,6 +18,7 @@ class LdapUserAdminForm extends ConfigFormBase {
 
   protected $drupalAcctProvisionServerOptions;
   protected $ldapEntryProvisionServerOptions;
+
   /**
    * {@inheritdoc}
    */
@@ -213,7 +213,7 @@ class LdapUserAdminForm extends ConfigFormBase {
         LdapUserConf::$provisionDrupalUserOnAllowingManualCreation => t('Provide option on admin/people/create to create corresponding LDAP Entry.'),
 
       ),
-      '#description' =>  t('Which LDAP attributes are synced on create or sync is determined in the
+      '#description' => t('Which LDAP attributes are synced on create or sync is determined in the
       "Provisioning from Drupal to LDAP mappings" table below in the right two columns.'),
     );
 
@@ -366,7 +366,6 @@ EOT;
     // @FIXME: Determine what is still needed here from this function.
     // In theory this should also be called on validateForm. Not ideal, investigate.
     // $this->validateCurrentConfiguration($form);
-    
     return $form;
   }
 
@@ -374,7 +373,6 @@ EOT;
    * {@inheritdoc}
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
-
 
     // @FIXME: Moved over from LdapUserConfAdmin for obvious reasons.
     // @TODO these form fields aren't named like this anymore
@@ -386,19 +384,19 @@ EOT;
         continue;
       }
       list($direction, $discard, $column_name, $i) = $parts;
-      // $action = $storage['sync_mapping_fields'][$direction][$i]['action'];
+      // $action = $storage['sync_mapping_fields'][$direction][$i]['action'];.
       $tokens = array();
       $row_mappings = array();
       foreach (array(
-                 'remove',
-                 'configurable_to_drupal',
-                 'configurable_to_ldap',
-                 'convert',
-                 'direction',
-                 'ldap_attr',
-                 'user_attr',
-                 'user_tokens'
-               ) as $column_name) {
+        'remove',
+        'configurable_to_drupal',
+        'configurable_to_ldap',
+        'convert',
+        'direction',
+        'ldap_attr',
+        'user_attr',
+        'user_tokens',
+      ) as $column_name) {
         $input_name = join('__', array('sm', $column_name, $i));
         $row_mappings[$column_name] = isset($values[$input_name]) ? $values[$input_name] : NULL;
       }
@@ -653,7 +651,6 @@ EOT;
     return $rows;
   }
 
-
   /**
    * Get mapping form row to ldap user provisioning mapping admin form table.
    *
@@ -770,13 +767,13 @@ EOT;
     // FIXME: Add table selection / ordering back:
     // $col and $row used to be paremeters to $result[$prov_event]. ID possible
     // not need needed anymore. Row used to be a parameter to this function.
-    // $col = ($direction == LdapUserConf::$provisioningDirectionToLDAPEntry) ? 5 : 4;
+    // $col = ($direction == LdapUserConf::$provisioningDirectionToLDAPEntry) ? 5 : 4;.
     $syncEvents = ($direction == LdapUserConf::$provisioningDirectionToDrupalUser) ? $this->LdapUserConfAdmin->provisionsDrupalEvents : $this->LdapUserConfAdmin->provisionsLdapEvents;
 
     foreach ($syncEvents as $prov_event => $prov_event_name) {
       // See above.
       // $col++;
-      // $id = $id_prefix . join('__', array('sm', $prov_event, $row));
+      // $id = $id_prefix . join('__', array('sm', $prov_event, $row));.
       $result[$prov_event] = array(
         '#type' => 'checkbox',
         '#title' => $prov_event,
@@ -891,7 +888,7 @@ EOT;
    *   $form['#storage']['sync_mapping_fields'][<direction>][N] = array(
    *    'sid' => $sid,
    *    'action' => 'add',
-   *   );
+   *   );.
    *
    * @return array
    *   Returns the relevant mappings.
@@ -953,10 +950,10 @@ EOT;
     $errors = array();
     $warnings = array();
     $tokens = array();
-    $has_drupal_acct_prov_servers = false;
+    $has_drupal_acct_prov_servers = FALSE;
 
     if (\Drupal::config('ldap_user.settings')->get('ldap_user_conf.drupalAcctProvisionServer')) {
-      $has_drupal_acct_prov_servers = true;
+      $has_drupal_acct_prov_servers = TRUE;
     };
 
     $has_drupal_acct_prov_settings_options  = (count(array_filter($this->LdapUserConfAdmin->drupalAcctProvisionTriggers)) > 0);
@@ -970,7 +967,7 @@ EOT;
 
     $has_ldap_prov_servers = FALSE;
     if (\Drupal::config('ldap_user.settings')->get('ldap_user_conf.ldapEntryProvisionServer')) {
-      $has_ldap_prov_servers = true;
+      $has_ldap_prov_servers = TRUE;
     };
 
     $has_ldap_prov_settings_options = (count(array_filter($this->LdapUserConfAdmin->ldapEntryProvisionTriggers)) > 0);

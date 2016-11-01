@@ -13,6 +13,7 @@ use Drupal\ldap_servers\TokenFunctions;
  */
 class ServerTestForm extends EntityForm {
   use TokenFunctions;
+
   /**
    * {@inheritdoc}
    */
@@ -207,7 +208,7 @@ class ServerTestForm extends EntityForm {
             dpm($user_entity);
           }
           dpm("Test Group LDAP Entry");
-          //@FIXME: group_entry is undefined.
+          // @FIXME: group_entry is undefined.
           dpm($test_data['group_entry'][0]);
         }
       }
@@ -225,7 +226,7 @@ class ServerTestForm extends EntityForm {
     if (!$values['id']) {
       $form_state->setErrorByName(NULL, t('No server id found in form'));
     }
-    elseif (!$factory->servers ) {
+    elseif (!$factory->servers) {
       $form_state->setErrorByName(NULL, t('Failed to create server object for server with server id=%id', [
         '%id' => $values['id'],
       ]));
@@ -423,162 +424,162 @@ class ServerTestForm extends EntityForm {
       $user = isset($values['testing_drupal_username']) ? $values['testing_drupal_username'] : NULL;
 
       foreach ([FALSE, TRUE] as $nested) {
-        // FALSE.
-        $nested_display = ($nested) ? 'Yes' : 'No';
-        if ($user) {
-          // This is the parent function that will call FromUserAttr or FromEntry.
-          $memberships = $ldap_server->groupMembershipsFromUser($user, 'group_dns', $nested);
-          // @FIXME
-          // theme() has been renamed to _theme() and should NEVER be called directly.
-          // Calling _theme() directly can alter the expected output and potentially
-          // introduce security issues (see https://www.drupal.org/node/2195739). You
-          // should use renderable arrays instead.
-          //
-          //
-          // @see https://www.drupal.org/node/2195739
-          // $result = theme('item_list', array('items' => $memberships, 'type' => 'ul'));
-          $settings = array(
-            '#theme' => 'item_list',
-            '#items' => $memberships,
-            '#type' => 'ul',
-          );
-          $result = drupal_render($settings);
+      // FALSE.
+      $nested_display = ($nested) ? 'Yes' : 'No';
+      if ($user) {
+      // This is the parent function that will call FromUserAttr or FromEntry.
+      $memberships = $ldap_server->groupMembershipsFromUser($user, 'group_dns', $nested);
+      // @FIXME
+      // theme() has been renamed to _theme() and should NEVER be called directly.
+      // Calling _theme() directly can alter the expected output and potentially
+      // introduce security issues (see https://www.drupal.org/node/2195739). You
+      // should use renderable arrays instead.
+      //
+      //
+      // @see https://www.drupal.org/node/2195739
+      // $result = theme('item_list', array('items' => $memberships, 'type' => 'ul'));
+      $settings = array(
+      '#theme' => 'item_list',
+      '#items' => $memberships,
+      '#type' => 'ul',
+      );
+      $result = drupal_render($settings);
 
-          $results_tables['group2'][] = [
-            "ldap_server->groupMembershipsFromUser($user, 'group_dns', nested=$nested_display)<br>count=" . count($memberships),
-            $result,
-          ];
+      $results_tables['group2'][] = [
+      "ldap_server->groupMembershipsFromUser($user, 'group_dns', nested=$nested_display)<br>count=" . count($memberships),
+      $result,
+      ];
 
-          $result = ($ldap_server->groupIsMember($group_dn, $user, $nested)) ? 'Yes' : 'No';
-          $group_results[] = [
-            "ldap_server->groupIsMember($group_dn, $user, nested=$nested_display)",
-            $result,
-          ];
+      $result = ($ldap_server->groupIsMember($group_dn, $user, $nested)) ? 'Yes' : 'No';
+      $group_results[] = [
+      "ldap_server->groupIsMember($group_dn, $user, nested=$nested_display)",
+      $result,
+      ];
 
-          if ($ldap_server->groupUserMembershipsConfigured()) {
-            $groupusermembershipsfromuserattr = $ldap_server->groupUserMembershipsFromUserAttr($user, $nested);
-            $count = count($groupusermembershipsfromuserattr);
-            // @FIXME
-            // theme() has been renamed to _theme() and should NEVER be called directly.
-            // Calling _theme() directly can alter the expected output and potentially
-            // introduce security issues (see https://www.drupal.org/node/2195739). You
-            // should use renderable arrays instead.
-            //
-            //
-            // @see https://www.drupal.org/node/2195739
-            // $result = theme('item_list', array('items' => $groupusermembershipsfromuserattr, 'type' => 'ul'));
-            $settings = array(
-              '#theme' => 'item_list',
-              '#items' => $groupusermembershipsfromuserattr,
-              '#type' => 'ul',
-            );
-            $result = drupal_render($settings);
+      if ($ldap_server->groupUserMembershipsConfigured()) {
+      $groupusermembershipsfromuserattr = $ldap_server->groupUserMembershipsFromUserAttr($user, $nested);
+      $count = count($groupusermembershipsfromuserattr);
+      // @FIXME
+      // theme() has been renamed to _theme() and should NEVER be called directly.
+      // Calling _theme() directly can alter the expected output and potentially
+      // introduce security issues (see https://www.drupal.org/node/2195739). You
+      // should use renderable arrays instead.
+      //
+      //
+      // @see https://www.drupal.org/node/2195739
+      // $result = theme('item_list', array('items' => $groupusermembershipsfromuserattr, 'type' => 'ul'));
+      $settings = array(
+      '#theme' => 'item_list',
+      '#items' => $groupusermembershipsfromuserattr,
+      '#type' => 'ul',
+      );
+      $result = drupal_render($settings);
 
-          }
-          else {
-            $groupusermembershipsfromuserattr = [];
-            $result = "'A user LDAP attribute such as memberOf exists that contains a list of their group' is not configured.";
-          }
-          $results_tables['group2'][] = [
-            "ldap_server->groupUserMembershipsFromUserAttr($user, nested=$nested_display)<br> count=" . count($groupusermembershipsfromuserattr),
-            $result,
-          ];
+      }
+      else {
+      $groupusermembershipsfromuserattr = [];
+      $result = "'A user LDAP attribute such as memberOf exists that contains a list of their group' is not configured.";
+      }
+      $results_tables['group2'][] = [
+      "ldap_server->groupUserMembershipsFromUserAttr($user, nested=$nested_display)<br> count=" . count($groupusermembershipsfromuserattr),
+      $result,
+      ];
 
-          if ($ldap_server->groupGroupEntryMembershipsConfigured()) {
-            $groupusermembershipsfromentry = $ldap_server->groupUserMembershipsFromEntry($user, $nested);
-            // @FIXME
-            // theme() has been renamed to _theme() and should NEVER be called directly.
-            // Calling _theme() directly can alter the expected output and potentially
-            // introduce security issues (see https://www.drupal.org/node/2195739). You
-            // should use renderable arrays instead.
-            //
-            //
-            // @see https://www.drupal.org/node/2195739
-            // $result = theme('item_list', array('items' => $groupusermembershipsfromentry, 'type' => 'ul'));
-            $settings = array(
-              '#theme' => 'item_list',
-              '#items' => $groupusermembershipsfromentry,
-              '#type' => 'ul',
-            );
-            $result = drupal_render($settings);
+      if ($ldap_server->groupGroupEntryMembershipsConfigured()) {
+      $groupusermembershipsfromentry = $ldap_server->groupUserMembershipsFromEntry($user, $nested);
+      // @FIXME
+      // theme() has been renamed to _theme() and should NEVER be called directly.
+      // Calling _theme() directly can alter the expected output and potentially
+      // introduce security issues (see https://www.drupal.org/node/2195739). You
+      // should use renderable arrays instead.
+      //
+      //
+      // @see https://www.drupal.org/node/2195739
+      // $result = theme('item_list', array('items' => $groupusermembershipsfromentry, 'type' => 'ul'));
+      $settings = array(
+      '#theme' => 'item_list',
+      '#items' => $groupusermembershipsfromentry,
+      '#type' => 'ul',
+      );
+      $result = drupal_render($settings);
 
-          }
-          else {
-            $groupusermembershipsfromentry = [];
-            $result = "Groups by entry not configured.";
-          }
-          $results_tables['group2'][] = [
-            "ldap_server->groupUserMembershipsFromEntry($user, nested=$nested_display)<br>count=" . count($groupusermembershipsfromentry),
-            $result,
-          ];
+      }
+      else {
+      $groupusermembershipsfromentry = [];
+      $result = "Groups by entry not configured.";
+      }
+      $results_tables['group2'][] = [
+      "ldap_server->groupUserMembershipsFromEntry($user, nested=$nested_display)<br>count=" . count($groupusermembershipsfromentry),
+      $result,
+      ];
 
-          if (count($groupusermembershipsfromentry) && count($groupusermembershipsfromuserattr)) {
-            $diff1 = array_diff($groupusermembershipsfromuserattr, $groupusermembershipsfromentry);
-            $diff2 = array_diff($groupusermembershipsfromentry, $groupusermembershipsfromuserattr);
-            // @FIXME
-            // theme() has been renamed to _theme() and should NEVER be called directly.
-            // Calling _theme() directly can alter the expected output and potentially
-            // introduce security issues (see https://www.drupal.org/node/2195739). You
-            // should use renderable arrays instead.
-            //
-            //
-            // @see https://www.drupal.org/node/2195739
-            // $result1 = theme('item_list', array('items' => $diff1, 'type' => 'ul'));
-            $settings = array(
-              '#theme' => 'item_list',
-              '#items' => $diff1,
-              '#type' => 'ul',
-            );
-            $result1 = drupal_render($settings);
+      if (count($groupusermembershipsfromentry) && count($groupusermembershipsfromuserattr)) {
+      $diff1 = array_diff($groupusermembershipsfromuserattr, $groupusermembershipsfromentry);
+      $diff2 = array_diff($groupusermembershipsfromentry, $groupusermembershipsfromuserattr);
+      // @FIXME
+      // theme() has been renamed to _theme() and should NEVER be called directly.
+      // Calling _theme() directly can alter the expected output and potentially
+      // introduce security issues (see https://www.drupal.org/node/2195739). You
+      // should use renderable arrays instead.
+      //
+      //
+      // @see https://www.drupal.org/node/2195739
+      // $result1 = theme('item_list', array('items' => $diff1, 'type' => 'ul'));
+      $settings = array(
+      '#theme' => 'item_list',
+      '#items' => $diff1,
+      '#type' => 'ul',
+      );
+      $result1 = drupal_render($settings);
 
-            // @FIXME
-            // theme() has been renamed to _theme() and should NEVER be called directly.
-            // Calling _theme() directly can alter the expected output and potentially
-            // introduce security issues (see https://www.drupal.org/node/2195739). You
-            // should use renderable arrays instead.
-            //
-            //
-            // @see https://www.drupal.org/node/2195739
-            // $result2 = theme('item_list', array('items' => $diff2, 'type' => 'ul'));
-            $settings = array(
-              '#theme' => 'item_list',
-              '#items' => $diff2,
-              '#type' => 'ul',
-            );
-            $result2 = drupal_render($settings);
+      // @FIXME
+      // theme() has been renamed to _theme() and should NEVER be called directly.
+      // Calling _theme() directly can alter the expected output and potentially
+      // introduce security issues (see https://www.drupal.org/node/2195739). You
+      // should use renderable arrays instead.
+      //
+      //
+      // @see https://www.drupal.org/node/2195739
+      // $result2 = theme('item_list', array('items' => $diff2, 'type' => 'ul'));
+      $settings = array(
+      '#theme' => 'item_list',
+      '#items' => $diff2,
+      '#type' => 'ul',
+      );
+      $result2 = drupal_render($settings);
 
-            $results_tables['group2'][] = [
-              "groupUserMembershipsFromEntry and FromUserAttr Diff)",
-              $result1,
-            ];
-            $results_tables['group2'][] = [
-              "FromUserAttr and groupUserMembershipsFromEntry Diff)",
-              $result2,
-            ];
-          }
-        }
+      $results_tables['group2'][] = [
+      "groupUserMembershipsFromEntry and FromUserAttr Diff)",
+      $result1,
+      ];
+      $results_tables['group2'][] = [
+      "FromUserAttr and groupUserMembershipsFromEntry Diff)",
+      $result2,
+      ];
+      }
+      }
       }
 
       if ($groups_from_dn = $ldap_server->groupUserMembershipsFromDn($user)) {
-        // @FIXME
-        // theme() has been renamed to _theme() and should NEVER be called directly.
-        // Calling _theme() directly can alter the expected output and potentially
-        // introduce security issues (see https://www.drupal.org/node/2195739). You
-        // should use renderable arrays instead.
-        //
-        //
-        // @see https://www.drupal.org/node/2195739
-        // $results_tables['groupfromDN'][] = array("Groups from DN", theme('item_list', array('items' => $groups_from_dn, 'type' => 'ul')));
-        $settings = array(
-          '#theme' => 'item_list',
-          '#items' => $groups_from_dn,
-          '#type' => 'ul',
-        );
-        $result = drupal_render($settings);
-        $results_tables['groupfromDN'][] = array("Groups from DN", $result);
+      // @FIXME
+      // theme() has been renamed to _theme() and should NEVER be called directly.
+      // Calling _theme() directly can alter the expected output and potentially
+      // introduce security issues (see https://www.drupal.org/node/2195739). You
+      // should use renderable arrays instead.
+      //
+      //
+      // @see https://www.drupal.org/node/2195739
+      // $results_tables['groupfromDN'][] = array("Groups from DN", theme('item_list', array('items' => $groups_from_dn, 'type' => 'ul')));
+      $settings = array(
+      '#theme' => 'item_list',
+      '#items' => $groups_from_dn,
+      '#type' => 'ul',
+      );
+      $result = drupal_render($settings);
+      $results_tables['groupfromDN'][] = array("Groups from DN", $result);
 
       }
-*/
+       */
     }
 
     list($has_errors, $more_results, $ldap_user) = $ldap_server->testUserMapping($values['testing_drupal_username']);

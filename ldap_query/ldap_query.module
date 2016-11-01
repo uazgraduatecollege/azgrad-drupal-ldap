@@ -8,6 +8,9 @@ use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\ldap_query\LdapQuery;
 use Drupal\ldap_query\LdapQueryAdmin;
 
+/**
+ *
+ */
 function ldap_query_menu() {
   // @FIXME: Unported, placehoder for first form created.
   $menu_offset = 4;
@@ -122,8 +125,8 @@ function ldap_query_cache_clear() {
  *   do not use cached or static result.
  *
  * @return array|bool
- *  Array of server conf object keyed on sid, single server conf object
- *  (if flatten == TRUE).
+ *   Array of server conf object keyed on sid, single server conf object
+ *   (if flatten == TRUE).
  */
 function ldap_query_get_queries($qid = NULL, $type, $flatten = FALSE, $reset = FALSE) {
   static $queries;

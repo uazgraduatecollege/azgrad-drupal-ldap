@@ -1,11 +1,5 @@
 <?php
 
-/**
- * @file
- * Abstract class to represent an ldap implementation type
- * such as active directory, open ldap, novell, etc.
- */
-
 namespace Drupal\ldap_servers\LdapTypes;
 
 /**

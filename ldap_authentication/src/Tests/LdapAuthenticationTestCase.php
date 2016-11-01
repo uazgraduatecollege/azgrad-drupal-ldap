@@ -2,7 +2,6 @@
 
 namespace Drupal\ldap_authentication\Tests;
 
-use Drupal\Core\Password\PasswordInterface;
 use Drupal\ldap_authentication\LdapAuthenticationConf;
 use Drupal\ldap_authentication\LdapAuthenticationConfAdmin;
 use Drupal\ldap_servers\ServerFactory;

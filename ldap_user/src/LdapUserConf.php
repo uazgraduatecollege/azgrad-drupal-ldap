@@ -7,7 +7,6 @@ use Drupal\ldap_servers\ServerFactory;
 use Drupal\ldap_servers\TokenFunctions;
 use Drupal\ldap_user\Exception\LdapBadParamsException;
 use Drupal\user\Entity\User;
-use Drupal\user\UserInterface;
 
 /**
  * The entry-point to working with users by loading their configuration.
@@ -18,7 +17,7 @@ class LdapUserConf {
   use LdapUserConfigurationValues;
 
   public $createLDAPAccounts;
-  // TODO: Unused variable
+  // TODO: Unused variable.
   public $createLDAPAccountsAdminApproval;
   protected $syncFormRow = 0;
 
@@ -49,7 +48,7 @@ class LdapUserConf {
 
   /**
    * Array of events that trigger provisioning of Drupal Accounts
-   * Valid constants are: see LdapUserConfigurationValues
+   * Valid constants are: see LdapUserConfigurationValues.
    *
    * @var array
    */
@@ -58,7 +57,7 @@ class LdapUserConf {
 
   /**
    * Array of events that trigger provisioning of LDAP Entries
-   * Valid constants are: see LdapUserConfigurationValues
+   * Valid constants are: see LdapUserConfigurationValues.
    *
    * @var array
    */
@@ -76,8 +75,9 @@ class LdapUserConf {
   /**
    * What to do when an ldap provisioned username conflicts with existing drupal user?
    *  See above.
+   *
    * @var int
-    */
+   */
   public $manualAccountConflict;
 
   // @todo default to FALSE and check for mapping to set to true
@@ -150,7 +150,9 @@ class LdapUserConf {
 
   public $config;
 
-
+  /**
+   *
+   */
   public function __construct() {
 
     $this->config = \Drupal::config('ldap_user.settings')->get('ldap_user_conf');
@@ -360,7 +362,7 @@ class LdapUserConf {
       case 'ldap_user_prov_to_ldap':
         $result = [
           LdapUserConf::$eventSyncToLdapEntry,
-          LdapUserConf::$eventCreateLdapEntry
+          LdapUserConf::$eventCreateLdapEntry,
         ];
         break;
 
@@ -432,7 +434,8 @@ class LdapUserConf {
           try {
             $factory = new ServerFactory($sid, NULL, TRUE);
             $ldap_server = $factory->servers;
-          } catch (\Exception $e) {
+          }
+          catch (\Exception $e) {
             \Drupal::logger('ldap_user')->error('Missing server');
           }
         }
@@ -462,7 +465,8 @@ class LdapUserConf {
    *   see events above.
    *   or
    *   'sync', 'provision', 'delete_ldap_entry', 'delete_drupal_entry', 'cancel_drupal_entry'.
-   *   @FIXME: Documentation incomplete.
+   *
+   * @FIXME: Documentation incomplete.
    *
    * @return bool
    */
@@ -500,7 +504,7 @@ class LdapUserConf {
    *   as prepopulated ldap entry.  usually not provided.
    *
    * @return array
-   *  Format:
+   *   Format:
    *     array('status' => 'success', 'fail', or 'conflict'),
    *     array('ldap_server' => ldap server object),
    *     array('proposed' => proposed ldap entry),
@@ -556,10 +560,10 @@ class LdapUserConf {
       'include_count' => FALSE,
     ];
 
-
     try {
       $proposed_ldap_entry = $this->drupalUserToLdapEntry($account, $ldap_server, $params, $ldap_user);
-    } catch (\Exception $e) {
+    }
+    catch (\Exception $e) {
       \Drupal::logger('ldap_user')->error('User or server is missing.');
       return [
         'status' => 'fail',
@@ -609,7 +613,7 @@ class LdapUserConf {
         \Drupal::moduleHandler()->invokeAll('ldap_entry_post_provision', [$ldap_entries, $ldap_server, $context]);
         $result = [
           'status' => 'success',
-          'description' =>  'ldap account created',
+          'description' => 'ldap account created',
           'proposed' => $proposed_ldap_entry,
           'created' => $ldap_entry_created,
           'ldap_server' => $ldap_server,
@@ -707,7 +711,8 @@ class LdapUserConf {
 
       try {
         $proposed_ldap_entry = $this->drupalUserToLdapEntry($account, $ldap_server, $params, $ldap_user);
-      } catch (\Exception $e) {
+      }
+      catch (\Exception $e) {
         \Drupal::logger('ldap_user')->error('User or server is missing.');
         return FALSE;
       }
@@ -799,7 +804,7 @@ class LdapUserConf {
       $prov_event = LdapUserConf::$eventSyncToDrupalUser;
     }
 
-    if ((!$ldap_user && method_exists($account,'getUsername')) ||
+    if ((!$ldap_user && method_exists($account, 'getUsername')) ||
         (!$account && $save) ||
         ($ldap_user && !isset($ldap_user['sid']))) {
       \Drupal::logger('ldap_user')->notice('Invalid selection passed to syncToDrupalAccount.');
@@ -877,7 +882,8 @@ class LdapUserConf {
 
     try {
       $proposed_ldap_entry = $this->drupalUserToLdapEntry($account, $ldap_server, $params);
-    } catch (\Exception $e) {
+    }
+    catch (\Exception $e) {
       \Drupal::logger('ldap_user')->error('User or server is missing.');
       return FALSE;
     }
@@ -945,7 +951,7 @@ class LdapUserConf {
    *   'module' => module calling function, e.g. 'ldap_user'
    *   'function' => function calling function, e.g. 'provisionLdapEntry'
    *   'include_count' => should 'count' array key be included
-   *   'direction' => self::$provisioningDirectionToLDAPEntry || self::$provisioningDirectionToDrupalUser
+   *   'direction' => self::$provisioningDirectionToLDAPEntry || self::$provisioningDirectionToDrupalUser.
    * @param null $ldap_user_entry
    *
    * @return array (ldap entry, $result)
@@ -971,7 +977,7 @@ class LdapUserConf {
     $mappings = $this->getSyncMappings($direction, $prov_events);
     // Loop over the mappings.
     foreach ($mappings as $field_key => $field_detail) {
-      // FIXME: Incorrect parameter count
+      // FIXME: Incorrect parameter count.
       list($ldap_attr_name, $ordinal, $conversion) = $this->extractTokenParts($field_key, TRUE);
       $ordinal = (!$ordinal) ? 0 : $ordinal;
       if ($ldap_user_entry && isset($ldap_user_entry[$ldap_attr_name]) && is_array($ldap_user_entry[$ldap_attr_name]) && isset($ldap_user_entry[$ldap_attr_name][$ordinal])) {
@@ -1451,13 +1457,16 @@ class LdapUserConf {
     }
     // Exclude users who have the field ldap_user_ldap_exclude set to 1.
     if (is_object($account) && $account->get('ldap_user_ldap_exclude')->getValue() == 1) {
-      //@TODO: Verify that the above statement is correct.
+      // @TODO: Verify that the above statement is correct.
       return TRUE;
     }
     // Everyone else is fine.
     return FALSE;
   }
 
+  /**
+   *
+   */
   private function activeUserAuthentication() {
     $user_register = \Drupal::config('user.settings')
       ->get("register_no_approval_required");

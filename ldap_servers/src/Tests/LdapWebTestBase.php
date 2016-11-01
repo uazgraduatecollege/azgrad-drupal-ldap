@@ -15,7 +15,7 @@ use Drupal\simpletest\WebTestBase;
  */
 abstract class LdapWebTestBase extends WebTestBase {
 
-  // number of cloned drupal users (clone0, clone1, etc) to make for tests
+  // Number of cloned drupal users (clone0, clone1, etc) to make for tests.
   public static $userOrphanCloneCount = 7;
   // Number of cloned drupal users to delete in orphan check.
   public static $userOrphanCloneRemoveCount = 2;
@@ -180,7 +180,7 @@ abstract class LdapWebTestBase extends WebTestBase {
       $members = array_diff($test_data['groups'][$group_dn]['attr']['member'], array($group_dn));
       $test_data['groups'][$group_dn]['attr']['member'] = $members;
       // @Fixme: Incomplete declaration
-     // $test_data['groups'][$group_dn]['attr']['member'][$i]['count'] = count($members - 1);
+      // $test_data['groups'][$group_dn]['attr']['member'][$i]['count'] = count($members - 1);
     }
     // debug("removeUserFromGroup:debug test_data[groups][$group_dn]"); debug($test_data['groups'][$group_dn]);.
   }

@@ -48,7 +48,7 @@ function theme_ldap_authentication_user_login_block_links($variables) {
  */
 function theme_ldap_authentication_user_pass_message($variables) {
   extract($variables);
-  //@FIXME: Missing auth_conf
+  // @FIXME: Missing auth_conf
   if ($auth_conf->authenticationMode == LdapAuthenticationConf::$mode_exclusive && $auth_conf->passwordOption != LdapAuthenticationConf::$passwordFieldAllow) {
     $msg = t('This page is only useful for the site administrator.  All other users
       need to reset their passwords');

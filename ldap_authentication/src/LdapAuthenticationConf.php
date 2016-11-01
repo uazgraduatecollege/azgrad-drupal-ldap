@@ -1,11 +1,5 @@
 <?php
 
-/**
- * @file
- * This class represents an ldap_authentication module's configuration
- * It is extended by LdapAuthenticationConfAdmin for configuration and other admin functions.
- */
-
 namespace Drupal\ldap_authentication;
 
 use Drupal\Core\Url;
@@ -115,6 +109,7 @@ class LdapAuthenticationConf {
   /**
    * Email handling option
    *   See above for possible values.
+   *
    * @var int
    */
   public $emailOption;
@@ -129,6 +124,7 @@ class LdapAuthenticationConf {
   /**
    * Email handling option
    *   See above for possible values.
+   *
    * @var int
    */
   public $emailUpdate;
@@ -142,6 +138,7 @@ class LdapAuthenticationConf {
   /**
    * Password handling option
    *   See above for possible values.
+   *
    * @var int
    */
   public $passwordOption;

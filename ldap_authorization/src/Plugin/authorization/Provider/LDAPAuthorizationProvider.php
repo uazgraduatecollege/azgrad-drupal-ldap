@@ -3,13 +3,11 @@
 namespace Drupal\ldap_authorization\Plugin\authorization\provider;
 
 use Drupal\authorization\AuthorizationSkipAuthorization;
-use Drupal\authorization\Entity\AuthorizationProfile;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Form\FormStateInterface;
 
 use Drupal\authorization\Provider\ProviderPluginBase;
 use Drupal\ldap_servers\ConversionHelper;
-use Drupal\ldap_servers\Entity\Server;
 use Drupal\ldap_servers\ServerFactory;
 use Drupal\ldap_user\LdapUserConf;
 
@@ -31,8 +29,7 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
   <li><code>cn=gryffindor,ou=groups,dc=hogwarts,dc=edu</code></li>
   <li><code>cn=faculty,ou=groups,dc=hogwarts,dc=edu</code></li>
   <li><code>cn=probation students,ou=groups,dc=hogwarts,dc=edu</code></li>
-  </ul>'
-  ;
+  </ul>';
 
   public $syncOnLogon = TRUE;
 
@@ -67,7 +64,8 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
         '#markup' => t('<strong>Warning</strong>: You must create an LDAP Server first.'),
       );
       drupal_set_message(t('You must create an LDAP Server first.'), 'warning');
-    } else {
+    }
+    else {
       $server_options = array();
       foreach ($servers as $id => $server) {
         /* @var Server $server */
@@ -83,16 +81,16 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
         '#type' => 'radios',
         '#title' => t('LDAP Server used in @profile_name configuration.', $tokens),
         '#required' => 1,
-        //@FIXME: Not sure what this defaults to
+        // @FIXME: Not sure what this defaults to
         '#default_value' => $this->configuration['server'],
-       // '#default_value' => 1,
+       // '#default_value' => 1,.
         '#options' => $server_options,
       );
     }
 
     $form['status']['type'] = array(
       '#type' => 'hidden',
-      //@FIXME: Not sure what this defaults to
+      // @FIXME: Not sure what this defaults to
      // '#value' => $this->configuration['status']['type'],
       '#value' => 1,
       '#required' => 1,
@@ -101,7 +99,7 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
     $form['status']['only_ldap_authenticated'] = array(
       '#type' => 'checkbox',
       '#title' => t('Only apply the following LDAP to @consumer_name configuration to users authenticated via LDAP.  On uncommon reason for disabling this is when you are using Drupal authentication, but want to leverage LDAP for authorization; for this to work the Drupal username still has to map to an LDAP entry.', $tokens),
-      //@FIXME: Not sure what this defaults to
+      // @FIXME: Not sure what this defaults to
       // '#default_value' => $this->configuration['status']['only_ldap_authenticated'],
     );
 
@@ -110,8 +108,8 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
       '#title' => t('II. LDAP to @consumer_name mapping and filtering', $tokens),
       '#description' => t(self::$genericDescription . '<p><strong>Mappings are used to convert and filter these group representations to @consumer_namePlural.</strong></p> @consumer_mappingDirections', $tokens),
       '#collapsible' => TRUE,
-      //@FIXME: Not sure what this defaults to
-      //'#collapsed' => !($this->mappings || $this->useMappingsAsFilter || $this->useFirstAttrAsGroupId),
+      // @FIXME: Not sure what this defaults to
+      // '#collapsed' => !($this->mappings || $this->useMappingsAsFilter || $this->useFirstAttrAsGroupId),
     );
 
     $form['filter_and_mappings']['use_first_attr_as_groupid'] = array(

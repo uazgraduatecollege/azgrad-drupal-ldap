@@ -1,16 +1,10 @@
 <?php
 
-/**
- * @file
- * This class extends LdapAuthenticationConf for configuration and other admin functions.
- */
-
 namespace Drupal\ldap_authentication;
 
 use Drupal\Core\Url;
 use Drupal\ldap_servers\Entity\Server;
 use Drupal\ldap_servers\ServerFactory;
-use Drupal\ldap_user\LdapUserConf;
 
 /**
  *
@@ -557,7 +551,7 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
             Server::$bindMethodAnonUser => 'Anonymous Bind for search, then Bind with Users Credentials',
           );
           $tokens = array(
-            '%edit' => \Drupal::l($enabled_servers[$sid]->name,  Url::fromUri('/admin/config/people/ldap/servers/edit/' . $sid)),
+            '%edit' => \Drupal::l($enabled_servers[$sid]->name, Url::fromUri('/admin/config/people/ldap/servers/edit/' . $sid)),
             '%sid' => $sid,
             '%bind_method' => $methods[$enabled_servers[$sid]->get('bind_method')],
           );

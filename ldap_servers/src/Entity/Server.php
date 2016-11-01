@@ -10,7 +10,6 @@ use Drupal\ldap_servers\MassageFunctions;
 use Drupal\ldap_servers\ServerInterface;
 use Drupal\ldap_servers\TokenFunctions;
 use Drupal\ldap_user\LdapUserConf;
-use Drupal\user\Entity\User;
 
 /**
  * Defines the Server entity.
@@ -262,7 +261,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
    *   entry array: http://us.php.net/manual/en/function.ldap-add.php
    *    $attributes["attribute1"] = "value";
    *    $attributes["attribute2"][0] = "value1";
-   *    $attributes["attribute2"][1] = "value2";
+   *    $attributes["attribute2"][1] = "value2";.
    *
    * @return boolean result
    */
@@ -290,7 +289,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
         '%id' => $this->id(),
         '%ldap_errno' => ldap_errno($this->connection),
         '%ldap_err2str' => ldap_err2str(ldap_errno($this->connection)),
-        '%ldap_additionalinfo' => $ldap_additionalinfo
+        '%ldap_additionalinfo' => $ldap_additionalinfo,
       );
       \Drupal::logger('ldap_server')->error($error, $tokens);
     }
@@ -348,7 +347,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
    *   entry array: http://us.php.net/manual/en/function.ldap-add.php
    *     $attributes["attribute1"] = "value";
    *     $attributes["attribute2"][0] = "value1";
-   *     $attributes["attribute2"][1] = "value2";
+   *     $attributes["attribute2"][1] = "value2";.
    *
    * @return TRUE on success FALSE on error
    */
@@ -439,13 +438,12 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
    * @param null $deref
    * @param int $scope
    *
-   * @return array|boolean
-   * An array of matching entries->attributes (will have 0
-   * elements if search returns no results),
-   * or FALSE on error on any of the basedn queries
+   * @return array|bool
+   *   An array of matching entries->attributes (will have 0
+   *   elements if search returns no results),
+   *   or FALSE on error on any of the basedn queries
    *
    * @remaining params mimick ldap_search() function params
-   *
    */
   public function searchAllBaseDns($filter, $attributes = array(), $attrsonly = 0, $sizelimit = 0, $timelimit = 0, $deref = NULL, $scope = NULL) {
     if ($scope == NULL) {
@@ -495,15 +493,16 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
    * @param int $timelimit
    * @param null $deref
    * @param int $scope
+   *
    * @return array|bool
    *
-   * An array of matching entries->attributes (will have 0
-   * elements if search returns no results),
-   * or FALSE on error.
-   * @remaining params mimick ldap_search() function params
+   *   An array of matching entries->attributes (will have 0
+   *   elements if search returns no results),
+   *   or FALSE on error.
    *
+   * @remaining params mimick ldap_search() function params
    */
-  function search($base_dn = NULL, $filter, $attributes = array(), $attrsonly = 0, $sizelimit = 0, $timelimit = 0, $deref = NULL, $scope = NULL) {
+  public function search($base_dn = NULL, $filter, $attributes = array(), $attrsonly = 0, $sizelimit = 0, $timelimit = 0, $deref = NULL, $scope = NULL) {
     if ($scope == NULL) {
       $scope = Server::$scopeSubTree;
     }
@@ -984,7 +983,9 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
    * Undocumented.
    *
    * TODO: Naming and scope are unclear. Restructure if possible.
+   *
    * @param User|array|mixed $user
+   *
    * @return array|bool
    */
   public function userUserToExistingLdapEntry($user) {
@@ -1011,10 +1012,10 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
    * Get array of required attributes for an ldap query.
    *
    * @param string $sid
-   *   server id or ldap server object being used
+   *   server id or ldap server object being used.
    * @param string $ldap_context
    * @param bool $reset
-   *   cache
+   *   cache.
    *
    * @return mixed
    */
