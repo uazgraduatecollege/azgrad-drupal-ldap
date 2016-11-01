@@ -464,21 +464,24 @@ function ldap_servers_convert_attribute($value, $conversion = NULL) {
  */
 function ldap_servers_disable_http_check(&$form) {
 
-  if (\Drupal::config('ldap_servers.settings')->get('ldap_servers_require_ssl_for_credentials') == 1 && @$_SERVER['HTTPS'] != 'on') {
-    $tokens = array(
-      '%site_name' => \Drupal::config('system.site')->get('name'),
-      '%site_contact_link' => \Drupal::config('system.site')->get('mail'),
-    );
+  if (\Drupal::config('ldap_servers.settings')->get('require_ssl_for_credentials') == 1 ) {
+    \Drupal::service('page_cache_kill_switch')->trigger();
+    if (@$_SERVER['HTTPS'] != 'on') {
+      $tokens = array(
+        '%site_name' => \Drupal::config('system.site')->get('name'),
+        '%site_contact_link' => \Drupal::config('system.site')->get('mail'),
+      );
 
-    if (empty($tokens['%site_contact_link'])) {
-      $tokens['%site_contact_link'] = 'the site admin';
-    }
-    drupal_set_message(t('You are accessing %site_name using an unencrypted connection. For your security,
+      if (empty($tokens['%site_contact_link'])) {
+        $tokens['%site_contact_link'] = 'the site admin';
+      }
+      drupal_set_message(t('You are accessing %site_name using an unencrypted connection. For your security,
      %site_name only supports account logins using a secure protocol such as HTTPS. You can switch
      to HTTPS by trying to view this page again after changing the URL in your browser \'s
      location bar to begin with "https" instead of "http". Please contact
       %site_contact_link for help if this error continues.', $tokens), 'error');
-    $form['#disabled'] = TRUE;
+      $form['#disabled'] = TRUE;
+    }
   }
 }
 

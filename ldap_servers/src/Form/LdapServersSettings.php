@@ -42,22 +42,22 @@ class LdapServersSettings extends ConfigFormBase {
       drupal_set_message(t('PHP LDAP Extension is not loaded.'), "warning");
     }
 
-    $https_approaches = [];
-    $https_approaches[] = t('Use secure pages or secure login module to redirect to SSL (https)');
-    $https_approaches[] = t('Run entire site with SSL (https)');
-    $https_approaches[] = t('Remove logon block and redirect all /user page to https via webserver redirect');
-
     $form['#title'] = "Configure LDAP Preferences";
     $form['ssl'] = [
-      '#type' => 'details',
+      '#type' => 'fieldset',
       '#title' => t('Require HTTPS on Credential Pages'),
     ];
 
     $settings = array(
       '#theme' => 'item_list',
-      '#items' => $https_approaches,
+      '#items' => [
+        t('Use secure pages or secure login module to redirect to SSL (https)'),
+        t('Run entire site with SSL (https)'),
+        t('Remove logon block and redirect all /user page to https via webserver redirect'),
+      ],
       '#type' => 'ul',
     );
+
     $form['ssl']['require_ssl_for_credentials'] = array(
       '#type' => 'checkbox',
       '#title' => t('If checked, modules using LDAP will not allow credentials to
