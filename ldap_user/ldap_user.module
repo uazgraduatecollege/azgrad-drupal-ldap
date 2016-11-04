@@ -9,6 +9,7 @@ use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\ldap_servers\OrphanProcessor;
 use Drupal\ldap_servers\ServerFactory;
+use Drupal\ldap_servers\TokenHelper;
 use Drupal\user\UserInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
@@ -16,14 +17,6 @@ use Drupal\Core\Form\FormState;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Url;
 use Drupal\ldap_user\LdapUserConf;
-
-/**
- *
- */
-class LdapUserTokenHelper {
-  use \Drupal\ldap_servers\TokenFunctions;
-  // Temporary helper since TokenFunctions are a trait.
-}
 
 /**
  * Implements hook_init().

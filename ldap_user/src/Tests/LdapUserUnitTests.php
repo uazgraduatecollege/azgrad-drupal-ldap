@@ -5,6 +5,7 @@ namespace Drupal\ldap_user\Tests;
 use Drupal\Component\Utility\Unicode;
 use Drupal\ldap_servers\ServerFactory;
 use Drupal\ldap_servers\tests\LdapWebTestBase;
+use Drupal\ldap_servers\TokenHelper;
 use Drupal\ldap_user\LdapUserConf;
 use ReflectionFunction;
 
@@ -109,7 +110,7 @@ class LdapWebUserUnitTests extends LdapWebTestBase {
     $entity->house['und'][1]['value'] = 'Privet Drive';
     $account = new \stdClass();
     $account->mail = 'hpotter@hogwarts.edu';
-    $tokens = new \TokenHelper();
+    $tokens = new TokenHelper();
     $mail = $tokens->tokenReplace('[property.mail]', $account, $entity);
     $this->assertTrue($mail == $account->mail, t('[property.mail] token worked on ldap_user_token_replace().'), $this->testId('tokens.property'));
     $lname = $tokens->tokenReplace('[field.lname]', $account, $entity);

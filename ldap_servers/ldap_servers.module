@@ -9,15 +9,8 @@ use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Session\AccountProxy;
 use Drupal\Core\Url;
 use Drupal\ldap_servers\ServerFactory;
+use Drupal\ldap_servers\TokenHelper;
 use Drupal\ldap_user\LdapUserConf;
-
-/**
- *
- */
-class TokenHelper {
-  use \Drupal\ldap_servers\TokenFunctions;
-  // Temporary helper since TokenFunctions are a trait.
-}
 
 /**
  * Advertise the current ldap api version.
