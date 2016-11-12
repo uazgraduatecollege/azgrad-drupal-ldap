@@ -1442,7 +1442,7 @@ class LdapUserConf {
       return TRUE;
     }
     // Exclude users who have the field ldap_user_ldap_exclude set to 1.
-    if (is_object($account) && $account->get('ldap_user_ldap_exclude')->getValue() == 1) {
+    if (is_object($account) && $account->get('ldap_user_ldap_exclude')->value == 1) {
       // @TODO: Verify that the above statement is correct.
       return TRUE;
     }
