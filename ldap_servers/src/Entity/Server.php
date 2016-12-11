@@ -86,6 +86,10 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
   public static $scopeOneLevel = 2;
   public static $scopeSubTree = 3;
 
+  public $searchPageSize = 1000;
+  public $searchPageStart = 0;
+  public $searchPageEnd = NULL;
+
   /**
    * Connect Method.
    */
@@ -125,6 +129,10 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
         \Drupal::logger('user')->notice('Could not start TLS. (Error @errno: @error).', ['@errno' => ldap_errno($con), '@error' => ldap_error($con)]);
         return self::LDAP_CONNECT_ERROR;
       }
+    }
+
+    if ($this->get('search_pagination') && $this->get('search_page_size')) {
+      $this->searchPageSize = $this->get('search_page_size');
     }
 
     // Store the resulting resource.
@@ -630,7 +638,6 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
     $has_page_results = FALSE;
 
     do {
-      // FIXME: Undefined properties searchPageSize and searchPageStart.
       ldap_control_paged_result($this->connection, $this->searchPageSize, TRUE, $page_token);
       $result = $this->ldapQuery($ldap_query_params['scope'], $ldap_query_params);
 
@@ -675,7 +682,6 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
         break;
       }
       // User defined pagination has run out.
-      // FIXME: Undefined searchPageEnd.
       elseif ($this->searchPageEnd !== NULL && $page >= $this->searchPageEnd) {
         break;
       }
