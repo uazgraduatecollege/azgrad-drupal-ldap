@@ -1375,7 +1375,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
           $ors = array();
           foreach ($member_ids as $i => $member_id) {
             // @todo this would be replaced by query template
-            $ors[] = $this->groupMembershipsAttr() . '=' . $member_id;
+            $ors[] = $this->groupMembershipsAttr() . '=' . ldap_escape($member_id);
           }
 
           if (count($ors)) {
@@ -1510,7 +1510,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
         else {
           $member_value = $this->getFirstRDNValueFromDN($member_group_dn, $this->groupMembershipsAttrMatchingUserAttr());
         }
-        $ors[] = $this->groupMembershipsAttr() . '=' . $member_value;
+        $ors[] = $this->groupMembershipsAttr() . '=' . ldap_escape($member_value);
       }
     }
 
@@ -1644,7 +1644,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
         $tested_group_ids[] = $member_id;
         $all_group_dns[] = $group_entry['dn'];
         // Add $group_id (dn, cn, uid) to query.
-        $ors[] = $this->groupMembershipsAttr() . '=' . $member_id;
+        $ors[] = $this->groupMembershipsAttr() . '=' . ldap_escape($member_id);
       }
     }
 
