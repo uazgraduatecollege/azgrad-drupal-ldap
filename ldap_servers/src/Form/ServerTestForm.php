@@ -39,6 +39,13 @@ class ServerTestForm extends EntityForm {
     it can bind and basic user and group functions.  It also shows token examples
     and a sample user.  The only data this function will modify is the test LDAP group, which will be deleted and added');
 
+    if (!\Drupal::moduleHandler()->moduleExists('ldap_user')) {
+      $form['error'] = [
+        '#markup' => '<h3>' . t('This form requires ldap_user to function correctly, please enable it.') . '</h3>'
+      ];
+      return $form;
+    }
+
     $properties = array();
 
     $settings = array(
