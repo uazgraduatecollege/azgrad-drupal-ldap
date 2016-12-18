@@ -89,7 +89,7 @@ class LdapAuthenticationConf {
    * @var string
    */
   public $ldapUserHelpLinkUrl;
-  public $ldapUserHelpLinkText = 'Logon Help';
+  public $ldapUserHelpLinkText = 'login help';
 
   public static $authFailConnect = 1;
   public static $authFailBind = 2;
