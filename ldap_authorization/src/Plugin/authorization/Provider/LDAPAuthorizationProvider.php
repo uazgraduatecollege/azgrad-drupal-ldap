@@ -3,11 +3,13 @@
 namespace Drupal\ldap_authorization\Plugin\authorization\provider;
 
 use Drupal\authorization\AuthorizationSkipAuthorization;
+use Drupal\authorization\Entity\AuthorizationProfile;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Form\FormStateInterface;
 
 use Drupal\authorization\Provider\ProviderPluginBase;
 use Drupal\ldap_servers\ConversionHelper;
+use Drupal\ldap_servers\Entity\Server;
 use Drupal\ldap_servers\ServerFactory;
 use Drupal\ldap_user\LdapUserConf;
 
@@ -216,7 +218,7 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
     // Configure this provider.
     // Do not continue if user should be excluded from LDAP authentication.
     if (LdapUserConf::excludeUser($user)) {
-      return array();
+      throw new AuthorizationSkipAuthorization();
     }
     /* @var AuthorizationProfile $profile */
     $profile = $this->configuration['profile'];
