@@ -730,8 +730,8 @@ function ldap_user_ldap_provision_semaphore($action, $op, $value = NULL, $reset 
 /**
  * Implements hook_user_login().
  */
-function ldap_user_user_login(UserInterface $account) {
-
+function ldap_user_user_login($account) {
+  /* @var UserInterface $account */
   $ldap_user_conf = new LdapUserConf();
 
   if ($ldap_user_conf->excludeUser($account)) {
@@ -785,7 +785,8 @@ function ldap_user_user_login(UserInterface $account) {
 /**
  * Implements hook_ENTITY_TYPE_insert().
  */
-function ldap_user_user_insert(UserInterface $account) {
+function ldap_user_user_insert($account) {
+  /* @var UserInterface $account */
 
   $not_associated = LdapUserConf::excludeUser($account);
 
@@ -835,7 +836,8 @@ function ldap_user_user_insert(UserInterface $account) {
 /**
  * Implements hook_ENTITY_TYPE_update().
  */
-function ldap_user_user_update(UserInterface $account) {
+function ldap_user_user_update($account) {
+  /* @var UserInterface $account */
 
   $ldap_user_conf = new LdapUserConf();
 
@@ -884,7 +886,9 @@ function ldap_user_user_update(UserInterface $account) {
  *
  * @FIXME: Removed checking for new users in ldap_user_ldap_exclude(). Do we need that?
  */
-function ldap_user_user_presave(UserInterface $account) {
+function ldap_user_user_presave($account) {
+  /* @var UserInterface $account */
+
   $ldap_user_conf = new LdapUserConf();
 
   if ($ldap_user_conf->excludeUser($account) || !$account->getUsername()) {
@@ -908,7 +912,9 @@ function ldap_user_user_presave(UserInterface $account) {
 /**
  * Implements hook_ENTITY_TYPE_delete().
  */
-function ldap_user_user_delete(UserInterface $account) {
+function ldap_user_user_delete($account) {
+  /* @var UserInterface $account */
+
   // Drupal user account is about to be deleted.
   $ldap_user_conf = new LdapUserConf();
   if (
