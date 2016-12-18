@@ -11,6 +11,7 @@ use Drupal\ldap_authentication\LdapAuthenticationConf;
 use Drupal\ldap_servers\Entity\Server;
 use Drupal\ldap_servers\MassageFunctions;
 use Drupal\ldap_user\LdapUserConf;
+use Drupal\user\UserInterface;
 
 /**
  * @todo fix advanced help for ../ldap/authentication settings page
@@ -565,7 +566,8 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state, $re
   if ($drupal_account_exists && !$drupal_account_is_authmapped) {
     if ($auth_conf->ldapUser->loginConflictResolve == LdapUserConf::$userConflictLog) {
       if ($account_with_same_email = user_load_by_mail($ldap_user['mail'])) {
-        $watchdog_tokens['%conflict_name'] = $account_with_same_email->name;
+        /* @var UserInterface $account_with_same_email */
+        $watchdog_tokens['%conflict_name'] = $account_with_same_email->getUsername();
         \Drupal::logger('ldap_authentication')->error('LDAP user with DN %dn has a naming conflict with a local drupal user %conflict_name', $watchdog_tokens);
       }
       drupal_set_message(t('Another user already exists in the system with the same login name. You should contact the system administrator in order to solve this conflict.'), 'error');
@@ -586,12 +588,14 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state, $re
    * VI.C: existing Drupal account with incorrect email.  fix email if appropriate
    *
    */
-  if ($drupal_account_exists && $drupal_account->mail->value != $ldap_user['mail'] && (
+
+  /* @var UserInterface $drupal_account */
+  if ($drupal_account_exists && $drupal_account->getEmail() != $ldap_user['mail'] && (
       $auth_conf->emailUpdate == $auth_conf::$emailUpdateOnLdapChangeEnableNotify ||
       $auth_conf->emailUpdate == $auth_conf::$emailUpdateOnLdapChangeEnable
     )) {
     $drupal_account->set('mail', $ldap_user['mail']);
-    $watchdog_tokens['%username'] = $drupal_account->name->value;
+    $watchdog_tokens['%username'] = $drupal_account->getUsername();
     if (!$updated_account = $drupal_account->save()) {
       \Drupal::logger('ldap_authentication')->error('Failed to make changes to user %username updated %changed.', $watchdog_tokens);
     }
@@ -619,7 +623,7 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state, $re
        * username does not exist but email does.  Since user_external_login_register does not deal with
        * mail attribute and the email conflict error needs to be caught beforehand, need to throw error here
        */
-      $watchdog_tokens['%duplicate_name'] = $account_with_same_email->name;
+      $watchdog_tokens['%duplicate_name'] = $account_with_same_email->getUsername();
       \Drupal::logger('ldap_authentication')->error('LDAP user with DN %dn has email address (%mail) conflict with a drupal user %duplicate_name', $watchdog_tokens);
 
       drupal_set_message(t('Another user already exists in the system with the same email address. You should contact the system administrator in order to solve this conflict.'), 'error');
