@@ -5,6 +5,7 @@ namespace Drupal\ldap_user\Form;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\ldap_user\LdapUserConf;
+use Drupal\user\Entity\User;
 use PDO;
 
 /**
@@ -108,16 +109,8 @@ class LdapUserTestForm extends FormBase {
 
     if ($username && count($selected_actions) > 0) {
 
-      $user_object = user_load_by_name($username);
-      if ($user_object) {
-        $user_entities = \Drupal::entityManager()->getStorage('user', [
-          $user_object->uid,
-        ]);
-        $user_entity = $user_entities[$user_object->uid];
-      }
-      else {
-        $user_entity = NULL;
-      }
+      /* @var User $account */
+      $account = user_load_by_name($username);
 
       $ldap_user_conf = new LdapUserConf();
       $config = \Drupal::config('ldap_user.settings')->get('ldap_user_conf');
@@ -136,21 +129,19 @@ class LdapUserTestForm extends FormBase {
       }
       $results = [];
       $results['username'] = $username;
-      $results['user object (before provisioning or syncing)'] = $user_object;
-      $results['user entity (before provisioning or syncing)'] = $user_entity;
+      $results['user entity (before provisioning or syncing)'] = $account;
       $results['related ldap entry (before provisioning or syncing)'] = $user_ldap_entry;
       $results['ldap_user_conf'] = $ldap_user_conf;
 
-      if (is_object($user_object)) {
-        $authmaps = db_query("SELECT aid, uid, module, identifier FROM {ldap_user_identities} WHERE uid = :uid", [
-          ':uid' => $user_object->uid,
-        ])->fetchAllAssoc('aid', PDO::FETCH_ASSOC);
+      if (is_object($account)) {
+        $authmaps = LdapUserConf::ldap_user_get_identifier_from_map($account->id());
       }
       else {
         $authmaps = 'No authmaps available.  Authmaps only shown if user account exists beforehand';
         // Need for testing.
-        $user_object = new \stdClass();
-        $user_object->name = $username;
+        $account = User::create();
+        $account->setUsername($username);
+
       }
       $results['User Authmap'] = $authmaps;
       $results['LDAP User Configuration Object'] = $ldap_user_conf;
@@ -167,11 +158,11 @@ class LdapUserTestForm extends FormBase {
         ] as $direction) {
           if ($ldap_user_conf->provisionEnabled($direction, $sync_trigger)) {
             if ($direction == LdapUserConf::$provisioningDirectionToDrupalUser) {
-              $discard = $ldap_user_conf->provisionDrupalAccount(NULL, $account, NULL, $save);
+              $ldap_user_conf->provisionDrupalAccount(NULL, $account, NULL, $save);
               $results['provisionDrupalAccount method results']["context = $sync_trigger_description"]['proposed'] = $account;
             }
             else {
-              $provision_result = $ldap_user_conf->provisionLdapEntry($user_object, NULL, $test_query);
+              $provision_result = $ldap_user_conf->provisionLdapEntry($account, NULL, $test_query);
               $results['provisionLdapEntry method results']["context = $sync_trigger_description"] = $provision_result;
             }
           }
@@ -194,7 +185,7 @@ class LdapUserTestForm extends FormBase {
         ] as $direction) {
           if ($ldap_user_conf->provisionEnabled($direction, $sync_trigger)) {
             if ($direction == LdapUserConf::$provisioningDirectionToDrupalUser) {
-              $discard = $ldap_user_conf->syncToDrupalAccount($account, NULL, $test_query);
+              $ldap_user_conf->syncToDrupalAccount($account, NULL, $test_query);
               $results['syncToDrupalAccount method results']["context = $sync_trigger_description"]['proposed'] = $account;
             }
             else {

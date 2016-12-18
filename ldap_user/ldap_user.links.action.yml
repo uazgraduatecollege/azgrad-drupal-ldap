@@ -2,4 +2,4 @@ ldap_user.test_form:
   route_name: ldap_user.test_form
   title: 'Test LDAP User Functionality for a given user.'
   appears_on:
-    - ldap_user.test_form
+    - ldap_user.admin_form
