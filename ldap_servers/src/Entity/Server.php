@@ -1993,7 +1993,12 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
     unlink($unmanaged_file);
     $fieldSettings = $field->getFieldDefinition()->getItemDefinition()->getSettings();
     $token_service = \Drupal::token();
+
     $directory = $token_service->replace($fieldSettings['file_directory']);
+
+    if (!is_dir(\Drupal::service('file_system')->realpath('public://' . $directory))) {
+      \Drupal::service('file_system')->mkdir('public://' . $directory, NULL, TRUE);
+    }
 
     $managed_file = file_save_data($LdapUserPicture, 'public://' . $directory . '/' . $file_name . '.' . $extension);
 
@@ -2003,7 +2008,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
       'file_validate_size' => array($fieldSettings['max_filesize']),
     );
 
-    if (file_validate($managed_file, $validators)) {
+    if ($managed_file && file_validate($managed_file, $validators)) {
       return ['target_id' => $managed_file->id()];
     } else {
       // Uploaded and unfit files will be automatically garbage collected.
