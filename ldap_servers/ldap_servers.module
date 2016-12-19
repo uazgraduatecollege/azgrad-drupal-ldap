@@ -9,6 +9,7 @@ use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Session\AccountProxy;
 use Drupal\Core\Url;
 use Drupal\ldap_servers\ServerFactory;
+use Drupal\ldap_servers\TokenFunctions;
 use Drupal\ldap_servers\TokenHelper;
 use Drupal\ldap_user\LdapUserConf;
 
@@ -257,37 +258,9 @@ function ldap_servers_cache_clear() {
   }
 }
 
-/**
- * Function to convert microsoft style guids to strings.
- */
-function ldap_servers_msguid($value) {
 
-  $hex_string = bin2hex($value);
-  // (MS?) GUID are displayed with first three GUID parts as "big endian"
-  // Doing this so String value matches what other LDAP tool displays for AD.
-  $value = strtoupper(substr($hex_string, 6, 2) . substr($hex_string, 4, 2) .
-  substr($hex_string, 2, 2) . substr($hex_string, 0, 2) . '-' .
-  substr($hex_string, 10, 2) . substr($hex_string, 8, 2) . '-' .
-  substr($hex_string, 14, 2) . substr($hex_string, 12, 2) . '-' .
-  substr($hex_string, 16, 4) . '-' . substr($hex_string, 20, 12));
 
-  return $value;
-}
 
-/**
- * General binary conversion function for guids
- * tries to determine which approach based on length
- * of string.
- */
-function ldap_servers_binary($value) {
-  if (strlen($value) == 16) {
-    $value = ldap_servers_msguid($value);
-  }
-  else {
-    $value = bin2hex($value);
-  }
-  return $value;
-}
 
 /**
  * @TODO needs caching element.  several modules could potentially call this in the same
@@ -432,11 +405,11 @@ function ldap_servers_convert_attribute($value, $conversion = NULL) {
         break;
 
       case 'msguid':
-        $value = ldap_servers_msguid($value);
+        $value = TokenFunctions::convertMsguidToString($value);
         break;
 
       case 'binary':
-        $value = ldap_servers_binary($value);
+        $value = TokenFunctions::binaryConversiontoString($value);
         break;
 
       case 'md5':

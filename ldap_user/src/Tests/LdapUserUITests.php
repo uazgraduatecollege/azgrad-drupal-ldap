@@ -2,7 +2,7 @@
 
 namespace Drupal\ldap_user\Tests;
 
-use Drupal\ldap_test\LdapWebTestBase;
+use Drupal\ldap_servers\tests\LdapWebTestBase;
 use Drupal\ldap_user\LdapUserConf;
 
 /**

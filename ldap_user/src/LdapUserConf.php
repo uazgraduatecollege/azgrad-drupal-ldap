@@ -48,44 +48,12 @@ class LdapUserConf {
    */
   public $provisionSidFromDirection;
 
-  /**
-   * Array of events that trigger provisioning of Drupal Accounts
-   * Valid constants are: see LdapUserConfigurationValues.
-   *
-   * @var array
-   */
-  public $drupalAcctProvisionTriggers = [];
-
-
-  /**
-   * Array of events that trigger provisioning of LDAP Entries
-   * Valid constants are: see LdapUserConfigurationValues.
-   *
-   * @var array
-   */
-  public $ldapEntryProvisionTriggers = [];
-
-  /**
-   * Server providing LDAP entry provisioning.
-   *
-   * @var string
-   *
-   * @see LdapServer::sid
-   */
-  public $userConflictResolve;
-
-  /**
-   * What to do when an ldap provisioned username conflicts with existing drupal user?
-   *  See above.
-   *
-   * @var int
-   */
-  public $manualAccountConflict;
 
   // @todo default to FALSE and check for mapping to set to true
   public $setsLdapPassword = TRUE;
 
   public $loginConflictResolve = FALSE;
+
   /**
    * Array of field sync mappings provided by all modules (via hook_ldap_user_attrs_list_alter())
    * array of the form: array(
@@ -102,10 +70,12 @@ class LdapUserConf {
    *     'enabled' => 1|0 boolean
    *      prov_events' => array( see events above )
    *  )
+   *
+   * Array of field syncing directions for each operation.  should include ldapUserSyncMappings.
+   * Keyed on direction => property, ldap, or field token such as '[field.field_lname] with brackets in them.
    */
-  // Array of field syncing directions for each operation.  should include ldapUserSyncMappings.
   public $syncMapping = NULL;
-  // Keyed on direction => property, ldap, or field token such as '[field.field_lname] with brackets in them.
+
   /**
    * Sync mappings configured in ldap user module (not in other modules)
    *   array of the form: array(
@@ -122,15 +92,15 @@ class LdapUserConf {
    * prov_events' => array( see events above )
    * )
    * )
+   * Keyed on property, ldap, or field token such as '[field.field_lname] with brackets in them.
+   * Property removed. TODO: Move configuration to a better place.
+   * public $ldapUserSyncMappings = NULL;
    */
-  public $ldapUserSyncMappings = NULL;
-  // Keyed on property, ldap, or field token such as '[field.field_lname] with brackets in them.
+
   public $detailedWatchdog = FALSE;
   public $provisionsDrupalAccountsFromLdap = FALSE;
   public $provisionsLdapEntriesFromDrupalUsers = FALSE;
 
-  // What should be done with ldap provisioned accounts that no longer have associated drupal accounts.
-  public $orphanedDrupalAcctBehavior = 'ldap_user_orphan_email';
   /**
    * Options are partially derived from user module account cancel options:.
    *
@@ -141,8 +111,6 @@ class LdapUserConf {
    * 'user_cancel_reassign' => Delete the account and make its content belong to the Anonymous user.
    * 'user_cancel_delete' => Delete the account and its content.
    */
-
-  public $orphanedCheckQty = 100;
 
   public $provisionsLdapEvents = array();
   public $provisionsDrupalEvents = array();
@@ -156,22 +124,6 @@ class LdapUserConf {
 
     $this->config = \Drupal::config('ldap_user.settings')->get('ldap_user_conf');
 
-    $this->manualAccountConflict = self::$manualAccountConflictReject;
-
-    $this->userConflictResolve = self::$userConflictAttemptResolve;
-
-    $this->drupalAcctProvisionTriggers = [
-      self::$provisionDrupalUserOnUserUpdateCreate,
-      self::$provisionDrupalUserOnAuthentication,
-      self::$provisionDrupalUserOnAllowingManualCreation,
-    ];
-    $this->ldapEntryProvisionTriggers = [
-      self::$provisionLdapEntryOnUserUpdateCreate,
-      self::$provisionLdapEntryOnUserAuthentication,
-      self::$provisionLdapEntryOnUserDelete,
-    ];
-
-    $this->load();
     $this->activeUserAuthentication();
 
     $this->provisionSidFromDirection[self::$provisioningDirectionToDrupalUser] = $this->config['drupalAcctProvisionServer'];
@@ -190,42 +142,17 @@ class LdapUserConf {
     $this->provisionsDrupalAccountsFromLdap = (
       $this->config['drupalAcctProvisionServer'] &&
       $this->config['drupalAcctProvisionServer'] &&
-      (count(array_filter(array_values($this->drupalAcctProvisionTriggers))) > 0)
+      (count(array_filter(array_values(\Drupal::config('ldap_user.settings')->get('ldap_user_conf.drupalAcctProvisionTriggers')))) > 0)
     );
 
     $this->provisionsLdapEntriesFromDrupalUsers = (
       $this->config['ldapEntryProvisionServer']
       && $this->config['ldapEntryProvisionServer']
-      && (count(array_filter(array_values($this->ldapEntryProvisionTriggers))) > 0)
+      && (count(array_filter(array_values(\Drupal::config('ldap_user.settings')->get('ldap_user_conf.ldapEntryProvisionTriggers')))) > 0)
       );
 
     $this->setSyncMapping(TRUE);
     $this->detailedWatchdog = \Drupal::config('ldap_help.settings')->get('watchdog_detail');
-  }
-
-  /**
-   *
-   */
-  public function load() {
-
-    // TODO: load() needs to be removed, once defaults are properly set.
-    $saveable = array(
-      'drupalAcctProvisionTriggers',
-      'ldapEntryProvisionTriggers',
-      'orphanedDrupalAcctBehavior',
-      'orphanedCheckQty',
-      'userConflictResolve',
-      'manualAccountConflict',
-      'ldapUserSyncMappings',
-    );
-
-    if ($saved = \Drupal::config('ldap_user.settings')->get("ldap_user_conf")) {
-      foreach ($saveable as $property) {
-        if (isset($saved[$property])) {
-          $this->{$property} = $saved[$property];
-        }
-      }
-    }
   }
 
   /**
@@ -255,8 +182,8 @@ class LdapUserConf {
       $directions = array($direction);
     }
     foreach ($directions as $direction) {
-      if (!empty($this->ldapUserSyncMappings[$direction])) {
-        foreach ($this->ldapUserSyncMappings[$direction] as $attribute => $mapping) {
+      if (!empty($this->config['ldapUserSyncMappings'][$direction])) {
+        foreach ($this->config['ldapUserSyncMappings'][$direction] as $attribute => $mapping) {
           if (!empty($mapping['prov_events'])) {
             $result = count(array_intersect($prov_events, $mapping['prov_events']));
             if ($result) {
@@ -474,7 +401,7 @@ class LdapUserConf {
         $result = FALSE;
       }
       else {
-        $result = in_array($provision_trigger, $this->ldapEntryProvisionTriggers);
+        $result = in_array($provision_trigger, \Drupal::config('ldap_user.settings')->get('ldap_user_conf.ldapEntryProvisionTriggers'));
       }
 
     }
@@ -483,7 +410,7 @@ class LdapUserConf {
         $result = FALSE;
       }
       else {
-        $result = in_array($provision_trigger, $this->drupalAcctProvisionTriggers);
+        $result = in_array($provision_trigger, \Drupal::config('ldap_user.settings')->get('ldap_user_conf.drupalAcctProvisionTriggers'));
       }
     }
 
@@ -1339,7 +1266,7 @@ class LdapUserConf {
       }
       /**
         * if "convert from binary is selected" and no particular method is in token,
-        * default to ldap_servers_binary() function
+        * default to binaryConversiontoString() function
         */
       if ($field_detail['convert'] && strpos($field_detail['ldap_attr'], ';') === FALSE) {
         $field_detail['ldap_attr'] = str_replace(']', ';binary]', $field_detail['ldap_attr']);

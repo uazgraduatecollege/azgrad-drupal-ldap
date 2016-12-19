@@ -614,11 +614,12 @@ EOT;
         $row++;
       }
     }
+    $config = $this->config('ldap_user.settings');
 
     // 2. existing configurable mappings rows.
-    if (!empty($this->LdapUserConfHelper->ldapUserSyncMappings[$direction])) {
+    if (!empty($config->get('ldap_user_conf.ldapUserSyncMappings')[$direction])) {
       // Key could be ldap attribute name or user attribute name.
-      foreach ($this->LdapUserConfHelper->ldapUserSyncMappings[$direction] as $target_attr_token => $mapping) {
+      foreach ($config->get('ldap_user_conf.ldapUserSyncMappings')[$direction] as $target_attr_token => $mapping) {
         if (isset($mapping['enabled']) && $mapping['enabled'] && $this->isMappingConfigurable($this->LdapUserConfHelper->syncMapping[$direction][$mapping['user_attr']], 'ldap_user')) {
           $row_id = 'row-' . $row;
           $rows[$row_id] = $this->getSyncFormRow('update', $direction, $mapping, $user_attr_options, $row_id);
@@ -942,7 +943,7 @@ EOT;
       $has_drupal_acct_prov_servers = TRUE;
     };
 
-    $has_drupal_acct_prov_settings_options  = (count(array_filter($this->LdapUserConfHelper->drupalAcctProvisionTriggers)) > 0);
+    $has_drupal_acct_prov_settings_options  = (count(array_filter(\Drupal::config('ldap_user.settings')->get('ldap_user_conf.drupalAcctProvisionTriggers'))) > 0);
 
     if (!$has_drupal_acct_prov_servers && $has_drupal_acct_prov_settings_options) {
       $warnings['drupalAcctProvisionServer'] = t('No Servers are enabled to provide provisioning to Drupal, but Drupal Account Provisioning Options are selected.', $tokens);
@@ -956,7 +957,7 @@ EOT;
       $has_ldap_prov_servers = TRUE;
     };
 
-    $has_ldap_prov_settings_options = (count(array_filter($this->LdapUserConfHelper->ldapEntryProvisionTriggers)) > 0);
+    $has_ldap_prov_settings_options = (count(array_filter(\Drupal::config('ldap_user.settings')->get('ldap_user_conf.ldapEntryProvisionTriggers'))) > 0);
     if (!$has_ldap_prov_servers && $has_ldap_prov_settings_options) {
       $warnings['ldapEntryProvisionServer'] = t('No Servers are enabled to provide provisioning to ldap, but LDAP Entry Options are selected.', $tokens);
     }
@@ -964,11 +965,11 @@ EOT;
       $warnings['ldapEntryProvisionTriggers'] = t('Servers are enabled to provide provisioning to ldap, but no LDAP Entry Options are selected.  This will result in no syncing happening.', $tokens);
     }
 
-    if (isset($this->ldapUserSyncMappings)) {
+    if (isset($config['ldap_user_conf.ldapUserSyncMappings'])) {
       $to_ldap_entries_mappings_exist = FALSE;
-      foreach ($this->ldapUserSyncMappings as $sync_direction => $mappings) {
+      foreach ($config['ldap_user_conf.ldapUserSyncMappings'] as $sync_direction => $mappings) {
         $map_index = array();
-        $tokens['%sid'] = \Drupal::config('ldap_user.settings')->get('ldap_user_conf.drupalAcctProvisionServer');
+        $tokens['%sid'] = $config['ldap_user_conf.drupalAcctProvisionServer'];
         $to_drupal_user_mappings_exist = FALSE;
         $to_ldap_entries_mappings_exist = FALSE;
 

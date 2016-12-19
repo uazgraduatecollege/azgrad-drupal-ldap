@@ -2,19 +2,12 @@
 
 namespace Drupal\ldap_servers\tests;
 
-/**
- * LDAP Server Class.
- *
- *  This class is used to create, work with, and eventually destroy ldap_server
- * objects.
- *
- * @todo make bindpw protected
- */
 use Drupal\Component\Utility\Unicode;
 use Drupal\ldap_servers\Entity\Server;
 
 /**
- * @FIXME: LdapServer does not exist, won't run.
+ * The test server to allow for mocking complex communications with ldap_server.
+ * @FIXME: Clean Reimplementation probably more useful.
  */
 class TestServer extends Server {
 

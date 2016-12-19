@@ -6,6 +6,7 @@ use Drupal\Component\Utility\SafeMarkup;
 use Drupal\Component\Utility\Unicode;
 use Drupal\ldap_servers\Entity\Server;
 use Drupal\ldap_user\LdapUserConf;
+use Drupal\user\Entity\User;
 
 /**
  *
@@ -17,12 +18,35 @@ trait TokenFunctions {
   public static $token_del = ':';
   public static $token_modifier_del = ';';
 
+  private static $user_password = NULL;
+
+  /**
+   * Function to:
+   *   -- store user entered password during pageload
+   *   and protect unencrypted user password from other modules.
+   *
+   * @param enum string $action
+   *   'get' | 'set'.
+   * @param string $value
+   *   A user entered password.
+   *
+   * @return null|string
+   */
+  public static function passwordStorage($action, $value = NULL) {
+    if ($action == 'set') {
+      self::$user_password = $value;
+    }
+    else {
+      return self::$user_password;
+    }
+  }
+
   /**
    * @param string $attr_name
    *   such 'field_user_lname', 'name', 'mail', 'dn'.
    * @param string $attr_type
    *   such as 'field', 'property', etc.  NULL for ldap attributes.
-   * @param string $attr_ordinal
+   * @param string $ordinal
    *   0, 1, 2, etc.  not used in general.
    *
    * @return string such as 'field.field_user_lname', 'samaccountname', etc.
@@ -40,10 +64,12 @@ trait TokenFunctions {
   }
 
   /**
-   * @param $user_attr_key of form <attr_type>.<attr_name>[:<instance>]
-   *   such as field.lname, property.mail, field.aliases:2
+   * @param string $user_attr_key
+   *   A string in the form of <attr_type>.<attr_name>[:<instance>] such as
+   * field.lname, property.mail, field.aliases:2.
    *
-   * @return array array($attr_type, $attr_name, $attr_ordinal) such as array('field','field_user_lname', NULL)
+   * @return array
+   *   An array such as array('field','field_user_lname', NULL).
    */
   public function parseUserAttributeNames($user_attr_key) {
     // Make sure no [] are on attribute.
@@ -70,7 +96,6 @@ trait TokenFunctions {
    * @return string $text with tokens replaced or NULL if replacement not available
    */
   public function tokenReplace($resource, $text, $resource_type = 'ldap_entry') {
-    // user_account.
     // Desired tokens are of form "cn","mail", etc.
     $desired_tokens = $this->ldap_servers_token_tokens_needed_for_template($text);
 
@@ -204,7 +229,7 @@ trait TokenFunctions {
    *     [samaccountname:last] = jdoe
    *     [guid:0;base64_encode] = apply base64_encode() function to value
    *     [guid:0;bin2hex] = apply bin2hex() function to value
-   *     [guid:0;msguid] = apply ldap_servers_msguid() function to value
+   *     [guid:0;msguid] = apply convertMsguidToString() function to value
    */
   public function tokenizeEntry($ldap_entry, $token_keys = 'all', $pre = NULL, $post = NULL) {
     if ($pre == NULL) {
@@ -346,11 +371,11 @@ trait TokenFunctions {
               break;
 
             case 'msguid':
-              $value = ldap_servers_msguid($value);
+              $value = $this->convertMsguidToString($value);
               break;
 
             case 'binary':
-              $value = ldap_servers_binary($value);
+              $value = $this->binaryConversiontoString($value);
               break;
           }
         }
@@ -393,8 +418,6 @@ trait TokenFunctions {
 
     $tokens = array();
 
-    $user_entered_password_available = (boolean) ldap_user_ldap_provision_pwd('get');
-    // ldapUserPwd((property_exists($user_account, 'ldapUserPwd') && $user_account->ldapUserPwd));.
     if ($token_keys == 'all') {
       // Add lowercase keyed entries to ldap array.
       foreach ((array) $user_account as $property_name => $value) {
@@ -444,11 +467,11 @@ trait TokenFunctions {
           switch ($attr_name) {
 
             case 'user':
-              $pwd = ldap_user_ldap_provision_pwd('get');
+              $pwd = TokenHelper::passwordStorage('get');
               break;
 
             case 'user-random':
-              $pwd = ldap_user_ldap_provision_pwd('get');
+              $pwd = TokenHelper::passwordStorage('get');
               $value = ($pwd) ? $pwd : user_password();
               break;
 
@@ -536,6 +559,37 @@ trait TokenFunctions {
     }
 
     return $table;
+  }
+
+  /**
+   * Function to convert microsoft style guids to strings.
+   */
+  public static function convertMsguidToString($value) {
+    $hex_string = bin2hex($value);
+    // (MS?) GUID are displayed with first three GUID parts as "big endian"
+    // Doing this so String value matches what other LDAP tool displays for AD.
+    $value = strtoupper(substr($hex_string, 6, 2) . substr($hex_string, 4, 2) .
+      substr($hex_string, 2, 2) . substr($hex_string, 0, 2) . '-' .
+      substr($hex_string, 10, 2) . substr($hex_string, 8, 2) . '-' .
+      substr($hex_string, 14, 2) . substr($hex_string, 12, 2) . '-' .
+      substr($hex_string, 16, 4) . '-' . substr($hex_string, 20, 12));
+
+    return $value;
+  }
+
+  /**
+   * General binary conversion function for guids
+   * tries to determine which approach based on length
+   * of string.
+   */
+  public static function binaryConversiontoString($value) {
+    if (strlen($value) == 16) {
+      $value = TokenFunctions::convertMsguidToString($value);
+    }
+    else {
+      $value = bin2hex($value);
+    }
+    return $value;
   }
 
 }

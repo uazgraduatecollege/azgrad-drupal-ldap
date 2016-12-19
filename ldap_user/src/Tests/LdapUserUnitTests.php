@@ -110,14 +110,6 @@ class LdapWebUserUnitTests extends LdapWebTestBase {
     $entity->house['und'][1]['value'] = 'Privet Drive';
     $account = new \stdClass();
     $account->mail = 'hpotter@hogwarts.edu';
-    $tokens = new TokenHelper();
-    $mail = $tokens->tokenReplace('[property.mail]', $account, $entity);
-    $this->assertTrue($mail == $account->mail, t('[property.mail] token worked on ldap_user_token_replace().'), $this->testId('tokens.property'));
-    $lname = $tokens->tokenReplace('[field.lname]', $account, $entity);
-    $this->assertTrue($lname == $entity->lname['und'][0]['value'], t('[field.lname] token worked on ldap_user_token_replace().'), $this->testId('tokens.property.field'));
-    $house1 = $tokens->tokenReplace('[field.house:1]', $account, $entity);
-    $this->assertTrue($house1 == $entity->house['und'][1]['value'], t('[field.house:1] token worked on ldap_user_token_replace().'), $this->testId('tokens.property.field.ordinal'));
-    // @todo need tests for :last and a multivalued attribute.  see http://drupal.org/node/1245736
 
     $sids = array('activedirectory1');
     // prepTestData($sids, 'provisionToDrupal', 'default');.

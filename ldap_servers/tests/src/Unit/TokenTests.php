@@ -5,7 +5,7 @@ namespace Drupal\Tests\ldap_servers\Unit;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\ldap_servers\TokenHelper;
 use Drupal\Tests\UnitTestCase;
-use Drupal\user\Entity\User;
+
 
 /**
  * @coversDefaultClass \Drupal\ldap_servers\TokenFunctions
@@ -14,6 +14,7 @@ use Drupal\user\Entity\User;
 class TokenTests extends UnitTestCase {
 
   public $configFactory;
+  public $config;
   public $container;
 
   protected function setUp() {
@@ -31,13 +32,12 @@ class TokenTests extends UnitTestCase {
       ->with('ldap_help.settings')
       ->willReturn($this->config);
 
-    // Create a dummy container.
     $this->container = new ContainerBuilder();
     $this->container->set('config.factory', $this->configFactory);
     \Drupal::setContainer($this->container);
   }
 
-  public function testTokens() {
+  public function testTokenReplacement() {
     
     // Test tokens, see http://drupal.org/node/1245736
     $ldap_entry = [
@@ -96,8 +96,33 @@ class TokenTests extends UnitTestCase {
     $binary = $tokenHelper->tokenReplace($ldap_entry, '[guid;binary]');
     $this->assertEquals($tokenHelper->binaryConversiontoString($ldap_entry['guid'][0]), $binary);
 
-    $nameReplacement = $tokenHelper->tokenReplace($ldap_entry, '[property.name]', 'user_account');
+    $account = $this->prophesize('\Drupal\user\Entity\User');
+    $value = new \stdClass();
+    $value->value = $ldap_entry['sAMAccountName'][0];
+    $account->get('name')->willReturn($value);
+    $nameReplacement = $tokenHelper->tokenReplace($account->reveal(), '[property.name]', 'user_account');
     $this->assertEquals($ldap_entry['sAMAccountName'][0], $nameReplacement);
+
+  }
+
+  public function testPasswordStorage() {
+    $password = 'my-pass';
+
+    // Verify storage.
+    $TokenHelperA = new TokenHelper();
+    $TokenHelperA::passwordStorage('set', $password);
+    $this->assertEquals($password, $TokenHelperA::passwordStorage('get'));
+
+    // Verify storage across instance.
+    $TokenHelperB = new TokenHelper();
+    $this->assertEquals($password, $TokenHelperB::passwordStorage('get'));
+
+    // Verify storage without instance.
+    $this->assertEquals($password, TokenHelper::passwordStorage('get'));
+
+    // Unset storage.
+    TokenHelper::passwordStorage('set', NULL);
+    $this->assertEquals(NULL, TokenHelper::passwordStorage('get'));
   }
 
 }

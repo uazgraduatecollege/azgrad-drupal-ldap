@@ -454,8 +454,9 @@ class LdapWebUserIntegrationTests extends LdapWebTestBase {
     foreach ($account_options as $account_option => $account_option_text) {
       $sids = array('activedirectory1');
       $this->prepTestData('hogwarts', $sids, 'provisionToDrupal', 'default');
-      $ldap_user_conf->orphanedDrupalAcctBehavior = $account_option;
-      $ldap_user_conf->save();
+      // FIXME: Configuration no longer saved in LdapUserConfiguration.
+      //$ldap_user_conf->orphanedDrupalAcctBehavior = $account_option;
+      //$ldap_user_conf->save();
       $test_id = "ldap_user.orphans.$account_option";
       $test_text = "Test of orphaned Drupal account option: $account_option_text";
       $success = FALSE;

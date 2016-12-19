@@ -930,7 +930,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
       if (is_array($puid)) {
         $puid = $puid[0];
       }
-      return ($this->get('unique_persistent_attr_binary')) ? ldap_servers_binary($puid) : $puid;
+      return ($this->get('unique_persistent_attr_binary')) ? TokenFunctions::binaryConversiontoString($puid) : $puid;
     }
     else {
       return FALSE;

@@ -8,59 +8,18 @@
 use Drupal\Core\Url;
 use Drupal\Component\Utility\SafeMarkup;
 use Drupal\Core\Utility\UpdateException;
+
 /**
  * Implements hook_install().
  */
 function ldap_user_install() {
 
-  // Foreach (ldap_user_user_entity_fields() as $field_id => $field_conf) {
-  //   $field_info = field_info_field($field_id);
-  //   if (!$field_info) {
-  //     field_create_field($field_conf['field']);
-  //     field_create_instance($field_conf['instance']);
-  //   }
-  // }.
   // // make ldap user weight slightly less than other ldap modules so it can load
   // // user's associated ldap data first and save on ldap queries.
   // db_query("UPDATE {system} SET weight = -1 WHERE name = 'ldap_user'");.
-  // _ldap_user_install_update_authmap();
+
   \Drupal::service('router.builder')->rebuild();
 
-}
-
-/**
- *
- */
-function _ldap_user_install_update_authmap() {
-  db_update('authmap')
-    ->fields(
-    array(
-      'module' => 'ldap_user',
-    )
-    )
-    ->condition('module', 'ldap_authentication')
-    ->execute();
-
-}
-
-/**
- * Implements hook_uninstall().
- */
-function ldap_user_uninstall() {
-
-  // Foreach (ldap_user_user_entity_fields() as $field_id => $field_conf) {
-  // $instance = field_info_instance($field_conf['instance']['entity_type'], $field_conf['instance']['field_name'], $field_conf['instance']['bundle']);
-  //   if ($instance) {
-  //     field_delete_instance($instance);
-  //   }
-  // $field_info = field_info_field($field_conf['field']['field_name']);
-  //   if ($field_info) {
-  //     field_delete_field($field_conf['field']['field_name']);
-  //   }
-  // }.
-  // variable_del('ldap_user_conf');
-  // variable_del('ldap_user_cron_last_orphan_checked');
-  // variable_del('ldap_user_cron_last_uid_checked');.
 }
 
 /**
