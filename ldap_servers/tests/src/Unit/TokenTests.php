@@ -126,3 +126,15 @@ class TokenTests extends UnitTestCase {
   }
 
 }
+
+if (!function_exists('ldap_explode_dn')) {
+  function ldap_explode_dn() {
+    return  [
+      'count' => 4,
+      0 => 'cn=hpotter',
+      1 => 'ou=people',
+      2 => 'dc=hogwarts',
+      3 => 'dc=edu',
+    ];
+  }
+}
