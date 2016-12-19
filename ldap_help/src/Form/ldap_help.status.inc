@@ -10,9 +10,7 @@ use Drupal\ldap_servers\ServerFactory;
 use Drupal\ldap_user\LdapUserConf;
 
 /**
- * Helper functions to generate markup for ldap_help.
- *
- * FIXME: Unported.
+ * TODO: Move into DebuggingReviewForm
  */
 function ldap_help_status($return = 'html') {
 
