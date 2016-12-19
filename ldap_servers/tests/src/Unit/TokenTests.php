@@ -127,8 +127,10 @@ class TokenTests extends UnitTestCase {
 
 }
 
-if (!function_exists('ldap_explode_dn')) {
-  function ldap_explode_dn() {
+namespace Drupal\ldap_servers\Entity;
+
+class Server {
+  public static function ldapExplodeDn($dn, $attribute) {
     return  [
       'count' => 4,
       0 => 'cn=hpotter',

@@ -262,7 +262,7 @@ trait TokenFunctions {
 
     // 1. tokenize dn
     // escapes attribute values, need to be unescaped later.
-    $dn_parts = ldap_explode_dn($ldap_entry['dn'], 0);
+    $dn_parts = Server::ldapExplodeDn($ldap_entry['dn'], 0);
     unset($dn_parts['count']);
     $parts_count = array();
     $parts_last_value = array();

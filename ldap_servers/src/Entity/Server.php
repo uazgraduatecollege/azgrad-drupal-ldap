@@ -2015,4 +2015,9 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
       return FALSE;
     }
   }
+
+  public static function ldapExplodeDn($dn, $attribute) {
+    return ldap_explode_dn($dn, $attribute);
+  }
+
 }
