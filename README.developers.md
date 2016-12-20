@@ -10,10 +10,10 @@ this testing architecture is being phased out step by step.
 
 ## Setting up a development environment
 
-To quickly get up and running without using a production system to query against you can make us of Docker. An example
+To quickly get up and running without using a production system to query against you can make use of Docker. An example
 configuration is provided in the docs directory based on the Harry Potter schools.
 
-The following script based on a script by [Laudanum](https://github.com/Laudanum) populates a Docker instance as
+The following script - based on a script by [Laudanum](https://github.com/Laudanum) - populates a Docker instance as
 required (adjust paths where necessary for your *.ldif files):
 
 ```bash
@@ -87,14 +87,12 @@ $objectclass = $massage->massage_text($objectclass, 'attr_value', $massage::$que
 $filter = "(&(cn=$username)(objectClass=$objectclass))";
 ```
 
-
 The following functions are also available:
 
 * escape_dn_value()
 * unescape_dn_value()
 * unescape_filter_value()
 * unescape_filter_value()
-
 
 ### Common variables used in ldap_* and their structures
 
