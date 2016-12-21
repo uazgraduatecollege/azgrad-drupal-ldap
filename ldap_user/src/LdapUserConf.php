@@ -205,36 +205,6 @@ class LdapUserConf {
   }
 
   /**
-   *
-   */
-  public function isDrupalAcctProvisionServer($sid) {
-    if (!$sid || !$this->config['drupalAcctProvisionServer']) {
-      return FALSE;
-    }
-    elseif ($this->config['ldapEntryProvisionServer'] == $sid) {
-      return TRUE;
-    }
-    else {
-      return FALSE;
-    }
-  }
-
-  /**
-   *
-   */
-  public function isLdapEntryProvisionServer($sid) {
-    if (!$sid || !$this->config['ldapEntryProvisionServer']) {
-      return FALSE;
-    }
-    elseif ($this->config['ldapEntryProvisionServer'] == $sid) {
-      return TRUE;
-    }
-    else {
-      return FALSE;
-    }
-  }
-
-  /**
    * Util to fetch attributes required for this user conf, not other modules.
    *
    * @param enum $direction
@@ -268,7 +238,7 @@ class LdapUserConf {
   /**
    * Converts the more general ldap_context string to its associated ldap user event.
    */
-  public function ldapContextToProvEvents($ldap_context = NULL) {
+  private function ldapContextToProvEvents($ldap_context = NULL) {
 
     switch ($ldap_context) {
 
@@ -338,6 +308,7 @@ class LdapUserConf {
 
   /**
    * @todo change default to false after development
+   * @param bool $reset
    */
   public function setSyncMapping($reset = TRUE) {
 
@@ -733,7 +704,8 @@ class LdapUserConf {
     }
 
     if (!$ldap_user && $this->config['drupalAcctProvisionServer']) {
-      $ldap_user = ldap_servers_get_user_ldap_data($account, $this->config['drupalAcctProvisionServer'], 'ldap_user_prov_to_drupal');
+      $factory = \Drupal::service('ldap.servers');
+      $ldap_user = $factory->getUsgetUserDataFromServerByAccounterDataFromServerByAccount($account, $this->config['drupalAcctProvisionServer'], 'ldap_user_prov_to_drupal');
     }
 
     if (!$ldap_user) {
@@ -930,17 +902,11 @@ class LdapUserConf {
           if ($include_count) {
             $ldap_user_entry[$ldap_attr_name]['count'] = count($ldap_user_entry[$ldap_attr_name]);
           }
-
         }
-
       }
-
     }
 
-    /**
-     * 4. call drupal_alter() to allow other modules to alter $ldap_user
-     */
-
+    // Allow other modules to alter $ldap_user.
     \Drupal::moduleHandler()->alter('ldap_entry', $ldap_user_entry, $params);
 
     return $ldap_user_entry;
@@ -986,12 +952,13 @@ class LdapUserConf {
     if (!$ldap_user && !isset($user_values['name'])) {
       return FALSE;
     }
+    $factory = \Drupal::service('ldap.servers');
 
     // Get an LDAP user from the LDAP server.
     if (!$ldap_user) {
       $tokens['%username'] = $user_values['name'];
       if ($this->config['drupalAcctProvisionServer']) {
-        $ldap_user = ldap_servers_get_user_ldap_data($user_values['name'], $this->config['drupalAcctProvisionServer'], 'ldap_user_prov_to_drupal');
+        $ldap_user = $factory->getUserDataFromServerByIdentifier($user_values['name'], $this->config['drupalAcctProvisionServer'], 'ldap_user_prov_to_drupal');
       }
       // Still no LDAP user.
       if (!$ldap_user) {
@@ -1001,8 +968,6 @@ class LdapUserConf {
         return FALSE;
       }
     }
-
-    $factory = \Drupal::service('ldap.servers');
 
 
     // If we don't have an account name already we should set one.
@@ -1041,7 +1006,7 @@ class LdapUserConf {
         $account = $account2;
         $account->save();
         // Update the identifier table.
-        self::ldap_user_set_identifier($account, $account->getUsername());
+        self::setUserIdentifier($account, $account->getUsername());
 
         // 2. attempt sync if appropriate for current context.
         if ($account) {
@@ -1078,7 +1043,7 @@ class LdapUserConf {
             drupal_set_message(t('User account creation failed because of system problems.'), 'error');
           }
           else {
-            self::ldap_user_set_identifier($account, $account->getUsername());
+            self::setUserIdentifier($account, $account->getUsername());
             if (!empty($user_data)) {
               // FIXME: Undefined function.
               ldap_user_identities_data_update($account, $user_data);
@@ -1101,6 +1066,7 @@ class LdapUserConf {
   public function ldapAssociateDrupalAccount($drupal_username) {
     if ($this->config['drupalAcctProvisionServer']) {
       $factory = \Drupal::service('ldap.servers');
+      /* @var Server $ldap_server */
       $ldap_server = $factory->getServerByIdEnabled($this->config['drupalAcctProvisionServer']);
       $account = user_load_by_name($drupal_username);
       if (!$account) {
@@ -1108,7 +1074,7 @@ class LdapUserConf {
         return FALSE;
       }
 
-      $ldap_user = ldap_servers_get_user_ldap_data($account, $this->config['drupalAcctProvisionServer'], 'ldap_user_prov_to_drupal');
+      $ldap_user = $factory->getUserDataFromServerByAccount($account, $this->config['drupalAcctProvisionServer'], 'ldap_user_prov_to_drupal');
       if (!$ldap_user) {
         \Drupal::logger('ldap_user')->error('Failed to LDAP associate drupal account %drupal_username because corresponding LDAP entry not found', array('%drupal_username' => $drupal_username));
         return FALSE;
@@ -1137,7 +1103,6 @@ class LdapUserConf {
         $account->set('ldap_user_puid', $ldap_user_puid);
       }
       $account->set('ldap_user_puid_property', $ldap_server->get('unique_persistent_attr'));
-      // @TODO Should be changed to ldap_user_puid_server_id
       $account->set('ldap_user_puid_sid', $ldap_server->id());
       $account->set('ldap_user_current_dn', $ldap_user['dn']);
       // @TODO Shouldn't we set the "last checked" date?
@@ -1323,7 +1288,7 @@ class LdapUserConf {
    * Replaces the authmap table retired in Drupal 8
    * Drupal 7: user_set_authmap.
    */
-  public static function ldap_user_set_identifier($account, $identifier) {
+  public static function setUserIdentifier($account, $identifier) {
     $authmap = \Drupal::service('externalauth.authmap');
     $authmap->save($account, 'ldap_user', $identifier);
   }
@@ -1331,7 +1296,7 @@ class LdapUserConf {
   /**
    * Called from hook_user_delete ldap_user_user_delete.
    */
-  public static function ldap_user_identities_delete($uid) {
+  public static function deleteUserIdentifier($uid) {
     $authmap = \Drupal::service('externalauth.authmap');
     $authmap->delete($uid);
   }
@@ -1339,7 +1304,7 @@ class LdapUserConf {
   /**
    * Replaces the authmap table retired in Drupal 8.
    */
-  public static function ldap_user_get_uid_from_map($identifier) {
+  public static function getUidFromIdentifierMap($identifier) {
     $externalauth = \Drupal::service('externalauth.externalauth');
     $externalauth->load($identifier, 'ldap_user');
     if (property_exists($externalauth, 'uid')) {
@@ -1350,7 +1315,7 @@ class LdapUserConf {
   /**
    * Replaces the authmap table retired in Drupal 8.
    */
-  public static function ldap_user_get_identifier_from_map($uid) {
+  public static function getUserIdentifierFromMap($uid) {
     $authmap = \Drupal::service('externalauth.authmap');
     $authdata = $authmap->getAuthdata($uid, 'ldap_user');
     if (isset($authdata['authname']) && !empty($authdata['authname'])) {
@@ -1369,9 +1334,8 @@ class LdapUserConf {
     if (is_object($account) && $account->id() == 1) {
       return TRUE;
     }
-    // Exclude users who have the field ldap_user_ldap_exclude set to 1.
+    // Exclude users who have been manually flagged as excluded.
     if (is_object($account) && $account->get('ldap_user_ldap_exclude')->value == 1) {
-      // @TODO: Verify that the above statement is correct.
       return TRUE;
     }
     // Everyone else is fine.

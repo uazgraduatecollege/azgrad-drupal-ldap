@@ -156,7 +156,7 @@ trait TokenFunctions {
       else {
         $conversion = NULL;
       }
-      $attribute_maps[$attr_name] = ldap_servers_set_attribute_map(@$attribute_maps[$attr_name], $conversion, array($ordinal => NULL));
+      $attribute_maps[$attr_name] = TokenFunctions::setAttributeMap(@$attribute_maps[$attr_name], $conversion, array($ordinal => NULL));
     }
   }
 
@@ -591,6 +591,78 @@ trait TokenFunctions {
       $value = bin2hex($value);
     }
     return $value;
+  }
+
+  /**
+   * Converts an attribute by their format.
+   *
+   * @param string $value
+   *   as value to be converted.
+   * @param string $conversion
+   *   such as base64_encode, bin2hex, msguid, md5.
+   *
+   * @return string
+   */
+  public static function convertAttribute($value, $conversion = NULL) {
+
+    if ($conversion) {
+      switch ($conversion) {
+        case 'base64_encode':
+          $value = base64_encode($value);
+          break;
+
+        case 'bin2hex':
+          $value = bin2hex($value);
+          break;
+
+        case 'msguid':
+          $value = self::convertMsguidToString($value);
+          break;
+
+        case 'binary':
+          $value = self::binaryConversiontoString($value);
+          break;
+
+        case 'md5':
+          $value = '{md5}' . base64_encode(pack('H*', md5($value)));
+          break;
+      }
+    }
+    return $value;
+  }
+
+  /**
+   * @param array $attribute
+   *   For a given attribute in the form ['values' => [], 'data_type' => NULL]
+   *   as outlined in ldap_user/README.developers.txt.
+   * @param string $conversion
+   *   As type of conversion to do @see ldap_servers_convert_attribute(),
+   *   e.g. base64_encode, bin2hex, msguid, md5.
+   * @param array $values
+   *   In form [<ordinal> => <value> | NULL], where NULL indicates value is
+   *   needed for provisioning or other operations.
+   *
+   * @return array
+   *   Converted values. If nothing is passed in, create empty array in the
+   *   proper structure ['values' => [0 => 'john', 1 => 'johnny']].
+   */
+  public static function setAttributeMap($attribute = NULL, $conversion = NULL, $values = NULL) {
+
+    $attribute = (is_array($attribute)) ? $attribute : array();
+    $attribute['conversion'] = $conversion;
+    if (!$values && (!isset($attribute['values']) || !is_array($attribute['values']))) {
+      $attribute['values'] = array(0 => NULL);
+    }
+    // Merge into array overwriting ordinals.
+    elseif (is_array($values)) {
+      foreach ($values as $ordinal => $value) {
+        if ($conversion) {
+          $value = self::convertAttribute($value, $conversion);
+        }
+        $attribute['values'][(int) $ordinal] = $value;
+      }
+    }
+    return $attribute;
   }
 
 }

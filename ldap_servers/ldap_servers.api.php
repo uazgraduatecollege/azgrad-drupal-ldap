@@ -4,6 +4,7 @@
  * @file
  * Hooks provided by ldap_servers module.
  */
+use Drupal\ldap_servers\TokenFunctions;
 
 /**
  * Allows other modules to periodically affect an ldap associated user
@@ -110,7 +111,7 @@ function hook_ldap_entry_post_provision(&$ldap_entries, $ldap_server, $context) 
  */
 function hook_ldap_attributes_needed_alter(&$attributes, $params) {
 
-  $attributes['dn'] = ldap_servers_set_attribute_map(@$attributes['dn'], 'ldap_dn');
+  $attributes['dn'] = TokenFunctions::setAttributeMap(@$attributes['dn'], 'ldap_dn');
   // Puid attributes are server specific.
   if ($params['sid']) {
 
@@ -124,15 +125,15 @@ function hook_ldap_attributes_needed_alter(&$attributes, $params) {
         if (!isset($attributes[$ldap_server->user_attr])) {
           // don't provide attribute if it exists, unless you are adding data_type or value information
           //   in that case, don't overwrite the whole array (see $ldap_server->mail_attr example below)
-          $attributes[$ldap_server->user_attr] = ldap_servers_set_attribute_map();
+          $attributes[$ldap_server->user_attr] = TokenFunctions::setAttributeMap();
         }
         if (!isset($attributes[$ldap_server->mail_attr])) {
           // Set default values for an attribute, force data_type.
-          $attributes[$ldap_server->mail_attr] = ldap_servers_set_attribute_map();
+          $attributes[$ldap_server->mail_attr] = TokenFunctions::setAttributeMap();
         }
         // Todo: Update example below
         // ldap_servers_token_extract_attributes($attributes, $ldap_server_obj->mail_template);
-        // $attributes[$ldap_server->unique_persistent_attr] = ldap_servers_set_attribute_map(@$attributes[$ldap_server->unique_persistent_attr]);.
+        // $attributes[$ldap_server->unique_persistent_attr] = TokenFunctions::setAttributeMap(@$attributes[$ldap_server->unique_persistent_attr]);.
         break;
     }
   }

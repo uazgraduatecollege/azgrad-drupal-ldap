@@ -290,7 +290,15 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
    */
   public function drupalForm() {
     if (count($this->authenticationServersOptions) == 0) {
-      $message = ldap_servers_no_enabled_servers_msg('configure LDAP Authentication');
+
+      $url = Url::fromRoute('entity.ldap_server.collection');
+      $edit_server_link = \Drupal::l(t('@path', array('@path' => 'LDAP Servers')), $url);
+
+      $message = t('At least one LDAP server must configured and <em>enabled</em>
+ before configuring LDAP authentication. Please go to @link to configure an LDAP server.',
+        ['@link' => $edit_server_link]
+      );
+
       $form['intro'] = array(
         '#type' => 'item',
         '#markup' => t('<h1>LDAP Authentication Settings</h1>') . $message,

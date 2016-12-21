@@ -8,6 +8,7 @@ use \Drupal\Core\Config\ConfigFactoryInterface;
 
 use Drupal\ldap_servers\Entity\Server;
 use Drupal\ldap_user\LdapUserConf;
+use Drupal\ldap_user\SemaphoreStorage;
 
 /**
  *
@@ -61,7 +62,12 @@ class LdapUserAdminForm extends ConfigFormBase {
     $config = $this->config('ldap_user.settings');
 
     if (count($this->drupalAcctProvisionServerOptions) == 0) {
-      $message = ldap_servers_no_enabled_servers_msg('configure LDAP User');
+      $url = Url::fromRoute('entity.ldap_server.collection');
+      $edit_server_link = \Drupal::l(t('@path', array('@path' => 'LDAP Servers')), $url);
+      $message = t('At least one LDAP server must configured and <em>enabled</em>
+ before configuring LDAP user. Please go to @link to configure an LDAP server.',
+        ['@link' => $edit_server_link]
+      );
       $form['intro'] = array(
         '#type' => 'item',
         '#markup' => t('<h1>LDAP User Settings</h1>') . $message,
@@ -453,7 +459,7 @@ EOT;
       ->save();
     $form_state->getValues();
 
-    ldap_user_conf_cache_clear();
+    SemaphoreStorage::flushAllValues();
   }
 
   /**

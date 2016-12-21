@@ -86,7 +86,7 @@ function ldap_authentication_ldap_authenticated($user) {
   if (!is_object($user) || $user->id() == 0) {
     return FALSE;
   }
-  $authname = LdapUserConf::ldap_user_get_identifier_from_map($user->id());
+  $authname = LdapUserConf::getUserIdentifierFromMap($user->id());
   return !empty($authname);
 }
 
@@ -402,7 +402,7 @@ function _ldap_authentication_login_form_alter(&$form, &$form_state, $form_id) {
       '#items' => $items,
     ];
   }
-  ldap_servers_disable_http_check($form);
+  _ldap_authentication_disable_http_check($form);
 
   // Add help information for entering in username/password.
   $auth_conf = ldap_authentication_get_valid_conf();
@@ -412,6 +412,35 @@ function _ldap_authentication_login_form_alter(&$form, &$form_state, $form_id) {
     }
     if (isset($auth_conf->loginUIPasswordTxt)) {
       $form['pass']['#description'] = t($auth_conf->loginUIPasswordTxt);
+    }
+  }
+}
+
+/**
+ * Disable a logon form if ldap preferences exclude http logon forms.
+ *
+ * @param array $form
+ *    drupal logon form.
+ */
+function _ldap_authentication_disable_http_check(&$form) {
+
+  if (\Drupal::config('ldap_servers.settings')->get('require_ssl_for_credentials') == 1 ) {
+    \Drupal::service('page_cache_kill_switch')->trigger();
+    if (@$_SERVER['HTTPS'] != 'on') {
+      $tokens = array(
+        '%site_name' => \Drupal::config('system.site')->get('name'),
+        '%site_contact_link' => \Drupal::config('system.site')->get('mail'),
+      );
+
+      if (empty($tokens['%site_contact_link'])) {
+        $tokens['%site_contact_link'] = 'the site admin';
+      }
+      drupal_set_message(t('You are accessing %site_name using an unencrypted connection. For your security,
+     %site_name only supports account logins using a secure protocol such as HTTPS. You can switch
+     to HTTPS by trying to view this page again after changing the URL in your browser \'s
+     location bar to begin with "https" instead of "http". Please contact
+      %site_contact_link for help if this error continues.', $tokens), 'error');
+      $form['#disabled'] = TRUE;
     }
   }
 }
@@ -574,7 +603,7 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state, $re
     // LDAP_authen.AC.disallow.ldap.drupal.
     else {
       // Add ldap_authentication authmap to user. account name is fine here, though cn could be used.
-      LdapUserConf::ldap_user_set_identifier($drupal_account, $authname);
+      LdapUserConf::setUserIdentifier($drupal_account, $authname);
       $drupal_account_is_authmapped = TRUE;
       if ($detailed_watchdog_log) {
         \Drupal::logger('ldap_authentication')->debug('set authmap for %username authname_ldap_user', $watchdog_tokens);
@@ -697,12 +726,12 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state, $re
 function ldap_authentication_corresponding_drupal_user($authname, $auth_conf, &$watchdog_tokens) {
   $detailed_watchdog_log = \Drupal::config('ldap_help.settings')->get('watchdog_detail');
   if (!($drupal_account = user_load_by_name($authname))) {
-    $uid = LdapUserConf::ldap_user_get_uid_from_map($authname);
+    $uid = LdapUserConf::getUidFromIdentifierMap($authname);
     $drupal_account = $uid ? user_load($uid) : FALSE;
   }
 
   if (is_object($drupal_account)) {
-    $drupal_account_is_authmapped = LdapUserConf::ldap_user_get_identifier_from_map($drupal_account->id());
+    $drupal_account_is_authmapped = LdapUserConf::getUserIdentifierFromMap($drupal_account->id());
     if ($drupal_account->id() == 1 && $detailed_watchdog_log) {
       \Drupal::logger('ldap_authentication')->debug('%username : Drupal username maps to user 1, so do not authenticate with ldap', $watchdog_tokens);
     }

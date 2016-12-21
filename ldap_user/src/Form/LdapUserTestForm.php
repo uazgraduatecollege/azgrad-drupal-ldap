@@ -117,14 +117,16 @@ class LdapUserTestForm extends FormBase {
 
       $test_servers = [];
       $user_ldap_entry = FALSE;
+      $factory = \Drupal::service('ldap.servers');
+
       if ($config['drupalAcctProvisionServer']) {
         $test_servers[LdapUserConf::$provisioningDirectionToDrupalUser] = $config['drupalAcctProvisionServer'];
-        $user_ldap_entry = ldap_servers_get_user_ldap_data($username, $config['drupalAcctProvisionServer']);
+        $user_ldap_entry = $factory->getUserDataFromServerByIdentifier($username, $config['drupalAcctProvisionServer']);
       }
       if ($config['ldapEntryProvisionServer']) {
         $test_servers[LdapUserConf::$provisioningDirectionToLDAPEntry] = $config['ldapEntryProvisionServer'];
         if (!$user_ldap_entry) {
-          $user_ldap_entry = ldap_servers_get_user_ldap_data($username, $config['ldapEntryProvisionServer']);
+          $user_ldap_entry = $factory->getUserDataFromServerByIdentifier($username, $config['ldapEntryProvisionServer']);
         }
       }
       $results = [];
@@ -134,7 +136,7 @@ class LdapUserTestForm extends FormBase {
       $results['ldap_user_conf'] = $ldap_user_conf;
 
       if (is_object($account)) {
-        $authmaps = LdapUserConf::ldap_user_get_identifier_from_map($account->id());
+        $authmaps = LdapUserConf::getUserIdentifierFromMap($account->id());
       }
       else {
         $authmaps = 'No authmaps available.  Authmaps only shown if user account exists beforehand';

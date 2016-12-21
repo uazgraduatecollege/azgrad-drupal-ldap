@@ -225,25 +225,23 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
 
     // Load the correct server.
     $server_id = $config['status']['server'];
-    /* @var Server $ldap_server */
-    $ldap_server = \Drupal::entityManager()->getStorage('ldap_server')->load($server_id);
-    // Get user data.
-    $ldap_user = ldap_servers_get_user_ldap_data($user, $server_id);
+    $factory = \Drupal::service('ldap.servers');
+    /* @var Server $server */
+    $server = $factory->getServerByIdEnabled($server_id);
+    $ldapUserData = $factory->getUserDataFromServerByAccount($user, $server_id);
 
-    // Get user data.
-    $ldap_user = ldap_servers_get_user_ldap_data($user, $server_id);
-    if (!$ldap_user && $this->configuration['status']['only_ldap_authenticated'] == TRUE) {
+    if (!$ldapUserData && $this->configuration['status']['only_ldap_authenticated'] == TRUE) {
       throw new AuthorizationSkipAuthorization();
     }
 
     // Get user groups from DN.
-    $derive_from_dn_authorizations = $ldap_server->groupUserMembershipsFromDn($user);
+    $derive_from_dn_authorizations = $server->groupUserMembershipsFromDn($user);
     if (!$derive_from_dn_authorizations) {
       $derive_from_dn_authorizations = array();
     }
 
     // Get user groups from membership.
-    $group_dns = $ldap_server->groupMembershipsFromUser($user);
+    $group_dns = $server->groupMembershipsFromUser($user);
     if (!$group_dns) {
       $group_dns = array();
     }

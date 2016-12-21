@@ -58,7 +58,9 @@ class FeedsDrupalUserLdapEntryFetcherResult extends FeedsFetcherResult {
         continue;
       }
 
-      if ($ldap_user = ldap_servers_get_user_ldap_data($user)) {
+      $factory = \Drupal::service('ldap.servers');
+
+      if ($ldap_user = $factory->getUserDataByAccount($user)) {
         unset($ldap_user['mail']);
         $ldap_user['attr']['count'] = $ldap_user['attr']['count'] + count($this->availableDrupalUserAttributes);
         foreach ($this->availableDrupalUserAttributes as $attr_name => $attr_conf) {
@@ -71,7 +73,6 @@ class FeedsDrupalUserLdapEntryFetcherResult extends FeedsFetcherResult {
       }
     }
     $results['count'] = count($results);
-    // drupal_set_message("<pre>" . print_r($results, TRUE));.
     return $results;
   }
 

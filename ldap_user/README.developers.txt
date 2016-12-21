@@ -126,7 +126,7 @@ ldapUserConf::syncToLdapEntry()
 ldapUserConf::deleteProvisionedLdapEntries()
 
 3. to get mappings and determine which attributes are needed "ldap_contexts" and "prov_events" are passed into 
-ldap_servers_get_user_ldap_data()
+ServerFactory::getUserDataFromServerByAccount()
 ldapUserConf::drupalUserToLdapEntry()
 
 

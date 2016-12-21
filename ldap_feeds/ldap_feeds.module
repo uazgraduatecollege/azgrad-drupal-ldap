@@ -179,8 +179,9 @@ function ldap_feeds_drupal_user_legend(&$form, $importer) {
           $sources[$id] = array('name' => array('#markup' => $id), 'description' => array('#markup' => $account->{$attr_name}));
         }
       }
+      $factory = \Drupal::service('ldap.servers');
 
-      $ldap_user = ldap_servers_get_user_ldap_data($ldap_server->testingDrupalUsername, $sid);
+      $ldap_user = $factory->getUserDataFromServerByIdentifier($ldap_server->testingDrupalUsername, $sid);
       foreach ($ldap_user['attr'] as $id => $value) {
         if (!is_numeric($id) && is_scalar($ldap_user['attr'][$id][0]) && $ldap_user['attr'][$id]['count'] == 1) {
           $sources[$id] = array('name' => array('#markup' => $id), 'description' => array('#markup' => $ldap_user['attr'][$id][0]));

@@ -35,7 +35,7 @@ class ServerTests extends UnitTestCase {
         ],
       ]);
     // TODO: Figure out the correct format to pass to searchAllBaseDns and compare them.
-    // $stub->searchAllBaseDns('*');.
+    //$stub->searchAllBaseDns('*');
     $this->assertTrue(TRUE);
   }
 
@@ -44,18 +44,38 @@ class ServerTests extends UnitTestCase {
    */
   public function testRemoveUnchangedAttributes() {
 
+    // TODO: (At least) the expected result is in the wrong format, thus the
+    // test defaults to true for now and does nothing.
+    $this->assertTrue(TRUE);
+
     $existing_data = [
-      'count' => 1,
-      ['organizationalPerson', 'Person', 'inetOrgPerson'],
+      'count' => 3,
+      0 => 'Person',
+      1 => 'inetOrgPerson',
+      2 => 'organizationalPerson'
     ];
 
     $new_data = [
-      0 => 'organizationalPersonUpdated',
-      1 => 'Person',
+      'samAccountName' => 'Test1',
+        'memberOf' => [
+          'Group1',
+          'Group2',
+        ]
     ];
-    // TODO: Figure out the correct format to RemoveUnchangedAttributes and compare them.
-    // $result = Server::removeUnchangedAttributes($new_data, $existing_data);.
-    $this->assertTrue(TRUE);
+
+    $result = Server::removeUnchangedAttributes($new_data, $existing_data);
+
+    $result_expected = [
+      'count' => 3,
+      [
+        'organizationalPerson',
+        'Person',
+        'inetOrgPerson',
+      ],
+    ];
+
+   // $this->assertEquals($result_expected, $result);
+
   }
 
 }

@@ -2,6 +2,7 @@
 
 namespace Drupal\ldap_user\EventSubscriber;
 
+use Drupal\ldap_user\SemaphoreStorage;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
@@ -22,7 +23,7 @@ class InitSubscriber implements EventSubscriberInterface {
    */
   public function onEvent() {
     // Reset for simpletest page load behavior.
-    ldap_user_ldap_provision_semaphore(NULL, NULL, NULL, TRUE);
+    SemaphoreStorage::flushAllValues();
   }
 
 }

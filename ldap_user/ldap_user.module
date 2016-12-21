@@ -8,7 +8,9 @@
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\ldap_servers\OrphanProcessor;
+use Drupal\ldap_servers\TokenFunctions;
 use Drupal\ldap_servers\TokenHelper;
+use Drupal\ldap_user\SemaphoreStorage;
 use Drupal\user\UserInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
@@ -16,14 +18,6 @@ use Drupal\Core\Form\FormState;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Url;
 use Drupal\ldap_user\LdapUserConf;
-
-/**
- * Implements hook_init().
- */
-function ldap_user_init() {
-  // Reset for simpletest page load behavior.
-  ldap_user_ldap_provision_semaphore(NULL, NULL, NULL, TRUE);
-}
 
 /**
  * Implements hook_theme().
@@ -140,20 +134,6 @@ function ldap_user_mail($key, &$message, $params) {
 }
 
 /**
- * Implements hook_ldap_derived_user_name_alter().
- */
-function ldap_user_ldap_derived_user_name_alter(&$name, $ldap_user) {
-  // Alter $name in some way here.
-}
-
-/**
- *
- */
-function ldap_user_conf_cache_clear() {
-  ldap_user_ldap_provision_semaphore(NULL, NULL, NULL, TRUE);
-}
-
-/**
  * Implements hook_ldap_attributes_needed_alter().
  */
 function ldap_user_ldap_attributes_needed_alter(&$attributes, $params) {
@@ -178,17 +158,17 @@ function ldap_user_ldap_attributes_needed_alter(&$attributes, $params) {
       $attributes['dn'] = array();
     }
     // Force dn "attribute" to exist.
-    $attributes['dn'] = ldap_servers_set_attribute_map($attributes['dn']);
+    $attributes['dn'] = TokenFunctions::setAttributeMap($attributes['dn']);
     // Add the attributes required by the user configuration when provisioning drupal users.
     switch ($params['ldap_context']) {
       case 'ldap_user_insert_drupal_user':
       case 'ldap_user_update_drupal_user':
       case 'ldap_user_ldap_associate':
         // array($ldap_server->user_attr, 0, NULL);.
-        $attributes[$ldap_server->user_attr] = ldap_servers_set_attribute_map(@$attributes[$ldap_server->user_attr]);
-        $attributes[$ldap_server->mail_attr] = ldap_servers_set_attribute_map(@$attributes[$ldap_server->mail_attr]);
-        $attributes[$ldap_server->picture_attr] = ldap_servers_set_attribute_map(@$attributes[$ldap_server->picture_attr]);
-        $attributes[$ldap_server->unique_persistent_attr] = ldap_servers_set_attribute_map(@$attributes[$ldap_server->unique_persistent_attr]);
+        $attributes[$ldap_server->user_attr] = TokenFunctions::setAttributeMap(@$attributes[$ldap_server->user_attr]);
+        $attributes[$ldap_server->mail_attr] = TokenFunctions::setAttributeMap(@$attributes[$ldap_server->mail_attr]);
+        $attributes[$ldap_server->picture_attr] = TokenFunctions::setAttributeMap(@$attributes[$ldap_server->picture_attr]);
+        $attributes[$ldap_server->unique_persistent_attr] = TokenFunctions::setAttributeMap(@$attributes[$ldap_server->unique_persistent_attr]);
         if ($ldap_server->mail_template) {
           $tokens = new TokenHelper();
           $tokens->extractTokenAttributes($attributes, $ldap_server->mail_template);
@@ -529,10 +509,11 @@ function ldap_user_form_register_form_validate($form, &$form_state) {
   if ($values['ldap_user_association'] == LdapUserConf::$manualAccountConflictNoLdapAssociate) {
     $form_state->set('ldap_user_ldap_exclude', 1);
   }
+  $factory = \Drupal::service('ldap.servers');
 
   // If corresponding ldap account doesn't exist and provision not selected and make ldap associated is selected, throw error.
   if (!@$values['ldap_user_create_ldap_acct'] && @$values['ldap_user_association'] == LdapUserConf::$manualAccountConflictLdapAssociate) {
-    $ldap_user = ldap_servers_get_user_ldap_data($drupal_username, $config->get('ldap_user_conf.ldapEntryProvisionServer'), 'ldap_user_prov_to_drupal');
+    $ldap_user = $factory->getUserDataFromServerByIdentifier($drupal_username, $config->get('ldap_user_conf.ldapEntryProvisionServer'), 'ldap_user_prov_to_drupal');
     if (!$ldap_user) {
 
       $form_state->setErrorByName('ldap_user_association', t('User %name does not have a corresponding LDAP Entry (dn).
@@ -542,7 +523,7 @@ function ldap_user_form_register_form_validate($form, &$form_state) {
 
   // If trying to provision an LDAP account and one already exists, throw error.
   if (@$values['ldap_user_create_ldap_acct']) {
-    $ldap_user = ldap_servers_get_user_ldap_data($drupal_username, $config->get('ldap_user_conf.ldapEntryProvisionServer'), 'ldap_user_prov_to_ldap');
+    $ldap_user = $factory->getUserDataFromServerByIdentifier($drupal_username, $config->get('ldap_user_conf.ldapEntryProvisionServer'), 'ldap_user_prov_to_ldap');
     if ($ldap_user) {
       $tokens = array('%dn' => $ldap_user['dn'], '%name' => $drupal_username);
       $form_state->setErrorByName('ldap_user_create_ldap_acct', t('User %name already has a corresponding LDAP Entry (%dn).
@@ -598,6 +579,7 @@ function ldap_user_form_register_form_submit2(&$form, FormState $form_state) {
 }
 
 /**
+ * TODO: Move this out of ldap_user.module
  * @param object $account
  *   as drupal user object.
  * @param enum int $direction
@@ -619,7 +601,7 @@ function ldap_user_is_ldap_associated($account, $direction = NULL) {
       $to_drupal_user = TRUE;
     }
     elseif ($account->id()) {
-      $authmaps = LdapUserConf::ldap_user_get_identifier_from_map($account->id());
+      $authmaps = LdapUserConf::getUserIdentifierFromMap($account->id());
       $to_drupal_user = (boolean) (count($authmaps));
     }
   }
@@ -643,56 +625,6 @@ function ldap_user_is_ldap_associated($account, $direction = NULL) {
 }
 
 /**
- * Function to avoid multiple sync or provision in same page load (if desired)
- *
- * @param enum string $action
- *   'sync' | 'provision' | 'set_page_load_key' | NULL.
- * @param enum string $op
- *   = 'set' or 'get'.
- *
- * @value mixed value associate with $op.
- *
- * @return bool|void
- */
-function ldap_user_ldap_provision_semaphore($action, $op, $value = NULL, $reset = FALSE) {
-
-  $calling_function = FALSE;
-  // {.
-  if (function_exists('debug_backtrace') && $backtrace = debug_backtrace()) {
-    $calling_function = $backtrace[1]['function'];
-  }
-
-  // @FIXME: This should go into state(!)
-  static $ldap_accts;
-  static $intialized;
-
-  if ($reset || !$intialized) {
-    $ldap_accts = array();
-    $intialized = TRUE;
-  }
-
-  // Mark that the given drupal user has had ldap entry synced or provisioned on this page load.
-  if ($op == 'set') {
-    if ($action && $value) {
-      $ldap_accts[$action][$value] = TRUE;
-    }
-    // @FIXME: Inconsistent returns.
-    return;
-  }
-
-  // Has the given drupal user x action (sync or provision) been executed.
-  if ($op == 'get') {
-    if ($action && $value && isset($ldap_accts[$action][$value])) {
-      return $ldap_accts[$action][$value];
-    }
-    else {
-      return FALSE;
-    }
-  }
-
-}
-
-/**
  * Implements hook_user_login().
  */
 function ldap_user_user_login($account) {
@@ -710,35 +642,34 @@ function ldap_user_user_login($account) {
   // if ($account->access == 0 && $account->login != 0) {} check for first time user.
   if (
       $ldap_user_conf->provisionsLdapEntriesFromDrupalUsers
-      && ldap_user_ldap_provision_semaphore('provision', 'get', $account->getUsername()) === FALSE
+      && SemaphoreStorage::get('provision', $account->getUsername()) == FALSE
       && !$ldap_user_conf->getProvisionRelatedLdapEntry($account)
       && \Drupal::config('ldap_user.settings')->get('ldap_user_conf.ldapEntryProvisionServer')
       && $ldap_user_conf->provisionEnabled(LdapUserConf::$provisioningDirectionToLDAPEntry, LdapUserConf::$provisionLdapEntryOnUserAuthentication)
       ) {
     $provision_result = $ldap_user_conf->provisionLdapEntry($account);
     if ($provision_result['status'] == 'success') {
-      ldap_user_ldap_provision_semaphore('provision', 'set', $account->getUsername());
+      SemaphoreStorage::set('provision', $account->getUsername());
     }
   }
   // don't sync if just provisioned.
   if (
     $ldap_user_conf->provisionsLdapEntriesFromDrupalUsers
-    && ldap_user_ldap_provision_semaphore('sync', 'get', $account->getUsername()) === FALSE
+    && SemaphoreStorage::get('sync', $account->getUsername()) == FALSE
     && $provision_result['status'] != 'success'
     && $ldap_user_conf->provisionEnabled(LdapUserConf::$provisioningDirectionToLDAPEntry, LdapUserConf::$provisionLdapEntryOnUserAuthentication)
     ) {
     $bool_result = $ldap_user_conf->syncToLdapEntry($account);
     if ($bool_result) {
-      ldap_user_ldap_provision_semaphore('sync', 'set', $account->getUsername());
+      SemaphoreStorage::set('sync', $account->getUsername());
     }
   }
-
+  $factory = \Drupal::service('ldap.servers');
   $config = \Drupal::config('ldap_user.settings')->get('ldap_user_conf');
 
   if ($ldap_user_conf->provisionsDrupalAccountsFromLdap  && in_array(LdapUserConf::$eventSyncToDrupalUser, array_keys($ldap_user_conf->provisionsDrupalEvents))) {
-    $ldap_user = ldap_servers_get_user_ldap_data($account, $config['drupalAcctProvisionServer'], 'ldap_user_prov_to_drupal');
+    $ldap_user = $factory->getUserDataFromServerByAccount($account, $config['drupalAcctProvisionServer'], 'ldap_user_prov_to_drupal');
     if ($ldap_user) {
-      $factory = \Drupal::service('ldap.servers');
       $ldap_server = $factory->getServerById($config['drupalAcctProvisionServer']);
       $ldap_user_conf->applyAttributesToAccount($ldap_user, $account, $ldap_server, LdapUserConf::$provisioningDirectionToDrupalUser, array(LdapUserConf::$eventSyncToDrupalUser));
     }
@@ -762,8 +693,8 @@ function ldap_user_user_insert($account) {
   if (is_object($account) && $account->getUsername()) {
     // Check for first time user.
     $new_account_request = (boolean) (\Drupal::currentUser()->isAnonymous() && $account->isNew());
-    $already_provisioned_to_ldap = ldap_user_ldap_provision_semaphore('provision', 'get', $account->getUsername());
-    $already_synced_to_ldap = ldap_user_ldap_provision_semaphore('sync', 'user_action_query', $account->getUsername());
+    $already_provisioned_to_ldap = SemaphoreStorage::get('provision', $account->getUsername());
+    $already_synced_to_ldap = SemaphoreStorage::get('sync', $account->getUsername());
     if ($already_provisioned_to_ldap || $already_synced_to_ldap || $new_account_request) {
       return;
     }
@@ -785,13 +716,13 @@ function ldap_user_user_insert($account) {
       if (!$ldap_provision_entry) {
         $provision_result = $ldap_user_conf->provisionLdapEntry($account);
         if ($provision_result['status'] == 'success') {
-          ldap_user_ldap_provision_semaphore('provision', 'set', $account->getUsername());
+          SemaphoreStorage::set('provision', $account->getUsername());
         }
       }
       elseif ($ldap_provision_entry) {
         $bool_result = $ldap_user_conf->syncToLdapEntry($account);
         if ($bool_result) {
-          ldap_user_ldap_provision_semaphore('sync', 'set', $account->getUsername());
+          SemaphoreStorage::set('sync', $account->getUsername());
         }
       }
     }
@@ -814,8 +745,8 @@ function ldap_user_user_update($account) {
   if ($ldap_user_conf->provisionsLdapEntriesFromDrupalUsers &&
       $ldap_user_conf->provisionEnabled(LdapUserConf::$provisioningDirectionToLDAPEntry, LdapUserConf::$provisionLdapEntryOnUserUpdateCreate)) {
 
-    $already_provisioned_to_ldap = ldap_user_ldap_provision_semaphore('provision', 'get', $account->getUsername());
-    $already_synced_to_ldap = ldap_user_ldap_provision_semaphore('sync', 'get', $account->getUsername());
+    $already_provisioned_to_ldap = SemaphoreStorage::get('provision', $account->getUsername());
+    $already_synced_to_ldap = SemaphoreStorage::get('sync', $account->getUsername());
     if ($already_provisioned_to_ldap || $already_synced_to_ldap) {
       return;
     }
@@ -827,7 +758,7 @@ function ldap_user_user_update($account) {
     if (!$ldap_entry) {
       $provision_result = $ldap_user_conf->provisionLdapEntry($account);
       if ($provision_result['status'] == 'success') {
-        ldap_user_ldap_provision_semaphore('provision', 'set', $account->getUsername());
+        SemaphoreStorage::set('provision', $account->getUsername());
       }
     }
     // Sync if not just provisioned and enabled.
@@ -838,7 +769,7 @@ function ldap_user_user_update($account) {
       if ($provision_enabled && $ldap_entry) {
         $bool_result = $ldap_user_conf->syncToLdapEntry($account);
         if ($bool_result) {
-          ldap_user_ldap_provision_semaphore('sync', 'set', $account->getUsername());
+          SemaphoreStorage::set('sync', $account->getUsername());
         }
       }
     }
@@ -860,13 +791,13 @@ function ldap_user_user_presave($account) {
     return;
   }
 
+  $factory = \Drupal::service('ldap.servers');
   $config = \Drupal::config('ldap_user.settings')->get('ldap_user_conf');
 
   // Check for provisioning to drupal and override synced user fields/props.
   if ($ldap_user_conf->provisionsDrupalAccountsFromLdap && in_array(LdapUserConf::$eventSyncToDrupalUser, array_keys($ldap_user_conf->provisionsDrupalEvents))) {
     if (ldap_user_is_ldap_associated($account, LdapUserConf::$provisioningDirectionToDrupalUser)) {
-      $ldap_user = ldap_servers_get_user_ldap_data($account, $config['drupalAcctProvisionServer'], 'ldap_user_prov_to_drupal');
-      $factory = \Drupal::service('ldap.servers');
+      $ldap_user = $factory->getUserDataFromServerByAccount($account, $config['drupalAcctProvisionServer'], 'ldap_user_prov_to_drupal');
       $ldap_server = $factory->getServerById($config['drupalAcctProvisionServer']);
       $ldap_user_conf->applyAttributesToAccount($ldap_user, $account, $ldap_server, LdapUserConf::$provisioningDirectionToDrupalUser, array(LdapUserConf::$eventSyncToDrupalUser));
     }
@@ -890,11 +821,11 @@ function ldap_user_user_delete($account) {
     // No need to watchdog here, because fail in deleteProvisionedLdapEntries provides watchdog entry.
   }
   // Also clean up identities.
-  LdapUserConf::ldap_user_identities_delete($account->id());
+  LdapUserConf::deleteUserIdentifier($account->id());
 }
 
 /**
- *
+ * TODO: Move this out of ldap_user.module
  */
 function ldap_user_all_events() {
   return array(
@@ -909,7 +840,7 @@ function ldap_user_all_events() {
 
 /**
  * Load user $account and $entity, given uid or $username.
- *
+ * TODO: Move this out of ldap_user.module
  * @param string $user_id
  *   is username or uid.
  * @param string $user_id_type
@@ -946,32 +877,32 @@ function ldap_user_entity_base_field_info(EntityTypeInterface $entity_type) {
     $fields = [];
 
     $fields['ldap_user_puid_sid'] = BaseFieldDefinition::create('string')
-      ->setLabel('LDAP Server ID that puid was derived from. NULL if puid is independent of server configuration instance.');
+      ->setLabel(t('LDAP server ID'))
+      ->setDescription(t('Server ID  that PUID was derived from. NULL if PUID is independent of server configuration instance.'));
 
     $fields['ldap_user_puid'] = BaseFieldDefinition::create('string')
-      ->setLabel('Value of user\'s permanent unique id . This should never change for a given ldap identified user.')
-      ->setDescription('This field should not be edited.');
+      ->setLabel(t('Permanent unique ID'))
+      ->setDescription(t('The user\'s permanent unique ID should never change for a given ldap identified user.'));
 
     $fields['ldap_user_puid_property'] = BaseFieldDefinition::create('string')
-      ->setLabel('Property specified as user\'s puid.')
-      ->setDescription('This field should not be edited.');
+      ->setLabel(t('PUID base property'))
+      ->setDescription(t('The LDAP property used for the PUID, for example "dn".'));
 
     $fields['ldap_user_current_dn'] = BaseFieldDefinition::create('string')
-      ->setLabel('User LDAP DN')
-      ->setDescription('May change when user\'s DN changes. This field should not be edited.');
+      ->setLabel(t('LDAP DN'))
+      ->setDescription(t('The user\'s LDAP DN. May change when user\'s DN changes.'));
 
     $fields['ldap_user_prov_entries'] = BaseFieldDefinition::create('string')
-      ->setLabel('LDAP Entries that have been provisioned from this Drupal user.')
-      ->setDescription('This field should not be edited.')
+      ->setLabel(t('Provisioned LDAP entries'))
       ->setCardinality(FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED);
 
     $fields['ldap_user_last_checked'] = BaseFieldDefinition::create('timestamp')
-      ->setLabel('Unix timestamp of when Drupal user was compared to ldap entry. This could be for purposes of syncing, deleteing drupal account, etc.')
-      ->setDescription('This field should not be edited.');
+      ->setLabel(t('Last LDAP comparison'))
+      ->setDescription(t('Unix timestamp of when Drupal user was compared to ldap entry. This could be for purposes of syncing, deleteing drupal account, etc.'));
 
     $fields['ldap_user_ldap_exclude'] = BaseFieldDefinition::create('boolean')
-      ->setLabel('Whether to exclude the user from LDAP functionality')
-      ->setDescription('This field should not be edited.');
+      ->setLabel(t('Exclude from LDAP'))
+      ->setDescription(t('Whether to exclude the user from LDAP functionality.'));
 
     return $fields;
   }

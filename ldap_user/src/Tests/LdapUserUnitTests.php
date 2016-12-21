@@ -5,6 +5,7 @@ namespace Drupal\ldap_user\Tests;
 use Drupal\Component\Utility\Unicode;
 use Drupal\ldap_servers\tests\LdapWebTestBase;
 use Drupal\ldap_user\LdapUserConf;
+use Drupal\ldap_user\SemaphoreStorage;
 use ReflectionFunction;
 
 /**
@@ -86,6 +87,7 @@ class LdapWebUserUnitTests extends LdapWebTestBase {
       'ldap_user_conf' => array(2, 0),
       'ldap_user_sync_to_drupal' => array(3, 1),
       'ldap_user_provision_to_drupal' => array(2, 1),
+      // would be SemaphoreStorage
       'ldap_user_ldap_provision_semaphore' => array(4, 2),
       'ldap_user_token_replace' => array(3, 2),
       'ldap_user_token_tokenize_entry' => array(5, 2),
@@ -240,6 +242,7 @@ class LdapWebUserUnitTests extends LdapWebTestBase {
       debug('ldapUserConf::isSynced failures:'); debug($debug);
     }
 
+    // Legacy functions removed, call config directly.
     $this->assertTrue($ldap_user_conf->isDrupalAcctProvisionServer('activedirectory1'), t('isDrupalAcctProvisionServer works'), $this->testId('isDrupalAcctProvisionServer'));
     $this->assertFalse($ldap_user_conf->isLdapEntryProvisionServer('activedirectory1'), t('isLdapEntryProvisionServer works'), $this->testId('isLdapEntryProvisionServer'));
 
@@ -616,7 +619,7 @@ class LdapWebUserUnitTests extends LdapWebTestBase {
         $ldap_user_conf->save();
         // Fixme: Test broken since LdapUserConfAdmin gone.
         $ldap_user_conf = new LdapUserConf();
-        ldap_user_ldap_provision_semaphore(NULL, NULL, NULL, TRUE);
+        SemaphoreStorage::flushAllValues();
 
         // 2. delete user.
         $username = $test['user'];
@@ -656,7 +659,7 @@ class LdapWebUserUnitTests extends LdapWebTestBase {
             debug("field_name=$field_name not configured to provisionDrupalAccount on drupal user create for direction=$direction and prov_event=$prov_event");
           }
         }
-        ldap_user_ldap_provision_semaphore(NULL, NULL, NULL, TRUE);
+        SemaphoreStorage::flushAllValues();
       }
 
       /**

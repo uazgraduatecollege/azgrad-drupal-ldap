@@ -5,6 +5,7 @@ namespace Drupal\ldap_user\Tests;
 use Drupal\ldap_servers\ServerFactory;
 use Drupal\ldap_servers\tests\LdapWebTestBase;
 use Drupal\ldap_user\LdapUserConf;
+use Drupal\ldap_user\SemaphoreStorage;
 use Drupal\user\Entity\User;
 
 /**
@@ -130,7 +131,7 @@ class LdapWebUserIntegrationTests extends LdapWebTestBase {
       }
 
       // Need to reset for simpletests.
-      ldap_user_ldap_provision_semaphore(NULL, NULL, NULL, TRUE);
+      SemaphoreStorage::flushAllValues();
 
       // Change lastname and first name (in drupal) and save user to test ldapSync event handler
       // confirm that appropriate attributes were changed in ldap entry.
@@ -208,7 +209,7 @@ class LdapWebUserIntegrationTests extends LdapWebTestBase {
     foreach ($password_tests as $password_token => $password_result) {
       $test_id = "provisionToLdapEmailVerification $password_token, $test_sid";
       // Need to reset for simpletests.
-      ldap_user_ldap_provision_semaphore(NULL, NULL, NULL, TRUE);
+      SemaphoreStorage::flushAllValues();
       /**
        * provisionToLdapEmailVerification setup
        */
