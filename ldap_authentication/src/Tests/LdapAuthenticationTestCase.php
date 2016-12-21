@@ -4,7 +4,6 @@ namespace Drupal\ldap_authentication\Tests;
 
 use Drupal\ldap_authentication\LdapAuthenticationConf;
 use Drupal\ldap_authentication\LdapAuthenticationConfAdmin;
-use Drupal\ldap_servers\ServerFactory;
 use Drupal\ldap_servers\tests\LdapWebTestBase;
 use Drupal\ldap_user\LdapUserConf;
 
@@ -97,9 +96,9 @@ class LdapAuthenticationWebTestBase extends LdapWebTestBase {
       'drupal_role_authentication_test'
     );
 
-    $factory = new ServerFactory($sid, 'enabled');
-    $ldap_servers = $factory->servers;
-    $this->assertTrue(count($ldap_servers) == 1, ' ldap_authentication test server setup successful', $testid);
+    $factory = \Drupal::service('ldap.servers');
+    $ldap_servers = $factory->getServerByIdEnabled($sid);
+    $this->assertTrue($ldap_servers, ' ldap_authentication test server setup successful', $testid);
 
     /**
      * LDAP_authen.MM.ULT.user1.goodpwd -- result: Successful logon as user 1
@@ -214,9 +213,9 @@ class LdapAuthenticationWebTestBase extends LdapWebTestBase {
       'drupal_role_authentication_test'
       );
 
-    $factory = new ServerFactory($sid, 'enabled');
-    $ldap_servers = $factory->servers;
-    $this->assertTrue(count($ldap_servers) == 1, ' ldap_authentication test server setup successful', $testid);
+    $factory = \Drupal::service('ldap.servers');
+    $ldap_servers = $factory->getServerByIdEnabled($sid);
+    $this->assertTrue($ldap_servers, ' ldap_authentication test server setup successful', $testid);
 
     /**
      * LDAP_authen.EM.ULT.user1.goodpwd -- result: Successful logon as user 1
@@ -393,9 +392,9 @@ class LdapAuthenticationWebTestBase extends LdapWebTestBase {
       debug('authenticationConf'); debug($authenticationConf);
     }
 
-    $factory = new ServerFactory($sid, 'enabled');
-    $ldap_servers = $factory->servers;
-    $this->assertTrue(count($ldap_servers) == 1, ' ldap_authentication test server setup successful', $testid);
+    $factory = \Drupal::service('ldap.servers');
+    $ldap_servers = $factory->getServerByIdEnabled($sid);
+    $this->assertTrue($ldap_servers, ' ldap_authentication test server setup successful', $testid);
     $hpotter_drupal = user_load_by_name('hpotter');
     // @TODO: Verify that nothing from LdapUserConfAdmin missing.
     $ldap_user_conf = new LdapUserConf();
@@ -445,9 +444,9 @@ class LdapAuthenticationWebTestBase extends LdapWebTestBase {
       'drupal_role_authentication_test'
       );
 
-    $factory = new ServerFactory($sid, 'enabled');
-    $ldap_servers = $factory->servers;
-    $this->assertTrue(count($ldap_servers) == 1, ' ldap_authentication test server setup successful', $testid);
+    $factory = \Drupal::service('ldap.servers');
+    $ldap_servers = $factory->getServerByIdEnabled($sid);
+    $this->assertTrue($ldap_servers, ' ldap_authentication test server setup successful', $testid);
 
     // These 2 modules are configured in setup, but disabled for most authentication tests.
     \Drupal::service('module_installer')->uninstall(['ldap_authorization_drupal_role']);

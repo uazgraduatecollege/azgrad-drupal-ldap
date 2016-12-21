@@ -3,7 +3,6 @@
 namespace Drupal\ldap_servers\tests;
 
 use Drupal\Component\Utility\Unicode;
-use Drupal\ldap_servers\ServerFactory;
 use Drupal\ldap_servers\TokenFunctions;
 
 /**
@@ -129,8 +128,8 @@ class ServerUITests extends LdapWebTestBase {
       $this->drupalPost('admin/config/people/ldap/servers/add', $edit, t('Add'));
       $field_to_prop_map = LdapServer::field_to_properties_map();
       $field_to_prop_map['bindpw'] = 'bindpw';
-      $factory = new ServerFactory(NULL, 'all', FALSE, TRUE);
-      $ldap_servers = $factory->servers;
+      $factory = \Drupal::service('ldap.servers');
+      $ldap_servers = $factory->getAllServers();
       $this->assertTrue(count(array_keys($ldap_servers)) == 1, 'Add form for ldap server added server.', $this->ldapTestId . ' Add Server');
       $this->assertText('LDAP Server Server server1 added', 'Add form confirmation message', $this->ldapTestId . ' Add Server');
       // Assert one ldap server exists in db table
@@ -157,8 +156,8 @@ class ServerUITests extends LdapWebTestBase {
 
       unset($edit['sid']);
       $this->drupalPost('admin/config/people/ldap/servers/edit/server1', $edit, t('Update'));
-      $factory = new ServerFactory(NULL, 'all', FALSE, TRUE);
-      $ldap_servers = $factory->servers;
+      $factory = \Drupal::service('ldap.servers');
+      $ldap_servers = $factory->getAllServers();
       $this->assertTrue(count(array_keys($ldap_servers)) == 1, 'Update form for ldap server didnt delete or add another server.', $this->ldapTestId . '.Update Server');
       // Assert confirmation message without error
       // assert one ldap server exists in db table
@@ -174,8 +173,8 @@ class ServerUITests extends LdapWebTestBase {
       $this->drupalGet('admin/config/people/ldap/servers/delete/server1');
       $this->drupalPost('admin/config/people/ldap/servers/delete/server1', array(), t('Delete'));
 
-      $factory = new ServerFactory(NULL, 'all', FALSE, TRUE);
-      $ldap_servers = $factory->servers;
+      $factory = \Drupal::service('ldap.servers');
+      $ldap_servers = $factory->getAllServers();
 
       $this->assertTrue(count(array_keys($ldap_servers)) == 0, 'Delete form for ldap server deleted server.', $this->ldapTestId . '.Delete Server');
 

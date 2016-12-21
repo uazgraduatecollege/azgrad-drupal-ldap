@@ -3,7 +3,6 @@
 namespace Drupal\ldap_query;
 
 use Drupal\Core\Url;
-use Drupal\ldap_servers\ServerFactory;
 
 /**
  *
@@ -227,8 +226,9 @@ class LdapQueryAdmin extends LdapQuery {
 
     $form['basic']['qid']['#disabled'] = ($op == 'edit');
 
-    $factory = new ServerFactory(NULL, 'enabled');
-    $servers = $factory->servers;
+
+    $factory = \Drupal::service('ldap.servers');
+    $servers = $factory->getEnabledServers();
     if (count($servers) == 0) {
       drupal_set_message(t('No ldap servers configured.  Please configure a server before an ldap query.'), 'error');
     }

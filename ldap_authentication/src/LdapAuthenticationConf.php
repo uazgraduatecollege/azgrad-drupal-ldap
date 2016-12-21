@@ -3,7 +3,6 @@
 namespace Drupal\ldap_authentication;
 
 use Drupal\Core\Url;
-use Drupal\ldap_servers\ServerFactory;
 use Drupal\ldap_user\LdapUserConf;
 
 /**
@@ -247,8 +246,8 @@ class LdapAuthenticationConf {
       }
       // Reset in case reloading instantiated object.
       $this->enabledAuthenticationServers = array();
-      $factory = new ServerFactory(NULL, 'enabled');
-      $enabled_ldap_servers = $factory->servers;
+      $factory = \Drupal::service('ldap.servers');
+      $enabled_ldap_servers = $factory->getEnabledServers();
       foreach ($this->sids as $sid => $enabled) {
         if ($enabled && isset($enabled_ldap_servers[$sid])) {
           $this->enabledAuthenticationServers[$sid] = $enabled_ldap_servers[$sid];

@@ -5,7 +5,6 @@ namespace Drupal\ldap_servers\Form;
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\ldap_servers\Entity\Server;
-use Drupal\ldap_servers\ServerFactory;
 
 /**
  * Class ServerForm.
@@ -504,8 +503,8 @@ class ServerForm extends EntityForm {
     }
     // If there isn't a password then load the existing one (unless this an anonymous bind server)
     elseif ($form_state->getValue('bind_method') != Server::$bindMethodAnon || $form_state->getValue('bind_method') != Server::$bindMethodAnonUser) {
-      $factory = new ServerFactory($new_configuration->id());
-      $existing_configuration = $factory->servers;
+      $factory = \Drupal::service('ldap.servers');
+      $existing_configuration = $factory->getServerById($new_configuration->id());
       if ($existing_configuration && $existing_configuration->get('bindpw')) {
         $new_configuration->set('bindpw', $existing_configuration->get('bindpw'));
       }

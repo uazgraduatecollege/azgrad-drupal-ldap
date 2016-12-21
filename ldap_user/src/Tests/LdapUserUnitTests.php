@@ -3,9 +3,7 @@
 namespace Drupal\ldap_user\Tests;
 
 use Drupal\Component\Utility\Unicode;
-use Drupal\ldap_servers\ServerFactory;
 use Drupal\ldap_servers\tests\LdapWebTestBase;
-use Drupal\ldap_servers\TokenHelper;
 use Drupal\ldap_user\LdapUserConf;
 use ReflectionFunction;
 
@@ -114,8 +112,8 @@ class LdapWebUserUnitTests extends LdapWebTestBase {
     $sids = array('activedirectory1');
     // prepTestData($sids, 'provisionToDrupal', 'default');.
     $this->prepTestData('hogwarts', $sids, 'default');
-    $factory = new ServerFactory('activedirectory1', NULL, TRUE, TRUE);
-    $ldap_server = $factory->servers;
+    $factory = \Drupal::service('ldap.servers');
+    $ldap_server = $factory->getServerById('activedirectory1');
     // Fixme: Test broken since LdapUserConfAdmin gone.
     $ldap_user_conf = new LdapUserConf();
 
@@ -137,7 +135,8 @@ class LdapWebUserUnitTests extends LdapWebTestBase {
     if (count($array_diff) != 0) {
       debug('ldap_servers_get_user_ldap_data failed.  resulting ldap data array:'); debug($ldap_user); debug('desired result:'); debug($desired_result); debug('array_diff:'); debug($array_diff);
     }
-    $factory = new ServerFactory($config['drupalAcctProvisionServer'], 'all', TRUE);
+    $factory = \Drupal::service('ldap.servers');
+    $ldap_server = $factory->getServerById($config['drupalAcctProvisionServer']);
     $ldap_todrupal_prov_server = $factory->servers;
     $ldap_user_conf->applyAttributesToAccount($ldap_user, $user_edit, $ldap_todrupal_prov_server);
 
@@ -327,10 +326,8 @@ class LdapWebUserUnitTests extends LdapWebTestBase {
     $ldap_user_conf->save();
 
     $this->testFunctions->setFakeServerUserAttribute($sid, 'cn=hpotter,ou=people,dc=hogwarts,dc=edu', 'mail', 'hpotter@owlcarriers.com', 0);
-    // Clear server cache;.
-    $factory = new ServerFactory('activedirectory1', NULL, TRUE, TRUE);
-    $ldap_server = $factory->servers;
-    $user = $ldap_user_conf->syncToDrupalAccount($account, LdapUserConf::$eventSyncToDrupalUser, NULL, TRUE);
+
+    $ldap_user_conf->syncToDrupalAccount($account, LdapUserConf::$eventSyncToDrupalUser, NULL, TRUE);
 
     $hpotter = user_load_by_name('hpotter');
     $hpotter_uid = $hpotter->uid;
@@ -339,8 +336,8 @@ class LdapWebUserUnitTests extends LdapWebTestBase {
     $this->assertTrue($success, t('syncToDrupalAccount worked for property (mail) for hpotter'), $this->testId());
     if (!$success) {
       debug("hpotter mail after syncToDrupalAccount :" . $hpotter->mail);
-      $factory = new ServerFactory($sid, NULL, TRUE, TRUE);
-      $ldap_server = $factory->servers;
+      $factory = \Drupal::service('ldap.servers');
+      $ldap_server = $factory->getServerById($sid);
       debug('ldap_server'); debug($ldap_server);
     }
 
@@ -380,8 +377,8 @@ class LdapWebUserUnitTests extends LdapWebTestBase {
     // To reset the user cache, use EntityStorageInterface::resetCache().
     \Drupal::entityManager()->getStorage('user')->load($hpotter_uid), t('deleteDrupalAccount deleted hpotter successfully'), $this->testId());
 
-    $factory = new ServerFactory('activedirectory1', 'enabled', TRUE, TRUE);
-    $ldap_server = $factory->servers;
+    $factory = \Drupal::service('ldap.servers');
+    $ldap_server = $factory->getServerByIdEnabled('activedirectory1');
     $ldap_server->refreshFakeData();
     $account = NULL;
     $user_edit = array('name' => 'hpotter');
@@ -584,8 +581,6 @@ class LdapWebUserUnitTests extends LdapWebTestBase {
 
         // 1. set fake ldap values for field and property in fake ldap server
         // and clear out mappings and set to provision account with test field and prop[0] on provision.
-        $factory = new ServerFactory('activedirectory1', 'enabled', TRUE);
-        $ldap_server = $factory->servers;
         $this->prepTestData('hogwarts', $sids, 'provisionToDrupal', 'default');
         // Fixme: Test broken since LdapUserConfAdmin gone.
         $ldap_user_conf = new LdapUserConf();
@@ -622,7 +617,6 @@ class LdapWebUserUnitTests extends LdapWebTestBase {
         // Fixme: Test broken since LdapUserConfAdmin gone.
         $ldap_user_conf = new LdapUserConf();
         ldap_user_ldap_provision_semaphore(NULL, NULL, NULL, TRUE);
-        ldap_servers_flush_server_cache();
 
         // 2. delete user.
         $username = $test['user'];

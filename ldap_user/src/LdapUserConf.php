@@ -4,7 +4,6 @@ namespace Drupal\ldap_user;
 
 use Drupal\Component\Utility\Unicode;
 use Drupal\ldap_servers\Entity\Server;
-use Drupal\ldap_servers\ServerFactory;
 use Drupal\ldap_servers\TokenFunctions;
 use Drupal\ldap_user\Exception\LdapBadParamsException;
 use Drupal\user\Entity\User;
@@ -354,8 +353,8 @@ class LdapUserConf {
         $ldap_server = FALSE;
         if ($sid) {
           try {
-            $factory = new ServerFactory($sid, NULL, TRUE);
-            $ldap_server = $factory->servers;
+            $factory = \Drupal::service('ldap.servers');
+            $ldap_server = $factory->getServerById($sid);
           }
           catch (\Exception $e) {
             \Drupal::logger('ldap_user')->error('Missing server');
@@ -471,9 +470,8 @@ class LdapUserConf {
       $result['error_description'] = 'no provisioning server enabled';
       return $result;
     }
-
-    $factory = new ServerFactory($this->config['ldapEntryProvisionServer'], NULL, TRUE);
-    $ldap_server = $factory->servers;
+    $factory = \Drupal::service('ldap.servers');
+    $ldap_server = $factory->getServerById($this->config['ldapEntryProvisionServer']);
     $params = [
       'direction' => self::$provisioningDirectionToLDAPEntry,
       'prov_events' => [self::$eventCreateLdapEntry],
@@ -620,8 +618,9 @@ class LdapUserConf {
     $result = FALSE;
 
     if ($this->config['ldapEntryProvisionServer']) {
-      $factory = new ServerFactory($this->config['ldapEntryProvisionServer'], NULL, TRUE);
-      $ldap_server = $factory->servers;
+
+      $factory = \Drupal::service('ldap.servers');
+      $ldap_server = $factory->getServerById($this->config['ldapEntryProvisionServer']);
 
       $params = array(
         'direction' => self::$provisioningDirectionToLDAPEntry,
@@ -742,8 +741,9 @@ class LdapUserConf {
     }
 
     if ($this->config['drupalAcctProvisionServer']) {
-      $factory = new ServerFactory($this->config['drupalAcctProvisionServer'], NULL, TRUE);
-      $ldap_server = $factory->servers;
+
+      $factory = \Drupal::service('ldap.servers');
+      $ldap_server = $factory->getServerById($this->config['drupalAcctProvisionServer']);
       $this->applyAttributesToAccount($ldap_user, $account, $ldap_server, self::$provisioningDirectionToDrupalUser, array($prov_event));
     }
 
@@ -791,8 +791,8 @@ class LdapUserConf {
       return FALSE;
     }
     // $user_entity->ldap_user_prov_entries,.
-    $factory = new ServerFactory($sid, NULL, TRUE);
-    $ldap_server = $factory->servers;
+    $factory = \Drupal::service('ldap.servers');
+    $ldap_server = $factory->getServerById($sid);
     $params = [
       'direction' => self::$provisioningDirectionToLDAPEntry,
       'prov_events' => $prov_events,
@@ -838,8 +838,8 @@ class LdapUserConf {
         if (count($parts) == 2) {
 
           list($sid, $dn) = $parts;
-          $factory = new ServerFactory($sid, NULL, TRUE);
-          $ldap_server = $factory->servers;
+          $factory = \Drupal::service('ldap.servers');
+          $ldap_server = $factory->getServerById($sid);
           if (is_object($ldap_server) && $dn) {
             $boolean_result = $ldap_server->delete($dn);
             $tokens = array('%sid' => $sid, '%dn' => $dn, '%username' => $account->getUsername(), '%uid' => $account->id());
@@ -1002,10 +1002,12 @@ class LdapUserConf {
       }
     }
 
+    $factory = \Drupal::service('ldap.servers');
+
+
     // If we don't have an account name already we should set one.
     if (!$account->getUsername()) {
-      $factory = new ServerFactory($this->config['drupalAcctProvisionServer'], 'enabled', TRUE);
-      $ldap_server = $factory->servers;
+      $ldap_server = $factory->getServerByIdEnabled($this->config['drupalAcctProvisionServer']);
       $account->set('name', $ldap_user[$ldap_server->get('user_attr')]);
       $tokens['%username'] = $account->getUsername();
     }
@@ -1014,8 +1016,7 @@ class LdapUserConf {
     if ($this->config['drupalAcctProvisionServer']) {
 
       // $ldap_user['sid'].
-      $factory = new ServerFactory($this->config['drupalAcctProvisionServer'], 'enabled', TRUE);
-      $ldap_server = $factory->servers;
+      $ldap_server = $factory->getServerByIdEnabled($this->config['drupalAcctProvisionServer']);
 
       $params = array(
         'account' => $account,
@@ -1099,8 +1100,8 @@ class LdapUserConf {
    */
   public function ldapAssociateDrupalAccount($drupal_username) {
     if ($this->config['drupalAcctProvisionServer']) {
-      $factory = new ServerFactory($this->config['drupalAcctProvisionServer'], 'enabled', TRUE);
-      $ldap_server = $factory->servers;
+      $factory = \Drupal::service('ldap.servers');
+      $ldap_server = $factory->getServerByIdEnabled($this->config['drupalAcctProvisionServer']);
       $account = user_load_by_name($drupal_username);
       if (!$account) {
         \Drupal::logger('ldap_user')->error('Failed to LDAP associate drupal account %drupal_username because account not found', array('%drupal_username' => $drupal_username));

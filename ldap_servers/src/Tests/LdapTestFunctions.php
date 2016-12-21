@@ -14,7 +14,6 @@ use Drupal\ldap_authentication\LdapAuthenticationConf;
 use Drupal\ldap_authentication\LdapAuthenticationConfAdmin;
 use Drupal\ldap_servers\Entity\Server;
 use Drupal\ldap_servers\LdapProtocol;
-use Drupal\ldap_servers\ServerFactory;
 use Drupal\ldap_user\LdapUserConf;
 
 /**
@@ -76,8 +75,6 @@ class LdapTestFunctions implements LdapProtocol {
     // don't count the 'count'.
     $test_data['ldap'][$dn][$attr_name]['count'] = count($test_data['ldap'][$dn][$attr_name]) - $count_set;
     // @FIXME: variable_set('ldap_test_server__' . $sid, $test_data);
-    // clear server cache;.
-    new ServerFactory($sid, NULL, TRUE, TRUE);
   }
 
   /**

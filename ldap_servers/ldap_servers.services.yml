@@ -1,0 +1,3 @@
+services:
+  ldap.servers:
+    class: Drupal\ldap_servers\ServerFactory

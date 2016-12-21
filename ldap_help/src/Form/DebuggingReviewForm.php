@@ -6,7 +6,6 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use \Drupal\Core\Config\ConfigFactoryInterface;
 
-use Drupal\ldap_servers\ServerFactory;
 use Drupal\ldap_user\LdapUserConf;
 
 /**
@@ -26,7 +25,6 @@ class DebuggingReviewForm extends ConfigFormBase {
     parent::__construct($config_factory);
 
     $this->LdapUserConfHelper = new LdapUserConf();
-    $factory = new ServerFactory(NULL, 'enabled');
 
   }
 

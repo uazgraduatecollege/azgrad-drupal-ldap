@@ -10,7 +10,6 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\authorization\Provider\ProviderPluginBase;
 use Drupal\ldap_servers\ConversionHelper;
 use Drupal\ldap_servers\Entity\Server;
-use Drupal\ldap_servers\ServerFactory;
 use Drupal\ldap_user\LdapUserConf;
 
 /**
@@ -50,8 +49,8 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
       $tokens += $profile->getConsumer()->getTokens();
     }
 
-    $factory = new ServerFactory(NULL, 'enabled');
-    $servers = $factory->servers;
+    $factory = \Drupal::service('ldap.servers');
+    $servers = $factory->getEnabledServers();
 
     $form['status'] = array(
       '#type' => 'fieldset',
@@ -300,10 +299,10 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
     /* @var AuthorizationProfile $profile */
     $profile = $this->configuration['profile'];
     $config = $profile->getProviderConfig();
-
+    $factory = \Drupal::service('ldap.servers');
     foreach ($proposals as $key => $authorization_id) {
       if ($config['filter_and_mappings']['use_first_attr_as_groupid']) {
-        $attr_parts = ldap_explode_dn($authorization_id, 0);
+        $attr_parts = $factory->ldapExplodeDn($authorization_id, 0);
         if (count($attr_parts) > 0) {
           $first_part = explode('=', $attr_parts[0]);
           if (count($first_part) > 1) {

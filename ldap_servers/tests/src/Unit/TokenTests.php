@@ -14,12 +14,14 @@ use Drupal\Tests\UnitTestCase;
 class TokenTests extends UnitTestCase {
 
   public $configFactory;
+  public $serverFactory;
   public $config;
   public $container;
 
   protected function setUp() {
     parent::setUp();
 
+    /* Mocks the configuration due to detailed watchdog logging. */
     $this->config = $this->getMockBuilder('\Drupal\Core\Config\ImmutableConfig')
       ->disableOriginalConstructor()
       ->getMock();
@@ -27,13 +29,30 @@ class TokenTests extends UnitTestCase {
     $this->configFactory = $this->getMockBuilder('\Drupal\Core\Config\ConfigFactory')
       ->disableOriginalConstructor()
       ->getMock();
+
     $this->configFactory->expects($this->any())
       ->method('get')
       ->with('ldap_help.settings')
       ->willReturn($this->config);
 
+    /* Mocks the Server due to wrapper for ldap_explode_dn(). */
+    $this->serverFactory = $this->getMockBuilder('\Drupal\ldap_servers\Entity\Server')
+      ->disableOriginalConstructor()
+      ->getMock();
+
+    $this->serverFactory->expects($this->any())
+      ->method('ldapExplodeDn')
+      ->willReturn([
+        'count' => 4,
+        0 => 'cn=hpotter',
+        1 => 'ou=people',
+        2 => 'dc=hogwarts',
+        3 => 'dc=edu',
+      ]);
+
     $this->container = new ContainerBuilder();
     $this->container->set('config.factory', $this->configFactory);
+    $this->container->set('ldap.servers', $this->serverFactory);
     \Drupal::setContainer($this->container);
   }
 
@@ -125,18 +144,4 @@ class TokenTests extends UnitTestCase {
     $this->assertEquals(NULL, TokenHelper::passwordStorage('get'));
   }
 
-}
-
-namespace Drupal\ldap_servers\Entity;
-
-class Server {
-  public static function ldapExplodeDn($dn, $attribute) {
-    return  [
-      'count' => 4,
-      0 => 'cn=hpotter',
-      1 => 'ou=people',
-      2 => 'dc=hogwarts',
-      3 => 'dc=edu',
-    ];
-  }
 }

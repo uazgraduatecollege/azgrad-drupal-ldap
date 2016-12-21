@@ -7,7 +7,6 @@ use Drupal\Core\Form\ConfigFormBase;
 use \Drupal\Core\Config\ConfigFactoryInterface;
 
 use Drupal\ldap_servers\Entity\Server;
-use Drupal\ldap_servers\ServerFactory;
 use Drupal\ldap_user\LdapUserConf;
 
 /**
@@ -27,9 +26,10 @@ class LdapUserAdminForm extends ConfigFormBase {
     parent::__construct($config_factory);
 
     $this->LdapUserConfHelper = new LdapUserConf();
-    $factory = new ServerFactory(NULL, 'enabled');
-    if ($factory->servers) {
-      foreach ($factory->servers as $sid => $ldap_server) {
+    $factory = \Drupal::service('ldap.servers');
+    $ldap_servers = $factory->getEnabledServers();
+    if ($ldap_servers) {
+      foreach ($ldap_servers as $sid => $ldap_server) {
         /* @var Server $ldap_server */
         $enabled = ($ldap_server->get('status')) ? 'Enabled' : 'Disabled';
         $this->drupalAcctProvisionServerOptions[$sid] = $ldap_server->label() . ' (' . $ldap_server->get('address') . ') Status: ' . $enabled;
@@ -234,10 +234,6 @@ the top of this form.
     );
 
     foreach (array(LdapUserConf::$provisioningDirectionToDrupalUser, LdapUserConf::$provisioningDirectionToLDAPEntry) as $direction) {
-      $sid = $this->LdapUserConfHelper->provisionSidFromDirection[$direction];
-      $factory = new ServerFactory($sid, NULL, TRUE);
-      $ldap_server = ($sid) ? $factory->servers : FALSE;
-      $ldap_server_selected = (boolean) $ldap_server;
 
       if ($direction == LdapUserConf::$provisioningDirectionToDrupalUser) {
         $parent_fieldset = 'basic_to_drupal';

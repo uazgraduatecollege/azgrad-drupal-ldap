@@ -326,7 +326,9 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
 
     foreach ($new_entry as $key => $new_val) {
       $old_value = FALSE;
+      $old_value_is_scalar = NULL;
       $key_lcase = Unicode::strtolower($key);
+      // TODO: Make this if loop include the actions when tests are available.
       if (isset($old_entry[$key_lcase])) {
         if ($old_entry[$key_lcase]['count'] == 1) {
           $old_value = $old_entry[$key_lcase][0];
@@ -1936,7 +1938,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
    */
   private function getFirstRDNValueFromDN($dn, $rdn) {
     // Escapes attribute values, need to be unescaped later.
-    $pairs = ldap_explode_dn($dn, 0);
+    $pairs = $this->ldapExplodeDn($dn, 0);
     $count = array_shift($pairs);
     $rdn = Unicode::strtolower($rdn);
     $rdn_value = FALSE;
@@ -1963,7 +1965,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
    */
   private function getAllRDNValuesFromDN($dn, $rdn) {
     // Escapes attribute values, need to be unescaped later.
-    $pairs = ldap_explode_dn($dn, 0);
+    $pairs = $this->ldapExplodeDn($dn, 0);
     $count = array_shift($pairs);
     $rdn = Unicode::strtolower($rdn);
     $rdn_values = array();
@@ -2016,7 +2018,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
     }
   }
 
-  public static function ldapExplodeDn($dn, $attribute) {
+  public function ldapExplodeDn($dn, $attribute) {
     return ldap_explode_dn($dn, $attribute);
   }
 

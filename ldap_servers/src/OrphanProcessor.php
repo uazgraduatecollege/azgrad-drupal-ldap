@@ -57,8 +57,8 @@ class OrphanProcessor {
     //   ->addMetaData('account', \Drupal::entityManager()->getStorage('user')->load(1)); // run the query as user 1
     // $result = $query->execute();
     $drupal_users = array();
-    $factory = new ServerFactory(NULL, 'enabled');
-    $ldap_servers = $factory->servers;
+    $factory = \Drupal::service('ldap.servers');
+    $ldap_servers = $factory->getEnabledServers();
     $watchdogs_sids_missing_watchdogged = array();
     /**
      * first produce array of form:

@@ -8,7 +8,6 @@ use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Session\AccountProxy;
 use Drupal\Core\Url;
-use Drupal\ldap_servers\ServerFactory;
 use Drupal\ldap_servers\TokenFunctions;
 use Drupal\ldap_servers\TokenHelper;
 use Drupal\ldap_user\LdapUserConf;
@@ -59,11 +58,8 @@ function ldap_servers_ldap_attributes_needed_alter(&$attributes, $params) {
   // Puid attributes are server specific.
   if ($params['sid'] && $params['sid']) {
     if (is_scalar($params['sid'])) {
-      $factory = new ServerFactory($params['sid'], 'enabled', TRUE);
-      $ldap_server = $factory->servers;
-    }
-    else {
-      $ldap_server = $params['sid'];
+      $factory = \Drupal::service('ldap.servers');
+      $ldap_server = $factory->getServerById($params['sid']);
     }
     // mail, unique_persistent_attr, user_attr, mail_template, and user_dn_expression are needed for all functionality.
     if (!isset($attributes[$ldap_server->get('mail_attr')])) {
@@ -240,27 +236,6 @@ function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$param
   }
 }
 
-/**
- * Flush server static cache.
- */
-function ldap_servers_flush_server_cache() {
-  // Flush server cache.
-  new ServerFactory(NULL, 'all', FALSE, TRUE);
-}
-
-/**
- *
- */
-function ldap_servers_cache_clear() {
-  new ServerFactory(NULL, 'all', FALSE, TRUE);
-  if (\Drupal::moduleHandler()->moduleExists('ctools')) {
-    ctools_export_load_object_reset('ldap_servers');
-  }
-}
-
-
-
-
 
 /**
  * @TODO needs caching element.  several modules could potentially call this in the same
@@ -295,8 +270,8 @@ function ldap_servers_get_user_ldap_data($account, $id = NULL, $ldap_context = N
     }
   }
   elseif (!$id) {
-    $factory = new ServerFactory(NULL, 'enabled');
-    $ldap_servers = $factory->servers;
+    $factory = \Drupal::service('ldap.servers');
+    $ldap_servers = $factory->getEnabledServers();
     if (count($ldap_servers) == 1) {
       $ids = array_keys($ldap_servers);
       $id = $ids[0];
@@ -312,8 +287,8 @@ function ldap_servers_get_user_ldap_data($account, $id = NULL, $ldap_context = N
   }
 
   /* @var \Drupal\ldap_servers\Entity\Server $ldap_server*/
-  $factory = new ServerFactory($id, 'enabled', TRUE);
-  $ldap_server = ($id) ? $factory->servers : FALSE;
+  $factory = \Drupal::service('ldap.servers');
+  $ldap_server = $factory->getServerById($id);
 
   if ($ldap_server === FALSE) {
     \Drupal::logger('ldap_servers')->error('Failed to load server object %sid in _ldap_servers_get_user_ldap_data', array('%sid' => $id));
@@ -594,8 +569,8 @@ function ldap_servers_get_ldap_type_object($ldap_conf) {
  */
 function ldap_servers_no_enabled_servers_msg($action) {
 
-  $factory = new ServerFactory(NULL, 'enabled');
-  $servers = $factory->servers;
+  $factory = \Drupal::service('ldap.servers');
+  $servers = $factory->getEnabledServers();
   if (count($servers) == 0) {
 
     $url = Url::fromRoute('entity.ldap_server.collection');

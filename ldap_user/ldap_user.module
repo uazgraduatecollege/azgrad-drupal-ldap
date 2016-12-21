@@ -8,7 +8,6 @@
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\ldap_servers\OrphanProcessor;
-use Drupal\ldap_servers\ServerFactory;
 use Drupal\ldap_servers\TokenHelper;
 use Drupal\user\UserInterface;
 use Drupal\Core\Form\FormStateInterface;
@@ -162,8 +161,8 @@ function ldap_user_ldap_attributes_needed_alter(&$attributes, $params) {
   // Puid attributes are server specific.
   if (isset($params['sid']) && $params['sid']) {
     if (is_scalar($params['sid'])) {
-      $factory = new ServerFactory($params['sid'], 'enabled', TRUE);
-      $ldap_server = $factory->servers;
+      $factory = \Drupal::service('ldap.servers');
+      $ldap_server = $factory->getServerByIdEnabled($params['sid']);
     }
     else {
       $ldap_server = $params['sid'];
@@ -739,8 +738,8 @@ function ldap_user_user_login($account) {
   if ($ldap_user_conf->provisionsDrupalAccountsFromLdap  && in_array(LdapUserConf::$eventSyncToDrupalUser, array_keys($ldap_user_conf->provisionsDrupalEvents))) {
     $ldap_user = ldap_servers_get_user_ldap_data($account, $config['drupalAcctProvisionServer'], 'ldap_user_prov_to_drupal');
     if ($ldap_user) {
-      $factory = new ServerFactory($config['drupalAcctProvisionServer'], NULL, TRUE);
-      $ldap_server = $factory->servers;
+      $factory = \Drupal::service('ldap.servers');
+      $ldap_server = $factory->getServerById($config['drupalAcctProvisionServer']);
       $ldap_user_conf->applyAttributesToAccount($ldap_user, $account, $ldap_server, LdapUserConf::$provisioningDirectionToDrupalUser, array(LdapUserConf::$eventSyncToDrupalUser));
     }
     $account->save();
@@ -867,8 +866,8 @@ function ldap_user_user_presave($account) {
   if ($ldap_user_conf->provisionsDrupalAccountsFromLdap && in_array(LdapUserConf::$eventSyncToDrupalUser, array_keys($ldap_user_conf->provisionsDrupalEvents))) {
     if (ldap_user_is_ldap_associated($account, LdapUserConf::$provisioningDirectionToDrupalUser)) {
       $ldap_user = ldap_servers_get_user_ldap_data($account, $config['drupalAcctProvisionServer'], 'ldap_user_prov_to_drupal');
-      $factory = new ServerFactory($config['drupalAcctProvisionServer'], NULL, TRUE);
-      $ldap_server = $factory->servers;
+      $factory = \Drupal::service('ldap.servers');
+      $ldap_server = $factory->getServerById($config['drupalAcctProvisionServer']);
       $ldap_user_conf->applyAttributesToAccount($ldap_user, $account, $ldap_server, LdapUserConf::$provisioningDirectionToDrupalUser, array(LdapUserConf::$eventSyncToDrupalUser));
     }
   }

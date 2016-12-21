@@ -262,7 +262,8 @@ trait TokenFunctions {
 
     // 1. tokenize dn
     // escapes attribute values, need to be unescaped later.
-    $dn_parts = Server::ldapExplodeDn($ldap_entry['dn'], 0);
+    $factory = \Drupal::service('ldap.servers');
+    $dn_parts = $factory->ldapExplodeDn($ldap_entry['dn'], 0);
     unset($dn_parts['count']);
     $parts_count = array();
     $parts_last_value = array();
@@ -531,10 +532,10 @@ trait TokenFunctions {
    *
    */
   public function showSampleUserTokens($sid) {
-
-    $factory = new ServerFactory($sid, 'all', TRUE);
+    $factory = \Drupal::service('ldap.servers');
     /* @var Server $ldap_server */
-    $ldap_server = $factory->servers;
+    $ldap_server = $factory->getServerById($sid);
+
     // @FIXME undefined function
     $test_username = $ldap_server->testingDrupalUsername;
     if (!$test_username || !(

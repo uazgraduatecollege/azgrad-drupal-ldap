@@ -4,7 +4,6 @@ namespace Drupal\ldap_authentication;
 
 use Drupal\Core\Url;
 use Drupal\ldap_servers\Entity\Server;
-use Drupal\ldap_servers\ServerFactory;
 
 /**
  *
@@ -276,9 +275,10 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
     $this->authenticationModeDefault = self::$mode_mixed;
 
     $this->setTranslatableProperties();
-    $factory = new ServerFactory(NULL, 'enabled');
-    if ($factory->servers) {
-      foreach ($factory->servers as $sid => $ldap_server) {
+    $factory = \Drupal::service('ldap.servers');
+    $servers = $factory->getEnabledServers();
+    if ($servers) {
+      foreach ($servers as $sid => $ldap_server) {
         $enabled = ($ldap_server->get('status')) ? 'Enabled' : 'Disabled';
         $this->authenticationServersOptions[$sid] = $ldap_server->get('label') . ' (' . $ldap_server->get('address') . ') Status: ' . $enabled;
       }
@@ -541,8 +541,9 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
   public function validate() {
     $errors = array();
 
-    $factory = new ServerFactory(NULL, 'enabled');
-    $enabled_servers = $factory->servers;
+    $factory = \Drupal::service('ldap.servers');
+    $enabled_servers = $factory->getEnabledServers();
+
     if ($this->ssoEnabled) {
       foreach ($this->sids as $sid => $discard) {
         if ($enabled_servers[$sid]->get('bind_method') == Server::$bindMethodUser || $enabled_servers[$sid]->get('bind_method') == Server::$bindMethodAnonUser) {

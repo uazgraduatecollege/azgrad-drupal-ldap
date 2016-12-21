@@ -103,8 +103,8 @@ class LdapWebUserIntegrationTests extends LdapWebTestBase {
       $user_acct->field_fname['und'][0]['value'] = 'Bercilak';
       $user_acct->field_lname['und'][0]['value'] = 'Hautdesert';
 
-      $factory = new ServerFactory(NULL, NULL, FALSE, TRUE);
-      $servers = $factory->servers;
+      $factory = \Drupal::service('ldap.servers');
+      $servers = $factory->getAllServers();
       $desired_dn = "cn=bhautdeser,ou=people,dc=hogwarts,dc=edu";
 
       $pre_entry = $servers[$test_sid]->dnExists($desired_dn, 'ldap_entry');
@@ -144,9 +144,6 @@ class LdapWebUserIntegrationTests extends LdapWebTestBase {
       // $user_acct = user_save($user_acct, $edit);
       $user_acct_post = user_load_by_name('bhautdeser');
 
-      // Clear cache.
-      $factory = new ServerFactory(NULL, NULL, FALSE, TRUE);
-      $servers = $factory->servers;
       $ldap_entry_post = $servers[$test_sid]->dnExists($desired_dn, 'ldap_entry');
 
       $ldap_entry_success = (
@@ -177,9 +174,7 @@ class LdapWebUserIntegrationTests extends LdapWebTestBase {
       // $user_acct = user_save($user_acct, $edit);
       $user_acct_post = user_load_by_name('bhautdeser');
 
-      // Clear cache.
-      $factory = new ServerFactory(NULL, NULL, FALSE, TRUE);
-      $servers = $factory->servers;
+
       /* @var Server $servers[$test_sid] */
       $ldap_entry_post = $servers[$test_sid]->dnExists($desired_dn, 'ldap_entry');
 
@@ -309,9 +304,7 @@ class LdapWebUserIntegrationTests extends LdapWebTestBase {
 
         $this->drupalPost(NULL, $edit, t('Save'));
         $sstephens = user_load_by_name($username);
-        // Clear cache.
-        $factory = new ServerFactory(NULL, NULL, FALSE, TRUE);
-        $servers = $factory->servers;
+
         $desired_dn = "cn=$username,ou=people,dc=hogwarts,dc=edu";
         $ldap_entry_post = $servers[$test_sid]->dnExists($desired_dn, 'ldap_entry');
 
@@ -383,8 +376,7 @@ class LdapWebUserIntegrationTests extends LdapWebTestBase {
       $user_acct->field_fname['und'][0]['value'] = 'Bercilak';
       $user_acct->field_lname['und'][0]['value'] = 'Hautdesert';
 
-      $factory = new ServerFactory(NULL, NULL, FALSE, TRUE);
-      $servers = $factory->servers;
+
       $desired_dn = "cn=bhautdeser,ou=people,dc=hogwarts,dc=edu";
 
       $pre_entry = $servers[$test_sid]->dnExists($desired_dn, 'ldap_entry');
@@ -397,8 +389,8 @@ class LdapWebUserIntegrationTests extends LdapWebTestBase {
 
       // 2. test.
       $drupal_account->uid->delete();
-      $factory = new ServerFactory($test_sid, 'all', TRUE, TRUE);
-      $ldap_server = $factory->servers;
+      $factory = \Drupal::service('ldap.servers');
+      $ldap_server = $factory->getServerById($test_sid);
       $ldap_entry_post_delete = $ldap_server->dnExists($desired_dn, 'ldap_entry');
 
       $success = (!$ldap_entry_post_delete);
@@ -448,8 +440,8 @@ class LdapWebUserIntegrationTests extends LdapWebTestBase {
     $drupal_form = $ldap_user_conf->drupalForm();
     $account_options = $drupal_form['basic_to_drupal']['orphanedDrupalAcctBehavior']['#options'];
     $cn_to_account = array();
-    $factory = new ServerFactory('activedirectory1', NULL, TRUE, TRUE);
-    $ldap_server = $factory->servers;
+    $factory = \Drupal::service('ldap.servers');
+    $ldap_server = $factory->getServerById('activedirectory1');
 
     foreach ($account_options as $account_option => $account_option_text) {
       $sids = array('activedirectory1');

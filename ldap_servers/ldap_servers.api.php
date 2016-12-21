@@ -5,8 +5,6 @@
  * Hooks provided by ldap_servers module.
  */
 
-use Drupal\ldap_servers\ServerFactory;
-
 /**
  * Allows other modules to periodically affect an ldap associated user
  * or its corresponding ldap entry.
@@ -115,9 +113,11 @@ function hook_ldap_attributes_needed_alter(&$attributes, $params) {
   $attributes['dn'] = ldap_servers_set_attribute_map(@$attributes['dn'], 'ldap_dn');
   // Puid attributes are server specific.
   if ($params['sid']) {
-    $factory = new ServerFactory($params['sid'], 'enabled', TRUE);
-    $ldap_server = (is_object($params['sid'])) ? $params['sid'] : $factory->servers;
 
+    $factory = \Drupal::service('ldap.servers');
+    $ldap_server = $factory->getServerByIdEnabled($params['sid']);
+
+    // TODO: Missing $op
     switch ($op) {
       case 'user_insert':
       case 'user_update':
