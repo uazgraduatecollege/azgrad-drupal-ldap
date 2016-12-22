@@ -5,165 +5,7 @@
  */
 
 use Drupal\Core\Routing\RouteMatchInterface;
-use Drupal\ldap_query\LdapQuery;
-use Drupal\ldap_query\LdapQueryAdmin;
-
-/**
- *
- */
-function ldap_query_menu() {
-  // @FIXME: Unported, placehoder for first form created.
-  $menu_offset = 4;
-
-  $items['admin/config/people/ldap/query'] = array(
-    'title' => 'Queries',
-    'page callback' => 'ldap_query_index',
-    'page arguments' => array(),
-    'weight' => 6,
-    'type' => MENU_LOCAL_TASK,
-    'access arguments' => array('administer site configuration'),
-    'file' => 'ldap_query.admin.inc',
-  );
-
-  $items['admin/config/people/ldap/query/list'] = array(
-    'title' => 'Queries',
-    'type' => MENU_DEFAULT_LOCAL_TASK,
-  );
-
-  $items['admin/config/people/ldap/query/add'] = array(
-    'title' => 'Add LDAP Query',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('ldap_query_admin_form', 'add'),
-    'type' => MENU_LOCAL_TASK + MENU_CONTEXT_INLINE,
-    'weight' => 3,
-    'access arguments' => array('administer site configuration'),
-    'file' => 'ldap_query.admin.inc',
-  );
-
-  $items['admin/config/people/ldap/query/edit/%'] = array(
-    'title' => 'Edit LDAP Query',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('ldap_query_admin_form', 'edit', $menu_offset + 2),
-    'access arguments' => array('administer site configuration'),
-    'file' => 'ldap_query.admin.inc',
-  );
-
-  $items['admin/config/people/ldap/query/test/%'] = array(
-    'title' => 'Test LDAP Query',
-    'page callback' => 'ldap_query_test',
-    'page arguments' => array($menu_offset + 2),
-    'access arguments' => array('administer site configuration'),
-    'file' => 'ldap_query.admin.inc',
-  );
-
-  $items['admin/config/people/ldap/query/delete/%'] = array(
-    'title' => 'Delete LDAP Query',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('ldap_query_admin_delete', $menu_offset + 1, $menu_offset + 2),
-    'access arguments' => array('administer site configuration'),
-    'file' => 'ldap_query.admin.inc',
-  );
-
-  $items['admin/config/people/ldap/query/enable/%'] = array(
-    'title' => 'Enable LDAP Query',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('ldap_query_admin_enable_disable', $menu_offset + 1, $menu_offset + 2),
-    'access arguments' => array('administer site configuration'),
-    'file' => 'ldap_query.admin.inc',
-  );
-
-  $items['admin/config/people/ldap/query/disable/%'] = array(
-    'title' => 'Enable LDAP Query',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('ldap_query_admin_enable_disable', $menu_offset + 1, $menu_offset + 2),
-    'access arguments' => array('administer site configuration'),
-    'file' => 'ldap_query.admin.inc',
-  );
-
-  return $items;
-}
-
-/**
- *
- */
-function ldap_query_theme() {
-  return array(
-    'ldap_query_list' => array(
-      'variables' => array('ldap_query' => NULL, 'actions' => TRUE, 'type' => 'table'),
-      'render element' => 'element',
-      'file' => 'ldap_query.theme.inc',
-    ),
-    'ldap_query' => array(
-      'variables' => array('ldap_server' => NULL, 'actions' => FALSE, 'type' => 'detail'),
-      'render element' => 'element',
-      'file' => 'ldap_query.theme.inc',
-    ),
-    'ldap_query_results' => array(
-      'variables' => array('ldap_query' => NULL, 'result' => FALSE, 'show_query' => TRUE),
-      'render element' => 'element',
-      'file' => 'ldap_query.theme.inc',
-    ),
-  );
-}
-
-/**
- *
- */
-function ldap_query_cache_clear() {
-  $discard = ldap_query_get_queries(NULL, 'all', FALSE, TRUE);
-}
-
-/**
- * Return ldap query objects.
- *
- * @param string $qid
- * @param string $type
- *   Either all or enabled.
- * @param bool $flatten
- *   signifies if array or single object returned.  Only works if sid is specified.
- * @param bool $reset
- *   do not use cached or static result.
- *
- * @return array|bool
- *   Array of server conf object keyed on sid, single server conf object
- *   (if flatten == TRUE).
- */
-function ldap_query_get_queries($qid = NULL, $type, $flatten = FALSE, $reset = FALSE) {
-  static $queries;
-
-  if ($reset) {
-    $queries = array();
-  }
-  if (!isset($queries['all'])) {
-    $queries['all'] = LdapQueryAdmin::getLdapQueryObjects('all', 'all');
-  }
-  if (!isset($queries['enabled'])) {
-    $queries['enabled'] = array();
-    foreach ($queries['all'] as $_qid => $ldap_query) {
-      if ($ldap_query->status == 1) {
-        $queries['enabled'][$_qid] = $ldap_query;
-      }
-    }
-  }
-
-  if ($qid) {
-    if (!isset($queries[$type][$qid])) {
-      return FALSE;
-    }
-    return ($flatten) ? $queries[$type][$qid] : $queries[$type];
-  }
-
-  if (isset($queries[$type])) {
-    return $queries[$type];
-  }
-}
-
-/**
- *
- */
-function ldap_query_fields() {
-  return LdapQuery::fields();
-}
+use Drupal\Core\Entity\EntityInterface;
 
 /**
  * Implements hook_help().
@@ -171,7 +13,7 @@ function ldap_query_fields() {
 function ldap_query_help($route_name, RouteMatchInterface $route_match) {
 
   $help = '<h3>' . t('LDAP Query Module') . '</h3><p>' .
-  t('This module does nothing in and of itself.  It should only be
+    t('This module does nothing in and of itself.  It should only be
     enabled and configured if another module requires it.') . '</p>';
 
   switch ($route_name) {
@@ -179,4 +21,21 @@ function ldap_query_help($route_name, RouteMatchInterface $route_match) {
       $output = '<p>' . $help . '</p>';
       return $output;
   }
+}
+
+/**
+ * Implements hook_entity_operation().
+ */
+function ldap_query_entity_operation(EntityInterface $entity) {
+  $operations = array();
+  if (\Drupal::currentUser()->hasPermission('administer site configuration')) {
+    if ($entity->getEntityType()->id() == 'ldap_query_entity') {
+      $operations['query_test'] = array(
+        'title' => t('Test'),
+        'weight' => 10,
+        'url' => $entity->toUrl('test'),
+      );
+    }
+  }
+  return $operations;
 }

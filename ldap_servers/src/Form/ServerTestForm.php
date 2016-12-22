@@ -154,7 +154,7 @@ class ServerTestForm extends EntityForm {
               else {
                 $token = "";
               }
-              $rows[] = array('data' => array($key, $i, $this->binaryCheck($value2), $token));
+              $rows[] = array('data' => array($key, $i, self::binaryCheck($value2), $token));
             }
           }
         }
@@ -550,7 +550,7 @@ class ServerTestForm extends EntityForm {
     return array($group_entry, $values, $results_tables);
   }
 
-  private function binaryCheck($input) {
+  public static function binaryCheck($input) {
     if (preg_match('~[^\x20-\x7E\t\r\n]~', $input) > 0) {
       return t('Binary (excerpt): @excerpt', array('@excerpt' => Unicode::truncate($input, 120, FALSE, TRUE)));
     } else {

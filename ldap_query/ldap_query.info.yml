@@ -6,4 +6,4 @@ package: 'Lightweight Directory Access Protocol'
 dependencies:
   - ldap:ldap_servers
 
-configure: ldap_query.admin_form
+configure: entity.ldap_query_entity.collection
