@@ -67,9 +67,6 @@ ldap_servers.server.*:
     user_dn_expression:
       type: string
       label: 'Expression for user DN. Required when "Bind with Users Credentials" method selected.'
-    ldap_to_drupal_user:
-      type: string
-      label: 'PHP to transform Drupal login username to LDAP UserName attribute.'
     testing_drupal_username:
       type: string
       label: 'Testing Drupal Username'

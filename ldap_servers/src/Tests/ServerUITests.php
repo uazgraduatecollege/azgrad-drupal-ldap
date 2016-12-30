@@ -83,7 +83,6 @@ class ServerUITests extends LdapWebTestBase {
         'unique_persistent_attr' => array('dn', 'uniqueregistryid'),
         'unique_persistent_attr_binary' => array(1, 1, 1, 1),
         'user_dn_expression' => array('cn=%cn,%basedn', 'cn=%username,%basedn'),
-        'ldap_to_drupal_user' => array('code', 'different code'),
 
         'testing_drupal_username' => array('hpotter', 'hpotter'),
         'testing_drupal_user_dn' => array('cn=hpotter,ou=people,dc=hogwarts,dc=edu', 'cn=hpotter,ou=people,dc=hogwarts,dc=edu'),
@@ -115,8 +114,6 @@ class ServerUITests extends LdapWebTestBase {
         'grp_memb_attr_match_user_attr',
         'grp_derive_from_dn_attr',
       );
-
-      unset($server_data[$sid]['ldap_to_drupal_user']);
 
       /** add server conf test **/
       $this->drupalGet('admin/config/people/ldap/servers/add');

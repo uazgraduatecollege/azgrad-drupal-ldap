@@ -291,7 +291,6 @@ function ldap_help_get_ldap_servers() {
 
   $servers = array();
   $field_to_properties = LdapServer::field_to_properties_map();
-  // array('sid', 'name', 'status', 'ldap_type', 'port', 'tls', 'user_attr', 'mail_attr', 'user_dn_expression', 'ldap_to_drupal_user');.
   $props = array_values($field_to_properties);
   foreach ($servers_objects as $sid => $server_object) {
     $server_admin = new LdapServerAdmin($sid);
