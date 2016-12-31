@@ -9,35 +9,25 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 
 /**
+ * Implements hook_form_ldap_servers_settings_alter().
+ *
  * Alter LDAP settings form to add watchdog details.
  */
 function ldap_help_form_ldap_servers_settings_alter(&$form, FormStateInterface $form_state) {
-  $form['watchdog_detail'] = array('#type' => 'fieldset', '#title' => t('Development'));
+  $form['watchdog_detail'] = array('#type' => 'fieldset', '#title' => t('Debugging'));
   $form['watchdog_detail']['watchdog_detail'] = array(
     '#type' => 'checkbox',
-    '#title' => t('Enabled Detailed LDAP Watchdog logging.  This is generally for
+    '#title' => t('Enabled Detailed LDAP Watchdog logging. This is generally for
        debugging and reporting issues with the ldap modules and should not be left
        on.'),
     '#default_value' => \Drupal::config('ldap_help.settings')->get('watchdog_detail'),
-  );
-  $date = \Drupal::config('ldap_help.settings')->get('user_data_clear_set_date');
-  $form['watchdog_detail']['user_data_clear'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Discard and ignore user authorization data stored by ldap module in user records data before %date.
-      This is useful for implementers of development versions of the module
-      that may have corrupt user data from the past.', array('%date' => date('Y-m-d H:i:s', $date))),
-    '#default_value' => \Drupal::config('ldap_help.settings')->get('user_data_clear'),
-  // array('%date' => date('Y-m-d H:i:s', $date))
-  );
-  $form['watchdog_detail']['user_data_clear_date'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Reset the clear date to the current date %date', array('%date' => date('Y-m-d H:i:s'))),
-    '#default_value' => \Drupal::config('ldap_help.settings')->get('user_data_clear_set_date'),
   );
   $form['#submit'][] = 'ldap_help_watchdog_detail_submit';
 }
 
 /**
+ * Implements hook_form_submit().
+ *
  * Alter LDAP settings form submission handler to add watchdog details.
  */
 function ldap_help_watchdog_detail_submit(array &$form, FormStateInterface $form_state) {
@@ -46,12 +36,6 @@ function ldap_help_watchdog_detail_submit(array &$form, FormStateInterface $form
     $watchdog_detail = $form_state->getValue('watchdog_detail');
     if ($watchdog_detail != $config->get('watchdog_detail')) {
       $config->set('watchdog_detail', $watchdog_detail);
-    }
-    if ($form_state->getValue('user_data_clear') != $config->get('user_data_clear')) {
-      $config->set('user_data_clear', $form_state->getValue('user_data_clear'));
-    }
-    if ($form_state->getValue('user_data_clear_date') != 0) {
-      $config->set('user_data_clear_set_date', time());
     }
     $config->save();
   }

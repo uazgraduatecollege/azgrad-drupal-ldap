@@ -2,6 +2,6 @@ ldap_help.debugging_review:
   path: /admin/config/people/ldap/help/debugging
   defaults:
     _title: 'LDAP Debugging Review'
-    _form: \Drupal\ldap_servers\Form\DebuggingReviewForm
+    _form: \Drupal\ldap_help\Form\DebuggingReviewForm
   requirements:
     _permission: 'administer site configuration'
