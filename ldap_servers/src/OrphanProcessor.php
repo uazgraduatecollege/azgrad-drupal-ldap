@@ -17,7 +17,7 @@ class OrphanProcessor {
    */
   public function __construct() {
     $this->ldapUserConf = new LdapUserConf();
-    $this->config = \Drupal::service('config.factory')->get('ldap_user.settings');
+    $this->config = \Drupal::config('ldap_user.settings')->get('ldap_user_conf');
   }
 
   /**
@@ -29,10 +29,9 @@ class OrphanProcessor {
    * @todo need to avoid sending repeated emails
    */
   public function checkOrphans() {
-
     // Return TRUE; // this is untested code.
-    if (!$this->config['ldap_user_conf.orphanedDrupalAcctBehavior'] ||
-      $this->config['ldap_user_conf.orphanedDrupalAcctBehavior'] == 'ldap_user_orphan_do_not_check') {
+    if (!$this->config['orphanedDrupalAcctBehavior'] ||
+      $this->config['orphanedDrupalAcctBehavior'] == 'ldap_user_orphan_do_not_check') {
       return TRUE;
     }
 
@@ -44,7 +43,7 @@ class OrphanProcessor {
      *   - order by uid asc (get oldest first)
      */
 
-    $last_uid_checked = $this->config['ldap_user_cron_last_uid_checked'];
+    $last_uid_checked = \Drupal::config('ldap_user.settings')->get('ldap_user_cron_last_uid_checked');
 
     // @FIXME : replace by D8 entityQuery
     // https://www.drupal.org/node/1827278
@@ -53,7 +52,7 @@ class OrphanProcessor {
     //   ->fieldCondition('ldap_user_current_dn', 'value', 'NULL', '!=')
     //   ->propertyCondition('uid', $last_uid_checked, '>')
     //   ->propertyOrderBy('uid', 'ASC')
-    //   ->range(0, $this->config['ldap_user_conf.orphanedCheckQty'] - 1)
+    //   ->range(0, $this->config['orphanedCheckQty'] - 1)
     //   ->addMetaData('account', \Drupal::entityManager()->getStorage('user')->load(1)); // run the query as user 1
     // $result = $query->execute();
     $drupal_users = array();
@@ -73,7 +72,7 @@ class OrphanProcessor {
     $user_count = count($uids);
 
     // If maxed out reset uid check counter.
-    if ($user_count < $this->config['ldap_user_conf.orphanedCheckQty']) {
+    if ($user_count < $this->config['orphanedCheckQty']) {
       \Drupal::configFactory()->getEditable('ldap_user.settings')->set('ldap_user_cron_last_uid_checked', 1)->save();
     }
     else {
@@ -155,7 +154,7 @@ class OrphanProcessor {
       }
     }
     // 3. we now have $drupal_users[$sid][$puid_attr][$puid]['exists'] = FALSE | TRUE;.
-    if ($this->config['ldap_user_conf.orphanedDrupalAcctBehavior'] == 'ldap_user_orphan_email') {
+    if ($this->config['orphanedDrupalAcctBehavior'] == 'ldap_user_orphan_email') {
       $email_list = array();
       global $base_url;
     }
@@ -170,17 +169,17 @@ class OrphanProcessor {
           $account = user_save($account, $user_edit, 'ldap_user');
           if (!$user_data['exists']) {
           /**
-           * $this->config['ldap_user_conf.orphanedDrupalAcctBehavior'] will either be
+           * $this->config['orphanedDrupalAcctBehavior'] will either be
            *  'ldap_user_orphan_email' or one of the user module options:
            *     user_cancel_block, user_cancel_block_unpublish,
            *     user_cancel_reassign, user_cancel_delete
            */
-          /*   if ($this->config['ldap_user_conf.orphanedDrupalAcctBehavior'] == 'ldap_user_orphan_email') {
+          /*   if ($this->config['orphanedDrupalAcctBehavior'] == 'ldap_user_orphan_email') {
           $email_list[] = $account->name . "," . $account->mail . "," . $base_url . "/user/$uid/edit";
           }
 
           else {
-          _user_cancel(array(), $account, $this->config['ldap_user_conf.orphanedDrupalAcctBehavior']);
+          _user_cancel(array(), $account, $this->config['orphanedDrupalAcctBehavior']);
           }
           }*/
         }
