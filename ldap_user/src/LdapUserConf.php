@@ -705,7 +705,7 @@ class LdapUserConf {
 
     if (!$ldap_user && $this->config['drupalAcctProvisionServer']) {
       $factory = \Drupal::service('ldap.servers');
-      $ldap_user = $factory->getUsgetUserDataFromServerByAccounterDataFromServerByAccount($account, $this->config['drupalAcctProvisionServer'], 'ldap_user_prov_to_drupal');
+      $ldap_user = $factory->getUserDataFromServerByAccount($account, $this->config['drupalAcctProvisionServer'], 'ldap_user_prov_to_drupal');
     }
 
     if (!$ldap_user) {
