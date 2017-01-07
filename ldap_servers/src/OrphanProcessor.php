@@ -2,21 +2,22 @@
 
 namespace Drupal\ldap_servers;
 
-use Drupal\ldap_user\LdapUserConf;
+use Drupal\user\Entity\User;
 
 /**
  *
  */
 class OrphanProcessor {
 
-  protected $ldapUserConf;
-  protected $config;
+  private $config;
+  private $emailList;
+  private $ldapQueryOrLimit = 30;
+  private $missingServerSemaphore = [];
 
   /**
    *
    */
   public function __construct() {
-    $this->ldapUserConf = new LdapUserConf();
     $this->config = \Drupal::config('ldap_user.settings')->get('ldap_user_conf');
   }
 
@@ -26,182 +27,35 @@ class OrphanProcessor {
    *
    * @return boolean FALSE on error or incompletion or TRUE otherwise
    *
-   * @todo need to avoid sending repeated emails
    */
   public function checkOrphans() {
-    // Return TRUE; // this is untested code.
+
     if (!$this->config['orphanedDrupalAcctBehavior'] ||
       $this->config['orphanedDrupalAcctBehavior'] == 'ldap_user_orphan_do_not_check') {
       return TRUE;
     }
+    $uids = $this->fetchUidsToCheck();
 
-    /**
-     * query drupal accounts
-     *   - ldap associated drupal accounts
-     *   - where (ldap_user_current_dn not null)
-     *   - ordered by ldap_user_last_checked
-     *   - order by uid asc (get oldest first)
-     */
+    if (!empty($uids)) {
+      $processedUsers = [];
 
-    $last_uid_checked = \Drupal::config('ldap_user.settings')->get('ldap_user_cron_last_uid_checked');
+      // To avoid query limits, queries are batched by the limit, for example with
+      // 175 users and a limit of 30, 6 batches are run.
+      $batches = floor(count($uids) / $this->ldapQueryOrLimit) + 1;
+      for ($batch = 1; $batch <= $batches; $batch++) {
+        $processedUsers += $this->batchQueryUsers($batch, $uids);
+      }
 
-    // @FIXME : replace by D8 entityQuery
-    // https://www.drupal.org/node/1827278
-    // $query = new EntityFieldQuery();
-    // $query->entityCondition('entity_type', 'user')
-    //   ->fieldCondition('ldap_user_current_dn', 'value', 'NULL', '!=')
-    //   ->propertyCondition('uid', $last_uid_checked, '>')
-    //   ->propertyOrderBy('uid', 'ASC')
-    //   ->range(0, $this->config['orphanedCheckQty'] - 1)
-    //   ->addMetaData('account', \Drupal::entityManager()->getStorage('user')->load(1)); // run the query as user 1
-    // $result = $query->execute();
-    $drupal_users = array();
-    $factory = \Drupal::service('ldap.servers');
-    $ldap_servers = $factory->getEnabledServers();
-    $watchdogs_sids_missing_watchdogged = array();
-    /**
-     * first produce array of form:
-     *  $drupal_users[$sid][$puid_attr][$puid]['exists'] = FALSE | TRUE;
-     *  signifying if corresponding LDAP Entry exists
-     */
-    if (!(isset($result['user']) && count($result['user']) > 0)) {
+      $this->processUser($processedUsers);
+
+      if (count($this->emailList) > 0) {
+        $this->sendOrphanedAccountsMail();
+      }
+
       return TRUE;
+    } else {
+      return FALSE;
     }
-
-    $uids = array_keys($result['user']);
-    $user_count = count($uids);
-
-    // If maxed out reset uid check counter.
-    if ($user_count < $this->config['orphanedCheckQty']) {
-      \Drupal::configFactory()->getEditable('ldap_user.settings')->set('ldap_user_cron_last_uid_checked', 1)->save();
-    }
-    else {
-      \Drupal::configFactory()->getEditable('ldap_user.settings')->set('ldap_user_cron_last_uid_checked', $uids[count($uids) - 1])->save();
-    }
-
-    $maxfilter_ors = 30;
-
-    $batches = floor($user_count / $maxfilter_ors) + 1;
-    // e.g. 175 users and  50 max ldap query ors will yield 4 batches
-    // e.g. 1,2,3,4.
-    for ($batch = 1; $batch <= $batches; $batch++) {
-      $filters = array();
-
-      /**
-       * 1. populate $drupal_users[$sid][$puid_attr][$puid]['exists']  = TRUE
-       *
-       * e.g.  first batch $i=0; $i<50; $i++
-       *       2nd batch   $i=50; $i<100; $i++
-       *       4th batch   $i=150; $i<175; $i++
-       */
-      // e.g 0, 50, 100.
-      $start = ($batch - 1) * $maxfilter_ors;
-      // e.g. 50, 100, 150.
-      $end_plus_1 = min(($batch) * $maxfilter_ors, $user_count);
-      // e.g. 50, 50; 100, 50.
-      $batch_uids = array_slice($uids, $start, ($end_plus_1 - $start));
-      $accounts = \Drupal::entityManager()->getStorage('user');
-
-      foreach ($accounts as $uid => $user) {
-        $sid = @$user->ldap_user_puid_sid['und'][0]['value'];
-        $puid = @$user->ldap_user_puid['und'][0]['value'];
-        $puid_attr = @$user->ldap_user_puid_property['und'][0]['value'];
-        if ($sid && $puid && $puid_attr) {
-          if ($ldap_servers[$sid]->unique_persistent_attr_binary) {
-            $filters[$sid][$puid_attr][] = "($puid_attr=" . $this->binaryFilter($puid) . ")";
-          }
-          else {
-            $filters[$sid][$puid_attr][] = "($puid_attr=$puid)";
-          }
-          $drupal_users[$sid][$puid_attr][$puid]['uid'] = $uid;
-          $drupal_users[$sid][$puid_attr][$puid]['exists'] = FALSE;
-        }
-        else {
-          // User with missing ldap data fields
-          // perhaps should be watchdogged?
-        }
-      }
-
-      // 2. set $drupal_users[$sid][$puid_attr][$puid]['exists'] to FALSE
-      // if entry doesn't exist.
-      foreach ($filters as $sid => $puid_attrs) {
-        if (!isset($ldap_servers[$sid])) {
-          if (!isset($watchdogs_sids_missing_watchdogged[$sid])) {
-            \Drupal::logger('ldap_user')->error('Server %sid not enabled, but needed to remove orphaned ldap users', array('%sid' => $sid));
-            $watchdogs_sids_missing_watchdogged[$sid] = TRUE;
-          }
-          continue;
-        }
-        foreach ($puid_attrs as $puid_attr => $ors) {
-          // Query should look like (|(guid=3243243)(guid=3243243)(guid=3243243))
-          $ldap_filter = '(|' . join("", $ors) . ')';
-          $ldap_entries = $ldap_servers[$sid]->searchAllBaseDns($ldap_filter, array($puid_attr));
-          if ($ldap_entries === FALSE) {
-            // If query has error, don't remove ldap entries!
-            unset($drupal_users[$sid]);
-            \Drupal::logger('ldap_user')->error('ldap server %sid had error while querying to
-            deal with orphaned ldap user entries.  Please check that the ldap
-            server is configured correctly.  Query; %query', array('%sid' => $sid, '%query' => $query));
-            continue;
-          }
-
-          unset($ldap_entries['count']);
-          foreach ($ldap_entries as $i => $ldap_entry) {
-            $puid = $ldap_servers[$sid]->userPuidFromLdapEntry($ldap_entry);
-            $drupal_users[$sid][$puid_attr][$puid]['exists'] = TRUE;
-          }
-        }
-      }
-    }
-    // 3. we now have $drupal_users[$sid][$puid_attr][$puid]['exists'] = FALSE | TRUE;.
-    if ($this->config['orphanedDrupalAcctBehavior'] == 'ldap_user_orphan_email') {
-      $email_list = array();
-      global $base_url;
-    }
-    $check_time = time();
-    $email_list = array();
-    foreach ($drupal_users as $sid => $puid_x_puid_attrs) {
-      foreach ($puid_x_puid_attrs as $puid_attr => $puids) {
-        foreach ($puids as $puid => $user_data) {
-          // FIXME: Unported.
-          /* $account = $accounts[$user_data['uid']];
-          $user_edit['ldap_user_last_checked'][0]['value'] = $check_time;
-          $account = user_save($account, $user_edit, 'ldap_user');
-          if (!$user_data['exists']) {
-          /**
-           * $this->config['orphanedDrupalAcctBehavior'] will either be
-           *  'ldap_user_orphan_email' or one of the user module options:
-           *     user_cancel_block, user_cancel_block_unpublish,
-           *     user_cancel_reassign, user_cancel_delete
-           */
-          /*   if ($this->config['orphanedDrupalAcctBehavior'] == 'ldap_user_orphan_email') {
-          $email_list[] = $account->name . "," . $account->mail . "," . $base_url . "/user/$uid/edit";
-          }
-
-          else {
-          _user_cancel(array(), $account, $this->config['orphanedDrupalAcctBehavior']);
-          }
-          }*/
-        }
-      }
-    }
-
-    // Todo: Move hook_mail over.
-    if (count($email_list) > 0) {
-      $site_email = \Drupal::config('system.site')->get('mail');
-      $params = array('accounts' => $email_list);
-      if ($site_email) {
-        drupal_mail(
-          'ldap_user',
-          'orphaned_accounts',
-          $site_email,
-          language_default(),
-          $params
-        );
-      }
-    }
-
-    return TRUE;
   }
 
   /**
@@ -228,6 +82,178 @@ class OrphanProcessor {
     }
 
     return $match;
+  }
+
+  /**
+   * @param $emailList
+   */
+  public function sendOrphanedAccountsMail() {
+    $mailManager = \Drupal::service('plugin.manager.mail');
+    $to = \Drupal::config('system.site')->get('mail');
+    $siteLanguage = \Drupal::languageManager()->getCurrentLanguage()->getId();
+    $params = ['accounts' => $this->emailList];
+    $result = $mailManager->mail('ldap_user', 'orphaned_accounts', $to, $siteLanguage, $params, NULL, true);
+    if (!$result) {
+      \Drupal::logger('ldap_user')->error('Could not send orphaned LDAP accounts notification.');
+    }
+  }
+
+  /**
+   * @param $batch
+   * @param $uids
+   * @return array
+   */
+  private function batchQueryUsers($batch, $uids) {
+
+    $factory = \Drupal::service('ldap.servers');
+    $servers = $factory->getEnabledServers();
+
+    $users = [];
+
+    // Creates a list of users in the required format.
+
+    $start = ($batch - 1) * $this->ldapQueryOrLimit;
+    $end_plus_1 = min(($batch) * $this->ldapQueryOrLimit, count($uids));
+    $batch_uids = array_slice($uids, $start, ($end_plus_1 - $start));
+
+    $accounts = \Drupal::entityManager()
+      ->getStorage('user')
+      ->loadMultiple($batch_uids);
+
+    foreach ($accounts as $uid => $user) {
+      $serverId = $user->get('ldap_user_puid_sid')->value;
+      $persistentUid = $user->get('ldap_user_puid')->value;
+      $persistentUidProperty = $user->get('ldap_user_puid_property')->value;
+      if ($serverId && $persistentUid && $persistentUidProperty) {
+        if ($servers[$serverId]->get('unique_persistent_attr_binary')) {
+          $filters[$serverId][$persistentUidProperty][] = "($persistentUidProperty=" . $this->binaryFilter($persistentUid) . ")";
+        }
+        else {
+          $filters[$serverId][$persistentUidProperty][] = "($persistentUid)";
+        }
+        $users[$serverId][$persistentUidProperty][$persistentUid]['uid'] = $uid;
+        $users[$serverId][$persistentUidProperty][$persistentUid]['exists'] = FALSE;
+      }
+      else {
+        \Drupal::logger('ldap_user')->notice(
+          'User %uid has missing LDAP data fields.',
+          ['%uid' => $uid]
+        );
+      }
+    }
+
+    // Query LDAP and update the prepared users with the actual state.
+
+    foreach ($filters as $serverId => $persistentUidAttributes) {
+      if (!isset($servers[$serverId])) {
+        if (!isset($this->missingServerSemaphore[$serverId])) {
+          \Drupal::logger('ldap_user')
+            ->error('Server %id not enabled, but needed to remove orphaned ldap users', array('%id' => $serverId));
+          $this->missingServerSemaphore[$serverId] = TRUE;
+        }
+        continue;
+      }
+      foreach ($persistentUidAttributes as $persistentUidProperty => $OrElement) {
+        // Query should look like (|(guid=3243243)(guid=3243243)(guid=3243243))
+        $ldapFilter = '(|' . join("", $OrElement) . ')';
+        $ldapEntries = $servers[$serverId]->searchAllBaseDns($ldapFilter, array($persistentUidProperty));
+        if ($ldapEntries === FALSE) {
+          // If the query returns an error, ignore the entire server.
+          unset($users[$serverId]);
+          \Drupal::logger('ldap_user')->error('LDAP server %id had error while querying to deal with orphaned LDAP user entries. Please check that the LDAP server is configured correctly',
+            ['%id' => $serverId]
+          );
+          continue;
+        }
+
+        unset($ldapEntries['count']);
+        foreach ($ldapEntries as $i => $ldap_entry) {
+          $persistentUid = $servers[$serverId]->userPuidFromLdapEntry($ldap_entry);
+          $users[$serverId][$persistentUidProperty][$persistentUid]['exists'] = TRUE;
+        }
+      }
+    }
+    return $users;
+  }
+
+  /**
+   * @return array
+   */
+  private function fetchUidsToCheck() {
+    /**
+     * We want to query drupal accounts, which are LDAP associated where a DN
+     * is present. The lastUidChecked is used to process only a limited number
+     * of batches in the cron run and each user is only checked if the time
+     * configured for checking has lapsed.
+     */
+    $lastUidChecked = \Drupal::state()
+      ->get('ldap_user_cron_last_uid_checked', 1);
+
+    $query = \Drupal::entityQuery('user')
+      ->exists('ldap_user_current_dn')
+      ->condition('uid', $lastUidChecked, '>')
+      ->sort('uid', 'ASC')
+      ->range(0, $this->config['orphanedCheckQty']);
+
+    $group = $query->orConditionGroup();
+    $group->notExists('ldap_user_last_checked');
+
+    switch ($this->config['orphanedAccountCheckInterval']) {
+      case 'always':
+        $group->condition('ldap_user_last_checked', time(), '<');
+        break;
+      case 'daily':
+        $group->condition('ldap_user_last_checked', strtotime('today'), '<');
+        break;
+      case 'weekly':
+      default:
+        $group->condition('ldap_user_last_checked', strtotime('today - 7 days'), '<');
+        break;
+      case 'monthly':
+        $group->condition('ldap_user_last_checked', strtotime('today - 30 days'), '<');
+        break;
+    }
+    $query->condition($group);
+    $uids = $query->execute();
+
+    if (count($uids) < $this->config['orphanedCheckQty']) {
+      \Drupal::state()->set('ldap_user_cron_last_uid_checked', 1);
+    }
+    else {
+      \Drupal::state()->set('ldap_user_cron_last_uid_checked', max($uids));
+    }
+
+    return $uids;
+  }
+
+  /**
+   * @param $processedUsers
+   * @return mixed
+   */
+  private function processUser($processedUsers) {
+    foreach ($processedUsers as $serverId => $persistentAttributes) {
+      foreach ($persistentAttributes as $attribute => $persistentUids) {
+        foreach ($persistentUids as $persistentUid => $user_data) {
+          $account = User::load($user_data['uid']);
+          $account->set('ldap_user_last_checked', time());
+          $account->save();
+          global $base_url;
+          if (!$user_data['exists']) {
+            switch ($this->config['orphanedDrupalAcctBehavior']) {
+              case 'ldap_user_orphan_email';
+                $this->emailList[] = $account->getAccountName() . "," . $account->getEmail() . "," . $base_url . "/user/" . $user_data['uid'] . "/edit";
+                break;
+              case 'user_cancel_block':
+              case 'user_cancel_block_unpublish':
+              case 'user_cancel_reassign':
+              case 'user_cancel_delete':
+                _user_cancel(array(), $account, $this->config['orphanedDrupalAcctBehavior']);
+                break;
+            }
+          }
+        }
+      }
+    }
   }
 
 }

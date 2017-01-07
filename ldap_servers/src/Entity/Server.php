@@ -443,33 +443,29 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
    * Perform an LDAP search on all base dns and aggregate into one result.
    *
    * @param string $filter
-   *   The search filter. such as sAMAccountName=jbarclay.  attribute values (e.g. jbarclay) should be esacaped before calling.
+   *   The search filter, such as sAMAccountName=jbarclay. Attribute values
+   *   (e.g. jbarclay) should be esacaped before calling.
    *
    * @param array $attributes
    *   List of desired attributes. If omitted, we only return "dn".
    *
-   * @param int $attrsonly
-   * @param int $sizelimit
-   * @param int $timelimit
-   * @param null $deref
    * @param int $scope
+   *   Scope of the search, defaults to subtree.
    *
    * @return array|bool
-   *   An array of matching entries->attributes (will have 0
-   *   elements if search returns no results),
-   *   or FALSE on error on any of the basedn queries
+   *   An array of matching entries->attributes (will have 0 elements if search
+   *   returns no results), or FALSE on error on any of the base DN queries.
    *
-   * @remaining params mimick ldap_search() function params
    */
-  public function searchAllBaseDns($filter, $attributes = array(), $attrsonly = 0, $sizelimit = 0, $timelimit = 0, $deref = NULL, $scope = NULL) {
+  public function searchAllBaseDns($filter, $attributes = array(), $scope = NULL) {
     if ($scope == NULL) {
       $scope = Server::$scopeSubTree;
     }
     $all_entries = array();
-    // Need to search on all basedns one at a time.
-    foreach ($this->getBasedn() as $base_dn) {
-      // No attributes, just dns needed.
-      $entries = $this->search($base_dn, $filter, $attributes, $attrsonly, $sizelimit, $timelimit, $deref, $scope);
+
+    foreach ($this->getBaseDn() as $base_dn) {
+      $relative_filter = str_replace(',' . $base_dn, '', $filter);
+      $entries = $this->search($base_dn, $relative_filter, $attributes, 0, 0, 0, NULL, $scope);
       // If error in any search, return false.
       if ($entries === FALSE) {
         return FALSE;
@@ -530,8 +526,8 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
       */
 
     if ($base_dn == NULL) {
-      if (count($this->getBasedn()) == 1) {
-        $base_dn = $this->getBasedn()[0];
+      if (count($this->getBaseDn()) == 1) {
+        $base_dn = $this->getBaseDn()[0];
       }
       else {
         return FALSE;
@@ -759,23 +755,14 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
     return array_keys(array_change_key_case(array_flip($dns), CASE_LOWER));
   }
 
-  /**
-   * Utility to transform basedn into the array that most calls expect.
-   * This replaces the property on the class (D7) with a method.
-   */
-  public function getBasedn() {
-    // Get the basedn value.
-    $basedn = $this->get('basedn');
-    // See if it is an array.
-    if (!is_array($basedn)) {
-      // @TODO Is it serialised?
-      // Is it a string?
-      if (is_scalar($basedn)) {
-        // Split on linebreaks.
-        $basedn = explode("\n", $basedn);
-      }
+
+  public function getBaseDn() {
+    $baseDn = $this->get('basedn');
+
+    if (!is_array($baseDn) && is_string($baseDn)) {
+        $baseDn = explode("\n", $baseDn);
     }
-    return $basedn;
+    return $baseDn;
   }
 
   /**
@@ -1038,7 +1025,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
       $attributes = array_keys($attribute_maps);
     }
 
-    foreach ($this->getBasedn() as $basedn) {
+    foreach ($this->getBaseDn() as $basedn) {
 
       if (empty($basedn)) {
         continue;
@@ -1392,7 +1379,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
               $query_for_child_members = '&(|' . join($object_classes_ors) . ')(' . $query_for_child_members . ')';
             }
             // Need to search on all basedns one at a time.
-            foreach ($this->getBasedn() as $base_dn) {
+            foreach ($this->getBaseDn() as $base_dn) {
               $child_member_entries = $this->search($base_dn, $query_for_child_members, array('objectclass', $this->groupMembershipsAttr(), $this->groupMembershipsAttrMatchingUserAttr()));
               if ($child_member_entries !== FALSE) {
                 $this->groupMembersResursive($child_member_entries, $all_member_dns, $tested_group_ids, $level + 1, $max_levels, $object_classes);
@@ -1526,7 +1513,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
         $query_for_parent_groups = '(&(objectClass=' . $this->groupObjectClass() . ')' . $or . ')';
 
         // Need to search on all basedns one at a time.
-        foreach ($this->getBasedn() as $base_dn) {
+        foreach ($this->getBaseDn() as $base_dn) {
           // no attributes, just dns needed.
           $group_entries = $this->search($base_dn, $query_for_parent_groups);
           if ($group_entries !== FALSE  && $level < self::LDAP_SERVER_LDAP_QUERY_RECURSION_LIMIT) {
@@ -1588,7 +1575,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
     $group_query = '(&(objectClass=' . $this->groupObjectClass() . ')(' . $this->groupMembershipsAttr() . "=$member_value))";
 
     // Need to search on all basedns one at a time.
-    foreach ($this->getBasedn() as $base_dn) {
+    foreach ($this->getBaseDn() as $base_dn) {
       // Only need dn, so empty array forces return of no attributes.
       $group_entries = $this->search($base_dn, $group_query, array());
       if ($group_entries !== FALSE) {
@@ -1660,7 +1647,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
         $query_for_parent_groups = '(&(objectClass=' . $this->groupObjectClass() . ')' . $or . ')';
 
         // Need to search on all basedns one at a time.
-        foreach ($this->getBasedn() as $base_dn) {
+        foreach ($this->getBaseDn() as $base_dn) {
           // No attributes, just dns needed.
           $group_entries = $this->search($base_dn, $query_for_parent_groups);
           if ($group_entries !== FALSE  && $level < $max_levels) {

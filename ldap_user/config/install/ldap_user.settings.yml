@@ -1,4 +1,3 @@
-ldap_user_cron_last_uid_checked: 1
 ldap_user_conf:
   drupalAcctProvisionServer: '0'
   ldapEntryProvisionServer: '0'
@@ -12,6 +11,7 @@ ldap_user_conf:
     3: 0
   orphanedDrupalAcctBehavior: ldap_user_orphan_email
   orphanedCheckQty: 100
+  orphanedAccountCheckInterval: 'weekly'
   userConflictResolve: 2
   manualAccountConflict: 1
   acctCreation: 4

@@ -1,8 +1,6 @@
 ldap_user.settings:
   type: config_object
   mapping:
-    ldap_user_cron_last_uid_checked:
-      type: integer
     ldap_user_conf:
       type: mapping
       mapping:
@@ -24,6 +22,9 @@ ldap_user.settings:
         orphanedCheckQty:
           label: 'orphanedCheckQty'
           type: integer
+        orphanedAccountCheckInterval:
+          label: 'Orphaned account checking interval'
+          type: string
         userConflictResolve:
           label: 'userConflictResolve'
           type: integer

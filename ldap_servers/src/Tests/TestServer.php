@@ -150,8 +150,8 @@ class TestServer extends Server {
     $filter = trim(str_replace(array("\n", "  "), array('', ''), $filter));
 
     if ($base_dn == NULL) {
-      if (count($this->getBasedn()) == 1) {
-        $base_dn = $this->getBasedn()[0];
+      if (count($this->getBaseDn()) == 1) {
+        $base_dn = $this->getBaseDn()[0];
       }
       else {
         return FALSE;

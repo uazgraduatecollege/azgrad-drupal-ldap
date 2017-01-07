@@ -109,10 +109,10 @@ function template_preprocess_ldap_user_conf_mapping_table(&$variables) {
 function ldap_user_cron() {
   $check_orphans = \Drupal::config('ldap_user.settings')->get('ldap_user_conf.orphanedDrupalAcctBehavior');
   if ($check_orphans != 'ldap_user_orphan_do_not_check') {
-    $processer = new OrphanProcessor();
-    $result = $processer->checkOrphans();
+    $processor = new OrphanProcessor();
+    $result = $processor->checkOrphans();
     if ($result !== TRUE) {
-      \Drupal::logger('ldap_user')->error('LDAP User check for orphaned ldap provisioned Drupal accounts failed', array());
+      \Drupal::logger('ldap_user')->error('Check for orphaned LDAP provisioned Drupal accounts failed.');
     }
   }
 }
@@ -124,11 +124,10 @@ function ldap_user_mail($key, &$message, $params) {
   switch ($key) {
     case 'orphaned_accounts':
       $message['subject'] = \Drupal::config('system.site')->get('name') . ' ' . t('Orphaned LDAP Users');
-      $message['body'][] = t('The following !count Drupal users no longer have
-        corresponding LDAP Entries.  Perhaps they have been removed from the LDAP
-        and should be removed:', array('!count' => count($params['accounts'])))
-        . "\n\n" . t('username,mail,edit url') . "\n" .
-        join("\n", $params['accounts']);
+      $message['body'][] = t('The following %count Drupal users no longer have corresponding LDAP Entries. Perhaps they have been removed from the LDAP and should be removed from your site.',
+          ['%count' => count($params['accounts'])]
+        );
+      $message['body'][] .= "\n" . t('username,mail,edit url') . "\n" . join("\n", $params['accounts']);
       break;
   }
 }

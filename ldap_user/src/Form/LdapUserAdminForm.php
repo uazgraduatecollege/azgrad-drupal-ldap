@@ -179,7 +179,7 @@ class LdapUserAdminForm extends ConfigFormBase {
       '#default_value' => $config->get('ldap_user_conf.orphanedDrupalAcctBehavior'),
       '#options' => $account_options,
       '#description' => t('It is highly recommended to use the "Perform no action, but email list of orphaned accounts" for some time before using the "Disable the account" options. <br>
-         These actions will only occur if the query to the erver is successful and does not return a user entry.'),
+         These actions will only occur if the query to the server is successful and does not return a user entry.'),
     );
 
     $form['basic_to_drupal']['orphanedCheckQty'] = array(
@@ -188,6 +188,19 @@ class LdapUserAdminForm extends ConfigFormBase {
       '#title' => t('Number of users to check each cron run.'),
       '#description' => t(''),
       '#default_value' => $config->get('ldap_user_conf.orphanedCheckQty'),
+      '#required' => FALSE,
+    );
+
+    $form['basic_to_drupal']['orphanedAccountCheckInterval'] = array(
+      '#type' => 'select',
+      '#title' => t('How often should each user be checked again?'),
+      '#default_value' => $config->get('ldap_user_conf.orphanedAccountCheckInterval'),
+      '#options' => [
+        'always' => $this->t('On every cron run'),
+        'daily' => $this->t('Daily'),
+        'weekly' => $this->t('Weekly'),
+        'monthly' => $this->t('Monthly'),
+      ],
       '#required' => FALSE,
     );
 
@@ -452,6 +465,7 @@ EOT;
       ->set('ldap_user_conf.ldapEntryProvisionTriggers', $form_state->getValue('ldapEntryProvisionTriggers'))
       ->set('ldap_user_conf.orphanedDrupalAcctBehavior', $form_state->getValue('orphanedDrupalAcctBehavior'))
       ->set('ldap_user_conf.orphanedCheckQty', $form_state->getValue('orphanedCheckQty'))
+      ->set('ldap_user_conf.orphanedAccountCheckInterval', $form_state->getValue('orphanedAccountCheckInterval'))
       ->set('ldap_user_conf.userConflictResolve', $form_state->getValue('userConflictResolve'))
       ->set('ldap_user_conf.manualAccountConflict', $form_state->getValue('manualAccountConflict'))
       ->set('ldap_user_conf.acctCreation', $form_state->getValue('acctCreation'))

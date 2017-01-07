@@ -12,31 +12,54 @@ use Drupal\Tests\UnitTestCase;
 class ServerTests extends UnitTestCase {
 
   /**
-   *
+   * Tests searches across multiple DNs.
    */
   public function testSearchAllBaseDns() {
 
     $stub = $this->getMockBuilder(Server::class)
       ->disableOriginalConstructor()
+      ->setMethods(['search', 'getBasedn'])
       ->getMock();
 
+    $baseDn[] = 'ou=people,dc=example,dc=org';
+
+
+    $validResult = [
+      'count' => 1,
+      0 => ['dn' => ['cn=hpotter,ou=people,dc=example,dc=org']]
+    ];
+    $valueMap = [
+      [$baseDn[0], '(|(cn=hpotter))', ['dn'], 0, 0, 0, NULL, Server::$scopeSubTree],
+      [$baseDn[0], '(cn=hpotter)', ['dn'], 0, 0, 0, NULL, Server::$scopeSubTree],
+      [$baseDn[0], 'cn=hpotter', ['dn'], 0, 0, 0, NULL, Server::$scopeSubTree]
+    ];
+
     $stub->method('getBasedn')
-      ->willReturn([0 => ['ou' => 'people', 'dc' => 'example', 'dc' => 'org']]);
+      ->willReturn($baseDn);
     $stub->method('search')
-      ->willReturn([
-        'count' => 1,
-        0 => [
-          'objectclass' => [
-            'count' => 4,
-            '0' => 'organizationalPerson',
-            '1' => 'Person',
-            '2' => 'inetOrgPerson',
-          ],
-        ],
-      ]);
-    // TODO: Figure out the correct format to pass to searchAllBaseDns and compare them.
-    //$stub->searchAllBaseDns('*');
-    $this->assertTrue(TRUE);
+      ->will($this->returnCallback( function () use ($valueMap, $validResult) {
+        $arguments = func_get_args();
+
+        foreach($valueMap as $map) {
+          if(!is_array($map) || count($arguments) != count($map)) {
+            continue;
+          }
+
+          if ($arguments === $map) {
+            return $validResult;
+          }
+        }
+        return ['count' => 0];
+      }));
+
+    $result = $stub->searchAllBaseDns('(|(cn=hpotter,ou=people,dc=example,dc=org))', ['dn']);
+    $this->assertEquals(1, $result['count']);
+    $result = $stub->searchAllBaseDns('(|(cn=invalid_cn,ou=people,dc=example,dc=org))', ['dn']);
+    $this->assertEquals(0, $result['count']);
+    $result = $stub->searchAllBaseDns('(|(cn=hpotter))', ['dn']);
+    $this->assertEquals(1, $result['count']);
+    $result = $stub->searchAllBaseDns('(cn=hpotter)', ['dn']);
+    $this->assertEquals(1, $result['count']);
   }
 
   /**

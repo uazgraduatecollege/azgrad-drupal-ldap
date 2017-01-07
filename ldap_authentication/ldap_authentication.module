@@ -822,7 +822,7 @@ function ldap_authentication_test_credentials($auth_conf, $sso_login, $authname,
     }
     elseif ($ldap_server->get('bind_method') == Server::$bindMethodUser && $sso_login == FALSE) {
       // With sso enabled this method of binding isn't valid.
-      foreach ($ldap_server->getBasedn() as $basedn) {
+      foreach ($ldap_server->getBaseDn() as $basedn) {
         $search = array('%basedn', '%username');
         $replace = array($basedn, $authname);
         $userdn = str_replace($search, $replace, $ldap_server->get('user_dn_expression'));
