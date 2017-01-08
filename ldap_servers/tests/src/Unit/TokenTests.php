@@ -3,12 +3,12 @@
 namespace Drupal\Tests\ldap_servers\Unit;
 
 use Drupal\Core\DependencyInjection\ContainerBuilder;
-use Drupal\ldap_servers\TokenHelper;
+use Drupal\ldap_servers\Processor\TokenProcessor;
 use Drupal\Tests\UnitTestCase;
 
 
 /**
- * @coversDefaultClass \Drupal\ldap_servers\TokenFunctions
+ * @coversDefaultClass \Drupal\ldap_servers\PRocessor\TokenProcessor
  * @group ldap
  */
 class TokenTests extends UnitTestCase {
@@ -68,7 +68,7 @@ class TokenTests extends UnitTestCase {
       'count' => 3,
     ];
 
-    $tokenHelper = new TokenHelper();
+    $tokenHelper = new TokenProcessor();
 
     $dn = $tokenHelper->tokenReplace($ldap_entry, '[dn]');
     $this->assertEquals($ldap_entry['dn'], $dn);
@@ -128,20 +128,20 @@ class TokenTests extends UnitTestCase {
     $password = 'my-pass';
 
     // Verify storage.
-    $TokenHelperA = new TokenHelper();
+    $TokenHelperA = new TokenProcessor();
     $TokenHelperA::passwordStorage('set', $password);
     $this->assertEquals($password, $TokenHelperA::passwordStorage('get'));
 
     // Verify storage across instance.
-    $TokenHelperB = new TokenHelper();
+    $TokenHelperB = new TokenProcessor();
     $this->assertEquals($password, $TokenHelperB::passwordStorage('get'));
 
     // Verify storage without instance.
-    $this->assertEquals($password, TokenHelper::passwordStorage('get'));
+    $this->assertEquals($password, TokenProcessor::passwordStorage('get'));
 
     // Unset storage.
-    TokenHelper::passwordStorage('set', NULL);
-    $this->assertEquals(NULL, TokenHelper::passwordStorage('get'));
+    TokenProcessor::passwordStorage('set', NULL);
+    $this->assertEquals(NULL, TokenProcessor::passwordStorage('get'));
   }
 
 }

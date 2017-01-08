@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\ldap_user;
+namespace Drupal\ldap_user\Helper;
 
 
 class SemaphoreStorage {

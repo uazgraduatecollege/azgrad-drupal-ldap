@@ -4,9 +4,11 @@ namespace Drupal\ldap_user\Form;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\FormBase;
-use Drupal\ldap_user\LdapUserConf;
+use Drupal\ldap_user\Helper\ExternalAuthenticationHelper;
+use Drupal\ldap_user\Helper\LdapConfiguration;
+use Drupal\ldap_user\Processor\DrupalUserProcessor;
+use Drupal\ldap_user\Processor\LdapUserProcessor;
 use Drupal\user\Entity\User;
-use PDO;
 
 /**
  *
@@ -27,12 +29,12 @@ class LdapUserTestForm extends FormBase {
    */
   public function __construct() {
     $this::$sync_trigger_options = [
-      LdapUserConf::$provisionDrupalUserOnUserUpdateCreate => t('On sync to Drupal user create or update. Requires a server with binding method of "Service Account Bind" or "Anonymous Bind".'),
-      LdapUserConf::$provisionDrupalUserOnAuthentication => t('On create or sync to Drupal user when successfully authenticated with LDAP credentials. (Requires LDAP Authentication module).'),
-      LdapUserConf::$provisionDrupalUserOnAllowingManualCreation => t('On manual creation of Drupal user from admin/people/create and "Create corresponding LDAP entry" is checked'),
-      LdapUserConf::$provisionLdapEntryOnUserUpdateCreate => t('On creation or sync of an LDAP entry when a Drupal account is created or updated. Only applied to accounts with a status of approved.'),
-      LdapUserConf::$provisionLdapEntryOnUserAuthentication => t('On creation or sync of an LDAP entry when a user authenticates.'),
-      LdapUserConf::$provisionLdapEntryOnUserDelete => t('On deletion of an LDAP entry when the corresponding Drupal Account is deleted.  This only applies when the LDAP entry was provisioned by Drupal by the LDAP User module.'),
+      LdapConfiguration::$provisionDrupalUserOnUserUpdateCreate => t('On sync to Drupal user create or update. Requires a server with binding method of "Service Account Bind" or "Anonymous Bind".'),
+      LdapConfiguration::$provisionDrupalUserOnAuthentication => t('On create or sync to Drupal user when successfully authenticated with LDAP credentials. (Requires LDAP Authentication module).'),
+      LdapConfiguration::$provisionDrupalUserOnAllowingManualCreation => t('On manual creation of Drupal user from admin/people/create and "Create corresponding LDAP entry" is checked'),
+      LdapConfiguration::$provisionLdapEntryOnUserUpdateCreate => t('On creation or sync of an LDAP entry when a Drupal account is created or updated. Only applied to accounts with a status of approved.'),
+      LdapConfiguration::$provisionLdapEntryOnUserAuthentication => t('On creation or sync of an LDAP entry when a user authenticates.'),
+      LdapConfiguration::$provisionLdapEntryOnUserDelete => t('On deletion of an LDAP entry when the corresponding Drupal Account is deleted.  This only applies when the LDAP entry was provisioned by Drupal by the LDAP User module.'),
     ];
   }
 
@@ -112,19 +114,20 @@ class LdapUserTestForm extends FormBase {
       /* @var User $account */
       $account = user_load_by_name($username);
 
-      $ldap_user_conf = new LdapUserConf();
       $config = \Drupal::config('ldap_user.settings')->get('ldap_user_conf');
+      $processor = new DrupalUserProcessor();
+      $ldapProcessor = new LdapUserProcessor();
 
       $test_servers = [];
       $user_ldap_entry = FALSE;
       $factory = \Drupal::service('ldap.servers');
 
       if ($config['drupalAcctProvisionServer']) {
-        $test_servers[LdapUserConf::$provisioningDirectionToDrupalUser] = $config['drupalAcctProvisionServer'];
+        $test_servers[LdapConfiguration::$provisioningDirectionToDrupalUser] = $config['drupalAcctProvisionServer'];
         $user_ldap_entry = $factory->getUserDataFromServerByIdentifier($username, $config['drupalAcctProvisionServer']);
       }
       if ($config['ldapEntryProvisionServer']) {
-        $test_servers[LdapUserConf::$provisioningDirectionToLDAPEntry] = $config['ldapEntryProvisionServer'];
+        $test_servers[LdapConfiguration::$provisioningDirectionToLDAPEntry] = $config['ldapEntryProvisionServer'];
         if (!$user_ldap_entry) {
           $user_ldap_entry = $factory->getUserDataFromServerByIdentifier($username, $config['ldapEntryProvisionServer']);
         }
@@ -133,10 +136,9 @@ class LdapUserTestForm extends FormBase {
       $results['username'] = $username;
       $results['user entity (before provisioning or syncing)'] = $account;
       $results['related ldap entry (before provisioning or syncing)'] = $user_ldap_entry;
-      $results['ldap_user_conf'] = $ldap_user_conf;
 
       if (is_object($account)) {
-        $authmaps = LdapUserConf::getUserIdentifierFromMap($account->id());
+        $authmaps = ExternalAuthenticationHelper::getUserIdentifierFromMap($account->id());
       }
       else {
         $authmaps = 'No authmaps available.  Authmaps only shown if user account exists beforehand';
@@ -146,7 +148,6 @@ class LdapUserTestForm extends FormBase {
 
       }
       $results['User Authmap'] = $authmaps;
-      $results['LDAP User Configuration Object'] = $ldap_user_conf;
 
       $save = ($form_state->getValue(['test_mode']) == 'execute');
       $test_query = ($form_state->getValue(['test_mode']) != 'execute');
@@ -155,21 +156,22 @@ class LdapUserTestForm extends FormBase {
       foreach (array_filter($selected_actions) as $i => $sync_trigger) {
         $sync_trigger_description = self::$sync_trigger_options[$sync_trigger];
         foreach ([
-          LdapUserConf::$provisioningDirectionToDrupalUser,
-          LdapUserConf::$provisioningDirectionToLDAPEntry,
+          LdapConfiguration::$provisioningDirectionToDrupalUser,
+          LdapConfiguration::$provisioningDirectionToLDAPEntry,
         ] as $direction) {
-          if ($ldap_user_conf->provisionEnabled($direction, $sync_trigger)) {
-            if ($direction == LdapUserConf::$provisioningDirectionToDrupalUser) {
-              $ldap_user_conf->provisionDrupalAccount(NULL, $account, NULL, $save);
+          if (LdapConfiguration::provisionEnabled($direction, $sync_trigger)) {
+            if ($direction == LdapConfiguration::$provisioningDirectionToDrupalUser) {
+
+              $processor->provisionDrupalAccount(NULL, $account, NULL, $save);
               $results['provisionDrupalAccount method results']["context = $sync_trigger_description"]['proposed'] = $account;
             }
             else {
-              $provision_result = $ldap_user_conf->provisionLdapEntry($account, NULL, $test_query);
+              $provision_result = $ldapProcessor->provisionLdapEntry($account, NULL, $test_query);
               $results['provisionLdapEntry method results']["context = $sync_trigger_description"] = $provision_result;
             }
           }
           else {
-            if ($direction == LdapUserConf::$provisioningDirectionToDrupalUser) {
+            if ($direction == LdapConfiguration::$provisioningDirectionToDrupalUser) {
               $results['provisionDrupalAccount method results']["context = $sync_trigger_description"] = 'Not enabled.';
             }
             else {
@@ -182,22 +184,23 @@ class LdapUserTestForm extends FormBase {
       foreach (array_filter($selected_actions) as $i => $sync_trigger) {
         $sync_trigger_description = self::$sync_trigger_options[$sync_trigger];
         foreach ([
-          LdapUserConf::$provisioningDirectionToDrupalUser,
-          LdapUserConf::$provisioningDirectionToLDAPEntry,
+          LdapConfiguration::$provisioningDirectionToDrupalUser,
+          LdapConfiguration::$provisioningDirectionToLDAPEntry,
         ] as $direction) {
-          if ($ldap_user_conf->provisionEnabled($direction, $sync_trigger)) {
-            if ($direction == LdapUserConf::$provisioningDirectionToDrupalUser) {
-              $ldap_user_conf->syncToDrupalAccount($account, NULL, $test_query);
+          if (LdapConfiguration::provisionEnabled($direction, $sync_trigger)) {
+            if ($direction == LdapConfiguration::$provisioningDirectionToDrupalUser) {
+              $processor->syncToDrupalAccount($account, NULL, $test_query);
               $results['syncToDrupalAccount method results']["context = $sync_trigger_description"]['proposed'] = $account;
             }
             else {
               // To ldap.
-              $provision_result = $ldap_user_conf->syncToLdapEntry($account, [], $test_query);
+              // FIXME
+              $ldapProcessor->syncToLdapEntry($account, [], $test_query);
               $results['syncToLdapEntry method results']["context = $sync_trigger_description"] = $provision_result;
             }
           }
           else {
-            if ($direction == LdapUserConf::$provisioningDirectionToDrupalUser) {
+            if ($direction == LdapConfiguration::$provisioningDirectionToDrupalUser) {
               $results['syncToDrupalAccount method results']["context = $sync_trigger_description"] = 'Not enabled.';
             }
             else {

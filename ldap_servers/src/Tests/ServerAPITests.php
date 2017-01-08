@@ -2,144 +2,13 @@
 
 namespace Drupal\ldap_servers\tests;
 
-use Drupal\ldap_servers\TokenFunctions;
+use Drupal\Component\Utility\Unicode;
 
 /**
- * Tests covering ldap_server module.
+ * Placeholder for remaining unported functions from legacy tests.
  *
- * @group ldap
  */
-class ServerAPITests extends LdapWebTestBase {
-
-  use TokenFunctions;
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function getInfo() {
-    return array(
-      'name' => 'LDAP Servers Tests',
-      'description' => 'Test ldap servers.  Servers module is primarily a storage
-        tool for ldap server configuration, so most of testing is just form and db testing.
-        there are some api like functions that are also tested.',
-      'group' => 'ldap',
-    );
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function __construct($test_id = NULL) {
-    parent::__construct($test_id);
-  }
-
-  protected $ldap_test_data;
-
-  public static $modules = array('ldap_servers');
-
-  /**
-   * Create one or more server configurations in such as way
-   *  that this setUp can be a prerequisite for ldap_authentication and ldap_authorization.
-   *    * Function setUp() {
-   * parent::setUp(array('ldap_test'));
-   * variable_set('ldap_simpletest', 2);
-   * }
-   *    * function tearDown() {
-   * parent::tearDown();
-   * variable_del('ldap_help_watchdog_detail');
-   * variable_del('ldap_simpletest');
-   * }.
-   */
-  public function testApiFunctions() {
-
-    return;
-
-    // The tests below are disabled due to significant structural mismatch.
-    // , 'activedirectory1'.
-    foreach (array('openldap1', 'activedirectory1') as $sid) {
-      $ldap_type = ($sid == 'openldap1') ? 'Open Ldap' : 'Active Directory';
-      $this->prepTestData('hogwarts', array($sid));
-
-      $group = "ldap_servers: functions: $ldap_type";
-      // @FIXME $test_data = variable_get('ldap_test_server__' . $sid, array());
-      $ldap_server = TestServer::getLdapServerObjects($sid, NULL, TRUE);
-
-      // Check against csv data rather than ldap array to make sure csv to ldap conversion is correct.
-      // @FIXME: Remove line below when fixed above
-      $test_data['csv']['users']['101'] = 'temp';
-      $user_csv_entry = $test_data['csv']['users']['101'];
-      $user_dn = $user_csv_entry['dn'];
-      $user_cn = $user_csv_entry['cn'];
-      $user_ldap_entry = $test_data['ldap'][$user_dn];
-
-      $username = $ldap_server->userUsernameFromLdapEntry($user_ldap_entry);
-      $this->assertTrue($username == $user_csv_entry['cn'], 'LdapServer::userUsernameFromLdapEntry works when LdapServer::user_attr attribute used', $group);
-
-      $bogus_ldap_entry = array();
-      $username = $ldap_server->userUsernameFromLdapEntry($bogus_ldap_entry);
-      $this->assertTrue($username === FALSE, 'LdapServer::userUsernameFromLdapEntry fails correctly', $group);
-
-      $username = $ldap_server->userUsernameFromDn($user_dn);
-      $this->assertTrue($username == $user_cn, 'LdapServer::userUsernameFromDn works when LdapServer::user_attr attribute used', $group);
-
-      $username = $ldap_server->userUsernameFromDn('bogus dn');
-      $this->assertTrue($username === FALSE, 'LdapServer::userUsernameFromDn fails correctly', $group);
-
-      $desired = array();
-      $desired[0] = array(
-        0 => 'cn=gryffindor,ou=groups,dc=hogwarts,dc=edu',
-        1 => 'cn=students,ou=groups,dc=hogwarts,dc=edu',
-        2 => 'cn=honors students,ou=groups,dc=hogwarts,dc=edu',
-      );
-      $desired[1] = array_merge($desired[0], array('cn=users,ou=groups,dc=hogwarts,dc=edu'));
-
-      foreach (array(0, 1) as $nested) {
-
-        $nested_display = ($nested) ? 'nested' : 'not nested';
-        $desired_count = ($nested) ? 4 : 3;
-        $ldap_module_user_entry = array('attr' => $user_ldap_entry, 'dn' => $user_dn);
-        $groups_desired = $desired[$nested];
-
-        $suffix = ",desired=$desired_count, nested=" . (boolean) $nested;
-
-        // Test parent function groupMembershipsFromUser.
-        $groups = $ldap_server->groupMembershipsFromUser($ldap_module_user_entry, 'group_dns', $nested);
-        $count = count($groups);
-        $diff1 = array_diff($groups_desired, $groups);
-        $diff2 = array_diff($groups, $groups_desired);
-        $pass = (count($diff1) == 0 && count($diff2) == 0 && $count == $desired_count);
-        $this->assertTrue($pass, "LdapServer::groupMembershipsFromUser nested=$nested", $group . $suffix);
-        if (!$pass) {
-          debug('groupMembershipsFromUser');debug($groups);  debug($diff1);  debug($diff2);  debug($groups_desired);
-        }
-
-        // Test parent groupUserMembershipsFromUserAttr, for openldap should be false, for ad should work.
-        $groups = $ldap_server->groupUserMembershipsFromUserAttr($ldap_module_user_entry, $nested);
-        $count = is_array($groups) ? count($groups) : $count;
-        $pass = $count === FALSE;
-        if ($sid == 'openldap1') {
-          $pass = ($groups === FALSE);
-        }
-        else {
-          $pass = (count($diff1) == 0 && count($diff2) == 0 && $count == $desired_count);
-        }
-        $this->assertTrue($pass, "LdapServer::groupUserMembershipsFromUserAttr $nested_display, $ldap_type, is false because not configured", $group . $suffix);
-        if (!$pass) {
-          debug('groupUserMembershipsFromUserAttr');debug($groups);  debug($diff1);  debug($diff2);
-        }
-
-        $groups = $ldap_server->groupUserMembershipsFromEntry($ldap_module_user_entry, $nested);
-        $count = count($groups);
-        $diff1 = array_diff($groups_desired, $groups);
-        $diff2 = array_diff($groups, $groups_desired);
-        $pass = (count($diff1) == 0 && count($diff2) == 0 && $count == $desired_count);
-        $this->assertTrue($pass, "LdapServer::groupUserMembershipsFromEntry $nested_display works", $group . $suffix);
-        if (!$pass) {
-          debug('groupUserMembershipsFromEntry'); debug($groups);  debug($diff1);  debug($diff2);  debug($groups_desired);
-        }
-      }
-    }
-  }
+class ServerAPITests {
 
   /**
    *
@@ -147,28 +16,261 @@ class ServerAPITests extends LdapWebTestBase {
   public function testInstall() {
 
     return;
-
-    // Unclear what this test event attemps to show. Disabling until ported.
-    $install_tables = array('ldap_servers');
-    // disable, uninstall, and enable/install module.
-    $modules = array($this->module_name);
-    $module_installer = ModuleInstaller();
-    $ldap_module_uninstall_sequence = array('ldap_authentication', 'ldap_test', 'ldap_user', 'ldap_group', 'ldap_servers');
-    // Uninstall dependent modules.
-    $module_installer->uninstall($modules, TRUE);
-    // Uninstall dependent modules.
-    $module_installer->install($modules, TRUE);
-    foreach ($install_tables as $table) {
-      $this->assertTrue(db_table_exists($table), $table . ' table creates', $group);
-    }
-
-    // Unistall dependent modules.
-    $module_installer->uninstall($modules, TRUE);
-    foreach ($install_tables as $table) {
-      $this->assertFalse(db_table_exists($table), $table . ' table removed', $group);
-    }
-
-    module_enable($modules, TRUE);
+    // Maybe: WebTestcase to verify that all modules can be cleanly installed.
   }
+
+  /**
+   * TOOD: Review for unit tests on bind()
+   */
+  public function bind($userdn = NULL, $pass = NULL, $anon_bind = FALSE) {
+    $userdn = ($userdn != NULL) ? $userdn : $this->binddn;
+    $pass = ($pass != NULL) ? $pass : $this->bindpw;
+
+    if (!isset($this->entries[$userdn])) {
+      // 0x20 or 32.
+      $ldap_errno = self::LDAP_NO_SUCH_OBJECT;
+      if (function_exists('ldap_err2str')) {
+        $ldap_error = ldap_err2str($ldap_errno);
+      }
+      else {
+        $ldap_error = "Failed to find $userdn in LdapServerTest.class.php";
+      }
+    }
+    elseif (isset($this->entries[$userdn]['password'][0]) && $this->entries[$userdn]['password'][0] == $pass && $pass) {
+      return self::LDAP_SUCCESS;
+    }
+    else {
+      if (!$pass) {
+        debug("Simpletest failure for $userdn.  No password submitted");
+      }
+      if (!isset($this->entries[$userdn]['password'][0])) {
+        debug("Simpletest failure for $userdn.  No password in entry to test for bind"); debug($this->entries[$userdn]);
+      }
+      $ldap_errno = self::LDAP_INVALID_CREDENTIALS;
+      if (function_exists('ldap_err2str')) {
+        $ldap_error = ldap_err2str($ldap_errno);
+      }
+      else {
+        $ldap_error = "Credentials for $userdn failed in LdapServerTest.class.php";
+      }
+    }
+    // @FIXME: watchdog
+    $watchdog_tokens = array('%user' => $userdn, '%errno' => $ldap_errno, '%error' => $ldap_error);
+    watchdog('ldap', "LDAP bind failure for user %user. Error %errno: %error", $watchdog_tokens);
+    return $ldap_errno;
+
+  }
+
+  /**
+   * TODO: Review for unit tests of search()
+   *
+   * @param null $base_dn
+   * @param string $filter
+   *   The search filter. such as sAMAccountName=jbarclay.
+   * @param array $attributes
+   *   List of desired attributes. If omitted, we only return "dn".
+   *
+   * @param int $attrsonly
+   * @param int $sizelimit
+   * @param int $timelimit
+   * @param int|null $deref
+   * @param null $scope
+   *
+   * @return array|bool An array of matching entries->attributes, or FALSE if the search is
+   *   An array of matching entries->attributes, or FALSE if the search is
+   *   empty.
+   *
+   * @internal param string $basedn The search base. If NULL, we use $this->basedn.*   The search base. If NULL, we use $this->basedn.
+   */
+  public function search($base_dn = NULL, $filter, $attributes = array(), $attrsonly = 0, $sizelimit = 0, $timelimit = 0, $deref = LDAP_DEREF_NEVER, $scope = NULL) {
+    if ($scope == NULL) {
+      $scope = Server::$scopeSubTree;
+    }
+
+    $lcase_attribute = array();
+    foreach ($attributes as $i => $attribute_name) {
+      $lcase_attribute[] = Unicode::strtolower($attribute_name);
+    }
+    $attributes = $lcase_attribute;
+
+    // For test matching simplicity remove line breaks and tab spacing.
+    $filter = trim(str_replace(array("\n", "  "), array('', ''), $filter));
+
+    if ($base_dn == NULL) {
+      if (count($this->getBaseDn()) == 1) {
+        $base_dn = $this->getBaseDn()[0];
+      }
+      else {
+        return FALSE;
+      }
+    }
+
+    /**
+     * Search CASE 1: for some mock ldap servers, a set of fixed ldap filters
+     * are prepolulated in test data
+     */
+    if (isset($this->searchResults[$filter][$base_dn])) {
+      $results = $this->searchResults[$filter][$base_dn];
+      foreach ($results as $i => $entry) {
+        if (is_array($entry) && isset($entry['FULLENTRY'])) {
+          unset($results[$i]['FULLENTRY']);
+          $dn = $results[$i]['dn'];
+          $results[$i] = $this->entries[$dn];
+          $results[$i]['dn'] = $dn;
+        }
+      }
+      return $results;
+    }
+
+    /**
+     * Search CASE 2: attempt to programmatically evaluate ldap filter
+     * by looping through fake ldap entries
+     */
+    $base_dn = Unicode::strtolower($base_dn);
+    $filter = trim($filter, "()");
+    $subqueries = array();
+    $operand = FALSE;
+
+    if (strpos($filter, '&') === 0) {
+      /**
+       * case 2.A.: filter of form (&(<attribute>=<value>)(<attribute>=<value>)(<attribute>=<value>))
+       *  such as (&(samaccountname=hpotter)(samaccountname=hpotter)(samaccountname=hpotter))
+       */
+      $operand = '&';
+      $filter = substr($filter, 1);
+      $filter = trim($filter, "()");
+      $parts = explode(')(', $filter);
+      foreach ($parts as $i => $pair) {
+        $subqueries[] = explode('=', $pair);
+      }
+    }
+    elseif (strpos($filter, '|') === 0) {
+      /**
+       * case 2.B: filter of form (|(<attribute>=<value>)(<attribute>=<value>)(<attribute>=<value>))
+       *  such as (|(samaccountname=hpotter)(samaccountname=hpotter)(samaccountname=hpotter))
+       */
+      $operand = '|';
+      $filter = substr($filter, 1);
+      $filter = trim($filter, "()");
+      $parts = explode(')(', $filter);
+      $parts = explode(')(', $filter);
+      foreach ($parts as $i => $pair) {
+        $subqueries[] = explode('=', $pair);
+      }
+    }
+    elseif (count(explode('=', $filter)) == 2) {
+      /**
+       * case 2.C.: filter of form (<attribute>=<value>)
+       *  such as (samaccountname=hpotter)
+       */
+      $operand = '|';
+      $subqueries[] = explode('=', $filter);
+    }
+    else {
+      return FALSE;
+    }
+
+    // Need to perform faux ldap search here with data in.
+    $results = array();
+
+    if ($operand == '|') {
+      foreach ($subqueries as $i => $subquery) {
+        $filter_attribute = Unicode::strtolower($subquery[0]);
+        $filter_value = $subquery[1];
+
+        foreach ($this->entries as $dn => $entry) {
+          $dn_lcase = Unicode::strtolower($dn);
+
+          // If not in basedn, skip
+          // eg. basedn ou=campus accounts,dc=ad,dc=myuniversity,dc=edu
+          // should be leftmost string in:
+          // cn=jdoe,ou=campus accounts,dc=ad,dc=myuniversity,dc=edu
+          // $pos = strpos($dn_lcase, $base_dn);.
+          $substring = strrev(substr(strrev($dn_lcase), 0, strlen($base_dn)));
+          $cascmp = strcasecmp($base_dn, $substring);
+          if ($cascmp !== 0) {
+
+            // Not in basedn.
+            continue;
+          }
+          // If doesn't filter attribute has no data, continue.
+          $attr_value_to_compare = FALSE;
+          foreach ($entry as $attr_name => $attr_value) {
+            if (Unicode::strtolower($attr_name) == $filter_attribute) {
+              $attr_value_to_compare = $attr_value;
+              break;
+            }
+          }
+          if (!$attr_value_to_compare || Unicode::strtolower($attr_value_to_compare[0]) != $filter_value) {
+            continue;
+          }
+
+          // match!
+          $entry['dn'] = $dn;
+          if ($attributes) {
+            $selected_data = array();
+            foreach ($attributes as $i => $attr_name) {
+              $selected_data[$attr_name] = (isset($entry[$attr_name])) ? $entry[$attr_name] : NULL;
+            }
+            $results[] = $selected_data;
+          }
+          else {
+            $results[] = $entry;
+          }
+        }
+      }
+    }
+    // Reverse the loops.
+    elseif ($operand == '&') {
+      foreach ($this->entries as $dn => $entry) {
+        $dn_lcase = Unicode::strtolower($dn);
+        // Until 1 subquery fails.
+        $match = TRUE;
+        foreach ($subqueries as $i => $subquery) {
+          $filter_attribute = Unicode::strtolower($subquery[0]);
+          $filter_value = $subquery[1];
+
+          $substring = strrev(substr(strrev($dn_lcase), 0, strlen($base_dn)));
+          $cascmp = strcasecmp($base_dn, $substring);
+          if ($cascmp !== 0) {
+            $match = FALSE;
+            // Not in basedn.
+            break;
+          }
+          // If doesn't filter attribute has no data, continue.
+          $attr_value_to_compare = FALSE;
+          foreach ($entry as $attr_name => $attr_value) {
+            if (Unicode::strtolower($attr_name) == $filter_attribute) {
+              $attr_value_to_compare = $attr_value;
+              break;
+            }
+          }
+          if (!$attr_value_to_compare || Unicode::strtolower($attr_value_to_compare[0]) != $filter_value) {
+            $match = FALSE;
+            // Not in basedn.
+            break;
+          }
+
+        }
+        if ($match === TRUE) {
+          $entry['dn'] = $dn;
+          if ($attributes) {
+            $selected_data = array();
+            foreach ($attributes as $i => $attr_name) {
+              $selected_data[$attr_name] = (isset($entry[$attr_name])) ? $entry[$attr_name] : NULL;
+            }
+            $results[] = $selected_data;
+          }
+          else {
+            $results[] = $entry;
+          }
+        }
+      }
+    }
+
+    $results['count'] = count($results);
+    return $results;
+  }
+
 
 }

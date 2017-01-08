@@ -1,0 +1,20 @@
+ldap_authentication_conf:
+  sids:
+  authenticationMode: 1
+  loginUIUsernameTxt: ''
+  loginUIPasswordTxt: ''
+  ldapUserHelpLinkUrl: ''
+  ldapUserHelpLinkText: ''
+  emailOption: 3
+  emailUpdate: 1
+  passwordOption: 3
+  allowOnlyIfTextInDn: {  }
+  excludeIfTextInDn: {  }
+  excludeIfNoAuthorizations: null
+  ssoRemoteUserStripDomainName: null
+  ssoExcludedPaths: {  }
+  ssoExcludedHosts: {  }
+  seamlessLogin: null
+  ldapImplementation: null
+  cookieExpire: null
+  // TODO: This list is made by hand and not in the schema

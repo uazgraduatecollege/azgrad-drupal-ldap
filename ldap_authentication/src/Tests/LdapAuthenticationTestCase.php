@@ -5,7 +5,7 @@ namespace Drupal\ldap_authentication\Tests;
 use Drupal\ldap_authentication\LdapAuthenticationConf;
 use Drupal\ldap_authentication\LdapAuthenticationConfAdmin;
 use Drupal\ldap_servers\tests\LdapWebTestBase;
-use Drupal\ldap_user\LdapUserConf;
+use Drupal\ldap_user\Processor\LdapUserProcessor;
 
 /**
  * Tests covering the ldap_autehentication module.
@@ -13,73 +13,6 @@ use Drupal\ldap_user\LdapUserConf;
  * @group ldap_authentication
  */
 class LdapAuthenticationWebTestBase extends LdapWebTestBase {
-
-  /**
-   *
-   */
-  public static function getInfo() {
-    return array(
-      'name' => 'LDAP Authentication Tests',
-      'description' => 'Test ldap authentication.',
-      'group' => 'LDAP Authentication',
-    );
-  }
-
-  /**
-   *
-   */
-  public function __construct($test_id = NULL) {
-    parent::__construct($test_id);
-  }
-
-  public $module_name = 'ldap_authentication';
-  protected $ldap_test_data;
-
-  /**
-   *
-   */
-  public function setUp() {
-    parent::setUp(array(
-      'ldap_authentication',
-      'ldap_authorization',
-      'ldap_authorization_drupal_role',
-      'ldap_test',
-    // don't need any real servers, configured, just ldap_servers code base.
-    ));
-
-    // @FIXME: Schema issues, config cannot be found.
-    // \Drupal::service('config.factory')->getEditable('ldap_test.settings')->set('simpletest', 2)->save();
-  }
-
-  /**
-   *
-   */
-  public function tearDown() {
-    parent::tearDown();
-    // @FIXME: Schema issues, config cannot be found.
-    /* \Drupal::service('config.factory')
-    ->getEditable('ldap_help.settings')
-    ->clear('watchdog_detail')
-    ->save();
-
-    \Drupal::service('config.factory')
-    ->getEditable('ldap_test.settings')
-    ->clear('simpletest')
-    ->save(); */
-  }
-
-  /**
-   * Difficult to test install and uninstall since setUp does module enabling and installing.
-   */
-  public function testInstall() {
-    $testid = $this->module_name . ': setup success';
-    $setup_success = (
-        \Drupal::moduleHandler()->moduleExists('ldap_authentication') &&
-        \Drupal::moduleHandler()->moduleExists('ldap_servers')
-      );
-
-    $this->assertTrue($setup_success, ' ldap_authentication setup successful', $testid);
-  }
 
   /**
    * LDAP Authentication Mixed Mode User Logon Test (ids = LDAP_authen.MM.ULT.*)
@@ -352,7 +285,7 @@ class LdapAuthenticationWebTestBase extends LdapWebTestBase {
       ldap_servers_set_globals('_SERVER', $server_var_key, $sso_name);
     }
     $authenticationConf->save();
-    return ldap_authentication_get_valid_conf(TRUE);
+    return [];
 
   }
 
@@ -388,18 +321,14 @@ class LdapAuthenticationWebTestBase extends LdapWebTestBase {
       $authenticationConf->ldapImplementation == 'mod_auth_sspi');
 
     $this->assertTrue($setup_success, 'setup ldap sso test worked ', $testid);
-    if (!$setup_success) {
-      debug('authenticationConf'); debug($authenticationConf);
-    }
+
 
     $factory = \Drupal::service('ldap.servers');
     $ldap_servers = $factory->getServerByIdEnabled($sid);
     $this->assertTrue($ldap_servers, ' ldap_authentication test server setup successful', $testid);
     $hpotter_drupal = user_load_by_name('hpotter');
-    // @TODO: Verify that nothing from LdapUserConfAdmin missing.
-    $ldap_user_conf = new LdapUserConf();
-    $hpotter_ldap = $ldap_user_conf->getProvisionRelatedLdapEntry($hpotter_drupal);
-    debug('hpotter ldap entry'); debug($hpotter_drupal);
+    $ldapProcessor = new LdapUserProcessor();
+    $hpotter_ldap = $ldapProcessor->getProvisionRelatedLdapEntry($hpotter_drupal);
 
     $tests = array(
       'dontstripnames' => array('sso_name' => 'hpotter'),
@@ -486,7 +415,6 @@ class LdapAuthenticationWebTestBase extends LdapWebTestBase {
     $authenticationConf = new LdapAuthenticationConfAdmin();
     $authenticationConf->allowOnlyIfTextInDn = array('pot');
     $authenticationConf->save();
-    $authenticationConf = ldap_authentication_get_valid_conf(TRUE);
 
     /**
     * LDAP_authen.WL.allow.match -- desirect_result: authenticate success
@@ -509,14 +437,12 @@ class LdapAuthenticationWebTestBase extends LdapWebTestBase {
     $authenticationConf = new LdapAuthenticationConfAdmin();
     $authenticationConf->allowOnlyIfTextInDn = array();
     $authenticationConf->save();
-    $authenticationConf = ldap_authentication_get_valid_conf(TRUE);
     /**
     * prep LDAP_authen.WL.exclude
     */
     $authenticationConf = new LdapAuthenticationConfAdmin();
     $authenticationConf->excludeIfTextInDn = array('cn=ssnape');
     $authenticationConf->save();
-    $authenticationConf = ldap_authentication_get_valid_conf(TRUE);
 
     /**
     * LDAP_authen.WL.exclude.match -- desirect_result: authenticate fail
@@ -539,7 +465,6 @@ class LdapAuthenticationWebTestBase extends LdapWebTestBase {
     $authenticationConf = new LdapAuthenticationConfAdmin();
     $authenticationConf->excludeIfTextInDn = array();
     $authenticationConf->save();
-    $authenticationConf = ldap_authentication_get_valid_conf(TRUE);
 
     /**
     * prep LDAP_authen.WL.php
@@ -547,7 +472,6 @@ class LdapAuthenticationWebTestBase extends LdapWebTestBase {
     $authenticationConf = new LdapAuthenticationConfAdmin();
 
     $authenticationConf->save();
-    $authenticationConf = ldap_authentication_get_valid_conf(TRUE);
 
     /**
    * need to test username changes with PUID
@@ -587,7 +511,6 @@ class LdapAuthenticationWebTestBase extends LdapWebTestBase {
     $authenticationConf = new LdapAuthenticationConfAdmin();
     $authenticationConf->excludeIfNoAuthorizations = 1;
     $authenticationConf->save();
-    $authenticationConf = ldap_authentication_get_valid_conf(TRUE);
     /**
      * LDAP_authen.WL1.excludeIfNoAuthorizations.failsafe
      * test for excludeIfNoAuthorizations set to true and ldap_authorization disabled
@@ -632,7 +555,6 @@ class LdapAuthenticationWebTestBase extends LdapWebTestBase {
     $authenticationConf = new LdapAuthenticationConfAdmin();
     $authenticationConf->excludeIfNoAuthorizations = 0;
     $authenticationConf->save();
-    $authenticationConf = ldap_authentication_get_valid_conf(TRUE);
     \Drupal::service('module_installer')->uninstall(['ldap_authorization_drupal_role']);
     \Drupal::service('module_installer')->uninstall(['ldap_authorization']);
   }
@@ -661,7 +583,6 @@ class LdapAuthenticationWebTestBase extends LdapWebTestBase {
 
     $this->drupalLogin($this->privileged_user);
 
-    $ldap_authentication_conf_pre = ldap_authentication_get_valid_conf();
 
     $this->drupalGet('admin/config/people/ldap/authentication');
 
@@ -772,7 +693,6 @@ class LdapAuthenticationWebTestBase extends LdapWebTestBase {
         $edit[$field_name] = $value;
       }
       $this->drupalPost('admin/config/people/ldap/authentication', $edit, t('Save'));
-      $ldap_authentication_conf_post = ldap_authentication_get_valid_conf(TRUE);
 
       foreach ($form_tests as $field_name => $conf) {
         $property = isset($conf['property']) ? $conf['property'] : $field_name;
@@ -789,11 +709,7 @@ class LdapAuthenticationWebTestBase extends LdapWebTestBase {
           $property . ' ' . t('field set correctly'),
           $this->testId('ldap authentication user interface tests')
         );
-        if (!$success) {
-          debug("fail $i $property");
-          debug("desired:"); debug($desired);
-          debug("actual:");  debug($ldap_authentication_conf_post->{$property});
-        }
+
       }
     }
   }

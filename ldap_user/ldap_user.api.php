@@ -20,10 +20,10 @@
  *   'configurable_to_ldap' =>  0 | 1, is this configurable?
  *   'user_tokens' => <user_tokens>
  *   'convert' => 1 | 0 convert from binary to string for storage and comparison purposes
- *   'direction' => LdapUserConf::$provisioningDirectionToDrupalUser or LdapUserConf::$provisioningDirectionToLDAPEntry leave empty if configurable
+ *   'direction' => LdapConfiguration::$provisioningDirectionToDrupalUser or LdapConfiguration::$provisioningDirectionToLDAPEntry leave empty if configurable
  *   'config_module' => module providing syncing configuration.
  *   'prov_module' => module providing actual syncing of attributes.
- *   'prov_events' => array( see LdapUserConf )
+ *   'prov_events' => array( )
  *
  * where
  * 'field_type' is one of the following:

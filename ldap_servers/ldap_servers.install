@@ -16,6 +16,7 @@ function ldap_servers_install() {
  * Implements hook_uninstall().
  */
 function ldap_servers_uninstall() {
+  // TODO: Verify what needs to be manually removed, e.g. LDAP fields on users.
   // \Drupal::config('ldap_servers.settings')->clear('require_ssl_for_credentials')->save();
   // Delete all servers
   // entity_delete_multiple('ldap_server', \Drupal::entityQuery('ldap_server')->execute());

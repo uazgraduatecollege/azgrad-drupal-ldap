@@ -3,7 +3,6 @@
 namespace Drupal\ldap_authentication;
 
 use Drupal\Core\Url;
-use Drupal\ldap_user\LdapUserConf;
 
 /**
  *
@@ -29,15 +28,6 @@ class LdapAuthenticationConf {
    * @see LdapServer
    */
   public $enabledAuthenticationServers = array();
-
-
-  /**
-   * LdapUser configuration object.
-   *
-   * @var LdapUserConf object
-   */
-  // ldap_user configuration object.
-  public $ldapUser = NULL;
 
   /**
    * Has current object been saved to the database?
@@ -258,8 +248,6 @@ class LdapAuthenticationConf {
     else {
       $this->inDatabase = FALSE;
     }
-
-    $this->ldapUser = new LdapUserConf();
     $this->ssoEnabled = \Drupal::moduleHandler()->moduleExists('ldap_sso');
     $this->apiPrefs['requireHttps'] = \Drupal::config('ldap_servers.settings')->get('require_ssl_for_credentials');
   }
@@ -279,97 +267,6 @@ class LdapAuthenticationConf {
    */
   public function allowUser($name, $ldap_user) {
 
-    /**
-     * do one of the exclude attribute pairs match
-     */
-    $ldap_user_conf = new LdapUserConf();
-    // If user does not already exists and deferring to user settings AND user settings only allow.
-    $user_register = \Drupal::config('user.settings')->get('register');
-
-    foreach ($this->excludeIfTextInDn as $test) {
-      if (stripos($ldap_user['dn'], $test) !== FALSE) {
-        // If a match, return FALSE;.
-        return FALSE;
-      }
-    }
-
-    /**
-     * do one of the allow attribute pairs match
-     */
-    if (count($this->allowOnlyIfTextInDn)) {
-      $fail = TRUE;
-      foreach ($this->allowOnlyIfTextInDn as $test) {
-        if (stripos($ldap_user['dn'], $test) !== FALSE) {
-          $fail = FALSE;
-        }
-      }
-      if ($fail) {
-        return FALSE;
-      }
-
-    }
-    /**
-     * is excludeIfNoAuthorizations option enabled and user not granted any groups
-     */
-
-    if ($this->excludeIfNoAuthorizations) {
-
-      if (!\Drupal::moduleHandler()->moduleExists('ldap_authorization')) {
-        drupal_set_message(t('The site logon is currently not working due to a configuration error.  Please see logs for additional details.'), 'warning');
-        $url = Url::fromRoute('ldap_authentication.admin_form');
-        $internal_link = \Drupal::l(t('LDAP Authentication Configuration'), $url);
-        $tokens = array('!ldap_authentication_config' => $internal_link);
-        \Drupal::logger('ldap_authentication')->notice('LDAP Authentication is configured to deny users without LDAP Authorization mappings, but LDAP Authorization module is not enabled.  Please enable and configure LDAP Authorization or disable this option at !ldap_authentication_config .');
-        return FALSE;
-      }
-
-      // @FIXME: Several undefined functions in this scope.
-      $user = new \stdClass();
-      $user->name = $name;
-      // Fake user property added for query.
-      $user->ldap_authenticated = TRUE;
-      $consumers = ldap_authorization_get_consumers();
-      $has_enabled_consumers = FALSE;
-      $has_ldap_authorizations = FALSE;
-
-      foreach ($consumers as $consumer_type => $consumer_config) {
-        $consumer_obj = ldap_authorization_get_consumer_object($consumer_type);
-        if ($consumer_obj->consumerConf->status) {
-          $has_enabled_consumers = TRUE;
-          list($authorizations, $notifications) = ldap_authorizations_user_authorizations($user, 'query', $consumer_type, 'test_if_authorizations_granted');
-          if (
-            isset($authorizations[$consumer_type]) &&
-            count($authorizations[$consumer_type]) > 0
-            ) {
-            $has_ldap_authorizations = TRUE;
-          }
-        }
-      }
-
-      if (!$has_enabled_consumers) {
-        drupal_set_message(t('The site logon is currently not working due to a configuration error.  Please see logs for additional details.'), 'warning');
-        \Drupal::logger('ldap_authentication')->notice('LDAP Authentication is configured to deny users without LDAP Authorization mappings, but 0 LDAP Authorization consumers are configured.');
-        return FALSE;
-      }
-      elseif (!$has_ldap_authorizations) {
-        return FALSE;
-      }
-
-    }
-
-    // Allow other modules to hook in and refuse if they like.
-    $hook_result = TRUE;
-    \Drupal::moduleHandler()->alter('ldap_authentication_allowuser_results', $ldap_user, $name, $hook_result);
-
-    if ($hook_result === FALSE) {
-      \Drupal::logger('ldap_authentication')->notice("Authentication Allow User Result=refused for %name", array('%name' => $name));
-      return FALSE;
-    }
-
-    /**
-     * default to allowed
-     */
-    return TRUE;
   }
 
 }

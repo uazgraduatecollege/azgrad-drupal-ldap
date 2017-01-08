@@ -8,6 +8,6 @@ dependencies:
   - ldap:ldap_servers
   - ldap:ldap_query
 
-#configure = admin/structure/feeds
+configure: feeds.admin
 
 

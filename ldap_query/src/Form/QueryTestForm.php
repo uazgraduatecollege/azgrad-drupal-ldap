@@ -5,12 +5,8 @@ namespace Drupal\ldap_query\Form;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\ldap_query\Controller\QueryController;
-use Drupal\ldap_query\Entity\QueryEntity;
 use Drupal\ldap_servers\Form\ServerTestForm;
 use Drupal\ldap_servers\MassageFunctions;
-use Drupal\ldap_user\LdapUserConf;
-use Drupal\user\Entity\User;
-use PDO;
 
 /**
  *

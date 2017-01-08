@@ -10,7 +10,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\authorization\Provider\ProviderPluginBase;
 use Drupal\ldap_servers\ConversionHelper;
 use Drupal\ldap_servers\Entity\Server;
-use Drupal\ldap_user\LdapUserConf;
+use Drupal\ldap_user\Helper\ExternalAuthenticationHelper;
 
 /**
  * @AuthorizationProvider(
@@ -23,14 +23,6 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
 
   public $providerType = 'ldap';
   public $handlers = array('ldap', 'ldap_authentication');
-
-  public static $genericDescription = 'Representations of groups derived from LDAP might initially look like:
-  <ul>
-  <li><code>cn=students,ou=groups,dc=hogwarts,dc=edu</code></li>
-  <li><code>cn=gryffindor,ou=groups,dc=hogwarts,dc=edu</code></li>
-  <li><code>cn=faculty,ou=groups,dc=hogwarts,dc=edu</code></li>
-  <li><code>cn=probation students,ou=groups,dc=hogwarts,dc=edu</code></li>
-  </ul>';
 
   public $syncOnLogon = TRUE;
 
@@ -54,7 +46,7 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
 
     $form['status'] = array(
       '#type' => 'fieldset',
-      '#title' => t('I.  Basics'),
+      '#title' => t('Base configuration'),
       '#collapsible' => TRUE,
       '#collapsed' => FALSE,
     );
@@ -74,55 +66,58 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
       }
     }
 
+    $provider_config = $profile->getProviderConfig();
+
     if (!empty($server_options)) {
-      if (count($server_options) == 1) {
-        $this->configuration['server'] = key($server_options);
+      if (isset($provider_config['status'])) {
+        $default_server = $provider_config['status']['server'];
+      }
+       else if (count($server_options) == 1) {
+         $default_server = key($server_options);
+      } else {
+         $default_server = '';
       }
       $form['status']['server'] = array(
         '#type' => 'radios',
         '#title' => t('LDAP Server used in @profile_name configuration.', $tokens),
         '#required' => 1,
-        // @FIXME: Not sure what this defaults to
-        '#default_value' => $this->configuration['server'],
-       // '#default_value' => 1,.
+        '#default_value' => $default_server,
         '#options' => $server_options,
       );
     }
 
-    $form['status']['type'] = array(
-      '#type' => 'hidden',
-      // @FIXME: Not sure what this defaults to
-     // '#value' => $this->configuration['status']['type'],
-      '#value' => 1,
-      '#required' => 1,
-    );
-
     $form['status']['only_ldap_authenticated'] = array(
       '#type' => 'checkbox',
-      '#title' => t('Only apply the following LDAP to @consumer_name configuration to users authenticated via LDAP.  On uncommon reason for disabling this is when you are using Drupal authentication, but want to leverage LDAP for authorization; for this to work the Drupal username still has to map to an LDAP entry.', $tokens),
-      // @FIXME: Not sure what this defaults to
-      // '#default_value' => $this->configuration['status']['only_ldap_authenticated'],
+      '#title' => t('Only apply the following <strong>LDAP</strong> to <strong>@consumer_name</strong> configuration to users authenticated via LDAP', $tokens),
+      '#description' => t('On uncommon reason for disabling this is when you are using Drupal authentication, but want to leverage LDAP for authorization; for this to work the Drupal username still has to map to an LDAP entry.'),
+      '#default_value' => isset($provider_config['status'], $provider_config['status']['only_ldap_authenticated']) ? $provider_config['status']['only_ldap_authenticated'] : '',
     );
 
     $form['filter_and_mappings'] = array(
       '#type' => 'fieldset',
-      '#title' => t('II. LDAP to @consumer_name mapping and filtering', $tokens),
-      '#description' => t(self::$genericDescription . '<p><strong>Mappings are used to convert and filter these group representations to @consumer_namePlural.</strong></p> @consumer_mappingDirections', $tokens),
+      '#title' => t('LDAP to @consumer_name mapping and filtering', $tokens),
+      '#description' => t('Representations of groups derived from LDAP might initially look like:
+        <ul>
+        <li><code>cn=students,ou=groups,dc=hogwarts,dc=edu</code></li>
+        <li><code>cn=gryffindor,ou=groups,dc=hogwarts,dc=edu</code></li>
+        <li><code>cn=faculty,ou=groups,dc=hogwarts,dc=edu</code></li>
+        <li><code>cn=probation students,ou=groups,dc=hogwarts,dc=edu</code></li>
+        </ul>
+        <p><strong>Mappings are used to convert and filter these group representations to @consumer_namePlural.</strong></p> @consumer_mappingDirections', $tokens),
       '#collapsible' => TRUE,
-      // @FIXME: Not sure what this defaults to
-      // '#collapsed' => !($this->mappings || $this->useMappingsAsFilter || $this->useFirstAttrAsGroupId),
     );
 
     $form['filter_and_mappings']['use_first_attr_as_groupid'] = array(
       '#type' => 'checkbox',
-      '#title' => t('Convert full dn to value of first attribute before mapping.  e.g.  <code>cn=students,ou=groups,dc=hogwarts,dc=edu</code> would be converted to <code>students</code>', $tokens),
-      '#default_value' => \Drupal::config('authorization.provider.plugin.ldap_authorization')->get('use_first_attr_as_groupid'),
+      '#title' => t('Convert full DN to value of first attribute before mapping'),
+      '#description' => t('Example: <code>cn=students,ou=groups,dc=hogwarts,dc=edu</code> would be converted to <code>students</code>'),
+      '#default_value' => isset($provider_config['filter_and_mappings'], $provider_config['filter_and_mappings']['use_first_attr_as_groupid']) ? $provider_config['filter_and_mappings']['use_first_attr_as_groupid'] : '',
     );
 
     $form['filter_and_mappings']['use_filter'] = array(
       '#type' => 'checkbox',
-      '#title' => t('Only grant @consumer_namePlural that match a filter below.', $tokens),
-      '#default_value' => \Drupal::config('authorization.provider.plugin.ldap_authorization')->get('use_filter'),
+      '#title' => t('Only grant "@consumer_namePlural" that match a filter below.', $tokens),
+      '#default_value' => isset($provider_config['filter_and_mappings'], $provider_config['filter_and_mappings']['use_filter']) ? $provider_config['filter_and_mappings']['use_filter'] : '',
       '#description' => t('If enabled, only below mapped @consumer_namePlural will be assigned (e.g. students and administrator).<br>
         <strong>If not checked, @consumer_namePlural not mapped below also may be created and granted (e.g. gryffindor and probation students).  In some LDAPs this can lead to hundreds of @consumer_namePlural being created if "Create @consumer_namePlural if they do not exist" is enabled below.</strong>',
         $tokens),
@@ -145,61 +140,25 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
     }
   }
 
-  /**
-   * {@inheritdoc}
-   */
-  public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
-    $values = $form_state->getValues();
-    // @TODO what does this do?
-
-    // Since the form is nested into another, we can't simply use #parents for
-    // doing this array restructuring magic. (At least not without creating an
-    // unnecessary dependency on internal implementation.)
-    // $values += $values['test'];
-    // $values += $values['advanced'];
-    // $values += !empty($values['autocomplete']) ? $values['autocomplete'] : array();
-    // unset($values['test'], $values['advanced'], $values['autocomplete']);.
-    // // Highlighting retrieved data only makes sense when we retrieve data.
-    // $values['highlight_data'] &= $values['retrieve_data'];.
-    // // For password fields, there is no default value, they're empty by default.
-    // // Therefore we ignore empty submissions if the user didn't change either.
-    // if ($values['http_pass'] === ''
-    //     && isset($this->configuration['http_user'])
-    //     && $values['http_user'] === $this->configuration['http_user']) {
-    //   $values['http_pass'] = $this->configuration['http_pass'];
-    // }.
-    foreach ($values as $key => $value) {
-      $form_state->setValue($key, $value);
-    }
-
-    parent::submitConfigurationForm($form, $form_state);
-  }
 
   /**
    *
    */
-  public function buildRowForm(array $form, FormStateInterface $form_state, $index) {
+  public function buildRowForm(array $form, FormStateInterface $form_state, $index = 0) {
     $row = array();
     $mappings = $this->configuration['profile']->getProviderMappings();
     $row['query'] = array(
       '#type' => 'textfield',
       '#title' => t('LDAP query'),
-      '#default_value' => $mappings[$index]['query'],
+      '#default_value' => isset($mappings[$index]) ? $mappings[$index]['query'] : NULL,
     );
     $row['is_regex'] = array(
       '#type' => 'checkbox',
       '#title' => t('Is this query a regular expression?'),
-      '#default_value' => $mappings[$index]['is_regex'],
+      '#default_value' => isset($mappings[$index]) ? $mappings[$index]['is_regex'] : NULL,
     );
 
     return $row;
-  }
-
-  /**
-   * Contains examples for how groups are derived as markup.
-   */
-  public function buildRowDescription(array $form, FormStateInterface $form_state) {
-    return self::$genericDescription;
   }
 
   /**
@@ -216,7 +175,7 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
     // So what does the 'query' do then? Is it the filter?
     // Configure this provider.
     // Do not continue if user should be excluded from LDAP authentication.
-    if (LdapUserConf::excludeUser($user)) {
+    if (ExternalAuthenticationHelper::excludeUser($user)) {
       throw new AuthorizationSkipAuthorization();
     }
     /* @var AuthorizationProfile $profile */

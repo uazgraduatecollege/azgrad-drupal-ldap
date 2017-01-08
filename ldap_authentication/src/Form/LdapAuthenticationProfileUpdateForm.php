@@ -44,7 +44,6 @@ class LdapAuthenticationProfileUpdateForm extends FormBase {
     if ($existing) {
       $form_state->setErrorByName('mail', t('This email address is already in user.'));
     }
-    $auth = ldap_authentication_get_valid_conf();
     $regex = '`' . $auth->templateUsagePromptRegex . '`i';
     if (preg_match($regex, $form_state->getValue(['mail']))) {
       $form_state->setErrorByName('mail', t('This email address still matches the invalid email template.'));

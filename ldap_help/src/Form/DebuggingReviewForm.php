@@ -15,9 +15,6 @@ use Drupal\ldap_servers\ServerFactory;
  */
 class DebuggingReviewForm extends FormBase {
 
-  protected $LdapUserConfHelper;
-
-  protected $drupalAcctProvisionServerOptions;
   protected $ldapEntryProvisionServerOptions;
 
   /**

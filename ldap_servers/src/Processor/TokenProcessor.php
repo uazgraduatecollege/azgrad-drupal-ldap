@@ -1,17 +1,18 @@
 <?php
 
-namespace Drupal\ldap_servers;
+namespace Drupal\ldap_servers\Processor;
 
 use Drupal\Component\Utility\SafeMarkup;
 use Drupal\Component\Utility\Unicode;
+use Drupal\ldap_servers\ConversionHelper;
 use Drupal\ldap_servers\Entity\Server;
-use Drupal\ldap_user\LdapUserConf;
+use Drupal\ldap_servers\MassageFunctions;
 use Drupal\user\Entity\User;
 
 /**
  *
  */
-trait TokenFunctions {
+class TokenProcessor {
 
   public static $token_pre = '[';
   public static $token_post = ']';
@@ -156,7 +157,7 @@ trait TokenFunctions {
       else {
         $conversion = NULL;
       }
-      $attribute_maps[$attr_name] = TokenFunctions::setAttributeMap(@$attribute_maps[$attr_name], $conversion, array($ordinal => NULL));
+      $attribute_maps[$attr_name] = self::setAttributeMap(@$attribute_maps[$attr_name], $conversion, array($ordinal => NULL));
     }
   }
 
@@ -439,11 +440,11 @@ trait TokenFunctions {
           // Field or property with no value, so no token can be generated.
         }
       }
-      $ldap_user_conf = new LdapUserConf();
-      if ($ldap_user_conf->setsLdapPassword) {
-        $token_keys[] = 'password.random';
-        $token_keys[] = 'password.user-random';
-      }
+
+      // TODO: Setting of LDAP passwords not handled anymore, compare with 7.
+      $token_keys[] = 'password.random';
+      $token_keys[] = 'password.user-random';
+
     }
 
     foreach ($token_keys as $token_key) {
@@ -468,11 +469,11 @@ trait TokenFunctions {
           switch ($attr_name) {
 
             case 'user':
-              $pwd = TokenHelper::passwordStorage('get');
+              $pwd = self::passwordStorage('get');
               break;
 
             case 'user-random':
-              $pwd = TokenHelper::passwordStorage('get');
+              $pwd = self::passwordStorage('get');
               $value = ($pwd) ? $pwd : user_password();
               break;
 
@@ -585,7 +586,7 @@ trait TokenFunctions {
    */
   public static function binaryConversiontoString($value) {
     if (strlen($value) == 16) {
-      $value = TokenFunctions::convertMsguidToString($value);
+      $value = self::convertMsguidToString($value);
     }
     else {
       $value = bin2hex($value);

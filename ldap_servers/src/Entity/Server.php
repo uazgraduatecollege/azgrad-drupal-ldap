@@ -10,8 +10,8 @@ use Drupal\ldap_servers\ConversionHelper;
 use Drupal\ldap_servers\LdapProtocol;
 use Drupal\ldap_servers\MassageFunctions;
 use Drupal\ldap_servers\ServerInterface;
-use Drupal\ldap_servers\TokenFunctions;
-use Drupal\ldap_user\LdapUserConf;
+use Drupal\ldap_servers\Processor\TokenProcessor;
+use Drupal\ldap_user\Helper\LdapConfiguration;
 use Drupal\user\Entity\User;
 
 /**
@@ -46,8 +46,6 @@ use Drupal\user\Entity\User;
  * )
  */
 class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
-
-  use TokenFunctions;
 
   /**
    * The Server ID.
@@ -365,6 +363,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
    *     $attributes["attribute2"][0] = "value1";
    *     $attributes["attribute2"][1] = "value2";.
    *
+   * @param bool|array $old_attributes
    * @return TRUE on success FALSE on error
    */
   public function modifyLdapEntry($dn, $attributes = array(), $old_attributes = FALSE) {
@@ -824,24 +823,6 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
   }
 
   /**
-   * @param string $dn
-   *   ldap dn.
-   *
-   * @return mixed string user's username value of FALSE
-   */
-  public function userUsernameFromDn($dn) {
-
-    $ldap_entry = @$this->dnExists($dn, 'ldap_entry', array());
-    if (!$ldap_entry || !is_array($ldap_entry)) {
-      return FALSE;
-    }
-    else {
-      return $this->userUsernameFromLdapEntry($ldap_entry);
-    }
-
-  }
-
-  /**
    * @param array $ldap_entry
    *   The LDAP entry.
    *
@@ -910,16 +891,13 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
    *   binary, if applicable.
    */
   public function userPuidFromLdapEntry($ldap_entry) {
-    if ($this->get('unique_persistent_attr')
-        && isset($ldap_entry[$this->get('unique_persistent_attr')])
-        && is_scalar($ldap_entry[$this->get('unique_persistent_attr')])
-        ) {
-      $puid = $ldap_entry[$this->get('unique_persistent_attr')];
+    if ($this->get('unique_persistent_attr') && isset($ldap_entry[Unicode::strtolower($this->get('unique_persistent_attr'))])) {
+      $puid = $ldap_entry[Unicode::strtolower($this->get('unique_persistent_attr'))];
       // If its still an array...
       if (is_array($puid)) {
         $puid = $puid[0];
       }
-      return ($this->get('unique_persistent_attr_binary')) ? TokenFunctions::binaryConversiontoString($puid) : $puid;
+      return ($this->get('unique_persistent_attr_binary')) ? TokenProcessor::binaryConversiontoString($puid) : $puid;
     }
     else {
       return FALSE;
@@ -1504,9 +1482,8 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
     }
 
     if ($nested && count($ors)) {
-      $count = count($ors);
       // Only 50 or so per query.
-      for ($i = 0; $i < $count; $i = $i + self::LDAP_SERVER_LDAP_QUERY_CHUNK) {
+      for ($i = 0; $i < count($ors); $i = $i + self::LDAP_SERVER_LDAP_QUERY_CHUNK) {
         $current_ors = array_slice($ors, $i, self::LDAP_SERVER_LDAP_QUERY_CHUNK);
         // e.g. (|(cn=group1)(cn=group2)) or   (|(dn=cn=group1,ou=blah...)(dn=cn=group2,ou=blah...))
         $or = '(|(' . join(")(", $current_ors) . '))';
@@ -1800,7 +1777,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
    */
   public function testUserMapping($drupal_username, $direction = NULL, $ldap_context = NULL) {
     if ($direction == NULL) {
-      $direction = LdapUserConf::$provisioningDirectionAll;
+      $direction = LdapConfiguration::$provisioningDirectionAll;
       // TODO: Remove unused parameter, if really not needed.
     }
     $ldap_user = self::userUserNameToExistingLdapEntry($drupal_username, $ldap_context);

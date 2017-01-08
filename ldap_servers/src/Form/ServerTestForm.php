@@ -6,13 +6,12 @@ use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Entity\EntityForm;
 use Drupal\ldap_servers\Entity\Server;
-use Drupal\ldap_servers\TokenFunctions;
+use Drupal\ldap_servers\Processor\TokenProcessor;
 
 /**
  * Use Drupal\Core\Form\FormBase;.
  */
 class ServerTestForm extends EntityForm {
-  use TokenFunctions;
 
   /* @var Server $ldapServer */
   protected $ldapServer;
@@ -140,16 +139,16 @@ class ServerTestForm extends EntityForm {
                 continue;
               }
               elseif ($i == 0 && $count == 1) {
-                $token = self::$token_pre . $key . self::$token_post;
+                $token = TokenProcessor::$token_pre . $key . TokenProcessor::$token_post;
               }
               elseif ($i == 0 && $count > 1) {
-                $token = self::$token_pre . $key . self::$token_del . '0' . self::$token_post;
+                $token = TokenProcessor::$token_pre . $key . TokenProcessor::$token_del . '0' . TokenProcessor::$token_post;
               }
               elseif (($i == $count - 1) && $count > 1) {
-                $token = self::$token_pre . $key . self::$token_del . 'last' . self::$token_post;
+                $token = TokenProcessor::$token_pre . $key . TokenProcessor::$token_del . 'last' . TokenProcessor::$token_post;
               }
               elseif ($count > 1) {
-                $token = self::$token_pre . $key . self::$token_del . $i . self::$token_post;
+                $token = TokenProcessor::$token_pre . $key . TokenProcessor::$token_del . $i . TokenProcessor::$token_post;
               }
               else {
                 $token = "";
@@ -411,8 +410,8 @@ class ServerTestForm extends EntityForm {
     }
 
     list($has_errors, $more_results, $ldap_user) = $this->ldapServer->testUserMapping($values['testing_drupal_username']);
-
-    $tokens = ($ldap_user && isset($ldap_user['attr'])) ? $this->tokenizeEntry($ldap_user['attr'], 'all', Server::$token_pre, Server::$token_post) : [];
+    $tokenHelper = new TokenProcessor();
+    $tokens = ($ldap_user && isset($ldap_user['attr'])) ? $tokenHelper->tokenizeEntry($ldap_user['attr'], 'all', TokenProcessor::$token_pre, TokenProcessor::$token_post) : [];
     foreach ($tokens as $key => $value) {
       $results_tables['tokens'][] = [$key, $this->binaryCheck($value)];
     }

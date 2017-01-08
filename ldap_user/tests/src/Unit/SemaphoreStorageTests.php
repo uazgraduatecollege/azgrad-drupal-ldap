@@ -2,14 +2,12 @@
 
 namespace Drupal\Tests\ldap_user\Unit;
 
-use Drupal\ldap_servers\TokenHelper;
-use Drupal\ldap_user\LdapUserConf;
-use Drupal\ldap_user\SemaphoreStorage;
+use Drupal\ldap_user\Helper\SemaphoreStorage;
 use Drupal\Tests\UnitTestCase;
 
 
 /**
- * @coversDefaultClass \Drupal\ldap_user\SemaphoreStorage
+ * @coversDefaultClass \Drupal\ldap_user\Helper\SemaphoreStorage
  * @group ldap
  */
 class SemaphoreStorageTests extends UnitTestCase {

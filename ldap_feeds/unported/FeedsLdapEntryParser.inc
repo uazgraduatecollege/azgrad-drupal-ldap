@@ -4,6 +4,8 @@
  * @file
  * Provides the Parser for an ldap entry array.
  */
+use Drupal\feeds\Annotation\FeedsParser;
+use Drupal\feeds\Annotation\FeedsSource;
 
 /**
  *

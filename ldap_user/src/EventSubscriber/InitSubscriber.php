@@ -2,7 +2,7 @@
 
 namespace Drupal\ldap_user\EventSubscriber;
 
-use Drupal\ldap_user\SemaphoreStorage;
+use Drupal\ldap_user\Helper\SemaphoreStorage;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 

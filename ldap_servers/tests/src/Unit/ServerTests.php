@@ -67,38 +67,217 @@ class ServerTests extends UnitTestCase {
    */
   public function testRemoveUnchangedAttributes() {
 
-    // TODO: (At least) the expected result is in the wrong format, thus the
-    // test defaults to true for now and does nothing.
-    $this->assertTrue(TRUE);
-
     $existing_data = [
-      'count' => 3,
-      0 => 'Person',
-      1 => 'inetOrgPerson',
-      2 => 'organizationalPerson'
+      'cn' => [0 => 'hpotter', 'count' => 1],
+      'memberof' => [
+        0 => 'cn=gryffindor,ou=groups,dc=hogwarts,dc=edu',
+        1 => 'cn=students,ou=groups,dc=hogwarts,dc=edu',
+        2 => 'cn=honors students,ou=groups,dc=hogwarts,dc=edu',
+        'count' => 3,
+      ],
+      'count' => 2,
     ];
 
     $new_data = [
-      'samAccountName' => 'Test1',
-        'memberOf' => [
-          'Group1',
-          'Group2',
+      'cn' => 'hpotter',
+      'test_example_value' => 'Test1',
+      'memberOf' => [
+        'Group1',
+        // TODO: This is not correctly supported.
+        // 'cn=honors students,ou=groups,dc=hogwarts,dc=edu',
         ]
     ];
 
     $result = Server::removeUnchangedAttributes($new_data, $existing_data);
 
     $result_expected = [
-      'count' => 3,
-      [
-        'organizationalPerson',
-        'Person',
-        'inetOrgPerson',
-      ],
+      'test_example_value' => 'Test1',
+      'memberOf' => [
+        'Group1',
+      ]
     ];
 
-   // $this->assertEquals($result_expected, $result);
+    $this->assertEquals($result_expected, $result);
 
+  }
+
+  public function testUserUsernameFromLdapEntry() {
+    $stub = $this->getMockBuilder(Server::class)
+      ->disableOriginalConstructor()
+      ->setMethods(['get'])
+      ->getMock();
+
+    $map = [
+      ['account_name_attr', ''],
+      ['user_attr', 'cn'],
+    ];
+    $stub->method('get')
+      ->willReturnMap($map);
+
+    $username = $stub->userUsernameFromLdapEntry([]);
+    $this->assertEquals(FALSE, $username);
+
+    $userOpenLdap = [
+      'cn' => [0 => 'hpotter', 'count' => 1],
+      'mail' => [0 => 'hpotter@hogwarts.edu', 'count' => 1],
+      'uid' => [0 => '1', 'count' => 1],
+      'guid' => [0 => '101', 'count' => 1],
+      'sn' => [0 => 'Potter', 'count' => 1],
+      'givenname' => [0 => 'Harry', 'count' => 1],
+      'house' => [0 => 'Gryffindor', 'count' => 1],
+      'department' => [0 => '', 'count' => 1],
+      'faculty' => [0 => 1, 'count' => 1],
+      'staff' => [0 => 1, 'count' => 1],
+      'student' => [0 => 1, 'count' => 1],
+      'gpa' => [0 => '3.8', 'count' => 1],
+      'probation' => [0 => 1, 'count' => 1],
+      'password' => [0 => 'goodpwd', 'count' => 1],
+      'count' => 14,
+    ];
+
+    $username = $stub->userUsernameFromLdapEntry($userOpenLdap);
+    $this->assertEquals('hpotter', $username);
+
+  }
+
+  public function testUserUsernameActiveDirectory() {
+    $stub = $this->getMockBuilder(Server::class)
+      ->disableOriginalConstructor()
+      ->setMethods(['get'])
+      ->getMock();
+
+    $map = [
+      ['account_name_attr', ''],
+      ['user_attr', 'samaccountname'],
+    ];
+    /**
+     * TODO: this does not cover the case sAMAccountName, verify if that's
+     * normalized at an earlier place.
+     */
+    $stub->method('get')
+      ->willReturnMap($map);
+
+    $username = $stub->userUsernameFromLdapEntry([]);
+    $this->assertEquals(FALSE, $username);
+
+    $userActiveDirectory = [
+      'cn' => [0 => 'hpotter', 'count' => 1],
+      'mail' => [0 => 'hpotter@hogwarts.edu', 'count' => 1],
+      'uid' => [0 => '1', 'count' => 1],
+      'guid' => [0 => '101', 'count' => 1],
+      'sn' => [0 => 'Potter', 'count' => 1],
+      'givenname' => [0 => 'Harry', 'count' => 1],
+      'house' => [0 => 'Gryffindor', 'count' => 1],
+      'department' => [0 => '', 'count' => 1],
+      'faculty' => [0 => 1, 'count' => 1],
+      'staff' => [0 => 1, 'count' => 1],
+      'student' => [0 => 1, 'count' => 1],
+      'gpa' => [0 => '3.8', 'count' => 1],
+      'probation' => [0 => 1, 'count' => 1],
+      'password' => [0 => 'goodpwd', 'count' => 1],
+      // Divergent data for AD below.
+      'samaccountname' => [0 => 'hpotter', 'count' => 1],
+      'distinguishedname' => [
+        0 => 'cn=hpotter,ou=people,dc=hogwarts,dc=edu',
+        'count' => 1,
+      ],
+      'memberof' => [
+        0 => 'cn=gryffindor,ou=groups,dc=hogwarts,dc=edu',
+        1 => 'cn=students,ou=groups,dc=hogwarts,dc=edu',
+        2 => 'cn=honors students,ou=groups,dc=hogwarts,dc=edu',
+        'count' => 3,
+      ],
+      'count' => 16,
+    ];
+
+    $username = $stub->userUsernameFromLdapEntry($userActiveDirectory);
+    $this->assertEquals('hpotter', $username);
+
+  }
+
+  public function testGroupUserMembershipsFromEntry() {
+    // TODO: Unported
+    $this->assertTrue(true);
+    return;
+
+    $user_dn = 'cn=hpotter,ou=people,dc=hogwarts,dc=edu';
+    $user_ldap_entry = [
+      'cn' => [0 => 'hpotter', 'count' => 1],
+      'mail' => [0 => 'hpotter@hogwarts.edu', 'count' => 1],
+      'uid' => [0 => '1', 'count' => 1],
+      'guid' => [0 => '101', 'count' => 1],
+      'sn' => [0 => 'Potter', 'count' => 1],
+      'givenname' => [0 => 'Harry', 'count' => 1],
+      'house' => [0 => 'Gryffindor', 'count' => 1],
+      'department' => [0 => '', 'count' => 1],
+      'faculty' => [0 => 1, 'count' => 1],
+      'staff' => [0 => 1, 'count' => 1],
+      'student' => [0 => 1, 'count' => 1],
+      'gpa' => [0 => '3.8', 'count' => 1],
+      'probation' => [0 => 1, 'count' => 1],
+      'password' => [0 => 'goodpwd', 'count' => 1],
+      // Divergent data for AD below.
+      'samaccountname' => [0 => 'hpotter', 'count' => 1],
+      'distinguishedname' => [
+        0 => 'cn=hpotter,ou=people,dc=hogwarts,dc=edu',
+        'count' => 1,
+      ],
+      'memberof' => [
+        0 => 'cn=gryffindor,ou=groups,dc=hogwarts,dc=edu',
+        1 => 'cn=students,ou=groups,dc=hogwarts,dc=edu',
+        2 => 'cn=honors students,ou=groups,dc=hogwarts,dc=edu',
+        'count' => 3,
+      ],
+      'count' => 16,
+    ];
+
+    $desired = [];
+    $desired[0] = [
+      0 => 'cn=gryffindor,ou=groups,dc=hogwarts,dc=edu',
+      1 => 'cn=students,ou=groups,dc=hogwarts,dc=edu',
+      2 => 'cn=honors students,ou=groups,dc=hogwarts,dc=edu',
+    ];
+    $desired[1] = array_merge($desired[0], ['cn=users,ou=groups,dc=hogwarts,dc=edu']);
+
+    foreach (array(0, 1) as $nested) {
+
+      // TODO: Before porting this test, consider splitting nested and not-nested
+      // functions up, since this is a mess.
+      $nested_display = ($nested) ? 'nested' : 'not nested';
+      $desired_count = ($nested) ? 4 : 3;
+      $ldap_module_user_entry = array('attr' => $user_ldap_entry, 'dn' => $user_dn);
+      $groups_desired = $desired[$nested];
+
+      // Test parent function groupMembershipsFromUser.
+      $groups = $ldap_server->groupMembershipsFromUser($ldap_module_user_entry, 'group_dns', $nested);
+      $count = count($groups);
+      $diff1 = array_diff($groups_desired, $groups);
+      $diff2 = array_diff($groups, $groups_desired);
+      $pass = (count($diff1) == 0 && count($diff2) == 0 && $count == $desired_count);
+      $this->assertTrue($pass);
+
+
+      // Test parent groupUserMembershipsFromUserAttr, for openldap should be false, for ad should work.
+      $groups = $ldap_server->groupUserMembershipsFromUserAttr($ldap_module_user_entry, $nested);
+      $count = is_array($groups) ? count($groups) : $count;
+      $pass = $count === FALSE;
+      if ($sid == 'openldap1') {
+        $pass = ($groups === FALSE);
+      }
+      else {
+        $pass = (count($diff1) == 0 && count($diff2) == 0 && $count == $desired_count);
+      }
+      $this->assertTrue($pass);
+
+
+      $groups = $ldap_server->groupUserMembershipsFromEntry($ldap_module_user_entry, $nested);
+      $count = count($groups);
+      $diff1 = array_diff($groups_desired, $groups);
+      $diff2 = array_diff($groups, $groups_desired);
+      $pass = (count($diff1) == 0 && count($diff2) == 0 && $count == $desired_count);
+      $this->assertTrue($pass);
+
+    }
   }
 
 }

@@ -119,7 +119,6 @@ see LdapUserConf
 ldapUserConf::provisionDrupalAccount()
 ldapUserConf::syncToDrupalAccount()
 ldapUserConf::ldapAssociateDrupalAccount()
-ldapUserConf::deleteDrupalAccount()
 
 ldapUserConf::provisionLdapEntry()
 ldapUserConf::syncToLdapEntry()
@@ -134,8 +133,8 @@ ldapUserConf::drupalUserToLdapEntry()
 
 ------------
 4.A.  Server Level: Does an ldap server configuration support provisioning?
-ldapUserConf::drupalAcctProvisionServer = <sid> | LdapUserConf::$noServerSID;  // servers used for to drupal acct provisioning
-ldapUserConf::ldapEntryProvisionServer =  <sid> | LdapUserConf::$noServerSID;  // servers used for provisioning to ldap
+ldapUserConf::drupalAcctProvisionServer = <sid> | LdapConfiguration::$noServerSID;  // servers used for to drupal acct provisioning
+ldapUserConf::ldapEntryProvisionServer =  <sid> | LdapConfiguration::$noServerSID;  // servers used for provisioning to ldap
 
 This is directly configured at config/people/ldap/user
 

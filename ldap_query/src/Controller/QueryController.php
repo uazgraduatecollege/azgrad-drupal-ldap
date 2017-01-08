@@ -52,7 +52,6 @@ class QueryController {
 
   /**
    * Return ldap query objects.
-   * TODO: Unported.
    *
    * @param string $qid
    * @param string $type
@@ -110,8 +109,11 @@ class QueryController {
   }
 
   /**
-   * TODO: Remove placeholder.
    * @deprecated
+   * @param string $sid
+   * @param string $type
+   * @param string $class
+   * @return array|\Drupal\Core\Entity\EntityInterface[]|static[]
    */
   public function getLdapQueryObjects($sid = 'all', $type = 'enabled', $class = 'LdapQuery') {
     // Deprecated, see getAllEnabledQueries() / getAllQueries().
