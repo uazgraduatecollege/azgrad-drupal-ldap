@@ -758,8 +758,8 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
   public function getBaseDn() {
     $baseDn = $this->get('basedn');
 
-    if (!is_array($baseDn) && is_string($baseDn)) {
-        $baseDn = explode("\n", $baseDn);
+    if (!is_array($baseDn) && is_scalar($baseDn)) {
+        $baseDn = explode("\r\n", $baseDn);
     }
     return $baseDn;
   }
