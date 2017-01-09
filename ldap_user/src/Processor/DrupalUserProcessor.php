@@ -481,7 +481,7 @@ class DrupalUserProcessor {
    * @param $params
    * @return array
    */
-  public function alterLdapUserAttributes(&$available_user_attrs, &$params): array {
+  public function alterLdapUserAttributes(&$available_user_attrs, &$params) {
     $sid = (isset($params['ldap_server']) && is_object($params['ldap_server'])) ? $params['ldap_server']->get('id') : LdapConfiguration::$noServerSID;
 
     $direction = isset($params['direction']) ? $params['direction'] : LdapConfiguration::$provisioningDirectionNone;
