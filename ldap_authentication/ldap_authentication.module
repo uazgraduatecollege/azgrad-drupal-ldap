@@ -92,7 +92,7 @@ function ldap_authentication_show_reset_pwd($user = NULL) {
     // Always show at user/passwordurl. otherwise user 1 will not be able to reset password.
   }
 
-  if ($user->id() == 0) {
+  if ($user->isAnonymous()) {
     // Hide reset password for anonymous users if ldap only authentication and password updates are disabled, otherwise show.
     if (\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.authenticationMode') != LdapAuthenticationConf::$mode_exclusive) {
       if (\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.passwordOption') == LdapAuthenticationConf::$passwordFieldAllow) {
@@ -296,7 +296,7 @@ function ldap_authentication_show_ldap_help_link($user = NULL) {
     return (ldap_authentication_ldap_authenticated($user));
   }
   elseif (\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.authenticationMode') == LdapAuthenticationConf::$mode_exclusive) {
-    if ($user->id() == 0 || ldap_authentication_ldap_authenticated($user)) {
+    if ($user->isAnonymous() || ldap_authentication_ldap_authenticated($user)) {
       return TRUE;
     }
     else {

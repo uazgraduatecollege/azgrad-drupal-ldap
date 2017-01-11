@@ -60,6 +60,12 @@ class LoginValidator {
     }
 
     $credentialsAuthenticationResult = $this->testCredentials($this->formState->getValue('pass'));
+
+    if ($credentialsAuthenticationResult == LdapAuthenticationConf::$authFailFind &&
+      \Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.authenticationMode') == LdapAuthenticationConf::$mode_exclusive) {
+      $this->formState->setErrorByName('non_ldap_login_not_allowed', t('User disallowed'));
+    }
+
     if ($credentialsAuthenticationResult != LdapAuthenticationConf::$authSuccess) {
       return FALSE;
     }
@@ -346,7 +352,7 @@ class LoginValidator {
         error message: %err_text', ['%username' => $this->authName, '%err_text' =>$this->_ldap_authentication_err_text($authentication_result)]
         );
       }
-      drupal_set_message(t('Error: @token', ['%err_text' => $this->_ldap_authentication_err_text($authentication_result)]), "error");
+      drupal_set_message(t('Error: %err_text', ['%err_text' => $this->_ldap_authentication_err_text($authentication_result)]), "error");
     }
     else {
       // Fail scenario 2.  simply fails ldap.  return false, but don't throw form error
