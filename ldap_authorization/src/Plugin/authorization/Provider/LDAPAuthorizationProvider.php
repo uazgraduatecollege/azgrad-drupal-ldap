@@ -3,13 +3,11 @@
 namespace Drupal\ldap_authorization\Plugin\authorization\provider;
 
 use Drupal\authorization\AuthorizationSkipAuthorization;
-use Drupal\authorization\Entity\AuthorizationProfile;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Form\FormStateInterface;
 
 use Drupal\authorization\Provider\ProviderPluginBase;
 use Drupal\ldap_servers\ConversionHelper;
-use Drupal\ldap_servers\Entity\Server;
 use Drupal\ldap_user\Helper\ExternalAuthenticationHelper;
 
 /**
@@ -72,10 +70,11 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
       if (isset($provider_config['status'])) {
         $default_server = $provider_config['status']['server'];
       }
-       else if (count($server_options) == 1) {
-         $default_server = key($server_options);
-      } else {
-         $default_server = '';
+      elseif (count($server_options) == 1) {
+        $default_server = key($server_options);
+      }
+      else {
+        $default_server = '';
       }
       $form['status']['server'] = array(
         '#type' => 'radios',
@@ -89,7 +88,7 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
     $form['status']['only_ldap_authenticated'] = array(
       '#type' => 'checkbox',
       '#title' => t('Only apply the following <strong>LDAP</strong> to <strong>@consumer_name</strong> configuration to users authenticated via LDAP', $tokens),
-      '#description' => t('On uncommon reason for disabling this is when you are using Drupal authentication, but want to leverage LDAP for authorization; for this to work the Drupal username still has to map to an LDAP entry.'),
+      '#description' => t('One uncommon reason for disabling this is when you are using Drupal authentication, but want to leverage LDAP for authorization; for this to work the Drupal username still has to map to an LDAP entry.'),
       '#default_value' => isset($provider_config['status'], $provider_config['status']['only_ldap_authenticated']) ? $provider_config['status']['only_ldap_authenticated'] : '',
     );
 
@@ -139,7 +138,6 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
       $form_state->setValues($values);
     }
   }
-
 
   /**
    *

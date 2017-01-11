@@ -248,6 +248,7 @@ class ServerTests extends UnitTestCase {
       $ldap_module_user_entry = array('attr' => $user_ldap_entry, 'dn' => $user_dn);
       $groups_desired = $desired[$nested];
 
+      /* @var Server $ldap_server */
       // Test parent function groupMembershipsFromUser.
       $groups = $ldap_server->groupMembershipsFromUser($ldap_module_user_entry, 'group_dns', $nested);
       $count = count($groups);

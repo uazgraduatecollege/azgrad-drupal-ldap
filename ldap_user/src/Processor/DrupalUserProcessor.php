@@ -100,7 +100,7 @@ class DrupalUserProcessor {
    * @return bool|User
    *   Return TRUE on success or FALSE on any problem.
    */
-  public function provisionDrupalAccount($account = FALSE, &$user_values, $ldap_user = NULL, $save = TRUE) {
+  public function provisionDrupalAccount($account = FALSE, $user_values, $ldap_user = NULL, $save = TRUE) {
 
     $tokens = array();
     /**

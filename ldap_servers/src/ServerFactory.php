@@ -14,6 +14,9 @@ use Drupal\user\UserInterface;
  */
 class ServerFactory {
 
+  /**
+   * @return Server
+   */
   public function getServerById($sid) {
     return Server::load($sid);
   }

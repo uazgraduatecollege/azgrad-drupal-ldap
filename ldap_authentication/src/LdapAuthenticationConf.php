@@ -206,13 +206,6 @@ class LdapAuthenticationConf {
   /**
    *
    */
-  public function enabled_servers() {
-    return $this->hasEnabledAuthenticationServers();
-  }
-
-  /**
-   *
-   */
   public function __construct() {
     $this->authenticationMode = self::$mode_mixed;
     $this->emailUpdate = self::$emailUpdateOnLdapChangeEnableNotify;
@@ -250,23 +243,6 @@ class LdapAuthenticationConf {
     }
     $this->ssoEnabled = \Drupal::moduleHandler()->moduleExists('ldap_sso');
     $this->apiPrefs['requireHttps'] = \Drupal::config('ldap_servers.settings')->get('require_ssl_for_credentials');
-  }
-
-  /**
-   * Decide if a username is excluded or not.
-   *
-   * @param string $name
-   *   as proposed drupal username.
-   * @param array $ldap_user
-   *   where top level keys are 'dn','attr','mail'.
-   *
-   * @return boolean FALSE means NOT allow; TRUE means allow
-   *
-   * @todo. this function should simply invoke hook_ldap_authentication_allowuser_results_alter
-   *   and most of this function should go in ldap_authentication_allowuser_results_alter
-   */
-  public function allowUser($name, $ldap_user) {
-
   }
 
 }

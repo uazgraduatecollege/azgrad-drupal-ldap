@@ -165,8 +165,7 @@ function _ldap_authentication_admin_user_form_warning() {
  * the UID from $form_state is set to the matching user ID.
  */
 function ldap_authentication_core_override_user_login_authenticate_validate($form, FormStateInterface &$form_state) {
-  // No additional validation of user credentials is needed when
-  // $form_state['uid'] is set.
+  // No additional validation of user credentials is needed when the uid is set.
   if (!empty($form_state->get('uid'))) {
     return;
   }
@@ -280,14 +279,12 @@ function ldap_authentication_form_user_login_block_alter(&$form, &$form_state) {
  * Validate function for user logon forms.
  * @param $form
  * @param FormStateInterface $form_state
- * @return bool
  */
 function ldap_authentication_user_login_authenticate_validate($form, FormStateInterface &$form_state) {
   if ($form_state->getValue('pass') && $form_state->getValue('name')) {
     $validator = new LoginValidator();
     $form_state = $validator->validateLogin($form_state);
   }
-  return $form_state;
 }
 
 /**

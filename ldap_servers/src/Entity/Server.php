@@ -1447,11 +1447,13 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
       $nested = $this->groupNested();
     }
 
-    $not_user_ldap_entry = empty($user['attr'][$this->groupUserMembershipsAttr()]);
+    $groupAttribute = $this->groupUserMembershipsAttr();
+
+    $not_user_ldap_entry = empty($user['attr'][$groupAttribute]);
     // If drupal user passed in, try to get user_ldap_entry.
     if ($not_user_ldap_entry) {
       $user = $this->userUserToExistingLdapEntry($user);
-      $not_user_ldap_entry = empty($user['attr'][$this->groupUserMembershipsAttr()]);
+      $not_user_ldap_entry = empty($user['attr'][$groupAttribute]);
       if ($not_user_ldap_entry) {
         // user's membership attribute is not present.  either misconfigured or query failed.
         return FALSE;
@@ -1463,7 +1465,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
     $tested_group_ids = array();
     $level = 0;
 
-    $member_group_dns = $user_ldap_entry['attr'][$this->groupUserMembershipsAttr()];
+    $member_group_dns = $user_ldap_entry['attr'][$groupAttribute];
     if (isset($member_group_dns['count'])) {
       unset($member_group_dns['count']);
     }
