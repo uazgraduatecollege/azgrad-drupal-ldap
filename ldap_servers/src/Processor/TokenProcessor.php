@@ -530,41 +530,9 @@ class TokenProcessor {
   }
 
   /**
-   *
-   */
-  public function showSampleUserTokens($sid) {
-    $factory = \Drupal::service('ldap.servers');
-    /* @var Server $ldap_server */
-    $ldap_server = $factory->getServerById($sid);
-
-    // @FIXME undefined function
-    $test_username = $ldap_server->testingDrupalUsername;
-    if (!$test_username || !(
-        $ldap_server->get('bind_method') == Server::$bindMethodServiceAccount ||
-        $ldap_server->get('bind_method') == Server::$bindMethodAnon
-      )
-    ) {
-      return FALSE;
-    }
-
-    if ($ldap_user = $ldap_server->userUserNameToExistingLdapEntry($test_username)) {
-      // @FIXME
-      // $table = theme('ldap_server_ldap_entry_table', array(
-      $table = _theme('ldap_server_ldap_entry_table', array(
-        'entry' => $ldap_user['attr'],
-        'username' => $test_username,
-        'dn' => $ldap_user['dn'],
-      ));
-    }
-    else {
-      $table = '<p>' . t('No sample user data found') . '</p>';
-    }
-
-    return $table;
-  }
-
-  /**
    * Function to convert microsoft style guids to strings.
+   * @param $value
+   * @return string
    */
   public static function convertMsguidToString($value) {
     $hex_string = bin2hex($value);
