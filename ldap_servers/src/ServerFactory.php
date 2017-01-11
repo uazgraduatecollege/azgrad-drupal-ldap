@@ -84,7 +84,11 @@ class ServerFactory {
    */
   public function getUserDataFromServerByAccount($account, $id, $ldap_context = NULL) {
     $identifier = ExternalAuthenticationHelper::getUserIdentifierFromMap($account->id());
-    return $this->getUserDataFromServerByIdentifier($identifier, $id, $ldap_context);
+    if ($account->id()) {
+      return $this->getUserDataFromServerByIdentifier($identifier, $id, $ldap_context);
+    } else {
+      return FALSE;
+    }
   }
 
   /**

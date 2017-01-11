@@ -5,6 +5,7 @@ namespace Drupal\ldap_user\Processor;
 
 use Drupal\ldap_servers\Entity\Server;
 use Drupal\ldap_servers\Processor\TokenProcessor;
+use Drupal\ldap_servers\ServerFactory;
 use Drupal\ldap_user\Helper\ExternalAuthenticationHelper;
 use Drupal\ldap_user\Helper\LdapConfiguration;
 use Drupal\ldap_user\Helper\SemaphoreStorage;
@@ -884,6 +885,7 @@ class DrupalUserProcessor {
         SemaphoreStorage::set('sync', $account->getUsername());
       }
     }
+    /* @var ServerFactory $factory */
     $factory = \Drupal::service('ldap.servers');
     $config = \Drupal::config('ldap_user.settings')->get('ldap_user_conf');
 
