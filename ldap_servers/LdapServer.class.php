@@ -1119,7 +1119,7 @@ class LdapServer {
 			}
       else {
 				foreach ($errors as $err => $err_val){
-					watchdog('ldap_server', "Error storing picture: %$err", "%$err_val", WATCHDOG_ERROR );
+					watchdog('ldap_server', "Error storing picture: %$err", array("%$err" => $err_val), WATCHDOG_ERROR);
 				}
 				return FALSE;
 			}
