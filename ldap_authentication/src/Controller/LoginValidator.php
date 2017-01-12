@@ -627,20 +627,6 @@ class LoginValidator {
    */
   private function validateCommonLoginConstraints() {
 
-    if (!empty($this->formState->get('uid'))) {
-      if (\Drupal::config('ldap_authentication.settings')
-          ->get('ldap_authentication_conf.authenticationMode') == LdapAuthenticationConfiguration::$mode_mixed
-      ) {
-        if ($this->detailedLogging) {
-          \Drupal::logger('ldap_authentication')->debug(
-            '%username : Previously authenticated in mixed mode, pass on validation.',
-            ['%username' => $this->authName]
-          );
-        }
-        return FALSE;
-      }
-    }
-
     // Check that enabled servers are available.
     if (!LdapAuthenticationConfiguration::hasEnabledAuthenticationServers()) {
       \Drupal::logger('ldap_authentication')->error('No LDAP servers configured.');

@@ -4,6 +4,7 @@ namespace Drupal\ldap_servers\Entity;
 
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
+use Drupal\Core\Render\Element\Token;
 use Drupal\file\Entity\File;
 use Drupal\file\Plugin\Field\FieldType\FileFieldItemList;
 use Drupal\ldap_servers\ConversionHelper;
@@ -838,7 +839,8 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
     }
     // Template is of form [cn]@illinois.edu.
     elseif ($ldap_entry && $this->get('mail_template')) {
-      return $this->tokenReplace($ldap_entry, $this->get('mail_template'), 'ldap_entry');
+      $tokenHelper = new TokenProcessor();
+      return $tokenHelper->tokenReplace($ldap_entry, $this->get('mail_template'), 'ldap_entry');
     }
     else {
       return FALSE;
