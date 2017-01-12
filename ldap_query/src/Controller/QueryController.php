@@ -15,7 +15,7 @@ class QueryController {
     if ($query) {
       $factory = \Drupal::service('ldap.servers');
       /* @var Server $ldap_server */
-      $ldap_server = $factory->getServerById( $query->get('server_id'));
+      $ldap_server = $factory->getServerById($query->get('server_id'));
       $ldap_server->connect();
       $ldap_server->bind();
       foreach ($query->getProcessedBaseDns() as $base_dn) {

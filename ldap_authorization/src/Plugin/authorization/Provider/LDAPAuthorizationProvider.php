@@ -3,11 +3,13 @@
 namespace Drupal\ldap_authorization\Plugin\authorization\provider;
 
 use Drupal\authorization\AuthorizationSkipAuthorization;
+use Drupal\authorization\Entity\AuthorizationProfile;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Form\FormStateInterface;
 
 use Drupal\authorization\Provider\ProviderPluginBase;
 use Drupal\ldap_servers\ConversionHelper;
+use Drupal\ldap_servers\Entity\Server;
 use Drupal\ldap_user\Helper\ExternalAuthenticationHelper;
 
 /**
@@ -140,10 +142,14 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
   }
 
   /**
-   *
+   * @param array $form
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   * @param int $index
+   * @return array
    */
   public function buildRowForm(array $form, FormStateInterface $form_state, $index = 0) {
     $row = array();
+    /* @var AuthorizationProfile $this->configuration['profile'] */
     $mappings = $this->configuration['profile']->getProviderMappings();
     $row['query'] = array(
       '#type' => 'textfield',
@@ -160,7 +166,11 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
   }
 
   /**
-   *
+   * @param $user
+   * @param $op
+   * @param $identifier
+   * @return array|null
+   * @throws \Drupal\authorization\AuthorizationSkipAuthorization
    */
   public function getProposals($user, $op, $identifier) {
     // In 7.x-2.x we get groups from Server via three methods
@@ -210,15 +220,13 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
   }
 
   /**
-   *
+   * @param $proposed_ldap_authorizations
+   * @param null $op
+   * @param $provider_mapping
+   * @return array
    */
   public function filterProposals($proposed_ldap_authorizations, $op = NULL, $provider_mapping) {
-    // Configure this provider.
-    /* @var AuthorizationProfile $profile */
-    $profile = $this->configuration['profile'];
-    $config = $profile->getProviderConfig();
-
-    $filtered_proposals = array();
+    $filtered_proposals = [];
     foreach ($proposed_ldap_authorizations as $key => $value) {
       // Match regular expressions.
       if ($provider_mapping['is_regex']) {
@@ -247,7 +255,8 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
   }
 
   /**
-   *
+   * @param $proposals
+   * @param null $op
    */
   public function sanitizeProposals($proposals, $op = NULL) {
     // Configure this provider.
@@ -279,7 +288,8 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
   }
 
   /**
-   *
+   * @param $mappings
+   * @return string
    */
   protected function mappingsToPipeList($mappings) {
     $result_text = "";
@@ -290,7 +300,9 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
   }
 
   /**
-   *
+   * @param $mapping_list_txt
+   * @param bool $make_item0_lowercase
+   * @return array
    */
   protected function pipeListToArray($mapping_list_txt, $make_item0_lowercase = FALSE) {
     $result_array = array();
@@ -306,6 +318,8 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
 
   /**
    * @see LdapAuthorizationConsumerAbstract::normalizeMappings
+   * @param $mappings
+   * @return array
    */
   public function normalizeMappings($mappings) {
     $new_mappings = array();

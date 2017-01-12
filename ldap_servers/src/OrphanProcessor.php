@@ -116,9 +116,7 @@ class OrphanProcessor {
     $end_plus_1 = min(($batch) * $this->ldapQueryOrLimit, count($uids));
     $batch_uids = array_slice($uids, $start, ($end_plus_1 - $start));
 
-    $accounts = \Drupal::entityManager()
-      ->getStorage('user')
-      ->loadMultiple($batch_uids);
+    $accounts = User::loadMultiple($batch_uids);
 
     foreach ($accounts as $uid => $user) {
       $serverId = $user->get('ldap_user_puid_sid')->value;

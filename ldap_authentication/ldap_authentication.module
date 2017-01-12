@@ -10,7 +10,6 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\ldap_authentication\Controller\LoginValidator;
 use Drupal\ldap_authentication\Helper\LdapAuthenticationConfiguration;
-use Drupal\ldap_authentication\LdapAuthenticationConf;
 use Drupal\ldap_user\Helper\ExternalAuthenticationHelper;
 
 /**
@@ -55,7 +54,7 @@ function ldap_authentication_help($path, $arg) {
 
 /**
  *
- * @param int|\User $user
+ * @param int|User $user
  * @return bool true
  *   true if user is recorded as ldap authenticated and identified (ldap_authentified)
  */
@@ -94,8 +93,8 @@ function ldap_authentication_show_reset_pwd($user = NULL) {
 
   if ($user->isAnonymous()) {
     // Hide reset password for anonymous users if ldap only authentication and password updates are disabled, otherwise show.
-    if (\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.authenticationMode') != LdapAuthenticationConf::$mode_exclusive) {
-      if (\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.passwordOption') == LdapAuthenticationConf::$passwordFieldAllow) {
+    if (\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.authenticationMode') != LdapAuthenticationConfiguration::$mode_exclusive) {
+      if (\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.passwordOption') == LdapAuthenticationConfiguration::$passwordFieldAllow) {
         return TRUE;
       }
       return FALSE;
@@ -106,7 +105,7 @@ function ldap_authentication_show_reset_pwd($user = NULL) {
     // Authenticated user.  hide if ldap authenticated and updating password is
     // not allowed, otherwise show.
     if (ldap_authentication_ldap_authenticated($user)) {
-      if (\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.passwordOption') == LdapAuthenticationConf::$passwordFieldAllow) {
+      if (\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.passwordOption') == LdapAuthenticationConfiguration::$passwordFieldAllow) {
         return TRUE;
       }
       return FALSE;
@@ -138,8 +137,8 @@ function ldap_authentication_form_user_pass_alter(&$form, $form_state) {
  */
 function _ldap_authentication_admin_user_form_warning() {
   $warning = '';
-  if (\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.authenticationMode') == LdapAuthenticationConf::$mode_exclusive &&
-    \Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.passwordOption') != LdapAuthenticationConf::$passwordFieldAllow) {
+  if (\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.authenticationMode') == LdapAuthenticationConfiguration::$mode_exclusive &&
+    \Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.passwordOption') != LdapAuthenticationConfiguration::$passwordFieldAllow) {
     if (\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.ldapUserHelpLinkUrl')) {
       $warning = t('This page is only useful for the site administrator. All other users need to reset their passwords at @link', [
         '@link' => \Drupal::l(
@@ -188,7 +187,7 @@ function ldap_authentication_user_pass_validate(&$form, FormStateInterface $form
   if ($account) {
     if (ldap_authentication_ldap_authenticated($account)) {
       $error = TRUE;
-        if (\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.passwordOption') == LdapAuthenticationConf::$passwordFieldAllow) {
+        if (\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.passwordOption') == LdapAuthenticationConfiguration::$passwordFieldAllow) {
           $error = FALSE;
       }
       if (!empty($error)) {
@@ -226,23 +225,23 @@ function ldap_authentication_form_user_form_alter(&$form, FormStateInterface $fo
 
   $user = $form_state->getBuildInfo()['callback_object']->getEntity();
   if (ldap_authentication_ldap_authenticated($user)) {
-    if (\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.emailOption') == LdapAuthenticationConf::$emailFieldRemove) {
+    if (\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.emailOption') == LdapAuthenticationConfiguration::$emailFieldRemove) {
       $form['account']['mail']['#type'] = 'hidden';
     }
-    elseif (\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.emailOption') == LdapAuthenticationConf::$emailFieldDisable) {
+    elseif (\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.emailOption') == LdapAuthenticationConfiguration::$emailFieldDisable) {
       $form['account']['mail']['#disabled'] = TRUE;
       $form['account']['mail']['#description'] = t('This email address is automatically set and may not be changed.');
     }
-    elseif (\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.emailOption') == LdapAuthenticationConf::$emailFieldAllow) {
+    elseif (\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.emailOption') == LdapAuthenticationConfiguration::$emailFieldAllow) {
       // Email field is functional.
     }
 
     if (!ldap_authentication_show_reset_pwd($user)) {
-      if (\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.passwordOption') == LdapAuthenticationConf::$passwordFieldHide) {
+      if (\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.passwordOption') == LdapAuthenticationConfiguration::$passwordFieldHide) {
         $form['account']['current_pass']['#type'] = 'hidden';
         $form['account']['pass']['#type'] = 'hidden';
       }
-      elseif (\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.emailOption') == LdapAuthenticationConf::$emailFieldDisable) {
+      elseif (\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.emailOption') == LdapAuthenticationConfiguration::$emailFieldDisable) {
         $form['account']['current_pass']['#disabled'] = TRUE;
         $form['account']['pass']['#disabled'] = TRUE;
         if (\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.ldapUserHelpLinkUrl')) {
@@ -292,10 +291,10 @@ function ldap_authentication_user_login_authenticate_validate($form, FormStateIn
  */
 function ldap_authentication_show_ldap_help_link($user = NULL) {
   $user = \Drupal::currentUser();
-  if (\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.authenticationMode') == LdapAuthenticationConf::$mode_mixed) {
+  if (\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.authenticationMode') == LdapAuthenticationConfiguration::$mode_mixed) {
     return (ldap_authentication_ldap_authenticated($user));
   }
-  elseif (\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.authenticationMode') == LdapAuthenticationConf::$mode_exclusive) {
+  elseif (\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.authenticationMode') == LdapAuthenticationConfiguration::$mode_exclusive) {
     if ($user->isAnonymous() || ldap_authentication_ldap_authenticated($user)) {
       return TRUE;
     }

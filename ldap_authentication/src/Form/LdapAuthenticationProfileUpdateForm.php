@@ -6,7 +6,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\FormBase;
 
 /**
- *
+ * FIXME: What does this form do?
  */
 class LdapAuthenticationProfileUpdateForm extends FormBase {
 

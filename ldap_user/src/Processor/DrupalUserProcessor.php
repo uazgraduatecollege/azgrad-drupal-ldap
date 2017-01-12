@@ -135,8 +135,6 @@ class DrupalUserProcessor {
       }
     }
 
-    /* @var Server $ldap_server */
-
     // If we don't have an account name already we should set one.
     if (!$account->getUsername()) {
       $ldap_server = $factory->getServerByIdEnabled($this->config['drupalAcctProvisionServer']);

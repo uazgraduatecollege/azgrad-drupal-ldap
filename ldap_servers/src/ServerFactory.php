@@ -21,6 +21,9 @@ class ServerFactory {
     return Server::load($sid);
   }
 
+  /**
+   * @return Server|bool
+   */
   public function getServerByIdEnabled($sid) {
     $server = Server::load($sid);
     if ($server->status()) {
@@ -30,12 +33,18 @@ class ServerFactory {
     }
   }
 
+  /**
+   * @return Server[]
+   */
   public function getAllServers() {
     $query = \Drupal::entityQuery('ldap_server');
     $ids = $query->execute();
     return Server::loadMultiple($ids);
   }
 
+  /**
+   * @return Server[]
+   */
   public function getEnabledServers() {
     $query = \Drupal::entityQuery('ldap_server')
       ->condition('status', 1);
@@ -129,7 +138,10 @@ class ServerFactory {
 
   /**
    * Duplicate function in Server due to test complications.
-   **/
+   * @param $dn
+   * @param $attribute
+   * @return array
+   */
   public function ldapExplodeDn($dn, $attribute) {
     return ldap_explode_dn($dn, $attribute);
   }
