@@ -301,7 +301,7 @@ class DrupalUserProcessor {
       }
     }
     if ($processor->isSynced('[field.ldap_user_puid_property]', $prov_events, $direction)) {
-      $account->set('ldap_user_puid_property', $ldap_server->unique_persistent_attr);
+      $account->set('ldap_user_puid_property', $ldap_server->get('unique_persistent_attr'));
     }
     if ($processor->isSynced('[field.ldap_user_puid_sid]', $prov_events, $direction)) {
       $account->set('ldap_user_puid_sid', $ldap_server->id());
@@ -341,10 +341,10 @@ class DrupalUserProcessor {
       }
     }
 
-    // @FIXME: Incorrect parameter count
-    // Allow other modules to have a say.
-    \Drupal::moduleHandler()->alter('ldap_user_edit_user', $account, $ldap_user, $ldap_server, $prov_events);
-    // don't let empty 'name' value pass for user.
+    $context = ['ldap_server' => $ldap_server, 'prov_events' => $prov_events];
+    \Drupal::moduleHandler()->alter('ldap_user_edit_user', $account, $ldap_user, $context);
+
+    // Don't let empty 'name' value pass for user.
     if (empty($account->getUsername())) {
       $account->set('name', $ldap_user[$ldap_server->get('user_attr')]);
     }
@@ -424,8 +424,9 @@ class DrupalUserProcessor {
   /**
    * @param $attributes
    * @param $params
+   * @return mixed
    */
-  function alterUserAttributes(&$attributes, $params) {
+  function alterUserAttributes($attributes, $params) {
     // Puid attributes are server specific.
     if (isset($params['sid']) && $params['sid']) {
       if (is_scalar($params['sid'])) {
@@ -436,10 +437,7 @@ class DrupalUserProcessor {
         $ldap_server = $params['sid'];
       }
 
-      // Failed to find enabled server.
       if ($ldap_server) {
-
-
         if (!isset($attributes['dn'])) {
           $attributes['dn'] = array();
         }
@@ -476,17 +474,20 @@ class DrupalUserProcessor {
 
 
   /**
-   * @param $available_user_attrs
+   * @param $availableUserAttributes
    * @param $params
    * @return array
    */
-  public function alterLdapUserAttributes(&$available_user_attrs, &$params) {
-    $sid = (isset($params['ldap_server']) && is_object($params['ldap_server'])) ? $params['ldap_server']->get('id') : LdapConfiguration::$noServerSID;
-
-    $direction = isset($params['direction']) ? $params['direction'] : LdapConfiguration::$provisioningDirectionNone;
+  public function alterLdapUserAttributes($availableUserAttributes, $params) {
+    if (isset($params['direction'])) {
+      $direction = $params['direction'];
+    }
+    else {
+      $direction = LdapConfiguration::$provisioningDirectionNone;
+    }
 
     if ($direction == LdapConfiguration::$provisioningDirectionToLDAPEntry) {
-      $available_user_attrs['[property.name]'] = array(
+      $availableUserAttributes['[property.name]'] = array(
         'name' => 'Property: Username',
         'source' => '',
         'direction' => LdapConfiguration::$provisioningDirectionToLDAPEntry,
@@ -500,7 +501,7 @@ class DrupalUserProcessor {
         'configurable_to_ldap' => TRUE,
       );
 
-      $available_user_attrs['[property.mail]'] = array(
+      $availableUserAttributes['[property.mail]'] = array(
         'name' => 'Property: Email',
         'source' => '',
         'direction' => LdapConfiguration::$provisioningDirectionToLDAPEntry,
@@ -514,7 +515,7 @@ class DrupalUserProcessor {
         'configurable_to_ldap' => TRUE,
       );
 
-      $available_user_attrs['[property.picture]'] = array(
+      $availableUserAttributes['[property.picture]'] = array(
         'name' => 'Property: picture',
         'source' => '',
         'direction' => LdapConfiguration::$provisioningDirectionToLDAPEntry,
@@ -528,7 +529,7 @@ class DrupalUserProcessor {
         'configurable_to_ldap' => TRUE,
       );
 
-      $available_user_attrs['[property.uid]'] = array(
+      $availableUserAttributes['[property.uid]'] = array(
         'name' => 'Property: Drupal User Id (uid)',
         'source' => '',
         'direction' => LdapConfiguration::$provisioningDirectionToLDAPEntry,
@@ -546,18 +547,15 @@ class DrupalUserProcessor {
 
     // 1. Drupal user properties
     // 1.a make sure empty array are present so array + function works.
-    foreach (array(
-               'property.status',
-               'property.timezone',
-               'property.signature'
-             ) as $i => $property_id) {
+    foreach (['property.status', 'property.timezone', 'property.signature'] as $i => $property_id) {
       $property_token = '[' . $property_id . ']';
-      if (!isset($available_user_attrs[$property_token]) || !is_array($available_user_attrs[$property_token])) {
-        $available_user_attrs[$property_token] = array();
+      if (!isset($availableUserAttributes[$property_token]) || !is_array($availableUserAttributes[$property_token])) {
+        $availableUserAttributes[$property_token] = [];
       }
     }
+
     // @todo make these merges so they don't override saved values such as 'enabled'
-    $available_user_attrs['[property.status]'] = $available_user_attrs['[property.status]'] + array(
+    $availableUserAttributes['[property.status]'] = $availableUserAttributes['[property.status]'] + [
         'name' => 'Property: Account Status',
         'configurable_to_drupal' => 1,
         'configurable_to_ldap' => 1,
@@ -565,18 +563,18 @@ class DrupalUserProcessor {
         'enabled' => FALSE,
         'config_module' => 'ldap_user',
         'prov_module' => 'ldap_user',
-      );
+      ];
 
-    $available_user_attrs['[property.timezone]'] = $available_user_attrs['[property.timezone]'] + array(
+    $availableUserAttributes['[property.timezone]'] = $availableUserAttributes['[property.timezone]'] + [
         'name' => 'Property: User Timezone',
         'configurable_to_drupal' => 1,
         'configurable_to_ldap' => 1,
         'enabled' => FALSE,
         'config_module' => 'ldap_user',
         'prov_module' => 'ldap_user',
-      );
+      ];
 
-    $available_user_attrs['[property.signature]'] = $available_user_attrs['[property.signature]'] + array(
+    $availableUserAttributes['[property.signature]'] = $availableUserAttributes['[property.signature]'] + array(
         'name' => 'Property: User Signature',
         'configurable_to_drupal' => 1,
         'configurable_to_ldap' => 1,
@@ -590,11 +588,11 @@ class DrupalUserProcessor {
 
     foreach ($user_fields as $field_name => $field_instance) {
       $field_id = "[field.$field_name]";
-      if (!isset($available_user_attrs[$field_id]) || !is_array($available_user_attrs[$field_id])) {
-        $available_user_attrs[$field_id] = array();
+      if (!isset($availableUserAttributes[$field_id]) || !is_array($availableUserAttributes[$field_id])) {
+        $availableUserAttributes[$field_id] = array();
       }
 
-      $available_user_attrs[$field_id] = $available_user_attrs[$field_id] + array(
+      $availableUserAttributes[$field_id] = $availableUserAttributes[$field_id] + array(
           'name' => t('Field') . ': ' . $field_instance->getLabel(),
           'configurable_to_drupal' => 1,
           'configurable_to_ldap' => 1,
@@ -605,13 +603,13 @@ class DrupalUserProcessor {
     }
 
     if (!LdapConfiguration::provisionsDrupalAccountsFromLdap()) {
-      $available_user_attrs['[property.mail]']['config_module'] = 'ldap_user';
-      $available_user_attrs['[property.name]']['config_module'] = 'ldap_user';
-      $available_user_attrs['[property.picture]']['config_module'] = 'ldap_user';
+      $availableUserAttributes['[property.mail]']['config_module'] = 'ldap_user';
+      $availableUserAttributes['[property.name]']['config_module'] = 'ldap_user';
+      $availableUserAttributes['[property.picture]']['config_module'] = 'ldap_user';
     }
 
     if ($direction == LdapConfiguration::$provisioningDirectionToLDAPEntry) {
-      $available_user_attrs['[password.random]'] = array(
+      $availableUserAttributes['[password.random]'] = array(
         'name' => 'Pwd: Random',
         'source' => '',
         'direction' => LdapConfiguration::$provisioningDirectionToLDAPEntry,
@@ -626,7 +624,7 @@ class DrupalUserProcessor {
       );
 
       // Use user password when available fall back to random pwd.
-      $available_user_attrs['[password.user-random]'] = array(
+      $availableUserAttributes['[password.user-random]'] = array(
         'name' => 'Pwd: User or Random',
         'source' => '',
         'direction' => LdapConfiguration::$provisioningDirectionToLDAPEntry,
@@ -642,39 +640,14 @@ class DrupalUserProcessor {
 
     }
 
-    $config = \Drupal::config('ldap_user.settings');
+    $mappings = \Drupal::config('ldap_user.settings')->get('ldap_user_conf.ldapUserSyncMappings');
 
     // This is where need to be added to arrays.
-    if (!empty($config->get('ldap_user_conf.ldapUserSyncMappings')[$direction])) {
-
-      foreach ($config->get('ldap_user_conf.ldapUserSyncMappings')[$direction] as $target_token => $mapping) {
-        if ($direction == LdapConfiguration::$provisioningDirectionToDrupalUser && isset($mapping['user_attr'])) {
-          $key = $mapping['user_attr'];
-        }
-        elseif ($direction == LdapConfiguration::$provisioningDirectionToLDAPEntry && isset($mapping['ldap_attr'])) {
-          $key = $mapping['ldap_attr'];
-        }
-        else {
-          continue;
-        }
-
-        foreach (['ldap_attr', 'user_attr', 'convert', 'direction', 'enabled', 'prov_events'] as $subKey) {
-          if (isset($mapping[$subKey])) {
-            $available_user_attrs[$key][$subKey] = $mapping[$subKey];
-          }
-          else {
-            $available_user_attrs[$key][$subKey] = NULL;
-          }
-          $available_user_attrs[$key]['config_module'] = 'ldap_user';
-          $available_user_attrs[$key]['prov_module'] = 'ldap_user';
-        }
-        if ($mapping['user_attr'] == 'user_tokens') {
-          $available_user_attrs['user_attr'] = $mapping['user_tokens'];
-        }
-      }
-      return array($params, $available_user_attrs);
+    if (!empty($mappings[$direction])) {
+      $availableUserAttributes = $this->applyUserAttributes($availableUserAttributes, $mappings, $direction);
     }
-    return array($params, $available_user_attrs);
+
+    return array($availableUserAttributes, $params);
   }
 
   /**
@@ -694,9 +667,7 @@ class DrupalUserProcessor {
     $to_ldap_entry = FALSE;
 
     if ($direction === NULL || $direction == LdapConfiguration::$provisioningDirectionToDrupalUser) {
-      // @FIXME: Legacy syntax
-
-      if (property_exists($account, 'ldap_user_current_dn') && !empty($account->ldap_user_current_dn['und'][0]['value'])) {
+      if (property_exists($account, 'ldap_user_current_dn') && !empty($account->get('ldap_user_current_dn')->value)) {
         $to_drupal_user = TRUE;
       }
       elseif ($account->id()) {
@@ -706,8 +677,7 @@ class DrupalUserProcessor {
     }
 
     if ($direction === NULL || $direction == LdapConfiguration::$provisioningDirectionToLDAPEntry) {
-      //FIXME: Legacy syntax
-      if (property_exists($account, 'ldap_user_prov_entries') && !empty($account->ldap_user_prov_entries['und'][0]['value'])) {
+      if (property_exists($account, 'ldap_user_prov_entries') && !empty($account->get('ldap_user_prov_entries')->value)) {
         $to_ldap_entry = TRUE;
       }
     }
@@ -915,5 +885,49 @@ class DrupalUserProcessor {
     }
     ExternalAuthenticationHelper::deleteUserIdentifier($account->id());
   }
-  
+
+  /**
+   * @param $availableUserAttributes
+   * @param $mappings
+   * @param $direction
+   * @return mixed
+   */
+  private function applyUserAttributes($availableUserAttributes, $mappings, $direction) {
+    foreach ($mappings[$direction] as $target_token => $mapping) {
+      if ($direction == LdapConfiguration::$provisioningDirectionToDrupalUser && isset($mapping['user_attr'])) {
+        $key = $mapping['user_attr'];
+      }
+      elseif ($direction == LdapConfiguration::$provisioningDirectionToLDAPEntry && isset($mapping['ldap_attr'])) {
+        $key = $mapping['ldap_attr'];
+      }
+      else {
+        continue;
+      }
+
+      $keys = [
+        'ldap_attr',
+        'user_attr',
+        'convert',
+        'direction',
+        'enabled',
+        'prov_events'
+      ];
+
+      foreach ($keys as $subKey) {
+        if (isset($mapping[$subKey])) {
+          $availableUserAttributes[$key][$subKey] = $mapping[$subKey];
+        }
+        else {
+          $availableUserAttributes[$key][$subKey] = NULL;
+        }
+        $availableUserAttributes[$key]['config_module'] = 'ldap_user';
+        $availableUserAttributes[$key]['prov_module'] = 'ldap_user';
+      }
+      if ($mapping['user_attr'] == 'user_tokens') {
+        $availableUserAttributes['user_attr'] = $mapping['user_tokens'];
+      }
+    }
+    return $availableUserAttributes;
+  }
+
 }

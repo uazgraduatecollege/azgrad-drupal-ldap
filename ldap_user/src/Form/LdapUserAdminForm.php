@@ -618,10 +618,12 @@ EOT;
           ||
           (isset($mapping['configurable_to_ldap']) && $mapping['configurable_to_ldap']  && $direction == LdapConfiguration::$provisioningDirectionToLDAPEntry)
         ) {
-          $user_attr_options[$target_id] = substr($mapping['name'], 0, 25);
+          $user_attr_options[$target_id] = $mapping['name'];
         }
       }
     }
+
+
     $user_attr_options['user_tokens'] = '-- user tokens --';
 
     $row = 0;

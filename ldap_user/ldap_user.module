@@ -62,7 +62,7 @@ function ldap_user_ldap_attributes_needed_alter(&$attributes, $params) {
  */
 function ldap_user_ldap_user_attrs_list_alter(&$available_user_attrs, &$params) {
   $processor = new DrupalUserProcessor();
-  list($params, $available_user_attrs) = $processor->alterLdapUserAttributes($available_user_attrs, $params);
+  list($available_user_attrs, $params) = $processor->alterLdapUserAttributes($available_user_attrs, $params);
 }
 
 

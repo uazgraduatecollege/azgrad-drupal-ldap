@@ -64,8 +64,6 @@ class SyncMappingHelper {
   /**
    * Util to fetch mappings for a given direction.
    *
-   * @param string $sid
-   *   The server id.
    * @param string $direction
    * @param array $prov_events
    *
@@ -119,6 +117,7 @@ class SyncMappingHelper {
    * should know when to invalidate cache.
    */
   public function setSyncMapping() {
+    // FIXME: This cache should be invalidated when user fields are added.
     $sync_mapping_cache = \Drupal::cache()->get('ldap_user_sync_mapping');
     if ($sync_mapping_cache) {
       $this->syncMapping = $sync_mapping_cache->data;
