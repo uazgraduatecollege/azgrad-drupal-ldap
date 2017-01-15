@@ -42,18 +42,23 @@ class ServerListBuilder extends ConfigEntityListBuilder {
     return $row + parent::buildRow($entity);
   }
 
+  /**
+   *
+   */
   private function checkStatus($server_id) {
     $server = Server::load($server_id);
     $connection_result = $server->connect();
     if ($server->get('status')) {
       if ($connection_result == Server::LDAP_SUCCESS) {
         $bind_result = $server->bind();
-        if ($bind_result  == Server::LDAP_SUCCESS) {
+        if ($bind_result == Server::LDAP_SUCCESS) {
           return t('Server available');
-        } else {
+        }
+        else {
           return t('Connection successful, bind failed.');
         }
-      } else {
+      }
+      else {
         return t('Cannot connect');
       }
     }

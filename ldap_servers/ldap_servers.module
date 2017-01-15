@@ -84,8 +84,6 @@ function ldap_servers_ldap_attributes_needed_alter(&$attributes, $params) {
   $attributes = $factory->alterLdapAttributes($attributes, $params);
 }
 
-
-
 /**
  * Implements hook_ldap_user_attrs_list_alter().
  */
@@ -93,8 +91,6 @@ function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$param
   $factory = \Drupal::service('ldap.servers');
   list($params, $available_user_attrs) = $factory->alterLdapUserAttributesList($available_user_attrs, $params);
 }
-
-
 
 /**
  * Implements hook_user_logout().

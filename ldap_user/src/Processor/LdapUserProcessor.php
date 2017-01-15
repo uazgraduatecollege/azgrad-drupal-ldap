@@ -10,11 +10,17 @@ use Drupal\ldap_user\Helper\LdapConfiguration;
 use Drupal\ldap_user\Helper\SyncMappingHelper;
 use Drupal\user\Entity\User;
 
+/**
+ *
+ */
 class LdapUserProcessor {
 
   private $config;
   private $detailedWatchdog = FALSE;
 
+  /**
+   *
+   */
   public function __construct() {
     $this->config = \Drupal::config('ldap_user.settings')->get('ldap_user_conf');
     $this->detailedWatchdog = \Drupal::config('ldap_help.settings')->get('watchdog_detail');
@@ -42,7 +48,7 @@ class LdapUserProcessor {
     if ($this->config['ldapEntryProvisionServer']) {
 
       $factory = \Drupal::service('ldap.servers');
-      /* @var Server $ldap_server */
+      /** @var Server $ldap_server */
       $ldap_server = $factory->getServerById($this->config['ldapEntryProvisionServer']);
 
       $params = array(
@@ -109,7 +115,7 @@ class LdapUserProcessor {
       '%dn' => isset($result['proposed']['dn']) ? $result['proposed']['dn'] : NULL,
       '%sid' => $this->config['ldapEntryProvisionServer'],
       '%username' => $account->getAccountName(),
-      '%uid' => (!method_exists($account,'id') || empty($account->id())) ? '' : $account->id(),
+      '%uid' => (!method_exists($account, 'id') || empty($account->id())) ? '' : $account->id(),
     ];
 
     if ($result) {
@@ -254,7 +260,7 @@ class LdapUserProcessor {
       return $result;
     }
     $factory = \Drupal::service('ldap.servers');
-    /* @var Server $ldap_server */
+    /** @var Server $ldap_server */
     $ldap_server = $factory->getServerById($this->config['ldapEntryProvisionServer']);
     $params = [
       'direction' => LdapConfiguration::$provisioningDirectionToLDAPEntry,
@@ -382,7 +388,6 @@ class LdapUserProcessor {
     return $result;
   }
 
-
   /**
    * Given a drupal account, delete ldap entry that was provisioned based on it
    *   normally this will be 0 or 1 entry, but the ldap_user_provisioned_ldap_entries
@@ -407,7 +412,7 @@ class LdapUserProcessor {
           $factory = \Drupal::service('ldap.servers');
           $ldap_server = $factory->getServerById($sid);
           if (is_object($ldap_server) && $dn) {
-            /* @var Server $ldap_server */
+            /** @var Server $ldap_server */
             $boolean_result = $ldap_server->delete($dn);
             $tokens = array('%sid' => $sid, '%dn' => $dn, '%username' => $account->getUsername(), '%uid' => $account->id());
             if ($boolean_result) {
@@ -444,7 +449,7 @@ class LdapUserProcessor {
     }
     // $user_entity->ldap_user_prov_entries,.
     $factory = \Drupal::service('ldap.servers');
-    /* @var Server $ldap_server */
+    /** @var Server $ldap_server */
     $ldap_server = $factory->getServerById($sid);
     $params = [
       'direction' => LdapConfiguration::$provisioningDirectionToLDAPEntry,
@@ -470,6 +475,5 @@ class LdapUserProcessor {
     return $ldap_entry;
 
   }
-
 
 }

@@ -67,7 +67,7 @@ class TokenProcessor {
   /**
    * @param string $user_attr_key
    *   A string in the form of <attr_type>.<attr_name>[:<instance>] such as
-   * field.lname, property.mail, field.aliases:2.
+   *   field.lname, property.mail, field.aliases:2.
    *
    * @return array
    *   An array such as array('field','field_user_lname', NULL).
@@ -531,7 +531,9 @@ class TokenProcessor {
 
   /**
    * Function to convert microsoft style guids to strings.
+   *
    * @param $value
+   *
    * @return string
    */
   public static function convertMsguidToString($value) {

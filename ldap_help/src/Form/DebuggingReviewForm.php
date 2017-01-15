@@ -99,7 +99,7 @@ class DebuggingReviewForm extends FormBase {
 
       $servers = new ServerFactory();
       foreach ($servers->getAllServers() as $sid => $server) {
-        /* @var Server $server */
+        /** @var Server $server */
         $form['config_server_' . $sid] = [
           '#markup' =>
             '<h3>' . $this->t('Server @name:', ['@name' => $server->label()]) . '</h3>' .

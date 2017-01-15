@@ -2,11 +2,11 @@
 
 namespace Drupal\ldap_user\Helper;
 
-
-
-
 use Drupal\ldap_servers\Processor\TokenProcessor;
 
+/**
+ *
+ */
 class SyncMappingHelper {
 
 
@@ -36,6 +36,9 @@ class SyncMappingHelper {
 
   private $config;
 
+  /**
+   *
+   */
   public function __construct() {
     $this->config = \Drupal::config('ldap_user.settings')->get('ldap_user_conf');
     $this->setSyncMapping();
@@ -127,10 +130,11 @@ class SyncMappingHelper {
       foreach (array(LdapConfiguration::$provisioningDirectionToDrupalUser, LdapConfiguration::$provisioningDirectionToLDAPEntry) as $direction) {
         if ($direction == LdapConfiguration::$provisioningDirectionToDrupalUser) {
           $sid = \Drupal::config('ldap_user.settings')->get('ldap_user_conf.drupalAcctProvisionServer');
-        } else {
+        }
+        else {
           $sid = \Drupal::config('ldap_user.settings')->get('ldap_user_conf.ldapEntryProvisionServer');
         }
-        $available_user_attributes[$direction] =[];
+        $available_user_attributes[$direction] = [];
         $ldap_server = FALSE;
         if ($sid) {
           try {

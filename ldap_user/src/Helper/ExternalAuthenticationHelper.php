@@ -2,7 +2,9 @@
 
 namespace Drupal\ldap_user\Helper;
 
-
+/**
+ *
+ */
 class ExternalAuthenticationHelper {
 
   /**
@@ -62,4 +64,5 @@ class ExternalAuthenticationHelper {
     // Everyone else is fine.
     return FALSE;
   }
+
 }

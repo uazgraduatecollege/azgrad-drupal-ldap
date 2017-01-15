@@ -19,7 +19,7 @@ class ServerForm extends EntityForm {
   public function form(array $form, FormStateInterface $form_state) {
     $form = parent::form($form, $form_state);
 
-    /* @var Server $server */
+    /** @var Server $server */
     $server = $this->entity;
 
     $form['server'] = array(
@@ -475,7 +475,7 @@ class ServerForm extends EntityForm {
    * {@inheritdoc}
    */
   public function save(array $form, FormStateInterface $form_state) {
-    /* @var Server $new_configuration */
+    /** @var Server $new_configuration */
     $new_configuration = $this->entity;
 
     // Handle the password as the form is empty.
@@ -489,7 +489,7 @@ class ServerForm extends EntityForm {
     // If there isn't a password then load the existing one (unless this an anonymous bind server)
     elseif ($form_state->getValue('bind_method') != Server::$bindMethodAnon || $form_state->getValue('bind_method') != Server::$bindMethodAnonUser) {
       $factory = \Drupal::service('ldap.servers');
-      /* @var Server $existing_configuration */
+      /** @var Server $existing_configuration */
       $existing_configuration = $factory->getServerById($new_configuration->id());
       if ($existing_configuration && $existing_configuration->get('bindpw')) {
         $new_configuration->set('bindpw', $existing_configuration->get('bindpw'));

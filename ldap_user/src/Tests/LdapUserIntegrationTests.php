@@ -30,7 +30,6 @@ class LdapWebUserIntegrationTests extends LdapWebTestBase {
   public $module_name = 'ldap_user';
   protected $ldap_test_data;
 
-
   /**
    * Integration tests for provisioning to ldap.
    */
@@ -91,7 +90,6 @@ class LdapWebUserIntegrationTests extends LdapWebTestBase {
       );
       $this->assertTrue($ldap_entry_success, t("provision of ldap entry on user create succeeded for " . $username), $this->testId("test for provision to ldap on drupal acct create"));
 
-
       // Need to reset for simpletests.
       SemaphoreStorage::flushAllValues();
 
@@ -117,7 +115,6 @@ class LdapWebUserIntegrationTests extends LdapWebTestBase {
 
       $this->assertTrue($ldap_entry_success, t("sync to ldap entry on user save succeeded for " . $username), $this->testId());
 
-
       // Change username and first name (in drupal) and save user to test ldapSync event handler
       // confirm that appropriate attributes were changed in ldap entry.
       $ldap_entry_pre = $servers[$test_sid]->dnExists($desired_dn, 'ldap_entry');
@@ -130,8 +127,7 @@ class LdapWebUserIntegrationTests extends LdapWebTestBase {
       // $user_acct = user_save($user_acct, $edit);
       $user_acct_post = user_load_by_name('bhautdeser');
 
-
-      /* @var Server $servers[$test_sid] */
+      /** @var Server $servers[$test_sid] */
       $ldap_entry_post = $servers[$test_sid]->dnExists($desired_dn, 'ldap_entry');
 
       $ldap_entry_success = (
@@ -290,7 +286,6 @@ class LdapWebUserIntegrationTests extends LdapWebTestBase {
       $user_acct->is_new = TRUE;
       $user_acct->field_fname['und'][0]['value'] = 'Bercilak';
       $user_acct->field_lname['und'][0]['value'] = 'Hautdesert';
-
 
       $desired_dn = "cn=bhautdeser,ou=people,dc=hogwarts,dc=edu";
 

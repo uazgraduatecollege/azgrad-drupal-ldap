@@ -33,7 +33,7 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
    *
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
-    /* @var AuthorizationProfile $profile */
+    /** @var AuthorizationProfile $profile */
     $profile = $this->configuration['profile'];
     $tokens = $this->getTokens();
     $tokens += $profile->getTokens();
@@ -61,7 +61,7 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
     else {
       $server_options = array();
       foreach ($servers as $id => $server) {
-        /* @var Server $server */
+        /** @var Server $server */
         $server_options[$id] = $server->label() . ' (' . $server->get('address') . ')';
       }
     }
@@ -149,7 +149,7 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
    */
   public function buildRowForm(array $form, FormStateInterface $form_state, $index = 0) {
     $row = array();
-    /* @var AuthorizationProfile $this->configuration['profile'] */
+    /** @var AuthorizationProfile $this->configuration['profile'] */
     $mappings = $this->configuration['profile']->getProviderMappings();
     $row['query'] = array(
       '#type' => 'textfield',
@@ -186,14 +186,14 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
     if (ExternalAuthenticationHelper::excludeUser($user)) {
       throw new AuthorizationSkipAuthorization();
     }
-    /* @var AuthorizationProfile $profile */
+    /** @var AuthorizationProfile $profile */
     $profile = $this->configuration['profile'];
     $config = $profile->getProviderConfig();
 
     // Load the correct server.
     $server_id = $config['status']['server'];
     $factory = \Drupal::service('ldap.servers');
-    /* @var Server $server */
+    /** @var Server $server */
     $server = $factory->getServerByIdEnabled($server_id);
     $ldapUserData = $factory->getUserDataFromServerByAccount($user, $server_id);
 
@@ -260,7 +260,7 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
    */
   public function sanitizeProposals($proposals, $op = NULL) {
     // Configure this provider.
-    /* @var AuthorizationProfile $profile */
+    /** @var AuthorizationProfile $profile */
     $profile = $this->configuration['profile'];
     $config = $profile->getProviderConfig();
     $factory = \Drupal::service('ldap.servers');

@@ -39,7 +39,7 @@ function ldap_authentication_help($path, $arg) {
 
   $authentication_help = t('LDAP authentication allows authentication against an LDAP server. It may be used alongside other authentication means such as built in Drupal authentication, OpenID, etc.  More detailed help is available on drupal.org at !helplink.', [
     '%helplink' => \Drupal::l('http://drupal.org/node/997082', Url::fromUri('http://drupal.org/node/997082')),
-    ]
+  ]
   );
   switch ($path) {
     case 'admin/config/people/ldap/authentication':
@@ -115,7 +115,6 @@ function ldap_authentication_show_reset_pwd($user = NULL) {
 
 }
 
-
 /**
  * Implements hook_form_FORM_ID_alter().
  */
@@ -156,7 +155,6 @@ function _ldap_authentication_admin_user_form_warning() {
   return $warning;
 }
 
-
 /**
  * A validate handler on the login form.
  *
@@ -187,8 +185,8 @@ function ldap_authentication_user_pass_validate(&$form, FormStateInterface $form
   if ($account) {
     if (ldap_authentication_ldap_authenticated($account)) {
       $error = TRUE;
-        if (\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.passwordOption') == LdapAuthenticationConfiguration::$passwordFieldAllow) {
-          $error = FALSE;
+      if (\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.passwordOption') == LdapAuthenticationConfiguration::$passwordFieldAllow) {
+        $error = FALSE;
       }
       if (!empty($error)) {
         if (\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.passwordOption')) {
@@ -197,7 +195,7 @@ function ldap_authentication_user_pass_validate(&$form, FormStateInterface $form
             [
               '@link' => \Drupal::l(t(
                 \Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.ldapUserHelpLinkText')),
-                Url::fromUri(\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.ldapUserHelpLinkUrl')))
+                Url::fromUri(\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.ldapUserHelpLinkUrl'))),
             ]
           );
         }
@@ -276,6 +274,7 @@ function ldap_authentication_form_user_login_block_alter(&$form, &$form_state) {
 
 /**
  * Validate function for user logon forms.
+ *
  * @param $form
  * @param FormStateInterface $form_state
  */
@@ -329,7 +328,7 @@ function _ldap_authentication_login_form_alter(&$form, &$form_state, $form_id) {
    * without any other external authentication modules, this array will start out as:
    *    array('user_login_name_validate', 'user_login_authenticate_validate', 'user_login_final_validate')
    */
-  
+
   if (@in_array('::validateAuthentication', $form['#validate']) &&
     \Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.authenticationMode')) {
     $key = array_search('::validateAuthentication', $form['#validate']);
@@ -346,10 +345,10 @@ function _ldap_authentication_login_form_alter(&$form, &$form_state, $form_id) {
     if (ldap_authentication_show_reset_pwd()) {
       $items[] = \Drupal::l(t('Request new password'), Url::fromRoute('user.pass'));
     }
-    
+
     elseif (\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.ldapUserHelpLinkUrl')) {
       $items[] = \Drupal::l(
-        t(\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.ldapUserHelpLinkText')), 
+        t(\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.ldapUserHelpLinkText')),
         Url::fromUri(\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.ldapUserHelpLinkUrl'))
       );
     }
@@ -378,7 +377,7 @@ function _ldap_authentication_login_form_alter(&$form, &$form_state, $form_id) {
  */
 function _ldap_authentication_disable_http_check(&$form) {
 
-  if (\Drupal::config('ldap_servers.settings')->get('require_ssl_for_credentials') == 1 ) {
+  if (\Drupal::config('ldap_servers.settings')->get('require_ssl_for_credentials') == 1) {
     \Drupal::service('page_cache_kill_switch')->trigger();
     if (!\Drupal::request()->isSecure()) {
       $tokens = array(

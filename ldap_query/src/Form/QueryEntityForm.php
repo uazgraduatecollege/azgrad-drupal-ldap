@@ -40,7 +40,7 @@ class QueryEntityForm extends EntityForm {
     $factory = \Drupal::service('ldap.servers');
     $servers = $factory->getAllServers();
     $options = [];
-    /* @var Server $server */
+    /** @var Server $server */
     foreach ($servers as $server) {
       $options[$server->id()] = $server->label();
     }

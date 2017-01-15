@@ -19,15 +19,15 @@ class LoginValidator {
 
   protected $drupalUserAuthMapped = FALSE;
   public $drupalUserName = FALSE;
-  /* @var Server $serverDrupalUser */
+  /** @var Server $serverDrupalUser */
   public $serverDrupalUser = FALSE;
-  /* @var User $drupalUser */
+  /** @var User $drupalUser */
   public $drupalUser = FALSE;
   public $ldapUser = FALSE;
 
   protected $detailedLogging = FALSE;
 
-  /* @var FormStateInterface $formState */
+  /** @var FormStateInterface $formState */
   protected $formState;
 
   public function __construct() {
@@ -590,7 +590,7 @@ class LoginValidator {
     $puid = $this->serverDrupalUser->userPuidFromLdapEntry($this->ldapUser['attr']);
     if ($puid) {
       $this->drupalUser = $this->serverDrupalUser->userUserEntityFromPuid($puid);
-      /* @var User $userMatchingPuid */
+      /** @var User $userMatchingPuid */
       if ($this->drupalUser) {
         $this->drupalUser->setUsername($this->drupalUserName);
         $this->drupalUser->save();
@@ -686,7 +686,7 @@ class LoginValidator {
         ->get('ldap_user_conf.userConflictResolve') == LdapConfiguration::$userConflictLog
     ) {
       if ($account_with_same_email = user_load_by_mail($this->ldapUser['mail'])) {
-        /* @var UserInterface $account_with_same_email */
+        /** @var UserInterface $account_with_same_email */
         \Drupal::logger('ldap_authentication')
           ->error('LDAP user with DN %dn has a naming conflict with a local drupal user %conflict_name',
             [

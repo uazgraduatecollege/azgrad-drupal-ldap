@@ -13,7 +13,7 @@ use Drupal\ldap_servers\Processor\TokenProcessor;
  */
 class ServerTestForm extends EntityForm {
 
-  /* @var Server $ldapServer */
+  /** @var Server $ldapServer */
   protected $ldapServer;
 
   /**
@@ -39,7 +39,7 @@ class ServerTestForm extends EntityForm {
 
     if (!\Drupal::moduleHandler()->moduleExists('ldap_user')) {
       $form['error'] = [
-        '#markup' => '<h3>' . t('This form requires ldap_user to function correctly, please enable it.') . '</h3>'
+        '#markup' => '<h3>' . t('This form requires ldap_user to function correctly, please enable it.') . '</h3>',
       ];
       return $form;
     }
@@ -164,7 +164,7 @@ class ServerTestForm extends EntityForm {
           '#rows' => $rows,
         );
 
-        $form['#suffix']  = '<div class="content">
+        $form['#suffix'] = '<div class="content">
         <h2>' . t('LDAP Entry for %username (dn: %dn)', array('%dn' => $test_data['ldap_user']['dn'], '%username' => $test_data['username'])) . '</h2>'
           . drupal_render($settings) . '</div>';
       }
@@ -178,7 +178,7 @@ class ServerTestForm extends EntityForm {
       ];
 
       foreach ($test_data['results_tables'] as $table_name => $table_data) {
-       $settings = array(
+        $settings = array(
           '#type' => 'table',
           '#header' => array('Test', 'Result'),
           '#rows' => $table_data,
@@ -394,7 +394,7 @@ class ServerTestForm extends EntityForm {
       if ($result == Server::LDAP_SUCCESS) {
         $results_tables['basic'][] = [
           t('Successfully bound to server'),
-          t('PASS')
+          t('PASS'),
         ];
       }
       else {
@@ -466,7 +466,7 @@ class ServerTestForm extends EntityForm {
         $group_results = [];
         $group_results[] = [
           "ldap_server->groupIsMember($group_dn, $user, nested=$nested_display)",
-          $result
+          $result,
         ];
 
         if ($this->ldapServer->groupUserMembershipsConfigured()) {
@@ -549,10 +549,14 @@ class ServerTestForm extends EntityForm {
     return array($group_entry, $values, $results_tables);
   }
 
+  /**
+   *
+   */
   public static function binaryCheck($input) {
     if (preg_match('~[^\x20-\x7E\t\r\n]~', $input) > 0) {
       return t('Binary (excerpt): @excerpt', array('@excerpt' => Unicode::truncate($input, 120, FALSE, TRUE)));
-    } else {
+    }
+    else {
       return $input;
     }
   }

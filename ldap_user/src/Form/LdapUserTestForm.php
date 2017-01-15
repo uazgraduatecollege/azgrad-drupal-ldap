@@ -111,7 +111,7 @@ class LdapUserTestForm extends FormBase {
 
     if ($username && count($selected_actions) > 0) {
 
-      /* @var User $account */
+      /** @var User $account */
       $account = user_load_by_name($username);
 
       $config = \Drupal::config('ldap_user.settings')->get('ldap_user_conf');
@@ -194,7 +194,7 @@ class LdapUserTestForm extends FormBase {
             }
             else {
               // To ldap.
-              // FIXME
+              // FIXME.
               $ldapProcessor->syncToLdapEntry($account, [], $test_query);
               $results['syncToLdapEntry method results']["context = $sync_trigger_description"] = $provision_result;
             }

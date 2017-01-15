@@ -7,7 +7,9 @@ namespace Drupal\ldap_user\Helper;
  */
 class LdapConfiguration {
 
-  // Provisioning events (events are triggered by triggers).
+  /**
+   * Provisioning events (events are triggered by triggers).
+   */
   public static $eventCreateDrupalUser = 1;
   public static $eventSyncToDrupalUser = 2;
   public static $eventCreateLdapEntry = 3;
@@ -26,20 +28,28 @@ class LdapConfiguration {
   public static $provisioningResultNoPassword = 1;
   public static $provisioningResultBadParameters = 2;
 
-  // Originally needed to avoid conflicting with server ids.
+  /**
+   * Originally needed to avoid conflicting with server ids.
+   */
   public static $noServerSID = 0;
 
-  // Configurable Drupal account provision triggers.
+  /**
+   * Configurable Drupal account provision triggers.
+   */
   public static $provisionDrupalUserOnUserUpdateCreate = 1;
   public static $provisionDrupalUserOnAuthentication = 2;
   public static $provisionDrupalUserOnAllowingManualCreation = 3;
 
-  // Configurable ldap entry provision triggers.
+  /**
+   * Configurable ldap entry provision triggers.
+   */
   public static $provisionLdapEntryOnUserUpdateCreate = 6;
   public static $provisionLdapEntryOnUserAuthentication = 7;
   public static $provisionLdapEntryOnUserDelete = 8;
 
-  // Options for account creation behavior.
+  /**
+   * Options for account creation behavior.
+   */
   public static $accountCreationLdapBehaviour = 4;
   public static $accountCreationUserSettingsForLdap = 1;
 
@@ -52,35 +62,47 @@ class LdapConfiguration {
   public static $manualAccountConflictShowOptionOnForm = 3;
   public static $manualAccountConflictNoLdapAssociate = 4;
 
+  /**
+   *
+   */
   public static function getAllEvents() {
     return [
       self::$eventSyncToLdapEntry,
       self::$eventCreateDrupalUser,
       self::$eventSyncToLdapEntry,
       self::$eventCreateLdapEntry,
-      self::$eventLdapAssociateDrupalAccount
+      self::$eventLdapAssociateDrupalAccount,
     ];
   }
 
+  /**
+   *
+   */
   public static function createLDAPAccounts() {
     if (\Drupal::config('ldap_user.settings')->get('ldap_user_conf.acctCreation') == self::$accountCreationLdapBehaviour ||
       \Drupal::config('user.settings')->get('register_no_approval_required') == USER_REGISTER_VISITORS) {
       return TRUE;
-    } else {
+    }
+    else {
       return FALSE;
     }
   }
 
-
+  /**
+   *
+   */
   public static function createLDAPAccountsAdminApproval() {
     if (\Drupal::config('user.settings')->get('register_no_approval_required') == USER_REGISTER_VISITORS_ADMINISTRATIVE_APPROVAL) {
       return TRUE;
-    } else {
+    }
+    else {
       return FALSE;
     }
   }
 
-
+  /**
+   *
+   */
   public static function provisionsLdapEvents() {
     return [
       LdapConfiguration::$eventCreateLdapEntry => t('On LDAP Entry Creation'),
@@ -88,6 +110,9 @@ class LdapConfiguration {
     ];
   }
 
+  /**
+   *
+   */
   public static function provisionsDrupalEvents() {
     return [
       self::$eventCreateDrupalUser => t('On Drupal User Creation'),
@@ -95,27 +120,37 @@ class LdapConfiguration {
     ];
   }
 
+  /**
+   *
+   */
   public static function provisionsDrupalAccountsFromLdap() {
     if (\Drupal::config('ldap_user.settings')->get('ldap_user_conf.drupalAcctProvisionServer') &&
       count(array_filter(array_values(\Drupal::config('ldap_user.settings')->get('ldap_user_conf.drupalAcctProvisionTriggers')))) > 0) {
       return TRUE;
-    } else {
+    }
+    else {
       return FALSE;
     }
   }
 
+  /**
+   *
+   */
   public static function provisionsLdapEntriesFromDrupalUsers() {
     if (\Drupal::config('ldap_user.settings')->get('ldap_user_conf.ldapEntryProvisionServer') &&
       count(array_filter(array_values(\Drupal::config('ldap_user.settings')->get('ldap_user_conf.ldapEntryProvisionTriggers')))) > 0) {
       return TRUE;
-    } else {
+    }
+    else {
       return FALSE;
     }
   }
 
   /**
    * Converts the more general ldap_context string to its associated ldap user event.
+   *
    * @param string|null $ldapContext
+   *
    * @return array
    */
   public static function ldapContextToProvEvents($ldapContext = NULL) {
@@ -128,12 +163,14 @@ class LdapConfiguration {
           self::$eventLdapAssociateDrupalAccount,
         ];
         break;
+
       case 'ldap_user_prov_to_ldap':
         $result = [
           self::$eventSyncToLdapEntry,
           self::$eventCreateLdapEntry,
         ];
         break;
+
       default:
         $result = LdapConfiguration::getAllEvents();
         break;
@@ -143,7 +180,9 @@ class LdapConfiguration {
 
   /**
    * Converts the more general ldap_context string to its associated ldap user prov direction.
+   *
    * @param string|null $ldapContext
+   *
    * @return int
    */
   public static function ldapContextToProvDirection($ldapContext = NULL) {
@@ -152,10 +191,12 @@ class LdapConfiguration {
       case 'ldap_user_prov_to_drupal':
         $result = LdapConfiguration::$provisioningDirectionToDrupalUser;
         break;
+
       case 'ldap_user_prov_to_ldap':
       case 'ldap_user_delete_drupal_user':
         $result = LdapConfiguration::$provisioningDirectionToLDAPEntry;
         break;
+
       // Provisioning is can happen in both directions in most contexts.
       case 'ldap_user_insert_drupal_user':
       case 'ldap_user_update_drupal_user':
@@ -163,6 +204,7 @@ class LdapConfiguration {
       case 'ldap_user_disable_drupal_user':
         $result = LdapConfiguration::$provisioningDirectionAll;
         break;
+
       default:
         $result = LdapConfiguration::$provisioningDirectionAll;
         break;
@@ -184,7 +226,6 @@ class LdapConfiguration {
    *
    * @deprecated
    *
-   *
    * @return bool
    */
   public static function provisionEnabled($direction, $provision_trigger) {
@@ -201,18 +242,26 @@ class LdapConfiguration {
     return $result;
   }
 
+  /**
+   *
+   */
   public static function provisionAvailableToLDAP($trigger) {
     if (\Drupal::config('ldap_user.settings')->get('ldap_user_conf.ldapEntryProvisionTriggers')) {
       return in_array($trigger, \Drupal::config('ldap_user.settings')->get('ldap_user_conf.ldapEntryProvisionTriggers'));
-    } else {
+    }
+    else {
       return FALSE;
     }
   }
 
+  /**
+   *
+   */
   public static function provisionAvailableToDrupal($trigger) {
     if (\Drupal::config('ldap_user.settings')->get('ldap_user_conf.drupalAcctProvisionTriggers')) {
       return in_array($trigger, \Drupal::config('ldap_user.settings')->get('ldap_user_conf.drupalAcctProvisionTriggers'));
-    } else {
+    }
+    else {
       return FALSE;
     }
   }

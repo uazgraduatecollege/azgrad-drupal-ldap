@@ -11,14 +11,12 @@ use Drupal\Core\Url;
  */
 class ServerEnableDisableForm extends EntityConfirmFormBase {
 
-
   /**
    * {@inheritdoc}
    */
   public function getFormId() {
     return 'ldap_servers_enable_disable_form';
   }
-
 
   /**
    * {@inheritdoc}
@@ -42,7 +40,8 @@ class ServerEnableDisableForm extends EntityConfirmFormBase {
   public function getConfirmText() {
     if ($this->entity->get('status') == 1) {
       return $this->t('Disable');
-    } else {
+    }
+    else {
       return $this->t('Enable');
     }
   }
@@ -71,4 +70,5 @@ class ServerEnableDisableForm extends EntityConfirmFormBase {
 
     $form_state->setRedirect('entity.ldap_server.collection');
   }
+
 }

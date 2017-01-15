@@ -26,7 +26,6 @@ class OrphanProcessor {
    * longer have a related LDAP entry.
    *
    * @return boolean FALSE on error or incompletion or TRUE otherwise
-   *
    */
   public function checkOrphans() {
 
@@ -53,7 +52,8 @@ class OrphanProcessor {
       }
 
       return TRUE;
-    } else {
+    }
+    else {
       return FALSE;
     }
   }
@@ -92,7 +92,7 @@ class OrphanProcessor {
     $to = \Drupal::config('system.site')->get('mail');
     $siteLanguage = \Drupal::languageManager()->getCurrentLanguage()->getId();
     $params = ['accounts' => $this->emailList];
-    $result = $mailManager->mail('ldap_user', 'orphaned_accounts', $to, $siteLanguage, $params, NULL, true);
+    $result = $mailManager->mail('ldap_user', 'orphaned_accounts', $to, $siteLanguage, $params, NULL, TRUE);
     if (!$result) {
       \Drupal::logger('ldap_user')->error('Could not send orphaned LDAP accounts notification.');
     }
@@ -200,13 +200,16 @@ class OrphanProcessor {
       case 'always':
         $group->condition('ldap_user_last_checked', time(), '<');
         break;
+
       case 'daily':
         $group->condition('ldap_user_last_checked', strtotime('today'), '<');
         break;
+
       case 'weekly':
       default:
         $group->condition('ldap_user_last_checked', strtotime('today - 7 days'), '<');
         break;
+
       case 'monthly':
         $group->condition('ldap_user_last_checked', strtotime('today - 30 days'), '<');
         break;
@@ -241,6 +244,7 @@ class OrphanProcessor {
               case 'ldap_user_orphan_email';
                 $this->emailList[] = $account->getAccountName() . "," . $account->getEmail() . "," . $base_url . "/user/" . $user_data['uid'] . "/edit";
                 break;
+
               case 'user_cancel_block':
               case 'user_cancel_block_unpublish':
               case 'user_cancel_reassign':

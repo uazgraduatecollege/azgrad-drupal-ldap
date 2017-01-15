@@ -6,7 +6,6 @@ use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\ldap_servers\Processor\TokenProcessor;
 use Drupal\Tests\UnitTestCase;
 
-
 /**
  * @coversDefaultClass \Drupal\ldap_servers\PRocessor\TokenProcessor
  * @group ldap
@@ -18,6 +17,9 @@ class TokenTests extends UnitTestCase {
   public $config;
   public $container;
 
+  /**
+   *
+   */
   protected function setUp() {
     parent::setUp();
 
@@ -56,8 +58,11 @@ class TokenTests extends UnitTestCase {
     \Drupal::setContainer($this->container);
   }
 
+  /**
+   *
+   */
   public function testTokenReplacement() {
-    
+
     // Test tokens, see http://drupal.org/node/1245736
     $ldap_entry = [
       'dn' => 'cn=hpotter,ou=people,dc=hogwarts,dc=edu',
@@ -124,6 +129,9 @@ class TokenTests extends UnitTestCase {
 
   }
 
+  /**
+   *
+   */
   public function testPasswordStorage() {
     $password = 'my-pass';
 

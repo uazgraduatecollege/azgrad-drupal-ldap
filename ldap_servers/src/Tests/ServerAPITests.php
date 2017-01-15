@@ -6,7 +6,6 @@ use Drupal\Component\Utility\Unicode;
 
 /**
  * Placeholder for remaining unported functions from legacy tests.
- *
  */
 class ServerAPITests {
 
@@ -271,6 +270,5 @@ class ServerAPITests {
     $results['count'] = count($results);
     return $results;
   }
-
 
 }

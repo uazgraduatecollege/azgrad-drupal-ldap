@@ -13,10 +13,16 @@ use Drupal\ldap_user\Helper\SyncMappingHelper;
 use Drupal\user\entity\User;
 use Drupal\user\UserInterface;
 
+/**
+ *
+ */
 class DrupalUserProcessor {
 
   private $config;
 
+  /**
+   *
+   */
   public function __construct() {
     $this->config = \Drupal::config('ldap_user.settings')->get('ldap_user_conf');
   }
@@ -31,7 +37,7 @@ class DrupalUserProcessor {
   public function ldapAssociateDrupalAccount($drupal_username) {
     if ($this->config['drupalAcctProvisionServer']) {
       $factory = \Drupal::service('ldap.servers');
-      /* @var Server $ldap_server */
+      /** @var Server $ldap_server */
       $ldap_server = $factory->getServerByIdEnabled($this->config['drupalAcctProvisionServer']);
       $account = user_load_by_name($drupal_username);
       if (!$account) {
@@ -166,7 +172,7 @@ class DrupalUserProcessor {
       // Sync drupal account, since drupal account exists.
       if ($account2) {
         // 1. correct username and authmap.
-        /* @var User $account2 */
+        /** @var User $account2 */
         $this->applyAttributesToAccount($ldap_user, $account2, $ldap_server, LdapConfiguration::$provisioningDirectionToDrupalUser, array(LdapConfiguration::$eventSyncToDrupalUser));
         $account = $account2;
         $account->save();
@@ -426,7 +432,7 @@ class DrupalUserProcessor {
    * @param $params
    * @return mixed
    */
-  function alterUserAttributes($attributes, $params) {
+  public function alterUserAttributes($attributes, $params) {
     // Puid attributes are server specific.
     if (isset($params['sid']) && $params['sid']) {
       if (is_scalar($params['sid'])) {
@@ -472,7 +478,6 @@ class DrupalUserProcessor {
     return $attributes;
   }
 
-
   /**
    * @param $availableUserAttributes
    * @param $params
@@ -494,7 +499,7 @@ class DrupalUserProcessor {
         'enabled' => TRUE,
         'prov_events' => array(
           LdapConfiguration::$eventCreateDrupalUser,
-          LdapConfiguration::$eventSyncToDrupalUser
+          LdapConfiguration::$eventSyncToDrupalUser,
         ),
         'config_module' => 'ldap_user',
         'prov_module' => 'ldap_user',
@@ -508,7 +513,7 @@ class DrupalUserProcessor {
         'enabled' => TRUE,
         'prov_events' => array(
           LdapConfiguration::$eventCreateDrupalUser,
-          LdapConfiguration::$eventSyncToDrupalUser
+          LdapConfiguration::$eventSyncToDrupalUser,
         ),
         'config_module' => 'ldap_user',
         'prov_module' => 'ldap_user',
@@ -522,7 +527,7 @@ class DrupalUserProcessor {
         'enabled' => TRUE,
         'prov_events' => array(
           LdapConfiguration::$eventCreateDrupalUser,
-          LdapConfiguration::$eventSyncToDrupalUser
+          LdapConfiguration::$eventSyncToDrupalUser,
         ),
         'config_module' => 'ldap_user',
         'prov_module' => 'ldap_user',
@@ -536,7 +541,7 @@ class DrupalUserProcessor {
         'enabled' => TRUE,
         'prov_events' => array(
           LdapConfiguration::$eventCreateDrupalUser,
-          LdapConfiguration::$eventSyncToDrupalUser
+          LdapConfiguration::$eventSyncToDrupalUser,
         ),
         'config_module' => 'ldap_user',
         'prov_module' => 'ldap_user',
@@ -556,32 +561,32 @@ class DrupalUserProcessor {
 
     // @todo make these merges so they don't override saved values such as 'enabled'
     $availableUserAttributes['[property.status]'] = $availableUserAttributes['[property.status]'] + [
-        'name' => 'Property: Account Status',
-        'configurable_to_drupal' => 1,
-        'configurable_to_ldap' => 1,
-        'user_tokens' => '1=enabled, 0=blocked.',
-        'enabled' => FALSE,
-        'config_module' => 'ldap_user',
-        'prov_module' => 'ldap_user',
-      ];
+      'name' => 'Property: Account Status',
+      'configurable_to_drupal' => 1,
+      'configurable_to_ldap' => 1,
+      'user_tokens' => '1=enabled, 0=blocked.',
+      'enabled' => FALSE,
+      'config_module' => 'ldap_user',
+      'prov_module' => 'ldap_user',
+    ];
 
     $availableUserAttributes['[property.timezone]'] = $availableUserAttributes['[property.timezone]'] + [
-        'name' => 'Property: User Timezone',
-        'configurable_to_drupal' => 1,
-        'configurable_to_ldap' => 1,
-        'enabled' => FALSE,
-        'config_module' => 'ldap_user',
-        'prov_module' => 'ldap_user',
-      ];
+      'name' => 'Property: User Timezone',
+      'configurable_to_drupal' => 1,
+      'configurable_to_ldap' => 1,
+      'enabled' => FALSE,
+      'config_module' => 'ldap_user',
+      'prov_module' => 'ldap_user',
+    ];
 
     $availableUserAttributes['[property.signature]'] = $availableUserAttributes['[property.signature]'] + array(
-        'name' => 'Property: User Signature',
-        'configurable_to_drupal' => 1,
-        'configurable_to_ldap' => 1,
-        'enabled' => FALSE,
-        'config_module' => 'ldap_user',
-        'prov_module' => 'ldap_user',
-      );
+      'name' => 'Property: User Signature',
+      'configurable_to_drupal' => 1,
+      'configurable_to_ldap' => 1,
+      'enabled' => FALSE,
+      'config_module' => 'ldap_user',
+      'prov_module' => 'ldap_user',
+    );
 
     // 2. Drupal user fields.
     $user_fields = \Drupal::entityManager()->getFieldStorageDefinitions('user');
@@ -593,13 +598,13 @@ class DrupalUserProcessor {
       }
 
       $availableUserAttributes[$field_id] = $availableUserAttributes[$field_id] + array(
-          'name' => t('Field') . ': ' . $field_instance->getLabel(),
-          'configurable_to_drupal' => 1,
-          'configurable_to_ldap' => 1,
-          'enabled' => FALSE,
-          'config_module' => 'ldap_user',
-          'prov_module' => 'ldap_user',
-        );
+        'name' => t('Field') . ': ' . $field_instance->getLabel(),
+        'configurable_to_drupal' => 1,
+        'configurable_to_ldap' => 1,
+        'enabled' => FALSE,
+        'config_module' => 'ldap_user',
+        'prov_module' => 'ldap_user',
+      );
     }
 
     if (!LdapConfiguration::provisionsDrupalAccountsFromLdap()) {
@@ -616,7 +621,7 @@ class DrupalUserProcessor {
         'enabled' => TRUE,
         'prov_events' => array(
           LdapConfiguration::$eventCreateDrupalUser,
-          LdapConfiguration::$eventSyncToDrupalUser
+          LdapConfiguration::$eventSyncToDrupalUser,
         ),
         'config_module' => 'ldap_user',
         'prov_module' => 'ldap_user',
@@ -631,7 +636,7 @@ class DrupalUserProcessor {
         'enabled' => TRUE,
         'prov_events' => array(
           LdapConfiguration::$eventCreateDrupalUser,
-          LdapConfiguration::$eventSyncToDrupalUser
+          LdapConfiguration::$eventSyncToDrupalUser,
         ),
         'config_module' => 'ldap_user',
         'prov_module' => 'ldap_user',
@@ -709,7 +714,7 @@ class DrupalUserProcessor {
     if (is_object($account) && $account->getUsername()) {
       // Check for first time user.
       $new_account_request = (boolean) (\Drupal::currentUser()
-          ->isAnonymous() && $account->isNew());
+        ->isAnonymous() && $account->isNew());
       $already_provisioned_to_ldap = SemaphoreStorage::get('provision', $account->getUsername());
       $already_synced_to_ldap = SemaphoreStorage::get('sync', $account->getUsername());
       if ($already_provisioned_to_ldap || $already_synced_to_ldap || $new_account_request) {
@@ -816,7 +821,6 @@ class DrupalUserProcessor {
     }
   }
 
-
   /**
    * @param UserInterface $account
    */
@@ -855,7 +859,7 @@ class DrupalUserProcessor {
         SemaphoreStorage::set('sync', $account->getUsername());
       }
     }
-    /* @var ServerFactory $factory */
+    /** @var ServerFactory $factory */
     $factory = \Drupal::service('ldap.servers');
     $config = \Drupal::config('ldap_user.settings')->get('ldap_user_conf');
 
@@ -874,7 +878,7 @@ class DrupalUserProcessor {
    * @param UserInterface $account
    */
   public function drupalUserDeleted($account) {
-    /* @var UserInterface $account */
+    /** @var UserInterface $account */
 
     // Drupal user account is about to be deleted.
     if (LdapConfiguration::provisionsLdapEntriesFromDrupalUsers()
@@ -910,7 +914,7 @@ class DrupalUserProcessor {
         'convert',
         'direction',
         'enabled',
-        'prov_events'
+        'prov_events',
       ];
 
       foreach ($keys as $subKey) {

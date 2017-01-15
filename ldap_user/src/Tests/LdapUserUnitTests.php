@@ -90,7 +90,7 @@ class LdapWebUserUnitTests extends LdapWebTestBase {
       'ldap_user_conf' => array(2, 0),
       'ldap_user_sync_to_drupal' => array(3, 1),
       'ldap_user_provision_to_drupal' => array(2, 1),
-      // would be SemaphoreStorage
+      // Would be SemaphoreStorage.
       'ldap_user_ldap_provision_semaphore' => array(4, 2),
       'ldap_user_token_replace' => array(3, 2),
       'ldap_user_token_tokenize_entry' => array(5, 2),
@@ -119,7 +119,7 @@ class LdapWebUserUnitTests extends LdapWebTestBase {
     $this->prepTestData('hogwarts', $sids, 'default');
     $factory = \Drupal::service('ldap.servers');
     $ldap_server = $factory->getServerById('activedirectory1');
-    $this->assertTrue(is_object(true), t('ldap_conf class instantiated'), $this->testId('construct ldapUserConf object'));
+    $this->assertTrue(is_object(TRUE), t('ldap_conf class instantiated'), $this->testId('construct ldapUserConf object'));
     $config = \Drupal::config('ldap_user.settings')->get('ldap_user_conf');
 
     $user_edit = array();
@@ -135,7 +135,8 @@ class LdapWebUserUnitTests extends LdapWebTestBase {
     $array_diff = array_diff($ldap_user, $desired_result);
     $this->assertTrue(count($array_diff) == 0, t('ldap_servers_get_user_ldap_data retrieved correct attributes and values'), $this->testId('ldap_servers_get_user_ldap_data'));
     if (count($array_diff) != 0) {
-      debug('ldap_servers_get_user_ldap_data failed.  resulting ldap data array:'); }
+      debug('ldap_servers_get_user_ldap_data failed.  resulting ldap data array:');
+    }
     $factory = \Drupal::service('ldap.servers');
     $ldap_server = $factory->getServerById($config['drupalAcctProvisionServer']);
     $ldap_todrupal_prov_server = $factory->servers;
@@ -639,7 +640,8 @@ class LdapWebUserUnitTests extends LdapWebTestBase {
               $user_entity->{$field_name}['und'][0]['value'] == $test['field_results'][0];
             $this->assertTrue($field_success, t("provisionDrupalAccount worked for field $field_name"), $this->testId(":provisionDrupalAccount.i=$j.prov_event=$prov_event"));
             if (!$field_success) {
-              debug('field fail,' . $field_name);   }
+              debug('field fail,' . $field_name);
+            }
           }
           else {
             debug("field_name=$field_name not configured to provisionDrupalAccount on drupal user create for direction=$direction and prov_event=$prov_event");

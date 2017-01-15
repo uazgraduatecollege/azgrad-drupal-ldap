@@ -1,17 +1,22 @@
-<?php 
+<?php
+
+/**
+ * @file
+ */
+
 [
-  'properties' => 
+  'properties' =>
   [
     'sid' => 'activedirectory1',
     'name' => 'Test Active Directory LDAP',
-    'inDatabase' => true,
+    'inDatabase' => TRUE,
     'status' => 1,
     'ldap_type' => 'activedirectory',
     'address' => 'ldap.hogwarts.edu',
     'port' => 389,
-    'tls' => false,
+    'tls' => FALSE,
     'bind_method' => 1,
-    'basedn' => 
+    'basedn' =>
     [
       0 => 'dc=hogwarts,dc=edu',
     ],
@@ -22,40 +27,40 @@
     'mail_attr' => 'mail',
     'mail_template' => NULL,
     'unique_persistent_attr' => 'guid',
-    'unique_persistent_attr_binary' => false,
-    'ldap_to_drupal_user' => false,
+    'unique_persistent_attr_binary' => FALSE,
+    'ldap_to_drupal_user' => FALSE,
     'ldapToDrupalUserPhp' => NULL,
     'groupNested' => 0,
     'groupObjectClass' => 'group',
-    'groupUserMembershipsAttrExists' => true,
+    'groupUserMembershipsAttrExists' => TRUE,
     'groupUserMembershipsAttr' => 'memberof',
     'groupMembershipsAttr' => 'member',
     'groupMembershipsAttrMatchingUserAttr' => 'dn',
     'search_pagination' => 0,
     'searchPageSize' => NULL,
   ],
-  'methodResponses' => 
+  'methodResponses' =>
   [
     'connect' => 0,
   ],
   'clones' => 7,
-  'search_results' => 
+  'search_results' =>
   [
-    '(&(objectClass=group)(member=cn=hpotter,ou=people,dc=hogwarts,dc=edu))' => 
+    '(&(objectClass=group)(member=cn=hpotter,ou=people,dc=hogwarts,dc=edu))' =>
     [
-      'dc=hogwarts,dc=edu' => 
+      'dc=hogwarts,dc=edu' =>
       [
-        0 => 
+        0 =>
         [
           'count' => 1,
           'dn' => 'cn=gryffindor,ou=groups,dc=hogwarts,dc=edu',
         ],
-        1 => 
+        1 =>
         [
           'count' => 1,
           'dn' => 'cn=students,ou=groups,dc=hogwarts,dc=edu',
         ],
-        2 => 
+        2 =>
         [
           'count' => 1,
           'dn' => 'cn=honors students,ou=groups,dc=hogwarts,dc=edu',
@@ -63,11 +68,11 @@
         'count' => 3,
       ],
     ],
-    '(&(objectClass=group)(|(member=cn=gryffindor,ou=groups,dc=hogwarts,dc=edu)(member=cn=students,ou=groups,dc=hogwarts,dc=edu)(member=cn=honors students,ou=groups,dc=hogwarts,dc=edu)))' => 
+    '(&(objectClass=group)(|(member=cn=gryffindor,ou=groups,dc=hogwarts,dc=edu)(member=cn=students,ou=groups,dc=hogwarts,dc=edu)(member=cn=honors students,ou=groups,dc=hogwarts,dc=edu)))' =>
     [
-      'dc=hogwarts,dc=edu' => 
+      'dc=hogwarts,dc=edu' =>
       [
-        0 => 
+        0 =>
         [
           'count' => 1,
           'dn' => 'cn=users,ou=groups,dc=hogwarts,dc=edu',
@@ -75,1926 +80,1926 @@
         'count' => 1,
       ],
     ],
-    '(cn=hpotter)' => 
+    '(cn=hpotter)' =>
     [
-      'dc=hogwarts,dc=edu' => 
+      'dc=hogwarts,dc=edu' =>
       [
-        0 => 
+        0 =>
         [
           'count' => 1,
           'dn' => 'cn=hpotter,ou=people,dc=hogwarts,dc=edu',
-          'FULLENTRY' => true,
+          'FULLENTRY' => TRUE,
         ],
         'count' => 1,
       ],
     ],
-    '(samaccountname=hpotter)' => 
+    '(samaccountname=hpotter)' =>
     [
-      'dc=hogwarts,dc=edu' => 
+      'dc=hogwarts,dc=edu' =>
       [
-        0 => 
+        0 =>
         [
           'count' => 1,
           'dn' => 'cn=hpotter,ou=people,dc=hogwarts,dc=edu',
-          'FULLENTRY' => true,
+          'FULLENTRY' => TRUE,
         ],
         'count' => 1,
       ],
     ],
-    '(cn=hgrainger)' => 
+    '(cn=hgrainger)' =>
     [
-      'dc=hogwarts,dc=edu' => 
+      'dc=hogwarts,dc=edu' =>
       [
-        0 => 
+        0 =>
         [
           'count' => 1,
           'dn' => 'cn=hgrainger,ou=people,dc=hogwarts,dc=edu',
-          'FULLENTRY' => true,
+          'FULLENTRY' => TRUE,
         ],
         'count' => 1,
       ],
     ],
-    '(samaccountname=hgrainger)' => 
+    '(samaccountname=hgrainger)' =>
     [
-      'dc=hogwarts,dc=edu' => 
+      'dc=hogwarts,dc=edu' =>
       [
-        0 => 
+        0 =>
         [
           'count' => 1,
           'dn' => 'cn=hgrainger,ou=people,dc=hogwarts,dc=edu',
-          'FULLENTRY' => true,
+          'FULLENTRY' => TRUE,
         ],
         'count' => 1,
       ],
     ],
-    '(cn=ssnape)' => 
+    '(cn=ssnape)' =>
     [
-      'dc=hogwarts,dc=edu' => 
+      'dc=hogwarts,dc=edu' =>
       [
-        0 => 
+        0 =>
         [
           'count' => 1,
           'dn' => 'cn=ssnape,ou=people,dc=hogwarts,dc=edu',
-          'FULLENTRY' => true,
+          'FULLENTRY' => TRUE,
         ],
         'count' => 1,
       ],
     ],
-    '(samaccountname=ssnape)' => 
+    '(samaccountname=ssnape)' =>
     [
-      'dc=hogwarts,dc=edu' => 
+      'dc=hogwarts,dc=edu' =>
       [
-        0 => 
+        0 =>
         [
           'count' => 1,
           'dn' => 'cn=ssnape,ou=people,dc=hogwarts,dc=edu',
-          'FULLENTRY' => true,
+          'FULLENTRY' => TRUE,
         ],
         'count' => 1,
       ],
     ],
-    '(cn=adumbledore)' => 
+    '(cn=adumbledore)' =>
     [
-      'dc=hogwarts,dc=edu' => 
+      'dc=hogwarts,dc=edu' =>
       [
-        0 => 
+        0 =>
         [
           'count' => 1,
           'dn' => 'cn=adumbledore,ou=people,dc=hogwarts,dc=edu',
-          'FULLENTRY' => true,
+          'FULLENTRY' => TRUE,
         ],
         'count' => 1,
       ],
     ],
-    '(samaccountname=adumbledore)' => 
+    '(samaccountname=adumbledore)' =>
     [
-      'dc=hogwarts,dc=edu' => 
+      'dc=hogwarts,dc=edu' =>
       [
-        0 => 
+        0 =>
         [
           'count' => 1,
           'dn' => 'cn=adumbledore,ou=people,dc=hogwarts,dc=edu',
-          'FULLENTRY' => true,
+          'FULLENTRY' => TRUE,
         ],
         'count' => 1,
       ],
     ],
-    '(samaccountname=hpotter-granger)' => 
+    '(samaccountname=hpotter-granger)' =>
     [
-      'dc=hogwarts,dc=edu' => 
+      'dc=hogwarts,dc=edu' =>
       [
-        0 => 
+        0 =>
         [
           'count' => 1,
           'dn' => 'cn=hpotter,ou=people,dc=hogwarts,dc=edu',
-          'FULLENTRY' => true,
+          'FULLENTRY' => TRUE,
         ],
         'count' => 1,
       ],
     ],
   ],
-  'users' => 
+  'users' =>
   [
-    'cn=hpotter,ou=people,dc=hogwarts,dc=edu' => 
+    'cn=hpotter,ou=people,dc=hogwarts,dc=edu' =>
     [
-      'attr' => 
+      'attr' =>
       [
-        'cn' => 
+        'cn' =>
         [
           0 => 'hpotter',
           'count' => 1,
         ],
-        'mail' => 
+        'mail' =>
         [
           0 => 'hpotter@hogwarts.edu',
           'count' => 1,
         ],
-        'uid' => 
+        'uid' =>
         [
           0 => '1',
           'count' => 1,
         ],
-        'guid' => 
+        'guid' =>
         [
           0 => '101',
           'count' => 1,
         ],
-        'sn' => 
+        'sn' =>
         [
           0 => 'Potter',
           'count' => 1,
         ],
-        'givenname' => 
+        'givenname' =>
         [
           0 => 'Harry',
           'count' => 1,
         ],
-        'house' => 
+        'house' =>
         [
           0 => 'Gryffindor',
           'count' => 1,
         ],
-        'department' => 
+        'department' =>
         [
           0 => '',
           'count' => 1,
         ],
-        'faculty' => 
+        'faculty' =>
         [
           0 => 1,
           'count' => 1,
         ],
-        'staff' => 
+        'staff' =>
         [
           0 => 1,
           'count' => 1,
         ],
-        'student' => 
+        'student' =>
         [
           0 => 1,
           'count' => 1,
         ],
-        'gpa' => 
+        'gpa' =>
         [
           0 => '3.8',
           'count' => 1,
         ],
-        'probation' => 
+        'probation' =>
         [
           0 => 1,
           'count' => 1,
         ],
-        'password' => 
+        'password' =>
         [
           0 => 'goodpwd',
           'count' => 1,
         ],
-        'samaccountname' => 
+        'samaccountname' =>
         [
           0 => 'hpotter',
           'count' => 1,
         ],
-        'distinguishedname' => 
+        'distinguishedname' =>
         [
           0 => 'cn=hpotter,ou=people,dc=hogwarts,dc=edu',
           'count' => 1,
         ],
       ],
     ],
-    'cn=hgrainger,ou=people,dc=hogwarts,dc=edu' => 
+    'cn=hgrainger,ou=people,dc=hogwarts,dc=edu' =>
     [
-      'attr' => 
+      'attr' =>
       [
-        'cn' => 
+        'cn' =>
         [
           0 => 'hgrainger',
           'count' => 1,
         ],
-        'mail' => 
+        'mail' =>
         [
           0 => 'hgrainger@hogwarts.edu',
           'count' => 1,
         ],
-        'uid' => 
+        'uid' =>
         [
           0 => '2',
           'count' => 1,
         ],
-        'guid' => 
+        'guid' =>
         [
           0 => '102',
           'count' => 1,
         ],
-        'sn' => 
+        'sn' =>
         [
           0 => 'Granger',
           'count' => 1,
         ],
-        'givenname' => 
+        'givenname' =>
         [
           0 => 'Hermione',
           'count' => 1,
         ],
-        'house' => 
+        'house' =>
         [
           0 => 'Gryffindor',
           'count' => 1,
         ],
-        'department' => 
+        'department' =>
         [
           0 => '',
           'count' => 1,
         ],
-        'faculty' => 
+        'faculty' =>
         [
           0 => 1,
           'count' => 1,
         ],
-        'staff' => 
+        'staff' =>
         [
           0 => 1,
           'count' => 1,
         ],
-        'student' => 
+        'student' =>
         [
           0 => 1,
           'count' => 1,
         ],
-        'gpa' => 
+        'gpa' =>
         [
           0 => '4',
           'count' => 1,
         ],
-        'probation' => 
+        'probation' =>
         [
           0 => 1,
           'count' => 1,
         ],
-        'password' => 
+        'password' =>
         [
           0 => 'goodpwd',
           'count' => 1,
         ],
-        'samaccountname' => 
+        'samaccountname' =>
         [
           0 => 'hgrainger',
           'count' => 1,
         ],
-        'distinguishedname' => 
+        'distinguishedname' =>
         [
           0 => 'cn=hgrainger,ou=people,dc=hogwarts,dc=edu',
           'count' => 1,
         ],
       ],
     ],
-    'cn=rweasley,ou=people,dc=hogwarts,dc=edu' => 
+    'cn=rweasley,ou=people,dc=hogwarts,dc=edu' =>
     [
-      'attr' => 
+      'attr' =>
       [
-        'cn' => 
+        'cn' =>
         [
           0 => 'rweasley',
           'count' => 1,
         ],
-        'mail' => 
+        'mail' =>
         [
           0 => 'rweasley@hogwarts.edu',
           'count' => 1,
         ],
-        'uid' => 
+        'uid' =>
         [
           0 => '3',
           'count' => 1,
         ],
-        'guid' => 
+        'guid' =>
         [
           0 => '103',
           'count' => 1,
         ],
-        'sn' => 
+        'sn' =>
         [
           0 => 'Weasley',
           'count' => 1,
         ],
-        'givenname' => 
+        'givenname' =>
         [
           0 => 'Ron',
           'count' => 1,
         ],
-        'house' => 
+        'house' =>
         [
           0 => 'Gryffindor',
           'count' => 1,
         ],
-        'department' => 
+        'department' =>
         [
           0 => '',
           'count' => 1,
         ],
-        'faculty' => 
+        'faculty' =>
         [
           0 => 1,
           'count' => 1,
         ],
-        'staff' => 
+        'staff' =>
         [
           0 => 1,
           'count' => 1,
         ],
-        'student' => 
+        'student' =>
         [
           0 => 1,
           'count' => 1,
         ],
-        'gpa' => 
+        'gpa' =>
         [
           0 => '3.6',
           'count' => 1,
         ],
-        'probation' => 
+        'probation' =>
         [
           0 => 1,
           'count' => 1,
         ],
-        'password' => 
+        'password' =>
         [
           0 => 'goodpwd',
           'count' => 1,
         ],
-        'samaccountname' => 
+        'samaccountname' =>
         [
           0 => 'rweasley',
           'count' => 1,
         ],
-        'distinguishedname' => 
+        'distinguishedname' =>
         [
           0 => 'cn=rweasley,ou=people,dc=hogwarts,dc=edu',
           'count' => 1,
         ],
       ],
     ],
-    'cn=fweasley,ou=people,dc=hogwarts,dc=edu' => 
+    'cn=fweasley,ou=people,dc=hogwarts,dc=edu' =>
     [
-      'attr' => 
+      'attr' =>
       [
-        'cn' => 
+        'cn' =>
         [
           0 => 'fweasley',
           'count' => 1,
         ],
-        'mail' => 
+        'mail' =>
         [
           0 => 'fweasley@hogwarts.edu',
           'count' => 1,
         ],
-        'uid' => 
+        'uid' =>
         [
           0 => '4',
           'count' => 1,
         ],
-        'guid' => 
+        'guid' =>
         [
           0 => '104',
           'count' => 1,
         ],
-        'sn' => 
+        'sn' =>
         [
           0 => 'Weasley',
           'count' => 1,
         ],
-        'givenname' => 
+        'givenname' =>
         [
           0 => 'Fred',
           'count' => 1,
         ],
-        'house' => 
+        'house' =>
         [
           0 => 'Gryffindor',
           'count' => 1,
         ],
-        'department' => 
+        'department' =>
         [
           0 => '',
           'count' => 1,
         ],
-        'faculty' => 
+        'faculty' =>
         [
           0 => 1,
           'count' => 1,
         ],
-        'staff' => 
+        'staff' =>
         [
           0 => 1,
           'count' => 1,
         ],
-        'student' => 
+        'student' =>
         [
           0 => 1,
           'count' => 1,
         ],
-        'gpa' => 
+        'gpa' =>
         [
           0 => '3',
           'count' => 1,
         ],
-        'probation' => 
+        'probation' =>
         [
           0 => 1,
           'count' => 1,
         ],
-        'password' => 
+        'password' =>
         [
           0 => 'goodpwd',
           'count' => 1,
         ],
-        'samaccountname' => 
+        'samaccountname' =>
         [
           0 => 'fweasley',
           'count' => 1,
         ],
-        'distinguishedname' => 
+        'distinguishedname' =>
         [
           0 => 'cn=fweasley,ou=people,dc=hogwarts,dc=edu',
           'count' => 1,
         ],
       ],
     ],
-    'cn=gweasley,ou=people,dc=hogwarts,dc=edu' => 
+    'cn=gweasley,ou=people,dc=hogwarts,dc=edu' =>
     [
-      'attr' => 
+      'attr' =>
       [
-        'cn' => 
+        'cn' =>
         [
           0 => 'gweasley',
           'count' => 1,
         ],
-        'mail' => 
+        'mail' =>
         [
           0 => 'gweasley@hogwarts.edu',
           'count' => 1,
         ],
-        'uid' => 
+        'uid' =>
         [
           0 => '5',
           'count' => 1,
         ],
-        'guid' => 
+        'guid' =>
         [
           0 => '105',
           'count' => 1,
         ],
-        'sn' => 
+        'sn' =>
         [
           0 => 'Weasley',
           'count' => 1,
         ],
-        'givenname' => 
+        'givenname' =>
         [
           0 => 'George',
           'count' => 1,
         ],
-        'house' => 
+        'house' =>
         [
           0 => 'Gryffindor',
           'count' => 1,
         ],
-        'department' => 
+        'department' =>
         [
           0 => '',
           'count' => 1,
         ],
-        'faculty' => 
+        'faculty' =>
         [
           0 => 1,
           'count' => 1,
         ],
-        'staff' => 
+        'staff' =>
         [
           0 => 1,
           'count' => 1,
         ],
-        'student' => 
+        'student' =>
         [
           0 => 1,
           'count' => 1,
         ],
-        'gpa' => 
+        'gpa' =>
         [
           0 => '2.7',
           'count' => 1,
         ],
-        'probation' => 
+        'probation' =>
         [
           0 => 1,
           'count' => 1,
         ],
-        'password' => 
+        'password' =>
         [
           0 => 'goodpwd',
           'count' => 1,
         ],
-        'samaccountname' => 
+        'samaccountname' =>
         [
           0 => 'gweasley',
           'count' => 1,
         ],
-        'distinguishedname' => 
+        'distinguishedname' =>
         [
           0 => 'cn=gweasley,ou=people,dc=hogwarts,dc=edu',
           'count' => 1,
         ],
       ],
     ],
-    'cn=dmalfoy,ou=people,dc=hogwarts,dc=edu' => 
+    'cn=dmalfoy,ou=people,dc=hogwarts,dc=edu' =>
     [
-      'attr' => 
+      'attr' =>
       [
-        'cn' => 
+        'cn' =>
         [
           0 => 'dmalfoy',
           'count' => 1,
         ],
-        'mail' => 
+        'mail' =>
         [
           0 => 'dmalfoy@hogwarts.edu',
           'count' => 1,
         ],
-        'uid' => 
+        'uid' =>
         [
           0 => '6',
           'count' => 1,
         ],
-        'guid' => 
+        'guid' =>
         [
           0 => '106',
           'count' => 1,
         ],
-        'sn' => 
+        'sn' =>
         [
           0 => 'Malfoy',
           'count' => 1,
         ],
-        'givenname' => 
+        'givenname' =>
         [
           0 => 'Draco',
           'count' => 1,
         ],
-        'house' => 
+        'house' =>
         [
           0 => 'Slytherin',
           'count' => 1,
         ],
-        'department' => 
+        'department' =>
         [
           0 => '',
           'count' => 1,
         ],
-        'faculty' => 
+        'faculty' =>
         [
           0 => 1,
           'count' => 1,
         ],
-        'staff' => 
+        'staff' =>
         [
           0 => 1,
           'count' => 1,
         ],
-        'student' => 
+        'student' =>
         [
           0 => 1,
           'count' => 1,
         ],
-        'gpa' => 
+        'gpa' =>
         [
           0 => '3.7',
           'count' => 1,
         ],
-        'probation' => 
+        'probation' =>
         [
           0 => 1,
           'count' => 1,
         ],
-        'password' => 
+        'password' =>
         [
           0 => 'goodpwd',
           'count' => 1,
         ],
-        'samaccountname' => 
+        'samaccountname' =>
         [
           0 => 'dmalfoy',
           'count' => 1,
         ],
-        'distinguishedname' => 
+        'distinguishedname' =>
         [
           0 => 'cn=dmalfoy,ou=people,dc=hogwarts,dc=edu',
           'count' => 1,
         ],
       ],
     ],
-    'cn=triddle,ou=people,dc=hogwarts,dc=edu' => 
+    'cn=triddle,ou=people,dc=hogwarts,dc=edu' =>
     [
-      'attr' => 
+      'attr' =>
       [
-        'cn' => 
+        'cn' =>
         [
           0 => 'triddle',
           'count' => 1,
         ],
-        'mail' => 
+        'mail' =>
         [
           0 => 'triddle@hogwarts.edu',
           'count' => 1,
         ],
-        'uid' => 
+        'uid' =>
         [
           0 => '7',
           'count' => 1,
         ],
-        'guid' => 
+        'guid' =>
         [
           0 => '107',
           'count' => 1,
         ],
-        'sn' => 
+        'sn' =>
         [
           0 => 'Riddle',
           'count' => 1,
         ],
-        'givenname' => 
+        'givenname' =>
         [
           0 => 'Tom',
           'count' => 1,
         ],
-        'house' => 
+        'house' =>
         [
           0 => 'Slytherin',
           'count' => 1,
         ],
-        'department' => 
+        'department' =>
         [
           0 => '',
           'count' => 1,
         ],
-        'faculty' => 
+        'faculty' =>
         [
           0 => 1,
           'count' => 1,
         ],
-        'staff' => 
+        'staff' =>
         [
           0 => 1,
           'count' => 1,
         ],
-        'student' => 
+        'student' =>
         [
           0 => 1,
           'count' => 1,
         ],
-        'gpa' => 
+        'gpa' =>
         [
           0 => '3.6',
           'count' => 1,
         ],
-        'probation' => 
+        'probation' =>
         [
           0 => 1,
           'count' => 1,
         ],
-        'password' => 
+        'password' =>
         [
           0 => 'goodpwd',
           'count' => 1,
         ],
-        'samaccountname' => 
+        'samaccountname' =>
         [
           0 => 'triddle',
           'count' => 1,
         ],
-        'distinguishedname' => 
+        'distinguishedname' =>
         [
           0 => 'cn=triddle,ou=people,dc=hogwarts,dc=edu',
           'count' => 1,
         ],
       ],
     ],
-    'cn=ggoyle,ou=people,dc=hogwarts,dc=edu' => 
+    'cn=ggoyle,ou=people,dc=hogwarts,dc=edu' =>
     [
-      'attr' => 
+      'attr' =>
       [
-        'cn' => 
+        'cn' =>
         [
           0 => 'ggoyle',
           'count' => 1,
         ],
-        'mail' => 
+        'mail' =>
         [
           0 => 'ggoyle@hogwarts.edu',
           'count' => 1,
         ],
-        'uid' => 
+        'uid' =>
         [
           0 => '8',
           'count' => 1,
         ],
-        'guid' => 
+        'guid' =>
         [
           0 => '108',
           'count' => 1,
         ],
-        'sn' => 
+        'sn' =>
         [
           0 => 'Goyle',
           'count' => 1,
         ],
-        'givenname' => 
+        'givenname' =>
         [
           0 => 'Gregory',
           'count' => 1,
         ],
-        'house' => 
+        'house' =>
         [
           0 => 'Slytherin',
           'count' => 1,
         ],
-        'department' => 
+        'department' =>
         [
           0 => '',
           'count' => 1,
         ],
-        'faculty' => 
+        'faculty' =>
         [
           0 => 1,
           'count' => 1,
         ],
-        'staff' => 
+        'staff' =>
         [
           0 => 1,
           'count' => 1,
         ],
-        'student' => 
+        'student' =>
         [
           0 => 1,
           'count' => 1,
         ],
-        'gpa' => 
+        'gpa' =>
         [
           0 => '3.3',
           'count' => 1,
         ],
-        'probation' => 
+        'probation' =>
         [
           0 => 1,
           'count' => 1,
         ],
-        'password' => 
+        'password' =>
         [
           0 => 'goodpwd',
           'count' => 1,
         ],
-        'samaccountname' => 
+        'samaccountname' =>
         [
           0 => 'ggoyle',
           'count' => 1,
         ],
-        'distinguishedname' => 
+        'distinguishedname' =>
         [
           0 => 'cn=ggoyle,ou=people,dc=hogwarts,dc=edu',
           'count' => 1,
         ],
       ],
     ],
-    'cn=ssnape,ou=people,dc=hogwarts,dc=edu' => 
+    'cn=ssnape,ou=people,dc=hogwarts,dc=edu' =>
     [
-      'attr' => 
+      'attr' =>
       [
-        'cn' => 
+        'cn' =>
         [
           0 => 'ssnape',
           'count' => 1,
         ],
-        'mail' => 
+        'mail' =>
         [
           0 => 'ssnape@hogwarts.edu',
           'count' => 1,
         ],
-        'uid' => 
+        'uid' =>
         [
           0 => '9',
           'count' => 1,
         ],
-        'guid' => 
+        'guid' =>
         [
           0 => '109',
           'count' => 1,
         ],
-        'sn' => 
+        'sn' =>
         [
           0 => 'Snape',
           'count' => 1,
         ],
-        'givenname' => 
+        'givenname' =>
         [
           0 => 'Severus ',
           'count' => 1,
         ],
-        'house' => 
+        'house' =>
         [
           0 => 'Slytherin',
           'count' => 1,
         ],
-        'department' => 
+        'department' =>
         [
           0 => 'Defence Against the Dark Arts professor ',
           'count' => 1,
         ],
-        'faculty' => 
+        'faculty' =>
         [
           0 => 1,
           'count' => 1,
         ],
-        'staff' => 
+        'staff' =>
         [
           0 => 1,
           'count' => 1,
         ],
-        'student' => 
+        'student' =>
         [
           0 => 1,
           'count' => 1,
         ],
-        'gpa' => 
+        'gpa' =>
         [
           0 => '',
           'count' => 1,
         ],
-        'probation' => 
+        'probation' =>
         [
           0 => 0,
           'count' => 1,
         ],
-        'password' => 
+        'password' =>
         [
           0 => 'goodpwd',
           'count' => 1,
         ],
-        'samaccountname' => 
+        'samaccountname' =>
         [
           0 => 'ssnape',
           'count' => 1,
         ],
-        'distinguishedname' => 
+        'distinguishedname' =>
         [
           0 => 'cn=ssnape,ou=people,dc=hogwarts,dc=edu',
           'count' => 1,
         ],
       ],
     ],
-    'cn=adumbledore,ou=people,dc=hogwarts,dc=edu' => 
+    'cn=adumbledore,ou=people,dc=hogwarts,dc=edu' =>
     [
-      'attr' => 
+      'attr' =>
       [
-        'cn' => 
+        'cn' =>
         [
           0 => 'adumbledore',
           'count' => 1,
         ],
-        'mail' => 
+        'mail' =>
         [
           0 => 'adumbledore@hogwarts.edu',
           'count' => 1,
         ],
-        'uid' => 
+        'uid' =>
         [
           0 => '10',
           'count' => 1,
         ],
-        'guid' => 
+        'guid' =>
         [
           0 => '110',
           'count' => 1,
         ],
-        'sn' => 
+        'sn' =>
         [
           0 => 'Dumbledore',
           'count' => 1,
         ],
-        'givenname' => 
+        'givenname' =>
         [
           0 => 'Albus',
           'count' => 1,
         ],
-        'house' => 
+        'house' =>
         [
           0 => '',
           'count' => 1,
         ],
-        'department' => 
+        'department' =>
         [
           0 => 'Head Master Of Hogwarts',
           'count' => 1,
         ],
-        'faculty' => 
+        'faculty' =>
         [
           0 => 1,
           'count' => 1,
         ],
-        'staff' => 
+        'staff' =>
         [
           0 => 1,
           'count' => 1,
         ],
-        'student' => 
+        'student' =>
         [
           0 => 1,
           'count' => 1,
         ],
-        'gpa' => 
+        'gpa' =>
         [
           0 => '',
           'count' => 1,
         ],
-        'probation' => 
+        'probation' =>
         [
           0 => 0,
           'count' => 1,
         ],
-        'password' => 
+        'password' =>
         [
           0 => 'goodpwd',
           'count' => 1,
         ],
-        'samaccountname' => 
+        'samaccountname' =>
         [
           0 => 'adumbledore',
           'count' => 1,
         ],
-        'distinguishedname' => 
+        'distinguishedname' =>
         [
           0 => 'cn=adumbledore,ou=people,dc=hogwarts,dc=edu',
           'count' => 1,
         ],
       ],
     ],
-    'cn=mmcgonagall,ou=people,dc=hogwarts,dc=edu' => 
+    'cn=mmcgonagall,ou=people,dc=hogwarts,dc=edu' =>
     [
-      'attr' => 
+      'attr' =>
       [
-        'cn' => 
+        'cn' =>
         [
           0 => 'mmcgonagall',
           'count' => 1,
         ],
-        'mail' => 
+        'mail' =>
         [
           0 => 'mmcgonagall@hogwarts.edu',
           'count' => 1,
         ],
-        'uid' => 
+        'uid' =>
         [
           0 => '11',
           'count' => 1,
         ],
-        'guid' => 
+        'guid' =>
         [
           0 => '111',
           'count' => 1,
         ],
-        'sn' => 
+        'sn' =>
         [
           0 => 'McGonagall',
           'count' => 1,
         ],
-        'givenname' => 
+        'givenname' =>
         [
           0 => 'Minerva',
           'count' => 1,
         ],
-        'house' => 
+        'house' =>
         [
           0 => 'Gryffindor',
           'count' => 1,
         ],
-        'department' => 
+        'department' =>
         [
           0 => 'Tranfiguration/ Deputy Head Mistress',
           'count' => 1,
         ],
-        'faculty' => 
+        'faculty' =>
         [
           0 => 1,
           'count' => 1,
         ],
-        'staff' => 
+        'staff' =>
         [
           0 => 1,
           'count' => 1,
         ],
-        'student' => 
+        'student' =>
         [
           0 => 1,
           'count' => 1,
         ],
-        'gpa' => 
+        'gpa' =>
         [
           0 => '',
           'count' => 1,
         ],
-        'probation' => 
+        'probation' =>
         [
           0 => 0,
           'count' => 1,
         ],
-        'password' => 
+        'password' =>
         [
           0 => 'goodpwd',
           'count' => 1,
         ],
-        'samaccountname' => 
+        'samaccountname' =>
         [
           0 => 'mmcgonagall',
           'count' => 1,
         ],
-        'distinguishedname' => 
+        'distinguishedname' =>
         [
           0 => 'cn=mmcgonagall,ou=people,dc=hogwarts,dc=edu',
           'count' => 1,
         ],
       ],
     ],
-    'cn=spomana,ou=people,dc=hogwarts,dc=edu' => 
+    'cn=spomana,ou=people,dc=hogwarts,dc=edu' =>
     [
-      'attr' => 
+      'attr' =>
       [
-        'cn' => 
+        'cn' =>
         [
           0 => 'spomana',
           'count' => 1,
         ],
-        'mail' => 
+        'mail' =>
         [
           0 => 'spomana@hogwarts.edu',
           'count' => 1,
         ],
-        'uid' => 
+        'uid' =>
         [
           0 => '12',
           'count' => 1,
         ],
-        'guid' => 
+        'guid' =>
         [
           0 => '112',
           'count' => 1,
         ],
-        'sn' => 
+        'sn' =>
         [
           0 => 'Pomona',
           'count' => 1,
         ],
-        'givenname' => 
+        'givenname' =>
         [
           0 => 'Sprout',
           'count' => 1,
         ],
-        'house' => 
+        'house' =>
         [
           0 => 'Hufflepuff',
           'count' => 1,
         ],
-        'department' => 
+        'department' =>
         [
           0 => 'Herbology',
           'count' => 1,
         ],
-        'faculty' => 
+        'faculty' =>
         [
           0 => 1,
           'count' => 1,
         ],
-        'staff' => 
+        'staff' =>
         [
           0 => 1,
           'count' => 1,
         ],
-        'student' => 
+        'student' =>
         [
           0 => 1,
           'count' => 1,
         ],
-        'gpa' => 
+        'gpa' =>
         [
           0 => '',
           'count' => 1,
         ],
-        'probation' => 
+        'probation' =>
         [
           0 => 0,
           'count' => 1,
         ],
-        'password' => 
+        'password' =>
         [
           0 => 'goodpwd',
           'count' => 1,
         ],
-        'samaccountname' => 
+        'samaccountname' =>
         [
           0 => 'spomana',
           'count' => 1,
         ],
-        'distinguishedname' => 
+        'distinguishedname' =>
         [
           0 => 'cn=spomana,ou=people,dc=hogwarts,dc=edu',
           'count' => 1,
         ],
       ],
     ],
-    'cn=rhagrid,ou=people,dc=hogwarts,dc=edu' => 
+    'cn=rhagrid,ou=people,dc=hogwarts,dc=edu' =>
     [
-      'attr' => 
+      'attr' =>
       [
-        'cn' => 
+        'cn' =>
         [
           0 => 'rhagrid',
           'count' => 1,
         ],
-        'mail' => 
+        'mail' =>
         [
           0 => 'rhagrid@hogwarts.edu',
           'count' => 1,
         ],
-        'uid' => 
+        'uid' =>
         [
           0 => '13',
           'count' => 1,
         ],
-        'guid' => 
+        'guid' =>
         [
           0 => '113',
           'count' => 1,
         ],
-        'sn' => 
+        'sn' =>
         [
           0 => 'Hagrid',
           'count' => 1,
         ],
-        'givenname' => 
+        'givenname' =>
         [
           0 => 'Rubeus',
           'count' => 1,
         ],
-        'house' => 
+        'house' =>
         [
           0 => 'Gryffindor',
           'count' => 1,
         ],
-        'department' => 
+        'department' =>
         [
           0 => '',
           'count' => 1,
         ],
-        'faculty' => 
+        'faculty' =>
         [
           0 => 1,
           'count' => 1,
         ],
-        'staff' => 
+        'staff' =>
         [
           0 => 1,
           'count' => 1,
         ],
-        'student' => 
+        'student' =>
         [
           0 => 1,
           'count' => 1,
         ],
-        'gpa' => 
+        'gpa' =>
         [
           0 => '',
           'count' => 1,
         ],
-        'probation' => 
+        'probation' =>
         [
           0 => 0,
           'count' => 1,
         ],
-        'password' => 
+        'password' =>
         [
           0 => 'goodpwd',
           'count' => 1,
         ],
-        'samaccountname' => 
+        'samaccountname' =>
         [
           0 => 'rhagrid',
           'count' => 1,
         ],
-        'distinguishedname' => 
+        'distinguishedname' =>
         [
           0 => 'cn=rhagrid,ou=people,dc=hogwarts,dc=edu',
           'count' => 1,
         ],
       ],
     ],
-    'cn=service-account,ou=people,dc=hogwarts,dc=edu' => 
+    'cn=service-account,ou=people,dc=hogwarts,dc=edu' =>
     [
-      'attr' => 
+      'attr' =>
       [
-        'cn' => 
+        'cn' =>
         [
           0 => 'service-account',
           'count' => 1,
         ],
-        'mail' => 
+        'mail' =>
         [
           0 => 'service-account@hogwarts.edu',
           'count' => 1,
         ],
-        'uid' => 
+        'uid' =>
         [
           0 => '19',
           'count' => 1,
         ],
-        'guid' => 
+        'guid' =>
         [
           0 => '119',
           'count' => 1,
         ],
-        'sn' => 
+        'sn' =>
         [
           0 => 'Service',
           'count' => 1,
         ],
-        'givenname' => 
+        'givenname' =>
         [
           0 => 'Account',
           'count' => 1,
         ],
-        'house' => 
+        'house' =>
         [
           0 => '',
           'count' => 1,
         ],
-        'department' => 
+        'department' =>
         [
           0 => '',
           'count' => 1,
         ],
-        'faculty' => 
+        'faculty' =>
         [
           0 => 0,
           'count' => 1,
         ],
-        'staff' => 
+        'staff' =>
         [
           0 => 0,
           'count' => 1,
         ],
-        'student' => 
+        'student' =>
         [
           0 => 0,
           'count' => 1,
         ],
-        'gpa' => 
+        'gpa' =>
         [
           0 => '',
           'count' => 1,
         ],
-        'probation' => 
+        'probation' =>
         [
           0 => 0,
           'count' => 1,
         ],
-        'password' => 
+        'password' =>
         [
           0 => 'goodpwd',
           'count' => 1,
         ],
-        'samaccountname' => 
+        'samaccountname' =>
         [
           0 => 'service-account',
           'count' => 1,
         ],
-        'distinguishedname' => 
+        'distinguishedname' =>
         [
           0 => 'cn=service-account,ou=people,dc=hogwarts,dc=edu',
           'count' => 1,
         ],
       ],
     ],
-    'cn=clone0,ou=people,dc=hogwarts,dc=edu' => 
+    'cn=clone0,ou=people,dc=hogwarts,dc=edu' =>
     [
-      'attr' => 
+      'attr' =>
       [
-        'cn' => 
+        'cn' =>
         [
           0 => 'clone0',
           'count' => 1,
         ],
-        'mail' => 
+        'mail' =>
         [
           0 => 'clone0@hogwarts.edu',
           'count' => 1,
         ],
-        'uid' => 
+        'uid' =>
         [
           0 => 20,
           'count' => 1,
         ],
-        'guid' => 
+        'guid' =>
         [
           0 => 120,
           'count' => 1,
         ],
-        'sn' => 
+        'sn' =>
         [
           0 => 'Potter_0',
           'count' => 1,
         ],
-        'givenname' => 
+        'givenname' =>
         [
           0 => 'Harry',
           'count' => 1,
         ],
-        'house' => 
+        'house' =>
         [
           0 => 'Gryffindor',
           'count' => 1,
         ],
-        'department' => 
+        'department' =>
         [
           0 => '',
           'count' => 1,
         ],
-        'faculty' => 
+        'faculty' =>
         [
           0 => 1,
           'count' => 1,
         ],
-        'staff' => 
+        'staff' =>
         [
           0 => 1,
           'count' => 1,
         ],
-        'student' => 
+        'student' =>
         [
           0 => 1,
           'count' => 1,
         ],
-        'gpa' => 
+        'gpa' =>
         [
           0 => '3.8',
           'count' => 1,
         ],
-        'probation' => 
+        'probation' =>
         [
           0 => 1,
           'count' => 1,
         ],
-        'password' => 
+        'password' =>
         [
           0 => 'goodpwd',
           'count' => 1,
         ],
-        'samaccountname' => 
+        'samaccountname' =>
         [
           0 => 'clone0',
           'count' => 1,
         ],
-        'distinguishedname' => 
+        'distinguishedname' =>
         [
           0 => 'cn=clone0,ou=people,dc=hogwarts,dc=edu',
           'count' => 1,
         ],
       ],
     ],
-    'cn=clone1,ou=people,dc=hogwarts,dc=edu' => 
+    'cn=clone1,ou=people,dc=hogwarts,dc=edu' =>
     [
-      'attr' => 
+      'attr' =>
       [
-        'cn' => 
+        'cn' =>
         [
           0 => 'clone1',
           'count' => 1,
         ],
-        'mail' => 
+        'mail' =>
         [
           0 => 'clone1@hogwarts.edu',
           'count' => 1,
         ],
-        'uid' => 
+        'uid' =>
         [
           0 => 21,
           'count' => 1,
         ],
-        'guid' => 
+        'guid' =>
         [
           0 => 121,
           'count' => 1,
         ],
-        'sn' => 
+        'sn' =>
         [
           0 => 'Potter_1',
           'count' => 1,
         ],
-        'givenname' => 
+        'givenname' =>
         [
           0 => 'Harry',
           'count' => 1,
         ],
-        'house' => 
+        'house' =>
         [
           0 => 'Gryffindor',
           'count' => 1,
         ],
-        'department' => 
+        'department' =>
         [
           0 => '',
           'count' => 1,
         ],
-        'faculty' => 
+        'faculty' =>
         [
           0 => 1,
           'count' => 1,
         ],
-        'staff' => 
+        'staff' =>
         [
           0 => 1,
           'count' => 1,
         ],
-        'student' => 
+        'student' =>
         [
           0 => 1,
           'count' => 1,
         ],
-        'gpa' => 
+        'gpa' =>
         [
           0 => '3.8',
           'count' => 1,
         ],
-        'probation' => 
+        'probation' =>
         [
           0 => 1,
           'count' => 1,
         ],
-        'password' => 
+        'password' =>
         [
           0 => 'goodpwd',
           'count' => 1,
         ],
-        'samaccountname' => 
+        'samaccountname' =>
         [
           0 => 'clone1',
           'count' => 1,
         ],
-        'distinguishedname' => 
+        'distinguishedname' =>
         [
           0 => 'cn=clone1,ou=people,dc=hogwarts,dc=edu',
           'count' => 1,
         ],
       ],
     ],
-    'cn=clone2,ou=people,dc=hogwarts,dc=edu' => 
+    'cn=clone2,ou=people,dc=hogwarts,dc=edu' =>
     [
-      'attr' => 
+      'attr' =>
       [
-        'cn' => 
+        'cn' =>
         [
           0 => 'clone2',
           'count' => 1,
         ],
-        'mail' => 
+        'mail' =>
         [
           0 => 'clone2@hogwarts.edu',
           'count' => 1,
         ],
-        'uid' => 
+        'uid' =>
         [
           0 => 22,
           'count' => 1,
         ],
-        'guid' => 
+        'guid' =>
         [
           0 => 122,
           'count' => 1,
         ],
-        'sn' => 
+        'sn' =>
         [
           0 => 'Potter_2',
           'count' => 1,
         ],
-        'givenname' => 
+        'givenname' =>
         [
           0 => 'Harry',
           'count' => 1,
         ],
-        'house' => 
+        'house' =>
         [
           0 => 'Gryffindor',
           'count' => 1,
         ],
-        'department' => 
+        'department' =>
         [
           0 => '',
           'count' => 1,
         ],
-        'faculty' => 
+        'faculty' =>
         [
           0 => 1,
           'count' => 1,
         ],
-        'staff' => 
+        'staff' =>
         [
           0 => 1,
           'count' => 1,
         ],
-        'student' => 
+        'student' =>
         [
           0 => 1,
           'count' => 1,
         ],
-        'gpa' => 
+        'gpa' =>
         [
           0 => '3.8',
           'count' => 1,
         ],
-        'probation' => 
+        'probation' =>
         [
           0 => 1,
           'count' => 1,
         ],
-        'password' => 
+        'password' =>
         [
           0 => 'goodpwd',
           'count' => 1,
         ],
-        'samaccountname' => 
+        'samaccountname' =>
         [
           0 => 'clone2',
           'count' => 1,
         ],
-        'distinguishedname' => 
+        'distinguishedname' =>
         [
           0 => 'cn=clone2,ou=people,dc=hogwarts,dc=edu',
           'count' => 1,
         ],
       ],
     ],
-    'cn=clone3,ou=people,dc=hogwarts,dc=edu' => 
+    'cn=clone3,ou=people,dc=hogwarts,dc=edu' =>
     [
-      'attr' => 
+      'attr' =>
       [
-        'cn' => 
+        'cn' =>
         [
           0 => 'clone3',
           'count' => 1,
         ],
-        'mail' => 
+        'mail' =>
         [
           0 => 'clone3@hogwarts.edu',
           'count' => 1,
         ],
-        'uid' => 
+        'uid' =>
         [
           0 => 23,
           'count' => 1,
         ],
-        'guid' => 
+        'guid' =>
         [
           0 => 123,
           'count' => 1,
         ],
-        'sn' => 
+        'sn' =>
         [
           0 => 'Potter_3',
           'count' => 1,
         ],
-        'givenname' => 
+        'givenname' =>
         [
           0 => 'Harry',
           'count' => 1,
         ],
-        'house' => 
+        'house' =>
         [
           0 => 'Gryffindor',
           'count' => 1,
         ],
-        'department' => 
+        'department' =>
         [
           0 => '',
           'count' => 1,
         ],
-        'faculty' => 
+        'faculty' =>
         [
           0 => 1,
           'count' => 1,
         ],
-        'staff' => 
+        'staff' =>
         [
           0 => 1,
           'count' => 1,
         ],
-        'student' => 
+        'student' =>
         [
           0 => 1,
           'count' => 1,
         ],
-        'gpa' => 
+        'gpa' =>
         [
           0 => '3.8',
           'count' => 1,
         ],
-        'probation' => 
+        'probation' =>
         [
           0 => 1,
           'count' => 1,
         ],
-        'password' => 
+        'password' =>
         [
           0 => 'goodpwd',
           'count' => 1,
         ],
-        'samaccountname' => 
+        'samaccountname' =>
         [
           0 => 'clone3',
           'count' => 1,
         ],
-        'distinguishedname' => 
+        'distinguishedname' =>
         [
           0 => 'cn=clone3,ou=people,dc=hogwarts,dc=edu',
           'count' => 1,
         ],
       ],
     ],
-    'cn=clone4,ou=people,dc=hogwarts,dc=edu' => 
+    'cn=clone4,ou=people,dc=hogwarts,dc=edu' =>
     [
-      'attr' => 
+      'attr' =>
       [
-        'cn' => 
+        'cn' =>
         [
           0 => 'clone4',
           'count' => 1,
         ],
-        'mail' => 
+        'mail' =>
         [
           0 => 'clone4@hogwarts.edu',
           'count' => 1,
         ],
-        'uid' => 
+        'uid' =>
         [
           0 => 24,
           'count' => 1,
         ],
-        'guid' => 
+        'guid' =>
         [
           0 => 124,
           'count' => 1,
         ],
-        'sn' => 
+        'sn' =>
         [
           0 => 'Potter_4',
           'count' => 1,
         ],
-        'givenname' => 
+        'givenname' =>
         [
           0 => 'Harry',
           'count' => 1,
         ],
-        'house' => 
+        'house' =>
         [
           0 => 'Gryffindor',
           'count' => 1,
         ],
-        'department' => 
+        'department' =>
         [
           0 => '',
           'count' => 1,
         ],
-        'faculty' => 
+        'faculty' =>
         [
           0 => 1,
           'count' => 1,
         ],
-        'staff' => 
+        'staff' =>
         [
           0 => 1,
           'count' => 1,
         ],
-        'student' => 
+        'student' =>
         [
           0 => 1,
           'count' => 1,
         ],
-        'gpa' => 
+        'gpa' =>
         [
           0 => '3.8',
           'count' => 1,
         ],
-        'probation' => 
+        'probation' =>
         [
           0 => 1,
           'count' => 1,
         ],
-        'password' => 
+        'password' =>
         [
           0 => 'goodpwd',
           'count' => 1,
         ],
-        'samaccountname' => 
+        'samaccountname' =>
         [
           0 => 'clone4',
           'count' => 1,
         ],
-        'distinguishedname' => 
+        'distinguishedname' =>
         [
           0 => 'cn=clone4,ou=people,dc=hogwarts,dc=edu',
           'count' => 1,
         ],
       ],
     ],
-    'cn=clone5,ou=people,dc=hogwarts,dc=edu' => 
+    'cn=clone5,ou=people,dc=hogwarts,dc=edu' =>
     [
-      'attr' => 
+      'attr' =>
       [
-        'cn' => 
+        'cn' =>
         [
           0 => 'clone5',
           'count' => 1,
         ],
-        'mail' => 
+        'mail' =>
         [
           0 => 'clone5@hogwarts.edu',
           'count' => 1,
         ],
-        'uid' => 
+        'uid' =>
         [
           0 => 25,
           'count' => 1,
         ],
-        'guid' => 
+        'guid' =>
         [
           0 => 125,
           'count' => 1,
         ],
-        'sn' => 
+        'sn' =>
         [
           0 => 'Potter_5',
           'count' => 1,
         ],
-        'givenname' => 
+        'givenname' =>
         [
           0 => 'Harry',
           'count' => 1,
         ],
-        'house' => 
+        'house' =>
         [
           0 => 'Gryffindor',
           'count' => 1,
         ],
-        'department' => 
+        'department' =>
         [
           0 => '',
           'count' => 1,
         ],
-        'faculty' => 
+        'faculty' =>
         [
           0 => 1,
           'count' => 1,
         ],
-        'staff' => 
+        'staff' =>
         [
           0 => 1,
           'count' => 1,
         ],
-        'student' => 
+        'student' =>
         [
           0 => 1,
           'count' => 1,
         ],
-        'gpa' => 
+        'gpa' =>
         [
           0 => '3.8',
           'count' => 1,
         ],
-        'probation' => 
+        'probation' =>
         [
           0 => 1,
           'count' => 1,
         ],
-        'password' => 
+        'password' =>
         [
           0 => 'goodpwd',
           'count' => 1,
         ],
-        'samaccountname' => 
+        'samaccountname' =>
         [
           0 => 'clone5',
           'count' => 1,
         ],
-        'distinguishedname' => 
+        'distinguishedname' =>
         [
           0 => 'cn=clone5,ou=people,dc=hogwarts,dc=edu',
           'count' => 1,
         ],
       ],
     ],
-    'cn=clone6,ou=people,dc=hogwarts,dc=edu' => 
+    'cn=clone6,ou=people,dc=hogwarts,dc=edu' =>
     [
-      'attr' => 
+      'attr' =>
       [
-        'cn' => 
+        'cn' =>
         [
           0 => 'clone6',
           'count' => 1,
         ],
-        'mail' => 
+        'mail' =>
         [
           0 => 'clone6@hogwarts.edu',
           'count' => 1,
         ],
-        'uid' => 
+        'uid' =>
         [
           0 => 26,
           'count' => 1,
         ],
-        'guid' => 
+        'guid' =>
         [
           0 => 126,
           'count' => 1,
         ],
-        'sn' => 
+        'sn' =>
         [
           0 => 'Potter_6',
           'count' => 1,
         ],
-        'givenname' => 
+        'givenname' =>
         [
           0 => 'Harry',
           'count' => 1,
         ],
-        'house' => 
+        'house' =>
         [
           0 => 'Gryffindor',
           'count' => 1,
         ],
-        'department' => 
+        'department' =>
         [
           0 => '',
           'count' => 1,
         ],
-        'faculty' => 
+        'faculty' =>
         [
           0 => 1,
           'count' => 1,
         ],
-        'staff' => 
+        'staff' =>
         [
           0 => 1,
           'count' => 1,
         ],
-        'student' => 
+        'student' =>
         [
           0 => 1,
           'count' => 1,
         ],
-        'gpa' => 
+        'gpa' =>
         [
           0 => '3.8',
           'count' => 1,
         ],
-        'probation' => 
+        'probation' =>
         [
           0 => 1,
           'count' => 1,
         ],
-        'password' => 
+        'password' =>
         [
           0 => 'goodpwd',
           'count' => 1,
         ],
-        'samaccountname' => 
+        'samaccountname' =>
         [
           0 => 'clone6',
           'count' => 1,
         ],
-        'distinguishedname' => 
+        'distinguishedname' =>
         [
           0 => 'cn=clone6,ou=people,dc=hogwarts,dc=edu',
           'count' => 1,
@@ -2002,28 +2007,28 @@
       ],
     ],
   ],
-  'groups' => 
+  'groups' =>
   [
-    'cn=gryffindor,ou=groups,dc=hogwarts,dc=edu' => 
+    'cn=gryffindor,ou=groups,dc=hogwarts,dc=edu' =>
     [
-      'attr' => 
+      'attr' =>
       [
-        'cn' => 
+        'cn' =>
         [
           0 => 'gryffindor',
           'count' => 1,
         ],
-        'gid' => 
+        'gid' =>
         [
           0 => '1',
           'count' => 1,
         ],
-        'guid' => 
+        'guid' =>
         [
           0 => 201,
           'count' => 1,
         ],
-        'member' => 
+        'member' =>
         [
           0 => 'cn=hpotter,ou=people,dc=hogwarts,dc=edu',
           1 => 'cn=hgrainger,ou=people,dc=hogwarts,dc=edu',
@@ -2036,26 +2041,26 @@
         ],
       ],
     ],
-    'cn=slytherin,ou=groups,dc=hogwarts,dc=edu' => 
+    'cn=slytherin,ou=groups,dc=hogwarts,dc=edu' =>
     [
-      'attr' => 
+      'attr' =>
       [
-        'cn' => 
+        'cn' =>
         [
           0 => 'slytherin',
           'count' => 1,
         ],
-        'gid' => 
+        'gid' =>
         [
           0 => '2',
           'count' => 1,
         ],
-        'guid' => 
+        'guid' =>
         [
           0 => 202,
           'count' => 1,
         ],
-        'member' => 
+        'member' =>
         [
           0 => 'cn=dmalfoy,ou=people,dc=hogwarts,dc=edu',
           1 => 'cn=triddle,ou=people,dc=hogwarts,dc=edu',
@@ -2066,52 +2071,52 @@
         ],
       ],
     ],
-    'cn=hufflepuff,ou=groups,dc=hogwarts,dc=edu' => 
+    'cn=hufflepuff,ou=groups,dc=hogwarts,dc=edu' =>
     [
-      'attr' => 
+      'attr' =>
       [
-        'cn' => 
+        'cn' =>
         [
           0 => 'hufflepuff',
           'count' => 1,
         ],
-        'gid' => 
+        'gid' =>
         [
           0 => '3',
           'count' => 1,
         ],
-        'guid' => 
+        'guid' =>
         [
           0 => 203,
           'count' => 1,
         ],
-        'member' => 
+        'member' =>
         [
           0 => 'cn=spomana,ou=people,dc=hogwarts,dc=edu',
           'count' => 1,
         ],
       ],
     ],
-    'cn=students,ou=groups,dc=hogwarts,dc=edu' => 
+    'cn=students,ou=groups,dc=hogwarts,dc=edu' =>
     [
-      'attr' => 
+      'attr' =>
       [
-        'cn' => 
+        'cn' =>
         [
           0 => 'students',
           'count' => 1,
         ],
-        'gid' => 
+        'gid' =>
         [
           0 => '4',
           'count' => 1,
         ],
-        'guid' => 
+        'guid' =>
         [
           0 => 204,
           'count' => 1,
         ],
-        'member' => 
+        'member' =>
         [
           0 => 'cn=hpotter,ou=people,dc=hogwarts,dc=edu',
           1 => 'cn=hgrainger,ou=people,dc=hogwarts,dc=edu',
@@ -2124,26 +2129,26 @@
         ],
       ],
     ],
-    'cn=honors students,ou=groups,dc=hogwarts,dc=edu' => 
+    'cn=honors students,ou=groups,dc=hogwarts,dc=edu' =>
     [
-      'attr' => 
+      'attr' =>
       [
-        'cn' => 
+        'cn' =>
         [
           0 => 'honors students',
           'count' => 1,
         ],
-        'gid' => 
+        'gid' =>
         [
           0 => '5',
           'count' => 1,
         ],
-        'guid' => 
+        'guid' =>
         [
           0 => 205,
           'count' => 1,
         ],
-        'member' => 
+        'member' =>
         [
           0 => 'cn=hpotter,ou=people,dc=hogwarts,dc=edu',
           1 => 'cn=hgrainger,ou=people,dc=hogwarts,dc=edu',
@@ -2151,26 +2156,26 @@
         ],
       ],
     ],
-    'cn=probation students,ou=groups,dc=hogwarts,dc=edu' => 
+    'cn=probation students,ou=groups,dc=hogwarts,dc=edu' =>
     [
-      'attr' => 
+      'attr' =>
       [
-        'cn' => 
+        'cn' =>
         [
           0 => 'probation students',
           'count' => 1,
         ],
-        'gid' => 
+        'gid' =>
         [
           0 => '6',
           'count' => 1,
         ],
-        'guid' => 
+        'guid' =>
         [
           0 => 206,
           'count' => 1,
         ],
-        'member' => 
+        'member' =>
         [
           0 => 'cn=dmalfoy,ou=people,dc=hogwarts,dc=edu',
           1 => 'cn=ggoyle,ou=people,dc=hogwarts,dc=edu',
@@ -2178,26 +2183,26 @@
         ],
       ],
     ],
-    'cn=faculty,ou=groups,dc=hogwarts,dc=edu' => 
+    'cn=faculty,ou=groups,dc=hogwarts,dc=edu' =>
     [
-      'attr' => 
+      'attr' =>
       [
-        'cn' => 
+        'cn' =>
         [
           0 => 'faculty',
           'count' => 1,
         ],
-        'gid' => 
+        'gid' =>
         [
           0 => '7',
           'count' => 1,
         ],
-        'guid' => 
+        'guid' =>
         [
           0 => 207,
           'count' => 1,
         ],
-        'member' => 
+        'member' =>
         [
           0 => 'cn=ssnape,ou=people,dc=hogwarts,dc=edu',
           1 => 'cn=adumbledore,ou=people,dc=hogwarts,dc=edu',
@@ -2207,52 +2212,52 @@
         ],
       ],
     ],
-    'cn=staff,ou=groups,dc=hogwarts,dc=edu' => 
+    'cn=staff,ou=groups,dc=hogwarts,dc=edu' =>
     [
-      'attr' => 
+      'attr' =>
       [
-        'cn' => 
+        'cn' =>
         [
           0 => 'staff',
           'count' => 1,
         ],
-        'gid' => 
+        'gid' =>
         [
           0 => '8',
           'count' => 1,
         ],
-        'guid' => 
+        'guid' =>
         [
           0 => 208,
           'count' => 1,
         ],
-        'member' => 
+        'member' =>
         [
           0 => 'cn=rhagrid,ou=people,dc=hogwarts,dc=edu',
           'count' => 1,
         ],
       ],
     ],
-    'cn=users,ou=groups,dc=hogwarts,dc=edu' => 
+    'cn=users,ou=groups,dc=hogwarts,dc=edu' =>
     [
-      'attr' => 
+      'attr' =>
       [
-        'cn' => 
+        'cn' =>
         [
           0 => 'users',
           'count' => 1,
         ],
-        'gid' => 
+        'gid' =>
         [
           0 => '9',
           'count' => 1,
         ],
-        'guid' => 
+        'guid' =>
         [
           0 => 209,
           'count' => 1,
         ],
-        'member' => 
+        'member' =>
         [
           0 => 'cn=students,ou=groups,dc=hogwarts,dc=edu',
           1 => 'cn=faculty,ou=groups,dc=hogwarts,dc=edu',
@@ -2262,92 +2267,92 @@
       ],
     ],
   ],
-  'ldap' => 
+  'ldap' =>
   [
-    'cn=hpotter,ou=people,dc=hogwarts,dc=edu' => 
+    'cn=hpotter,ou=people,dc=hogwarts,dc=edu' =>
     [
-      'cn' => 
+      'cn' =>
       [
         0 => 'hpotter',
         'count' => 1,
       ],
-      'mail' => 
+      'mail' =>
       [
         0 => 'hpotter@hogwarts.edu',
         'count' => 1,
       ],
-      'uid' => 
+      'uid' =>
       [
         0 => '1',
         'count' => 1,
       ],
-      'guid' => 
+      'guid' =>
       [
         0 => '101',
         'count' => 1,
       ],
-      'sn' => 
+      'sn' =>
       [
         0 => 'Potter',
         'count' => 1,
       ],
-      'givenname' => 
+      'givenname' =>
       [
         0 => 'Harry',
         'count' => 1,
       ],
-      'house' => 
+      'house' =>
       [
         0 => 'Gryffindor',
         'count' => 1,
       ],
-      'department' => 
+      'department' =>
       [
         0 => '',
         'count' => 1,
       ],
-      'faculty' => 
+      'faculty' =>
       [
         0 => 1,
         'count' => 1,
       ],
-      'staff' => 
+      'staff' =>
       [
         0 => 1,
         'count' => 1,
       ],
-      'student' => 
+      'student' =>
       [
         0 => 1,
         'count' => 1,
       ],
-      'gpa' => 
+      'gpa' =>
       [
         0 => '3.8',
         'count' => 1,
       ],
-      'probation' => 
+      'probation' =>
       [
         0 => 1,
         'count' => 1,
       ],
-      'password' => 
+      'password' =>
       [
         0 => 'goodpwd',
         'count' => 1,
       ],
-      'samaccountname' => 
+      'samaccountname' =>
       [
         0 => 'hpotter',
         'count' => 1,
       ],
-      'distinguishedname' => 
+      'distinguishedname' =>
       [
         0 => 'cn=hpotter,ou=people,dc=hogwarts,dc=edu',
         'count' => 1,
       ],
       'count' => 16,
-      'memberof' => 
+      'memberof' =>
       [
         0 => 'cn=gryffindor,ou=groups,dc=hogwarts,dc=edu',
         1 => 'cn=students,ou=groups,dc=hogwarts,dc=edu',
@@ -2355,90 +2360,90 @@
         'count' => 3,
       ],
     ],
-    'cn=hgrainger,ou=people,dc=hogwarts,dc=edu' => 
+    'cn=hgrainger,ou=people,dc=hogwarts,dc=edu' =>
     [
-      'cn' => 
+      'cn' =>
       [
         0 => 'hgrainger',
         'count' => 1,
       ],
-      'mail' => 
+      'mail' =>
       [
         0 => 'hgrainger@hogwarts.edu',
         'count' => 1,
       ],
-      'uid' => 
+      'uid' =>
       [
         0 => '2',
         'count' => 1,
       ],
-      'guid' => 
+      'guid' =>
       [
         0 => '102',
         'count' => 1,
       ],
-      'sn' => 
+      'sn' =>
       [
         0 => 'Granger',
         'count' => 1,
       ],
-      'givenname' => 
+      'givenname' =>
       [
         0 => 'Hermione',
         'count' => 1,
       ],
-      'house' => 
+      'house' =>
       [
         0 => 'Gryffindor',
         'count' => 1,
       ],
-      'department' => 
+      'department' =>
       [
         0 => '',
         'count' => 1,
       ],
-      'faculty' => 
+      'faculty' =>
       [
         0 => 1,
         'count' => 1,
       ],
-      'staff' => 
+      'staff' =>
       [
         0 => 1,
         'count' => 1,
       ],
-      'student' => 
+      'student' =>
       [
         0 => 1,
         'count' => 1,
       ],
-      'gpa' => 
+      'gpa' =>
       [
         0 => '4',
         'count' => 1,
       ],
-      'probation' => 
+      'probation' =>
       [
         0 => 1,
         'count' => 1,
       ],
-      'password' => 
+      'password' =>
       [
         0 => 'goodpwd',
         'count' => 1,
       ],
-      'samaccountname' => 
+      'samaccountname' =>
       [
         0 => 'hgrainger',
         'count' => 1,
       ],
-      'distinguishedname' => 
+      'distinguishedname' =>
       [
         0 => 'cn=hgrainger,ou=people,dc=hogwarts,dc=edu',
         'count' => 1,
       ],
       'count' => 16,
-      'memberof' => 
+      'memberof' =>
       [
         0 => 'cn=gryffindor,ou=groups,dc=hogwarts,dc=edu',
         1 => 'cn=students,ou=groups,dc=hogwarts,dc=edu',
@@ -2446,360 +2451,360 @@
         'count' => 3,
       ],
     ],
-    'cn=rweasley,ou=people,dc=hogwarts,dc=edu' => 
+    'cn=rweasley,ou=people,dc=hogwarts,dc=edu' =>
     [
-      'cn' => 
+      'cn' =>
       [
         0 => 'rweasley',
         'count' => 1,
       ],
-      'mail' => 
+      'mail' =>
       [
         0 => 'rweasley@hogwarts.edu',
         'count' => 1,
       ],
-      'uid' => 
+      'uid' =>
       [
         0 => '3',
         'count' => 1,
       ],
-      'guid' => 
+      'guid' =>
       [
         0 => '103',
         'count' => 1,
       ],
-      'sn' => 
+      'sn' =>
       [
         0 => 'Weasley',
         'count' => 1,
       ],
-      'givenname' => 
+      'givenname' =>
       [
         0 => 'Ron',
         'count' => 1,
       ],
-      'house' => 
+      'house' =>
       [
         0 => 'Gryffindor',
         'count' => 1,
       ],
-      'department' => 
+      'department' =>
       [
         0 => '',
         'count' => 1,
       ],
-      'faculty' => 
+      'faculty' =>
       [
         0 => 1,
         'count' => 1,
       ],
-      'staff' => 
+      'staff' =>
       [
         0 => 1,
         'count' => 1,
       ],
-      'student' => 
+      'student' =>
       [
         0 => 1,
         'count' => 1,
       ],
-      'gpa' => 
+      'gpa' =>
       [
         0 => '3.6',
         'count' => 1,
       ],
-      'probation' => 
+      'probation' =>
       [
         0 => 1,
         'count' => 1,
       ],
-      'password' => 
+      'password' =>
       [
         0 => 'goodpwd',
         'count' => 1,
       ],
-      'samaccountname' => 
+      'samaccountname' =>
       [
         0 => 'rweasley',
         'count' => 1,
       ],
-      'distinguishedname' => 
+      'distinguishedname' =>
       [
         0 => 'cn=rweasley,ou=people,dc=hogwarts,dc=edu',
         'count' => 1,
       ],
       'count' => 16,
-      'memberof' => 
+      'memberof' =>
       [
         0 => 'cn=gryffindor,ou=groups,dc=hogwarts,dc=edu',
         1 => 'cn=students,ou=groups,dc=hogwarts,dc=edu',
         'count' => 2,
       ],
     ],
-    'cn=fweasley,ou=people,dc=hogwarts,dc=edu' => 
+    'cn=fweasley,ou=people,dc=hogwarts,dc=edu' =>
     [
-      'cn' => 
+      'cn' =>
       [
         0 => 'fweasley',
         'count' => 1,
       ],
-      'mail' => 
+      'mail' =>
       [
         0 => 'fweasley@hogwarts.edu',
         'count' => 1,
       ],
-      'uid' => 
+      'uid' =>
       [
         0 => '4',
         'count' => 1,
       ],
-      'guid' => 
+      'guid' =>
       [
         0 => '104',
         'count' => 1,
       ],
-      'sn' => 
+      'sn' =>
       [
         0 => 'Weasley',
         'count' => 1,
       ],
-      'givenname' => 
+      'givenname' =>
       [
         0 => 'Fred',
         'count' => 1,
       ],
-      'house' => 
+      'house' =>
       [
         0 => 'Gryffindor',
         'count' => 1,
       ],
-      'department' => 
+      'department' =>
       [
         0 => '',
         'count' => 1,
       ],
-      'faculty' => 
+      'faculty' =>
       [
         0 => 1,
         'count' => 1,
       ],
-      'staff' => 
+      'staff' =>
       [
         0 => 1,
         'count' => 1,
       ],
-      'student' => 
+      'student' =>
       [
         0 => 1,
         'count' => 1,
       ],
-      'gpa' => 
+      'gpa' =>
       [
         0 => '3',
         'count' => 1,
       ],
-      'probation' => 
+      'probation' =>
       [
         0 => 1,
         'count' => 1,
       ],
-      'password' => 
+      'password' =>
       [
         0 => 'goodpwd',
         'count' => 1,
       ],
-      'samaccountname' => 
+      'samaccountname' =>
       [
         0 => 'fweasley',
         'count' => 1,
       ],
-      'distinguishedname' => 
+      'distinguishedname' =>
       [
         0 => 'cn=fweasley,ou=people,dc=hogwarts,dc=edu',
         'count' => 1,
       ],
       'count' => 16,
-      'memberof' => 
+      'memberof' =>
       [
         0 => 'cn=gryffindor,ou=groups,dc=hogwarts,dc=edu',
         1 => 'cn=students,ou=groups,dc=hogwarts,dc=edu',
         'count' => 2,
       ],
     ],
-    'cn=gweasley,ou=people,dc=hogwarts,dc=edu' => 
+    'cn=gweasley,ou=people,dc=hogwarts,dc=edu' =>
     [
-      'cn' => 
+      'cn' =>
       [
         0 => 'gweasley',
         'count' => 1,
       ],
-      'mail' => 
+      'mail' =>
       [
         0 => 'gweasley@hogwarts.edu',
         'count' => 1,
       ],
-      'uid' => 
+      'uid' =>
       [
         0 => '5',
         'count' => 1,
       ],
-      'guid' => 
+      'guid' =>
       [
         0 => '105',
         'count' => 1,
       ],
-      'sn' => 
+      'sn' =>
       [
         0 => 'Weasley',
         'count' => 1,
       ],
-      'givenname' => 
+      'givenname' =>
       [
         0 => 'George',
         'count' => 1,
       ],
-      'house' => 
+      'house' =>
       [
         0 => 'Gryffindor',
         'count' => 1,
       ],
-      'department' => 
+      'department' =>
       [
         0 => '',
         'count' => 1,
       ],
-      'faculty' => 
+      'faculty' =>
       [
         0 => 1,
         'count' => 1,
       ],
-      'staff' => 
+      'staff' =>
       [
         0 => 1,
         'count' => 1,
       ],
-      'student' => 
+      'student' =>
       [
         0 => 1,
         'count' => 1,
       ],
-      'gpa' => 
+      'gpa' =>
       [
         0 => '2.7',
         'count' => 1,
       ],
-      'probation' => 
+      'probation' =>
       [
         0 => 1,
         'count' => 1,
       ],
-      'password' => 
+      'password' =>
       [
         0 => 'goodpwd',
         'count' => 1,
       ],
-      'samaccountname' => 
+      'samaccountname' =>
       [
         0 => 'gweasley',
         'count' => 1,
       ],
-      'distinguishedname' => 
+      'distinguishedname' =>
       [
         0 => 'cn=gweasley,ou=people,dc=hogwarts,dc=edu',
         'count' => 1,
       ],
       'count' => 16,
-      'memberof' => 
+      'memberof' =>
       [
         0 => 'cn=gryffindor,ou=groups,dc=hogwarts,dc=edu',
         1 => 'cn=students,ou=groups,dc=hogwarts,dc=edu',
         'count' => 2,
       ],
     ],
-    'cn=dmalfoy,ou=people,dc=hogwarts,dc=edu' => 
+    'cn=dmalfoy,ou=people,dc=hogwarts,dc=edu' =>
     [
-      'cn' => 
+      'cn' =>
       [
         0 => 'dmalfoy',
         'count' => 1,
       ],
-      'mail' => 
+      'mail' =>
       [
         0 => 'dmalfoy@hogwarts.edu',
         'count' => 1,
       ],
-      'uid' => 
+      'uid' =>
       [
         0 => '6',
         'count' => 1,
       ],
-      'guid' => 
+      'guid' =>
       [
         0 => '106',
         'count' => 1,
       ],
-      'sn' => 
+      'sn' =>
       [
         0 => 'Malfoy',
         'count' => 1,
       ],
-      'givenname' => 
+      'givenname' =>
       [
         0 => 'Draco',
         'count' => 1,
       ],
-      'house' => 
+      'house' =>
       [
         0 => 'Slytherin',
         'count' => 1,
       ],
-      'department' => 
+      'department' =>
       [
         0 => '',
         'count' => 1,
       ],
-      'faculty' => 
+      'faculty' =>
       [
         0 => 1,
         'count' => 1,
       ],
-      'staff' => 
+      'staff' =>
       [
         0 => 1,
         'count' => 1,
       ],
-      'student' => 
+      'student' =>
       [
         0 => 1,
         'count' => 1,
       ],
-      'gpa' => 
+      'gpa' =>
       [
         0 => '3.7',
         'count' => 1,
       ],
-      'probation' => 
+      'probation' =>
       [
         0 => 1,
         'count' => 1,
       ],
-      'password' => 
+      'password' =>
       [
         0 => 'goodpwd',
         'count' => 1,
       ],
-      'samaccountname' => 
+      'samaccountname' =>
       [
         0 => 'dmalfoy',
         'count' => 1,
       ],
-      'distinguishedname' => 
+      'distinguishedname' =>
       [
         0 => 'cn=dmalfoy,ou=people,dc=hogwarts,dc=edu',
         'count' => 1,
       ],
       'count' => 16,
-      'memberof' => 
+      'memberof' =>
       [
         0 => 'cn=slytherin,ou=groups,dc=hogwarts,dc=edu',
         1 => 'cn=slytherin,ou=groups,dc=hogwarts,dc=edu',
@@ -2808,179 +2813,179 @@
         'count' => 4,
       ],
     ],
-    'cn=triddle,ou=people,dc=hogwarts,dc=edu' => 
+    'cn=triddle,ou=people,dc=hogwarts,dc=edu' =>
     [
-      'cn' => 
+      'cn' =>
       [
         0 => 'triddle',
         'count' => 1,
       ],
-      'mail' => 
+      'mail' =>
       [
         0 => 'triddle@hogwarts.edu',
         'count' => 1,
       ],
-      'uid' => 
+      'uid' =>
       [
         0 => '7',
         'count' => 1,
       ],
-      'guid' => 
+      'guid' =>
       [
         0 => '107',
         'count' => 1,
       ],
-      'sn' => 
+      'sn' =>
       [
         0 => 'Riddle',
         'count' => 1,
       ],
-      'givenname' => 
+      'givenname' =>
       [
         0 => 'Tom',
         'count' => 1,
       ],
-      'house' => 
+      'house' =>
       [
         0 => 'Slytherin',
         'count' => 1,
       ],
-      'department' => 
+      'department' =>
       [
         0 => '',
         'count' => 1,
       ],
-      'faculty' => 
+      'faculty' =>
       [
         0 => 1,
         'count' => 1,
       ],
-      'staff' => 
+      'staff' =>
       [
         0 => 1,
         'count' => 1,
       ],
-      'student' => 
+      'student' =>
       [
         0 => 1,
         'count' => 1,
       ],
-      'gpa' => 
+      'gpa' =>
       [
         0 => '3.6',
         'count' => 1,
       ],
-      'probation' => 
+      'probation' =>
       [
         0 => 1,
         'count' => 1,
       ],
-      'password' => 
+      'password' =>
       [
         0 => 'goodpwd',
         'count' => 1,
       ],
-      'samaccountname' => 
+      'samaccountname' =>
       [
         0 => 'triddle',
         'count' => 1,
       ],
-      'distinguishedname' => 
+      'distinguishedname' =>
       [
         0 => 'cn=triddle,ou=people,dc=hogwarts,dc=edu',
         'count' => 1,
       ],
       'count' => 16,
-      'memberof' => 
+      'memberof' =>
       [
         0 => 'cn=slytherin,ou=groups,dc=hogwarts,dc=edu',
         'count' => 1,
       ],
     ],
-    'cn=ggoyle,ou=people,dc=hogwarts,dc=edu' => 
+    'cn=ggoyle,ou=people,dc=hogwarts,dc=edu' =>
     [
-      'cn' => 
+      'cn' =>
       [
         0 => 'ggoyle',
         'count' => 1,
       ],
-      'mail' => 
+      'mail' =>
       [
         0 => 'ggoyle@hogwarts.edu',
         'count' => 1,
       ],
-      'uid' => 
+      'uid' =>
       [
         0 => '8',
         'count' => 1,
       ],
-      'guid' => 
+      'guid' =>
       [
         0 => '108',
         'count' => 1,
       ],
-      'sn' => 
+      'sn' =>
       [
         0 => 'Goyle',
         'count' => 1,
       ],
-      'givenname' => 
+      'givenname' =>
       [
         0 => 'Gregory',
         'count' => 1,
       ],
-      'house' => 
+      'house' =>
       [
         0 => 'Slytherin',
         'count' => 1,
       ],
-      'department' => 
+      'department' =>
       [
         0 => '',
         'count' => 1,
       ],
-      'faculty' => 
+      'faculty' =>
       [
         0 => 1,
         'count' => 1,
       ],
-      'staff' => 
+      'staff' =>
       [
         0 => 1,
         'count' => 1,
       ],
-      'student' => 
+      'student' =>
       [
         0 => 1,
         'count' => 1,
       ],
-      'gpa' => 
+      'gpa' =>
       [
         0 => '3.3',
         'count' => 1,
       ],
-      'probation' => 
+      'probation' =>
       [
         0 => 1,
         'count' => 1,
       ],
-      'password' => 
+      'password' =>
       [
         0 => 'goodpwd',
         'count' => 1,
       ],
-      'samaccountname' => 
+      'samaccountname' =>
       [
         0 => 'ggoyle',
         'count' => 1,
       ],
-      'distinguishedname' => 
+      'distinguishedname' =>
       [
         0 => 'cn=ggoyle,ou=people,dc=hogwarts,dc=edu',
         'count' => 1,
       ],
       'count' => 16,
-      'memberof' => 
+      'memberof' =>
       [
         0 => 'cn=slytherin,ou=groups,dc=hogwarts,dc=edu',
         1 => 'cn=students,ou=groups,dc=hogwarts,dc=edu',
@@ -2988,1145 +2993,1145 @@
         'count' => 3,
       ],
     ],
-    'cn=ssnape,ou=people,dc=hogwarts,dc=edu' => 
+    'cn=ssnape,ou=people,dc=hogwarts,dc=edu' =>
     [
-      'cn' => 
+      'cn' =>
       [
         0 => 'ssnape',
         'count' => 1,
       ],
-      'mail' => 
+      'mail' =>
       [
         0 => 'ssnape@hogwarts.edu',
         'count' => 1,
       ],
-      'uid' => 
+      'uid' =>
       [
         0 => '9',
         'count' => 1,
       ],
-      'guid' => 
+      'guid' =>
       [
         0 => '109',
         'count' => 1,
       ],
-      'sn' => 
+      'sn' =>
       [
         0 => 'Snape',
         'count' => 1,
       ],
-      'givenname' => 
+      'givenname' =>
       [
         0 => 'Severus ',
         'count' => 1,
       ],
-      'house' => 
+      'house' =>
       [
         0 => 'Slytherin',
         'count' => 1,
       ],
-      'department' => 
+      'department' =>
       [
         0 => 'Defence Against the Dark Arts professor ',
         'count' => 1,
       ],
-      'faculty' => 
+      'faculty' =>
       [
         0 => 1,
         'count' => 1,
       ],
-      'staff' => 
+      'staff' =>
       [
         0 => 1,
         'count' => 1,
       ],
-      'student' => 
+      'student' =>
       [
         0 => 1,
         'count' => 1,
       ],
-      'gpa' => 
+      'gpa' =>
       [
         0 => '',
         'count' => 1,
       ],
-      'probation' => 
+      'probation' =>
       [
         0 => 0,
         'count' => 1,
       ],
-      'password' => 
+      'password' =>
       [
         0 => 'goodpwd',
         'count' => 1,
       ],
-      'samaccountname' => 
+      'samaccountname' =>
       [
         0 => 'ssnape',
         'count' => 1,
       ],
-      'distinguishedname' => 
+      'distinguishedname' =>
       [
         0 => 'cn=ssnape,ou=people,dc=hogwarts,dc=edu',
         'count' => 1,
       ],
       'count' => 16,
-      'memberof' => 
+      'memberof' =>
       [
         0 => 'cn=slytherin,ou=groups,dc=hogwarts,dc=edu',
         1 => 'cn=faculty,ou=groups,dc=hogwarts,dc=edu',
         'count' => 2,
       ],
     ],
-    'cn=adumbledore,ou=people,dc=hogwarts,dc=edu' => 
+    'cn=adumbledore,ou=people,dc=hogwarts,dc=edu' =>
     [
-      'cn' => 
+      'cn' =>
       [
         0 => 'adumbledore',
         'count' => 1,
       ],
-      'mail' => 
+      'mail' =>
       [
         0 => 'adumbledore@hogwarts.edu',
         'count' => 1,
       ],
-      'uid' => 
+      'uid' =>
       [
         0 => '10',
         'count' => 1,
       ],
-      'guid' => 
+      'guid' =>
       [
         0 => '110',
         'count' => 1,
       ],
-      'sn' => 
+      'sn' =>
       [
         0 => 'Dumbledore',
         'count' => 1,
       ],
-      'givenname' => 
+      'givenname' =>
       [
         0 => 'Albus',
         'count' => 1,
       ],
-      'house' => 
+      'house' =>
       [
         0 => '',
         'count' => 1,
       ],
-      'department' => 
+      'department' =>
       [
         0 => 'Head Master Of Hogwarts',
         'count' => 1,
       ],
-      'faculty' => 
+      'faculty' =>
       [
         0 => 1,
         'count' => 1,
       ],
-      'staff' => 
+      'staff' =>
       [
         0 => 1,
         'count' => 1,
       ],
-      'student' => 
+      'student' =>
       [
         0 => 1,
         'count' => 1,
       ],
-      'gpa' => 
+      'gpa' =>
       [
         0 => '',
         'count' => 1,
       ],
-      'probation' => 
+      'probation' =>
       [
         0 => 0,
         'count' => 1,
       ],
-      'password' => 
+      'password' =>
       [
         0 => 'goodpwd',
         'count' => 1,
       ],
-      'samaccountname' => 
+      'samaccountname' =>
       [
         0 => 'adumbledore',
         'count' => 1,
       ],
-      'distinguishedname' => 
+      'distinguishedname' =>
       [
         0 => 'cn=adumbledore,ou=people,dc=hogwarts,dc=edu',
         'count' => 1,
       ],
       'count' => 16,
-      'memberof' => 
+      'memberof' =>
       [
         0 => 'cn=faculty,ou=groups,dc=hogwarts,dc=edu',
         'count' => 1,
       ],
     ],
-    'cn=mmcgonagall,ou=people,dc=hogwarts,dc=edu' => 
+    'cn=mmcgonagall,ou=people,dc=hogwarts,dc=edu' =>
     [
-      'cn' => 
+      'cn' =>
       [
         0 => 'mmcgonagall',
         'count' => 1,
       ],
-      'mail' => 
+      'mail' =>
       [
         0 => 'mmcgonagall@hogwarts.edu',
         'count' => 1,
       ],
-      'uid' => 
+      'uid' =>
       [
         0 => '11',
         'count' => 1,
       ],
-      'guid' => 
+      'guid' =>
       [
         0 => '111',
         'count' => 1,
       ],
-      'sn' => 
+      'sn' =>
       [
         0 => 'McGonagall',
         'count' => 1,
       ],
-      'givenname' => 
+      'givenname' =>
       [
         0 => 'Minerva',
         'count' => 1,
       ],
-      'house' => 
+      'house' =>
       [
         0 => 'Gryffindor',
         'count' => 1,
       ],
-      'department' => 
+      'department' =>
       [
         0 => 'Tranfiguration/ Deputy Head Mistress',
         'count' => 1,
       ],
-      'faculty' => 
+      'faculty' =>
       [
         0 => 1,
         'count' => 1,
       ],
-      'staff' => 
+      'staff' =>
       [
         0 => 1,
         'count' => 1,
       ],
-      'student' => 
+      'student' =>
       [
         0 => 1,
         'count' => 1,
       ],
-      'gpa' => 
+      'gpa' =>
       [
         0 => '',
         'count' => 1,
       ],
-      'probation' => 
+      'probation' =>
       [
         0 => 0,
         'count' => 1,
       ],
-      'password' => 
+      'password' =>
       [
         0 => 'goodpwd',
         'count' => 1,
       ],
-      'samaccountname' => 
+      'samaccountname' =>
       [
         0 => 'mmcgonagall',
         'count' => 1,
       ],
-      'distinguishedname' => 
+      'distinguishedname' =>
       [
         0 => 'cn=mmcgonagall,ou=people,dc=hogwarts,dc=edu',
         'count' => 1,
       ],
       'count' => 16,
-      'memberof' => 
+      'memberof' =>
       [
         0 => 'cn=gryffindor,ou=groups,dc=hogwarts,dc=edu',
         1 => 'cn=faculty,ou=groups,dc=hogwarts,dc=edu',
         'count' => 2,
       ],
     ],
-    'cn=spomana,ou=people,dc=hogwarts,dc=edu' => 
+    'cn=spomana,ou=people,dc=hogwarts,dc=edu' =>
     [
-      'cn' => 
+      'cn' =>
       [
         0 => 'spomana',
         'count' => 1,
       ],
-      'mail' => 
+      'mail' =>
       [
         0 => 'spomana@hogwarts.edu',
         'count' => 1,
       ],
-      'uid' => 
+      'uid' =>
       [
         0 => '12',
         'count' => 1,
       ],
-      'guid' => 
+      'guid' =>
       [
         0 => '112',
         'count' => 1,
       ],
-      'sn' => 
+      'sn' =>
       [
         0 => 'Pomona',
         'count' => 1,
       ],
-      'givenname' => 
+      'givenname' =>
       [
         0 => 'Sprout',
         'count' => 1,
       ],
-      'house' => 
+      'house' =>
       [
         0 => 'Hufflepuff',
         'count' => 1,
       ],
-      'department' => 
+      'department' =>
       [
         0 => 'Herbology',
         'count' => 1,
       ],
-      'faculty' => 
+      'faculty' =>
       [
         0 => 1,
         'count' => 1,
       ],
-      'staff' => 
+      'staff' =>
       [
         0 => 1,
         'count' => 1,
       ],
-      'student' => 
+      'student' =>
       [
         0 => 1,
         'count' => 1,
       ],
-      'gpa' => 
+      'gpa' =>
       [
         0 => '',
         'count' => 1,
       ],
-      'probation' => 
+      'probation' =>
       [
         0 => 0,
         'count' => 1,
       ],
-      'password' => 
+      'password' =>
       [
         0 => 'goodpwd',
         'count' => 1,
       ],
-      'samaccountname' => 
+      'samaccountname' =>
       [
         0 => 'spomana',
         'count' => 1,
       ],
-      'distinguishedname' => 
+      'distinguishedname' =>
       [
         0 => 'cn=spomana,ou=people,dc=hogwarts,dc=edu',
         'count' => 1,
       ],
       'count' => 16,
-      'memberof' => 
+      'memberof' =>
       [
         0 => 'cn=hufflepuff,ou=groups,dc=hogwarts,dc=edu',
         1 => 'cn=faculty,ou=groups,dc=hogwarts,dc=edu',
         'count' => 2,
       ],
     ],
-    'cn=rhagrid,ou=people,dc=hogwarts,dc=edu' => 
+    'cn=rhagrid,ou=people,dc=hogwarts,dc=edu' =>
     [
-      'cn' => 
+      'cn' =>
       [
         0 => 'rhagrid',
         'count' => 1,
       ],
-      'mail' => 
+      'mail' =>
       [
         0 => 'rhagrid@hogwarts.edu',
         'count' => 1,
       ],
-      'uid' => 
+      'uid' =>
       [
         0 => '13',
         'count' => 1,
       ],
-      'guid' => 
+      'guid' =>
       [
         0 => '113',
         'count' => 1,
       ],
-      'sn' => 
+      'sn' =>
       [
         0 => 'Hagrid',
         'count' => 1,
       ],
-      'givenname' => 
+      'givenname' =>
       [
         0 => 'Rubeus',
         'count' => 1,
       ],
-      'house' => 
+      'house' =>
       [
         0 => 'Gryffindor',
         'count' => 1,
       ],
-      'department' => 
+      'department' =>
       [
         0 => '',
         'count' => 1,
       ],
-      'faculty' => 
+      'faculty' =>
       [
         0 => 1,
         'count' => 1,
       ],
-      'staff' => 
+      'staff' =>
       [
         0 => 1,
         'count' => 1,
       ],
-      'student' => 
+      'student' =>
       [
         0 => 1,
         'count' => 1,
       ],
-      'gpa' => 
+      'gpa' =>
       [
         0 => '',
         'count' => 1,
       ],
-      'probation' => 
+      'probation' =>
       [
         0 => 0,
         'count' => 1,
       ],
-      'password' => 
+      'password' =>
       [
         0 => 'goodpwd',
         'count' => 1,
       ],
-      'samaccountname' => 
+      'samaccountname' =>
       [
         0 => 'rhagrid',
         'count' => 1,
       ],
-      'distinguishedname' => 
+      'distinguishedname' =>
       [
         0 => 'cn=rhagrid,ou=people,dc=hogwarts,dc=edu',
         'count' => 1,
       ],
       'count' => 16,
-      'memberof' => 
+      'memberof' =>
       [
         0 => 'cn=gryffindor,ou=groups,dc=hogwarts,dc=edu',
         1 => 'cn=staff,ou=groups,dc=hogwarts,dc=edu',
         'count' => 2,
       ],
     ],
-    'cn=service-account,ou=people,dc=hogwarts,dc=edu' => 
+    'cn=service-account,ou=people,dc=hogwarts,dc=edu' =>
     [
-      'cn' => 
+      'cn' =>
       [
         0 => 'service-account',
         'count' => 1,
       ],
-      'mail' => 
+      'mail' =>
       [
         0 => 'service-account@hogwarts.edu',
         'count' => 1,
       ],
-      'uid' => 
+      'uid' =>
       [
         0 => '19',
         'count' => 1,
       ],
-      'guid' => 
+      'guid' =>
       [
         0 => '119',
         'count' => 1,
       ],
-      'sn' => 
+      'sn' =>
       [
         0 => 'Service',
         'count' => 1,
       ],
-      'givenname' => 
+      'givenname' =>
       [
         0 => 'Account',
         'count' => 1,
       ],
-      'house' => 
+      'house' =>
       [
         0 => '',
         'count' => 1,
       ],
-      'department' => 
+      'department' =>
       [
         0 => '',
         'count' => 1,
       ],
-      'faculty' => 
+      'faculty' =>
       [
         0 => 0,
         'count' => 1,
       ],
-      'staff' => 
+      'staff' =>
       [
         0 => 0,
         'count' => 1,
       ],
-      'student' => 
+      'student' =>
       [
         0 => 0,
         'count' => 1,
       ],
-      'gpa' => 
+      'gpa' =>
       [
         0 => '',
         'count' => 1,
       ],
-      'probation' => 
+      'probation' =>
       [
         0 => 0,
         'count' => 1,
       ],
-      'password' => 
+      'password' =>
       [
         0 => 'goodpwd',
         'count' => 1,
       ],
-      'samaccountname' => 
+      'samaccountname' =>
       [
         0 => 'service-account',
         'count' => 1,
       ],
-      'distinguishedname' => 
+      'distinguishedname' =>
       [
         0 => 'cn=service-account,ou=people,dc=hogwarts,dc=edu',
         'count' => 1,
       ],
       'count' => 16,
     ],
-    'cn=clone0,ou=people,dc=hogwarts,dc=edu' => 
+    'cn=clone0,ou=people,dc=hogwarts,dc=edu' =>
     [
-      'cn' => 
+      'cn' =>
       [
         0 => 'clone0',
         'count' => 1,
       ],
-      'mail' => 
+      'mail' =>
       [
         0 => 'clone0@hogwarts.edu',
         'count' => 1,
       ],
-      'uid' => 
+      'uid' =>
       [
         0 => 20,
         'count' => 1,
       ],
-      'guid' => 
+      'guid' =>
       [
         0 => 120,
         'count' => 1,
       ],
-      'sn' => 
+      'sn' =>
       [
         0 => 'Potter_0',
         'count' => 1,
       ],
-      'givenname' => 
+      'givenname' =>
       [
         0 => 'Harry',
         'count' => 1,
       ],
-      'house' => 
+      'house' =>
       [
         0 => 'Gryffindor',
         'count' => 1,
       ],
-      'department' => 
+      'department' =>
       [
         0 => '',
         'count' => 1,
       ],
-      'faculty' => 
+      'faculty' =>
       [
         0 => 1,
         'count' => 1,
       ],
-      'staff' => 
+      'staff' =>
       [
         0 => 1,
         'count' => 1,
       ],
-      'student' => 
+      'student' =>
       [
         0 => 1,
         'count' => 1,
       ],
-      'gpa' => 
+      'gpa' =>
       [
         0 => '3.8',
         'count' => 1,
       ],
-      'probation' => 
+      'probation' =>
       [
         0 => 1,
         'count' => 1,
       ],
-      'password' => 
+      'password' =>
       [
         0 => 'goodpwd',
         'count' => 1,
       ],
-      'samaccountname' => 
+      'samaccountname' =>
       [
         0 => 'clone0',
         'count' => 1,
       ],
-      'distinguishedname' => 
+      'distinguishedname' =>
       [
         0 => 'cn=clone0,ou=people,dc=hogwarts,dc=edu',
         'count' => 1,
       ],
       'count' => 16,
     ],
-    'cn=clone1,ou=people,dc=hogwarts,dc=edu' => 
+    'cn=clone1,ou=people,dc=hogwarts,dc=edu' =>
     [
-      'cn' => 
+      'cn' =>
       [
         0 => 'clone1',
         'count' => 1,
       ],
-      'mail' => 
+      'mail' =>
       [
         0 => 'clone1@hogwarts.edu',
         'count' => 1,
       ],
-      'uid' => 
+      'uid' =>
       [
         0 => 21,
         'count' => 1,
       ],
-      'guid' => 
+      'guid' =>
       [
         0 => 121,
         'count' => 1,
       ],
-      'sn' => 
+      'sn' =>
       [
         0 => 'Potter_1',
         'count' => 1,
       ],
-      'givenname' => 
+      'givenname' =>
       [
         0 => 'Harry',
         'count' => 1,
       ],
-      'house' => 
+      'house' =>
       [
         0 => 'Gryffindor',
         'count' => 1,
       ],
-      'department' => 
+      'department' =>
       [
         0 => '',
         'count' => 1,
       ],
-      'faculty' => 
+      'faculty' =>
       [
         0 => 1,
         'count' => 1,
       ],
-      'staff' => 
+      'staff' =>
       [
         0 => 1,
         'count' => 1,
       ],
-      'student' => 
+      'student' =>
       [
         0 => 1,
         'count' => 1,
       ],
-      'gpa' => 
+      'gpa' =>
       [
         0 => '3.8',
         'count' => 1,
       ],
-      'probation' => 
+      'probation' =>
       [
         0 => 1,
         'count' => 1,
       ],
-      'password' => 
+      'password' =>
       [
         0 => 'goodpwd',
         'count' => 1,
       ],
-      'samaccountname' => 
+      'samaccountname' =>
       [
         0 => 'clone1',
         'count' => 1,
       ],
-      'distinguishedname' => 
+      'distinguishedname' =>
       [
         0 => 'cn=clone1,ou=people,dc=hogwarts,dc=edu',
         'count' => 1,
       ],
       'count' => 16,
     ],
-    'cn=clone2,ou=people,dc=hogwarts,dc=edu' => 
+    'cn=clone2,ou=people,dc=hogwarts,dc=edu' =>
     [
-      'cn' => 
+      'cn' =>
       [
         0 => 'clone2',
         'count' => 1,
       ],
-      'mail' => 
+      'mail' =>
       [
         0 => 'clone2@hogwarts.edu',
         'count' => 1,
       ],
-      'uid' => 
+      'uid' =>
       [
         0 => 22,
         'count' => 1,
       ],
-      'guid' => 
+      'guid' =>
       [
         0 => 122,
         'count' => 1,
       ],
-      'sn' => 
+      'sn' =>
       [
         0 => 'Potter_2',
         'count' => 1,
       ],
-      'givenname' => 
+      'givenname' =>
       [
         0 => 'Harry',
         'count' => 1,
       ],
-      'house' => 
+      'house' =>
       [
         0 => 'Gryffindor',
         'count' => 1,
       ],
-      'department' => 
+      'department' =>
       [
         0 => '',
         'count' => 1,
       ],
-      'faculty' => 
+      'faculty' =>
       [
         0 => 1,
         'count' => 1,
       ],
-      'staff' => 
+      'staff' =>
       [
         0 => 1,
         'count' => 1,
       ],
-      'student' => 
+      'student' =>
       [
         0 => 1,
         'count' => 1,
       ],
-      'gpa' => 
+      'gpa' =>
       [
         0 => '3.8',
         'count' => 1,
       ],
-      'probation' => 
+      'probation' =>
       [
         0 => 1,
         'count' => 1,
       ],
-      'password' => 
+      'password' =>
       [
         0 => 'goodpwd',
         'count' => 1,
       ],
-      'samaccountname' => 
+      'samaccountname' =>
       [
         0 => 'clone2',
         'count' => 1,
       ],
-      'distinguishedname' => 
+      'distinguishedname' =>
       [
         0 => 'cn=clone2,ou=people,dc=hogwarts,dc=edu',
         'count' => 1,
       ],
       'count' => 16,
     ],
-    'cn=clone3,ou=people,dc=hogwarts,dc=edu' => 
+    'cn=clone3,ou=people,dc=hogwarts,dc=edu' =>
     [
-      'cn' => 
+      'cn' =>
       [
         0 => 'clone3',
         'count' => 1,
       ],
-      'mail' => 
+      'mail' =>
       [
         0 => 'clone3@hogwarts.edu',
         'count' => 1,
       ],
-      'uid' => 
+      'uid' =>
       [
         0 => 23,
         'count' => 1,
       ],
-      'guid' => 
+      'guid' =>
       [
         0 => 123,
         'count' => 1,
       ],
-      'sn' => 
+      'sn' =>
       [
         0 => 'Potter_3',
         'count' => 1,
       ],
-      'givenname' => 
+      'givenname' =>
       [
         0 => 'Harry',
         'count' => 1,
       ],
-      'house' => 
+      'house' =>
       [
         0 => 'Gryffindor',
         'count' => 1,
       ],
-      'department' => 
+      'department' =>
       [
         0 => '',
         'count' => 1,
       ],
-      'faculty' => 
+      'faculty' =>
       [
         0 => 1,
         'count' => 1,
       ],
-      'staff' => 
+      'staff' =>
       [
         0 => 1,
         'count' => 1,
       ],
-      'student' => 
+      'student' =>
       [
         0 => 1,
         'count' => 1,
       ],
-      'gpa' => 
+      'gpa' =>
       [
         0 => '3.8',
         'count' => 1,
       ],
-      'probation' => 
+      'probation' =>
       [
         0 => 1,
         'count' => 1,
       ],
-      'password' => 
+      'password' =>
       [
         0 => 'goodpwd',
         'count' => 1,
       ],
-      'samaccountname' => 
+      'samaccountname' =>
       [
         0 => 'clone3',
         'count' => 1,
       ],
-      'distinguishedname' => 
+      'distinguishedname' =>
       [
         0 => 'cn=clone3,ou=people,dc=hogwarts,dc=edu',
         'count' => 1,
       ],
       'count' => 16,
     ],
-    'cn=clone4,ou=people,dc=hogwarts,dc=edu' => 
+    'cn=clone4,ou=people,dc=hogwarts,dc=edu' =>
     [
-      'cn' => 
+      'cn' =>
       [
         0 => 'clone4',
         'count' => 1,
       ],
-      'mail' => 
+      'mail' =>
       [
         0 => 'clone4@hogwarts.edu',
         'count' => 1,
       ],
-      'uid' => 
+      'uid' =>
       [
         0 => 24,
         'count' => 1,
       ],
-      'guid' => 
+      'guid' =>
       [
         0 => 124,
         'count' => 1,
       ],
-      'sn' => 
+      'sn' =>
       [
         0 => 'Potter_4',
         'count' => 1,
       ],
-      'givenname' => 
+      'givenname' =>
       [
         0 => 'Harry',
         'count' => 1,
       ],
-      'house' => 
+      'house' =>
       [
         0 => 'Gryffindor',
         'count' => 1,
       ],
-      'department' => 
+      'department' =>
       [
         0 => '',
         'count' => 1,
       ],
-      'faculty' => 
+      'faculty' =>
       [
         0 => 1,
         'count' => 1,
       ],
-      'staff' => 
+      'staff' =>
       [
         0 => 1,
         'count' => 1,
       ],
-      'student' => 
+      'student' =>
       [
         0 => 1,
         'count' => 1,
       ],
-      'gpa' => 
+      'gpa' =>
       [
         0 => '3.8',
         'count' => 1,
       ],
-      'probation' => 
+      'probation' =>
       [
         0 => 1,
         'count' => 1,
       ],
-      'password' => 
+      'password' =>
       [
         0 => 'goodpwd',
         'count' => 1,
       ],
-      'samaccountname' => 
+      'samaccountname' =>
       [
         0 => 'clone4',
         'count' => 1,
       ],
-      'distinguishedname' => 
+      'distinguishedname' =>
       [
         0 => 'cn=clone4,ou=people,dc=hogwarts,dc=edu',
         'count' => 1,
       ],
       'count' => 16,
     ],
-    'cn=clone5,ou=people,dc=hogwarts,dc=edu' => 
+    'cn=clone5,ou=people,dc=hogwarts,dc=edu' =>
     [
-      'cn' => 
+      'cn' =>
       [
         0 => 'clone5',
         'count' => 1,
       ],
-      'mail' => 
+      'mail' =>
       [
         0 => 'clone5@hogwarts.edu',
         'count' => 1,
       ],
-      'uid' => 
+      'uid' =>
       [
         0 => 25,
         'count' => 1,
       ],
-      'guid' => 
+      'guid' =>
       [
         0 => 125,
         'count' => 1,
       ],
-      'sn' => 
+      'sn' =>
       [
         0 => 'Potter_5',
         'count' => 1,
       ],
-      'givenname' => 
+      'givenname' =>
       [
         0 => 'Harry',
         'count' => 1,
       ],
-      'house' => 
+      'house' =>
       [
         0 => 'Gryffindor',
         'count' => 1,
       ],
-      'department' => 
+      'department' =>
       [
         0 => '',
         'count' => 1,
       ],
-      'faculty' => 
+      'faculty' =>
       [
         0 => 1,
         'count' => 1,
       ],
-      'staff' => 
+      'staff' =>
       [
         0 => 1,
         'count' => 1,
       ],
-      'student' => 
+      'student' =>
       [
         0 => 1,
         'count' => 1,
       ],
-      'gpa' => 
+      'gpa' =>
       [
         0 => '3.8',
         'count' => 1,
       ],
-      'probation' => 
+      'probation' =>
       [
         0 => 1,
         'count' => 1,
       ],
-      'password' => 
+      'password' =>
       [
         0 => 'goodpwd',
         'count' => 1,
       ],
-      'samaccountname' => 
+      'samaccountname' =>
       [
         0 => 'clone5',
         'count' => 1,
       ],
-      'distinguishedname' => 
+      'distinguishedname' =>
       [
         0 => 'cn=clone5,ou=people,dc=hogwarts,dc=edu',
         'count' => 1,
       ],
       'count' => 16,
     ],
-    'cn=clone6,ou=people,dc=hogwarts,dc=edu' => 
+    'cn=clone6,ou=people,dc=hogwarts,dc=edu' =>
     [
-      'cn' => 
+      'cn' =>
       [
         0 => 'clone6',
         'count' => 1,
       ],
-      'mail' => 
+      'mail' =>
       [
         0 => 'clone6@hogwarts.edu',
         'count' => 1,
       ],
-      'uid' => 
+      'uid' =>
       [
         0 => 26,
         'count' => 1,
       ],
-      'guid' => 
+      'guid' =>
       [
         0 => 126,
         'count' => 1,
       ],
-      'sn' => 
+      'sn' =>
       [
         0 => 'Potter_6',
         'count' => 1,
       ],
-      'givenname' => 
+      'givenname' =>
       [
         0 => 'Harry',
         'count' => 1,
       ],
-      'house' => 
+      'house' =>
       [
         0 => 'Gryffindor',
         'count' => 1,
       ],
-      'department' => 
+      'department' =>
       [
         0 => '',
         'count' => 1,
       ],
-      'faculty' => 
+      'faculty' =>
       [
         0 => 1,
         'count' => 1,
       ],
-      'staff' => 
+      'staff' =>
       [
         0 => 1,
         'count' => 1,
       ],
-      'student' => 
+      'student' =>
       [
         0 => 1,
         'count' => 1,
       ],
-      'gpa' => 
+      'gpa' =>
       [
         0 => '3.8',
         'count' => 1,
       ],
-      'probation' => 
+      'probation' =>
       [
         0 => 1,
         'count' => 1,
       ],
-      'password' => 
+      'password' =>
       [
         0 => 'goodpwd',
         'count' => 1,
       ],
-      'samaccountname' => 
+      'samaccountname' =>
       [
         0 => 'clone6',
         'count' => 1,
       ],
-      'distinguishedname' => 
+      'distinguishedname' =>
       [
         0 => 'cn=clone6,ou=people,dc=hogwarts,dc=edu',
         'count' => 1,
       ],
       'count' => 16,
     ],
-    'cn=gryffindor,ou=groups,dc=hogwarts,dc=edu' => 
+    'cn=gryffindor,ou=groups,dc=hogwarts,dc=edu' =>
     [
-      'cn' => 
+      'cn' =>
       [
         0 => 'gryffindor',
         'count' => 1,
       ],
-      'gid' => 
+      'gid' =>
       [
         0 => '1',
         'count' => 1,
       ],
-      'guid' => 
+      'guid' =>
       [
         0 => 201,
         'count' => 1,
       ],
-      'member' => 
+      'member' =>
       [
         0 => 'cn=hpotter,ou=people,dc=hogwarts,dc=edu',
         1 => 'cn=hgrainger,ou=people,dc=hogwarts,dc=edu',
@@ -4138,24 +4143,24 @@
         'count' => 7,
       ],
     ],
-    'cn=slytherin,ou=groups,dc=hogwarts,dc=edu' => 
+    'cn=slytherin,ou=groups,dc=hogwarts,dc=edu' =>
     [
-      'cn' => 
+      'cn' =>
       [
         0 => 'slytherin',
         'count' => 1,
       ],
-      'gid' => 
+      'gid' =>
       [
         0 => '2',
         'count' => 1,
       ],
-      'guid' => 
+      'guid' =>
       [
         0 => 202,
         'count' => 1,
       ],
-      'member' => 
+      'member' =>
       [
         0 => 'cn=dmalfoy,ou=people,dc=hogwarts,dc=edu',
         1 => 'cn=triddle,ou=people,dc=hogwarts,dc=edu',
@@ -4165,47 +4170,47 @@
         'count' => 5,
       ],
     ],
-    'cn=hufflepuff,ou=groups,dc=hogwarts,dc=edu' => 
+    'cn=hufflepuff,ou=groups,dc=hogwarts,dc=edu' =>
     [
-      'cn' => 
+      'cn' =>
       [
         0 => 'hufflepuff',
         'count' => 1,
       ],
-      'gid' => 
+      'gid' =>
       [
         0 => '3',
         'count' => 1,
       ],
-      'guid' => 
+      'guid' =>
       [
         0 => 203,
         'count' => 1,
       ],
-      'member' => 
+      'member' =>
       [
         0 => 'cn=spomana,ou=people,dc=hogwarts,dc=edu',
         'count' => 1,
       ],
     ],
-    'cn=students,ou=groups,dc=hogwarts,dc=edu' => 
+    'cn=students,ou=groups,dc=hogwarts,dc=edu' =>
     [
-      'cn' => 
+      'cn' =>
       [
         0 => 'students',
         'count' => 1,
       ],
-      'gid' => 
+      'gid' =>
       [
         0 => '4',
         'count' => 1,
       ],
-      'guid' => 
+      'guid' =>
       [
         0 => 204,
         'count' => 1,
       ],
-      'member' => 
+      'member' =>
       [
         0 => 'cn=hpotter,ou=people,dc=hogwarts,dc=edu',
         1 => 'cn=hgrainger,ou=people,dc=hogwarts,dc=edu',
@@ -4216,78 +4221,78 @@
         6 => 'cn=ggoyle,ou=people,dc=hogwarts,dc=edu',
         'count' => 7,
       ],
-      'memberof' => 
+      'memberof' =>
       [
         0 => 'cn=users,ou=groups,dc=hogwarts,dc=edu',
         'count' => 1,
       ],
     ],
-    'cn=honors students,ou=groups,dc=hogwarts,dc=edu' => 
+    'cn=honors students,ou=groups,dc=hogwarts,dc=edu' =>
     [
-      'cn' => 
+      'cn' =>
       [
         0 => 'honors students',
         'count' => 1,
       ],
-      'gid' => 
+      'gid' =>
       [
         0 => '5',
         'count' => 1,
       ],
-      'guid' => 
+      'guid' =>
       [
         0 => 205,
         'count' => 1,
       ],
-      'member' => 
+      'member' =>
       [
         0 => 'cn=hpotter,ou=people,dc=hogwarts,dc=edu',
         1 => 'cn=hgrainger,ou=people,dc=hogwarts,dc=edu',
         'count' => 2,
       ],
     ],
-    'cn=probation students,ou=groups,dc=hogwarts,dc=edu' => 
+    'cn=probation students,ou=groups,dc=hogwarts,dc=edu' =>
     [
-      'cn' => 
+      'cn' =>
       [
         0 => 'probation students',
         'count' => 1,
       ],
-      'gid' => 
+      'gid' =>
       [
         0 => '6',
         'count' => 1,
       ],
-      'guid' => 
+      'guid' =>
       [
         0 => 206,
         'count' => 1,
       ],
-      'member' => 
+      'member' =>
       [
         0 => 'cn=dmalfoy,ou=people,dc=hogwarts,dc=edu',
         1 => 'cn=ggoyle,ou=people,dc=hogwarts,dc=edu',
         'count' => 2,
       ],
     ],
-    'cn=faculty,ou=groups,dc=hogwarts,dc=edu' => 
+    'cn=faculty,ou=groups,dc=hogwarts,dc=edu' =>
     [
-      'cn' => 
+      'cn' =>
       [
         0 => 'faculty',
         'count' => 1,
       ],
-      'gid' => 
+      'gid' =>
       [
         0 => '7',
         'count' => 1,
       ],
-      'guid' => 
+      'guid' =>
       [
         0 => 207,
         'count' => 1,
       ],
-      'member' => 
+      'member' =>
       [
         0 => 'cn=ssnape,ou=people,dc=hogwarts,dc=edu',
         1 => 'cn=adumbledore,ou=people,dc=hogwarts,dc=edu',
@@ -4295,58 +4300,58 @@
         3 => 'cn=spomana,ou=people,dc=hogwarts,dc=edu',
         'count' => 4,
       ],
-      'memberof' => 
+      'memberof' =>
       [
         0 => 'cn=users,ou=groups,dc=hogwarts,dc=edu',
         'count' => 1,
       ],
     ],
-    'cn=staff,ou=groups,dc=hogwarts,dc=edu' => 
+    'cn=staff,ou=groups,dc=hogwarts,dc=edu' =>
     [
-      'cn' => 
+      'cn' =>
       [
         0 => 'staff',
         'count' => 1,
       ],
-      'gid' => 
+      'gid' =>
       [
         0 => '8',
         'count' => 1,
       ],
-      'guid' => 
+      'guid' =>
       [
         0 => 208,
         'count' => 1,
       ],
-      'member' => 
+      'member' =>
       [
         0 => 'cn=rhagrid,ou=people,dc=hogwarts,dc=edu',
         'count' => 1,
       ],
-      'memberof' => 
+      'memberof' =>
       [
         0 => 'cn=users,ou=groups,dc=hogwarts,dc=edu',
         'count' => 1,
       ],
     ],
-    'cn=users,ou=groups,dc=hogwarts,dc=edu' => 
+    'cn=users,ou=groups,dc=hogwarts,dc=edu' =>
     [
-      'cn' => 
+      'cn' =>
       [
         0 => 'users',
         'count' => 1,
       ],
-      'gid' => 
+      'gid' =>
       [
         0 => '9',
         'count' => 1,
       ],
-      'guid' => 
+      'guid' =>
       [
         0 => 209,
         'count' => 1,
       ],
-      'member' => 
+      'member' =>
       [
         0 => 'cn=students,ou=groups,dc=hogwarts,dc=edu',
         1 => 'cn=faculty,ou=groups,dc=hogwarts,dc=edu',
@@ -4355,67 +4360,67 @@
       ],
     ],
   ],
-  'csv' => 
+  'csv' =>
   [
-    'groups' => 
+    'groups' =>
     [
-      201 => 
+      201 =>
       [
         'guid' => '201',
         'gid' => '1',
         'cn' => 'gryffindor',
         'dn' => 'cn=gryffindor,ou=groups,dc=hogwarts,dc=edu',
       ],
-      202 => 
+      202 =>
       [
         'guid' => '202',
         'gid' => '2',
         'cn' => 'slytherin',
         'dn' => 'cn=slytherin,ou=groups,dc=hogwarts,dc=edu',
       ],
-      203 => 
+      203 =>
       [
         'guid' => '203',
         'gid' => '3',
         'cn' => 'hufflepuff',
         'dn' => 'cn=hufflepuff,ou=groups,dc=hogwarts,dc=edu',
       ],
-      204 => 
+      204 =>
       [
         'guid' => '204',
         'gid' => '4',
         'cn' => 'students',
         'dn' => 'cn=students,ou=groups,dc=hogwarts,dc=edu',
       ],
-      205 => 
+      205 =>
       [
         'guid' => '205',
         'gid' => '5',
         'cn' => 'honors students',
         'dn' => 'cn=honors students,ou=groups,dc=hogwarts,dc=edu',
       ],
-      206 => 
+      206 =>
       [
         'guid' => '206',
         'gid' => '6',
         'cn' => 'probation students',
         'dn' => 'cn=probation students,ou=groups,dc=hogwarts,dc=edu',
       ],
-      207 => 
+      207 =>
       [
         'guid' => '207',
         'gid' => '7',
         'cn' => 'faculty',
         'dn' => 'cn=faculty,ou=groups,dc=hogwarts,dc=edu',
       ],
-      208 => 
+      208 =>
       [
         'guid' => '208',
         'gid' => '8',
         'cn' => 'staff',
         'dn' => 'cn=staff,ou=groups,dc=hogwarts,dc=edu',
       ],
-      209 => 
+      209 =>
       [
         'guid' => '209',
         'gid' => '9',
@@ -4423,9 +4428,9 @@
         'dn' => 'cn=users,ou=groups,dc=hogwarts,dc=edu',
       ],
     ],
-    'users' => 
+    'users' =>
     [
-      101 => 
+      101 =>
       [
         'guid' => '101',
         'uid' => '1',
@@ -4441,7 +4446,7 @@
         'probation' => 'N',
         'dn' => 'cn=hpotter,ou=people,dc=hogwarts,dc=edu',
       ],
-      102 => 
+      102 =>
       [
         'guid' => '102',
         'uid' => '2',
@@ -4457,7 +4462,7 @@
         'probation' => 'N',
         'dn' => 'cn=hgrainger,ou=people,dc=hogwarts,dc=edu',
       ],
-      103 => 
+      103 =>
       [
         'guid' => '103',
         'uid' => '3',
@@ -4473,7 +4478,7 @@
         'probation' => 'N',
         'dn' => 'cn=rweasley,ou=people,dc=hogwarts,dc=edu',
       ],
-      104 => 
+      104 =>
       [
         'guid' => '104',
         'uid' => '4',
@@ -4489,7 +4494,7 @@
         'probation' => 'N',
         'dn' => 'cn=fweasley,ou=people,dc=hogwarts,dc=edu',
       ],
-      105 => 
+      105 =>
       [
         'guid' => '105',
         'uid' => '5',
@@ -4505,7 +4510,7 @@
         'probation' => 'N',
         'dn' => 'cn=gweasley,ou=people,dc=hogwarts,dc=edu',
       ],
-      106 => 
+      106 =>
       [
         'guid' => '106',
         'uid' => '6',
@@ -4521,7 +4526,7 @@
         'probation' => 'Y',
         'dn' => 'cn=dmalfoy,ou=people,dc=hogwarts,dc=edu',
       ],
-      107 => 
+      107 =>
       [
         'guid' => '107',
         'uid' => '7',
@@ -4537,7 +4542,7 @@
         'probation' => 'N',
         'dn' => 'cn=triddle,ou=people,dc=hogwarts,dc=edu',
       ],
-      108 => 
+      108 =>
       [
         'guid' => '108',
         'uid' => '8',
@@ -4553,7 +4558,7 @@
         'probation' => 'Y',
         'dn' => 'cn=ggoyle,ou=people,dc=hogwarts,dc=edu',
       ],
-      109 => 
+      109 =>
       [
         'guid' => '109',
         'uid' => '9',
@@ -4569,7 +4574,7 @@
         'probation' => '',
         'dn' => 'cn=ssnape,ou=people,dc=hogwarts,dc=edu',
       ],
-      110 => 
+      110 =>
       [
         'guid' => '110',
         'uid' => '10',
@@ -4585,7 +4590,7 @@
         'probation' => '',
         'dn' => 'cn=adumbledore,ou=people,dc=hogwarts,dc=edu',
       ],
-      111 => 
+      111 =>
       [
         'guid' => '111',
         'uid' => '11',
@@ -4601,7 +4606,7 @@
         'probation' => '',
         'dn' => 'cn=mmcgonagall,ou=people,dc=hogwarts,dc=edu',
       ],
-      112 => 
+      112 =>
       [
         'guid' => '112',
         'uid' => '12',
@@ -4617,7 +4622,7 @@
         'probation' => '',
         'dn' => 'cn=spomana,ou=people,dc=hogwarts,dc=edu',
       ],
-      113 => 
+      113 =>
       [
         'guid' => '113',
         'uid' => '13',
@@ -4633,7 +4638,7 @@
         'probation' => '',
         'dn' => 'cn=rhagrid,ou=people,dc=hogwarts,dc=edu',
       ],
-      119 => 
+      119 =>
       [
         'guid' => '119',
         'uid' => '19',
@@ -4650,9 +4655,9 @@
         'dn' => 'cn=service-account,ou=people,dc=hogwarts,dc=edu',
       ],
     ],
-    'memberships' => 
+    'memberships' =>
     [
-      1 => 
+      1 =>
       [
         'membershipid' => '1',
         'gid' => '1',
@@ -4660,7 +4665,7 @@
         'member_guid' => '101',
         'group_guid' => '201',
       ],
-      2 => 
+      2 =>
       [
         'membershipid' => '2',
         'gid' => '1',
@@ -4668,7 +4673,7 @@
         'member_guid' => '102',
         'group_guid' => '201',
       ],
-      3 => 
+      3 =>
       [
         'membershipid' => '3',
         'gid' => '1',
@@ -4676,7 +4681,7 @@
         'member_guid' => '103',
         'group_guid' => '201',
       ],
-      4 => 
+      4 =>
       [
         'membershipid' => '4',
         'gid' => '1',
@@ -4684,7 +4689,7 @@
         'member_guid' => '104',
         'group_guid' => '201',
       ],
-      5 => 
+      5 =>
       [
         'membershipid' => '5',
         'gid' => '1',
@@ -4692,7 +4697,7 @@
         'member_guid' => '105',
         'group_guid' => '201',
       ],
-      6 => 
+      6 =>
       [
         'membershipid' => '6',
         'gid' => '1',
@@ -4700,7 +4705,7 @@
         'member_guid' => '111',
         'group_guid' => '201',
       ],
-      7 => 
+      7 =>
       [
         'membershipid' => '7',
         'gid' => '1',
@@ -4708,7 +4713,7 @@
         'member_guid' => '113',
         'group_guid' => '201',
       ],
-      8 => 
+      8 =>
       [
         'membershipid' => '8',
         'gid' => '2',
@@ -4716,7 +4721,7 @@
         'member_guid' => '106',
         'group_guid' => '202',
       ],
-      9 => 
+      9 =>
       [
         'membershipid' => '9',
         'gid' => '2',
@@ -4724,7 +4729,7 @@
         'member_guid' => '107',
         'group_guid' => '202',
       ],
-      10 => 
+      10 =>
       [
         'membershipid' => '10',
         'gid' => '2',
@@ -4732,7 +4737,7 @@
         'member_guid' => '108',
         'group_guid' => '202',
       ],
-      11 => 
+      11 =>
       [
         'membershipid' => '11',
         'gid' => '2',
@@ -4740,7 +4745,7 @@
         'member_guid' => '109',
         'group_guid' => '202',
       ],
-      12 => 
+      12 =>
       [
         'membershipid' => '12',
         'gid' => '2',
@@ -4748,7 +4753,7 @@
         'member_guid' => '106',
         'group_guid' => '202',
       ],
-      13 => 
+      13 =>
       [
         'membershipid' => '13',
         'gid' => '3',
@@ -4756,7 +4761,7 @@
         'member_guid' => '112',
         'group_guid' => '203',
       ],
-      14 => 
+      14 =>
       [
         'membershipid' => '14',
         'gid' => '4',
@@ -4764,7 +4769,7 @@
         'member_guid' => '101',
         'group_guid' => '204',
       ],
-      15 => 
+      15 =>
       [
         'membershipid' => '15',
         'gid' => '4',
@@ -4772,7 +4777,7 @@
         'member_guid' => '102',
         'group_guid' => '204',
       ],
-      16 => 
+      16 =>
       [
         'membershipid' => '16',
         'gid' => '4',
@@ -4780,7 +4785,7 @@
         'member_guid' => '103',
         'group_guid' => '204',
       ],
-      17 => 
+      17 =>
       [
         'membershipid' => '17',
         'gid' => '4',
@@ -4788,7 +4793,7 @@
         'member_guid' => '104',
         'group_guid' => '204',
       ],
-      18 => 
+      18 =>
       [
         'membershipid' => '18',
         'gid' => '4',
@@ -4796,7 +4801,7 @@
         'member_guid' => '105',
         'group_guid' => '204',
       ],
-      19 => 
+      19 =>
       [
         'membershipid' => '19',
         'gid' => '4',
@@ -4804,7 +4809,7 @@
         'member_guid' => '106',
         'group_guid' => '204',
       ],
-      20 => 
+      20 =>
       [
         'membershipid' => '20',
         'gid' => '4',
@@ -4812,7 +4817,7 @@
         'member_guid' => '108',
         'group_guid' => '204',
       ],
-      21 => 
+      21 =>
       [
         'membershipid' => '21',
         'gid' => '5',
@@ -4820,7 +4825,7 @@
         'member_guid' => '101',
         'group_guid' => '205',
       ],
-      22 => 
+      22 =>
       [
         'membershipid' => '22',
         'gid' => '5',
@@ -4828,7 +4833,7 @@
         'member_guid' => '102',
         'group_guid' => '205',
       ],
-      23 => 
+      23 =>
       [
         'membershipid' => '23',
         'gid' => '6',
@@ -4836,7 +4841,7 @@
         'member_guid' => '106',
         'group_guid' => '206',
       ],
-      24 => 
+      24 =>
       [
         'membershipid' => '24',
         'gid' => '6',
@@ -4844,7 +4849,7 @@
         'member_guid' => '108',
         'group_guid' => '206',
       ],
-      25 => 
+      25 =>
       [
         'membershipid' => '25',
         'gid' => '7',
@@ -4852,7 +4857,7 @@
         'member_guid' => '109',
         'group_guid' => '207',
       ],
-      26 => 
+      26 =>
       [
         'membershipid' => '26',
         'gid' => '7',
@@ -4860,7 +4865,7 @@
         'member_guid' => '110',
         'group_guid' => '207',
       ],
-      27 => 
+      27 =>
       [
         'membershipid' => '27',
         'gid' => '7',
@@ -4868,7 +4873,7 @@
         'member_guid' => '111',
         'group_guid' => '207',
       ],
-      28 => 
+      28 =>
       [
         'membershipid' => '28',
         'gid' => '7',
@@ -4876,7 +4881,7 @@
         'member_guid' => '112',
         'group_guid' => '207',
       ],
-      29 => 
+      29 =>
       [
         'membershipid' => '29',
         'gid' => '8',
@@ -4884,7 +4889,7 @@
         'member_guid' => '113',
         'group_guid' => '208',
       ],
-      30 => 
+      30 =>
       [
         'membershipid' => '30',
         'gid' => '9',
@@ -4892,7 +4897,7 @@
         'member_guid' => '204',
         'group_guid' => '209',
       ],
-      31 => 
+      31 =>
       [
         'membershipid' => '31',
         'gid' => '9',
@@ -4900,7 +4905,7 @@
         'member_guid' => '207',
         'group_guid' => '209',
       ],
-      32 => 
+      32 =>
       [
         'membershipid' => '32',
         'gid' => '9',
@@ -4909,9 +4914,9 @@
         'group_guid' => '209',
       ],
     ],
-    'conf' => 
+    'conf' =>
     [
-      'hogwarts' => 
+      'hogwarts' =>
       [
         'id' => 'hogwarts',
         'mailhostname' => 'hogwarts.edu',

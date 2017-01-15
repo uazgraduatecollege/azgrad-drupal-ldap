@@ -89,18 +89,24 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
   public $searchPageStart = 0;
   public $searchPageEnd = NULL;
 
+  /**
+   *
+   */
   public function getFormattedBind() {
     switch ($this->get('bind_method')) {
       case self::$bindMethodServiceAccount:
-        default:
-          $namedBind = t('service account bind');
-          break;
+      default:
+        $namedBind = t('service account bind');
+        break;
+
       case self::$bindMethodUser:
         $namedBind = t('user credentials bind');
         break;
+
       case self::$bindMethodAnon:
         $namedBind = t('anonymous bind (search), then user credentials');
         break;
+
       case self::$bindMethodAnonUser:
         $namedBind = t('anonymous bind');
         break;
@@ -384,6 +390,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
    *     $attributes["attribute2"][1] = "value2";.
    *
    * @param bool|array $old_attributes
+   *
    * @return TRUE on success FALSE on error
    */
   public function modifyLdapEntry($dn, $attributes = array(), $old_attributes = FALSE) {
@@ -474,7 +481,6 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
    * @return array|bool
    *   An array of matching entries->attributes (will have 0 elements if search
    *   returns no results), or FALSE on error on any of the base DN queries.
-   *
    */
   public function searchAllBaseDns($filter, $attributes = array(), $scope = NULL) {
     if ($scope == NULL) {
@@ -774,12 +780,14 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
     return array_keys(array_change_key_case(array_flip($dns), CASE_LOWER));
   }
 
-
+  /**
+   *
+   */
   public function getBaseDn() {
     $baseDn = $this->get('basedn');
 
     if (!is_array($baseDn) && is_scalar($baseDn)) {
-        $baseDn = explode("\r\n", $baseDn);
+      $baseDn = explode("\r\n", $baseDn);
     }
     return $baseDn;
   }
@@ -871,7 +879,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
    *   The LDAP entry.
    * @param User $account
    * @return bool|\Drupal\ldap_servers\Entity\File Drupal file object image user's thumbnail or FALSE if none present or ERROR happens.
-   * Drupal file object image user's thumbnail or FALSE if none present or ERROR happens.
+   *   Drupal file object image user's thumbnail or FALSE if none present or ERROR happens.
    */
   public function userPictureFromLdapEntry($ldap_entry, $account) {
     if ($ldap_entry && $this->get('picture_attr')) {
@@ -890,9 +898,10 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
       $currentUserPicture = $account->get('user_picture')->getValue();
       if (empty($currentUserPicture)) {
         return $this->saveUserPicture($account->get('user_picture'), $LdapUserPicture);
-      } else {
+      }
+      else {
         $file = File::load($currentUserPicture[0]['target_id']);
-        if ($file && md5(file_get_contents($file->getFileUri())) ==  md5($LdapUserPicture)) {
+        if ($file && md5(file_get_contents($file->getFileUri())) == md5($LdapUserPicture)) {
           // Same image, do nothing.
           return FALSE;
         }
@@ -1514,7 +1523,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
 
         // Need to search on all basedns one at a time.
         foreach ($this->getBaseDn() as $base_dn) {
-          // no attributes, just dns needed.
+          // No attributes, just dns needed.
           $group_entries = $this->search($base_dn, $query_for_parent_groups);
           if ($group_entries !== FALSE  && $level < self::LDAP_SERVER_LDAP_QUERY_RECURSION_LIMIT) {
             $this->groupMembershipsFromEntryResursive($group_entries, $all_group_dns, $tested_group_ids, $level + 1, self::LDAP_SERVER_LDAP_QUERY_RECURSION_LIMIT);
@@ -1976,9 +1985,9 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
     // Create tmp file to get image format and derive extension.
     $file_name = uniqid();
     $unmanaged_file = file_directory_temp() . '/' . $file_name;
-    file_put_contents($unmanaged_file,  $LdapUserPicture);
+    file_put_contents($unmanaged_file, $LdapUserPicture);
     $image_type = exif_imagetype($unmanaged_file);
-    $extension = image_type_to_extension($image_type, false);
+    $extension = image_type_to_extension($image_type, FALSE);
     unlink($unmanaged_file);
     $fieldSettings = $field->getFieldDefinition()->getItemDefinition()->getSettings();
     $token_service = \Drupal::token();
@@ -1999,12 +2008,16 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
 
     if ($managed_file && file_validate($managed_file, $validators)) {
       return ['target_id' => $managed_file->id()];
-    } else {
+    }
+    else {
       // Uploaded and unfit files will be automatically garbage collected.
       return FALSE;
     }
   }
 
+  /**
+   *
+   */
   public function ldapExplodeDn($dn, $attribute) {
     return ldap_explode_dn($dn, $attribute);
   }

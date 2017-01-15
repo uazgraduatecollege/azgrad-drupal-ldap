@@ -6,7 +6,6 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use \Drupal\Core\Config\ConfigFactoryInterface;
 
-use Drupal\Core\Render\Element\Token;
 use Drupal\ldap_servers\Entity\Server;
 use Drupal\ldap_servers\Processor\TokenProcessor;
 use Drupal\ldap_user\Helper\LdapConfiguration;
@@ -31,7 +30,7 @@ class LdapUserAdminForm extends ConfigFormBase {
     $ldap_servers = $factory->getEnabledServers();
     if ($ldap_servers) {
       foreach ($ldap_servers as $sid => $ldap_server) {
-        /* @var Server $ldap_server */
+        /** @var Server $ldap_server */
         $enabled = ($ldap_server->get('status')) ? 'Enabled' : 'Disabled';
         $this->drupalAcctProvisionServerOptions[$sid] = $ldap_server->label() . ' (' . $ldap_server->get('address') . ') Status: ' . $enabled;
         $this->ldapEntryProvisionServerOptions[$sid] = $ldap_server->label() . ' (' . $ldap_server->get('address') . ') Status: ' . $enabled;
@@ -168,7 +167,7 @@ class LdapUserAdminForm extends ConfigFormBase {
     $form['basic_to_drupal']['orphanedAccounts'] = [
       '#type' => 'fieldset',
       '#title' => 'Orphaned account cron job',
-      '#description' => $this->t('<strong>Warning: Use this feature at your own risk!</strong>')
+      '#description' => $this->t('<strong>Warning: Use this feature at your own risk!</strong>'),
     ];
 
     $form['basic_to_drupal']['orphanedAccounts']['orphanedDrupalAcctBehavior'] = array(
@@ -394,7 +393,7 @@ EOT;
 
     // @FIXME: Determine what is still needed here from this function.
     // In theory this should also be called on validateForm. Not ideal, investigate.
-     $this->validateCurrentConfiguration($form);
+    $this->validateCurrentConfiguration($form);
   }
 
   /**
@@ -623,7 +622,6 @@ EOT;
       }
     }
 
-
     $user_attr_options['user_tokens'] = '-- user tokens --';
 
     $row = 0;
@@ -676,10 +674,10 @@ EOT;
    * @param array $user_attr_options
    *   of drupal user target options.
    * @param $row_id
-   *  is current row in table.
-   * @return array A single row
-   * A single row
+   *   is current row in table.
    *
+   * @return array A single row
+   *   A single row
    */
   private function getSyncFormRow($action, $direction, $mapping, $user_attr_options, $row_id) {
 
@@ -971,7 +969,7 @@ EOT;
       $has_drupal_acct_prov_servers = TRUE;
     };
 
-    $has_drupal_acct_prov_settings_options  = (count(array_filter(\Drupal::config('ldap_user.settings')->get('ldap_user_conf.drupalAcctProvisionTriggers'))) > 0);
+    $has_drupal_acct_prov_settings_options = (count(array_filter(\Drupal::config('ldap_user.settings')->get('ldap_user_conf.drupalAcctProvisionTriggers'))) > 0);
 
     if (!$has_drupal_acct_prov_servers && $has_drupal_acct_prov_settings_options) {
       $warnings['drupalAcctProvisionServer'] = t('No Servers are enabled to provide provisioning to Drupal, but Drupal Account Provisioning Options are selected.', $tokens);

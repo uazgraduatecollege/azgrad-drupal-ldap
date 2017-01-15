@@ -5,18 +5,22 @@ namespace Drupal\Tests\ldap_user\Unit;
 use Drupal\ldap_user\Helper\SemaphoreStorage;
 use Drupal\Tests\UnitTestCase;
 
-
 /**
  * @coversDefaultClass \Drupal\ldap_user\Helper\SemaphoreStorage
  * @group ldap
  */
 class SemaphoreStorageTests extends UnitTestCase {
 
-
+  /**
+   *
+   */
   protected function setUp() {
     parent::setUp();
   }
 
+  /**
+   *
+   */
   public function testPasswordStorage() {
 
     $this->assertFalse(SemaphoreStorage::get('sync', 'hpotter'));
