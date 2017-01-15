@@ -1,0 +1,6 @@
+services:
+  ldap_authentication.route_subscriber:
+    class: Drupal\ldap_authentication\Routing\RouteSubscriber
+    tags:
+      - { name: event_subscriber }
+

@@ -55,10 +55,9 @@ function ldap_help_help($route_name, RouteMatchInterface $route_match) {
 
   switch ($route_name) {
     case 'admin/config/people/ldap/help':
-      return '<p>' . $help . '</p>';
-
     case 'admin/help#ldap_help':
       return '<p>' . $help . '</p>';
+      break;
   }
 
 }

@@ -164,7 +164,7 @@ class ServerFactory {
     $attributes['dn'] = TokenProcessor::setAttributeMap(@$attributes['dn'], 'ldap_dn');
 
     // Puid attributes are server specific.
-    if ($params['sid'] && $params['sid']) {
+    if (isset($params['sid']) && $params['sid']) {
       if (is_scalar($params['sid'])) {
         $ldap_server = $this->getServerById($params['sid']);
 

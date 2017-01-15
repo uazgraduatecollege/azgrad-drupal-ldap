@@ -339,10 +339,7 @@ class DrupalUserProcessor {
 
       // $value_instance not used, may have future use case.
       // Are we dealing with a field?
-      if ($value_type == 'field') {
-        $account->set($value_name, $value);
-      }
-      elseif ($value_type == 'property') {
+      if ($value_type == 'field' || $value_type == 'property') {
         $account->set($value_name, $value);
       }
     }

@@ -457,9 +457,6 @@ class TokenProcessor {
 
       switch ($attr_type) {
         case 'field':
-          $value = @is_scalar($user_account->get($attr_name)->value) ? $user_account->get($attr_name)->value : '';
-          break;
-
         case 'property':
           $value = @is_scalar($user_account->get($attr_name)->value) ? $user_account->get($attr_name)->value : '';
           break;

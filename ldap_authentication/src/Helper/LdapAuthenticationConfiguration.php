@@ -3,6 +3,7 @@
 namespace Drupal\ldap_authentication\Helper;
 
 use Drupal\ldap_servers\ServerFactory;
+use Drupal\user\Entity\User;
 
 class LdapAuthenticationConfiguration {
 
@@ -27,7 +28,7 @@ class LdapAuthenticationConfiguration {
   // Remove default later if possible, see also $emailUpdate.
   public static $emailUpdateOnLdapChangeDefault = 1;
 
-  public static $passwordFieldShow = 2;
+  public static $passwordFieldShowDisabled = 2;
   public static $passwordFieldHide = 3;
   public static $passwordFieldAllow = 4;
   // Remove default later if possible, see also $passwordOption.
@@ -86,6 +87,35 @@ class LdapAuthenticationConfiguration {
       $array = array();
     }
     return $array;
+  }
+
+
+  /**
+   * @param User $user
+   * @return bool
+   */
+  public static function showPasswordField($user = NULL) {
+
+    if (!$user) {
+      $user = \Drupal::currentUser();
+    }
+
+    if ($user->id() == 1) {
+      return TRUE;
+    }
+
+    /**
+     * Hide if LDAP authenticated and updating password is not allowed, otherwise
+     * show.
+     */
+    if (ldap_authentication_ldap_authenticated($user)) {
+      if (\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.passwordOption') == LdapAuthenticationConfiguration::$passwordFieldAllow) {
+        return TRUE;
+      }
+      return FALSE;
+    }
+    return TRUE;
+
   }
 
 

@@ -967,7 +967,7 @@ EOT;
 
     if (\Drupal::config('ldap_user.settings')->get('ldap_user_conf.drupalAcctProvisionServer')) {
       $has_drupal_acct_prov_servers = TRUE;
-    };
+    }
 
     $has_drupal_acct_prov_settings_options = (count(array_filter(\Drupal::config('ldap_user.settings')->get('ldap_user_conf.drupalAcctProvisionTriggers'))) > 0);
 
@@ -981,7 +981,7 @@ EOT;
     $has_ldap_prov_servers = FALSE;
     if (\Drupal::config('ldap_user.settings')->get('ldap_user_conf.ldapEntryProvisionServer')) {
       $has_ldap_prov_servers = TRUE;
-    };
+    }
 
     $has_ldap_prov_settings_options = (count(array_filter(\Drupal::config('ldap_user.settings')->get('ldap_user_conf.ldapEntryProvisionTriggers'))) > 0);
     if (!$has_ldap_prov_servers && $has_ldap_prov_settings_options) {

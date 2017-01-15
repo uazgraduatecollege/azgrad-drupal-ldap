@@ -229,14 +229,14 @@ class LoginValidator {
 
       if (!$this->connectToServer()) {
         continue;
-      };
+      }
 
       $bindStatus = $this->bindToServer($password);
       if ($bindStatus != 'success') {
         $authenticationResult = $bindStatus;
         // If bind fails, onto next server.
         continue;
-      };
+      }
 
       // Check if user exists in LDAP.
 
@@ -339,14 +339,14 @@ class LoginValidator {
 
       if (!$this->connectToServer()) {
         continue;
-      };
+      }
 
       $bindResult = $this->bindToServerSSO();
       if ($bindResult != 'success') {
         $authenticationResult = $bindResult;
         // If bind fails, onto next server.
         continue;
-      };
+      }
       
       $this->ldapUser = $this->serverDrupalUser->userUserNameToExistingLdapEntry($authName);
       
@@ -447,18 +447,12 @@ class LoginValidator {
         $msg = t('Failed to bind to ldap server');
         break;
 
-      case LdapAuthenticationConfiguration::$authFailFind:
-        $msg = t('Sorry, unrecognized username or password.');
-        break;
-
       case LdapAuthenticationConfiguration::$authFailDisallowed:
         $msg = t('User disallowed');
         break;
 
+      case LdapAuthenticationConfiguration::$authFailFind:
       case LdapAuthenticationConfiguration::$authFailCredentials:
-        $msg = t('Sorry, unrecognized username or password.');
-        break;
-
       case LdapAuthenticationConfiguration::$authFailGeneric:
         $msg = t('Sorry, unrecognized username or password.');
         break;
@@ -895,12 +889,10 @@ class LoginValidator {
       $bind_success = ($this->serverDrupalUser->bind(NULL, NULL, TRUE) == Server::LDAP_SUCCESS);
     }
     else {
-      \Drupal::logger('ldap_authentication')->error(
-        'Trying to use SSO with user bind method.'
-      );
-      \Drupal::logger('ldap_authentication')->debug(
-        'No bind method set in ldap_server->bind_method in ldap_authentication_user_login_authenticate_validate.'
-      );
+      \Drupal::logger('ldap_authentication')
+        ->error('Trying to use SSO with user bind method.');
+      \Drupal::logger('ldap_authentication')
+        ->debug('No bind method set in ldap_server->bind_method in ldap_authentication_user_login_authenticate_validate.');
     }
 
     if (!$bind_success) {

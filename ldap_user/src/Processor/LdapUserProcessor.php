@@ -214,10 +214,10 @@ class LdapUserProcessor {
   /**
    * Given a drupal account, provision an ldap entry if none exists.  if one exists do nothing.
    *
-   * @param object $account
+   * @param User $account
    *   drupal account object with minimum of name property.
    * @param array $ldap_user
-   *   as prepopulated ldap entry.  usually not provided.
+   *   as pre-populated ldap entry.  usually not provided.
    *
    * @return array
    *   Format:
@@ -254,7 +254,7 @@ class LdapUserProcessor {
       return $result;
     }
 
-    if (!$this->config['ldapEntryProvisionServer'] || !$this->config['ldapEntryProvisionServer']) {
+    if (!$this->config['ldapEntryProvisionServer']) {
       $result['status'] = 'fail';
       $result['error_description'] = 'no provisioning server enabled';
       return $result;
@@ -378,7 +378,7 @@ class LdapUserProcessor {
       }
       elseif ($result['status'] == 'conflict') {
         if ($this->detailedWatchdog) {
-          \Drupal::logger('ldap_user')->warning('LDAP entry on server %sid not created because of existing ldap entry. %description. username=%username, uid=%uid', $tokens);
+          \Drupal::logger('ldap_user')->warning('LDAP entry on server %sid not created because of existing LDAP entry. %description. username=%username, uid=%uid', $tokens);
         }
       }
       elseif ($result['status'] == 'fail') {
@@ -389,14 +389,15 @@ class LdapUserProcessor {
   }
 
   /**
-   * Given a drupal account, delete ldap entry that was provisioned based on it
+   * Given a drupal account, delete LDAP entry that was provisioned based on it
    *   normally this will be 0 or 1 entry, but the ldap_user_provisioned_ldap_entries
-   *   field attached to the user entity track each ldap entry provisioned.
+   *   field attached to the user entity track each LDAP entry provisioned.
    *
    * @param User $account
    *   Drupal user account.
    *
-   * @return TRUE or FALSE.  FALSE indicates failed or action not enabled in ldap user configuration
+   * @return boolean
+   *   FALSE indicates failed or action not enabled in LDAP user configuration.
    */
   public function deleteProvisionedLdapEntries($account) {
     // Determine server that is associated with user.
@@ -433,11 +434,13 @@ class LdapUserProcessor {
   }
 
   /**
-   * Given a drupal account, find the related ldap entry.
+   * Given a drupal account, find the related LDAP entry.
    *
-   * @param drupal user object $account
+   * @param User $account
+   * @param null $prov_events
    *
-   * @return FALSE or ldap entry
+   * @return boolean|array
+   *   False or LDAP entry
    */
   public function getProvisionRelatedLdapEntry($account, $prov_events = NULL) {
     if (!$prov_events) {

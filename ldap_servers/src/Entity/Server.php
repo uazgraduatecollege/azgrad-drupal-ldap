@@ -1342,7 +1342,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
     }
     if (isset($current_member_entries['count'])) {
       unset($current_member_entries['count']);
-    };
+    }
 
     foreach ($current_member_entries as $i => $member_entry) {
       // dpm("groupMembersResursive:member_entry $i, level=$level < max_levels=$max_levels"); dpm($member_entry);
@@ -1368,8 +1368,8 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
           $member_ids = $member_entry[$this->groupMembershipsAttr()];
           if (isset($member_ids['count'])) {
             unset($member_ids['count']);
-          };
-          $ors = array();
+          }
+          $ors = [];
           foreach ($member_ids as $i => $member_id) {
             // @todo this would be replaced by query template
             $ors[] = $this->groupMembershipsAttr() . '=' . ldap_escape($member_id);
@@ -1380,7 +1380,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
             $query_for_child_members = '(|(' . join(")(", $ors) . '))';
             // Add or on object classes, otherwise get all object classes.
             if (count($object_classes)) {
-              $object_classes_ors = array('(objectClass=' . $this->groupObjectClass() . ')');
+              $object_classes_ors = ['(objectClass=' . $this->groupObjectClass() . ')'];
               foreach ($object_classes as $object_class) {
                 $object_classes_ors[] = '(objectClass=' . $object_class . ')';
               }
@@ -1388,7 +1388,15 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
             }
             // Need to search on all basedns one at a time.
             foreach ($this->getBaseDn() as $base_dn) {
-              $child_member_entries = $this->search($base_dn, $query_for_child_members, array('objectclass', $this->groupMembershipsAttr(), $this->groupMembershipsAttrMatchingUserAttr()));
+              $child_member_entries = $this->search(
+                $base_dn,
+                $query_for_child_members,
+                [
+                  'objectclass',
+                  $this->groupMembershipsAttr(),
+                  $this->groupMembershipsAttrMatchingUserAttr()
+                ]
+              );
               if ($child_member_entries !== FALSE) {
                 $this->groupMembersResursive($child_member_entries, $all_member_dns, $tested_group_ids, $level + 1, $max_levels, $object_classes);
               }
@@ -1626,7 +1634,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
     }
     if (isset($current_group_entries['count'])) {
       unset($current_group_entries['count']);
-    };
+    }
 
     $ors = array();
     foreach ($current_group_entries as $i => $group_entry) {

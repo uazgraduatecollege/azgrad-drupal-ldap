@@ -77,13 +77,12 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
       '#required' => 1,
       '#default_value' => $config->get('ldap_authentication_conf.authenticationMode'),
       '#options' => [
-        LdapAuthenticationConfiguration::$mode_mixed => t('Mixed mode. Drupal authentication is tried first.  On failure, LDAP authentication is performed.'),
-        LdapAuthenticationConfiguration::$mode_exclusive => t('Only LDAP Authentication is allowed except for user 1.
-        If selected, (1) reset password links will be replaced with links to ldap end user documentation below.
-        (2) The reset password form will be left available at user/password for user 1; but no links to it
-        will be provided to anonymous users.
-        (3) Password fields in user profile form will be removed except for user 1.'),
+        LdapAuthenticationConfiguration::$mode_mixed => $this->t('Mixed mode: Drupal authentication is tried first. On failure, LDAP authentication is performed.'),
+        LdapAuthenticationConfiguration::$mode_exclusive => $this->t('Exclusive mode: Only LDAP Authentication is allowed, except for user 1.'),
       ],
+      '#description' => $this->t('If exclusive is selected: <br> (1) reset password links will be replaced with links to ldap end user documentation below.<br>
+        (2) The reset password form will be left available at user/password for user 1; but no links to it will be provided to anonymous users.<br>
+        (3) Password fields in user profile form will be removed except for user 1.'),
     ];
 
     $form['logon']['authenticationServers'] = [
@@ -222,7 +221,7 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
       '#required' => 1,
       '#default_value' => $config->get('ldap_authentication_conf.passwordOption'),
       '#options' => [
-        LdapAuthenticationConfiguration::$passwordFieldShow => t('Display password field disabled (Prevents password updates).'),
+        LdapAuthenticationConfiguration::$passwordFieldShowDisabled => t('Display password field disabled (Prevents password updates).'),
         LdapAuthenticationConfiguration::$passwordFieldHide => t('Don\'t show password field on user forms except login form.'),
         LdapAuthenticationConfiguration::$passwordFieldAllow => t('Display password field and allow updating it. In order to change password in LDAP, LDAP provisioning for this field must be enabled.'),
       ],
