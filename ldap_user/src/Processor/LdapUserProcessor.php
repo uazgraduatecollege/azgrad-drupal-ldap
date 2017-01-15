@@ -58,7 +58,7 @@ class LdapUserProcessor {
         $proposed_ldap_entry = $processor->drupalUserToLdapEntry($account, $ldap_server, $params, $ldap_user);
       }
       catch (\Exception $e) {
-        \Drupal::logger('ldap_user')->error('User or server is missing.');
+        \Drupal::logger('ldap_user')->error('User or server is missing, drupalUserToLdapEntry() failed.');
         return FALSE;
       }
 
@@ -268,7 +268,7 @@ class LdapUserProcessor {
       $proposed_ldap_entry = $this->drupalUserToLdapEntry($account, $ldap_server, $params, $ldap_user);
     }
     catch (\Exception $e) {
-      \Drupal::logger('ldap_user')->error('User or server is missing.');
+      \Drupal::logger('ldap_user')->error('User or server is missing during LDAP provisioning.');
       return [
         'status' => 'fail',
         'ldap_server' => $ldap_server,
@@ -396,6 +396,7 @@ class LdapUserProcessor {
   public function deleteProvisionedLdapEntries($account) {
     // Determine server that is associated with user.
     $boolean_result = FALSE;
+    // @FIXME: Legacy syntax
     $language = ($account->language) ? $account->language : 'und';
     if (isset($account->ldap_user_prov_entries[$language][0])) {
       foreach ($account->ldap_user_prov_entries[$language] as $i => $field_instance) {
@@ -457,7 +458,7 @@ class LdapUserProcessor {
       $proposed_ldap_entry = $this->drupalUserToLdapEntry($account, $ldap_server, $params);
     }
     catch (\Exception $e) {
-      \Drupal::logger('ldap_user')->error('User or server is missing.');
+      \Drupal::logger('ldap_user')->error('User or server is missing locally for fetching ProvisionRelatedLdapEntry.');
       return FALSE;
     }
 

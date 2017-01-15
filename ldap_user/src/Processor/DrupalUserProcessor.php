@@ -694,6 +694,7 @@ class DrupalUserProcessor {
     $to_ldap_entry = FALSE;
 
     if ($direction === NULL || $direction == LdapConfiguration::$provisioningDirectionToDrupalUser) {
+      // @FIXME: Legacy syntax
 
       if (property_exists($account, 'ldap_user_current_dn') && !empty($account->ldap_user_current_dn['und'][0]['value'])) {
         $to_drupal_user = TRUE;
@@ -705,6 +706,7 @@ class DrupalUserProcessor {
     }
 
     if ($direction === NULL || $direction == LdapConfiguration::$provisioningDirectionToLDAPEntry) {
+      //FIXME: Legacy syntax
       if (property_exists($account, 'ldap_user_prov_entries') && !empty($account->ldap_user_prov_entries['und'][0]['value'])) {
         $to_ldap_entry = TRUE;
       }

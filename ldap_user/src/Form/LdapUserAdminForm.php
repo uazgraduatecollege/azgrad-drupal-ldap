@@ -390,10 +390,11 @@ EOT;
       '#value' => 'Save',
     );
 
+    return $form;
+
     // @FIXME: Determine what is still needed here from this function.
     // In theory this should also be called on validateForm. Not ideal, investigate.
-    // $this->validateCurrentConfiguration($form);
-    return $form;
+     $this->validateCurrentConfiguration($form);
   }
 
   /**
@@ -459,18 +460,14 @@ EOT;
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
 
-    /**
-     * Recheck these
-     * $this->drupalAcctProvisionServer = ($values['drupalAcctProvisionServer'] == 'none') ? 0 : $values['drupalAcctProvisionServer'];
-     * $this->ldapEntryProvisionServer = ($values['ldapEntryProvisionServer'] == 'none') ? 0 : $values['ldapEntryProvisionServer'];
-     * $this->userConflictResolve  = ($values['userConflictResolve']) ? (int) $values['userConflictResolve'] : NULL;
-     */
+    $drupalAcctProvisionServer = ($form_state->getValue('drupalAcctProvisionServer') == 'none') ? 0 : $form_state->getValue('drupalAcctProvisionServer');
+    $ldapEntryProvisionServer = ($form_state->getValue('ldapEntryProvisionServer') == 'none') ? 0 : $form_state->getValue('ldapEntryProvisionServer');
 
     $processedSyncMappings = $this->syncMappingsFromForm($form_state->getValues());
 
     $this->config('ldap_user.settings')
-      ->set('ldap_user_conf.drupalAcctProvisionServer', $form_state->getValue('drupalAcctProvisionServer'))
-      ->set('ldap_user_conf.ldapEntryProvisionServer', $form_state->getValue('ldapEntryProvisionServer'))
+      ->set('ldap_user_conf.drupalAcctProvisionServer', $drupalAcctProvisionServer)
+      ->set('ldap_user_conf.ldapEntryProvisionServer', $ldapEntryProvisionServer)
       ->set('ldap_user_conf.drupalAcctProvisionTriggers', $form_state->getValue('drupalAcctProvisionTriggers'))
       ->set('ldap_user_conf.ldapEntryProvisionTriggers', $form_state->getValue('ldapEntryProvisionTriggers'))
       ->set('ldap_user_conf.orphanedDrupalAcctBehavior', $form_state->getValue('orphanedDrupalAcctBehavior'))
@@ -668,7 +665,6 @@ EOT;
   /**
    * Get mapping form row to ldap user provisioning mapping admin form table.
    *
-   * @param drupal form array $form
    * @param string $action
    *   is 'add', 'update', or 'nonconfigurable'.
    * @param string $direction
@@ -677,11 +673,11 @@ EOT;
    *   is current setting for updates or nonconfigurable items.
    * @param array $user_attr_options
    *   of drupal user target options.
-   * @param int $row
-   *   is current row in table.
+   * @param $row_id
+   *  is current row in table.
+   * @return array A single row
+   * A single row
    *
-   * @return array
-   *   A single row
    */
   private function getSyncFormRow($action, $direction, $mapping, $user_attr_options, $row_id) {
 
@@ -782,7 +778,12 @@ EOT;
     // $col and $row used to be paremeters to $result[$prov_event]. ID possible
     // not need needed anymore. Row used to be a parameter to this function.
     // $col = ($direction == LdapConfiguration::$provisioningDirectionToLDAPEntry) ? 5 : 4;.
-    $syncEvents = ($direction == LdapConfiguration::$provisioningDirectionToDrupalUser) ? LdapConfiguration::provisionsDrupalEvents() : LdapConfiguration::provisionsDrupalEvents();
+    if (($direction == LdapConfiguration::$provisioningDirectionToDrupalUser)) {
+      $syncEvents = LdapConfiguration::provisionsDrupalEvents();
+    }
+    else {
+      $syncEvents = LdapConfiguration::provisionsDrupalEvents();
+    }
 
     foreach ($syncEvents as $prov_event => $prov_event_name) {
       // See above.
@@ -877,8 +878,6 @@ EOT;
    *
    * @param array $values
    *   as $form_state['values'] from drupal form api.
-   * @param array $storage
-   *   as $form_state['storage'] from drupal form api
    *
    *   WARNING: Rewritten using nested forms. This may no longer apply.
    *

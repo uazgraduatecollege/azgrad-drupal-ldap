@@ -89,6 +89,25 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
   public $searchPageStart = 0;
   public $searchPageEnd = NULL;
 
+  public function getFormattedBind() {
+    switch ($this->get('bind_method')) {
+      case self::$bindMethodServiceAccount:
+        default:
+          $namedBind = t('service account bind');
+          break;
+      case self::$bindMethodUser:
+        $namedBind = t('user credentials bind');
+        break;
+      case self::$bindMethodAnon:
+        $namedBind = t('anonymous bind (search), then user credentials');
+        break;
+      case self::$bindMethodAnonUser:
+        $namedBind = t('anonymous bind');
+        break;
+    }
+    return $namedBind;
+  }
+
   /**
    * Connect Method.
    */

@@ -219,10 +219,10 @@ class LoginValidator {
       $authenticationResult = LdapAuthenticationConfiguration::$authFailGeneric;
       $this->serverDrupalUser = $factory->getServerById($server);
       if ($this->detailedLogging) {
-        \Drupal::logger('ldap_authentication')->debug('%username : Trying server %id where bind_method = %bind_method', [
+        \Drupal::logger('ldap_authentication')->debug('%username : Trying server %id with %bind_method', [
             '%username' => $this->authName,
             '%id' => $this->serverDrupalUser->id(),
-            '%bind_method' => $this->serverDrupalUser->get('bind_method'),
+            '%bind_method' => $this->serverDrupalUser->getFormattedBind(),
           ]
         );
       }
@@ -244,9 +244,10 @@ class LoginValidator {
 
       if (!$this->ldapUser) {
         if ($this->detailedLogging) {
-          \Drupal::logger('ldap_authentication')->debug('%username : Trying server %id where bind_method = %bind_method.  Error: %err_text', [
+          \Drupal::logger('ldap_authentication')->debug('%username : Error trying server %id with %bind_method: %err_text', [
               '%username' => $this->authName,
               '%err_text' => $this->serverDrupalUser->errorMsg('ldap'),
+              '%bind_method' => $this->serverDrupalUser->getFormattedBind(),
               '%id' => $this->serverDrupalUser->id(),
             ]
           );
@@ -273,9 +274,9 @@ class LoginValidator {
       $credentials_pass = ($this->serverDrupalUser->bind($this->ldapUser['dn'], $password, FALSE) == Server::LDAP_SUCCESS);
       if (!$credentials_pass) {
         if ($this->detailedLogging) {
-          \Drupal::logger('ldap_authentication')->debug('%username : Testing user credentials on server %id where bind_method = %bind_method.  Error: %err_text', [
+          \Drupal::logger('ldap_authentication')->debug('%username : Error testing user credentials on server %id with %bind_method. Error: %err_text', [
             '%username' => $this->authName,
-            '%bind_method' => $this->serverDrupalUser->get('bind_method'),
+            '%bind_method' => $this->serverDrupalUser->getFormattedBind(),
             '%id' => $this->serverDrupalUser->id(),
             '%err_text' => $this->serverDrupalUser->errorMsg('ldap'),
           ]);
@@ -286,7 +287,6 @@ class LoginValidator {
       }
       else {
         $authenticationResult = LdapAuthenticationConfiguration::$authSuccess;
-        // @FIXME: bind_method not defined
         if ($this->serverDrupalUser->get('bind_method') == Server::$bindMethodAnonUser) {
           // After successful bind, lookup user again to get private attributes.
           $this->ldapUser = $this->serverDrupalUser->userUserNameToExistingLdapEntry($this->authName);
@@ -465,6 +465,9 @@ class LoginValidator {
 
       case LdapAuthenticationConfiguration::$authFailServer:
         $msg = t('Authentication Server or Configuration Error.');
+        break;
+      case LdapAuthenticationConfiguration::$authSuccess:
+        $msg = t('Authentication successful');
         break;
 
     }
