@@ -663,8 +663,10 @@ class LoginValidator {
               '%account_name_attr' => $this->serverDrupalUser->get('account_name_attr'),
             ]
           );
+        return FALSE;
+      } else {
+        $this->drupalUserName = $userNameFromAttribute;
       }
-      return FALSE;
     }
     else {
       $this->drupalUserName = $this->authName;
