@@ -489,6 +489,7 @@ class LdapServer {
 
     foreach ($new_entry as $key => $new_val) {
       $old_value = FALSE;
+      $old_value_is_scalar = FALSE;
       $key_lcase = drupal_strtolower($key);
       if (isset($old_entry[$key_lcase])) {
         if ($old_entry[$key_lcase]['count'] == 1) {
