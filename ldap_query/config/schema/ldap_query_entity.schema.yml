@@ -26,14 +26,14 @@ ldap_query.ldap_query_entity.*:
       type: string
       label: 'Attributes to return'
     size_limit:
-      type: number
+      type: integer
       label: 'Size limit of returned data'
     time_limit:
-      type: number
+      type: integer
       label: 'Time limit for query in seconds'
     dereference:
-      type: number
+      type: integer
       label: 'How aliases should be handled'
     scope:
-      type: number
+      type: integer
       label: 'Scope of search'

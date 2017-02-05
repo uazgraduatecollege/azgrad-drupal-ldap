@@ -1,6 +1,8 @@
 ldap_user.settings:
   type: config_object
   mapping:
+    ldap_user_cron_last_uid_checked:
+      type: integer
     ldap_user_conf:
       type: mapping
       mapping:
@@ -13,9 +15,13 @@ ldap_user.settings:
         drupalAcctProvisionTriggers:
           label: 'drupalAcctProvisionTriggers'
           type: sequence
+          sequence:
+            type: integer
         ldapEntryProvisionTriggers:
           label: 'ldapEntryProvisionTriggers'
           type: sequence
+          sequence:
+            type: integer
         orphanedDrupalAcctBehavior:
           label: 'orphanedDrupalAcctBehavior'
           type: string

@@ -17,4 +17,3 @@ ldap_authentication_conf:
   seamlessLogin: null
   ldapImplementation: null
   cookieExpire: null
-  // TODO: This list is made by hand and not in the schema
