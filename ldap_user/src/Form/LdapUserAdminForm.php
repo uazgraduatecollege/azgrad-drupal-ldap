@@ -110,7 +110,7 @@ class LdapUserAdminForm extends ConfigFormBase {
       '#type' => 'radios',
       '#title' => t('LDAP Servers Providing Provisioning Data'),
       '#required' => 1,
-      '#default_value' => $config->get('ldap_user_conf.drupalAcctProvisionServer'),
+      '#default_value' => $config->get('ldap_user_conf.drupalAcctProvisionServer') ? $config->get('ldap_user_conf.drupalAcctProvisionServer') : 'none',
       '#options' => $this->drupalAcctProvisionServerOptions,
       '#description' => t('Choose the LDAP server configuration to use in provisioning Drupal users and their user fields.'),
       '#states' => array(
@@ -213,7 +213,7 @@ class LdapUserAdminForm extends ConfigFormBase {
       '#type' => 'radios',
       '#title' => t('LDAP Servers to Provision LDAP Entries on'),
       '#required' => 1,
-      '#default_value' => $config->get('ldap_user_conf.ldapEntryProvisionServer'),
+      '#default_value' => $config->get('ldap_user_conf.ldapEntryProvisionServer') ? $config->get('ldap_user_conf.ldapEntryProvisionServer') : 'none',
       '#options' => $this->ldapEntryProvisionServerOptions,
       '#description' => t('Check ONE LDAP server configuration to create LDAP entries on.'),
     );
@@ -459,8 +459,8 @@ EOT;
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
 
-    $drupalAcctProvisionServer = ($form_state->getValue('drupalAcctProvisionServer') == 'none') ? 0 : $form_state->getValue('drupalAcctProvisionServer');
-    $ldapEntryProvisionServer = ($form_state->getValue('ldapEntryProvisionServer') == 'none') ? 0 : $form_state->getValue('ldapEntryProvisionServer');
+    $drupalAcctProvisionServer = ($form_state->getValue('drupalAcctProvisionServer') == 'none') ? NULL : $form_state->getValue('drupalAcctProvisionServer');
+    $ldapEntryProvisionServer = ($form_state->getValue('ldapEntryProvisionServer') == 'none') ? NULL : $form_state->getValue('ldapEntryProvisionServer');
 
     $processedSyncMappings = $this->syncMappingsFromForm($form_state->getValues());
 
