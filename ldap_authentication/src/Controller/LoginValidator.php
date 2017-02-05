@@ -505,7 +505,11 @@ class LoginValidator {
 
     if (\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.excludeIfNoAuthorizations')) {
 
-      $user = User::create(['name' => $authName]);
+      $user = User::load($authName);
+
+      if (!$user) {
+        $user = User::create(['name' => $authName]);
+      }
 
       $profiles = authorization_get_profiles();
       $authorizations = [];

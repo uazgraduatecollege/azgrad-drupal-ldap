@@ -215,6 +215,12 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
 
     $proposed_ldap_authorizations = array_merge($derive_from_dn_authorizations, $group_dns);
     $proposed_ldap_authorizations = array_unique($proposed_ldap_authorizations);
+    if (\Drupal::config('ldap_help.settings')->get('watchdog_detail')) {
+      \Drupal::logger('ldap_authorization')->debug(
+        'Available authorizations to test: @authorizations',
+        ['@authorizations' => implode("\n", $proposed_ldap_authorizations)]
+      );
+    }
 
     return (count($proposed_ldap_authorizations)) ? array_combine($proposed_ldap_authorizations, $proposed_ldap_authorizations) : array();
   }
