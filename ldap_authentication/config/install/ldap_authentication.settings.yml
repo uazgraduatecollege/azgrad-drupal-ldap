@@ -1,5 +1,5 @@
 ldap_authentication_conf:
-  sids:
+  sids: {  }
   authenticationMode: 1
   loginUIUsernameTxt: ''
   loginUIPasswordTxt: ''
