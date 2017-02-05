@@ -11,6 +11,16 @@ Contact your organization's staff to receive the necessary information. This sho
 * If applicable, the structure of the data you are trying to sync, e.g. sAMAccountName is the unique name attribute for
 your Active Directory.
 
+### Requirements
+
+The following requirements need to be met for you to work with any of the LDAP modules. 
+
+- PHP version 5.6.
+- PHP LDAP extension.
+- Drupal Core >=8.2.0.
+
+For SSO please see ldap_sso/README.md.
+
 ## Installation
 
 ### Enabling communication

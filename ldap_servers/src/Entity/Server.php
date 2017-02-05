@@ -335,6 +335,15 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
     return $result;
   }
 
+  public static function ldap_escape($string) {
+    if (function_exists('ldap_escape')) {
+      return ldap_escape($string);
+    }
+    else {
+      return str_replace(array('*', '\\', '(', ')'), array('\\*', '\\\\', '\\(', '\\)'), $string);
+    }
+  }
+
   /**
    * Given 2 ldap entries, old and new, removed unchanged values to avoid security errors and incorrect date modifieds.
    *
@@ -1372,7 +1381,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
           $ors = [];
           foreach ($member_ids as $i => $member_id) {
             // @todo this would be replaced by query template
-            $ors[] = $this->groupMembershipsAttr() . '=' . ldap_escape($member_id);
+            $ors[] = $this->groupMembershipsAttr() . '=' . self::ldap_escape($member_id);
           }
 
           if (count($ors)) {
@@ -1517,7 +1526,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
         else {
           $member_value = $this->getFirstRDNValueFromDN($member_group_dn, $this->groupMembershipsAttrMatchingUserAttr());
         }
-        $ors[] = $this->groupMembershipsAttr() . '=' . ldap_escape($member_value);
+        $ors[] = $this->groupMembershipsAttr() . '=' . self::ldap_escape($member_value);
       }
     }
 
@@ -1650,7 +1659,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
         $tested_group_ids[] = $member_id;
         $all_group_dns[] = $group_entry['dn'];
         // Add $group_id (dn, cn, uid) to query.
-        $ors[] = $this->groupMembershipsAttr() . '=' . ldap_escape($member_id);
+        $ors[] = $this->groupMembershipsAttr() . '=' . self::ldap_escape($member_id);
       }
     }
 

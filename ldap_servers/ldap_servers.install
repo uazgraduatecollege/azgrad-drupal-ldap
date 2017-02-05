@@ -4,6 +4,7 @@
  * @file
  * Install, update and uninstall functions for the LDAP API module.
  */
+use Drupal\Core\Url;
 
 /**
  * Implements hook_install().
@@ -29,6 +30,16 @@ function ldap_servers_requirements($phase) {
   $requirements = array();
 
   if ($phase == 'install') {
+    $requirements['php'] = array(
+      'title' => t('PHP'),
+      'value' => ($phase == 'runtime') ? \Drupal::l(phpversion(), new Url('system.php')) : phpversion(),
+    );
+    if (version_compare(phpversion(), '5.6.0') < 0) {
+      $requirements['php']['description'] = t('Your PHP installation is too old. Please upgrade to at least %version.', array('%version' => '5.6.0'));
+      $requirements['php']['severity'] = REQUIREMENT_ERROR;
+    }
+
+
     $requirements['ldap_extension_loaded']['title'] = t('LDAP Extension Loaded');
     if (extension_loaded('ldap')) {
       $requirements['ldap_extension_loaded']['severity'] = REQUIREMENT_OK;
