@@ -221,17 +221,17 @@ function ldap_user_form_user_register_form_alter(&$form, $form_state) {
     return;
   }
 
-  $ldap_fieldset = array();
-  $options = array(
-    LdapConfiguration::$manualAccountConflictLdapAssociate => t('Make this an LDAP Associated account.  If a related LDAP account can not be found, a validation error will appear and the account will not be created.'),
-    LdapConfiguration::$manualAccountConflictNoLdapAssociate => t('Do not make this an LDAP Associated account.'),
-  );
-  $ldap_fieldset['ldap_user_association'] = array(
+  $ldap_fieldset = [];
+  $ldap_fieldset['ldap_user_association'] = [
     '#type' => 'radios',
-    '#options' => $options,
-    '#required' => FALSE,
+    '#options' => [
+      LdapConfiguration::$manualAccountConflictLdapAssociate => t('Make this an LDAP associated account.'),
+      LdapConfiguration::$manualAccountConflictNoLdapAssociate => t('Do not make this an LDAP associated account.'),
+    ],
+    '#default_value' => LdapConfiguration::$manualAccountConflictNoLdapAssociate,
+    '#description' => t('If a related LDAP account can not be found, a validation error will appear and the account will not be created.'),
     '#title' => t('LDAP Entry Association.'),
-  );
+  ];
 
   if (LdapConfiguration::provisionAvailableToLDAP(LdapConfiguration::$provisionDrupalUserOnUserUpdateCreate)) {
     $ldap_fieldset['ldap_user_association']['#disabled'] = TRUE;
