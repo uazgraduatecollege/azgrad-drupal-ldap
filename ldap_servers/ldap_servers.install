@@ -862,8 +862,9 @@ function ldap_servers_update_7206() {
  */
 function ldap_servers_update_7207() {
     if (!is_null($old_var = variable_get('ldap_servers_require_ssl_for_credentails'))) {
-        variable_set('ldap_servers_require_ssl_for_credentials', $old_var);
-        variable_del('ldap_servers_require_ssl_for_credentails');
+      variable_set('ldap_servers_require_ssl_for_credentials', $old_var);
+      variable_del('ldap_servers_require_ssl_for_credentails');
+    }
 }
 
 function ldap_servers_install_update_schema($schema, &$change_log) {
