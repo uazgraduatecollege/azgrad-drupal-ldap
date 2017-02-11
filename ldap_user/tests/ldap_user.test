@@ -83,17 +83,17 @@ class LdapUserUnitTests extends LdapTestCase {
 
     // test user token functions
     $entity = new stdClass();
-    $entity->lname['und'][0]['value'] = 'potter';
-    $entity->house['und'][0]['value'] = 'Gryffindor';
-    $entity->house['und'][1]['value'] = 'Privet Drive';
+    $entity->lname[LANGUAGE_NONE][0]['value'] = 'potter';
+    $entity->house[LANGUAGE_NONE][0]['value'] = 'Gryffindor';
+    $entity->house[LANGUAGE_NONE][1]['value'] = 'Privet Drive';
     $account = new stdClass();
     $account->mail = 'hpotter@hogwarts.edu';
     $mail = ldap_user_token_replace('[property.mail]', $account, $entity);
     $this->assertTrue($mail == $account->mail, t('[property.mail] token worked on ldap_user_token_replace().'), $this->testId('tokens.property'));
     $lname = ldap_user_token_replace('[field.lname]', $account, $entity);
-    $this->assertTrue($lname ==  $entity->lname['und'][0]['value'], t('[field.lname] token worked on ldap_user_token_replace().'), $this->testId('tokens.property.field'));
+    $this->assertTrue($lname ==  $entity->lname[LANGUAGE_NONE][0]['value'], t('[field.lname] token worked on ldap_user_token_replace().'), $this->testId('tokens.property.field'));
     $house1 = ldap_user_token_replace('[field.house:1]', $account, $entity);
-    $this->assertTrue($house1 == $entity->house['und'][1]['value'], t('[field.house:1] token worked on ldap_user_token_replace().'), $this->testId('tokens.property.field.ordinal'));
+    $this->assertTrue($house1 == $entity->house[LANGUAGE_NONE][1]['value'], t('[field.house:1] token worked on ldap_user_token_replace().'), $this->testId('tokens.property.field.ordinal'));
     //@todo need tests for :last and a multivalued attribute.  see http://drupal.org/node/1245736
 
 
@@ -145,7 +145,7 @@ class LdapUserUnitTests extends LdapTestCase {
         ),
         'ldap_user_puid' =>
         array(
-          'und' =>
+          LANGUAGE_NONE =>
           array(
             0 =>
             array(
@@ -155,7 +155,7 @@ class LdapUserUnitTests extends LdapTestCase {
         ),
         'ldap_user_puid_property' =>
         array(
-          'und' =>
+          LANGUAGE_NONE =>
           array(
             0 =>
             array(
@@ -165,7 +165,7 @@ class LdapUserUnitTests extends LdapTestCase {
         ),
         'ldap_user_puid_sid' =>
         array(
-          'und' =>
+          LANGUAGE_NONE =>
           array(
             0 =>
             array(
@@ -175,7 +175,7 @@ class LdapUserUnitTests extends LdapTestCase {
         ),
         'ldap_user_current_dn' =>
         array(
-          'und' =>
+          LANGUAGE_NONE =>
           array(
             0 =>
             array(
@@ -270,14 +270,14 @@ class LdapUserUnitTests extends LdapTestCase {
     $this->assertTrue($properties_set, t('user name, mail, init, and status correctly populated for hpotter'), $this->testId());
 
     $fields_set = (
-      isset($hpotter->ldap_user_puid['und'][0]['value']) &&
-      $hpotter->ldap_user_puid['und'][0]['value'] == '101' &&
-      isset($hpotter->ldap_user_puid_property['und'][0]['value']) &&
-      $hpotter->ldap_user_puid_property['und'][0]['value'] == 'guid' &&
-      isset($hpotter->ldap_user_puid_sid['und'][0]['value']) &&
-      $hpotter->ldap_user_puid_sid['und'][0]['value'] == 'activedirectory1' &&
-      isset($hpotter->ldap_user_current_dn['und'][0]['value']) &&
-      $hpotter->ldap_user_current_dn['und'][0]['value'] == 'cn=hpotter,ou=people,dc=hogwarts,dc=edu'
+      isset($hpotter->ldap_user_puid[LANGUAGE_NONE][0]['value']) &&
+      $hpotter->ldap_user_puid[LANGUAGE_NONE][0]['value'] == '101' &&
+      isset($hpotter->ldap_user_puid_property[LANGUAGE_NONE][0]['value']) &&
+      $hpotter->ldap_user_puid_property[LANGUAGE_NONE][0]['value'] == 'guid' &&
+      isset($hpotter->ldap_user_puid_sid[LANGUAGE_NONE][0]['value']) &&
+      $hpotter->ldap_user_puid_sid[LANGUAGE_NONE][0]['value'] == 'activedirectory1' &&
+      isset($hpotter->ldap_user_current_dn[LANGUAGE_NONE][0]['value']) &&
+      $hpotter->ldap_user_current_dn[LANGUAGE_NONE][0]['value'] == 'cn=hpotter,ou=people,dc=hogwarts,dc=edu'
     );
     $this->assertTrue($fields_set, t('user ldap_user_puid, ldap_user_puid_property, ldap_user_puid_sid, and  ldap_user_current_dn correctly populated for hpotter'), $this->testId('provisionDrupalAccount function test 3'));
 
@@ -628,8 +628,8 @@ class LdapUserUnitTests extends LdapTestCase {
           // debug("property_name=$property_name, prov_event=$prov_event, direction=$direction, field_token=$field_token, sid=$sid, ldap_user_conf->ldapUserSynchMappings $direction - $sid"); debug($ldap_user_conf->ldapUserSynchMappings[$direction][$sid]);
 
           if (in_array($prov_event, $ldap_user_conf->ldapUserSynchMappings[$direction][$field_token]['prov_events'])) { // if intended to synch
-            $field_success = isset($user_entity->{$field_name}['und'][0]['value']) &&
-              $user_entity->{$field_name}['und'][0]['value'] == $test['field_results'][0];
+            $field_success = isset($user_entity->{$field_name}[LANGUAGE_NONE][0]['value']) &&
+              $user_entity->{$field_name}[LANGUAGE_NONE][0]['value'] == $test['field_results'][0];
             $this->assertTrue($field_success, t("provisionDrupalAccount worked for field $field_name"),  $this->testId(":provisionDrupalAccount.i=$j.prov_event=$prov_event"));
             if (!$field_success) {
               debug('field fail,' . $field_name); debug($user_entity->{$field_name}); debug($test['field_results'][0]); //debug($user_entity);
@@ -744,8 +744,8 @@ class LdapUserIntegrationTests extends LdapTestCase {
       );
       $user_acct = new stdClass();
       $user_acct->is_new = TRUE;
-      $user_acct->field_fname['und'][0]['value'] = 'Bercilak';
-      $user_acct->field_lname['und'][0]['value'] = 'Hautdesert';
+      $user_acct->field_fname[LANGUAGE_NONE][0]['value'] = 'Bercilak';
+      $user_acct->field_lname[LANGUAGE_NONE][0]['value'] = 'Hautdesert';
 
       $servers = ldap_servers_get_servers(NULL, NULL, FALSE, TRUE);
       $desired_dn = "cn=bhautdeser,ou=people,dc=hogwarts,dc=edu";
@@ -778,8 +778,8 @@ class LdapUserIntegrationTests extends LdapTestCase {
       $ldap_entry_pre = $servers[$test_sid]->dnExists($desired_dn, 'ldap_entry');
       $user_acct_pre = user_load_by_name('bhautdeser');
       $edit = array();
-      $edit['field_fname']['und'][0]['value'] = 'Bredbeddle';
-      $edit['field_lname']['und'][0]['value'] = 'Hautdesert';
+      $edit['field_fname'][LANGUAGE_NONE][0]['value'] = 'Bredbeddle';
+      $edit['field_lname'][LANGUAGE_NONE][0]['value'] = 'Hautdesert';
       $user_acct = user_save($user_acct, $edit);
       $user_acct_post = user_load_by_name('bhautdeser');
 
@@ -808,8 +808,8 @@ class LdapUserIntegrationTests extends LdapTestCase {
       $ldap_entry_pre = $servers[$test_sid]->dnExists($desired_dn, 'ldap_entry');
       $user_acct_pre = user_load_by_name('bhautdeser');
       $edit = array();
-      $edit['field_fname']['und'][0]['value'] = 'Bredbeddle';
-      $edit['field_lname']['und'][0]['value'] = 'Hautdesert';
+      $edit['field_fname'][LANGUAGE_NONE][0]['value'] = 'Bredbeddle';
+      $edit['field_lname'][LANGUAGE_NONE][0]['value'] = 'Hautdesert';
       $user_acct = user_save($user_acct, $edit);
       $user_acct_post = user_load_by_name('bhautdeser');
 
@@ -990,8 +990,8 @@ class LdapUserIntegrationTests extends LdapTestCase {
       );
       $user_acct = new stdClass();
       $user_acct->is_new = TRUE;
-      $user_acct->field_fname['und'][0]['value'] = 'Bercilak';
-      $user_acct->field_lname['und'][0]['value'] = 'Hautdesert';
+      $user_acct->field_fname[LANGUAGE_NONE][0]['value'] = 'Bercilak';
+      $user_acct->field_lname[LANGUAGE_NONE][0]['value'] = 'Hautdesert';
 
       $servers = ldap_servers_get_servers(NULL, NULL, FALSE, TRUE);
       $desired_dn = "cn=bhautdeser,ou=people,dc=hogwarts,dc=edu";
@@ -1096,9 +1096,9 @@ class LdapUserIntegrationTests extends LdapTestCase {
       for ($i = 0; $i < $delete; $i++) {
         $name = "clone" . $i;
         $account = $cn_to_account[$name];
-        //debug("delete ldap entry: ". $account->ldap_user_current_dn['und'][0]['value']);
+        //debug("delete ldap entry: ". $account->ldap_user_current_dn[LANGUAGE_NONE][0]['value']);
       //  ?? is it possible the ldap delete hook is causing the drupal user to get populated with empty values?
-        $ldap_server->delete($account->ldap_user_current_dn['und'][0]['value']);
+        $ldap_server->delete($account->ldap_user_current_dn[LANGUAGE_NONE][0]['value']);
       }
 
       $clone_first = user_load($clone_first_uid, TRUE);

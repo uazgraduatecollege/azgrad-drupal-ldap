@@ -368,7 +368,7 @@ function ldap_servers_token_tokenize_user_account($user_account, $token_keys = '
           $token_keys[] = 'property.' . drupal_strtolower($property_name);
         }
       }
-      elseif (isset($user_account->{$attr_name}['und'][0]['value']) && is_scalar($user_account->{$attr_name}['und'][0]['value'])) {
+      elseif (isset($user_account->{$attr_name}[LANGUAGE_NONE][0]['value']) && is_scalar($user_account->{$attr_name}[LANGUAGE_NONE][0]['value'])) {
         $token_keys[] = 'field.' . $property_name;
         if (drupal_strtolower($property_name) != $property_name) {
           $token_keys[] = 'field.' . drupal_strtolower($property_name);
@@ -395,7 +395,7 @@ function ldap_servers_token_tokenize_user_account($user_account, $token_keys = '
 
     switch ($attr_type) {
       case 'field':
-        $value = @is_scalar($user_account->{$attr_name}['und'][0]['value']) ? $user_account->{$attr_name}['und'][0]['value'] : '';
+        $value = @is_scalar($user_account->{$attr_name}[LANGUAGE_NONE][0]['value']) ? $user_account->{$attr_name}[LANGUAGE_NONE][0]['value'] : '';
       break;
 
       case 'property':
