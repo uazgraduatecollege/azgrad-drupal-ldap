@@ -262,17 +262,15 @@ function ldap_authentication_info($field = 0) {
 
 
 /**
+ * Determines if the passed user has a valid authmap record.
  *
  * @param object $user
+ *   A drupal user account.
+ *
  * @return boolean
  *    true if user is recorded as ldap authenticated and identified (ldap_authentified)
  */
-
 function ldap_authentication_ldap_authenticated($user) {
-
-  if (is_numeric($user)) {
-    $user = @user_load((int)$user);
-  }
   if (!is_object($user) || $user->uid == 0) {
     return FALSE;
   }
