@@ -444,9 +444,9 @@ function ldap_servers_token_tokenize_user_account($user_account, $token_keys = '
           break;
       }
 
-      $tokens[$pre . $token_key . $post] = check_plain($value);
+      $tokens[$pre . $token_key . $post] = ($attr_type == 'password') ? $value : check_plain($value);
       if ($token_key != drupal_strtolower($token_key)) {
-        $tokens[$pre . drupal_strtolower($token_key) . $post] = check_plain($value);
+        $tokens[$pre . drupal_strtolower($token_key) . $post] = ($attr_type == 'password') ? $value : check_plain($value);
       }
     }
   }
