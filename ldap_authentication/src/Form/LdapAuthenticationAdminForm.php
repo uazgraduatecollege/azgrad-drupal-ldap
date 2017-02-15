@@ -191,9 +191,9 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
       '#required' => 1,
       '#default_value' => $config->get('ldap_authentication_conf.emailOption'),
       '#options' =>  [
-        LdapAuthenticationConfiguration::$emailFieldRemove => t('Don\'t show an email field on user forms.  LDAP derived email will be used for user and connot be changed by user'),
-        LdapAuthenticationConfiguration::$emailFieldDisable => t('Show disabled email field on user forms with LDAP derived email.  LDAP derived email will be used for user and connot be changed by user'),
-        LdapAuthenticationConfiguration::$emailFieldAllow => t('Leave email field on user forms enabled.  Generally used when provisioning to LDAP or not using email derived from LDAP.'),
+        LdapAuthenticationConfiguration::$emailFieldRemove => t('Don\'t show an email field on user forms. LDAP derived email will be used for user and cannot be changed by user.'),
+        LdapAuthenticationConfiguration::$emailFieldDisable => t('Show disabled email field on user forms with LDAP derived email. LDAP derived email will be used for user and cannot be changed by user.'),
+        LdapAuthenticationConfiguration::$emailFieldAllow => t('Leave email field on user forms enabled. Generally used when provisioning to LDAP or not using email derived from LDAP.'),
       ],
     ];
 
