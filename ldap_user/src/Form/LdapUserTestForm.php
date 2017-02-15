@@ -166,7 +166,7 @@ class LdapUserTestForm extends FormBase {
               $results['provisionDrupalAccount method results']["context = $sync_trigger_description"]['proposed'] = $account;
             }
             else {
-              $provision_result = $ldapProcessor->provisionLdapEntry($account, NULL, $test_query);
+              $provision_result = $ldapProcessor->provisionLdapEntry($username, NULL, $test_query);
               $results['provisionLdapEntry method results']["context = $sync_trigger_description"] = $provision_result;
             }
           }
