@@ -591,12 +591,17 @@ function ldap_server_massage_text($value, $value_type, $context) {
     * @param string $string String to convert
     *
     * @static
-    * @author beni@php.net, heavily based on work from DavidSmith@byu.net
     * @return string
     */
     function ldap_pear_hex2asc($string) {
-        $string = preg_replace("/\\\([0-9A-Fa-f]{2})/e", "''.chr(hexdec('\\1')).''", $string);
-        return $string;
+      $string = preg_replace_callback(
+        "/\\\([0-9A-Fa-f]{2})/",
+        function (array $matches) {
+          return chr(hexdec($matches[0]));
+        },
+        $string
+      );
+      return $string;
     }
 
     /**
