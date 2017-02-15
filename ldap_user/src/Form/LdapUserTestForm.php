@@ -194,8 +194,8 @@ class LdapUserTestForm extends FormBase {
             }
             else {
               // To ldap.
-              // FIXME.
-              $ldapProcessor->syncToLdapEntry($account, [], $test_query);
+              $syncAccount = user_load_by_name($username);
+              $ldapProcessor->syncToLdapEntry($syncAccount, [], $test_query);
               $results['syncToLdapEntry method results']["context = $sync_trigger_description"] = $provision_result;
             }
           }

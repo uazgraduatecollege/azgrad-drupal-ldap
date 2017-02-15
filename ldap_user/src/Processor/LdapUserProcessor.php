@@ -29,14 +29,15 @@ class LdapUserProcessor {
   /**
    * Given a drupal account, sync to related ldap entry.
    *
-   * @param User $account.
+   * @param User $account
    *   Drupal user object.
-   * @param array $ldap_user.
-   *   current ldap data of user. @see README.developers.txt for structure.
+   * @param array $ldap_user
+   *   Current LDAP data of user. See README.developers.txt for structure.
+   * @param bool $test_query
    *
    * @return TRUE on success or FALSE on fail.
    */
-  public function syncToLdapEntry($account, $ldap_user = array()) {
+  public function syncToLdapEntry($account, $ldap_user = array(), $test_query = FALSE) {
 
     if (is_object($account) && $account->id() == 1) {
       // Do not provision or sync user 1.
@@ -86,22 +87,31 @@ class LdapUserProcessor {
           }
         }
 
-        // //debug('modifyLdapEntry,dn=' . $proposed_ldap_entry['dn']);  //debug($attributes);
-        // stick $proposed_ldap_entry in $ldap_entries array for drupal_alter call.
-        $proposed_dn_lcase = Unicode::strtolower($proposed_ldap_entry['dn']);
-        $ldap_entries = [$proposed_dn_lcase => $attributes];
-        $context = [
-          'action' => 'update',
-          'corresponding_drupal_data' => [$proposed_dn_lcase => $attributes],
-          'corresponding_drupal_data_type' => 'user',
-        ];
-        \Drupal::moduleHandler()->alter('ldap_entry_pre_provision', $ldap_entries, $ldap_server, $context);
-        // Remove altered $proposed_ldap_entry from $ldap_entries array.
-        $attributes = $ldap_entries[$proposed_dn_lcase];
-        $result = $ldap_server->modifyLdapEntry($proposed_ldap_entry['dn'], $attributes);
+        if ($test_query) {
+          $proposed_ldap_entry = $attributes;
+          $result = array(
+            'proposed' => $proposed_ldap_entry,
+            'server' => $ldap_server,
+          );
+        } else {
+          // //debug('modifyLdapEntry,dn=' . $proposed_ldap_entry['dn']);  //debug($attributes);
+          // stick $proposed_ldap_entry in $ldap_entries array for drupal_alter call.
+          $proposed_dn_lcase = Unicode::strtolower($proposed_ldap_entry['dn']);
+          $ldap_entries = [$proposed_dn_lcase => $attributes];
+          $context = [
+            'action' => 'update',
+            'corresponding_drupal_data' => [$proposed_dn_lcase => $attributes],
+            'corresponding_drupal_data_type' => 'user',
+          ];
+          \Drupal::moduleHandler()->alter('ldap_entry_pre_provision', $ldap_entries, $ldap_server, $context);
+          // Remove altered $proposed_ldap_entry from $ldap_entries array.
+          $attributes = $ldap_entries[$proposed_dn_lcase];
+          $result = $ldap_server->modifyLdapEntry($proposed_ldap_entry['dn'], $attributes);
 
-        if ($result) {
-          \Drupal::moduleHandler()->invokeAll('ldap_entry_post_provision', [$ldap_entries, $ldap_server, $context]);
+          if ($result) {
+            \Drupal::moduleHandler()->invokeAll('ldap_entry_post_provision', [$ldap_entries, $ldap_server, $context]);
+          }
+
         }
 
       }
