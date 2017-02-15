@@ -45,27 +45,10 @@ class DrupalUserProcessor {
         return FALSE;
       }
 
-      $ldap_user = $factory->getUserDataFromServerByAccount($account, $this->config['drupalAcctProvisionServer'], 'ldap_user_prov_to_drupal');
+      $ldap_user = $ldap_server->userUserNameToExistingLdapEntry($drupal_username);
       if (!$ldap_user) {
         \Drupal::logger('ldap_user')->error('Failed to LDAP associate drupal account %drupal_username because corresponding LDAP entry not found', array('%drupal_username' => $drupal_username));
         return FALSE;
-      }
-
-      try {
-        $data = unserialize($account->get('data'));
-        if (!is_array($data)) {
-          $data = [];
-        }
-
-        $data['ldap_user']['init'] = [
-          'sid'  => $ldap_server->id(),
-          'dn'   => $ldap_user['dn'],
-          'mail'   => $account->mail,
-        ];
-        $account->set('data', serialize($data));
-      }
-      catch (\Exception $e) {
-        \Drupal::logger('ldap_user')->warning('Setting of serialized \'data\' attributes failed.');
       }
 
       $ldap_user_puid = $ldap_server->userPuidFromLdapEntry($ldap_user['attr']);
@@ -78,6 +61,9 @@ class DrupalUserProcessor {
       $account->set('ldap_user_last_checked', time());
       $account->set('ldap_user_ldap_exclude', 0);
       $account->save();
+      $processor = new DrupalUserProcessor();
+      $processor->syncToDrupalAccount($account, LdapConfiguration::$eventCreateDrupalUser, $ldap_user, TRUE);
+
       return TRUE;
     }
     else {
@@ -374,9 +360,8 @@ class DrupalUserProcessor {
       $prov_event = LdapConfiguration::$eventSyncToDrupalUser;
     }
 
-    if ((!$ldap_user && method_exists($account, 'getUsername')) ||
-      (!$account && $save) ||
-      ($ldap_user && !isset($ldap_user['sid']))) {
+    if ((!$ldap_user && !method_exists($account, 'getUsername')) ||
+      (!$account && $save)) {
       \Drupal::logger('ldap_user')->notice('Invalid selection passed to syncToDrupalAccount.');
       return FALSE;
     }
