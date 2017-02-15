@@ -201,10 +201,6 @@ class DrupalUserProcessor {
           }
           else {
             ExternalAuthenticationHelper::setUserIdentifier($account, $account->getUsername());
-            if (!empty($user_data)) {
-              // FIXME: Undefined function.
-              ldap_user_identities_data_update($account, $user_data);
-            }
           }
           return $account;
         }
@@ -273,12 +269,6 @@ class DrupalUserProcessor {
         $account->set('status', 1);
       }
 
-      // @FIXME data has gone away (Core). Use external_auth data column?
-      $user_data['init'] = array(
-        'sid'  => $ldap_server->id(),
-        'dn'   => $ldap_user['dn'],
-        'mail' => $derived_mail,
-      );
     }
 
     /**
