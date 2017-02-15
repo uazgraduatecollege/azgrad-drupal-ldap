@@ -1317,19 +1317,18 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
     }
 
     // FIXME: Unreachable statement.
-    $this->groupMembersResursive($current_group_entries, $all_group_dns, $tested_group_ids, 0, $max_levels, $object_classes);
+    $this->groupMembersRecursive($current_group_entries, $all_group_dns, $tested_group_ids, 0, $max_levels, $object_classes);
 
     return $all_group_dns;
 
   }
 
   /**
-   * @FIXME: NOT IMPLEMENTED
-   * recurse through all child groups and add members.
+   * Recurse through all child groups and add members.
    *
-   * @param array $current_group_entries
+   * @param array $current_member_entries
    *   of ldap group entries that are starting point.  should include at least 1 entry.
-   * @param array $all_group_dns
+   * @param array $all_member_dns
    *   as array of all groups user is a member of.  MIXED CASE VALUES.
    * @param array $tested_group_ids
    *   as array of tested group dn, cn, uid, etc.  MIXED CASE VALUES
@@ -1344,7 +1343,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
    *
    * @return bool
    */
-  public function groupMembersResursive($current_member_entries, &$all_member_dns, &$tested_group_ids, $level, $max_levels, $object_classes = FALSE) {
+  public function groupMembersRecursive($current_member_entries, &$all_member_dns, &$tested_group_ids, $level, $max_levels, $object_classes = FALSE) {
 
     if (!$this->groupGroupEntryMembershipsConfigured() || !is_array($current_member_entries) || count($current_member_entries) == 0) {
       return FALSE;
@@ -1354,7 +1353,6 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
     }
 
     foreach ($current_member_entries as $i => $member_entry) {
-      // dpm("groupMembersResursive:member_entry $i, level=$level < max_levels=$max_levels"); dpm($member_entry);
       // 1.  Add entry itself if of the correct type to $all_member_dns.
       $objectClassMatch = (!$object_classes || (count(array_intersect(array_values($member_entry['objectclass']), $object_classes)) > 0));
       $objectIsGroup = in_array($this->groupObjectClass(), array_values($member_entry['objectclass']));
@@ -1379,7 +1377,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
             unset($member_ids['count']);
           }
           $ors = [];
-          foreach ($member_ids as $i => $member_id) {
+          foreach ($member_ids as $key => $member_id) {
             // @todo this would be replaced by query template
             $ors[] = $this->groupMembershipsAttr() . '=' . self::ldap_escape($member_id);
           }
@@ -1407,7 +1405,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
                 ]
               );
               if ($child_member_entries !== FALSE) {
-                $this->groupMembersResursive($child_member_entries, $all_member_dns, $tested_group_ids, $level + 1, $max_levels, $object_classes);
+                $this->groupMembersRecursive($child_member_entries, $all_member_dns, $tested_group_ids, $level + 1, $max_levels, $object_classes);
               }
             }
           }
@@ -1717,33 +1715,12 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
    */
 
   public $detailedWatchdogLog = FALSE;
-  protected $_errorMsg = NULL;
-  protected $_hasError = FALSE;
-  protected $_errorName = NULL;
-
-  /**
-   *
-   */
-  public function setError($_errorName, $_errorMsgText = NULL) {
-    $this->_errorMsgText = $_errorMsgText;
-    $this->_errorName = $_errorName;
-    $this->_hasError = TRUE;
-  }
-
-  /**
-   *
-   */
-  public function clearError() {
-    $this->_hasError = FALSE;
-    $this->_errorMsg = NULL;
-    $this->_errorName = NULL;
-  }
 
   /**
    *
    */
   public function hasError() {
-    return ($this->_hasError || $this->ldapErrorNumber());
+    return $this->ldapErrorNumber();
   }
 
   /**
@@ -1752,9 +1729,6 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
   public function errorMsg($type = NULL) {
     if ($type == 'ldap' && $this->connection) {
       return ldap_err2str(ldap_errno($this->connection));
-    }
-    elseif ($type == NULL) {
-      return $this->_errorMsg;
     }
     else {
       return NULL;
@@ -1767,9 +1741,6 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
   public function errorName($type = NULL) {
     if ($type == 'ldap' && $this->connection) {
       return "LDAP Error: " . ldap_error($this->connection);
-    }
-    elseif ($type == NULL) {
-      return $this->_errorName;
     }
     else {
       return NULL;
