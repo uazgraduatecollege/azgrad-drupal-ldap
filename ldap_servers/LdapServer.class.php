@@ -1148,7 +1148,12 @@ class LdapServer {
         && isset($ldap_entry[$this->unique_persistent_attr][0])
         && is_scalar($ldap_entry[$this->unique_persistent_attr][0])
         ) {
-      $puid = $ldap_entry[$this->unique_persistent_attr][0];
+      if (is_array($ldap_entry[$this->unique_persistent_attr])) {
+        $puid = $ldap_entry[$this->unique_persistent_attr][0];
+      }
+      else {
+        $puid = $ldap_entry[$this->unique_persistent_attr];
+      }
       return ($this->unique_persistent_attr_binary) ? ldap_servers_binary($puid) : $puid;
     }
     else {
