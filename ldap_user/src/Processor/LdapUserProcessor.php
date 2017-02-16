@@ -344,9 +344,11 @@ class LdapUserProcessor {
           $account->set('ldap_user_prov_entries', array());
         }
         $ldap_user_prov_entry_exists = FALSE;
-        foreach ($account->get('ldap_user_prov_entries')->value as $i => $field_value_instance) {
-          if ($field_value_instance == $ldap_user_prov_entry) {
-            $ldap_user_prov_entry_exists = TRUE;
+        if ($account->get('ldap_user_prov_entries')->value) {
+          foreach ($account->get('ldap_user_prov_entries')->value as $i => $field_value_instance) {
+            if ($field_value_instance == $ldap_user_prov_entry) {
+              $ldap_user_prov_entry_exists = TRUE;
+            }
           }
         }
         if (!$ldap_user_prov_entry_exists) {

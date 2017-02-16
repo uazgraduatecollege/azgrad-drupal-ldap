@@ -105,8 +105,8 @@ class LdapConfiguration {
    */
   public static function provisionsLdapEvents() {
     return [
-      LdapConfiguration::$eventCreateLdapEntry => t('On LDAP Entry Creation'),
-      LdapConfiguration::$eventSyncToLdapEntry => t('On Sync to LDAP Entry'),
+      self::$eventCreateLdapEntry => t('On LDAP Entry Creation'),
+      self::$eventSyncToLdapEntry => t('On Sync to LDAP Entry'),
     ];
   }
 

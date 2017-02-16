@@ -782,7 +782,7 @@ EOT;
       $syncEvents = LdapConfiguration::provisionsDrupalEvents();
     }
     else {
-      $syncEvents = LdapConfiguration::provisionsDrupalEvents();
+      $syncEvents = LdapConfiguration::provisionsLdapEvents();
     }
 
     foreach ($syncEvents as $prov_event => $prov_event_name) {
@@ -931,7 +931,7 @@ EOT;
             'convert'     => $columns['convert'],
             'direction'   => $direction,
            // @FIXME: user_tokens is missing
-           // 'user_tokens' => $columns['user_tokens'],
+            'user_tokens' => isset($columns['user_tokens']) ? $columns['user_tokens'] : '',
             'config_module' => 'ldap_user',
             'prov_module' => 'ldap_user',
             'enabled'     => 1,
