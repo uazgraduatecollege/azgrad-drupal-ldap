@@ -463,6 +463,10 @@ class LdapServer {
       return FALSE;
     }
 
+    if (!empty($attributes['unicodePwd']) && ($this->ldap_type == 'ad')) {
+      $attributes['unicodePwd'] = ldap_servers_convert_password_for_active_directory_unicodePwd($attributes['unicodePwd']);
+    }
+
     $result = @ldap_add($this->connection, $dn, $attributes);
     if (!$result) {
       $error = "LDAP Server ldap_add(%dn) Error Server ID = %sid, LDAP Err No: %ldap_errno LDAP Err Message: %ldap_err2str ";
@@ -549,6 +553,11 @@ class LdapServer {
         $old_attributes =  $entries[0];
       }
     }
+
+    if (!empty($attributes['unicodePwd']) && ($this->ldap_type == 'ad')) {
+      $attributes['unicodePwd'] = ldap_servers_convert_password_for_active_directory_unicodePwd($attributes['unicodePwd']);
+    }
+
     $attributes = $this->removeUnchangedAttributes($attributes, $old_attributes);
 
     foreach ($attributes as $key => $cur_val) {
