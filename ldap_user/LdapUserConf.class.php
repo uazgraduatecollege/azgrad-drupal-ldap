@@ -509,7 +509,7 @@ class LdapUserConf {
     if (is_scalar($account)) {
       $username = $account;
       $account = new stdClass();
-      $acount->name = $username;
+      $account->name = $username;
     }
 
     list($account, $user_entity) = ldap_user_load_user_acct_and_entity($account->name);
