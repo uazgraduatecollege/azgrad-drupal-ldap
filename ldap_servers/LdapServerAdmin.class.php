@@ -201,6 +201,7 @@ EOF;
     '#title' => t('Binding Method.'),
     '#collapsible' => TRUE,
     '#collapsed' => FALSE,
+    'boolean' => FALSE,
   );
 
   $form['binding_service_acct'] = array(
