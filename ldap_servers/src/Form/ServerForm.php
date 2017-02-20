@@ -138,7 +138,6 @@ class ServerForm extends EntityForm {
       '#size' => 80,
       '#maxlength' => 512,
       '#states' => array(
-    // Action to take.
         'enabled' => array(
           ':input[name=bind_method]' => array('value' => strval(Server::$bindMethodServiceAccount)),
         ),
@@ -151,7 +150,6 @@ class ServerForm extends EntityForm {
       '#description' => $server->get('bindpw') ? t("Password exists in database.") : t("<strong>Warning: No password exists in database.</strong>"),
       '#size' => 20,
       '#states' => array(
-    // Action to take.
         'enabled' => array(
           ':input[name=bind_method]' => array('value' => strval(Server::$bindMethodServiceAccount)),
         ),
@@ -294,7 +292,6 @@ class ServerForm extends EntityForm {
       '#title' => t('Name of Group Object Class'),
       '#description' => t('e.g. groupOfNames, groupOfUniqueNames, group.'),
       '#states' => array(
-    // Action to take.
         'visible' => array(
           ':input[name=grp_unused]' => array('checked' => FALSE),
         ),
@@ -310,74 +307,98 @@ class ServerForm extends EntityForm {
          user should be considered to be in group A and B.  If your LDAP has nested groups, but you
          want to ignore nesting, leave this unchecked.'),
       '#states' => array(
-    // Action to take.
         'visible' => array(
           ':input[name=grp_unused]' => array('checked' => FALSE),
         ),
       ),
     );
 
-    $form['groups']['grp_user_memb_attr_exists'] = array(
-      '#default_value' => $server->get('grp_user_memb_attr_exists'),
-      '#type' => 'checkbox',
-      '#title' => t('A user LDAP attribute such as <code>memberOf</code> exists that contains a list of their groups.
-        Active Directory and openLdap with memberOf overlay fit this model.'),
-      '#disabled' => FALSE,
+
+    $form['groups']['derive_group'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Derive from group'),
       '#states' => array(
-    // Action to take.
         'visible' => array(
           ':input[name=grp_unused]' => array('checked' => FALSE),
         ),
       ),
     );
 
-    $form['groups']['grp_user_memb_attr'] = array(
-      '#default_value' => $server->get('grp_user_memb_attr'),
-      '#type' => 'textfield',
-      '#size' => 30,
-      '#title' => t('Attribute in User Entry Containing Groups'),
-      '#description' => t('e.g. memberOf <em>(case sensitive)</em>.'),
-      '#states' => array(
-    // Action to take.
-        'enabled' => array(
-          ':input[name=grp_user_memb_attr_exists]' => array('checked' => TRUE),
-        ),
-      // Action to take.
-        'visible' => array(
-          ':input[name=grp_unused]' => array('checked' => FALSE),
-        ),
-      ),
-    );
-
-    $form['groups']['grp_memb_attr'] = array(
+    $form['groups']['derive_group']['grp_memb_attr'] = array(
       '#default_value' => $server->get('grp_memb_attr'),
       '#type' => 'textfield',
       '#size' => 30,
       '#title' => t('LDAP Group Entry Attribute Holding User\'s DN, CN, etc.'),
       '#description' => t('e.g uniquemember, memberUid'),
       '#states' => array(
-    // Action to take.
         'visible' => array(
           ':input[name=grp_unused]' => array('checked' => FALSE),
         ),
       ),
     );
 
-    $form['groups']['grp_memb_attr_match_user_attr'] = array(
+    $form['groups']['derive_group']['grp_memb_attr_match_user_attr'] = array(
       '#default_value' => $server->get('grp_memb_attr_match_user_attr'),
       '#type' => 'textfield',
       '#size' => 30,
       '#title' => t('User attribute held in "LDAP Group Entry Attribute Holding..."'),
       '#description' => t('This is almost always "dn" (which technically isn\'t an attribute).  Sometimes its "cn".'),
       '#states' => array(
-    // Action to take.
         'visible' => array(
           ':input[name=grp_unused]' => array('checked' => FALSE),
         ),
       ),
     );
 
-    $form['groups']['grp_derive_from_dn'] = array(
+    $form['groups']['attribute'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Derive from user attribute'),
+      '#states' => array(
+        'visible' => array(
+          ':input[name=grp_unused]' => array('checked' => FALSE),
+        ),
+      ),
+    );
+    $form['groups']['attribute']['grp_user_memb_attr_exists'] = array(
+      '#default_value' => $server->get('grp_user_memb_attr_exists'),
+      '#type' => 'checkbox',
+      '#title' => t('A user LDAP attribute such as <code>memberOf</code> exists that contains a list of their groups.
+        Active Directory and openLdap with memberOf overlay fit this model.'),
+      '#disabled' => FALSE,
+      '#states' => array(
+        'visible' => array(
+          ':input[name=grp_unused]' => array('checked' => FALSE),
+        ),
+      ),
+    );
+
+    $form['groups']['attribute']['grp_user_memb_attr'] = array(
+      '#default_value' => $server->get('grp_user_memb_attr'),
+      '#type' => 'textfield',
+      '#size' => 30,
+      '#title' => t('Attribute in User Entry Containing Groups'),
+      '#description' => t('e.g. memberOf <em>(case sensitive)</em>.'),
+      '#states' => array(
+        'enabled' => array(
+          ':input[name=grp_user_memb_attr_exists]' => array('checked' => TRUE),
+        ),
+        'visible' => array(
+          ':input[name=grp_unused]' => array('checked' => FALSE),
+        ),
+      ),
+    );
+
+    $form['groups']['deriveDN'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Derive from DN'),
+      '#states' => array(
+        'visible' => array(
+          ':input[name=grp_unused]' => array('checked' => FALSE),
+        ),
+      ),
+    );
+
+    $form['groups']['deriveDN']['grp_derive_from_dn'] = array(
       '#default_value' => $server->get('grp_derive_from_dn'),
       '#type' => 'checkbox',
       '#title' => t('Groups are derived from user\'s LDAP entry DN.') . '<em>' .
@@ -386,25 +407,22 @@ class ServerForm extends EntityForm {
         not take this into account.  LDAP Authorization will.') . '</em>',
       '#disabled' => FALSE,
       '#states' => array(
-    // Action to take.
         'visible' => array(
           ':input[name=grp_unused]' => array('checked' => FALSE),
         ),
       ),
     );
 
-    $form['groups']['grp_derive_from_dn_attr'] = array(
+    $form['groups']['deriveDN']['grp_derive_from_dn_attr'] = array(
       '#default_value' => $server->get('grp_derive_from_dn_attr'),
       '#type' => 'textfield',
       '#size' => 30,
       '#title' => t('Attribute of the User\'s LDAP Entry DN which contains the group'),
       '#description' => t('e.g. ou'),
       '#states' => array(
-    // Action to take.
         'enabled' => array(
           ':input[name=grp_derive_from_dn]' => array('checked' => TRUE),
         ),
-      // Action to take.
         'visible' => array(
           ':input[name=grp_unused]' => array('checked' => FALSE),
         ),
@@ -418,7 +436,6 @@ class ServerForm extends EntityForm {
       '#title' => t('Testing LDAP Group DN'),
       '#description' => t('This is optional and can be useful for debugging and validating forms.'),
       '#states' => array(
-    // Action to take.
         'visible' => array(
           ':input[name=grp_unused]' => array('checked' => FALSE),
         ),
@@ -432,7 +449,6 @@ class ServerForm extends EntityForm {
       '#title' => t('Testing LDAP Group DN that is writable.  WARNING the test script for the server will create, delete, and add members to this group!'),
       '#description' => t('This is optional and can be useful for debugging and validating forms.'),
       '#states' => array(
-    // Action to take.
         'visible' => array(
           ':input[name=grp_unused]' => array('checked' => FALSE),
         ),
@@ -461,7 +477,6 @@ class ServerForm extends EntityForm {
         or LDAP Feeds will be allowed to set a smaller page size, but not
         a larger one.'),
       '#states' => array(
-    // Action to take.
         'visible' => array(
           ':input[name="search_pagination"]' => array('checked' => TRUE),
         ),

@@ -179,7 +179,7 @@ class ServerTestForm extends EntityForm {
 
       foreach ($test_data['results_tables'] as $table_name => $table_data) {
         $settings = array(
-          '#type' => 'table',
+          '#theme' => 'table',
           '#header' => array('Test', 'Result'),
           '#rows' => $table_data,
         );
@@ -437,10 +437,6 @@ class ServerTestForm extends EntityForm {
    */
   private function testGroupDN($values, $results_tables) {
     $group_dn = $values['grp_test_grp_dn'];
-
-    // @TODO: This query is not yet tested, previous version:
-    // $result = @ldap_read($ldap_server->connection, $group_dn, 'objectClass=*');
-    // $group_entry = ldap_get_entries($ldap_server->connection, $result);
     $group_entry = $this->ldapServer->search($group_dn, 'objectClass=*');
     $user = isset($values['testing_drupal_username']) ? $values['testing_drupal_username'] : NULL;
 
@@ -451,21 +447,21 @@ class ServerTestForm extends EntityForm {
         // This is the parent function that will call FromUserAttr or FromEntry.
         $memberships = $this->ldapServer->groupMembershipsFromUser($user, 'group_dns', $nested);
         $settings = array(
-          '#type' => 'item_list',
+          '#theme' => 'item_list',
           '#items' => $memberships,
           '#list_type' => 'ul',
         );
         $result = drupal_render($settings);
 
         $results_tables['group2'][] = [
-          "ldap_server->groupMembershipsFromUser($user, 'group_dns', nested=$nested_display)<br>count=" . count($memberships),
+          'Group memberships from user ("group_dns", nested=' . $nested_display . ') (' . count($memberships) . ' found)',
           $result,
         ];
 
         $result = ($this->ldapServer->groupIsMember($group_dn, $user, $nested)) ? 'Yes' : 'No';
         $group_results = [];
         $group_results[] = [
-          "ldap_server->groupIsMember($group_dn, $user, nested=$nested_display)",
+          'groupIsMember from group DN ' . $group_dn . 'for ' . $user . ' nested=' . $nested_display . ')',
           $result,
         ];
 
@@ -473,7 +469,7 @@ class ServerTestForm extends EntityForm {
           $groupUserMembershipsFromUserAttributes = $this->ldapServer->groupUserMembershipsFromUserAttr($user, $nested);
           $count = count($groupUserMembershipsFromUserAttributes);
           $settings = array(
-            '#type' => 'item_list',
+            '#theme' => 'item_list',
             '#items' => $groupUserMembershipsFromUserAttributes,
             '#list_type' => 'ul',
           );
@@ -485,7 +481,7 @@ class ServerTestForm extends EntityForm {
           $result = "'A user LDAP attribute such as memberOf exists that contains a list of their group' is not configured.";
         }
         $results_tables['group2'][] = [
-          "ldap_server->groupUserMembershipsFromUserAttr($user, nested=$nested_display)<br> count=" . count($groupUserMembershipsFromUserAttributes),
+          'Group memberships from user attribute for ' . $user . ' (nested=' . $nested_display . ') (' . count($groupUserMembershipsFromUserAttributes) . ' found)',
           $result,
         ];
 
@@ -504,7 +500,7 @@ class ServerTestForm extends EntityForm {
           $result = "Groups by entry not configured.";
         }
         $results_tables['group2'][] = [
-          "ldap_server->groupUserMembershipsFromEntry($user, nested=$nested_display)<br>count=" . count($groupUserMembershipsFromEntry),
+          'Group memberships from entry for ' . $user . ' (nested=' . $nested_display . ') (' . count($groupUserMembershipsFromEntry) . ' found)',
           $result,
         ];
 
