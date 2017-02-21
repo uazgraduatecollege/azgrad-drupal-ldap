@@ -364,7 +364,7 @@ class ServerTestForm extends EntityForm {
 
     if ($this->ldapServer->get('bind_method') == Server::$bindMethodAnonUser) {
       drupal_set_message('Bind method anonymous, user.');
-      list($has_errors, $more_results, $ldap_user) = $this->ldapServer->testUserMapping($values['testing_drupal_username']);
+      list($has_errors, $more_results, $ldap_user) = $this->testUserMapping($values['testing_drupal_username']);
       $results = array_merge($results, $more_results);
       if (!$has_errors) {
         $mapping[] = "dn = " . $ldap_user['dn'];
@@ -410,7 +410,7 @@ class ServerTestForm extends EntityForm {
       list($group_entry, $values, $results_tables) = $this->testGroupDN($values, $results_tables);
     }
 
-    list($has_errors, $more_results, $ldap_user) = $this->ldapServer->testUserMapping($values['testing_drupal_username']);
+    list($has_errors, $more_results, $ldap_user) = $this->testUserMapping($values['testing_drupal_username']);
     $tokenHelper = new TokenProcessor();
     $tokens = ($ldap_user && isset($ldap_user['attr'])) ? $tokenHelper->tokenizeEntry($ldap_user['attr'], 'all', TokenProcessor::$token_pre, TokenProcessor::$token_post) : [];
     foreach ($tokens as $key => $value) {
@@ -763,7 +763,7 @@ class ServerTestForm extends EntityForm {
       $results[] = t('Failed to find test user %username by searching on  %user_attr = %username.',
           array(
             '%username' => $drupal_username,
-            '%user_attr' => self::get('user_attr'),
+            '%user_attr' => $this->ldapServer->get('user_attr'),
           )
         )
         . ' ' . t('Error Message:') . ' ' . $this->ldapServer->errorMsg('ldap');

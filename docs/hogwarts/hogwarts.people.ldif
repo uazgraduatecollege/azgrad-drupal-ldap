@@ -1,11 +1,74 @@
 version: 1
 
-dn: ou=people,o=openldap
+# The password for all users is "pass".
+
+dn: ou=people,dc=hogwarts,dc=edu
 objectClass: organizationalUnit
 objectClass: top
 ou: people
 
-dn: cn=hpotter,ou=people,o=openldap
+dn: ou=groups,dc=hogwarts,dc=edu
+objectClass: organizationalUnit
+objectClass: top
+ou: groups
+
+dn: cn=users,ou=groups,dc=hogwarts,dc=edu
+objectClass: top
+objectClass: groupOfNames
+member: cn=students,ou=groups,dc=hogwarts,dc=edu
+member: cn=faculty,ou=groups,dc=hogwarts,dc=edu
+member: cn=staff,ou=groups,dc=hogwarts,dc=edu
+cn: users
+
+dn: cn=students,ou=groups,dc=hogwarts,dc=edu
+objectClass: top
+objectClass: groupOfNames
+cn: students
+member: cn=hpotter,ou=people,dc=hogwarts,dc=edu
+member: cn=hgranger,ou=people,dc=hogwarts,dc=edu
+member: cn=rweasley,ou=people,dc=hogwarts,dc=edu
+member: cn=fweasley,ou=people,dc=hogwarts,dc=edu
+member: cn=gweasley,ou=people,dc=hogwarts,dc=edu
+member: cn=dmalfoy,ou=people,dc=hogwarts,dc=edu
+member: cn=ggoyle,ou=people,dc=hogwarts,dc=edu
+
+dn: cn=faculty,ou=groups,dc=hogwarts,dc=edu
+objectClass: top
+objectClass: groupOfNames
+cn: faculty
+member: cn=ssnape,ou=people,dc=hogwarts,dc=edu
+member: cn=adumbledore,ou=people,dc=hogwarts,dc=edu
+member: cn=mmcgonagall,ou=people,dc=hogwarts,dc=edu
+member: cn=spomana,ou=people,dc=hogwarts,dc=edu
+
+dn: cn=staff,ou=groups,dc=hogwarts,dc=edu
+objectClass: top
+objectClass: groupOfNames
+cn: staff
+member: cn=ggoyle,ou=people,dc=hogwarts,dc=edu
+
+dn: cn=gryffindor,ou=groups,dc=hogwarts,dc=edu
+objectClass: top
+objectClass: groupOfNames
+cn: Gryffindor
+member: cn=hpotter,ou=people,dc=hogwarts,dc=edu
+member: cn=hgranger,ou=people,dc=hogwarts,dc=edu
+member: cn=rweasley,ou=people,dc=hogwarts,dc=edu
+member: cn=fweasley,ou=people,dc=hogwarts,dc=edu
+member: cn=gweasley,ou=people,dc=hogwarts,dc=edu
+member: cn=mmcgonagall,ou=people,dc=hogwarts,dc=edu
+member: cn=rhagrid,ou=people,dc=hogwarts,dc=edu
+
+dn: cn=slytherin,ou=groups,dc=hogwarts,dc=edu
+objectClass: top
+objectClass: groupOfNames
+cn: Slytherin
+member: cn=dmalfoy,ou=people,dc=hogwarts,dc=edu
+member: cn=triddle,ou=people,dc=hogwarts,dc=edu
+member: cn=ggoyle,ou=people,dc=hogwarts,dc=edu
+member: cn=ssnape,ou=people,dc=hogwarts,dc=edu
+
+dn: cn=hpotter,ou=people,dc=hogwarts,dc=edu
 objectClass: organizationalPerson
 objectClass: person
 objectClass: inetOrgPerson
@@ -196,9 +259,9 @@ jpegPhoto:: /9j/4AAQSkZJRgABAQEAZABkAAD/4gVASUNDX1BST0ZJTEUAAQEAAAUwYXBwbAIg
  UAFFFFABTn6j6UUUANooooAKKKKACiiigAooooAmhxubIzRRRQB//Z
 mail: Harry.Potter@hogwarts.edu
 uid: 20001
-userPassword:: e1NIQX1TWGtQdURDQUQzTE9Manh0Y1lsQ2xLbjFJSE09
+userPassword: {SHA}nU4eI71bcnBGqeO0t9tXvY1u5oQ=
 
-dn: cn=hgranger,ou=people,o=openldap
+dn: cn=hgranger,ou=people,dc=hogwarts,dc=edu
 objectClass: organizationalPerson
 objectClass: person
 objectClass: inetOrgPerson
@@ -481,9 +544,9 @@ jpegPhoto:: /9j/4AAQSkZJRgABAQEASABIAAD/4gVASUNDX1BST0ZJTEUAAQEAAAUwYXBwbAIg
  3EDHy8jr15x171QnVojIwbJ28ZAH5/T0oorMszY2KHdvZc9SvFFFFAH/9k=
 mail: Hermione.Granger@hogwarts.edu
 uid: 20002
-userPassword:: e1NIQX1TWGtQdURDQUQzTE9Manh0Y1lsQ2xLbjFJSE09
+userPassword:: {SHA}nU4eI71bcnBGqeO0t9tXvY1u5oQ=
 
-dn: cn=rweasley,ou=people,o=openldap
+dn: cn=rweasley,ou=people,dc=hogwarts,dc=edu
 objectClass: organizationalPerson
 objectClass: person
 objectClass: inetOrgPerson
@@ -699,9 +762,9 @@ jpegPhoto:: /9j/4AAQSkZJRgABAQEAZABkAAD/4gVASUNDX1BST0ZJTEUAAQEAAAUwYXBwbAIg
  ckY+jfpRRWGLinQqX7GmGk1Wj6noEqfPxye9FFFfJXPfuf/Z
 mail: Ron.Weasley@hogwarts.edu
 uid: 20003
-userPassword:: e1NIQX1TWGtQdURDQUQzTE9Manh0Y1lsQ2xLbjFJSE09
+userPassword:: {SHA}nU4eI71bcnBGqeO0t9tXvY1u5oQ=
 
-dn: cn=fweasley,ou=people,o=openldap
+dn: cn=fweasley,ou=people,dc=hogwarts,dc=edu
 objectClass: organizationalPerson
 objectClass: person
 objectClass: inetOrgPerson
@@ -966,9 +1029,9 @@ jpegPhoto:: /9j/4AAQSkZJRgABAQEAYABgAAD/4gVASUNDX1BST0ZJTEUAAQEAAAUwYXBwbAIg
  //2Q==
 mail: Fred.Weasley@hogwarts.edu
 uid: 20004
-userPassword:: e1NIQX1TWGtQdURDQUQzTE9Manh0Y1lsQ2xLbjFJSE09
+userPassword:: {SHA}nU4eI71bcnBGqeO0t9tXvY1u5oQ=
 
-dn: cn=gweasley,ou=people,o=openldap
+dn: cn=gweasley,ou=people,dc=hogwarts,dc=edu
 objectClass: organizationalPerson
 objectClass: person
 objectClass: inetOrgPerson
@@ -1100,9 +1163,9 @@ jpegPhoto:: /9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBQgMFBofBgYHCg0dHhwHBwgMFB0j
  7xq5o/wB/8/5Vq9jCO50keGPIBGM49CT/AIVN5Kf3Fqvb9fwH86s1znZY/9k=
 mail: George.Weasley@hogwarts.edu
 uid: 20005
-userPassword:: e1NIQX1TWGtQdURDQUQzTE9Manh0Y1lsQ2xLbjFJSE09
+userPassword:: {SHA}nU4eI71bcnBGqeO0t9tXvY1u5oQ=
 
-dn: cn=dmalfoy,ou=people,o=openldap
+dn: cn=dmalfoy,ou=people,dc=hogwarts,dc=edu
 objectClass: organizationalPerson
 objectClass: person
 objectClass: inetOrgPerson
@@ -1293,9 +1356,9 @@ jpegPhoto:: /9j/4AAQSkZJRgABAQEASABIAAD/4gVASUNDX1BST0ZJTEUAAQEAAAUwYXBwbAIg
  qM4doZFdCJI1cHI7qDRRRXTNWZktj//2Q==
 mail: Draco.Malfoy@hogwarts.edu
 uid: 20006
-userPassword:: e1NIQX1TWGtQdURDQUQzTE9Manh0Y1lsQ2xLbjFJSE09
+userPassword:: {SHA}nU4eI71bcnBGqeO0t9tXvY1u5oQ=
 
-dn: cn=triddle,ou=people,o=openldap
+dn: cn=triddle,ou=people,dc=hogwarts,dc=edu
 objectClass: organizationalPerson
 objectClass: person
 objectClass: inetOrgPerson
@@ -1498,9 +1561,9 @@ jpegPhoto:: /9j/4AAQSkZJRgABAQEAYABgAAD/4gVASUNDX1BST0ZJTEUAAQEAAAUwYXBwbAIg
  8WooooA//9k=
 mail: Tom.Riddle@hogwarts.edu
 uid: 20007
-userPassword:: e1NIQX1TWGtQdURDQUQzTE9Manh0Y1lsQ2xLbjFJSE09
+userPassword:: {SHA}nU4eI71bcnBGqeO0t9tXvY1u5oQ=
 
-dn: cn=ggoyle,ou=people,o=openldap
+dn: cn=ggoyle,ou=people,dc=hogwarts,dc=edu
 objectClass: organizationalPerson
 objectClass: person
 objectClass: inetOrgPerson
@@ -1709,9 +1772,9 @@ jpegPhoto:: /9j/4AAQSkZJRgABAQEASABIAAD/4gVASUNDX1BST0ZJTEUAAQEAAAUwYXBwbAIg
  5jhJISMvECu8rk8AgnkkEE8UUVzWshYdbHlkGUuJQxBIJBI9QaKKK6Eatn/9k=
 mail: Gregory.Goyle@Hogwarts.edu
 uid: 20008
-userPassword:: e1NIQX1TWGtQdURDQUQzTE9Manh0Y1lsQ2xLbjFJSE09
+userPassword:: {SHA}nU4eI71bcnBGqeO0t9tXvY1u5oQ=
 
-dn: cn=ssnape,ou=people,o=openldap
+dn: cn=ssnape,ou=people,dc=hogwarts,dc=edu
 objectClass: organizationalPerson
 objectClass: person
 objectClass: inetOrgPerson
@@ -1863,9 +1926,9 @@ jpegPhoto:: /9j/4AAQSkZJRgABAQEASABIAAD/4gVASUNDX1BST0ZJTEUAAQEAAAUwYXBwbAIg
  yJ30fUCw/0WTOM0UUV88oI9v2jP/Z
 mail: Severus.Snape@Hogwarts.edu
 uid: 20009
-userPassword:: e1NIQX1TWGtQdURDQUQzTE9Manh0Y1lsQ2xLbjFJSE09
+userPassword:: {SHA}nU4eI71bcnBGqeO0t9tXvY1u5oQ=
 
-dn: cn=adumbledore,ou=people,o=openldap
+dn: cn=adumbledore,ou=people,dc=hogwarts,dc=edu
 objectClass: organizationalPerson
 objectClass: person
 objectClass: inetOrgPerson
@@ -2055,9 +2118,9 @@ jpegPhoto:: /9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBQgMFBofBgYHCg0dHhwHBwgMFB0j
  x/9esv7J9fyru3RTjein0BHT6VH9ni/wCeMf5CtVIzcQD/2Q==
 mail: Albus.Dumbledore@Hogwarts.edu
 uid: 20010
-userPassword:: e1NIQX1TWGtQdURDQUQzTE9Manh0Y1lsQ2xLbjFJSE09
+userPassword:: {SHA}nU4eI71bcnBGqeO0t9tXvY1u5oQ=
 
-dn: cn=mmcgonagal,ou=people,o=openldap
+dn: cn=mmcgonagal,ou=people,dc=hogwarts,dc=edu
 objectClass: organizationalPerson
 objectClass: person
 objectClass: inetOrgPerson
@@ -2274,9 +2337,9 @@ jpegPhoto:: /9j/4AAQSkZJRgABAQEASABIAAD/4ghESUNDX1BST0ZJTEUAAQEAAAg0bXNmdAIA
  S/hds5dP8AA7P1iFJs272Zy3r24x0oZIWrXgzlk+s//9k=
 mail: Minerva.Mcgonagal@Hogwarts.edu
 uid: 20011
-userPassword:: e1NIQX1TWGtQdURDQUQzTE9Manh0Y1lsQ2xLbjFJSE09
+userPassword:: {SHA}nU4eI71bcnBGqeO0t9tXvY1u5oQ=
 
-dn: cn=spomana,ou=people,o=openldap
+dn: cn=spomana,ou=people,dc=hogwarts,dc=edu
 objectClass: organizationalPerson
 objectClass: person
 objectClass: inetOrgPerson
@@ -2583,5 +2646,5 @@ jpegPhoto:: /9j/4AAQSkZJRgABAQEAYABgAAD/4gVASUNDX1BST0ZJTEUAAQEAAAUwYXBwbAIg
  KXImP2rjoj//2Q==
 mail: Sprout.Ponoma@Hogwarts.edu
 uid: 20012
-userPassword:: e1NIQX1TWGtQdURDQUQzTE9Manh0Y1lsQ2xLbjFJSE09
+userPassword:: {SHA}nU4eI71bcnBGqeO0t9tXvY1u5oQ=
 

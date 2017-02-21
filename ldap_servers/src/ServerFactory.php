@@ -26,7 +26,7 @@ class ServerFactory {
    */
   public function getServerByIdEnabled($sid) {
     $server = Server::load($sid);
-    if ($server->status()) {
+    if ($server && $server->status()) {
       return $server;
     }
     else {
