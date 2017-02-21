@@ -285,18 +285,7 @@ class ServerForm extends EntityForm {
       '#disabled' => FALSE,
     );
 
-    $form['groups']['grp_object_cat'] = array(
-      '#default_value' => $server->get('grp_object_cat'),
-      '#type' => 'textfield',
-      '#size' => 30,
-      '#title' => t('Name of Group Object Class'),
-      '#description' => t('e.g. groupOfNames, groupOfUniqueNames, group.'),
-      '#states' => array(
-        'visible' => array(
-          ':input[name=grp_unused]' => array('checked' => FALSE),
-        ),
-      ),
-    );
+
 
     $form['groups']['grp_nested'] = array(
       '#default_value' => $server->get('grp_nested'),
@@ -306,6 +295,20 @@ class ServerForm extends EntityForm {
       '#description' => t('If a user is a member of group A and group A is a member of group B,
          user should be considered to be in group A and B.  If your LDAP has nested groups, but you
          want to ignore nesting, leave this unchecked.'),
+      '#states' => array(
+        'visible' => array(
+          ':input[name=grp_unused]' => array('checked' => FALSE),
+        ),
+      ),
+    );
+
+
+    $form['groups']['grp_memb_attr'] = array(
+      '#default_value' => $server->get('grp_memb_attr'),
+      '#type' => 'textfield',
+      '#size' => 30,
+      '#title' => t('LDAP Group Entry Attribute Holding User\'s DN, CN, etc.'),
+      '#description' => t('e.g uniquemember, memberUid'),
       '#states' => array(
         'visible' => array(
           ':input[name=grp_unused]' => array('checked' => FALSE),
@@ -324,18 +327,19 @@ class ServerForm extends EntityForm {
       ),
     );
 
-    $form['groups']['derive_group']['grp_memb_attr'] = array(
-      '#default_value' => $server->get('grp_memb_attr'),
+    $form['groups']['derive_group']['grp_object_cat'] = array(
+      '#default_value' => $server->get('grp_object_cat'),
       '#type' => 'textfield',
       '#size' => 30,
-      '#title' => t('LDAP Group Entry Attribute Holding User\'s DN, CN, etc.'),
-      '#description' => t('e.g uniquemember, memberUid'),
+      '#title' => t('Name of Group Object Class'),
+      '#description' => t('e.g. groupOfNames, groupOfUniqueNames, group.'),
       '#states' => array(
         'visible' => array(
           ':input[name=grp_unused]' => array('checked' => FALSE),
         ),
       ),
     );
+
 
     $form['groups']['derive_group']['grp_memb_attr_match_user_attr'] = array(
       '#default_value' => $server->get('grp_memb_attr_match_user_attr'),

@@ -7,6 +7,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Entity\EntityForm;
 use Drupal\ldap_servers\Entity\Server;
 use Drupal\ldap_servers\Processor\TokenProcessor;
+use Drupal\ldap_user\Helper\LdapConfiguration;
 
 /**
  * Use Drupal\Core\Form\FormBase;.
@@ -465,7 +466,7 @@ class ServerTestForm extends EntityForm {
           $result,
         ];
 
-        if ($this->ldapServer->groupUserMembershipsConfigured()) {
+        if ($this->ldapServer->groupUserMembershipsFromAttributeConfigured()) {
           $groupUserMembershipsFromUserAttributes = $this->ldapServer->groupUserMembershipsFromUserAttr($user, $nested);
           $count = count($groupUserMembershipsFromUserAttributes);
           $settings = array(
@@ -555,6 +556,224 @@ class ServerTestForm extends EntityForm {
     else {
       return $input;
     }
+  }
+
+  /** Unported legacy code. */
+
+  /**
+   * @FIXME: NOT TESTED
+   * add a group entry.
+   *
+   * @Todo: Move out, only called by ServerTestForm.
+   *
+   * @param string $group_dn
+   *   as ldap dn.
+   * @param array $attributes
+   *   in key value form
+   *    $attributes = array(
+   *      "attribute1" = "value",
+   *      "attribute2" = array("value1", "value2"),
+   *      )
+   *
+   * @return boolean success
+   */
+  public function groupAddGroup($group_dn, $attributes = array()) {
+
+    if ($this->ldapServer->dnExists($group_dn, 'boolean')) {
+      return FALSE;
+    }
+
+    $attributes = array_change_key_case($attributes, CASE_LOWER);
+    $objectclass = (empty($attributes['objectclass'])) ? $this->ldapServer->groupObjectClass() : $attributes['objectclass'];
+    $attributes['objectclass'] = $objectclass;
+
+    /**
+     * 2. give other modules a chance to add or alter attributes
+     */
+    $context = array(
+      'action' => 'add',
+      'corresponding_drupal_data' => array($group_dn => $attributes),
+      'corresponding_drupal_data_type' => 'group',
+    );
+    $ldap_entries = array($group_dn => $attributes);
+    \Drupal::moduleHandler()->alter('ldap_entry_pre_provision', $ldap_entries, $this, $context);
+    $attributes = $ldap_entries[$group_dn];
+
+    /**
+     * 4. provision ldap entry
+     *   @todo how is error handling done here?
+     */
+    $ldap_entry_created = $this->ldapServer->createLdapEntry($attributes, $group_dn);
+
+    /**
+     * 5. allow other modules to react to provisioned ldap entry
+     *   @todo how is error handling done here?
+     */
+    if ($ldap_entry_created) {
+      \Drupal::moduleHandler()->invokeAll('ldap_entry_post_provision', [$ldap_entries, $this, $context]);
+      return TRUE;
+    }
+    else {
+      return FALSE;
+    }
+
+  }
+
+  /**
+   * @TODO: NOT TESTED
+   * remove a group entry.
+   *
+   * @param string $group_dn
+   *   as ldap dn.
+   * @param bool $only_if_group_empty
+   *   TRUE = group should not be removed if not empty
+   *   FALSE = groups should be deleted regardless of members.
+   *
+   * @return bool|void
+   */
+  public function groupRemoveGroup($group_dn, $only_if_group_empty = TRUE) {
+
+    if ($only_if_group_empty) {
+      $members = $this->groupAllMembers($group_dn);
+      if (is_array($members) && count($members) > 0) {
+        return FALSE;
+      }
+    }
+    // @FIXME: Incorrect parameters
+    return $this->delete($group_dn);
+
+  }
+
+  /**
+   * @TODO: NOT TESTED
+   * add a member to a group.
+   *
+   * @param string $ldap_user_dn
+   *   as ldap dn.
+   * @param mixed $user
+   *    - drupal user object (stdClass Object)
+   *    - ldap entry of user (array) (with top level keys of 'dn', 'mail', 'sid' and 'attr' )
+   *    - ldap dn of user (array)
+   *    - drupal username of user (string)
+   *
+   * @return bool
+   */
+  public function groupAddMember($group_dn, $user) {
+
+    $user_ldap_entry = $this->ldapServer->userUserToExistingLdapEntry($user);
+    $result = FALSE;
+    if ($user_ldap_entry && $this->ldapServer->groupGroupEntryMembershipsConfigured()) {
+      $add = array();
+      $add[$this->ldapServer->groupMembershipsAttr()] = $user_ldap_entry['dn'];
+      $this->ldapServer->connectAndBindIfNotAlready();
+      $result = @ldap_mod_add($this->connection, $group_dn, $add);
+    }
+
+    return $result;
+  }
+
+  /**
+   * @FIXME: NOT TESTED
+   * Remove a member from a group.
+   *
+   * @param string $group_dn
+   *   as ldap dn.
+   * @param mixed $user
+   *    - drupal user object (stdClass Object)
+   *    - ldap entry of user (array) (with top level keys of 'dn', 'mail', 'sid' and 'attr' )
+   *    - ldap dn of user (array)
+   *    - drupal username of user (string)
+   *
+   * @return bool
+   */
+  public function groupRemoveMember($group_dn, $user) {
+
+    $user_ldap_entry = $this->ldapServer->userUserToExistingLdapEntry($user);
+    $result = FALSE;
+    if ($user_ldap_entry && $this->ldapServer->groupGroupEntryMembershipsConfigured()) {
+      $del = array();
+      $del[$this->ldapServer->groupMembershipsAttr()] = $user_ldap_entry['dn'];
+      $this->ldapServer->connectAndBindIfNotAlready();
+      $result = @ldap_mod_del($this->connection, $group_dn, $del);
+    }
+    return $result;
+  }
+
+  /**
+   * Get all members of a group.
+   *
+   * Currently only used by ServerTestForm and groupRemoveGroup.
+   * @todo: NOT IMPLEMENTED: nested groups
+   *
+   * @param string $group_dn
+   *   as ldap dn.
+   *
+   * @return bool|array
+   *   FALSE on error otherwise array of group members (could be users or groups).
+   */
+  public function groupAllMembers($group_dn) {
+
+    if (!$this->ldapServer->groupGroupEntryMembershipsConfigured()) {
+      return FALSE;
+    }
+    $attributes = array($this->ldapServer->groupMembershipsAttr(), 'cn');
+    $group_entry = $this->ldapServer->dnExists($group_dn, 'ldap_entry', $attributes);
+    if (!$group_entry) {
+      return FALSE;
+    }
+    else {
+      // If attributes weren't returned, don't give false  empty group.
+      if (empty($group_entry['cn'])) {
+        return FALSE;
+      }
+      if (empty($group_entry[$this->ldapServer->groupMembershipsAttr()])) {
+        // If no attribute returned, no members.
+        return array();
+      }
+      $members = $group_entry[$this->ldapServer->groupMembershipsAttr()];
+      if (isset($members['count'])) {
+        unset($members['count']);
+      }
+      return $members;
+    }
+
+    // FIXME: Unreachable statement.
+    $this->ldapServer->groupMembersRecursive($current_group_entries, $all_group_dns, $tested_group_ids, 0, $max_levels, $object_classes);
+
+    return $all_group_dns;
+
+  }
+
+  /**
+   * @param $drupal_username
+   * @param int $direction
+   * @param null $ldap_context
+   * @return array
+   */
+  public function testUserMapping($drupal_username, $direction = NULL, $ldap_context = NULL) {
+    if ($direction == NULL) {
+      $direction = LdapConfiguration::$provisioningDirectionAll;
+      // TODO: Remove unused parameter, if really not needed.
+    }
+    $ldap_user = $this->ldapServer->userUserNameToExistingLdapEntry($drupal_username, $ldap_context);
+
+    $errors = FALSE;
+    if (!$ldap_user) {
+
+      $results[] = t('Failed to find test user %username by searching on  %user_attr = %username.',
+          array(
+            '%username' => $drupal_username,
+            '%user_attr' => self::get('user_attr'),
+          )
+        )
+        . ' ' . t('Error Message:') . ' ' . $this->ldapServer->errorMsg('ldap');
+      $errors = TRUE;
+    }
+    else {
+      $results[] = t('Found test user %username by searching on  %user_attr = %username.',
+        array('%username' => $drupal_username, '%user_attr' => $this->ldapServer->get('user_attr')));
+    }
+    return array($errors, $results, $ldap_user);
   }
 
 }
