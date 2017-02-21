@@ -644,10 +644,16 @@ EOT;
     if (!empty($config->get('ldap_user_conf.ldapUserSyncMappings')[$direction])) {
       // Key could be ldap attribute name or user attribute name.
       foreach ($config->get('ldap_user_conf.ldapUserSyncMappings')[$direction] as $target_attr_token => $mapping) {
-        if (isset($mapping['enabled']) && $mapping['enabled'] && $this->isMappingConfigurable($syncMappings->syncMapping[$direction][$mapping['user_attr']], 'ldap_user')) {
-          $row_id = 'row-' . $row;
-          $rows[$row_id] = $this->getSyncFormRow('update', $direction, $mapping, $user_attr_options, $row_id);
-          $row++;
+        if ($direction == LdapConfiguration::$provisioningDirectionToDrupalUser) {
+          $mapping_key = $mapping['user_attr'];
+        }
+        else {
+          $mapping_key = $mapping['ldap_attr'];
+        }
+        if (isset($mapping['enabled']) && $mapping['enabled'] && $this->isMappingConfigurable($syncMappings->syncMapping[$direction][$mapping_key], 'ldap_user')) {
+            $row_id = 'row-' . $row;
+            $rows[$row_id] = $this->getSyncFormRow('update', $direction, $mapping, $user_attr_options, $row_id);
+            $row++;
         }
       }
     }
