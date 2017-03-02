@@ -48,21 +48,11 @@ class LdapServersSettings extends ConfigFormBase {
       '#title' => t('Require HTTPS on Credential Pages'),
     ];
 
-    $settings = array(
-      '#theme' => 'item_list',
-      '#items' => [
-        t('Use secure pages or secure login module to redirect to SSL (https)'),
-        t('Run entire site with SSL (https)'),
-        t('Remove logon block and redirect all /user page to https via webserver redirect'),
-      ],
-      '#type' => 'ul',
-    );
-
     $form['ssl']['require_ssl_for_credentials'] = array(
       '#type' => 'checkbox',
-      '#title' => t('If checked, modules using LDAP will not allow credentials to
-          be entered on or submitted to HTTP pages, only HTTPS. This option should be used with an
-          approach to get all logon forms to be https, such as:') . drupal_render($settings),
+      '#title' => t('If checked, modules using LDAP will not allow credentials
+       to be entered on or submitted to HTTP pages, only HTTPS. This option
+       is recommended for http/https mixed-mode sites.'),
       '#default_value' => \Drupal::config('ldap_servers.settings')->get('require_ssl_for_credentials'),
     );
 
