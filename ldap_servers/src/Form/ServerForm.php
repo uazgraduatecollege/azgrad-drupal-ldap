@@ -146,8 +146,8 @@ class ServerForm extends EntityForm {
     $form['bind']['bindpw'] = array(
       '#type' => 'password',
       '#title' => t('Password for non-anonymous search'),
-      '#description' => $server->get('bindpw') ? t("Password exists in database.") : t("<strong>Warning: No password exists in database.</strong>"),
-      '#size' => 20,
+      '#placeholder' => $server->get('bindpw') ? t("Password exists in database.") : t("Warning: No password exists in database."),
+      '#size' => 80,
       '#states' => array(
         'enabled' => array(
           ':input[name=bind_method]' => array('value' => strval(Server::$bindMethodServiceAccount)),
@@ -158,9 +158,13 @@ class ServerForm extends EntityForm {
     $form['bind']['bindpw_clear'] = array(
       '#type' => 'checkbox',
       '#title' => t('Clear existing password from database.'),
-      '#description' => t('Check this when switching away from Service Account Binding.'),
+      '#description' => t('Check this when switching away from Service Account binding.'),
       '#default_value' => 0,
     );
+
+    if (empty($server->get('bindpw'))) {
+      $form['bind']['bindpw_clear']['#type'] = 'hidden';
+    }
 
     $form['users'] = array(
       '#type' => 'details',
