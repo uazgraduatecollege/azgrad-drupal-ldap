@@ -271,16 +271,9 @@ class LoginValidator {
       /**
        * #5 TEST PASSWORD
        */
-      $credentials_pass = ($this->serverDrupalUser->bind($this->ldapUser['dn'], $password, FALSE) == Server::LDAP_SUCCESS);
+      $credentials_pass = $this->testUserPassword($password);
+
       if (!$credentials_pass) {
-        if ($this->detailedLogging) {
-          \Drupal::logger('ldap_authentication')->debug('%username : Error testing user credentials on server %id with %bind_method. Error: %err_text', [
-            '%username' => $this->authName,
-            '%bind_method' => $this->serverDrupalUser->getFormattedBind(),
-            '%id' => $this->serverDrupalUser->id(),
-            '%err_text' => $this->serverDrupalUser->errorMsg('ldap'),
-          ]);
-        }
         $authenticationResult = LdapAuthenticationConfiguration::$authFailCredentials;
         // Next server, please.
         continue;
@@ -316,6 +309,26 @@ class LoginValidator {
     }
 
     return $authenticationResult;
+  }
+
+  private function testUserPassword($password) {
+    $loginValid = FALSE;
+    if ($this->serverDrupalUser->get('bind_method') == Server::$bindMethodUser) {
+      $loginValid = TRUE;
+    }
+    elseif ($this->serverDrupalUser->bind($this->ldapUser['dn'], $password, FALSE) == Server::LDAP_SUCCESS) {
+      $loginValid = TRUE;
+    } else {
+      if ($this->detailedLogging) {
+        \Drupal::logger('ldap_authentication')->debug('%username : Error testing user credentials on server %id with %bind_method. Error: %err_text', [
+          '%username' => $this->authName,
+          '%bind_method' => $this->serverDrupalUser->getFormattedBind(),
+          '%id' => $this->serverDrupalUser->id(),
+          '%err_text' => $this->serverDrupalUser->errorMsg('ldap'),
+        ]);
+      }
+    }
+    return $loginValid;
   }
   
   public function testSsoCredentials($authName) {
