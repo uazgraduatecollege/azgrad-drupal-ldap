@@ -243,8 +243,12 @@ class ServerForm extends EntityForm {
     $form['users']['unique_persistent_attr_binary'] = array(
       '#default_value' => $server->get('unique_persistent_attr_binary'),
       '#type' => 'checkbox',
-      '#title' => t('Does PUID hold a binary value?'),
-      '#description' => t(''),
+      '#title' => t('Does the <em>Persistent and Unique User ID Attribute</em>
+         hold a binary value?'),
+      '#description' => t('You need to set this if you are using a binary
+        attribute  such as objectSid in ActiveDirectory for the PUID.<br> If you
+        don\'t want this consider switching to another attribute, such as
+        samaccountname.'),
     );
 
     $form['users']['user_dn_expression'] = array(
