@@ -140,16 +140,16 @@ class ServerTestForm extends EntityForm {
                 continue;
               }
               elseif ($i == 0 && $count == 1) {
-                $token = TokenProcessor::$token_pre . $key . TokenProcessor::$token_post;
+                $token = TokenProcessor::PREFIX . $key . TokenProcessor::SUFFIX;
               }
               elseif ($i == 0 && $count > 1) {
-                $token = TokenProcessor::$token_pre . $key . TokenProcessor::$token_del . '0' . TokenProcessor::$token_post;
+                $token = TokenProcessor::PREFIX . $key . TokenProcessor::DELIMITER . '0' . TokenProcessor::SUFFIX;
               }
               elseif (($i == $count - 1) && $count > 1) {
-                $token = TokenProcessor::$token_pre . $key . TokenProcessor::$token_del . 'last' . TokenProcessor::$token_post;
+                $token = TokenProcessor::PREFIX . $key . TokenProcessor::DELIMITER . 'last' . TokenProcessor::SUFFIX;
               }
               elseif ($count > 1) {
-                $token = TokenProcessor::$token_pre . $key . TokenProcessor::$token_del . $i . TokenProcessor::$token_post;
+                $token = TokenProcessor::PREFIX . $key . TokenProcessor::DELIMITER . $i . TokenProcessor::SUFFIX;
               }
               else {
                 $token = "";
@@ -412,7 +412,7 @@ class ServerTestForm extends EntityForm {
 
     list($has_errors, $more_results, $ldap_user) = $this->testUserMapping($values['testing_drupal_username']);
     $tokenHelper = new TokenProcessor();
-    $tokens = ($ldap_user && isset($ldap_user['attr'])) ? $tokenHelper->tokenizeEntry($ldap_user['attr'], 'all', TokenProcessor::$token_pre, TokenProcessor::$token_post) : [];
+    $tokens = ($ldap_user && isset($ldap_user['attr'])) ? $tokenHelper->tokenizeEntry($ldap_user['attr'], 'all', TokenProcessor::PREFIX, TokenProcessor::SUFFIX) : [];
     foreach ($tokens as $key => $value) {
       $results_tables['tokens'][] = [$key, $this->binaryCheck($value)];
     }

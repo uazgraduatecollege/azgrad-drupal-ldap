@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\ldap_servers;
+namespace Drupal\ldap_servers\Helper;
 
 /**
  *
@@ -23,7 +23,7 @@ class ConversionHelper {
    *
    * @return array Array $values, but escaped
    */
-  public function escape_filter_value($values) {
+  public static function escapeFilterValue($values) {
     // Parameter validation.
     $input_is_scalar = is_scalar($values);
     if ($input_is_scalar) {
@@ -33,11 +33,11 @@ class ConversionHelper {
     foreach ($values as $key => $val) {
       // Might be a Drupal field.
       if (isset($val->value)) {
-        $is_field = TRUE;
+        $isField = TRUE;
         $val = $val->getValue();
       }
       else {
-        $is_field = FALSE;
+        $isField = FALSE;
       }
       // Escaping of filter meta characters.
       $val = str_replace('\\', '\5c', $val);
@@ -46,13 +46,13 @@ class ConversionHelper {
       $val = str_replace(')', '\29', $val);
 
       // ASCII < 32 escaping.
-      $val = $this->asc2hex32($val);
+      $val = self::asc2hex32($val);
 
       if (NULL === $val) {
         // Apply escaped "null" if string is empty.
         $val = '\0';
       }
-      if ($is_field) {
+      if ($isField) {
         $values[$key]->setValue($val);
       }
       else {
@@ -80,19 +80,24 @@ class ConversionHelper {
    *
    * @return array Array $values, but unescaped
    */
-  public function unescape_filter_value($values) {
+  public static function unescapeFilterValue($values) {
     // Parameter validation.
-    $is_scalar = is_scalar($values);
+    $inputIsScalar = is_scalar($values);
     if (!is_array($values)) {
       $values = array($values);
     }
 
     foreach ($values as $key => $value) {
       // Translate hex code into ascii.
-      $values[$key] = $this->hex2asc($value);
+      $values[$key] = self::hex2asc($value);
     }
 
-    return ($is_scalar) ? $values[0] : $values;
+    if (($inputIsScalar)) {
+      return $values[0];
+    }
+    else {
+      return $values;
+    }
   }
 
   /**
@@ -110,10 +115,10 @@ class ConversionHelper {
    *
    * @return array The array $values, but escaped
    */
-  public function escape_dn_value($values) {
+  public static function escapeDnValue($values) {
     // Parameter validation.
-    $input_is_scalar = is_scalar($values);
-    if ($input_is_scalar) {
+    $inputIsScalar = is_scalar($values);
+    if ($inputIsScalar) {
       $values = array($values);
     }
 
@@ -130,7 +135,7 @@ class ConversionHelper {
       $val = str_replace('=', '\=', $val);
 
       // ASCII < 32 escaping.
-      $val = $this->asc2hex32($val);
+      $val = self::asc2hex32($val);
 
       // Convert all leading and trailing spaces to sequences of \20.
       if (preg_match('/^(\s*)(.+?)(\s*)$/', $val, $matches)) {
@@ -150,7 +155,7 @@ class ConversionHelper {
       $values[$key] = $val;
     }
 
-    if (($input_is_scalar)) {
+    if (($inputIsScalar)) {
       return $values[0];
     }
     else {
@@ -171,8 +176,8 @@ class ConversionHelper {
    *
    * @static
    */
-  public function unescape_dn_value($values) {
-    $is_scalar = is_scalar($values);
+  public static function unescapeDnValue($values) {
+    $inputIsScalar = is_scalar($values);
 
     // Parameter validation.
     if (!is_array($values)) {
@@ -192,10 +197,15 @@ class ConversionHelper {
       $val = str_replace('\=', '=', $val);
 
       // Translate hex code into ascii.
-      $values[$key] = $this->hex2asc($val);
+      $values[$key] = self::hex2asc($val);
     }
 
-    return ($is_scalar) ? $values[0] : $values;
+    if (($inputIsScalar)) {
+      return $values[0];
+    }
+    else {
+      return $values;
+    }
   }
 
   /**

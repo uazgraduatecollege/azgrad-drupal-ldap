@@ -4,6 +4,7 @@ namespace Drupal\ldap_servers;
 
 /**
  * Class for enabling rebind functionality for following referrrals.
+ * @FIXME: Unused class.
  */
 class LdapServersRebindHandler {
 

@@ -6,9 +6,9 @@ use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\file\Entity\File;
 use Drupal\file\Plugin\Field\FieldType\FileFieldItemList;
-use Drupal\ldap_servers\ConversionHelper;
+use Drupal\ldap_servers\Helper\ConversionHelper;
 use Drupal\ldap_servers\LdapProtocol;
-use Drupal\ldap_servers\MassageFunctions;
+use Drupal\ldap_servers\Helper\MassageAttributes;
 use Drupal\ldap_servers\ServerInterface;
 use Drupal\ldap_servers\Processor\TokenProcessor;
 use Drupal\user\Entity\User;
@@ -1086,8 +1086,8 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
       if (empty($basedn)) {
         continue;
       }
-      $massager = new MassageFunctions();
-      $filter = '(' . $this->get('user_attr') . '=' . $massager->massage_text($drupal_user_name, 'attr_value', $massager::$query_ldap) . ')';
+      $massager = new MassageAttributes();
+      $filter = '(' . $this->get('user_attr') . '=' . $massager->queryLdapAttributeValue($drupal_user_name) . ')';
 
       $result = $this->search($basedn, $filter, $attributes);
       if (!$result || !isset($result['count']) || !$result['count']) {
@@ -1754,8 +1754,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
     foreach ($pairs as $p) {
       $pair = explode('=', $p);
       if (Unicode::strtolower(trim($pair[0])) == $rdn) {
-        $helper = new ConversionHelper();
-        $rdn_value = $helper->unescape_dn_value(trim($pair[1]));
+        $rdn_value = ConversionHelper::unescapeDnValue(trim($pair[1]));
         break;
       }
     }
@@ -1781,8 +1780,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
     foreach ($pairs as $p) {
       $pair = explode('=', $p);
       if (Unicode::strtolower(trim($pair[0])) == $rdn) {
-        $helper = new ConversionHelper();
-        $rdn_values[] = $helper->unescape_dn_value(trim($pair[1]));
+        $rdn_values[] = ConversionHelper::unescapeDnValue(trim($pair[1]));
         break;
       }
     }

@@ -5,7 +5,7 @@ namespace Drupal\ldap_authentication\Controller;
 use Drupal\authorization\Entity\AuthorizationProfile;
 use Drupal\ldap_authentication\Helper\LdapAuthenticationConfiguration;
 use Drupal\ldap_servers\Entity\Server;
-use Drupal\ldap_servers\MassageFunctions;
+use Drupal\ldap_servers\Helper\MassageAttributes;
 use Drupal\ldap_user\Helper\ExternalAuthenticationHelper;
 use Drupal\ldap_user\Helper\LdapConfiguration;
 use Drupal\ldap_user\Processor\DrupalUserProcessor;
@@ -671,8 +671,9 @@ class LoginValidator {
      * If account_name_attr is set, Drupal username is different than authName.
      */
     if (!empty($this->serverDrupalUser->get('account_name_attr'))) {
-      $massager = new MassageFunctions();
-      $userNameFromAttribute = $this->ldapUser['attr'][$massager->massage_text($this->serverDrupalUser->get('account_name_attr'), 'attr_name', $massager::$query_array)][0];
+      $massager = new MassageAttributes();
+      $processedName = $massager->processAttributeName($this->serverDrupalUser->get('account_name_attr'));
+      $userNameFromAttribute = $this->ldapUser['attr'][$processedName][0];
       if (!$userNameFromAttribute) {
         \Drupal::logger('ldap_authentication')
           ->error('Derived drupal username from attribute %account_name_attr returned no username for authname %authname.', [

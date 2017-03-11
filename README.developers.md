@@ -22,29 +22,19 @@ disabled so that group DNs are queried.
 
 ### Case Sensitivity and Character Escaping in LDAP Modules
 
-The class MassageFunctions should be used for dealing with case sensitivity
-and character escaping consistently.
+The class MassageAttributes should be used for dealing with case sensitivity
+and character escaping consistently. See the functions for further information.
 
-The general rule is codified in MassageFunctions which is:
-* escape filter values and attribute values when querying ldap
-* use unescaped, lower case attribute names when storing attribute names in arrays (as keys or values), databases, or object properties.
-* use unescaped, mixed case attribute values when storing attribute values in arrays (as keys or values), databases, or object properties.
-
-So a filter might be built as follows:
+A filter might be built as follows:
 
 ```php
-$massage = new MassageFunctions;
-$username = $massage->massage_text($username, 'attr_value', $massage::$query_ldap)
-$objectclass = $massage->massage_text($objectclass, 'attr_value', $massage::$query_ldap)
+$massage = new MassageAttributes;
+$username = $massage->queryLdapAttributeValue($username);
+$objectclass = $massage->processAttributeName($item);
 $filter = "(&(cn=$username)(objectClass=$objectclass))";
 ```
 
-The following functions are also available:
-
-* escape_dn_value()
-* unescape_dn_value()
-* unescape_filter_value()
-* unescape_filter_value()
+See ConversionHelper for working with fields directly.
 
 ### Common variables used in ldap_* and their structures
 

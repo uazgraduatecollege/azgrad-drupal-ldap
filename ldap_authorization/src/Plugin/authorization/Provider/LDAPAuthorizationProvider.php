@@ -6,9 +6,8 @@ use Drupal\authorization\AuthorizationSkipAuthorization;
 use Drupal\authorization\Entity\AuthorizationProfile;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Form\FormStateInterface;
-
 use Drupal\authorization\Provider\ProviderPluginBase;
-use Drupal\ldap_servers\ConversionHelper;
+use Drupal\ldap_servers\Helper\ConversionHelper;
 use Drupal\ldap_servers\Entity\Server;
 use Drupal\ldap_user\Helper\ExternalAuthenticationHelper;
 
@@ -276,8 +275,7 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
         if (count($attr_parts) > 0) {
           $first_part = explode('=', $attr_parts[0]);
           if (count($first_part) > 1) {
-            $helper = new ConversionHelper();
-            $authorization_id = $helper->unescape_dn_value(trim($first_part[1]));
+            $authorization_id = ConversionHelper::unescapeDnValue(trim($first_part[1]));
           }
         }
         $new_key = Unicode::strtolower($authorization_id);
