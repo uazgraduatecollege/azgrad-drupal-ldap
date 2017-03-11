@@ -7,20 +7,8 @@ use Drupal\user\Entity\User;
 
 class LdapAuthenticationConfiguration {
 
-
-  // Signifies both LDAP and Drupal authentication are allowed.
-  public static $mode_mixed = 1;
-  // Signifies only LDAP authentication is allowed.
-  public static $mode_exclusive = 2;
-
-  public static $authFailConnect = 1;
-  public static $authFailBind = 2;
-  public static $authFailFind = 3;
-  public static $authFailDisallowed = 4;
-  public static $authFailCredentials = 5;
-  public static $authSuccess = 6;
-  public static $authFailGeneric = 7;
-  public static $authFailServer = 8;
+  const MODE_MIXED = 1;
+  const MODE_EXCLUSIVE = 2;
 
   public static $emailUpdateOnLdapChangeEnableNotify = 1;
   public static $emailUpdateOnLdapChangeEnable = 2;

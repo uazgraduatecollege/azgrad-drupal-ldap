@@ -27,7 +27,7 @@ class RouteSubscriber extends RouteSubscriberBase {
     $user = \Drupal::currentUser();
     if ($user->isAnonymous()) {
 
-      if (\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.authenticationMode') == LdapAuthenticationConfiguration::$mode_mixed) {
+      if (\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.authenticationMode') == LdapAuthenticationConfiguration::MODE_MIXED) {
         return AccessResult::allowed();
       }
 

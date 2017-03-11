@@ -39,10 +39,10 @@ function ldap_authentication_menu_alter(&$items) {
  */
 function ldap_authentication_show_ldap_help_link($user = NULL) {
   $user = \Drupal::currentUser();
-  if (\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.authenticationMode') == LdapAuthenticationConfiguration::$mode_mixed) {
+  if (\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.authenticationMode') == LdapAuthenticationConfiguration::MODE_MIXED) {
     return (ldap_authentication_ldap_authenticated($user));
   }
-  elseif (\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.authenticationMode') == LdapAuthenticationConfiguration::$mode_exclusive) {
+  elseif (\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.authenticationMode') == LdapAuthenticationConfiguration::MODE_EXCLUSIVE) {
     if ($user->isAnonymous() || ldap_authentication_ldap_authenticated($user)) {
       return TRUE;
     }

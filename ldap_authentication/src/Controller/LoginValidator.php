@@ -15,6 +15,15 @@ use Drupal\Core\Form\FormStateInterface;
 
 class LoginValidator {
 
+  const AUTHENTICATION_FAILURE_CONNECTION = 1;
+  const AUTHENTICATION_FAILURE_BIND = 2;
+  const AUTHENTICATION_FAILURE_FIND = 3;
+  const AUTHENTICATION_FAILURE_DISALLOWED = 4;
+  const AUTHENTICATION_FAILURE_CREDENTIALS = 5;
+  const AUTHENTICATION_SUCCESS = 6;
+  const AUTHENTICATION_FAILURE_GENERIC = 7;
+  const AUTHENTICATION_FAILURE_SERVER = 8;
+
   protected $authName = FALSE;
 
   protected $drupalUserAuthMapped = FALSE;
@@ -61,12 +70,12 @@ class LoginValidator {
 
     $credentialsAuthenticationResult = $this->testCredentials($this->formState->getValue('pass'));
 
-    if ($credentialsAuthenticationResult == LdapAuthenticationConfiguration::$authFailFind &&
-      \Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.authenticationMode') == LdapAuthenticationConfiguration::$mode_exclusive) {
+    if ($credentialsAuthenticationResult == self::AUTHENTICATION_FAILURE_FIND &&
+      \Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.authenticationMode') == LdapAuthenticationConfiguration::MODE_EXCLUSIVE) {
       $this->formState->setErrorByName('non_ldap_login_not_allowed', t('User disallowed'));
     }
 
-    if ($credentialsAuthenticationResult != LdapAuthenticationConfiguration::$authSuccess) {
+    if ($credentialsAuthenticationResult != self::AUTHENTICATION_SUCCESS) {
       return FALSE;
     }
 
@@ -127,12 +136,12 @@ class LoginValidator {
 
     $credentialsAuthenticationResult = $this->testSsoCredentials($this->authName);
 
-    if ($credentialsAuthenticationResult == LdapAuthenticationConfiguration::$authFailFind &&
-      \Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.authenticationMode') == LdapAuthenticationConfiguration::$mode_exclusive) {
+    if ($credentialsAuthenticationResult == self::AUTHENTICATION_FAILURE_FIND &&
+      \Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.authenticationMode') == LdapAuthenticationConfiguration::MODE_EXCLUSIVE) {
       $this->formState->setErrorByName('non_ldap_login_not_allowed', t('User disallowed'));
     }
 
-    if ($credentialsAuthenticationResult != LdapAuthenticationConfiguration::$authSuccess) {
+    if ($credentialsAuthenticationResult != self::AUTHENTICATION_SUCCESS) {
       return FALSE;
     }
 
@@ -212,11 +221,11 @@ class LoginValidator {
    *
    */
   private function testCredentials($password) {
-    $authenticationResult = LdapAuthenticationConfiguration::$authFailGeneric;
+    $authenticationResult = self::AUTHENTICATION_FAILURE_GENERIC;
     $factory = \Drupal::service('ldap.servers');
 
     foreach (LdapAuthenticationConfiguration::getEnabledAuthenticationServers() as $server) {
-      $authenticationResult = LdapAuthenticationConfiguration::$authFailGeneric;
+      $authenticationResult = self::AUTHENTICATION_FAILURE_GENERIC;
       $this->serverDrupalUser = $factory->getServerById($server);
       if ($this->detailedLogging) {
         \Drupal::logger('ldap_authentication')->debug('%username : Trying server %id with %bind_method', [
@@ -253,17 +262,17 @@ class LoginValidator {
           );
         }
         if ($this->serverDrupalUser->ldapErrorNumber()) {
-          $authenticationResult = LdapAuthenticationConfiguration::$authFailServer;
+          $authenticationResult = self::AUTHENTICATION_FAILURE_SERVER;
           break;
         }
-        $authenticationResult = LdapAuthenticationConfiguration::$authFailFind;
+        $authenticationResult = self::AUTHENTICATION_FAILURE_FIND;
         // Next server, please.
         continue;
       }
 
 
       if (!$this->checkAllowedExcluded($this->authName, $this->ldapUser)) {
-        $authenticationResult = LdapAuthenticationConfiguration::$authFailDisallowed;
+        $authenticationResult = self::AUTHENTICATION_FAILURE_DISALLOWED;
         // Regardless of how many servers, disallowed user fails.
         break;
       }
@@ -274,12 +283,12 @@ class LoginValidator {
       $credentials_pass = $this->testUserPassword($password);
 
       if (!$credentials_pass) {
-        $authenticationResult = LdapAuthenticationConfiguration::$authFailCredentials;
+        $authenticationResult = self::AUTHENTICATION_FAILURE_CREDENTIALS;
         // Next server, please.
         continue;
       }
       else {
-        $authenticationResult = LdapAuthenticationConfiguration::$authSuccess;
+        $authenticationResult = self::AUTHENTICATION_SUCCESS;
         if ($this->serverDrupalUser->get('bind_method') == Server::$bindMethodAnonUser) {
           // After successful bind, lookup user again to get private attributes.
           $this->ldapUser = $this->serverDrupalUser->userUserNameToExistingLdapEntry($this->authName);
@@ -295,16 +304,15 @@ class LoginValidator {
     }  // end loop through servers
 
     if ($this->detailedLogging) {
-      \Drupal::logger('ldap_authentication')->debug('%username : Authentication result is %auth_result (%err_text)',
+      \Drupal::logger('ldap_authentication')->debug('Authentication result for %username is: %err_text',
         [
           '%username' => $this->authName,
-          '%auth_result' => $authenticationResult,
-          '%err_text' => $this->_ldap_authentication_err_text($authenticationResult),
+          '%err_text' => $this->authenticationHelpText($authenticationResult),
         ]
       );
     }
 
-    if ($authenticationResult != LdapAuthenticationConfiguration::$authSuccess) {
+    if ($authenticationResult != self::AUTHENTICATION_SUCCESS) {
       $this->ldap_authentication_fail_response($authenticationResult);
     }
 
@@ -332,13 +340,13 @@ class LoginValidator {
   }
   
   public function testSsoCredentials($authName) {
-    //TODO: Verify if $mode_exclusive check is a regression.
-    $authenticationResult = LdapAuthenticationConfiguration::$authFailGeneric;
+    //TODO: Verify if MODE_EXCLUSIVE check is a regression.
+    $authenticationResult = self::AUTHENTICATION_FAILURE_GENERIC;
     $ldap_server = NULL;
     $factory = \Drupal::service('ldap.servers');
 
     foreach (LdapAuthenticationConfiguration::getEnabledAuthenticationServers() as $server) {
-      $authenticationResult = LdapAuthenticationConfiguration::$authFailGeneric;
+      $authenticationResult = self::AUTHENTICATION_FAILURE_GENERIC;
       $this->serverDrupalUser = $factory->getServerById($server);
       if ($this->detailedLogging) {
         \Drupal::logger('ldap_authentication')->debug(
@@ -374,21 +382,21 @@ class LoginValidator {
           );
         }
         if ($this->serverDrupalUser->ldapErrorNumber()) {
-          $authenticationResult = LdapAuthenticationConfiguration::$authFailServer;
+          $authenticationResult = self::AUTHENTICATION_FAILURE_SERVER;
           break;
         }
-        $authenticationResult = LdapAuthenticationConfiguration::$authFailFind;
+        $authenticationResult = self::AUTHENTICATION_FAILURE_FIND;
         // Next server, please.
         continue;
       }
 
       if (!$this->checkAllowedExcluded($this->authName, $this->ldapUser)) {
-        $authenticationResult = LdapAuthenticationConfiguration::$authFailDisallowed;
+        $authenticationResult = self::AUTHENTICATION_FAILURE_DISALLOWED;
         // Regardless of how many servers, disallowed user fails.
         break;
       }
       
-      $authenticationResult = LdapAuthenticationConfiguration::$authSuccess;
+      $authenticationResult = self::AUTHENTICATION_SUCCESS;
       if ($this->serverDrupalUser->get('bind_method') == Server::$bindMethodAnonUser) {
         // After successful bind, lookup user again to get private attributes.
         $this->ldapUser = $this->serverDrupalUser->userUserNameToExistingLdapEntry($authName);
@@ -403,11 +411,10 @@ class LoginValidator {
     }  // end loop through servers
     
     if ($this->detailedLogging) {
-      \Drupal::logger('ldap_authentication')->debug('%username : Authentication result %auth_result (%err_text)',
+      \Drupal::logger('ldap_authentication')->debug('Authentication result for %username is: %err_text',
         [
           '%username' => $authName,
-          '%auth_result' => $authenticationResult,
-          '%err_text' => $this->_ldap_authentication_err_text($authenticationResult),
+          '%err_text' => $this->authenticationHelpText($authenticationResult),
         ]
       );
     }
@@ -415,27 +422,29 @@ class LoginValidator {
   }
 
   /**
-   *
+   * @param $authenticationResult
    */
-  private function ldap_authentication_fail_response($authentication_result) {
+  private function ldap_authentication_fail_response($authenticationResult) {
     // Fail scenario 1.  ldap auth exclusive and failed  throw error so no other authentication methods are allowed.
-    if (\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.authenticationMode') == LdapAuthenticationConfiguration::$mode_exclusive) {
+    if (\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.authenticationMode') == LdapAuthenticationConfiguration::MODE_EXCLUSIVE) {
       if ($this->detailedLogging) {
         \Drupal::logger('ldap_authentication')->debug('%username : setting error because failed at ldap and
         exclusive authentication is set to true.  So need to stop authentication of Drupal user that is not user 1.
-        error message: %err_text', ['%username' => $this->authName, '%err_text' =>$this->_ldap_authentication_err_text($authentication_result)]
+        error message: %err_text', [
+          '%username' => $this->authName, 
+            '%err_text' =>$this->authenticationHelpText($authenticationResult)
+          ]
         );
       }
-      drupal_set_message(t('Error: %err_text', ['%err_text' => $this->_ldap_authentication_err_text($authentication_result)]), "error");
+      drupal_set_message(t('Error: %err_text', ['%err_text' => $this->authenticationHelpText($authenticationResult)]), "error");
     }
     else {
       // Fail scenario 2.  simply fails ldap.  return false, but don't throw form error
       // don't show user message, may be using other authentication after this that may succeed.
       if ($this->detailedLogging) {
         \Drupal::logger('ldap_authentication')->debug('%username : Failed ldap authentication.
-        User may have authenticated successfully by other means in a mixed authentication site.
-        LDAP Authentication Error #: %auth_result  error message: %err_text',
-          ['%auth_result' => $authentication_result, '%err_text' =>$this->_ldap_authentication_err_text($authentication_result)]
+        User may have authenticated successfully by other means in a mixed authentication site. Response: %err_text',
+          ['%err_text' =>$this->authenticationHelpText($authenticationResult)]
         );
       }
     }
@@ -448,35 +457,32 @@ class LoginValidator {
    *
    * @return string human readable error text
    */
-  function _ldap_authentication_err_text($error) {
-
-    $msg = t('unknown error: ' . $error);
+  private function authenticationHelpText($error) {
+    
     switch ($error) {
-      case LdapAuthenticationConfiguration::$authFailConnect:
+      case self::AUTHENTICATION_FAILURE_CONNECTION:
         $msg = t('Failed to connect to ldap server');
         break;
-
-      case LdapAuthenticationConfiguration::$authFailBind:
+      case self::AUTHENTICATION_FAILURE_BIND:
         $msg = t('Failed to bind to ldap server');
         break;
-
-      case LdapAuthenticationConfiguration::$authFailDisallowed:
+      case self::AUTHENTICATION_FAILURE_DISALLOWED:
         $msg = t('User disallowed');
         break;
-
-      case LdapAuthenticationConfiguration::$authFailFind:
-      case LdapAuthenticationConfiguration::$authFailCredentials:
-      case LdapAuthenticationConfiguration::$authFailGeneric:
+      case self::AUTHENTICATION_FAILURE_FIND:
+      case self::AUTHENTICATION_FAILURE_CREDENTIALS:
+      case self::AUTHENTICATION_FAILURE_GENERIC:
         $msg = t('Sorry, unrecognized username or password.');
         break;
-
-      case LdapAuthenticationConfiguration::$authFailServer:
+      case self::AUTHENTICATION_FAILURE_SERVER:
         $msg = t('Authentication Server or Configuration Error.');
         break;
-      case LdapAuthenticationConfiguration::$authSuccess:
+      case self::AUTHENTICATION_SUCCESS:
         $msg = t('Authentication successful');
         break;
-
+      default:
+        $msg = t('unknown error: ' . $error);
+        break;
     }
 
     return $msg;
@@ -622,7 +628,7 @@ class LoginValidator {
 
     if (!empty($this->formState->get('uid'))) {
       if (\Drupal::config('ldap_authentication.settings')
-          ->get('ldap_authentication_conf.authenticationMode') == LdapAuthenticationConfiguration::$mode_mixed
+          ->get('ldap_authentication_conf.authenticationMode') == LdapAuthenticationConfiguration::MODE_MIXED
       ) {
         if ($this->detailedLogging) {
           \Drupal::logger('ldap_authentication')->debug(
@@ -802,7 +808,7 @@ class LoginValidator {
   private function connectToServer() {
     $result = $this->serverDrupalUser->connect();
     if ($result != Server::LDAP_SUCCESS) {
-      $authenticationResult = LdapAuthenticationConfiguration::$authFailConnect;
+      $authenticationResult = self::AUTHENTICATION_FAILURE_CONNECTION;
       if ($this->detailedLogging) {
         \Drupal::logger('ldap_authentication')
           ->debug('%username : Failed connecting to %id.  Error: %err_msg', [
@@ -888,10 +894,10 @@ class LoginValidator {
       }
 
       if ($this->serverDrupalUser->get('bind_method') == Server::$bindMethodUser) {
-        return  LdapAuthenticationConfiguration::$authFailCredentials;
+        return  self::AUTHENTICATION_FAILURE_CREDENTIALS;
       }
       else {
-        return  LdapAuthenticationConfiguration::$authFailBind;
+        return  self::AUTHENTICATION_FAILURE_BIND;
 
       }
     }
@@ -932,9 +938,9 @@ class LoginValidator {
         $tokens['%err_text'] = NULL;
       }
       if ($this->serverDrupalUser->get('bind_method') == Server::$bindMethodUser) {
-        return LdapAuthenticationConfiguration::$authFailCredentials;
+        return self::AUTHENTICATION_FAILURE_CREDENTIALS;
       } else {
-        return LdapAuthenticationConfiguration::$authFailBind;
+        return self::AUTHENTICATION_FAILURE_BIND;
       }
     }
     return 'success';
