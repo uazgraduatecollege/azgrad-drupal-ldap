@@ -4,3 +4,7 @@ services:
     tags:
       - { name: event_subscriber }
 
+  ldap_authentication.email_template:
+    class: Drupal\ldap_authentication\Routing\EmailTemplateService
+    tags:
+      - { name: event_subscriber }

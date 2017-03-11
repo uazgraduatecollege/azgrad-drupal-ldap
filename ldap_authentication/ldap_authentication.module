@@ -222,10 +222,11 @@ function ldap_authentication_user_login_authenticate_validate($form, FormStateIn
  * @todo if form is being generated on non https and is set in preferences, set warning and end form development
  */
 function _ldap_authentication_login_form_alter(&$form, &$form_state, $form_id) {
-
   if (!LdapAuthenticationConfiguration::hasEnabledAuthenticationServers()) {
     return;
   }
+
+  $config = \Drupal::config('ldap_authentication.settings');
 
   /**
    * Add validate function to test for ldap authentication
@@ -242,7 +243,7 @@ function _ldap_authentication_login_form_alter(&$form, &$form_state, $form_id) {
    */
 
   if (@in_array('::validateAuthentication', $form['#validate']) &&
-    \Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.authenticationMode')) {
+    $config->get('ldap_authentication_conf.authenticationMode')) {
     $key = array_search('::validateAuthentication', $form['#validate']);
     $form['#validate'][$key] = 'ldap_authentication_core_override_user_login_authenticate_validate';
     array_splice($form['#validate'], $key + 1, 0, 'ldap_authentication_user_login_authenticate_validate');
@@ -251,11 +252,15 @@ function _ldap_authentication_login_form_alter(&$form, &$form_state, $form_id) {
   _ldap_authentication_disable_http_check($form);
 
   // Add help information for entering in username/password.
-  if (\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.loginUIUsernameTxt')) {
+  if ($config->get('ldap_authentication_conf.loginUIUsernameTxt')) {
     $form['name']['#description'] = t(\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.loginUIUsernameTxt'));
   }
-  if (\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.loginUIPasswordTxt')) {
+  if ($config->get('ldap_authentication_conf.loginUIPasswordTxt')) {
     $form['pass']['#description'] = t(\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.loginUIPasswordTxt'));
+  }
+
+  if ($config->get('ldap_authentication_conf.emailTemplateUsageRedirectOnLogin')) {
+    $form['#submit'][] = 'Drupal\ldap_authentication\Routing\EmailTemplateService::checkForEmailTemplate';
   }
 }
 

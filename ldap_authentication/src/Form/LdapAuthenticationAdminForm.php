@@ -181,8 +181,6 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
     $form['email'] = [
       '#type' => 'fieldset',
       '#title' => t('Email'),
-      '#collapsible' => TRUE,
-      '#collapsed' => FALSE,
     ];
 
     $form['email']['emailOption'] = [
@@ -197,7 +195,7 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
       ],
     ];
 
-    $form['email']['emailUpdate'] = array(
+    $form['email']['emailUpdate'] = [
       '#type' => 'radios',
       '#title' => t('Email Update'),
       '#required' => 1,
@@ -207,15 +205,75 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
         LdapAuthenticationConfiguration::$emailUpdateOnLdapChangeEnable => t('Update stored email if LDAP email differs at login but don\'t notify user.'),
         LdapAuthenticationConfiguration::$emailUpdateOnLdapChangeDisable => t('Don\'t update stored email if LDAP email differs at login.'),
       ],
-    );
+    ];
 
-    $form['password'] = array(
+
+    $form['email']['template'] = [
+      '#type' => 'fieldset',
+      '#title' => t('Email Templates'),
+    ];
+
+    $form['email']['template']['emailTemplateHandling'] = [
+      '#type' => 'radios',
+      '#title' => t('Email Template Handling'),
+      '#required' => 1,
+      '#default_value' => $config->get('ldap_authentication_conf.emailTemplateHandling'),
+      '#options' => [
+        'none' => t('Never use the template.'),
+        'if_empty' => t('Use the template if no email address was provided by the LDAP server.'),
+        'always' => t('Always use the template.'),
+      ]
+    ];
+
+    $form['email']['template']['emailTemplate'] = [
+      '#type' => 'textfield',
+      '#title' => t('Email Template'),
+      '#required' => 0,
+      '#default_value' => $config->get('ldap_authentication_conf.emailTemplate'),
+    ];
+
+    $form['email']['template']['templateUsageResolveConflict'] = [
+      '#type' => 'checkbox',
+      '#title' => t('If a Drupal account already exists with the same email, but different account name, use the email template instead of the LDAP email.'),
+      '#default_value' => $config->get('ldap_authentication_conf.emailTemplateUsageResolveConflict'),
+    ];
+
+    $form['email']['template']['templateUsageNeverUpdate'] = [
+      '#type' => 'checkbox',
+      '#title' => t('Ignore the Email Update settings and never update the stored email if the template is used.'),
+      '#default_value' => $config->get('ldap_authentication_conf.emailTemplateUsageNeverUpdate'),
+    ];
+
+    $form['email']['prompts'] = [
+      '#type' => 'fieldset',
+      '#title' => t('User Email Prompt'),
+      '#description' => t('These settings allow the user to fill in their email address after logging in if the template was used to generate their email address.'),
+    ];
+
+    $form['email']['prompts']['templateUsagePromptUser'] = [
+      '#type' => 'checkbox',
+      '#title' => t('Prompt user for email on every page load.'),
+      '#default_value' => $config->get('ldap_authentication_conf.emailTemplateUsagePromptUser'),
+    ];
+
+    $form['email']['prompts']['templateUsageRedirectOnLogin'] = [
+      '#type' => 'checkbox',
+      '#title' => t('Redirect the user to the form after logging in.'),
+      '#default_value' => $config->get('ldap_authentication_conf.emailTemplateUsageRedirectOnLogin'),
+    ];
+
+    $form['email']['prompts']['templateUsagePromptRegex'] = [
+      '#type' => 'textfield',
+      '#default_value' => $config->get('ldap_authentication_conf.emailTemplateUsagePromptRegex'),
+      '#title' => t('Template Regex'),
+      '#description' => t('This regex will be used to determine if the template was used to create an account.'),
+    ];
+
+    $form['password'] = [
       '#type' => 'fieldset',
       '#title' => t('Password'),
-      '#collapsible' => TRUE,
-      '#collapsed' => FALSE,
-    );
-    $form['password']['passwordOption'] = array(
+    ];
+    $form['password']['passwordOption'] = [
       '#type' => 'radios',
       '#title' => t('Password Behavior'),
       '#required' => 1,
@@ -225,12 +283,12 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
         LdapAuthenticationConfiguration::$passwordFieldHide => t('Don\'t show password field on user forms except login form.'),
         LdapAuthenticationConfiguration::$passwordFieldAllow => t('Display password field and allow updating it. In order to change password in LDAP, LDAP provisioning for this field must be enabled.'),
       ],
-    );
+    ];
 
-    $form['submit'] = array(
+    $form['submit'] = [
       '#type' => 'submit',
       '#value' => 'Save',
-    );
+    ];
 
     return $form;
   }
@@ -260,6 +318,13 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
       ->set('ldap_authentication_conf.excludeIfNoAuthorizations', $values['excludeIfNoAuthorizations'])
       ->set('ldap_authentication_conf.emailOption', $values['emailOption'])
       ->set('ldap_authentication_conf.emailUpdate', $values['emailUpdate'])
+      ->set('ldap_authentication_conf.emailTemplateHandling', $values['emailTemplateHandling'])
+      ->set('ldap_authentication_conf.emailTemplate', $values['emailTemplate'])
+      ->set('ldap_authentication_conf.emailTemplateUsageResolveConflict', $values['templateUsageResolveConflict'])
+      ->set('ldap_authentication_conf.emailTemplateUsageNeverUpdate', $values['templateUsageNeverUpdate'])
+      ->set('ldap_authentication_conf.emailTemplateUsagePromptUser', $values['templateUsagePromptUser'])
+      ->set('ldap_authentication_conf.emailTemplateUsageRedirectOnLogin', $values['templateUsageRedirectOnLogin'])
+      ->set('ldap_authentication_conf.emailTemplateUsagePromptRegex', $values['templateUsagePromptRegex'])
       ->set('ldap_authentication_conf.passwordOption', $values['passwordOption'])
       ->save();
 

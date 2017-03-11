@@ -1,10 +1,10 @@
 ldap_authentication.profile_update_form:
   path: /user/ldap-profile-update
   defaults:
-    _title: 'Update Profile'
+    _title: 'Update your email address'
     _form: \Drupal\ldap_authentication\Form\LdapAuthenticationProfileUpdateForm
   requirements:
-    _access: 'true'
+    _user_is_logged_in: 'TRUE'
 ldap_authentication.admin_form:
   path: /admin/config/people/ldap/authentication
   defaults:

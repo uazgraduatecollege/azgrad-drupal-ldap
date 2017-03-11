@@ -3,6 +3,7 @@
 namespace Drupal\ldap_authentication\Controller;
 
 use Drupal\authorization\Entity\AuthorizationProfile;
+use Drupal\Component\Utility\SafeMarkup;
 use Drupal\ldap_authentication\Helper\LdapAuthenticationConfiguration;
 use Drupal\ldap_servers\Entity\Server;
 use Drupal\ldap_servers\Helper\MassageAttributes;
@@ -34,13 +35,17 @@ class LoginValidator {
   public $drupalUser = FALSE;
   public $ldapUser = FALSE;
 
-  protected $detailedLogging = FALSE;
+  private $detailedLogging = FALSE;
+  private $config;
+  private $emailTemplateUsed = FALSE;
+  private $emailTemplateTokens = [];
 
   /** @var FormStateInterface $formState */
   protected $formState;
 
   public function __construct() {
     $this->detailedLogging = \Drupal::config('ldap_help.settings')->get('watchdog_detail');
+    $this->config = \Drupal::config('ldap_authentication.settings');
   }
 
   public function validateLogin(FormStateInterface $formState) {
@@ -579,14 +584,25 @@ class LoginValidator {
     return TRUE;
   }
 
+  /**
+   * @return bool
+   */
   private function fixOutdatedEmailAddress() {
-    if ($this->drupalUser && $this->drupalUser->getEmail() != $this->ldapUser['mail'] && (
-        \Drupal::config('ldap_authentication.settings')
-          ->get('ldap_authentication_conf.emailUpdate') == LdapAuthenticationConfiguration::$emailUpdateOnLdapChangeEnableNotify ||
-        \Drupal::config('ldap_authentication.settings')
-          ->get('ldap_authentication_conf.emailUpdate') == LdapAuthenticationConfiguration::$emailUpdateOnLdapChangeEnable
-      )
-    ) {
+
+    if (!($this->config->get('ldap_authentication_conf.emailTemplateUsageNeverUpdate') && $this->emailTemplateUsed)) {
+      return FALSE;
+    }
+
+    if (!$this->drupalUser) {
+      return FALSE;
+    }
+
+    if ($this->drupalUser->getEmail() == $this->ldapUser['mail']) {
+      return FALSE;
+    }
+
+    if ($this->config->get('ldap_authentication_conf.emailUpdate') == LdapAuthenticationConfiguration::$emailUpdateOnLdapChangeEnableNotify ||
+        $this->config->get('ldap_authentication_conf.emailUpdate') == LdapAuthenticationConfiguration::$emailUpdateOnLdapChangeEnable) {
       $this->drupalUser->set('mail', $this->ldapUser['mail']);
       if (!$this->drupalUser->save()) {
         \Drupal::logger('ldap_authentication')
@@ -595,15 +611,16 @@ class LoginValidator {
             '%changed' => $this->ldapUser['mail'],
             ]
           );
+        return FALSE;
       }
-      elseif (\Drupal::config('ldap_authentication.settings')
-          ->get('ldap_authentication_conf.emailUpdate') == LdapAuthenticationConfiguration::$emailUpdateOnLdapChangeEnableNotify
+      elseif ($this->config->get('ldap_authentication_conf.emailUpdate') == LdapAuthenticationConfiguration::$emailUpdateOnLdapChangeEnableNotify
       ) {
         drupal_set_message(t(
           'Your e-mail has been updated to match your current account (%mail).',
           ['%mail' => $this->ldapUser['mail']]),
           'status'
         );
+        return TRUE;
       }
     }
   }
@@ -640,9 +657,7 @@ class LoginValidator {
   private function validateAlreadyAuthenticated() {
 
     if (!empty($this->formState->get('uid'))) {
-      if (\Drupal::config('ldap_authentication.settings')
-          ->get('ldap_authentication_conf.authenticationMode') == LdapAuthenticationConfiguration::MODE_MIXED
-      ) {
+      if ($this->config->get('ldap_authentication_conf.authenticationMode') == LdapAuthenticationConfiguration::MODE_MIXED) {
         if ($this->detailedLogging) {
           \Drupal::logger('ldap_authentication')->debug(
             '%username: Previously authenticated in mixed mode, pass on validation.',
@@ -708,7 +723,28 @@ class LoginValidator {
     else {
       $this->drupalUserName = $this->authName;
     }
+    $this->prepareEmailTemplateToken();
+
     return TRUE;
+  }
+
+  private function prepareEmailTemplateToken() {
+    $this->emailTemplateTokens = [
+      '@username' => $this->drupalUserName,
+    ];
+
+    if (!empty($this->config->get('ldap_authentication_conf.emailTemplate'))) {
+      $handling = $this->config->get('ldap_authentication_conf.emailTemplateHandling');
+      if (($handling == 'if_empty' && empty($this->ldapUser['mail'])) || $handling == 'always') {
+          $this->replaceUserMailWithTemplate();
+          if ($this->detailedLogging) {
+            \Drupal::logger('ldap_authentication')->debug('Using template generated email for %username', [
+              '%username' => $this->drupalUserName
+            ]);
+          }
+          $this->emailTemplateUsed = TRUE;
+      }
+    }
   }
 
   /**
@@ -742,28 +778,56 @@ class LoginValidator {
     return TRUE;
   }
 
+  private function replaceUserMailWithTemplate() {
+    // fallback template in case one was not specified.
+    $template = '@username@localhost';
+    if (!empty($this->config->get('ldap_authentication_conf.emailTemplate'))) {
+      $template = $this->config->get('ldap_authentication_conf.emailTemplate');
+    }
+    $this->ldapUser['mail'] = SafeMarkup::format($template, $this->emailTemplateTokens)->__toString();
+  }
+
   /**
    * @return bool
    */
   private function provisionDrupalUser() {
 
     // Do not provision Drupal account if another account has same email.
-    if ($account_with_same_email = user_load_by_mail($this->ldapUser['mail'])) {
-      /**
-       * Username does not exist but email does. Since
-       * user_external_login_register does not deal with mail attribute and the
-       * email conflict error needs to be caught beforehand, need to throw error
-       * here.
-       */
-      \Drupal::logger('ldap_authentication')->error(
-        'LDAP user with DN %dn has email address (%mail) conflict with a drupal user %duplicate_name', [
-          '%dn' => $this->ldapUser['dn'],
-          '%duplicate_name' => $account_with_same_email->getUsername(),
-        ]
-      );
+    if ($accountDuplicateMail = user_load_by_mail($this->ldapUser['mail'])) {
+      $emailAvailable = FALSE;
+      if ($this->config->get('ldap_authentication_conf.emailTemplateUsageResolveConflict') && (!$this->emailTemplateUsed)) {
+        if ($this->detailedLogging) {
+          \Drupal::logger('ldap_authentication')->debug('Conflict detected, using template generated email for %username', [
+            '%duplicate_name' => $accountDuplicateMail->getUsername(),
+          ]);
+        }
+        $this->replaceUserMailWithTemplate();
+        $this->emailTemplateUsed = TRUE;
+        // recheck with the template email to make sure it doesn't also exist.
+        if ($accountDuplicateMail = user_load_by_mail($this->ldapUser['mail'])) {
+          $emailAvailable = FALSE;
+        } else {
+          $emailAvailable = TRUE;
+        }
+      }
+      if (!$emailAvailable) {
+        /**
+         * Username does not exist but email does. Since
+         * user_external_login_register does not deal with mail attribute and the
+         * email conflict error needs to be caught beforehand, need to throw error
+         * here.
+         */
+        \Drupal::logger('ldap_authentication')->error(
+          'LDAP user with DN %dn has email address (%mail) conflict with a drupal user %duplicate_name', [
+            '%dn' => $this->ldapUser['dn'],
+            '%duplicate_name' => $accountDuplicateMail->getUsername(),
+          ]
+        );
 
-      drupal_set_message(t(' Another user already exists in the system with the same email address. You should contact the system administrator in order to solve this conflict.'), 'error');
-      return FALSE;
+        drupal_set_message(t(' Another user already exists in the system with the same email address. You should contact the system administrator in order to solve this conflict.'), 'error');
+        return FALSE;
+      }
+
     }
 
     // Do not provision Drupal account if provisioning disabled.
@@ -792,6 +856,10 @@ class LoginValidator {
     }
     else {
       $user_values = ['name' => $this->drupalUserName, 'status' => 1];
+    }
+
+    if ($this->emailTemplateUsed) {
+      $user_values['mail'] = $this->ldapUser['mail'];
     }
 
     // Don't pass in LDAP user to provisionDrupalAccount, because want to

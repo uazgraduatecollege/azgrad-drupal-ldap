@@ -4,9 +4,13 @@ namespace Drupal\ldap_authentication\Form;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\FormBase;
+use Drupal\ldap_authentication\Routing\EmailTemplateService;
+use Drupal\user\Entity\User;
 
 /**
- * FIXME: What does this form do?
+ * This form is meant to presented to the user if the LDAP account does not
+ * have an e-mail address associated with it and we need it for Drupal
+ * to function correctly, thus we ask the user.
  */
 class LdapAuthenticationProfileUpdateForm extends FormBase {
 
@@ -18,23 +22,29 @@ class LdapAuthenticationProfileUpdateForm extends FormBase {
   }
 
   /**
-   *
+   * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-    $form['mail'] = [
-      '#type' => 'textfield',
-      '#required' => TRUE,
-      '#title' => t('Email Address'),
-    ];
-    $form['submit'] = [
-      '#type' => 'submit',
-      '#value' => t('Update Profile'),
-    ];
+    if (EmailTemplateService::profileNeedsUpdate()) {
+      $form['mail'] = [
+        '#type' => 'textfield',
+        '#required' => TRUE,
+        '#title' => t('Email address'),
+      ];
+      $form['submit'] = [
+        '#type' => 'submit',
+        '#value' => t('Update account'),
+      ];
+    } else {
+      $form['submit'] = [
+        '#markup' => '<h2>' . t('This form is only available to profiles which need an update.') . '</h2>',
+      ];
+    }
     return $form;
   }
 
   /**
-   *
+   * {@inheritdoc}
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
     if (!filter_var($form_state->getValue(['mail']), FILTER_VALIDATE_EMAIL)) {
@@ -42,29 +52,25 @@ class LdapAuthenticationProfileUpdateForm extends FormBase {
     }
     $existing = user_load_by_mail($form_state->getValue(['mail']));
     if ($existing) {
-      $form_state->setErrorByName('mail', t('This email address is already in user.'));
+      $form_state->setErrorByName('mail', t('This email address is already in use.'));
     }
-    $regex = '`' . $auth->templateUsagePromptRegex . '`i';
+    $pattern = \Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.emailTemplateUsagePromptRegex');
+    $regex = '`' . $pattern . '`i';
     if (preg_match($regex, $form_state->getValue(['mail']))) {
       $form_state->setErrorByName('mail', t('This email address still matches the invalid email template.'));
     }
   }
 
   /**
-   *
+   * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    $user = \Drupal::currentUser();
-    // @FIXME
-    // user_save() is now a method of the user entity.
-    // if (user_save($user, array(
-    //     'mail' => $form_state['values']['mail'],
-    //   ))) {
-    //     // prevents the cached setting from being used again.
-    //     unset($_SESSION['ldap_authentication_template']);
-    //     $form_state['redirect'] = isset($_GET['next']) ? $_GET['next'] : '<front>';
-    //     drupal_set_message(t('Your profile has been updated.'));
-    //   }
+    $proxy = \Drupal::currentUser();
+    $user = User::load($proxy->id());
+    $user->set('mail', $form_state->getValue('mail'));
+    $user->save();
+    drupal_set_message(t('Your profile has been updated.'));
+    $form_state->setRedirect('<front>');
   }
 
 }

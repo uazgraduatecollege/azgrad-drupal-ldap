@@ -22,6 +22,20 @@ ldap_authentication.settings:
           type: integer
         emailUpdate:
           type: integer
+        emailTemplateHandling:
+          type: string
+        emailTemplate:
+          type: string
+        emailTemplateUsageResolveConflict:
+          type: boolean
+        emailTemplateUsageNeverUpdate:
+          type: boolean
+        emailTemplateUsagePromptUser:
+          type: boolean
+        emailTemplateUsageRedirectOnLogin:
+          type: boolean
+        emailTemplateUsagePromptRegex:
+          type: string
         passwordOption:
           type: integer
         allowOnlyIfTextInDn:
