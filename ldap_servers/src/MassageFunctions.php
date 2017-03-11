@@ -57,10 +57,10 @@ class MassageFunctions {
 
     if ($value_type == 'attr_value') {
 
-      if ($context == self::$query_ldap) {
+      if ($context == self::$query_ldap && !empty($value)) {
         $value = $helper->escape_filter_value($value);
       }
-      elseif ($context == self::$store_ldap) {
+      elseif ($context == self::$store_ldap && !empty($value)) {
         $value = $helper->escape_dn_value($value);
       }
 

@@ -23,11 +23,11 @@ class ConversionHelper {
    *
    * @return array Array $values, but escaped
    */
-  public function escape_filter_value($values = array()) {
+  public function escape_filter_value($values) {
     // Parameter validation.
-    $is_scalar = is_scalar($values);
-    if (!is_array($values)) {
-      $values = array($values);
+    $input_is_scalar = is_scalar($values);
+    if ($input_is_scalar) {
+      $values = [$values];
     }
 
     foreach ($values as $key => $val) {
@@ -60,7 +60,12 @@ class ConversionHelper {
       }
     }
 
-    return ($is_scalar) ? $values[0] : $values;
+    if (($input_is_scalar)) {
+      return $values[0];
+    }
+    else {
+      return $values;
+    }
   }
 
   /**
@@ -75,7 +80,7 @@ class ConversionHelper {
    *
    * @return array Array $values, but unescaped
    */
-  public function unescape_filter_value($values = array()) {
+  public function unescape_filter_value($values) {
     // Parameter validation.
     $is_scalar = is_scalar($values);
     if (!is_array($values)) {
@@ -105,11 +110,10 @@ class ConversionHelper {
    *
    * @return array The array $values, but escaped
    */
-  public function escape_dn_value($values = array()) {
+  public function escape_dn_value($values) {
     // Parameter validation.
-    $is_scalar = is_scalar($values);
-
-    if (!is_array($values)) {
+    $input_is_scalar = is_scalar($values);
+    if ($input_is_scalar) {
       $values = array($values);
     }
 
@@ -146,7 +150,12 @@ class ConversionHelper {
       $values[$key] = $val;
     }
 
-    return ($is_scalar) ? $values[0] : $values;
+    if (($input_is_scalar)) {
+      return $values[0];
+    }
+    else {
+      return $values;
+    }
   }
 
   /**
@@ -162,7 +171,7 @@ class ConversionHelper {
    *
    * @static
    */
-  public function unescape_dn_value($values = array()) {
+  public function unescape_dn_value($values) {
     $is_scalar = is_scalar($values);
 
     // Parameter validation.
