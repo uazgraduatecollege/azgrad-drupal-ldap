@@ -212,7 +212,7 @@ function _ldap_authentication_verify_user_profile() {
       );
     }
   }
-  return TRUE;
+  return $result;
 }
 
 /**
