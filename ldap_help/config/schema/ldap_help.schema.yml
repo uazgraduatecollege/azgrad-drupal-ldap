@@ -3,8 +3,5 @@ ldap_help.settings:
   label: Settings
   mapping:
     watchdog_detail:
-      type: integer
-    user_data_clear:
-      type: integer
-    user_data_clear_set_date:
-      type: integer
+      label: 'Enable detailed logging'
+      type: boolean

@@ -75,7 +75,7 @@ class LdapConfiguration {
    *
    */
   public static function createLDAPAccounts() {
-    if (\Drupal::config('ldap_user.settings')->get('ldap_user_conf.acctCreation') == self::$accountCreationLdapBehaviour ||
+    if (\Drupal::config('ldap_user.settings')->get('acctCreation') == self::$accountCreationLdapBehaviour ||
       \Drupal::config('user.settings')->get('register_no_approval_required') == USER_REGISTER_VISITORS) {
       return TRUE;
     }
@@ -120,8 +120,8 @@ class LdapConfiguration {
    *
    */
   public static function provisionsDrupalAccountsFromLdap() {
-    if (\Drupal::config('ldap_user.settings')->get('ldap_user_conf.drupalAcctProvisionServer') &&
-      count(array_filter(array_values(\Drupal::config('ldap_user.settings')->get('ldap_user_conf.drupalAcctProvisionTriggers')))) > 0) {
+    if (\Drupal::config('ldap_user.settings')->get('drupalAcctProvisionServer') &&
+      count(array_filter(array_values(\Drupal::config('ldap_user.settings')->get('drupalAcctProvisionTriggers')))) > 0) {
       return TRUE;
     }
     else {
@@ -133,8 +133,8 @@ class LdapConfiguration {
    *
    */
   public static function provisionsLdapEntriesFromDrupalUsers() {
-    if (\Drupal::config('ldap_user.settings')->get('ldap_user_conf.ldapEntryProvisionServer') &&
-      count(array_filter(array_values(\Drupal::config('ldap_user.settings')->get('ldap_user_conf.ldapEntryProvisionTriggers')))) > 0) {
+    if (\Drupal::config('ldap_user.settings')->get('ldapEntryProvisionServer') &&
+      count(array_filter(array_values(\Drupal::config('ldap_user.settings')->get('ldapEntryProvisionTriggers')))) > 0) {
       return TRUE;
     }
     else {
@@ -242,8 +242,8 @@ class LdapConfiguration {
    *
    */
   public static function provisionAvailableToLDAP($trigger) {
-    if (\Drupal::config('ldap_user.settings')->get('ldap_user_conf.ldapEntryProvisionTriggers')) {
-      return in_array($trigger, \Drupal::config('ldap_user.settings')->get('ldap_user_conf.ldapEntryProvisionTriggers'));
+    if (\Drupal::config('ldap_user.settings')->get('ldapEntryProvisionTriggers')) {
+      return in_array($trigger, \Drupal::config('ldap_user.settings')->get('ldapEntryProvisionTriggers'));
     }
     else {
       return FALSE;
@@ -254,8 +254,8 @@ class LdapConfiguration {
    *
    */
   public static function provisionAvailableToDrupal($trigger) {
-    if (\Drupal::config('ldap_user.settings')->get('ldap_user_conf.drupalAcctProvisionTriggers')) {
-      return in_array($trigger, \Drupal::config('ldap_user.settings')->get('ldap_user_conf.drupalAcctProvisionTriggers'));
+    if (\Drupal::config('ldap_user.settings')->get('drupalAcctProvisionTriggers')) {
+      return in_array($trigger, \Drupal::config('ldap_user.settings')->get('drupalAcctProvisionTriggers'));
     }
     else {
       return FALSE;

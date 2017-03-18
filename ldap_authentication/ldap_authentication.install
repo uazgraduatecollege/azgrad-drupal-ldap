@@ -39,7 +39,7 @@ function ldap_authentication_install() {
  * Implements hook_uninstall().
  */
 function ldap_authentication_uninstall() {
-  // \Drupal::config('ldap_authentication.settings')->clear('ldap_authentication_conf')->save();
+  // \Drupal::config('ldap_authentication.settings')->clear()->save();
 }
 
 /**
@@ -48,12 +48,24 @@ function ldap_authentication_uninstall() {
 function ldap_authentication_update_8001() {
   $config_factory = \Drupal::configFactory();
   $config = $config_factory->getEditable('ldap_authentication.settings');
-  $config->set('ldap_authentication_conf.emailTemplateHandling', 'none');
-  $config->set('ldap_authentication_conf.emailTemplate', '@username@example.com');
-  $config->set('ldap_authentication_conf.emailTemplateUsageResolveConflict', FALSE);
-  $config->set('ldap_authentication_conf.emailTemplateUsageNeverUpdate', FALSE);
-  $config->set('ldap_authentication_conf.emailTemplateUsagePromptUser', FALSE);
-  $config->set('ldap_authentication_conf.emailTemplateUsageRedirectOnLogin', FALSE);
-  $config->set('ldap_authentication_conf.emailTemplateUsagePromptRegex', '.*@example\\.com');
+  $config->set('emailTemplateHandling', 'none');
+  $config->set('emailTemplate', '@username@example.com');
+  $config->set('emailTemplateUsageResolveConflict', FALSE);
+  $config->set('emailTemplateUsageNeverUpdate', FALSE);
+  $config->set('emailTemplateUsagePromptUser', FALSE);
+  $config->set('emailTemplateUsageRedirectOnLogin', FALSE);
+  $config->set('emailTemplateUsagePromptRegex', '.*@example\\.com');
+  $config->save(TRUE);
+}
+
+/**
+ * Removes the ldap_authentication_conf prefix.
+ */
+function ldap_authentication_update_8304() {
+  $config_factory = \Drupal::configFactory();
+  $config = $config_factory->getEditable('ldap_authentication.settings');
+  $data = $config->get('ldap_authentication_conf');
+  $config->clear('ldap_authentication_conf');
+  $config->setData($data);
   $config->save(TRUE);
 }

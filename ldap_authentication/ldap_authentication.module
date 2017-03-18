@@ -21,11 +21,11 @@ function ldap_authentication_menu_alter(&$items) {
   // @FIXME: Unported.
   // Adds a menu tab (local task) to the user's page with a help text and goes to the ldapUserHelpLinkUrl.
   // This would normally be in ldap_authentication.links.yml but it has to be dynamic.
-  if (\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.ldapUserHelpLinkUrl')) {
+  if (\Drupal::config('ldap_authentication.settings')->get('ldapUserHelpLinkUrl')) {
     $items['user/ldaphelp'] = array(
-      'title' => \Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.ldapUserHelpLinkText'),
+      'title' => \Drupal::config('ldap_authentication.settings')->get('ldapUserHelpLinkText'),
       'page callback' => 'drupal_goto',
-      'page arguments' => array(\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.ldapUserHelpLinkUrl')),
+      'page arguments' => array(\Drupal::config('ldap_authentication.settings')->get('ldapUserHelpLinkUrl')),
       'access callback' => 'ldap_authentication_show_ldap_help_link',
       'type' => MENU_LOCAL_TASK,
     );
@@ -39,10 +39,10 @@ function ldap_authentication_menu_alter(&$items) {
  */
 function ldap_authentication_show_ldap_help_link($user = NULL) {
   $user = \Drupal::currentUser();
-  if (\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.authenticationMode') == LdapAuthenticationConfiguration::MODE_MIXED) {
+  if (\Drupal::config('ldap_authentication.settings')->get('authenticationMode') == LdapAuthenticationConfiguration::MODE_MIXED) {
     return (ldap_authentication_ldap_authenticated($user));
   }
-  elseif (\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.authenticationMode') == LdapAuthenticationConfiguration::MODE_EXCLUSIVE) {
+  elseif (\Drupal::config('ldap_authentication.settings')->get('authenticationMode') == LdapAuthenticationConfiguration::MODE_EXCLUSIVE) {
     if ($user->isAnonymous() || ldap_authentication_ldap_authenticated($user)) {
       return TRUE;
     }
@@ -123,11 +123,11 @@ function ldap_authentication_user_pass_validate(&$form, FormStateInterface $form
   }
 
   if ($account && ldap_authentication_ldap_authenticated($account)) {
-    if (\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.passwordOption') != LdapAuthenticationConfiguration::$passwordFieldAllow) {
-      if (\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.ldapUserHelpLinkUrl')) {
+    if (\Drupal::config('ldap_authentication.settings')->get('passwordOption') != LdapAuthenticationConfiguration::$passwordFieldAllow) {
+      if (\Drupal::config('ldap_authentication.settings')->get('ldapUserHelpLinkUrl')) {
         $helpLink = \Drupal::l(t(
-          \Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.ldapUserHelpLinkText')),
-          Url::fromUri(\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.ldapUserHelpLinkUrl')));
+          \Drupal::config('ldap_authentication.settings')->get('ldapUserHelpLinkText')),
+          Url::fromUri(\Drupal::config('ldap_authentication.settings')->get('ldapUserHelpLinkUrl')));
         $form_state->setErrorByName('name', t(
           'You may not reset your password here. You must reset your password via the directions at @link.',
           ['@link' => $helpLink])
@@ -154,29 +154,29 @@ function ldap_authentication_form_user_form_alter(&$form, FormStateInterface $fo
 
   $user = $form_state->getBuildInfo()['callback_object']->getEntity();
   if (ldap_authentication_ldap_authenticated($user)) {
-    if (\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.emailOption') == LdapAuthenticationConfiguration::$emailFieldRemove) {
+    if (\Drupal::config('ldap_authentication.settings')->get('emailOption') == LdapAuthenticationConfiguration::$emailFieldRemove) {
       $form['account']['mail']['#type'] = 'hidden';
     }
-    elseif (\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.emailOption') == LdapAuthenticationConfiguration::$emailFieldDisable) {
+    elseif (\Drupal::config('ldap_authentication.settings')->get('emailOption') == LdapAuthenticationConfiguration::$emailFieldDisable) {
       $form['account']['mail']['#disabled'] = TRUE;
       $form['account']['mail']['#description'] = t('This email address is automatically set and may not be changed.');
     }
-    elseif (\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.emailOption') == LdapAuthenticationConfiguration::$emailFieldAllow) {
+    elseif (\Drupal::config('ldap_authentication.settings')->get('emailOption') == LdapAuthenticationConfiguration::$emailFieldAllow) {
       // Email field is functional.
     }
 
     if (!LdapAuthenticationConfiguration::showPasswordField($user)) {
-      if (\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.passwordOption') == LdapAuthenticationConfiguration::$passwordFieldHide) {
+      if (\Drupal::config('ldap_authentication.settings')->get('passwordOption') == LdapAuthenticationConfiguration::$passwordFieldHide) {
         $form['account']['current_pass']['#type'] = 'hidden';
         $form['account']['pass']['#type'] = 'hidden';
       }
-      elseif (\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.emailOption') == LdapAuthenticationConfiguration::$emailFieldDisable) {
+      elseif (\Drupal::config('ldap_authentication.settings')->get('emailOption') == LdapAuthenticationConfiguration::$emailFieldDisable) {
         $form['account']['current_pass']['#disabled'] = TRUE;
         $form['account']['pass']['#disabled'] = TRUE;
-        if (\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.ldapUserHelpLinkUrl')) {
+        if (\Drupal::config('ldap_authentication.settings')->get('ldapUserHelpLinkUrl')) {
           $form['account']['current_pass']['#description'] = \Drupal::l(
-            t(\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.ldapUserHelpLinkText')),
-            Url::fromUri(\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.ldapUserHelpLinkUrl'))
+            t(\Drupal::config('ldap_authentication.settings')->get('ldapUserHelpLinkText')),
+            Url::fromUri(\Drupal::config('ldap_authentication.settings')->get('ldapUserHelpLinkUrl'))
           );
         }
         else {
@@ -243,7 +243,7 @@ function _ldap_authentication_login_form_alter(&$form, &$form_state, $form_id) {
    */
 
   if (@in_array('::validateAuthentication', $form['#validate']) &&
-    $config->get('ldap_authentication_conf.authenticationMode')) {
+    $config->get('authenticationMode')) {
     $key = array_search('::validateAuthentication', $form['#validate']);
     $form['#validate'][$key] = 'ldap_authentication_core_override_user_login_authenticate_validate';
     array_splice($form['#validate'], $key + 1, 0, 'ldap_authentication_user_login_authenticate_validate');
@@ -252,14 +252,14 @@ function _ldap_authentication_login_form_alter(&$form, &$form_state, $form_id) {
   _ldap_authentication_disable_http_check($form);
 
   // Add help information for entering in username/password.
-  if ($config->get('ldap_authentication_conf.loginUIUsernameTxt')) {
-    $form['name']['#description'] = t(\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.loginUIUsernameTxt'));
+  if ($config->get('loginUIUsernameTxt')) {
+    $form['name']['#description'] = t(\Drupal::config('ldap_authentication.settings')->get('loginUIUsernameTxt'));
   }
-  if ($config->get('ldap_authentication_conf.loginUIPasswordTxt')) {
-    $form['pass']['#description'] = t(\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.loginUIPasswordTxt'));
+  if ($config->get('loginUIPasswordTxt')) {
+    $form['pass']['#description'] = t(\Drupal::config('ldap_authentication.settings')->get('loginUIPasswordTxt'));
   }
 
-  if ($config->get('ldap_authentication_conf.emailTemplateUsageRedirectOnLogin')) {
+  if ($config->get('emailTemplateUsageRedirectOnLogin')) {
     $form['#submit'][] = 'Drupal\ldap_authentication\Routing\EmailTemplateService::checkForEmailTemplate';
   }
 }

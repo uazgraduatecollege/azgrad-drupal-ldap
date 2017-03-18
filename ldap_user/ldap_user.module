@@ -22,7 +22,7 @@ use Drupal\Core\Url;
  * Implements hook_cron().
  */
 function ldap_user_cron() {
-  $check_orphans = \Drupal::config('ldap_user.settings')->get('ldap_user_conf.orphanedDrupalAcctBehavior');
+  $check_orphans = \Drupal::config('ldap_user.settings')->get('orphanedDrupalAcctBehavior');
   if ($check_orphans != 'ldap_user_orphan_do_not_check') {
     $processor = new OrphanProcessor();
     $result = $processor->checkOrphans();
@@ -240,7 +240,7 @@ function ldap_user_form_user_register_form_alter(&$form, $form_state) {
       is selected at admin/config/people/ldap/user, this option will have no
       effect so its disabled.');
   }
-  elseif (\Drupal::config('ldap_user.settings')->get('ldap_user_conf.manualAccountConflict') != LdapConfiguration::$manualAccountConflictShowOptionOnForm) {
+  elseif (\Drupal::config('ldap_user.settings')->get('manualAccountConflict') != LdapConfiguration::$manualAccountConflictShowOptionOnForm) {
     $ldap_fieldset['ldap_user_association']['#disabled'] = TRUE;
     $ldap_fieldset['ldap_user_association']['#description'] = t('To enable
       this an LDAP server must be selected for provisioning to Drupal in
@@ -293,12 +293,12 @@ function ldap_user_form_register_form_validate($form, FormStateInterface &$form_
    */
   if (!$form_state->getValue('ldap_user_create_ldap_acct') &&
     $form_state->getValue('ldap_user_association') == LdapConfiguration::$manualAccountConflictLdapAssociate) {
-    if (empty($config->get('ldap_user_conf.drupalAcctProvisionServer'))) {
+    if (empty($config->get('drupalAcctProvisionServer'))) {
       $form_state->setErrorByName('ldap_user_missing_', t('The provisioning server is not set up correctly.'));
       \Drupal::logger('ldap_user')->error('No server available for provisioning to Drupal.');
     }
     else {
-      $ldap_user = $factory->getUserDataFromServerByIdentifier($form_state->getValue('name'), $config->get('ldap_user_conf.drupalAcctProvisionServer'), 'ldap_user_prov_to_drupal');
+      $ldap_user = $factory->getUserDataFromServerByIdentifier($form_state->getValue('name'), $config->get('drupalAcctProvisionServer'), 'ldap_user_prov_to_drupal');
       if (!$ldap_user) {
         $form_state->setErrorByName('ldap_user_association', t(
             'User %name does not have a corresponding LDAP Entry (dn). Under LDAP options, you may NOT select "Make this an LDAP Associated Account"',
@@ -310,12 +310,12 @@ function ldap_user_form_register_form_validate($form, FormStateInterface &$form_
 
   // If trying to provision an LDAP account and one already exists, throw error.
   if ($form_state->getValue('ldap_user_create_ldap_acct')) {
-    if (empty($config->get('ldap_user_conf.ldapEntryProvisionServer'))) {
+    if (empty($config->get('ldapEntryProvisionServer'))) {
       $form_state->setErrorByName('ldap_user_missing_', t('The provisioning server is not set up correctly.'));
       \Drupal::logger('ldap_user')->error('No server available for provisioning to LDAP.');
     }
     else {
-      $ldap_user = $factory->getUserDataFromServerByIdentifier($form_state->getValue('name'), $config->get('ldap_user_conf.ldapEntryProvisionServer'), 'ldap_user_prov_to_ldap');
+      $ldap_user = $factory->getUserDataFromServerByIdentifier($form_state->getValue('name'), $config->get('ldapEntryProvisionServer'), 'ldap_user_prov_to_ldap');
       if ($ldap_user) {
         $form_state->setErrorByName(
           'ldap_user_create_ldap_acct', t(
@@ -361,7 +361,7 @@ function ldap_user_form_register_form_submit2(&$form, FormState $form_state) {
   }
   elseif ($ldap_user_association_set ||
     @$values['ldap_user_association'] == LdapConfiguration::$manualAccountConflictLdapAssociate ||
-    \Drupal::config('ldap_user.settings')->get('ldap_user_conf.manualAccountConflict') == LdapConfiguration::$manualAccountConflictLdapAssociate) {
+    \Drupal::config('ldap_user.settings')->get('manualAccountConflict') == LdapConfiguration::$manualAccountConflictLdapAssociate) {
     // Either LDAP provision (above) has said "associate" or the person creating
     // the account has said "associate" or the LDAP user settings says
     // "Associate manually created Drupal accounts with related LDAP Account if one exists.".

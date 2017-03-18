@@ -40,7 +40,7 @@ class SyncMappingHelper {
    *
    */
   public function __construct() {
-    $this->config = \Drupal::config('ldap_user.settings')->get('ldap_user_conf');
+    $this->config = \Drupal::config('ldap_user.settings')->get();
     $this->setSyncMapping();
   }
 
@@ -141,11 +141,11 @@ class SyncMappingHelper {
              ) as $direction) {
       if ($direction == LdapConfiguration::$provisioningDirectionToDrupalUser) {
         $sid = \Drupal::config('ldap_user.settings')
-          ->get('ldap_user_conf.drupalAcctProvisionServer');
+          ->get('drupalAcctProvisionServer');
       }
       else {
         $sid = \Drupal::config('ldap_user.settings')
-          ->get('ldap_user_conf.ldapEntryProvisionServer');
+          ->get('ldapEntryProvisionServer');
       }
       $available_user_attributes[$direction] = [];
       $ldap_server = FALSE;

@@ -24,7 +24,7 @@ class DrupalUserProcessor {
    *
    */
   public function __construct() {
-    $this->config = \Drupal::config('ldap_user.settings')->get('ldap_user_conf');
+    $this->config = \Drupal::config('ldap_user.settings')->get();
   }
 
   /**
@@ -619,7 +619,7 @@ class DrupalUserProcessor {
 
     }
 
-    $mappings = \Drupal::config('ldap_user.settings')->get('ldap_user_conf.ldapUserSyncMappings');
+    $mappings = \Drupal::config('ldap_user.settings')->get('ldapUserSyncMappings');
 
     // This is where need to be added to arrays.
     if (!empty($mappings[$direction])) {
@@ -782,7 +782,7 @@ class DrupalUserProcessor {
     }
 
     $factory = \Drupal::service('ldap.servers');
-    $config = \Drupal::config('ldap_user.settings')->get('ldap_user_conf');
+    $config = \Drupal::config('ldap_user.settings')->get();
     $processor = new DrupalUserProcessor();
 
     // Check for provisioning to drupal and override synced user fields/props.
@@ -812,7 +812,7 @@ class DrupalUserProcessor {
       LdapConfiguration::provisionsLdapEntriesFromDrupalUsers()
       && SemaphoreStorage::get('provision', $account->getUsername()) == FALSE
       && !$processor->getProvisionRelatedLdapEntry($account)
-      && \Drupal::config('ldap_user.settings')->get('ldap_user_conf.ldapEntryProvisionServer')
+      && \Drupal::config('ldap_user.settings')->get('ldapEntryProvisionServer')
       && LdapConfiguration::provisionAvailableToLDAP(LdapConfiguration::$provisionLdapEntryOnUserAuthentication)
     ) {
       $provision_result = $processor->provisionLdapEntry($account);
@@ -835,7 +835,7 @@ class DrupalUserProcessor {
     }
     /** @var ServerFactory $factory */
     $factory = \Drupal::service('ldap.servers');
-    $config = \Drupal::config('ldap_user.settings')->get('ldap_user_conf');
+    $config = \Drupal::config('ldap_user.settings')->get();
 
     if (LdapConfiguration::provisionsDrupalAccountsFromLdap()  && in_array(LdapConfiguration::$eventSyncToDrupalUser, array_keys(LdapConfiguration::provisionsDrupalEvents()))) {
       $ldap_user = $factory->getUserDataFromServerByAccount($account, $config['drupalAcctProvisionServer'], 'ldap_user_prov_to_drupal');

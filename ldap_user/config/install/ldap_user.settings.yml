@@ -1,18 +1,17 @@
-ldap_user_conf:
-  drupalAcctProvisionServer: '0'
-  ldapEntryProvisionServer: '0'
-  drupalAcctProvisionTriggers:
-    2: 0
-    1: 0
-  ldapEntryProvisionTriggers:
-    6: 0
-    7: 0
-    8: 0
-    3: 0
-  orphanedDrupalAcctBehavior: ldap_user_orphan_email
-  orphanedCheckQty: 100
-  orphanedAccountCheckInterval: 'weekly'
-  userConflictResolve: 2
-  manualAccountConflict: 1
-  acctCreation: 4
-  ldapUserSyncMappings: {  }
+drupalAcctProvisionServer: '0'
+ldapEntryProvisionServer: '0'
+drupalAcctProvisionTriggers:
+  2: 0
+  1: 0
+ldapEntryProvisionTriggers:
+  6: 0
+  7: 0
+  8: 0
+  3: 0
+orphanedDrupalAcctBehavior: ldap_user_orphan_email
+orphanedCheckQty: 100
+orphanedAccountCheckInterval: 'weekly'
+userConflictResolve: 2
+manualAccountConflict: 1
+acctCreation: 4
+ldapUserSyncMappings: {  }

@@ -54,7 +54,7 @@ class LdapAuthenticationProfileUpdateForm extends FormBase {
     if ($existing) {
       $form_state->setErrorByName('mail', t('This email address is already in use.'));
     }
-    $pattern = \Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.emailTemplateUsagePromptRegex');
+    $pattern = \Drupal::config('ldap_authentication.settings')->get('emailTemplateUsagePromptRegex');
     $regex = '`' . $pattern . '`i';
     if (preg_match($regex, $form_state->getValue(['mail']))) {
       $form_state->setErrorByName('mail', t('This email address still matches the invalid email template.'));

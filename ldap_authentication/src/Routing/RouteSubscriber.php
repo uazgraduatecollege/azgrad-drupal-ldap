@@ -27,7 +27,7 @@ class RouteSubscriber extends RouteSubscriberBase {
     $user = \Drupal::currentUser();
     if ($user->isAnonymous()) {
 
-      if (\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.authenticationMode') == LdapAuthenticationConfiguration::MODE_MIXED) {
+      if (\Drupal::config('ldap_authentication.settings')->get('authenticationMode') == LdapAuthenticationConfiguration::MODE_MIXED) {
         return AccessResult::allowed();
       }
 
@@ -35,7 +35,7 @@ class RouteSubscriber extends RouteSubscriberBase {
        * Hide reset password for anonymous users if LDAP-only authentication and
        * password updates are disabled, otherwise show.
        */
-      if (\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.passwordOption') == LdapAuthenticationConfiguration::$passwordFieldAllow) {
+      if (\Drupal::config('ldap_authentication.settings')->get('passwordOption') == LdapAuthenticationConfiguration::$passwordFieldAllow) {
         return AccessResult::allowed();
       } else {
         return AccessResult::forbidden();

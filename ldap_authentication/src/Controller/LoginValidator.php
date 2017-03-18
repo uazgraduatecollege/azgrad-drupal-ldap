@@ -76,7 +76,7 @@ class LoginValidator {
     $credentialsAuthenticationResult = $this->testCredentials($this->formState->getValue('pass'));
 
     if ($credentialsAuthenticationResult == self::AUTHENTICATION_FAILURE_FIND &&
-      \Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.authenticationMode') == LdapAuthenticationConfiguration::MODE_EXCLUSIVE) {
+      \Drupal::config('ldap_authentication.settings')->get('authenticationMode') == LdapAuthenticationConfiguration::MODE_EXCLUSIVE) {
       $this->formState->setErrorByName('non_ldap_login_not_allowed', t('User disallowed'));
     }
 
@@ -142,7 +142,7 @@ class LoginValidator {
     $credentialsAuthenticationResult = $this->testSsoCredentials($this->authName);
 
     if ($credentialsAuthenticationResult == self::AUTHENTICATION_FAILURE_FIND &&
-      \Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.authenticationMode') == LdapAuthenticationConfiguration::MODE_EXCLUSIVE) {
+      \Drupal::config('ldap_authentication.settings')->get('authenticationMode') == LdapAuthenticationConfiguration::MODE_EXCLUSIVE) {
       $this->formState->setErrorByName('non_ldap_login_not_allowed', t('User disallowed'));
     }
 
@@ -447,7 +447,7 @@ class LoginValidator {
    */
   private function ldap_authentication_fail_response($authenticationResult) {
     // Fail scenario 1.  ldap auth exclusive and failed  throw error so no other authentication methods are allowed.
-    if (\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.authenticationMode') == LdapAuthenticationConfiguration::MODE_EXCLUSIVE) {
+    if (\Drupal::config('ldap_authentication.settings')->get('authenticationMode') == LdapAuthenticationConfiguration::MODE_EXCLUSIVE) {
       if ($this->detailedLogging) {
         \Drupal::logger('ldap_authentication')->debug(
           '%username: Error raised because failure at LDAP and exclusive authentication is set to true.',
@@ -514,7 +514,7 @@ class LoginValidator {
      */
 
 
-    foreach (\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.excludeIfTextInDn') as $test) {
+    foreach (\Drupal::config('ldap_authentication.settings')->get('excludeIfTextInDn') as $test) {
       if (stripos($ldap_user['dn'], $test) !== FALSE) {
         // If a match, return FALSE;.
         return FALSE;
@@ -524,9 +524,9 @@ class LoginValidator {
     /**
      * do one of the allow attribute pairs match
      */
-    if (count(\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.allowOnlyIfTextInDn'))) {
+    if (count(\Drupal::config('ldap_authentication.settings')->get('allowOnlyIfTextInDn'))) {
       $fail = TRUE;
-      foreach (\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.allowOnlyIfTextInDn') as $test) {
+      foreach (\Drupal::config('ldap_authentication.settings')->get('allowOnlyIfTextInDn') as $test) {
         if (stripos($ldap_user['dn'], $test) !== FALSE) {
           $fail = FALSE;
         }
@@ -540,7 +540,7 @@ class LoginValidator {
      * Handle excludeIfNoAuthorizations enabled and user has no groups.
      */
 
-    if (\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.excludeIfNoAuthorizations')) {
+    if (\Drupal::config('ldap_authentication.settings')->get('excludeIfNoAuthorizations')) {
 
       $user = User::load($authName);
 
@@ -589,7 +589,7 @@ class LoginValidator {
    */
   private function fixOutdatedEmailAddress() {
 
-    if (!($this->config->get('ldap_authentication_conf.emailTemplateUsageNeverUpdate') && $this->emailTemplateUsed)) {
+    if (!($this->config->get('emailTemplateUsageNeverUpdate') && $this->emailTemplateUsed)) {
       return FALSE;
     }
 
@@ -601,8 +601,8 @@ class LoginValidator {
       return FALSE;
     }
 
-    if ($this->config->get('ldap_authentication_conf.emailUpdate') == LdapAuthenticationConfiguration::$emailUpdateOnLdapChangeEnableNotify ||
-        $this->config->get('ldap_authentication_conf.emailUpdate') == LdapAuthenticationConfiguration::$emailUpdateOnLdapChangeEnable) {
+    if ($this->config->get('emailUpdate') == LdapAuthenticationConfiguration::$emailUpdateOnLdapChangeEnableNotify ||
+        $this->config->get('emailUpdate') == LdapAuthenticationConfiguration::$emailUpdateOnLdapChangeEnable) {
       $this->drupalUser->set('mail', $this->ldapUser['mail']);
       if (!$this->drupalUser->save()) {
         \Drupal::logger('ldap_authentication')
@@ -613,7 +613,7 @@ class LoginValidator {
           );
         return FALSE;
       }
-      elseif ($this->config->get('ldap_authentication_conf.emailUpdate') == LdapAuthenticationConfiguration::$emailUpdateOnLdapChangeEnableNotify
+      elseif ($this->config->get('emailUpdate') == LdapAuthenticationConfiguration::$emailUpdateOnLdapChangeEnableNotify
       ) {
         drupal_set_message(t(
           'Your e-mail has been updated to match your current account (%mail).',
@@ -657,7 +657,7 @@ class LoginValidator {
   private function validateAlreadyAuthenticated() {
 
     if (!empty($this->formState->get('uid'))) {
-      if ($this->config->get('ldap_authentication_conf.authenticationMode') == LdapAuthenticationConfiguration::MODE_MIXED) {
+      if ($this->config->get('authenticationMode') == LdapAuthenticationConfiguration::MODE_MIXED) {
         if ($this->detailedLogging) {
           \Drupal::logger('ldap_authentication')->debug(
             '%username: Previously authenticated in mixed mode, pass on validation.',
@@ -733,8 +733,8 @@ class LoginValidator {
       '@username' => $this->drupalUserName,
     ];
 
-    if (!empty($this->config->get('ldap_authentication_conf.emailTemplate'))) {
-      $handling = $this->config->get('ldap_authentication_conf.emailTemplateHandling');
+    if (!empty($this->config->get('emailTemplate'))) {
+      $handling = $this->config->get('emailTemplateHandling');
       if (($handling == 'if_empty' && empty($this->ldapUser['mail'])) || $handling == 'always') {
           $this->replaceUserMailWithTemplate();
           if ($this->detailedLogging) {
@@ -752,7 +752,7 @@ class LoginValidator {
    */
   private function matchExistingUserWithLdap() {
     if (\Drupal::config('ldapUser.settings')
-        ->get('ldap_user_conf.userConflictResolve') == LdapConfiguration::$userConflictLog
+        ->get('userConflictResolve') == LdapConfiguration::$userConflictLog
     ) {
       if ($account_with_same_email = user_load_by_mail($this->ldapUser['mail'])) {
         /** @var UserInterface $account_with_same_email */
@@ -781,8 +781,8 @@ class LoginValidator {
   private function replaceUserMailWithTemplate() {
     // fallback template in case one was not specified.
     $template = '@username@localhost';
-    if (!empty($this->config->get('ldap_authentication_conf.emailTemplate'))) {
-      $template = $this->config->get('ldap_authentication_conf.emailTemplate');
+    if (!empty($this->config->get('emailTemplate'))) {
+      $template = $this->config->get('emailTemplate');
     }
     $this->ldapUser['mail'] = SafeMarkup::format($template, $this->emailTemplateTokens)->__toString();
   }
@@ -795,7 +795,7 @@ class LoginValidator {
     // Do not provision Drupal account if another account has same email.
     if ($accountDuplicateMail = user_load_by_mail($this->ldapUser['mail'])) {
       $emailAvailable = FALSE;
-      if ($this->config->get('ldap_authentication_conf.emailTemplateUsageResolveConflict') && (!$this->emailTemplateUsed)) {
+      if ($this->config->get('emailTemplateUsageResolveConflict') && (!$this->emailTemplateUsed)) {
         if ($this->detailedLogging) {
           \Drupal::logger('ldap_authentication')->debug('Conflict detected, using template generated email for %username', [
             '%duplicate_name' => $accountDuplicateMail->getUsername(),
@@ -848,7 +848,7 @@ class LoginValidator {
      * it here.
      */
 
-    if (\Drupal::config('ldapUser.settings')->get('ldap_user_conf.acctCreation') == LdapConfiguration::$accountCreationUserSettingsForLdap &&
+    if (\Drupal::config('ldapUser.settings')->get('acctCreation') == LdapConfiguration::$accountCreationUserSettingsForLdap &&
       \Drupal::config('user.settings')->get('register') == USER_REGISTER_VISITORS_ADMINISTRATIVE_APPROVAL
     ) {
       // If admin approval required, set status to 0.

@@ -33,7 +33,7 @@ class LdapAuthenticationConfiguration {
   }
 
   public static function getEnabledAuthenticationServers() {
-    $servers = \Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.sids');
+    $servers = \Drupal::config('ldap_authentication.settings')->get('sids');
     /** @var ServerFactory $factory */
     $factory = \Drupal::service('ldap.servers');
     $result = [];
@@ -97,7 +97,7 @@ class LdapAuthenticationConfiguration {
      * show.
      */
     if (ldap_authentication_ldap_authenticated($user)) {
-      if (\Drupal::config('ldap_authentication.settings')->get('ldap_authentication_conf.passwordOption') == LdapAuthenticationConfiguration::$passwordFieldAllow) {
+      if (\Drupal::config('ldap_authentication.settings')->get('passwordOption') == LdapAuthenticationConfiguration::$passwordFieldAllow) {
         return TRUE;
       }
       return FALSE;

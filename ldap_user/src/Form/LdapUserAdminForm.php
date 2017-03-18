@@ -96,21 +96,21 @@ class LdapUserAdminForm extends ConfigFormBase {
       ),
       '#title' => t('How to resolve LDAP conflicts with manually  created Drupal accounts.'),
       '#description' => t('This applies only to accounts created manually through admin/people/create for which an LDAP entry can be found on the LDAP server selected in "LDAP Servers Providing Provisioning Data"'),
-      '#default_value' => $config->get('ldap_user_conf.manualAccountConflict'),
+      '#default_value' => $config->get('manualAccountConflict'),
     );
 
     $form['basic_to_drupal'] = array(
       '#type' => 'fieldset',
       '#title' => t('Basic Provisioning to Drupal Account Settings'),
       '#collapsible' => TRUE,
-      '#collapsed' => !($config->get('ldap_user_conf.drupalAcctProvisionServer')),
+      '#collapsed' => !($config->get('drupalAcctProvisionServer')),
     );
 
     $form['basic_to_drupal']['drupalAcctProvisionServer'] = array(
       '#type' => 'radios',
       '#title' => t('LDAP Servers Providing Provisioning Data'),
       '#required' => 1,
-      '#default_value' => $config->get('ldap_user_conf.drupalAcctProvisionServer') ? $config->get('ldap_user_conf.drupalAcctProvisionServer') : 'none',
+      '#default_value' => $config->get('drupalAcctProvisionServer') ? $config->get('drupalAcctProvisionServer') : 'none',
       '#options' => $this->drupalAcctProvisionServerOptions,
       '#description' => t('Choose the LDAP server configuration to use in provisioning Drupal users and their user fields.'),
       '#states' => array(
@@ -125,7 +125,7 @@ class LdapUserAdminForm extends ConfigFormBase {
       '#type' => 'checkboxes',
       '#title' => t('Drupal Account Provisioning Events'),
       '#required' => FALSE,
-      '#default_value' => $config->get('ldap_user_conf.drupalAcctProvisionTriggers'),
+      '#default_value' => $config->get('drupalAcctProvisionTriggers'),
       '#options' => [
         LdapConfiguration::$provisionDrupalUserOnAuthentication => t('Create or Sync to Drupal user on successful authentication with LDAP credentials. (Requires LDAP Authentication module).'),
         LdapConfiguration::$provisionDrupalUserOnUserUpdateCreate => t('Create or Sync to Drupal user anytime a Drupal user account is created or updated. Requires a server with binding method of "Service Account Bind" or "Anonymous Bind".'),
@@ -137,7 +137,7 @@ class LdapUserAdminForm extends ConfigFormBase {
       '#type' => 'radios',
       '#title' => t('Existing Drupal User Account Conflict'),
       '#required' => 1,
-      '#default_value' => $config->get('ldap_user_conf.userConflictResolve'),
+      '#default_value' => $config->get('userConflictResolve'),
       '#options' => [
         LdapConfiguration::$userConflictLog => t('Don\'t associate Drupal account with LDAP.  Require user to use Drupal password. Log the conflict'),
         LdapConfiguration::$userConflictAttemptResolve => t('Associate Drupal account with the LDAP entry.  This option is useful for creating accounts and assigning roles before an LDAP user authenticates.'),
@@ -149,7 +149,7 @@ class LdapUserAdminForm extends ConfigFormBase {
       '#type' => 'radios',
       '#title' => t('Application of Drupal Account settings to LDAP Authenticated Users'),
       '#required' => 1,
-      '#default_value' => $config->get('ldap_user_conf.acctCreation'),
+      '#default_value' => $config->get('acctCreation'),
       '#options' => [
         LdapConfiguration::$accountCreationLdapBehaviour => t('Account creation settings at /admin/config/people/accounts/settings do not affect "LDAP Associated" Drupal accounts.'),
         LdapConfiguration::$accountCreationUserSettingsForLdap => t('Account creation policy at /admin/config/people/accounts/settings applies to both Drupal and LDAP Authenticated users. "Visitors" option automatically creates and account when they successfully LDAP authenticate. "Admin" and "Admin with approval" do not allow user to authenticate until the account is approved.'),
@@ -175,7 +175,7 @@ class LdapUserAdminForm extends ConfigFormBase {
       '#title' => t('Action to perform on Drupal accounts that no longer have
         corresponding LDAP entries'),
       '#required' => 0,
-      '#default_value' => $config->get('ldap_user_conf.orphanedDrupalAcctBehavior'),
+      '#default_value' => $config->get('orphanedDrupalAcctBehavior'),
       '#options' => $account_options,
       '#description' => t('It is highly recommended to fetch an email report first before attempting to disable or even delete users.'),
     );
@@ -185,14 +185,14 @@ class LdapUserAdminForm extends ConfigFormBase {
       '#size' => 10,
       '#title' => t('Number of users to check each cron run.'),
       '#description' => t(''),
-      '#default_value' => $config->get('ldap_user_conf.orphanedCheckQty'),
+      '#default_value' => $config->get('orphanedCheckQty'),
       '#required' => FALSE,
     );
 
     $form['basic_to_drupal']['orphanedAccounts']['orphanedAccountCheckInterval'] = array(
       '#type' => 'select',
       '#title' => t('How often should each user be checked again?'),
-      '#default_value' => $config->get('ldap_user_conf.orphanedAccountCheckInterval'),
+      '#default_value' => $config->get('orphanedAccountCheckInterval'),
       '#options' => [
         'always' => $this->t('On every cron run'),
         'daily' => $this->t('Daily'),
@@ -206,14 +206,14 @@ class LdapUserAdminForm extends ConfigFormBase {
       '#type' => 'fieldset',
       '#title' => t('Basic Provisioning to LDAP Settings'),
       '#collapsible' => TRUE,
-      '#collapsed' => !($config->get('ldap_user_conf.ldapEntryProvisionServer')),
+      '#collapsed' => !($config->get('ldapEntryProvisionServer')),
     );
 
     $form['basic_to_ldap']['ldapEntryProvisionServer'] = array(
       '#type' => 'radios',
       '#title' => t('LDAP Servers to Provision LDAP Entries on'),
       '#required' => 1,
-      '#default_value' => $config->get('ldap_user_conf.ldapEntryProvisionServer') ? $config->get('ldap_user_conf.ldapEntryProvisionServer') : 'none',
+      '#default_value' => $config->get('ldapEntryProvisionServer') ? $config->get('ldapEntryProvisionServer') : 'none',
       '#options' => $this->ldapEntryProvisionServerOptions,
       '#description' => t('Check ONE LDAP server configuration to create LDAP entries on.'),
     );
@@ -222,7 +222,7 @@ class LdapUserAdminForm extends ConfigFormBase {
       '#type' => 'checkboxes',
       '#title' => t('LDAP Entry Provisioning Events'),
       '#required' => FALSE,
-      '#default_value' => $config->get('ldap_user_conf.ldapEntryProvisionTriggers'),
+      '#default_value' => $config->get('ldapEntryProvisionTriggers'),
       '#options' => array(
         LdapConfiguration::$provisionLdapEntryOnUserUpdateCreate => t('Create or Sync to LDAP entry when a Drupal account is created or updated.
         Only applied to accounts with a status of approved.'),
@@ -465,17 +465,17 @@ EOT;
     $processedSyncMappings = $this->syncMappingsFromForm($form_state->getValues());
 
     $this->config('ldap_user.settings')
-      ->set('ldap_user_conf.drupalAcctProvisionServer', $drupalAcctProvisionServer)
-      ->set('ldap_user_conf.ldapEntryProvisionServer', $ldapEntryProvisionServer)
-      ->set('ldap_user_conf.drupalAcctProvisionTriggers', $form_state->getValue('drupalAcctProvisionTriggers'))
-      ->set('ldap_user_conf.ldapEntryProvisionTriggers', $form_state->getValue('ldapEntryProvisionTriggers'))
-      ->set('ldap_user_conf.orphanedDrupalAcctBehavior', $form_state->getValue('orphanedDrupalAcctBehavior'))
-      ->set('ldap_user_conf.orphanedCheckQty', $form_state->getValue('orphanedCheckQty'))
-      ->set('ldap_user_conf.orphanedAccountCheckInterval', $form_state->getValue('orphanedAccountCheckInterval'))
-      ->set('ldap_user_conf.userConflictResolve', $form_state->getValue('userConflictResolve'))
-      ->set('ldap_user_conf.manualAccountConflict', $form_state->getValue('manualAccountConflict'))
-      ->set('ldap_user_conf.acctCreation', $form_state->getValue('acctCreation'))
-      ->set('ldap_user_conf.ldapUserSyncMappings', $processedSyncMappings)
+      ->set('drupalAcctProvisionServer', $drupalAcctProvisionServer)
+      ->set('ldapEntryProvisionServer', $ldapEntryProvisionServer)
+      ->set('drupalAcctProvisionTriggers', $form_state->getValue('drupalAcctProvisionTriggers'))
+      ->set('ldapEntryProvisionTriggers', $form_state->getValue('ldapEntryProvisionTriggers'))
+      ->set('orphanedDrupalAcctBehavior', $form_state->getValue('orphanedDrupalAcctBehavior'))
+      ->set('orphanedCheckQty', $form_state->getValue('orphanedCheckQty'))
+      ->set('orphanedAccountCheckInterval', $form_state->getValue('orphanedAccountCheckInterval'))
+      ->set('userConflictResolve', $form_state->getValue('userConflictResolve'))
+      ->set('manualAccountConflict', $form_state->getValue('manualAccountConflict'))
+      ->set('acctCreation', $form_state->getValue('acctCreation'))
+      ->set('ldapUserSyncMappings', $processedSyncMappings)
       ->save();
     $form_state->getValues();
 
@@ -641,9 +641,9 @@ EOT;
     $config = $this->config('ldap_user.settings');
 
     // 2. existing configurable mappings rows.
-    if (!empty($config->get('ldap_user_conf.ldapUserSyncMappings')[$direction])) {
+    if (!empty($config->get('ldapUserSyncMappings')[$direction])) {
       // Key could be ldap attribute name or user attribute name.
-      foreach ($config->get('ldap_user_conf.ldapUserSyncMappings')[$direction] as $target_attr_token => $mapping) {
+      foreach ($config->get('ldapUserSyncMappings')[$direction] as $target_attr_token => $mapping) {
         if ($direction == LdapConfiguration::$provisioningDirectionToDrupalUser) {
           $mapping_key = $mapping['user_attr'];
         }
@@ -971,11 +971,11 @@ EOT;
     $tokens = array();
     $has_drupal_acct_prov_servers = FALSE;
 
-    if (\Drupal::config('ldap_user.settings')->get('ldap_user_conf.drupalAcctProvisionServer')) {
+    if (\Drupal::config('ldap_user.settings')->get('drupalAcctProvisionServer')) {
       $has_drupal_acct_prov_servers = TRUE;
     }
 
-    $has_drupal_acct_prov_settings_options = (count(array_filter(\Drupal::config('ldap_user.settings')->get('ldap_user_conf.drupalAcctProvisionTriggers'))) > 0);
+    $has_drupal_acct_prov_settings_options = (count(array_filter(\Drupal::config('ldap_user.settings')->get('drupalAcctProvisionTriggers'))) > 0);
 
     if (!$has_drupal_acct_prov_servers && $has_drupal_acct_prov_settings_options) {
       $warnings['drupalAcctProvisionServer'] = t('No Servers are enabled to provide provisioning to Drupal, but Drupal Account Provisioning Options are selected.', $tokens);
@@ -985,11 +985,11 @@ EOT;
     }
 
     $has_ldap_prov_servers = FALSE;
-    if (\Drupal::config('ldap_user.settings')->get('ldap_user_conf.ldapEntryProvisionServer')) {
+    if (\Drupal::config('ldap_user.settings')->get('ldapEntryProvisionServer')) {
       $has_ldap_prov_servers = TRUE;
     }
 
-    $has_ldap_prov_settings_options = (count(array_filter(\Drupal::config('ldap_user.settings')->get('ldap_user_conf.ldapEntryProvisionTriggers'))) > 0);
+    $has_ldap_prov_settings_options = (count(array_filter(\Drupal::config('ldap_user.settings')->get('ldapEntryProvisionTriggers'))) > 0);
     if (!$has_ldap_prov_servers && $has_ldap_prov_settings_options) {
       $warnings['ldapEntryProvisionServer'] = t('No Servers are enabled to provide provisioning to ldap, but LDAP Entry Options are selected.', $tokens);
     }
@@ -997,11 +997,11 @@ EOT;
       $warnings['ldapEntryProvisionTriggers'] = t('Servers are enabled to provide provisioning to ldap, but no LDAP Entry Options are selected.  This will result in no syncing happening.', $tokens);
     }
 
-    if (isset($config['ldap_user_conf.ldapUserSyncMappings'])) {
+    if (isset($config['ldapUserSyncMappings'])) {
       $to_ldap_entries_mappings_exist = FALSE;
-      foreach ($config['ldap_user_conf.ldapUserSyncMappings'] as $sync_direction => $mappings) {
+      foreach ($config['ldapUserSyncMappings'] as $sync_direction => $mappings) {
         $map_index = array();
-        $tokens['%sid'] = $config['ldap_user_conf.drupalAcctProvisionServer'];
+        $tokens['%sid'] = $config['drupalAcctProvisionServer'];
         $to_drupal_user_mappings_exist = FALSE;
         $to_ldap_entries_mappings_exist = FALSE;
 

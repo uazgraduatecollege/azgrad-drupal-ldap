@@ -18,7 +18,7 @@ class OrphanProcessor {
    *
    */
   public function __construct() {
-    $this->config = \Drupal::config('ldap_user.settings')->get('ldap_user_conf');
+    $this->config = \Drupal::config('ldap_user.settings')->get();
   }
 
   /**

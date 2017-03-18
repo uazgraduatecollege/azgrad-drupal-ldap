@@ -22,7 +22,7 @@ class LdapUserProcessor {
    *
    */
   public function __construct() {
-    $this->config = \Drupal::config('ldap_user.settings')->get('ldap_user_conf');
+    $this->config = \Drupal::config('ldap_user.settings')->get();
     $this->detailedWatchdog = \Drupal::config('ldap_help.settings')->get('watchdog_detail');
   }
 

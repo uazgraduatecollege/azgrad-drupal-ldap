@@ -1,66 +1,63 @@
 ldap_authentication.settings:
   type: config_object
   mapping:
-    ldap_authentication_conf:
-      type: mapping
-      mapping:
-        sids:
-         type: sequence
-         sequence:
-           type: string
-        authenticationMode:
-          type: integer
-        loginUIUsernameTxt:
-          type: string
-        loginUIPasswordTxt:
-          type: string
-        ldapUserHelpLinkUrl:
-          type: string
-        ldapUserHelpLinkText:
-          type: string
-        emailOption:
-          type: integer
-        emailUpdate:
-          type: integer
-        emailTemplateHandling:
-          type: string
-        emailTemplate:
-          type: string
-        emailTemplateUsageResolveConflict:
-          type: boolean
-        emailTemplateUsageNeverUpdate:
-          type: boolean
-        emailTemplateUsagePromptUser:
-          type: boolean
-        emailTemplateUsageRedirectOnLogin:
-          type: boolean
-        emailTemplateUsagePromptRegex:
-          type: string
-        passwordOption:
-          type: integer
-        allowOnlyIfTextInDn:
-          type: sequence
-          sequence:
-            type: string
-        excludeIfTextInDn:
-          type: sequence
-          sequence:
-            type: string
-        excludeIfNoAuthorizations:
-          type: integer
-        ssoRemoteUserStripDomainName:
-          type: integer
-        ssoExcludedPaths:
-          type: sequence
-          sequence:
-            type: string
-        ssoExcludedHosts:
-          type: sequence
-          sequence:
-            type: string
-        seamlessLogin:
-          type: string
-        ldapImplementation:
-          type: string
-        cookieExpire:
-          type: string
+    sids:
+     type: sequence
+     sequence:
+       type: string
+    authenticationMode:
+      type: integer
+    loginUIUsernameTxt:
+      type: string
+    loginUIPasswordTxt:
+      type: string
+    ldapUserHelpLinkUrl:
+      type: string
+    ldapUserHelpLinkText:
+      type: string
+    emailOption:
+      type: integer
+    emailUpdate:
+      type: integer
+    emailTemplateHandling:
+      type: string
+    emailTemplate:
+      type: string
+    emailTemplateUsageResolveConflict:
+      type: boolean
+    emailTemplateUsageNeverUpdate:
+      type: boolean
+    emailTemplateUsagePromptUser:
+      type: boolean
+    emailTemplateUsageRedirectOnLogin:
+      type: boolean
+    emailTemplateUsagePromptRegex:
+      type: string
+    passwordOption:
+      type: integer
+    allowOnlyIfTextInDn:
+      type: sequence
+      sequence:
+        type: string
+    excludeIfTextInDn:
+      type: sequence
+      sequence:
+        type: string
+    excludeIfNoAuthorizations:
+      type: integer
+    ssoRemoteUserStripDomainName:
+      type: integer
+    ssoExcludedPaths:
+      type: sequence
+      sequence:
+        type: string
+    ssoExcludedHosts:
+      type: sequence
+      sequence:
+        type: string
+    seamlessLogin:
+      type: string
+    ldapImplementation:
+      type: string
+    cookieExpire:
+      type: string

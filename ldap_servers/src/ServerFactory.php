@@ -108,7 +108,7 @@ class ServerFactory {
    * @return mixed
    */
   public function getUserDataByAccount($account, $ldap_context = NULL) {
-    $provisioningServer = \Drupal::config('ldap_user.settings')->get('ldap_user_conf.drupalAcctProvisionServer');
+    $provisioningServer = \Drupal::config('ldap_user.settings')->get('drupalAcctProvisionServer');
     $id = NULL;
     if (!$account) {
       return FALSE;

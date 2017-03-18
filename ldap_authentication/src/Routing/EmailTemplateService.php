@@ -30,7 +30,7 @@ class EmailTemplateService implements EventSubscriberInterface {
    * @param \Symfony\Component\HttpKernel\Event\GetResponseEvent $event
    */
   public function checkTemplate(GetResponseEvent $event) {
-    if ($this->config->get('ldap_authentication_conf.emailTemplateUsagePromptUser') === TRUE) {
+    if ($this->config->get('emailTemplateUsagePromptUser') === TRUE) {
       $this->checkForEmailTemplate();
     }
 
@@ -69,7 +69,7 @@ class EmailTemplateService implements EventSubscriberInterface {
     if ($proxy->id() != 1 && $proxy->isAuthenticated()) {
       $user = User::load($proxy->id());
       $regex = \Drupal::config('ldap_authentication.settings')
-        ->get('ldap_authentication_conf.emailTemplateUsagePromptRegex');
+        ->get('emailTemplateUsagePromptRegex');
 
       $regex = '`' . $regex . '`i';
       if (preg_match($regex, $user->get('mail')->value)) {

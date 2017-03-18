@@ -114,7 +114,7 @@ class LdapUserTestForm extends FormBase {
       /** @var User $account */
       $account = user_load_by_name($username);
 
-      $config = \Drupal::config('ldap_user.settings')->get('ldap_user_conf');
+      $config = \Drupal::config('ldap_user.settings')->get();
       $processor = new DrupalUserProcessor();
       $ldapProcessor = new LdapUserProcessor();
 
