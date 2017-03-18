@@ -187,7 +187,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
       return self::LDAP_CONNECT_ERROR;
     }
 
-    if ($anon_bind !== FALSE && $userdn === NULL && $pass === NULL && $this->get('bind_method') == Server::$bindMethodAnon) {
+    if ($anon_bind === FALSE && $userdn === NULL && $pass === NULL && $this->get('bind_method') == Server::$bindMethodAnon) {
       $anon_bind = TRUE;
     }
     if ($anon_bind === TRUE) {
