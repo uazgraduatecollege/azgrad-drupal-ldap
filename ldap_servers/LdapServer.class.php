@@ -327,7 +327,7 @@ class LdapServer {
       return LDAP_CONNECT_ERROR;
     }
 
-    if ($anon_bind !== FALSE && $userdn === NULL && $pass === NULL && $this->bind_method == LDAP_SERVERS_BIND_METHOD_ANON) {
+    if ($anon_bind === FALSE && $userdn === NULL && $pass === NULL && $this->bind_method == LDAP_SERVERS_BIND_METHOD_ANON) {
       $anon_bind = TRUE;
     }
     if ($anon_bind === TRUE) {
