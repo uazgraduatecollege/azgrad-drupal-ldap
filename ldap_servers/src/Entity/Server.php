@@ -428,7 +428,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
       $result = @ldap_read($this->connection, $dn, 'objectClass=*');
       if (!$result) {
         \Drupal::logger('ldap_server')->error(
-          "LDAP Server ldap_read(%dn) in LdapServer::modifyLdapEntry() Error Server ID = %sid, LDAP Err No: %ldap_errno LDAP Err Message: %ldap_err2str ", [
+          "LDAP Server ldap_read(%dn) in LdapServer::modifyLdapEntry() Error Server ID = %id, LDAP Err No: %ldap_errno LDAP Err Message: %ldap_err2str ", [
             '%dn' => $dn,
             '%id' => $this->id(),
             '%ldap_errno' => ldap_errno($this->connection),
@@ -463,7 +463,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
         $result = @ldap_mod_del($this->connection, $dn, [$key_lcase => $old_value]);
         if (!$result) {
           \Drupal::logger('ldap_server')->error(
-            "LDAP Server ldap_mod_del(%dn) in LdapServer::modifyLdapEntry() Error Server ID = %sid, LDAP Err No: %ldap_errno LDAP Err Message: %ldap_err2str ", [
+            "LDAP Server ldap_mod_del(%dn) in LdapServer::modifyLdapEntry() Error Server ID = %id, LDAP Err No: %ldap_errno LDAP Err Message: %ldap_err2str ", [
               '%dn' => $dn,
               '%id' => $this->id(),
               '%ldap_errno' => ldap_errno($this->connection),
@@ -485,12 +485,11 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
       }
     }
 
-    // FIXME: Type conversion error array vs ldap.
     if (count($attributes) > 0) {
       $result = @ldap_modify($this->connection, $dn, $attributes);
       if (!$result) {
         \Drupal::logger('ldap_server')->error(
-          "LDAP Server ldap_modify(%dn) in LdapServer::modifyLdapEntry() Error Server ID = %sid, LDAP Err No: %ldap_errno LDAP Err Message: %ldap_err2str ", [
+          "LDAP Server ldap_modify(%dn) in LdapServer::modifyLdapEntry() Error Server ID = %id, LDAP Err No: %ldap_errno LDAP Err Message: %ldap_err2str ", [
             '%dn' => $dn,
             '%id' => $this->id(),
             '%ldap_errno' => ldap_errno($this->connection),

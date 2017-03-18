@@ -122,18 +122,14 @@ class LdapUserProcessor {
     }
 
     $tokens = [
-      '%dn' => isset($result['proposed']['dn']) ? $result['proposed']['dn'] : NULL,
+      '%dn' => isset($proposed_ldap_entry['dn']) ? $proposed_ldap_entry['dn'] : 'null',
       '%sid' => $this->config['ldapEntryProvisionServer'],
       '%username' => $account->getAccountName(),
       '%uid' => (!method_exists($account, 'id') || empty($account->id())) ? '' : $account->id(),
+      '%action' => $result ? t('synced') : t('not synced'),
     ];
 
-    if ($result) {
-      \Drupal::logger('ldap_user')->info('LDAP entry on server %sid synced dn=%dn. username=%username, uid=%uid', $tokens);
-    }
-    else {
-      \Drupal::logger('ldap_user')->error('LDAP entry on server %sid not synced because error. username=%username, uid=%uid', $tokens);
-    }
+    \Drupal::logger('ldap_user')->info('LDAP entry on server %sid %action dn=%dn for username=%username, uid=%uid', $tokens);
 
     return $result;
 
