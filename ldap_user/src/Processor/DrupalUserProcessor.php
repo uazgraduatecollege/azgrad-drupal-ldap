@@ -74,139 +74,69 @@ class DrupalUserProcessor {
   /**
    * Provision a Drupal user account.
    *
-   * Given a drupal account, query LDAP and get all user fields and save the
-   * user account.
+   * Given user data, create a user and apply LDAP attributes or assign to
+   * correct user if name has changed through PUID.
    *
-   * @param User|bool $account
-   *   Drupal account object or null.
-   *   Todo: Fix default value of false or correct comment.
-   * @param array $user_values
+   * @param array $userData
    *   A keyed array normally containing 'name' and optionally more.
-   * @param array $ldap_user
-   *   User's ldap entry. Passed to avoid requerying ldap in cases where already
-   *   present.
-   * @param bool $save
-   *   Indicating if Drupal user should be saved. Generally depends on where
-   *   function is called from and if the result of the save is true.
-   *   Todo: Fix architecture here.
    *
    * @return bool|User
-   *   Return TRUE on success or FALSE on any problem.
+   *   Return the user on success or FALSE on any problem.
    */
-  public function provisionDrupalAccount($account = FALSE, $user_values, $ldap_user = NULL, $save = TRUE) {
+  public function provisionDrupalAccount($userData) {
 
     $tokens = array();
-    /**
-     * @TODO: Add error catching for conflicts.
-     * Conflicts should be checked before calling this function.
-     */
+    $account = User::create($userData);
+    $ldapUser = FALSE;
 
-    if (!$account) {
-      $account = \Drupal::entityManager()->getStorage('user')->create($user_values);
-    }
-    $account->enforceIsNew();
-
-    // Should pass in an LDAP record or a username.
-    if (!$ldap_user && !isset($user_values['name'])) {
-      return FALSE;
-    }
     /* @var ServerFactory $factory */
     $factory = \Drupal::service('ldap.servers');
 
     // Get an LDAP user from the LDAP server.
-    if (!$ldap_user) {
-      $tokens['%username'] = $user_values['name'];
-      if ($this->config['drupalAcctProvisionServer']) {
-        $ldap_user = $factory->getUserDataFromServerByIdentifier($user_values['name'], $this->config['drupalAcctProvisionServer'], 'ldap_user_prov_to_drupal');
-      }
-      // Still no LDAP user.
-      if (!$ldap_user) {
-        if (\Drupal::config('ldap_help.settings')->get('watchdog_detail')) {
-          \Drupal::logger('ldap_user')->debug('%username : failed to find associated ldap entry for username in provision.', []);
-        }
-        return FALSE;
-      }
+    $tokens['%username'] = $userData['name'];
+    if ($this->config['drupalAcctProvisionServer']) {
+      $ldapUser = $factory->getUserDataFromServerByIdentifier($userData['name'], $this->config['drupalAcctProvisionServer'], 'ldap_user_prov_to_drupal');
     }
+    // Still no LDAP user.
+    if (!$ldapUser) {
+      if (\Drupal::config('ldap_help.settings')->get('watchdog_detail')) {
+        \Drupal::logger('ldap_user')->debug('%username : failed to find associated ldap entry for username in provision.', []);
+      }
+      return FALSE;
+    }
+
+    $server = $factory->getServerByIdEnabled($this->config['drupalAcctProvisionServer']);
 
     // If we don't have an account name already we should set one.
     if (!$account->getUsername()) {
-      $ldap_server = $factory->getServerByIdEnabled($this->config['drupalAcctProvisionServer']);
-      $account->set('name', $ldap_user[$ldap_server->get('user_attr')]);
+      $account->set('name', $ldapUser[$server->get('user_attr')]);
       $tokens['%username'] = $account->getUsername();
     }
 
     // Can we get details from an LDAP server?
-    if ($this->config['drupalAcctProvisionServer']) {
 
-      $ldap_server = $factory->getServerByIdEnabled($this->config['drupalAcctProvisionServer']);
+    $params = [
+      'account' => $account,
+      'user_values' => $userData,
+      'prov_event' => LdapConfiguration::$eventCreateDrupalUser,
+      'module' => 'ldap_user',
+      'function' => 'provisionDrupalAccount',
+      'direction' => LdapConfiguration::$provisioningDirectionToDrupalUser,
+    ];
 
-      $params = array(
-        'account' => $account,
-        'user_values' => $user_values,
-        'prov_event' => LdapConfiguration::$eventCreateDrupalUser,
-        'module' => 'ldap_user',
-        'function' => 'provisionDrupalAccount',
-        'direction' => LdapConfiguration::$provisioningDirectionToDrupalUser,
-      );
+    \Drupal::moduleHandler()->alter('ldap_entry', $ldapUser, $params);
 
-      \Drupal::moduleHandler()->alter('ldap_entry', $ldap_user, $params);
-
-      // Look for existing drupal account with same puid.  if so update username and attempt to sync in current context.
-      $puid = $ldap_server->userPuidFromLdapEntry($ldap_user['attr']);
-      // FIXME: The entire account2 operation is broken.
-      $account2 = ($puid) ? $ldap_server->userUserEntityFromPuid($puid) : FALSE;
-
-      // Sync drupal account, since drupal account exists.
-      if ($account2) {
-        // 1. correct username and authmap.
-        /** @var User $account2 */
-        $this->applyAttributesToAccount($ldap_user, $account2, $ldap_server, LdapConfiguration::$provisioningDirectionToDrupalUser, array(LdapConfiguration::$eventSyncToDrupalUser));
-        $account = $account2;
-        $account->save();
-        // Update the identifier table.
-        ExternalAuthenticationHelper::setUserIdentifier($account, $account->getUsername());
-
-        // 2. attempt sync if appropriate for current context.
-        if ($account) {
-          $account = $this->syncToDrupalAccount($account, LdapConfiguration::$eventSyncToDrupalUser, $ldap_user, TRUE);
-        }
-        return $account;
-      }
-      // Create drupal account.
-      else {
-        $this->applyAttributesToAccount($ldap_user, $account, $ldap_server, LdapConfiguration::$provisioningDirectionToDrupalUser, array(LdapConfiguration::$eventCreateDrupalUser));
-        if ($save) {
-          $tokens = array('%drupal_username' => $account->get('name'));
-          if (empty($account->getUsername())) {
-            drupal_set_message(t('User account creation failed because of invalid, empty derived Drupal username.'), 'error');
-            \Drupal::logger('ldap_user')->error('Failed to create Drupal account %drupal_username because drupal username could not be derived.', []);
-            return FALSE;
-          }
-          if (!$mail = $account->getEmail()) {
-            drupal_set_message(t('User account creation failed because of invalid, empty derived email address.'), 'error');
-            \Drupal::logger('ldap_user')->error('Failed to create Drupal account %drupal_username because email address could not be derived by LDAP User module', []);
-            return FALSE;
-          }
-
-          if ($account_with_same_email = user_load_by_mail($mail)) {
-            $tokens['%email'] = $mail;
-            $tokens['%duplicate_name'] = $account_with_same_email->name;
-            \Drupal::logger('ldap_user')->error('LDAP user %drupal_username has email address
-              (%email) conflict with a drupal user %duplicate_name', []);
-            drupal_set_message(t('Another user already exists in the system with the same email address. You should contact the system administrator in order to solve this conflict.'), 'error');
-            return FALSE;
-          }
-          $account->save();
-          if (!$account) {
-            drupal_set_message(t('User account creation failed because of system problems.'), 'error');
-          }
-          else {
-            ExternalAuthenticationHelper::setUserIdentifier($account, $account->getUsername());
-          }
-          return $account;
-        }
-        return TRUE;
-      }
+    /**
+     * Look for existing Drupal account with the same PUID. If found, update
+     * that user instead of creating a new user.
+     */
+    $puid = $server->userPuidFromLdapEntry($ldapUser['attr']);
+    $accountFromPuid = ($puid) ? $server->userAccountFromPuid($puid) : FALSE;
+    if ($accountFromPuid) {
+      return $this->updateExistingDrupalAccount($server, $ldapUser, $accountFromPuid);
+    }
+    else {
+      return $this->createDrupalUser($server, $ldapUser, $account);
     }
   }
 
@@ -914,6 +844,70 @@ class DrupalUserProcessor {
       }
     }
     return $availableUserAttributes;
+  }
+
+  /**
+   * @param $ldap_server
+   * @param $ldap_user
+   * @param $account
+   * @return bool|User
+   */
+  private function createDrupalUser($ldap_server, $ldap_user, User $account) {
+    $account->enforceIsNew();
+    $this->applyAttributesToAccount($ldap_user, $account, $ldap_server, LdapConfiguration::$provisioningDirectionToDrupalUser, array(LdapConfiguration::$eventCreateDrupalUser));
+    $tokens = array('%drupal_username' => $account->get('name'));
+    if (empty($account->getUsername())) {
+      drupal_set_message(t('User account creation failed because of invalid, empty derived Drupal username.'), 'error');
+      \Drupal::logger('ldap_user')
+        ->error('Failed to create Drupal account %drupal_username because drupal username could not be derived.', []);
+      return FALSE;
+    }
+    if (!$mail = $account->getEmail()) {
+      drupal_set_message(t('User account creation failed because of invalid, empty derived email address.'), 'error');
+      \Drupal::logger('ldap_user')
+        ->error('Failed to create Drupal account %drupal_username because email address could not be derived by LDAP User module', []);
+      return FALSE;
+    }
+
+    if ($account_with_same_email = user_load_by_mail($mail)) {
+      $tokens['%email'] = $mail;
+      $tokens['%duplicate_name'] = $account_with_same_email->name;
+      \Drupal::logger('ldap_user')->error('LDAP user %drupal_username has email address
+            (%email) conflict with a drupal user %duplicate_name', []);
+      drupal_set_message(t('Another user already exists in the system with the same email address. You should contact the system administrator in order to solve this conflict.'), 'error');
+      return FALSE;
+    }
+    $account->save();
+    if (!$account) {
+      drupal_set_message(t('User account creation failed because of system problems.'), 'error');
+    }
+    else {
+      ExternalAuthenticationHelper::setUserIdentifier($account, $account->getUsername());
+    }
+    return $account;
+  }
+
+  /**
+   * @param $ldap_server
+   * @param $ldap_user
+   * @param $accountFromPuid
+   *
+   * @return bool|\Drupal\user\entity\User|\Drupal\user\UserInterface
+   */
+  private function updateExistingDrupalAccount($ldap_server, $ldap_user, $accountFromPuid) {
+    // 1. correct username and authmap.
+    /** @var User $accountFromPuid */
+    $this->applyAttributesToAccount($ldap_user, $accountFromPuid, $ldap_server, LdapConfiguration::$provisioningDirectionToDrupalUser, array(LdapConfiguration::$eventSyncToDrupalUser));
+    $account = $accountFromPuid;
+    $account->save();
+    // Update the identifier table.
+    ExternalAuthenticationHelper::setUserIdentifier($account, $account->getUsername());
+
+    // 2. attempt sync if appropriate for current context.
+    if ($account) {
+      $account = $this->syncToDrupalAccount($account, LdapConfiguration::$eventSyncToDrupalUser, $ldap_user, TRUE);
+    }
+    return $account;
   }
 
 }

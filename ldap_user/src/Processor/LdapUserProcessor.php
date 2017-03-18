@@ -401,9 +401,11 @@ class LdapUserProcessor {
   }
 
   /**
+   * Delete a provisioned LDAP entry.
+   *
    * Given a drupal account, delete LDAP entry that was provisioned based on it
-   *   normally this will be 0 or 1 entry, but the ldap_user_provisioned_ldap_entries
-   *   field attached to the user entity track each LDAP entry provisioned.
+   * normally this will be 0 or 1 entry, but the ldap_user_prov_entries field
+   * attached to the user entity track each LDAP entry provisioned.
    *
    * @param User $account
    *   Drupal user account.
@@ -413,22 +415,19 @@ class LdapUserProcessor {
    */
   public function deleteProvisionedLdapEntries($account) {
     // Determine server that is associated with user.
-    $boolean_result = FALSE;
-    // @FIXME: Legacy syntax
-    $language = ($account->language) ? $account->language : 'und';
-    if (isset($account->ldap_user_prov_entries[$language][0])) {
-      foreach ($account->ldap_user_prov_entries[$language] as $i => $field_instance) {
-        $parts = explode('|', $field_instance['value']);
+    $result = FALSE;
+    $entries = $account->get('ldap_user_prov_entries')->getValue();
+      foreach ($entries as $i => $entry) {
+        $parts = explode('|', $entry['value']);
         if (count($parts) == 2) {
-
           list($sid, $dn) = $parts;
           $factory = \Drupal::service('ldap.servers');
           $ldap_server = $factory->getServerById($sid);
           if (is_object($ldap_server) && $dn) {
             /** @var Server $ldap_server */
-            $boolean_result = $ldap_server->delete($dn);
-            $tokens = array('%sid' => $sid, '%dn' => $dn, '%username' => $account->getUsername(), '%uid' => $account->id());
-            if ($boolean_result) {
+            $result = $ldap_server->deleteLdapEntry($dn);
+            $tokens = ['%sid' => $sid, '%dn' => $dn, '%username' => $account->getUsername(), '%uid' => $account->id()];
+            if ($result) {
               \Drupal::logger('ldap_user')->info('LDAP entry on server %sid deleted dn=%dn. username=%username, uid=%uid', $tokens);
             }
             else {
@@ -436,12 +435,11 @@ class LdapUserProcessor {
             }
           }
           else {
-            $boolean_result = FALSE;
-          }
+            $result = FALSE;
         }
       }
     }
-    return $boolean_result;
+    return $result;
 
   }
 

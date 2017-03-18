@@ -350,6 +350,33 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
   }
 
   /**
+   * Perform an LDAP delete.
+   *
+   * @param string $dn
+   *
+   * @return boolean result per ldap_delete
+   */
+
+  public function deleteLdapEntry($dn) {
+    if (!$this->connection) {
+      $this->connect();
+      $this->bind();
+    }
+    $result = @ldap_delete($this->connection, $dn);
+
+    if (!$result) {
+      \Drupal::logger('ldap_server')->error(
+        "LDAP Server delete(%dn) in LdapServer::delete() Error Server ID = %id, LDAP Err No: %ldap_errno LDAP Err Message: %ldap_err2str", [
+        '%dn' => $dn,
+        '%id' => $this->id(),
+        '%ldap_errno' => ldap_errno($this->connection),
+        '%ldap_err2str' => ldap_err2str(ldap_errno($this->connection)),
+      ]);
+    }
+    return $result;
+  }
+
+  /**
    * Wrapper for ldap_escape().
    *
    * Helpful for unit testing without the PHP LDAP module.
@@ -838,9 +865,9 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
    * @param string $puid
    *   As returned from ldap_read or other ldap function (can be binary).
    *
-   * @return bool
+   * @return bool|User
    */
-  public function userUserEntityFromPuid($puid) {
+  public function userAccountFromPuid($puid) {
 
     $query = \Drupal::entityQuery('user');
     $query
@@ -852,14 +879,12 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
 
     $result = $query->execute();
 
-    if (isset($result['user'])) {
-      $uids = array_keys($result['user']);
-      if (count($uids) == 1) {
-        $user = \Drupal::entityManager()->getStorage('user');
-        return $user[$uids[0]];
+    if (!empty($result)) {
+      if (count($result) == 1) {
+        return User::load(array_values($result)[0]);
       }
       else {
-        $uids = join(',', $uids);
+        $uids = join(',', $result);
         \Drupal::logger('ldap_server')->error(
           'Multiple users (uids: %uids) with same puid (puid=%puid, sid=%sid, ldap_user_puid_property=%ldap_user_puid_property)', [
             '%uids' => $uids,

@@ -636,7 +636,7 @@ class LoginValidator {
   private function updateAuthNameFromPuid() {
     $puid = $this->serverDrupalUser->userPuidFromLdapEntry($this->ldapUser['attr']);
     if ($puid) {
-      $this->drupalUser = $this->serverDrupalUser->userUserEntityFromPuid($puid);
+      $this->drupalUser = $this->serverDrupalUser->userAccountFromPuid($puid);
       /** @var User $userMatchingPuid */
       if ($this->drupalUser) {
         $this->drupalUser->setUsername($this->drupalUserName);
@@ -862,11 +862,8 @@ class LoginValidator {
       $user_values['mail'] = $this->ldapUser['mail'];
     }
 
-    // Don't pass in LDAP user to provisionDrupalAccount, because want to
-    // re-query with correct attributes needed this may be a case where
-    // efficiency dictates querying for all attributes.
     $processor = new DrupalUserProcessor();
-    $this->drupalUser = $processor->provisionDrupalAccount(NULL, $user_values, NULL, TRUE);
+    $this->drupalUser = $processor->provisionDrupalAccount($user_values);
 
     if ($this->drupalUser  === FALSE) {
       \Drupal::logger('ldapUser')

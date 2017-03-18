@@ -17,7 +17,6 @@ class LdapConfiguration {
   public static $eventCreateLdapEntry = 3;
   public static $eventSyncToLdapEntry = 4;
   public static $eventLdapAssociateDrupalAccount = 5;
-
   public static $provisioningDirectionToDrupalUser = 1;
   public static $provisioningDirectionToLDAPEntry = 2;
   public static $provisioningDirectionNone = 3;
@@ -48,11 +47,8 @@ class LdapConfiguration {
    */
   public static $accountCreationLdapBehaviour = 4;
   public static $accountCreationUserSettingsForLdap = 1;
-
-
   public static $userConflictLog = 1;
   public static $userConflictAttemptResolve = 2;
-
   public static $manualAccountConflictReject = 1;
   public static $manualAccountConflictLdapAssociate = 2;
   public static $manualAccountConflictShowOptionOnForm = 3;
