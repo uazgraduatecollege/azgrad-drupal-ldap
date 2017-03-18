@@ -411,6 +411,7 @@ class DrupalUserProcessor {
     if (isset($params['sid']) && $params['sid']) {
       if (is_scalar($params['sid'])) {
         $factory = \Drupal::service('ldap.servers');
+        /** @var Server $ldap_server */
         $ldap_server = $factory->getServerByIdEnabled($params['sid']);
       }
       else {
@@ -428,14 +429,21 @@ class DrupalUserProcessor {
           case 'ldap_user_insert_drupal_user':
           case 'ldap_user_update_drupal_user':
           case 'ldap_user_ldap_associate':
-            // array($ldap_server->user_attr, 0, NULL);.
-            $attributes[$ldap_server->user_attr] = TokenProcessor::setAttributeMap(@$attributes[$ldap_server->user_attr]);
-            $attributes[$ldap_server->mail_attr] = TokenProcessor::setAttributeMap(@$attributes[$ldap_server->mail_attr]);
-            $attributes[$ldap_server->picture_attr] = TokenProcessor::setAttributeMap(@$attributes[$ldap_server->picture_attr]);
-            $attributes[$ldap_server->unique_persistent_attr] = TokenProcessor::setAttributeMap(@$attributes[$ldap_server->unique_persistent_attr]);
-            if ($ldap_server->mail_template) {
+            if ($ldap_server->get('user_attr')) {
+              $attributes[$ldap_server->get('user_attr')] = TokenProcessor::setAttributeMap(@$attributes[$ldap_server->get('user_attr')]);
+            }
+            if ($ldap_server->get('mail_attr')) {
+              $attributes[$ldap_server->get('mail_attr')] = TokenProcessor::setAttributeMap(@$attributes[$ldap_server->get('mail_attr')]);
+            }
+            if ($ldap_server->get('picture_attr')) {
+              $attributes[$ldap_server->get('picture_attr')] = TokenProcessor::setAttributeMap(@$attributes[$ldap_server->get('picture_attr')]);
+            }
+            if ($ldap_server->get('unique_persistent_attr')) {
+              $attributes[$ldap_server->get('unique_persistent_attr')] = TokenProcessor::setAttributeMap(@$attributes[$ldap_server->get('unique_persistent_attr')]);
+            }
+            if ($ldap_server->get('mail_template')) {
               $tokens = new TokenProcessor();
-              $tokens->extractTokenAttributes($attributes, $ldap_server->mail_template);
+              $tokens->extractTokenAttributes($attributes, $ldap_server->get('mail_template'));
             }
             break;
         }

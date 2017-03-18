@@ -173,7 +173,7 @@ class ServerFactory {
           if (!isset($attributes[$ldap_server->get('mail_attr')])) {
             $attributes[$ldap_server->get('mail_attr')] = TokenProcessor::setAttributeMap();
           }
-          if (!isset($attributes[$ldap_server->get('picture_attr')])) {
+          if ($ldap_server->get('picture_attr') && !isset($attributes[$ldap_server->get('picture_attr')])) {
             $attributes[$ldap_server->get('picture_attr')] = TokenProcessor::setAttributeMap();
           }
           if ($ldap_server->get('unique_persistent_attr') && !isset($attributes[$ldap_server->get('unique_persistent_attr')])) {
