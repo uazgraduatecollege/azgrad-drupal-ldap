@@ -82,7 +82,7 @@ class ServerAPITests {
    */
   public function search($base_dn = NULL, $filter, $attributes = [], $attrsonly = 0, $sizelimit = 0, $timelimit = 0, $deref = LDAP_DEREF_NEVER, $scope = NULL) {
     if ($scope == NULL) {
-      $scope = Server::$scopeSubTree;
+      $scope = Server::SCOPE_SUBTREE;
     }
 
     $lcase_attribute = [];

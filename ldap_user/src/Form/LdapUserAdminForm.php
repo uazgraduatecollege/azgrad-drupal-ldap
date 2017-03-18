@@ -6,6 +6,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Config\ConfigFactoryInterface;
 
+use Drupal\Core\Url;
 use Drupal\ldap_servers\Processor\TokenProcessor;
 use Drupal\ldap_user\Helper\LdapConfiguration;
 use Drupal\ldap_user\Helper\SemaphoreStorage;
@@ -62,8 +63,7 @@ class LdapUserAdminForm extends ConfigFormBase {
     if (count($this->drupalAcctProvisionServerOptions) == 0) {
       $url = Url::fromRoute('entity.ldap_server.collection');
       $edit_server_link = \Drupal::l(t('@path', ['@path' => 'LDAP Servers']), $url);
-      $message = t('At least one LDAP server must configured and <em>enabled</em>
- before configuring LDAP user. Please go to @link to configure an LDAP server.',
+      $message = t('At least one LDAP server must configured and <em>enabled</em> before configuring LDAP user. Please go to @link to configure an LDAP server.',
         ['@link' => $edit_server_link]
       );
       $form['intro'] = [

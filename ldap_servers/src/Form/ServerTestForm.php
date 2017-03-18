@@ -106,7 +106,7 @@ class ServerTestForm extends EntityForm {
       '#description' => t('This is optional and used for testing this server\'s group configuration.'),
     ];
 
-    if ($this->ldapServer->get('bind_method') == Server::$bindMethodAnonUser) {
+    if ($this->ldapServer->get('bind_method') == 'anon_user') {
       $form['testing_drupal_userpw'] = [
         '#type' => 'password',
         '#title' => t('Testing Drupal User Password'),
@@ -249,7 +249,7 @@ class ServerTestForm extends EntityForm {
       $bindpw_type = t('stored in configuration');
     }
 
-    if ($this->ldapServer->get('bind_method') == Server::$bindMethodServiceAccount) {
+    if ($this->ldapServer->get('bind_method') == 'service_account') {
       $results_tables['basic'][] = [
         t('Binding with DN for non-anonymous search (%bind_dn).  Using password ', [
           '%bind_dn' => $this->ldapServer->get('binddn'),
@@ -362,7 +362,7 @@ class ServerTestForm extends EntityForm {
 
     $results = array_merge($results, $more_results);
 
-    if ($this->ldapServer->get('bind_method') == Server::$bindMethodAnonUser) {
+    if ($this->ldapServer->get('bind_method') == 'anon_user') {
       drupal_set_message('Bind method anonymous, user.');
       list($has_errors, $more_results, $ldap_user) = $this->testUserMapping($values['testing_drupal_username']);
       $results = array_merge($results, $more_results);

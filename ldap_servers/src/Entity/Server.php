@@ -45,70 +45,42 @@ use Drupal\user\Entity\User;
  */
 class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
 
-  /**
-   * The Server ID.
-   *
-   * @var string
-   */
   protected $id;
-
-  /**
-   * The Server label.
-   *
-   * @var string
-   */
   protected $label;
-
-  /**
-   * Server connection.
-   *
-   * @var Resource
-   */
   protected $connection;
 
   const LDAP_OPT_DIAGNOSTIC_MESSAGE_BYTE = 0x0032;
   const LDAP_SERVER_LDAP_QUERY_CHUNK = 50;
   const LDAP_SERVER_LDAP_QUERY_RECURSION_LIMIT = 10;
 
+  const SCOPE_BASE = 1;
+  const SCOPE_ONE_LEVEL = 2;
+  const SCOPE_SUBTREE = 3;
 
-  public static $bindMethodServiceAccount = 1;
-  public static $bindMethodUser = 2;
-  public static $bindMethodAnon = 3;
-  public static $bindMethodAnonUser = 4;
-  /**
-   * Attempt to remove this later.
-   */
-  public static $bindMethodDefault = 1;
-
-  public static $scopeBase = 1;
-  public static $scopeOneLevel = 2;
-  public static $scopeSubTree = 3;
-
-  public $searchPageSize = 1000;
-  public $searchPageStart = 0;
-  public $searchPageEnd = NULL;
+  private $searchPageStart = 0;
+  private $searchPageEnd = NULL;
 
   /**
    * Returns the formatted label of the bind method.
    *
-   * Return string.
+   * return string.
    */
   public function getFormattedBind() {
     switch ($this->get('bind_method')) {
-      case self::$bindMethodServiceAccount:
+      case 'service_account':
       default:
         $namedBind = t('service account bind');
         break;
 
-      case self::$bindMethodUser:
+      case 'user':
         $namedBind = t('user credentials bind');
         break;
 
-      case self::$bindMethodAnon:
+      case 'anon':
         $namedBind = t('anonymous bind (search), then user credentials');
         break;
 
-      case self::$bindMethodAnonUser:
+      case 'anon_user':
         $namedBind = t('anonymous bind');
         break;
     }
@@ -159,10 +131,6 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
       }
     }
 
-    if ($this->get('search_pagination') && $this->get('search_page_size')) {
-      $this->searchPageSize = $this->get('search_page_size');
-    }
-
     // Store the resulting resource.
     $this->connection = $con;
     return self::LDAP_SUCCESS;
@@ -188,7 +156,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
       return self::LDAP_CONNECT_ERROR;
     }
 
-    if ($anon_bind === FALSE && $userdn === NULL && $pass === NULL && $this->get('bind_method') == Server::$bindMethodAnon) {
+    if ($anon_bind === FALSE && $userdn === NULL && $pass === NULL && $this->get('bind_method') == 'anon') {
       $anon_bind = TRUE;
     }
     if ($anon_bind === TRUE) {
@@ -282,7 +250,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
       $params['attributes'] = $attributes;
     }
 
-    $result = $this->ldapQuery(Server::$scopeBase, $params);
+    $result = $this->ldapQuery(Server::SCOPE_BASE, $params);
     if ($result !== FALSE) {
       $entries = @ldap_get_entries($this->connection, $result);
       if ($entries !== FALSE && $entries['count'] > 0) {
@@ -555,7 +523,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
    */
   public function searchAllBaseDns($filter, $attributes = [], $scope = NULL) {
     if ($scope == NULL) {
-      $scope = Server::$scopeSubTree;
+      $scope = Server::SCOPE_SUBTREE;
     }
     $all_entries = [];
 
@@ -611,7 +579,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
    */
   public function search($base_dn = NULL, $filter, $attributes = [], $attrsonly = 0, $sizelimit = 0, $timelimit = 0, $deref = NULL, $scope = NULL) {
     if ($scope == NULL) {
-      $scope = Server::$scopeSubTree;
+      $scope = Server::SCOPE_SUBTREE;
     }
     /**
       * pagingation issues:
@@ -731,7 +699,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
     $has_page_results = FALSE;
 
     do {
-      ldap_control_paged_result($this->connection, $this->searchPageSize, TRUE, $page_token);
+      ldap_control_paged_result($this->connection, $this->get('search_page_size'), TRUE, $page_token);
       $result = $this->ldapQuery($ldap_query_params['scope'], $ldap_query_params);
 
       if ($page >= $this->searchPageStart) {
@@ -802,7 +770,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
     $this->connectAndBindIfNotAlready();
 
     switch ($scope) {
-      case Server::$scopeSubTree:
+      case Server::SCOPE_SUBTREE:
         $result = @ldap_search($this->connection, $params['base_dn'], $params['filter'], $params['attributes'], $params['attrsonly'],
           $params['sizelimit'], $params['timelimit'], $params['deref']);
         if ($params['sizelimit'] && $this->ldapErrorNumber() == self::LDAP_SIZELIMIT_EXCEEDED) {
@@ -813,7 +781,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
         }
         break;
 
-      case Server::$scopeBase:
+      case Server::SCOPE_BASE:
         $result = @ldap_read($this->connection, $params['base_dn'], $params['filter'], $params['attributes'], $params['attrsonly'],
           $params['sizelimit'], $params['timelimit'], $params['deref']);
         if ($params['sizelimit'] && $this->ldapErrorNumber() == self::LDAP_SIZELIMIT_EXCEEDED) {
@@ -824,7 +792,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
         }
         break;
 
-      case Server::$scopeOneLevel:
+      case Server::SCOPE_ONE_LEVEL:
         $result = @ldap_list($this->connection, $params['base_dn'], $params['filter'], $params['attributes'], $params['attrsonly'],
           $params['sizelimit'], $params['timelimit'], $params['deref']);
         if ($params['sizelimit'] && $this->ldapErrorNumber() == self::LDAP_SIZELIMIT_EXCEEDED) {
@@ -1145,7 +1113,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
         $name_attr = Unicode::strtolower($name_attr);
       }
       else {
-        if ($this->get('bind_method') == Server::$bindMethodAnonUser) {
+        if ($this->get('bind_method') == 'anon_user') {
           $result = [
             'dn' => $match['dn'],
             'mail' => $this->userEmailFromLdapEntry($match),

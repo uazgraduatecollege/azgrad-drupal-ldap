@@ -32,7 +32,7 @@ ldap_servers.server.*:
       type: integer
       label: 'Weight'
     bind_method:
-      type: integer
+      type: string
       label: 'Binding Method for Searches (such as finding user object or their group memberships)'
     binddn:
       type: string

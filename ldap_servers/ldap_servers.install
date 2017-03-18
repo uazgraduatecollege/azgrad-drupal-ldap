@@ -67,3 +67,28 @@ function ldap_servers_requirements($phase) {
   // Check that ldapauth not installed.
   return $requirements;
 }
+
+/**
+ * Updates bind method to new value.
+ */
+function ldap_servers_update_8301() {
+  $factory = \Drupal::service('ldap.servers');
+  /** @var \Drupal\ldap_servers\ServerFactory $factory */
+  $servers = $factory->getAllServers();
+  foreach ($servers as $server) {
+    $currentMethod = $server->get('bind_method');
+    if ($currentMethod == 1) {
+      $server->set('bind_method', 'service_account');
+    }
+    else if ($currentMethod == 2) {
+      $server->set('bind_method', 'user');
+    }
+    else if ($currentMethod == 3) {
+      $server->set('bind_method', 'anon');
+    }
+    else if ($currentMethod == 4) {
+      $server->set('bind_method', 'anon_user');
+    }
+    $server->save();
+  }
+}

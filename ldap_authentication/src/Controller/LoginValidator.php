@@ -301,12 +301,12 @@ class LoginValidator {
       }
       else {
         $authenticationResult = self::AUTHENTICATION_SUCCESS;
-        if ($this->serverDrupalUser->get('bind_method') == Server::$bindMethodAnonUser) {
+        if ($this->serverDrupalUser->get('bind_method') == 'anon_user') {
           // After successful bind, lookup user again to get private attributes.
           $this->ldapUser = $this->serverDrupalUser->userUserNameToExistingLdapEntry($this->authName);
         }
-        if ($this->serverDrupalUser->get('bind_method') == Server::$bindMethodServiceAccount ||
-          $this->serverDrupalUser->get('bind_method') == Server::$bindMethodAnonUser) {
+        if ($this->serverDrupalUser->get('bind_method') == 'service_account' ||
+          $this->serverDrupalUser->get('bind_method') == 'anon_user') {
           $this->serverDrupalUser->disconnect();
         }
         // Success.
@@ -336,7 +336,7 @@ class LoginValidator {
    */
   private function testUserPassword($password) {
     $loginValid = FALSE;
-    if ($this->serverDrupalUser->get('bind_method') == Server::$bindMethodUser) {
+    if ($this->serverDrupalUser->get('bind_method') == 'user') {
       $loginValid = TRUE;
     }
     elseif ($this->serverDrupalUser->bind($this->ldapUser['dn'], $password, FALSE) == Server::LDAP_SUCCESS) {
@@ -416,12 +416,12 @@ class LoginValidator {
       }
 
       $authenticationResult = self::AUTHENTICATION_SUCCESS;
-      if ($this->serverDrupalUser->get('bind_method') == Server::$bindMethodAnonUser) {
+      if ($this->serverDrupalUser->get('bind_method') == 'anon_user') {
         // After successful bind, lookup user again to get private attributes.
         $this->ldapUser = $this->serverDrupalUser->userUserNameToExistingLdapEntry($authName);
       }
-      if ($this->serverDrupalUser->get('bind_method') == Server::$bindMethodServiceAccount ||
-        $this->serverDrupalUser->get('bind_method') == Server::$bindMethodAnonUser) {
+      if ($this->serverDrupalUser->get('bind_method') == 'service_account' ||
+        $this->serverDrupalUser->get('bind_method') == 'anon_user') {
         $this->serverDrupalUser->disconnect();
       }
       // Success.
@@ -948,37 +948,16 @@ class LoginValidator {
    * @return mixed
    */
   private function bindToServer($password) {
-    /**
-     *
-     * $bindMethodServiceAccount => t('Service Account Bind.  Use credentials in following section to
-     * bind to ldap.  This option is usually a best practice. Service account is entered in next section.'),
-     *
-     * $bindMethodUser => t('Bind with Users Credentials.  Use users\' entered credentials
-     * to bind to LDAP.  This is only useful for modules that work during user logon such
-     * as ldap authentication and ldap authorization.  This option is not a best practice in most cases.
-     * The users dn must be of the form "cn=[username],[base dn]" for this option to work.'),
-     *
-     * $bindMethodAnon => t('Anonymous Bind for search, then Bind with Users Credentials.
-     * Searches for user DN then uses users\' entered credentials to bind to LDAP.  This is only useful for
-     * modules that work during user logon such as ldap authentication and ldap authorization.
-     * The users dn must be discovered by an anonymous search for this option to work.'),
-     *
-     * $bindMethodAnonUser => t('Anonymous Bind. Use no credentials to bind to ldap server.
-     * Will not work on most ldaps.'),
-     *
-     */
-
     $bind_success = FALSE;
-    if ($this->serverDrupalUser->get('bind_method') == Server::$bindMethodServiceAccount) {
+    $bindMethod = $this->serverDrupalUser->get('bind_method');
+    if ($bindMethod == 'service_account') {
       $bind_success = ($this->serverDrupalUser->bind(NULL, NULL, FALSE) == Server::LDAP_SUCCESS);
     }
-    elseif ($this->serverDrupalUser->get('bind_method') == Server::$bindMethodAnon ||
-      $this->serverDrupalUser->get('bind_method') == Server::$bindMethodAnonUser
-    ) {
+    elseif ($bindMethod == 'anon' || $bindMethod == 'anon_user') {
       $bind_success = ($this->serverDrupalUser->bind(NULL, NULL, TRUE) == Server::LDAP_SUCCESS);
     }
-    elseif ($this->serverDrupalUser->get('bind_method') == Server::$bindMethodUser) {
-      // With sso enabled this method of binding isn't valid.
+    elseif ($bindMethod == 'user') {
+      // With SSO enabled this method of binding isn't valid.
       foreach ($this->serverDrupalUser->getBaseDn() as $basedn) {
         $search = ['%basedn', '%username'];
         $replace = [$basedn, $this->authName];
@@ -1004,7 +983,7 @@ class LoginValidator {
           ]);
       }
 
-      if ($this->serverDrupalUser->get('bind_method') == Server::$bindMethodUser) {
+      if ($this->serverDrupalUser->get('bind_method') == 'user') {
         return self::AUTHENTICATION_FAILURE_CREDENTIALS;
       }
       else {
@@ -1020,12 +999,11 @@ class LoginValidator {
    */
   private function bindToServerSSO() {
     $bind_success = FALSE;
-    if ($this->serverDrupalUser->get('bind_method') == Server::$bindMethodServiceAccount) {
+    $bindMethod = $this->serverDrupalUser->get('bind_method');
+    if ($bindMethod == 'service_account') {
       $bind_success = ($this->serverDrupalUser->bind(NULL, NULL, FALSE) == Server::LDAP_SUCCESS);
     }
-    elseif ($this->serverDrupalUser->get('bind_method') == Server::$bindMethodAnon ||
-      $this->serverDrupalUser->get('bind_method') == Server::$bindMethodAnonUser
-    ) {
+    elseif ($bindMethod == 'anon' || $bindMethod == 'anon_user') {
       $bind_success = ($this->serverDrupalUser->bind(NULL, NULL, TRUE) == Server::LDAP_SUCCESS);
     }
     else {
@@ -1048,7 +1026,7 @@ class LoginValidator {
           );
         $tokens['%err_text'] = NULL;
       }
-      if ($this->serverDrupalUser->get('bind_method') == Server::$bindMethodUser) {
+      if ($this->serverDrupalUser->get('bind_method') == 'user') {
         return self::AUTHENTICATION_FAILURE_CREDENTIALS;
       }
       else {

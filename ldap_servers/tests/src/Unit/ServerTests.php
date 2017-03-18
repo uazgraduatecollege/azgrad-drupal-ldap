@@ -28,9 +28,9 @@ class ServerTests extends UnitTestCase {
       0 => ['dn' => ['cn=hpotter,ou=people,dc=example,dc=org']],
     ];
     $valueMap = [
-      [$baseDn[0], '(|(cn=hpotter))', ['dn'], 0, 0, 0, NULL, Server::$scopeSubTree],
-      [$baseDn[0], '(cn=hpotter)', ['dn'], 0, 0, 0, NULL, Server::$scopeSubTree],
-      [$baseDn[0], 'cn=hpotter', ['dn'], 0, 0, 0, NULL, Server::$scopeSubTree],
+      [$baseDn[0], '(|(cn=hpotter))', ['dn'], 0, 0, 0, NULL, Server::SCOPE_SUBTREE],
+      [$baseDn[0], '(cn=hpotter)', ['dn'], 0, 0, 0, NULL, Server::SCOPE_SUBTREE],
+      [$baseDn[0], 'cn=hpotter', ['dn'], 0, 0, 0, NULL, Server::SCOPE_SUBTREE],
     ];
 
     $stub->method('getBasedn')

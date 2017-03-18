@@ -129,7 +129,7 @@ class QueryEntityForm extends EntityForm {
 
     $scope = $ldap_query_entity->get('scope');
     if (!$scope) {
-      $scope = Server::$scopeSubTree;
+      $scope = Server::SCOPE_SUBTREE;
     }
     $form['scope'] = [
       '#type' => 'radios',
@@ -137,9 +137,9 @@ class QueryEntityForm extends EntityForm {
       '#default_value' => $scope,
       '#required' => TRUE,
       '#options' => [
-        Server::$scopeSubTree => $this->t('Subtree (default)'),
-        Server::$scopeBase => $this->t('Base'),
-        Server::$scopeOneLevel => $this->t('One Level'),
+        Server::SCOPE_SUBTREE => $this->t('Subtree (default)'),
+        Server::SCOPE_BASE => $this->t('Base'),
+        Server::SCOPE_ONE_LEVEL => $this->t('One Level'),
       ],
       '#description' => $this->t('
       <em>Subtree</em>: This value is used to indicate searching of all entries at all levels under and including the specified base DN.<br>

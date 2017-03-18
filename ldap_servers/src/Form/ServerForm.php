@@ -99,24 +99,24 @@ class ServerForm extends EntityForm {
     ];
 
     $form['bind']['bind_method'] = [
-      '#default_value' => $server->get('bind_method') ? $server->get('bind_method') : Server::$bindMethodServiceAccount,
+      '#default_value' => $server->get('bind_method') ? $server->get('bind_method') : 'service_account',
       '#type' => 'radios',
       '#title' => t('Binding Method for Searches'),
       '#options' => [
-        Server::$bindMethodServiceAccount => t('Service Account Bind: Use credentials in the
+        'service_account' => t('Service Account Bind: Use credentials in the
         Service Account field below to bind to LDAP <br><div class="description">This option is usually a best practice.</div>'),
 
-        Server::$bindMethodUser => t('Bind with Users Credentials: Use user\'s entered credentials
+        'user' => t('Bind with Users Credentials: Use user\'s entered credentials
         to bind to LDAP<br><div class="description">This is only useful for modules that execute during user logon such
         as LDAP Authentication and LDAP Authorization.  <br> This option is not a best practice in most cases.
         <br> The user\'s dn must be of the form "cn=[username],[base dn]" for this option to work.</div>'),
 
-        Server::$bindMethodAnonUser => t('Anonymous Bind for search, then Bind with Users Credentials<br>
+        'anon_user' => t('Anonymous Bind for search, then Bind with Users Credentials<br>
         <div class="description">Searches for user dn then uses user\'s entered credentials to bind to LDAP.<br/> This is only useful for
         modules that work during user logon such as LDAP Authentication and LDAP Authorization. <br>
         The user\'s dn must be discovered by an anonymous search for this option to work.</div>'),
 
-        Server::$bindMethodAnon => t('Anonymous Bind: Use no credentials to bind to LDAP server<br/>
+        'anon' => t('Anonymous Bind: Use no credentials to bind to LDAP server<br/>
         <div class="description">This option will not work on most LDAPS connections.</div>'),
       ],
     ];
@@ -138,7 +138,7 @@ class ServerForm extends EntityForm {
       '#maxlength' => 512,
       '#states' => [
         'enabled' => [
-          ':input[name=bind_method]' => ['value' => strval(Server::$bindMethodServiceAccount)],
+          ':input[name=bind_method]' => ['value' => strval('service_account')],
         ],
       ],
     ];
@@ -150,7 +150,7 @@ class ServerForm extends EntityForm {
       '#size' => 80,
       '#states' => [
         'enabled' => [
-          ':input[name=bind_method]' => ['value' => strval(Server::$bindMethodServiceAccount)],
+          ':input[name=bind_method]' => ['value' => strval('service_account')],
         ],
       ],
     ];
@@ -503,7 +503,7 @@ class ServerForm extends EntityForm {
       $new_configuration->set('bindpw', NULL);
     }
     // If there isn't a password then load the existing one (unless this an anonymous bind server)
-    elseif ($form_state->getValue('bind_method') != Server::$bindMethodAnon || $form_state->getValue('bind_method') != Server::$bindMethodAnonUser) {
+    elseif ($form_state->getValue('bind_method') != 'anon' || $form_state->getValue('bind_method') != 'anon_user') {
       $factory = \Drupal::service('ldap.servers');
       /** @var \Drupal\ldap_servers\Entity\Server $existing_configuration */
       $existing_configuration = $factory->getServerById($new_configuration->id());

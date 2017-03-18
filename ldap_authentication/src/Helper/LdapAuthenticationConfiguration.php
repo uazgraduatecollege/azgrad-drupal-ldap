@@ -13,19 +13,25 @@ class LdapAuthenticationConfiguration {
   public static $emailUpdateOnLdapChangeEnableNotify = 1;
   public static $emailUpdateOnLdapChangeEnable = 2;
   public static $emailUpdateOnLdapChangeDisable = 3;
-  // Remove default later if possible, see also $emailUpdate.
+  /**
+   * Remove default later if possible, see also $emailUpdate.
+   */
   public static $emailUpdateOnLdapChangeDefault = 1;
 
   public static $passwordFieldShowDisabled = 2;
   public static $passwordFieldHide = 3;
   public static $passwordFieldAllow = 4;
-  // Remove default later if possible, see also $passwordOption.
+  /**
+   * Remove default later if possible, see also $passwordOption.
+   */
   public static $passwordFieldDefault = 2;
 
   public static $emailFieldRemove = 2;
   public static $emailFieldDisable = 3;
   public static $emailFieldAllow = 4;
-  // Remove default later if possible, see also $emailOption.
+  /**
+   * Remove default later if possible, see also $emailOption.
+   */
   public static $emailFieldDefault = 3;
 
   /**
