@@ -4,7 +4,6 @@ namespace Drupal\Tests\ldap_user\Unit;
 
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\ldap_user\Helper\LdapConfiguration;
-use Drupal\ldap_user\Helper\SyncMappingHelper;
 use Drupal\ldap_user\Processor\DrupalUserProcessor;
 use Drupal\Tests\UnitTestCase;
 
@@ -22,6 +21,9 @@ class DrupalUserProcessorTests extends UnitTestCase {
 
   public $provisioningEvents;
 
+  /**
+   *
+   */
   protected function setUp() {
     parent::setUp();
 
@@ -65,13 +67,15 @@ class DrupalUserProcessorTests extends UnitTestCase {
     \Drupal::setContainer($this->container);
   }
 
+  /**
+   *
+   */
   public function testprovisionDrupalAccount() {
-    $this->assertTrue(true);
+    $this->assertTrue(TRUE);
     return;
-    // TODO
-
+    // TODO.
     $account = NULL;
-    $user_edit = array('name' => 'hpotter');
+    $user_edit = ['name' => 'hpotter'];
 
     // Test method provisionDrupalAccount()
     $processor = new DrupalUserProcessor();
@@ -101,44 +105,46 @@ class DrupalUserProcessorTests extends UnitTestCase {
 
     $data_diff = array_diff(
       $hpotter->data['ldap_user'],
-      array(
+      [
         'init' =>
-          array(
+          [
             'sid' => 'activedirectory1',
             'dn' => NULL,
             'mail' => 'hpotter@hogwarts.edu',
-          ),
-      )
+          ],
+      ]
     );
     $this->assertTrue(count($data_diff) == 0, t('user->data array correctly populated for hpotter'), $this->testId());
   }
 
+  /**
+   *
+   */
   public function testSyncToDrupalUser() {
-    $this->assertTrue(true);
+    $this->assertTrue(TRUE);
     return;
-    // TODO
-
+    // TODO.
     // Test account exists with correct username, mail, fname, puid, puidfield, dn
     // Change some user mock ldap data first, (mail and fname) then sync.
     $account = user_load_by_name('hpotter');
 
     $user_edit = NULL;
-    $ldapUserSyncMappings = array();
+    $ldapUserSyncMappings = [];
     $sid = 'activedirectory1';
-    $ldapUserSyncMappings[LdapConfiguration::$provisioningDirectionToDrupalUser]['[property.mail]'] = array(
+    $ldapUserSyncMappings[LdapConfiguration::$provisioningDirectionToDrupalUser]['[property.mail]'] = [
       'sid' => $sid,
       'ldap_attr' => '[mail]',
       'user_attr' => '[property.mail]',
       'convert' => 0,
       'direction' => LdapConfiguration::$provisioningDirectionToDrupalUser,
-      'ldap_contexts' => array('ldap_user_insert_drupal_user', 'ldap_user_update_drupal_user', 'ldap_authentication_authenticate'),
-      'prov_events' => array(LdapConfiguration::$eventSyncToDrupalUser),
+      'ldap_contexts' => ['ldap_user_insert_drupal_user', 'ldap_user_update_drupal_user', 'ldap_authentication_authenticate'],
+      'prov_events' => [LdapConfiguration::$eventSyncToDrupalUser],
       'name' => 'Property: Mail',
       'enabled' => TRUE,
       'config_module' => 'ldap_servers',
       'prov_module' => 'ldap_user',
       'user_tokens' => '',
-    );
+    ];
 
     $this->testFunctions->setFakeServerUserAttribute($sid, 'cn=hpotter,ou=people,dc=hogwarts,dc=edu', 'mail', 'hpotter@owlcarriers.com', 0);
 
@@ -148,11 +154,13 @@ class DrupalUserProcessorTests extends UnitTestCase {
     $this->assertEquals($hpotter->mail, 'hpotter@owlcarriers.com');
   }
 
+  /**
+   *
+   */
   public function testApplyAttributesGeneric() {
-    $this->assertTrue(true);
+    $this->assertTrue(TRUE);
     return;
-    // TODO
-
+    // TODO.
     $sid = 'activedirectory1';
     $tests = [];
 
@@ -173,7 +181,7 @@ class DrupalUserProcessorTests extends UnitTestCase {
         'direction' => LdapConfiguration::$provisioningDirectionToDrupalUser,
         'prov_events' => [
           LdapConfiguration::$eventCreateDrupalUser,
-          LdapConfiguration::$eventSyncToDrupalUser
+          LdapConfiguration::$eventSyncToDrupalUser,
         ],
         'user_tokens' => '',
         'config_module' => 'ldap_user',
@@ -220,11 +228,13 @@ class DrupalUserProcessorTests extends UnitTestCase {
     }
   }
 
+  /**
+   *
+   */
   public function testApplyAttributeCompoundToken() {
-    $this->assertTrue(true);
+    $this->assertTrue(TRUE);
     return;
-    // TODO
-
+    // TODO.
     // Test for compound tokens on create/sync to Drupal user.
     $tests[] = [
       'disabled' => 0,
@@ -248,11 +258,13 @@ class DrupalUserProcessorTests extends UnitTestCase {
     ];
   }
 
+  /**
+   *
+   */
   public function testApplyAttributeConstants() {
-    $this->assertTrue(true);
+    $this->assertTrue(TRUE);
     return;
-    // TODO
-
+    // TODO.
     // Test for constants in use (e.g. "Smith" and "0") instead of tokens e.g. "[sn]" and "[enabled]" on create/sync to Drupal user.
     $tests[] = [
       'disabled' => 0,
@@ -277,11 +289,13 @@ class DrupalUserProcessorTests extends UnitTestCase {
     ];
   }
 
+  /**
+   *
+   */
   public function testApplyAttributeCompoundTokens() {
-    $this->assertTrue(true);
+    $this->assertTrue(TRUE);
     return;
-    // TODO
-
+    // TODO.
     // Test for compound tokens on create/sync to Drupal user.
     $tests[] = [
       'disabled' => 0,
@@ -304,11 +318,13 @@ class DrupalUserProcessorTests extends UnitTestCase {
     ];
   }
 
+  /**
+   *
+   */
   public function testApplyAttributeMultipleMailProperty() {
-    $this->assertTrue(true);
+    $this->assertTrue(TRUE);
     return;
-    // TODO
-
+    // TODO.
     // Test sync of mail property with multiple mail on create/sync to Drupal user.
     $tests[] = [
       'disabled' => 0,
@@ -331,11 +347,13 @@ class DrupalUserProcessorTests extends UnitTestCase {
     ];
   }
 
+  /**
+   *
+   */
   public function testApplyAttributeStatusZ() {
-    $this->assertTrue(true);
+    $this->assertTrue(TRUE);
     return;
-    // TODO
-
+    // TODO.
     // Test sync of status property with value 'z' on create to Drupal user.
     $tests[] = [
       'disabled' => 0,

@@ -53,7 +53,7 @@ class ServerAPITests {
         $ldap_error = "Credentials for $userdn failed in LdapServerTest.class.php";
       }
     }
-    $watchdog_tokens = array('%user' => $userdn, '%errno' => $ldap_errno, '%error' => $ldap_error);
+    $watchdog_tokens = ['%user' => $userdn, '%errno' => $ldap_errno, '%error' => $ldap_error];
     watchdog('ldap', "LDAP bind failure for user %user. Error %errno: %error", $watchdog_tokens);
     return $ldap_errno;
 
@@ -80,19 +80,19 @@ class ServerAPITests {
    *
    * @internal param string $basedn The search base. If NULL, we use $this->basedn.*   The search base. If NULL, we use $this->basedn.
    */
-  public function search($base_dn = NULL, $filter, $attributes = array(), $attrsonly = 0, $sizelimit = 0, $timelimit = 0, $deref = LDAP_DEREF_NEVER, $scope = NULL) {
+  public function search($base_dn = NULL, $filter, $attributes = [], $attrsonly = 0, $sizelimit = 0, $timelimit = 0, $deref = LDAP_DEREF_NEVER, $scope = NULL) {
     if ($scope == NULL) {
       $scope = Server::$scopeSubTree;
     }
 
-    $lcase_attribute = array();
+    $lcase_attribute = [];
     foreach ($attributes as $i => $attribute_name) {
       $lcase_attribute[] = Unicode::strtolower($attribute_name);
     }
     $attributes = $lcase_attribute;
 
     // For test matching simplicity remove line breaks and tab spacing.
-    $filter = trim(str_replace(array("\n", "  "), array('', ''), $filter));
+    $filter = trim(str_replace(["\n", "  "], ['', ''], $filter));
 
     if ($base_dn == NULL) {
       if (count($this->getBaseDn()) == 1) {
@@ -126,7 +126,7 @@ class ServerAPITests {
      */
     $base_dn = Unicode::strtolower($base_dn);
     $filter = trim($filter, "()");
-    $subqueries = array();
+    $subqueries = [];
     $operand = FALSE;
 
     if (strpos($filter, '&') === 0) {
@@ -169,7 +169,7 @@ class ServerAPITests {
     }
 
     // Need to perform faux ldap search here with data in.
-    $results = array();
+    $results = [];
 
     if ($operand == '|') {
       foreach ($subqueries as $i => $subquery) {
@@ -206,7 +206,7 @@ class ServerAPITests {
           // match!
           $entry['dn'] = $dn;
           if ($attributes) {
-            $selected_data = array();
+            $selected_data = [];
             foreach ($attributes as $i => $attr_name) {
               $selected_data[$attr_name] = (isset($entry[$attr_name])) ? $entry[$attr_name] : NULL;
             }
@@ -253,7 +253,7 @@ class ServerAPITests {
         if ($match === TRUE) {
           $entry['dn'] = $dn;
           if ($attributes) {
-            $selected_data = array();
+            $selected_data = [];
             foreach ($attributes as $i => $attr_name) {
               $selected_data[$attr_name] = (isset($entry[$attr_name])) ? $entry[$attr_name] : NULL;
             }

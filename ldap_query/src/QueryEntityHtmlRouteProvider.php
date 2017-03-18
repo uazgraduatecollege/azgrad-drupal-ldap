@@ -10,6 +10,7 @@ use Symfony\Component\Routing\Route;
  * Provides routes for LDAP Queries entities.
  */
 class QueryEntityHtmlRouteProvider extends AdminHtmlRouteProvider {
+
   /**
    * {@inheritdoc}
    */

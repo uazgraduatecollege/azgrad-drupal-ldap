@@ -9,7 +9,6 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpKernel\Event\GetResponseEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 
-
 /**
  * Class EmailTemplateService.
  *
@@ -58,7 +57,7 @@ class EmailTemplateService implements EventSubscriberInterface {
    * Currently this only checks if mail is valid or not according to the
    * authentication settings.
    *
-   * @return boolean
+   * @return bool
    *   TRUE if the user's profile is valid, otherwise FALSE.
    */
   public static function profileNeedsUpdate() {
@@ -83,7 +82,7 @@ class EmailTemplateService implements EventSubscriberInterface {
    * {@inheritdoc}
    */
   public static function getSubscribedEvents() {
-    $events[KernelEvents::REQUEST][] = array('checkTemplate', 30);
+    $events[KernelEvents::REQUEST][] = ['checkTemplate', 30];
     return $events;
   }
 

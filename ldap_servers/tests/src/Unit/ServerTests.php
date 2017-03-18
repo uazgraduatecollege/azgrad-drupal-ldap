@@ -83,8 +83,8 @@ class ServerTests extends UnitTestCase {
       'memberOf' => [
         'Group1',
         // TODO: This is not correctly supported.
-        // 'cn=honors students,ou=groups,dc=hogwarts,dc=edu',
-        ]
+        // 'cn=honors students,ou=groups,dc=hogwarts,dc=edu',.
+      ],
     ];
 
     $result = Server::removeUnchangedAttributes($new_data, $existing_data);
@@ -247,16 +247,16 @@ class ServerTests extends UnitTestCase {
     ];
     $desired[1] = array_merge($desired[0], ['cn=users,ou=groups,dc=hogwarts,dc=edu']);
 
-    foreach (array(0, 1) as $nested) {
+    foreach ([0, 1] as $nested) {
 
       // TODO: Before porting this test, consider splitting nested and not-nested
       // functions up, since this is a mess.
       $nested_display = ($nested) ? 'nested' : 'not nested';
       $desired_count = ($nested) ? 4 : 3;
-      $ldap_module_user_entry = array('attr' => $user_ldap_entry, 'dn' => $user_dn);
+      $ldap_module_user_entry = ['attr' => $user_ldap_entry, 'dn' => $user_dn];
       $groups_desired = $desired[$nested];
 
-      /** @var Server $ldap_server */
+      /** @var \Drupal\ldap_servers\Entity\Server $ldap_server */
       // Test parent function groupMembershipsFromUser.
       $groups = $ldap_server->groupMembershipsFromUser($ldap_module_user_entry, 'group_dns', $nested);
       $count = count($groups);

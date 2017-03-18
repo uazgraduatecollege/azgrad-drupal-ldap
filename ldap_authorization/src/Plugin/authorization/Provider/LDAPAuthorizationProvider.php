@@ -3,12 +3,10 @@
 namespace Drupal\ldap_authorization\Plugin\authorization\provider;
 
 use Drupal\authorization\AuthorizationSkipAuthorization;
-use Drupal\authorization\Entity\AuthorizationProfile;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\authorization\Provider\ProviderPluginBase;
 use Drupal\ldap_servers\Helper\ConversionHelper;
-use Drupal\ldap_servers\Entity\Server;
 use Drupal\ldap_user\Helper\ExternalAuthenticationHelper;
 
 /**
@@ -21,7 +19,7 @@ use Drupal\ldap_user\Helper\ExternalAuthenticationHelper;
 class LDAPAuthorizationProvider extends ProviderPluginBase {
 
   public $providerType = 'ldap';
-  public $handlers = array('ldap', 'ldap_authentication');
+  public $handlers = ['ldap', 'ldap_authentication'];
 
   public $syncOnLogon = TRUE;
 
@@ -32,7 +30,7 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
    *
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
-    /** @var AuthorizationProfile $profile */
+    /** @var \Drupal\authorization\Entity\AuthorizationProfile $profile */
     $profile = $this->configuration['profile'];
     $tokens = $this->getTokens();
     $tokens += $profile->getTokens();
@@ -43,24 +41,24 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
     $factory = \Drupal::service('ldap.servers');
     $servers = $factory->getEnabledServers();
 
-    $form['status'] = array(
+    $form['status'] = [
       '#type' => 'fieldset',
       '#title' => t('Base configuration'),
       '#collapsible' => TRUE,
       '#collapsed' => FALSE,
-    );
+    ];
 
     if (count($servers) == 0) {
-      $form['status']['server'] = array(
+      $form['status']['server'] = [
         '#type' => 'markup',
         '#markup' => t('<strong>Warning</strong>: You must create an LDAP Server first.'),
-      );
+      ];
       drupal_set_message(t('You must create an LDAP Server first.'), 'warning');
     }
     else {
-      $server_options = array();
+      $server_options = [];
       foreach ($servers as $id => $server) {
-        /** @var Server $server */
+        /** @var \Drupal\ldap_servers\Entity\Server $server */
         $server_options[$id] = $server->label() . ' (' . $server->get('address') . ')';
       }
     }
@@ -77,23 +75,23 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
       else {
         $default_server = '';
       }
-      $form['status']['server'] = array(
+      $form['status']['server'] = [
         '#type' => 'radios',
         '#title' => t('LDAP Server used in @profile_name configuration.', $tokens),
         '#required' => 1,
         '#default_value' => $default_server,
         '#options' => $server_options,
-      );
+      ];
     }
 
-    $form['status']['only_ldap_authenticated'] = array(
+    $form['status']['only_ldap_authenticated'] = [
       '#type' => 'checkbox',
       '#title' => t('Only apply the following <strong>LDAP</strong> to <strong>@consumer_name</strong> configuration to users authenticated via LDAP', $tokens),
       '#description' => t('One uncommon reason for disabling this is when you are using Drupal authentication, but want to leverage LDAP for authorization; for this to work the Drupal username still has to map to an LDAP entry.'),
       '#default_value' => isset($provider_config['status'], $provider_config['status']['only_ldap_authenticated']) ? $provider_config['status']['only_ldap_authenticated'] : '',
-    );
+    ];
 
-    $form['filter_and_mappings'] = array(
+    $form['filter_and_mappings'] = [
       '#type' => 'fieldset',
       '#title' => t('LDAP to @consumer_name mapping and filtering', $tokens),
       '#description' => t('Representations of groups derived from LDAP might initially look like:
@@ -105,23 +103,23 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
         </ul>
         <p><strong>Mappings are used to convert and filter these group representations to @consumer_namePlural.</strong></p> @consumer_mappingDirections', $tokens),
       '#collapsible' => TRUE,
-    );
+    ];
 
-    $form['filter_and_mappings']['use_first_attr_as_groupid'] = array(
+    $form['filter_and_mappings']['use_first_attr_as_groupid'] = [
       '#type' => 'checkbox',
       '#title' => t('Convert full DN to value of first attribute before mapping'),
       '#description' => t('Example: <code>cn=students,ou=groups,dc=hogwarts,dc=edu</code> would be converted to <code>students</code>'),
       '#default_value' => isset($provider_config['filter_and_mappings'], $provider_config['filter_and_mappings']['use_first_attr_as_groupid']) ? $provider_config['filter_and_mappings']['use_first_attr_as_groupid'] : '',
-    );
+    ];
 
-    $form['filter_and_mappings']['use_filter'] = array(
+    $form['filter_and_mappings']['use_filter'] = [
       '#type' => 'checkbox',
       '#title' => t('Only grant "@consumer_namePlural" that match a filter below.', $tokens),
       '#default_value' => isset($provider_config['filter_and_mappings'], $provider_config['filter_and_mappings']['use_filter']) ? $provider_config['filter_and_mappings']['use_filter'] : '',
       '#description' => t('If enabled, only below mapped @consumer_namePlural will be assigned (e.g. students and administrator).<br>
         <strong>If not checked, @consumer_namePlural not mapped below also may be created and granted (e.g. gryffindor and probation students).  In some LDAPs this can lead to hundreds of @consumer_namePlural being created if "Create @consumer_namePlural if they do not exist" is enabled below.</strong>',
         $tokens),
-    );
+    ];
 
     return $form;
   }
@@ -147,19 +145,19 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
    * @return array
    */
   public function buildRowForm(array $form, FormStateInterface $form_state, $index = 0) {
-    $row = array();
-    /** @var AuthorizationProfile $this->configuration['profile'] */
+    $row = [];
+    /** @var \Drupal\authorization\Entity\AuthorizationProfile $this->configuration['profile'] */
     $mappings = $this->configuration['profile']->getProviderMappings();
-    $row['query'] = array(
+    $row['query'] = [
       '#type' => 'textfield',
       '#title' => t('LDAP query'),
       '#default_value' => isset($mappings[$index]) ? $mappings[$index]['query'] : NULL,
-    );
-    $row['is_regex'] = array(
+    ];
+    $row['is_regex'] = [
       '#type' => 'checkbox',
       '#title' => t('Is this query a regular expression?'),
       '#default_value' => isset($mappings[$index]) ? $mappings[$index]['is_regex'] : NULL,
-    );
+    ];
 
     return $row;
   }
@@ -185,14 +183,14 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
     if (ExternalAuthenticationHelper::excludeUser($user)) {
       throw new AuthorizationSkipAuthorization();
     }
-    /** @var AuthorizationProfile $profile */
+    /** @var \Drupal\authorization\Entity\AuthorizationProfile $profile */
     $profile = $this->configuration['profile'];
     $config = $profile->getProviderConfig();
 
     // Load the correct server.
     $server_id = $config['status']['server'];
     $factory = \Drupal::service('ldap.servers');
-    /** @var Server $server */
+    /** @var \Drupal\ldap_servers\Entity\Server $server */
     $server = $factory->getServerByIdEnabled($server_id);
     $ldapUserData = $factory->getUserDataFromServerByAccount($user, $server_id);
 
@@ -203,13 +201,13 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
     // Get user groups from DN.
     $derive_from_dn_authorizations = $server->groupUserMembershipsFromDn($user);
     if (!$derive_from_dn_authorizations) {
-      $derive_from_dn_authorizations = array();
+      $derive_from_dn_authorizations = [];
     }
 
     // Get user groups from membership.
     $group_dns = $server->groupMembershipsFromUser($user);
     if (!$group_dns) {
-      $group_dns = array();
+      $group_dns = [];
     }
 
     $proposed_ldap_authorizations = array_merge($derive_from_dn_authorizations, $group_dns);
@@ -221,7 +219,7 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
       );
     }
 
-    return (count($proposed_ldap_authorizations)) ? array_combine($proposed_ldap_authorizations, $proposed_ldap_authorizations) : array();
+    return (count($proposed_ldap_authorizations)) ? array_combine($proposed_ldap_authorizations, $proposed_ldap_authorizations) : [];
   }
 
   /**
@@ -265,7 +263,7 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
    */
   public function sanitizeProposals($proposals, $op = NULL) {
     // Configure this provider.
-    /** @var AuthorizationProfile $profile */
+    /** @var \Drupal\authorization\Entity\AuthorizationProfile $profile */
     $profile = $this->configuration['profile'];
     $config = $profile->getProviderConfig();
     $factory = \Drupal::service('ldap.servers');
@@ -309,12 +307,12 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
    * @return array
    */
   protected function pipeListToArray($mapping_list_txt, $make_item0_lowercase = FALSE) {
-    $result_array = array();
+    $result_array = [];
     $mappings = preg_split('/[\n\r]+/', $mapping_list_txt);
     foreach ($mappings as $line) {
       if (count($mapping = explode('|', trim($line))) == 2) {
         $item_0 = ($make_item0_lowercase) ? Unicode::strtolower(trim($mapping[0])) : trim($mapping[0]);
-        $result_array[] = array($item_0, trim($mapping[1]));
+        $result_array[] = [$item_0, trim($mapping[1])];
       }
     }
     return $result_array;
@@ -326,17 +324,17 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
    * @return array
    */
   public function normalizeMappings($mappings) {
-    $new_mappings = array();
+    $new_mappings = [];
     // In rid => role name format.
     $roles_by_name = user_roles(TRUE);
     foreach ($mappings as $i => $mapping) {
-      $new_mapping = array();
+      $new_mapping = [];
       $new_mapping['user_entered'] = $mapping[1];
       $new_mapping['from'] = $mapping[0];
       $new_mapping['normalized'] = $mapping[1];
       $new_mapping['simplified'] = $mapping[1];
       $new_mapping['valid'] = (boolean) (!empty($roles_by_name[$mapping[1]]));
-      $new_mapping['error_message'] = ($new_mapping['valid']) ? '' : t("Role %role_name does not exist and role creation is not enabled.", array('%role' => $mapping[1]));
+      $new_mapping['error_message'] = ($new_mapping['valid']) ? '' : t("Role %role_name does not exist and role creation is not enabled.", ['%role' => $mapping[1]]);
       $new_mappings[] = $new_mapping;
     }
 

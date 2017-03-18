@@ -9,6 +9,7 @@ class LdapConfiguration {
 
   /**
    * Provisioning events (events are triggered by triggers).
+   *
    * @TODO Convert to string and save in configuration.
    * @TODO Write update hook.
    */
@@ -24,6 +25,7 @@ class LdapConfiguration {
 
   /**
    * Configurable Drupal account provision triggers.
+   *
    * @TODO Convert to string and save in configuration.
    * @TODO Write update hook.
    */
@@ -33,6 +35,7 @@ class LdapConfiguration {
 
   /**
    * Configurable ldap entry provision triggers.
+   *
    * @TODO Convert to string and save in configuration.
    * @TODO Write update hook.
    */
@@ -42,6 +45,7 @@ class LdapConfiguration {
 
   /**
    * Options for account creation behavior.
+   *
    * @TODO Convert to string and save in configuration.
    * @TODO Write update hook.
    */

@@ -5,4 +5,3 @@ entity.ldap_query_entity.collection:
   description: 'List LDAP Queries (bundles)'
   parent: ldap_servers.settings
   weight: 99
-

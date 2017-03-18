@@ -18,7 +18,7 @@ class ldap_views_plugin_query_ldap extends views_plugin_query {
   /**
    * A list of filters to apply to the LDAP search.
    */
-  private $filter = array();
+  private $filter = [];
 
   /**
    * Builds the necessary info to execute the query.
@@ -33,7 +33,7 @@ class ldap_views_plugin_query_ldap extends views_plugin_query {
   /**
    *
    */
-  public function add_field($table, $field, $alias = '', $params = array()) {
+  public function add_field($table, $field, $alias = '', $params = []) {
     // We check for this specifically because it gets a special alias.
     if ($table == $this->base_table && $field == $this->base_field && empty($alias)) {
       $alias = $this->base_field;
@@ -52,11 +52,11 @@ class ldap_views_plugin_query_ldap extends views_plugin_query {
     $alias = drupal_substr($alias, 0, 60);
 
     // Create a field info array.
-    $field_info = array(
+    $field_info = [
       'field' => $field,
       'table' => $table,
       'alias' => $alias,
-    ) + $params;
+    ] + $params;
 
     // Test to see if the field is actually the same or not. Due to
     // differing parameters changing the aggregation function, we need
@@ -77,11 +77,11 @@ class ldap_views_plugin_query_ldap extends views_plugin_query {
   /**
    *
    */
-  public function add_orderby($table, $field, $order, $alias = '', $params = array()) {
-    $this->orderby[] = array(
+  public function add_orderby($table, $field, $order, $alias = '', $params = []) {
+    $this->orderby[] = [
       'field' => $field,
       'direction' => drupal_strtoupper($order),
-    );
+    ];
   }
 
   /**
@@ -135,12 +135,12 @@ class ldap_views_plugin_query_ldap extends views_plugin_query {
       $this->set_where_group('AND', $group);
     }
 
-    $this->where[$group]['conditions'][] = array(
+    $this->where[$group]['conditions'][] = [
       'field' => $field,
       'value' => $value,
       'operator' => ltrim($operator, '!'),
       'negate' => drupal_substr($operator, 0, 1) == '!',
-    );
+    ];
   }
 
   /**
@@ -150,11 +150,11 @@ class ldap_views_plugin_query_ldap extends views_plugin_query {
    *   'where' or 'having'.
    */
   public function build_condition() {
-    $operator = array('AND' => '&', 'OR' => '|');
+    $operator = ['AND' => '&', 'OR' => '|'];
     $main_group = '';
     if (!isset($this->where)) {
       // Initialize where clause if not set.
-      $this->where = array();
+      $this->where = [];
     }
     foreach ($this->where as $group => $info) {
       if (!empty($info['conditions'])) {
@@ -173,7 +173,7 @@ class ldap_views_plugin_query_ldap extends views_plugin_query {
    *
    */
   public function build_ldap_basedn($basedn) {
-    return !empty($this->basedn) ? array($this->basedn) : $basedn;
+    return !empty($this->basedn) ? [$this->basedn] : $basedn;
   }
 
   /**
@@ -230,7 +230,7 @@ class ldap_views_plugin_query_ldap extends views_plugin_query {
    */
   public function execute(&$view) {
     $start       = microtime();
-    $entries     = array();
+    $entries     = [];
     $num_entries = 0;
 
     if (empty($this->options['qid'])) {
@@ -270,12 +270,12 @@ class ldap_views_plugin_query_ldap extends views_plugin_query {
 
     $limit       = $view->query->limit;
     $offset      = $view->query->offset;
-    $result      = array();
-    $sort_fields = array();
+    $result      = [];
+    $sort_fields = [];
     if (!empty($this->orderby)) {
       foreach ($this->orderby as $orderby) {
         $sort_fields[drupal_strtolower($orderby['field'])]['direction'] = $orderby['direction'];
-        $sort_fields[drupal_strtolower($orderby['field'])]['data']      = array();
+        $sort_fields[drupal_strtolower($orderby['field'])]['data']      = [];
       }
 
     }
@@ -317,9 +317,9 @@ class ldap_views_plugin_query_ldap extends views_plugin_query {
       }
     }
     if (!empty($this->orderby) && !empty($entries)) {
-      $params = array();
+      $params = [];
       // In PHP 5.3 every parameter in the array has to be a reference when calling array_multisort() with call_user_func_array().
-      $asc  = SORT_ASC;
+      $asc = SORT_ASC;
       $desc = SORT_DESC;
       foreach ($sort_fields as &$field) {
         $params[] = &$field['data'];
@@ -348,7 +348,7 @@ class ldap_views_plugin_query_ldap extends views_plugin_query {
     }
 
     for ($i = 0; (!isset($limit) || $i < $limit) && $offset + $i < $num_entries; $i++) {
-      $row = array();
+      $row = [];
       $entry = &$entries[$offset + $i];
       foreach ($view->field as $field) {
         if (!isset($field_alias[$field->field_alias])) {
@@ -361,10 +361,10 @@ class ldap_views_plugin_query_ldap extends views_plugin_query {
       $result[] = $row;
     }
 
-    $view->result       = $result;
-    $view->total_rows   = $num_entries;
-    $view->execute_time = microtime() - $start;
-    $view->query->pager->total_items  = $num_entries;
+    $view->result                    = $result;
+    $view->total_rows                = $num_entries;
+    $view->execute_time              = microtime() - $start;
+    $view->query->pager->total_items = $num_entries;
     $view->query->pager->update_page_info();
 
   }
@@ -374,7 +374,7 @@ class ldap_views_plugin_query_ldap extends views_plugin_query {
    */
   public function option_definition() {
     $options = parent::option_definition();
-    $options['qid'] = array('default' => '');
+    $options['qid'] = ['default' => ''];
 
     return $options;
   }
@@ -390,7 +390,7 @@ class ldap_views_plugin_query_ldap extends views_plugin_query {
  * $options[$data->qid] = $data->name;
  * }
  */
-    $queries = array();
+    $queries = [];
     $queries['all'] = LdapQueryAdmin::getLdapQueryObjects();
 
     foreach ($queries['all'] as $_sid => $ldap_query) {
@@ -400,13 +400,13 @@ class ldap_views_plugin_query_ldap extends views_plugin_query {
       }
     }
     // ******************************************************.
-    $form['qid'] = array(
+    $form['qid'] = [
       '#type' => 'select',
       '#title' => t('LDAP Search'),
       '#options' => $options,
       '#default_value' => $this->options['qid'],
       '#description' => t("The LDAP server to query."),
-    );
+    ];
   }
 
   /**

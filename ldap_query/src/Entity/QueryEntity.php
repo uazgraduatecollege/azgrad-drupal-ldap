@@ -63,13 +63,21 @@ class QueryEntity extends ConfigEntityBase implements QueryEntityInterface {
   protected $dereference;
   protected $scope;
 
+  /**
+   *
+   */
   public function getProcessedBaseDns() {
     return explode("\r\n", $this->base_dn);
   }
+
+  /**
+   *
+   */
   public function getProcessedAttributes() {
     if (!empty($this->attributes)) {
       return explode(',', $this->attributes);
-    } else {
+    }
+    else {
       return [];
     }
   }

@@ -9,5 +9,3 @@ dependencies:
   - ldap:ldap_query
 
 configure: feeds.admin
-
-

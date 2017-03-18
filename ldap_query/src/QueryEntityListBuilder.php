@@ -9,6 +9,7 @@ use Drupal\Core\Entity\EntityInterface;
  * Provides a listing of LDAP Queries entities.
  */
 class QueryEntityListBuilder extends ConfigEntityListBuilder {
+
   /**
    * {@inheritdoc}
    */
@@ -26,7 +27,7 @@ class QueryEntityListBuilder extends ConfigEntityListBuilder {
     $row['label'] = $entity->label();
     $factory = \Drupal::service('ldap.servers');
     $server = $factory->getServerById($entity->get('server_id'));
-    $row['server_id'] =  $server->label();
+    $row['server_id'] = $server->label();
     $row['status'] = $entity->get('status') ? $this->t('Enabled') : $this->t('Disabled');
     return $row + parent::buildRow($entity);
   }

@@ -5,4 +5,3 @@ entity.ldap_server.add_form:
   title: 'Add Server'
   appears_on:
     - entity.ldap_server.collection
-

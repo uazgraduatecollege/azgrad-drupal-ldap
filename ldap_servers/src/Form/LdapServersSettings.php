@@ -48,13 +48,13 @@ class LdapServersSettings extends ConfigFormBase {
       '#title' => t('Require HTTPS on Credential Pages'),
     ];
 
-    $form['ssl']['require_ssl_for_credentials'] = array(
+    $form['ssl']['require_ssl_for_credentials'] = [
       '#type' => 'checkbox',
       '#title' => t('If checked, modules using LDAP will not allow credentials
        to be entered on or submitted to HTTP pages, only HTTPS. This option
        is recommended for http/https mixed-mode sites.'),
       '#default_value' => \Drupal::config('ldap_servers.settings')->get('require_ssl_for_credentials'),
-    );
+    ];
 
     $form = parent::buildForm($form, $form_state);
     return $form;

@@ -45,17 +45,17 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
     if (count($authenticationServers) == 0) {
 
       $url = Url::fromRoute('entity.ldap_server.collection');
-      $edit_server_link = \Drupal::l(t('@path', array('@path' => 'LDAP Servers')), $url);
+      $edit_server_link = \Drupal::l(t('@path', ['@path' => 'LDAP Servers']), $url);
 
       $message = t('At least one LDAP server must configured and <em>enabled</em>
  before configuring LDAP authentication. Please go to @link to configure an LDAP server.',
         ['@link' => $edit_server_link]
       );
 
-      $form['intro'] = array(
+      $form['intro'] = [
         '#type' => 'item',
         '#markup' => t('<h1>LDAP Authentication Settings</h1>') . $message,
-      );
+      ];
       return $form;
     }
 
@@ -91,35 +91,35 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
       '#required' => FALSE,
       '#default_value' => $config->get('sids'),
       '#options' => $authenticationServers,
-      '#description' =>  t('Check all LDAP server configurations to use in authentication.
+      '#description' => t('Check all LDAP server configurations to use in authentication.
      Each will be tested for authentication until successful or
      until each is exhausted.  In most cases only one server configuration is selected.'),
     ];
 
-    $form['login_UI'] = array(
+    $form['login_UI'] = [
       '#type' => 'fieldset',
       '#title' => t('User Login Interface'),
       '#collapsible' => TRUE,
       '#collapsed' => FALSE,
-    );
+    ];
 
-    $form['login_UI']['loginUIUsernameTxt'] = array(
+    $form['login_UI']['loginUIUsernameTxt'] = [
       '#type' => 'textfield',
       '#title' => t('Username Description Text'),
       '#required' => 0,
       '#default_value' => $config->get('loginUIUsernameTxt'),
-      '#description' =>  $this->t('Text to be displayed to user below the username field of the user login screen.'),
-    );
+      '#description' => $this->t('Text to be displayed to user below the username field of the user login screen.'),
+    ];
 
-    $form['login_UI']['loginUIPasswordTxt'] = array(
+    $form['login_UI']['loginUIPasswordTxt'] = [
       '#type' => 'textfield',
       '#title' => t('Password Description Text'),
       '#required' => 0,
       '#default_value' => $config->get('loginUIPasswordTxt'),
       '#description' => $this->t('Text to be displayed to user below the password field of the user login screen.'),
-    );
+    ];
 
-    $form['login_UI']['ldapUserHelpLinkUrl'] = array(
+    $form['login_UI']['ldapUserHelpLinkUrl'] = [
       '#type' => 'textfield',
       '#title' => t('LDAP Account User Help URL'),
       '#required' => 0,
@@ -127,7 +127,7 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
       '#description' => $this->t('URL to LDAP user help/documentation for users resetting
      passwords etc. Should be of form http://domain.com/. Could be the institutions ldap password support page
      or a page within this drupal site that is available to anonymous users.'),
-    );
+    ];
 
     $form['login_UI']['ldapUserHelpLinkText'] = [
       '#type' => 'textfield',
@@ -155,7 +155,7 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
       such as <pre>ou=education<br>ou=engineering</pre> This test will be case insensitive.'),
     ];
 
-    $form['restrictions']['excludeIfTextInDn'] = array(
+    $form['restrictions']['excludeIfTextInDn'] = [
       '#type' => 'textarea',
       '#title' => t('Excluded Text Test'),
       '#default_value' => LdapAuthenticationConfiguration::arrayToLines($config->get('excludeIfTextInDn')),
@@ -164,9 +164,9 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
       '#description' => $this->t('A list of text such as ou=evil
       or cn=bad that if found in a user\'s dn, exclude them from ldap authentication.
       Enter one per line such as <pre>ou=evil<br>cn=bad</pre> This test will be case insensitive.'),
-    );
+    ];
 
-    $form['restrictions']['excludeIfNoAuthorizations'] = array(
+    $form['restrictions']['excludeIfNoAuthorizations'] = [
       '#type' => 'checkbox',
       '#title' => t('Deny access to users without Ldap Authorization Module
         authorization mappings such as Drupal roles.
@@ -176,7 +176,7 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
       organic groups, etc. by LDAP Authorization, login will be denied.  LDAP Authorization must be
       enabled for this to work.'),
       '#disabled' => (boolean) (!\Drupal::moduleHandler()->moduleExists('ldap_authorization')),
-    );
+    ];
 
     $form['email'] = [
       '#type' => 'fieldset',
@@ -188,7 +188,7 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
       '#title' => t('Email Behavior'),
       '#required' => 1,
       '#default_value' => $config->get('emailOption'),
-      '#options' =>  [
+      '#options' => [
         LdapAuthenticationConfiguration::$emailFieldRemove => t('Don\'t show an email field on user forms. LDAP derived email will be used for user and cannot be changed by user.'),
         LdapAuthenticationConfiguration::$emailFieldDisable => t('Show disabled email field on user forms with LDAP derived email. LDAP derived email will be used for user and cannot be changed by user.'),
         LdapAuthenticationConfiguration::$emailFieldAllow => t('Leave email field on user forms enabled. Generally used when provisioning to LDAP or not using email derived from LDAP.'),
@@ -207,7 +207,6 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
       ],
     ];
 
-
     $form['email']['template'] = [
       '#type' => 'fieldset',
       '#title' => t('Email Templates'),
@@ -222,7 +221,7 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
         'none' => t('Never use the template.'),
         'if_empty' => t('Use the template if no email address was provided by the LDAP server.'),
         'always' => t('Always use the template.'),
-      ]
+      ],
     ];
 
     $form['email']['template']['emailTemplate'] = [
@@ -310,7 +309,7 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
       ->set('authenticationMode', $values['authenticationMode'])
       ->set('sids', $values['authenticationServers'])
       ->set('allowOnlyIfTextInDn', LdapAuthenticationConfiguration::linesToArray($values['allowOnlyIfTextInDn']))
-      ->set('excludeIfTextInDn',  LdapAuthenticationConfiguration::linesToArray($values['excludeIfTextInDn']))
+      ->set('excludeIfTextInDn', LdapAuthenticationConfiguration::linesToArray($values['excludeIfTextInDn']))
       ->set('loginUIUsernameTxt', $values['loginUIUsernameTxt'])
       ->set('loginUIPasswordTxt', $values['loginUIPasswordTxt'])
       ->set('ldapUserHelpLinkUrl', $values['ldapUserHelpLinkUrl'])

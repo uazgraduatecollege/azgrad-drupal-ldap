@@ -14,14 +14,14 @@ use Drupal\Core\Routing\RouteMatchInterface;
  * Alter LDAP settings form to add watchdog details.
  */
 function ldap_help_form_ldap_servers_settings_alter(&$form, FormStateInterface $form_state) {
-  $form['watchdog_detail'] = array('#type' => 'fieldset', '#title' => t('Debugging'));
-  $form['watchdog_detail']['watchdog_detail'] = array(
+  $form['watchdog_detail'] = ['#type' => 'fieldset', '#title' => t('Debugging')];
+  $form['watchdog_detail']['watchdog_detail'] = [
     '#type' => 'checkbox',
     '#title' => t('Enabled Detailed LDAP Watchdog logging. This is generally for
        debugging and reporting issues with the ldap modules and should not be left
        on.'),
     '#default_value' => \Drupal::config('ldap_help.settings')->get('watchdog_detail'),
-  );
+  ];
   $form['#submit'][] = 'ldap_help_watchdog_detail_submit';
 }
 
@@ -57,7 +57,8 @@ function ldap_help_help($route_name, RouteMatchInterface $route_match) {
     case 'admin/config/people/ldap/help':
     case 'admin/help#ldap_help':
       return '<p>' . $help . '</p>';
-      break;
+
+    break;
   }
 
 }

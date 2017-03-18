@@ -50,6 +50,3 @@ their help can often save you a significant amount of time in debugging.
 * [University of Washington](http://www.netid.washington.edu/documentation/ldapConfig.aspx)
 * [University of Chicago](https://wiki.uchicago.edu/display/idm/LDAP)
 * [UIOWA](https://www.icts.uiowa.edu/confluence/display/ICTSit/Drupal+LDAP+Integration+Against+Active+Directory)
-
-
-

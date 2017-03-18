@@ -4,6 +4,7 @@
  * @file
  * Provides the Parser for an ldap entry array.
  */
+
 use Drupal\feeds\Annotation\FeedsParser;
 use Drupal\feeds\Annotation\FeedsSource;
 
@@ -20,10 +21,10 @@ class FeedsLdapEntryParser extends FeedsParser {
 
     $mappings = feeds_importer($this->id)->processor->config['mappings'];
     $ldap_entries = $fetcher_result->ldap_result;
-    $parsed_items = array();
+    $parsed_items = [];
     for ($i = 0; $i < $ldap_entries['count']; $i++) {
       $ldap_entry = $ldap_entries[$i];
-      $parsed_item = array('dn' => (string) $ldap_entry['dn']);
+      $parsed_item = ['dn' => (string) $ldap_entry['dn']];
       foreach ($mappings as $j => $map) {
         $source_lcase = drupal_strtolower($map['source']);
         $source = $map['source'];
@@ -51,7 +52,7 @@ class FeedsLdapEntryParser extends FeedsParser {
    * Source form.
    */
   public function sourceForm($source_config) {
-    $form = array();
+    $form = [];
     $mappings = feeds_importer($this->id)->processor->config['mappings'];
     if (empty($source_config)) {
       $source_config = $this->config;
@@ -63,7 +64,7 @@ class FeedsLdapEntryParser extends FeedsParser {
    * Override parent::configFormValidate().
    */
   public function configFormValidate(&$values) {
-    $this->setConfig(array('sources' => $values));
+    $this->setConfig(['sources' => $values]);
     $this->save();
   }
 
@@ -83,14 +84,14 @@ class FeedsLdapEntryParser extends FeedsParser {
      * 'multivalued' => LDAP_FEEDS_QUERY_FETCHER_MULTI_DEFAULT,
      * );
      *   */
-    return array();
+    return [];
   }
 
   /**
    * Override parent::configForm().
    */
   public function configForm(&$form_state) {
-    $form = array();
+    $form = [];
     return $form;
   }
 
@@ -98,7 +99,7 @@ class FeedsLdapEntryParser extends FeedsParser {
    *
    */
   public function sourceDefaults() {
-    return array();
+    return [];
   }
 
 }

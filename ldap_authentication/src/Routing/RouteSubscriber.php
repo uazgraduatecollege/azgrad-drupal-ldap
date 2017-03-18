@@ -14,6 +14,7 @@ use Symfony\Component\Routing\RouteCollection;
  * Listens to the dynamic route events.
  */
 class RouteSubscriber extends RouteSubscriberBase {
+
   /**
    * {@inheritdoc}
    */
@@ -23,6 +24,9 @@ class RouteSubscriber extends RouteSubscriberBase {
     }
   }
 
+  /**
+   *
+   */
   public static function validateResetPasswordAllowed() {
     $user = \Drupal::currentUser();
     if ($user->isAnonymous()) {
@@ -37,11 +41,14 @@ class RouteSubscriber extends RouteSubscriberBase {
        */
       if (\Drupal::config('ldap_authentication.settings')->get('passwordOption') == LdapAuthenticationConfiguration::$passwordFieldAllow) {
         return AccessResult::allowed();
-      } else {
+      }
+      else {
         return AccessResult::forbidden();
       }
-    } else {
+    }
+    else {
       return AccessResult::forbidden();
     }
   }
+
 }

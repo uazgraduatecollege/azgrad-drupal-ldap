@@ -81,12 +81,12 @@ class SyncMappingHelper {
       $direction = LdapConfiguration::$provisioningDirectionAll;
     }
 
-    $mappings = array();
+    $mappings = [];
     if ($direction == LdapConfiguration::$provisioningDirectionAll) {
-      $directions = array(LdapConfiguration::$provisioningDirectionToDrupalUser, LdapConfiguration::$provisioningDirectionToLDAPEntry);
+      $directions = [LdapConfiguration::$provisioningDirectionToDrupalUser, LdapConfiguration::$provisioningDirectionToLDAPEntry];
     }
     else {
-      $directions = array($direction);
+      $directions = [$direction];
     }
     foreach ($directions as $direction) {
       if (!empty($this->config['ldapUserSyncMappings'][$direction])) {
@@ -135,10 +135,10 @@ class SyncMappingHelper {
    */
   public function processSyncMappings() {
     $available_user_attributes = [];
-    foreach (array(
-               LdapConfiguration::$provisioningDirectionToDrupalUser,
-               LdapConfiguration::$provisioningDirectionToLDAPEntry
-             ) as $direction) {
+    foreach ([
+      LdapConfiguration::$provisioningDirectionToDrupalUser,
+      LdapConfiguration::$provisioningDirectionToLDAPEntry,
+    ] as $direction) {
       if ($direction == LdapConfiguration::$provisioningDirectionToDrupalUser) {
         $sid = \Drupal::config('ldap_user.settings')
           ->get('drupalAcctProvisionServer');
@@ -153,7 +153,8 @@ class SyncMappingHelper {
         try {
           $factory = \Drupal::service('ldap.servers');
           $ldap_server = $factory->getServerById($sid);
-        } catch (\Exception $e) {
+        }
+        catch (\Exception $e) {
           \Drupal::logger('ldap_user')->error('Missing server');
         }
       }

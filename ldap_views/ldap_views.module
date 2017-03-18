@@ -10,15 +10,14 @@
 function ldap_views_views_data() {
   $data['ldap_query_entity']['table']['group'] = t('LDAP Query');
 
-  $data['ldap_query_entity']['table']['base'] = array(
+  $data['ldap_query_entity']['table']['base'] = [
     'field' => 'id',
     'title' => t('LDAP Query'),
     'help' => t('Data from LDAP Server.'),
-  );
+  ];
 
   return $data;
 }
-
 
 /**
  * Legacy code below.
@@ -40,78 +39,77 @@ function ldap_views_get_qid(&$view) {
 function ldap_views_views_data_old() {
   $data['ldap']['table']['group'] = t('LDAP Query');
 
-
   // Basedn.
-  $data['ldap']['basedn'] = array(
+  $data['ldap']['basedn'] = [
     'title' => t('LDAP Base DN'),
     'help' => t('The LDAP search base entry'),
-    'argument' => array(
+    'argument' => [
       'handler' => 'ldap_views_handler_argument',
-    ),
-  );
+    ],
+  ];
   // filter
   // Generic column.
-  $data['ldap']['attribute'] = array(
+  $data['ldap']['attribute'] = [
     'title' => t('LDAP Attribute'),
     'help' => t('An attribute in LDAP Server'),
-    'argument' => array(
+    'argument' => [
       'handler' => 'ldap_views_handler_argument_attribute',
-    ),
-    'field' => array(
+    ],
+    'field' => [
       'handler' => 'ldap_views_handler_field_attribute',
-    ),
-    'sort' => array(
+    ],
+    'sort' => [
       'handler' => 'ldap_views_handler_sort_attribute',
-    ),
-    'filter' => array(
+    ],
+    'filter' => [
       'handler' => 'ldap_views_handler_filter_attribute',
-    ),
-  );
-  $data['ldap']['dn'] = array(
+    ],
+  ];
+  $data['ldap']['dn'] = [
     'title' => t('DN'),
     'help' => t('Distinguished name'),
-    'field' => array(
+    'field' => [
       'handler' => 'ldap_views_handler_field',
-    ),
-    'sort' => array(
+    ],
+    'sort' => [
       'handler' => 'ldap_views_handler_sort',
-    ),
-    'filter' => array(
+    ],
+    'filter' => [
       'handler' => 'views_handler_filter_string',
-    ),
-  );
-  $data['ldap']['cn'] = array(
+    ],
+  ];
+  $data['ldap']['cn'] = [
     'title' => t('CN'),
     'help' => t('Common name'),
-    'argument' => array(
+    'argument' => [
       'handler' => 'ldap_views_handler_argument',
-    ),
-    'field' => array(
+    ],
+    'field' => [
       'handler' => 'ldap_views_handler_field',
-    ),
-    'sort' => array(
+    ],
+    'sort' => [
       'handler' => 'ldap_views_handler_sort',
-    ),
-    'filter' => array(
+    ],
+    'filter' => [
       'handler' => 'ldap_views_handler_filter',
-    ),
-  );
-  $data['ldap']['objectClass'] = array(
+    ],
+  ];
+  $data['ldap']['objectClass'] = [
     'title' => t('Object Class'),
     'help' => t('The LDAP objectClass'),
-    'argument' => array(
+    'argument' => [
       'handler' => 'ldap_views_handler_argument',
-    ),
-    'field' => array(
+    ],
+    'field' => [
       'handler' => 'ldap_views_handler_field',
-    ),
-    'sort' => array(
+    ],
+    'sort' => [
       'handler' => 'ldap_views_handler_sort',
-    ),
-    'filter' => array(
+    ],
+    'filter' => [
       'handler' => 'ldap_views_handler_filter',
-    ),
-  );
+    ],
+  ];
 
   return $data;
 }

@@ -10,11 +10,11 @@
  * and refuse authentication.  See also: http://drupal.org/node/1634930.
  *
  * @param array $ldap_user
- *    See README.developers.txt for structure.
+ *   See README.developers.txt for structure.
  * @param string $name
- *    The drupal account name or proposed drupal account name if none exists yet.
+ *   The drupal account name or proposed drupal account name if none exists yet.
  * @param bool $hook_result
- *    TRUE for allow, FALSE for deny.
+ *   TRUE for allow, FALSE for deny.
  *    If set to TRUE or FALSE, another module has already set this and function should
  *    be careful about overriding this.
  *

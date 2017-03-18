@@ -8,4 +8,3 @@ entity.ldap_server.collection:
   route_name: entity.ldap_server.collection
   description: 'List LDAP Servers'
   parent: ldap_servers.settings
-

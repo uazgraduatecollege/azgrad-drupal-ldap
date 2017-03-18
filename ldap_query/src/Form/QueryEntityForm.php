@@ -12,6 +12,7 @@ use Drupal\ldap_servers\Entity\Server;
  * @package Drupal\ldap_query\Form
  */
 class QueryEntityForm extends EntityForm {
+
   /**
    * {@inheritdoc}
    */
@@ -19,28 +20,28 @@ class QueryEntityForm extends EntityForm {
     $form = parent::form($form, $form_state);
 
     $ldap_query_entity = $this->entity;
-    $form['label'] = array(
+    $form['label'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Label'),
       '#maxlength' => 255,
       '#default_value' => $ldap_query_entity->label(),
       '#description' => $this->t("Label for the LDAP Queries."),
       '#required' => TRUE,
-    );
+    ];
 
-    $form['id'] = array(
+    $form['id'] = [
       '#type' => 'machine_name',
       '#default_value' => $ldap_query_entity->id(),
-      '#machine_name' => array(
+      '#machine_name' => [
         'exists' => '\Drupal\ldap_query\Entity\QueryEntity::load',
-      ),
+      ],
       '#disabled' => !$ldap_query_entity->isNew(),
-    );
+    ];
 
     $factory = \Drupal::service('ldap.servers');
     $servers = $factory->getAllServers();
     $options = [];
-    /** @var Server $server */
+    /** @var \Drupal\ldap_servers\Entity\Server $server */
     foreach ($servers as $server) {
       $options[$server->id()] = $server->label();
     }
@@ -65,7 +66,6 @@ class QueryEntityForm extends EntityForm {
       '#default_value' => $ldap_query_entity->get('base_dn'),
       '#description' => $this->t('Each Base DN will be queried and results merged, e.g. <code>ou=groups,dc=hogwarts,dc=edu</code>. <br>Enter one per line in case if you need more than one.'),
     ];
-
 
     $form['filter'] = [
       '#type' => 'textarea',
@@ -119,12 +119,12 @@ class QueryEntityForm extends EntityForm {
       '#title' => $this->t('How should aliases should be handled'),
       '#default_value' => $dereference,
       '#required' => TRUE,
-      '#options' => array(
+      '#options' => [
         LDAP_DEREF_NEVER => $this->t('Aliases are never dereferenced (default).'),
         LDAP_DEREF_SEARCHING => $this->t('Aliases should be dereferenced during the search but not when locating the base object of the search.'),
         LDAP_DEREF_FINDING => $this->t('Aliases should be dereferenced when locating the base object but not during the search.'),
         LDAP_DEREF_ALWAYS => $this->t('Aliases should always be dereferenced.'),
-      ),
+      ],
     ];
 
     $scope = $ldap_query_entity->get('scope');
@@ -136,11 +136,11 @@ class QueryEntityForm extends EntityForm {
       '#title' => $this->t('Scope of search'),
       '#default_value' => $scope,
       '#required' => TRUE,
-      '#options' => array(
+      '#options' => [
         Server::$scopeSubTree => $this->t('Subtree (default)'),
         Server::$scopeBase => $this->t('Base'),
         Server::$scopeOneLevel => $this->t('One Level'),
-      ),
+      ],
       '#description' => $this->t('
       <em>Subtree</em>: This value is used to indicate searching of all entries at all levels under and including the specified base DN.<br>
       <em>Base</em>: This value is used to indicate searching only the entry at the base DN, resulting in only that entry being returned (keep in mind that it also has to meet the search filter criteria).<br>

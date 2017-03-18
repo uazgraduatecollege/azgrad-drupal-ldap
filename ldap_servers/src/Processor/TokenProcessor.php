@@ -5,9 +5,7 @@ namespace Drupal\ldap_servers\Processor;
 use Drupal\Component\Utility\SafeMarkup;
 use Drupal\Component\Utility\Unicode;
 use Drupal\ldap_servers\Helper\ConversionHelper;
-use Drupal\ldap_servers\Entity\Server;
 use Drupal\ldap_servers\Helper\MassageAttributes;
-use Drupal\user\Entity\User;
 use Drupal\user\UserInterface;
 
 /**
@@ -17,7 +15,7 @@ class TokenProcessor {
 
   const PREFIX = '[';
   const SUFFIX = ']';
-  const DELIMITER =  ':';
+  const DELIMITER = ':';
   const MODIFIER_DELIMITER = ';';
 
   private static $user_password = NULL;
@@ -88,7 +86,7 @@ class TokenProcessor {
         $attr_ordinal = $attr_name_parts[1];
       }
     }
-    return array($attr_type, $attr_name, $attr_ordinal);
+    return [$attr_type, $attr_name, $attr_ordinal];
   }
 
   /**
@@ -144,7 +142,7 @@ class TokenProcessor {
   public function extractTokenAttributes(&$attribute_maps, $text) {
     $tokens = $this->findTokensNeededForTemplate($text);
     foreach ($tokens as $token) {
-      $token = str_replace(array(self::PREFIX, self::SUFFIX), array('', ''), $token);
+      $token = str_replace([self::PREFIX, self::SUFFIX], ['', ''], $token);
       $parts = explode(self::DELIMITER, $token);
       $ordinal = (isset($parts[1]) && $parts[1]) ? $parts[1] : 0;
       $attr_name = $parts[0];
@@ -158,7 +156,7 @@ class TokenProcessor {
       else {
         $conversion = NULL;
       }
-      $attribute_maps[$attr_name] = self::setAttributeMap(@$attribute_maps[$attr_name], $conversion, array($ordinal => NULL));
+      $attribute_maps[$attr_name] = self::setAttributeMap(@$attribute_maps[$attr_name], $conversion, [$ordinal => NULL]);
     }
   }
 
@@ -171,7 +169,7 @@ class TokenProcessor {
    * @return array(<attr_name>, <ordinal>, <conversion>)
    */
   public function extractTokenParts($token) {
-    $attributes = array();
+    $attributes = [];
     $this->extractTokenAttributes($attributes, $token);
     if (is_array($attributes)) {
       $keys = array_keys($attributes);
@@ -179,10 +177,10 @@ class TokenProcessor {
       $attr_data = $attributes[$attr_name];
       $ordinals = array_keys($attr_data['values']);
       $ordinal = $ordinals[0];
-      return array($attr_name, $ordinal, $attr_data['conversion']);
+      return [$attr_name, $ordinal, $attr_data['conversion']];
     }
     else {
-      return array(NULL, NULL, NULL);
+      return [NULL, NULL, NULL];
     }
 
   }
@@ -236,8 +234,8 @@ class TokenProcessor {
   public function tokenizeEntry($ldap_entry, $token_keys = 'all', $pre = self::PREFIX, $post = self::SUFFIX) {
 
     $detailed_watchdog_log = \Drupal::config('ldap_help.settings')->get('watchdog_detail');
-    $tokens = array();
-    $log_variables = array();
+    $tokens = [];
+    $log_variables = [];
     $massager = new MassageAttributes();
 
     if (function_exists('debug_backtrace') && $backtrace = debug_backtrace()) {
@@ -261,8 +259,8 @@ class TokenProcessor {
     $factory = \Drupal::service('ldap.servers');
     $dn_parts = $factory->ldapExplodeDn($ldap_entry['dn'], 0);
     unset($dn_parts['count']);
-    $parts_count = array();
-    $parts_last_value = array();
+    $parts_count = [];
+    $parts_last_value = [];
     foreach ($dn_parts as $pair) {
       list($attr_name, $attr_value) = explode('=', $pair);
       $attr_value = ConversionHelper::unescapeDnValue($attr_value);
@@ -391,7 +389,7 @@ class TokenProcessor {
 
   /**
    *
-   * @param User $account
+   * @param \Drupal\user\Entity\User $account
    * @param array $token_keys
    *   'all' signifies return
    *   all token/value pairs available; otherwise array lists
@@ -406,7 +404,6 @@ class TokenProcessor {
    *   'uid' => 17.
    */
   public function tokenizeUserAccount(UserInterface $account, $token_keys = [], $pre = self::PREFIX, $post = self::SUFFIX) {
-
 
     if (empty($token_keys)) {
       $token_keys = $this->discoverUserAttributes($account);
@@ -583,10 +580,10 @@ class TokenProcessor {
    */
   public static function setAttributeMap($attribute = NULL, $conversion = NULL, $values = NULL) {
 
-    $attribute = (is_array($attribute)) ? $attribute : array();
+    $attribute = (is_array($attribute)) ? $attribute : [];
     $attribute['conversion'] = $conversion;
     if (!$values && (!isset($attribute['values']) || !is_array($attribute['values']))) {
-      $attribute['values'] = array(0 => NULL);
+      $attribute['values'] = [0 => NULL];
     }
     // Merge into array overwriting ordinals.
     elseif (is_array($values)) {

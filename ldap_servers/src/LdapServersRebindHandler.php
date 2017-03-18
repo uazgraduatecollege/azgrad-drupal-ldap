@@ -4,6 +4,7 @@ namespace Drupal\ldap_servers;
 
 /**
  * Class for enabling rebind functionality for following referrrals.
+ *
  * @FIXME: Unused class.
  */
 class LdapServersRebindHandler {
@@ -26,7 +27,7 @@ class LdapServersRebindHandler {
     // Ldap options.
     ldap_set_option($ldap, LDAP_OPT_PROTOCOL_VERSION, 3);
     ldap_set_option($ldap, LDAP_OPT_REFERRALS, 1);
-    ldap_set_rebind_proc($ldap, array($this, 'rebind_callback'));
+    ldap_set_rebind_proc($ldap, [$this, 'rebind_callback']);
 
     // Bind to new host, assumes initial bind dn has access to the referred servers.
     if (!ldap_bind($ldap, $this->bind_dn, $this->bind_passwd)) {

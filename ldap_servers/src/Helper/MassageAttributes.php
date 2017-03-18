@@ -13,6 +13,7 @@ class MassageAttributes {
    * Escape filter values and attribute values when querying ldap.
    *
    * @param $value
+   *
    * @return array
    */
   public function queryLdapAttributeValue($value) {
@@ -29,6 +30,7 @@ class MassageAttributes {
    * in arrays (as keys or values), databases, or object properties.
    *
    * @param $value
+   *
    * @return array
    */
   public function storeLdapAttributeValue($value) {
@@ -45,6 +47,7 @@ class MassageAttributes {
    * arrays (as keys or values), databases, or object properties.
    *
    * @param $value
+   *
    * @return array|string
    */
   public function processAttributeName($value) {

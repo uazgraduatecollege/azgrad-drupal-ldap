@@ -23,7 +23,7 @@ class ldap_views_handler_filter_attribute extends ldap_views_handler_filter {
    */
   public function option_definition() {
     $options = parent::option_definition();
-    $options['attribute_name'] = array('default' => '');
+    $options['attribute_name'] = ['default' => ''];
     return $options;
   }
 
@@ -33,20 +33,20 @@ class ldap_views_handler_filter_attribute extends ldap_views_handler_filter {
    * adding/removing items from this array.
    */
   public function operators() {
-    $operators = array(
-      'exists' => array(
+    $operators = [
+      'exists' => [
         'title' => t('Exists'),
         'method' => 'op_exists',
         'short' => t('exists'),
         'values' => 0,
-      ),
-      'not exists' => array(
+      ],
+      'not exists' => [
         'title' => t('Not exists'),
         'method' => 'op_exists',
         'short' => t('not exists'),
         'values' => 0,
-      ),
-    );
+      ],
+    ];
 
     return parent::operators() + $operators;
   }
@@ -61,29 +61,29 @@ class ldap_views_handler_filter_attribute extends ldap_views_handler_filter {
     : $current_display->handler->default_display->display->display_options['query']['options']['qid'];
      */
     // ldap_data_load($qid);
-    $ldap_data       = new LdapQuery(ldap_views_get_qid($this->view));
+    $ldap_data = new LdapQuery(ldap_views_get_qid($this->view));
 
     if (empty($ldap_data)) {
-      $form['attribute_name'] = array(
+      $form['attribute_name'] = [
         '#markup' => 'You must select a valid LDAP search (Advanced::Query settings)',
-      );
+      ];
       return;
     }
 
-    $options         = array();
+    $options = [];
     foreach ($ldap_data->attributes as $attribute) {
       $options[$attribute] = $attribute;
     }
 
     if (empty($form_state['exposed'])) {
-      $form['attribute_name'] = array(
+      $form['attribute_name'] = [
         '#type' => 'select',
         '#title' => t('Attribute name'),
         '#description' => t('The attribute name from LDAP response'),
         '#options' => $options,
         '#default_value' => $this->options['attribute_name'],
         '#required' => TRUE,
-      );
+      ];
     }
 
     parent::value_form($form, $form_state);

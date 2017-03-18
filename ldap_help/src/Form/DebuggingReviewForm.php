@@ -6,9 +6,7 @@ use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Serialization\Yaml;
 use Drupal\ldap_query\Controller\QueryController;
-use Drupal\ldap_servers\Entity\Server;
 use Drupal\ldap_servers\ServerFactory;
-
 
 /**
  *
@@ -24,11 +22,13 @@ class DebuggingReviewForm extends FormBase {
     return 'ldap_help_debugging_review';
   }
 
+  /**
+   *
+   */
   private function printConfig($configName) {
     $config = \Drupal::configFactory()->get($configName);
     return '<pre>' . Yaml::encode($config->getRawData()) . '</pre>';
   }
-
 
   /**
    * {@inheritdoc}
@@ -44,30 +44,30 @@ class DebuggingReviewForm extends FormBase {
     }
     else {
       $form['heading_modules'] = [
-        '#markup' => '<h2>' . $this->t('PHP LDAP module') . '</h2>'
+        '#markup' => '<h2>' . $this->t('PHP LDAP module') . '</h2>',
       ];
       $form['modules'] = [
-        '#markup' => '<pre>' . Yaml::encode($this->parsePHPModules()['ldap']) . '</pre>'
+        '#markup' => '<pre>' . Yaml::encode($this->parsePHPModules()['ldap']) . '</pre>',
       ];
     }
 
     $form['heading_ldap'] = [
-      '#markup' => '<h2>' . $this->t('Drupal LDAP modules') . '</h2>'
+      '#markup' => '<h2>' . $this->t('Drupal LDAP modules') . '</h2>',
     ];
 
     if (\Drupal::moduleHandler()->moduleExists('ldap_servers')) {
       $form['config_servers'] = [
         '#markup' =>
-          '<h3>' . $this->t('The LDAP servers base configuration') . '</h3>' .
-          $this->printConfig('ldap_servers.settings')
+        '<h3>' . $this->t('The LDAP servers base configuration') . '</h3>' .
+        $this->printConfig('ldap_servers.settings'),
       ];
     }
 
     if (\Drupal::moduleHandler()->moduleExists('ldap_user')) {
       $form['config_users'] = [
         '#markup' =>
-          '<h3>' . $this->t('The LDAP user configuration') . '</h3>' .
-          $this->printConfig('ldap_user.settings')
+        '<h3>' . $this->t('The LDAP user configuration') . '</h3>' .
+        $this->printConfig('ldap_user.settings'),
       ];
     }
 
@@ -79,31 +79,31 @@ class DebuggingReviewForm extends FormBase {
     if (\Drupal::moduleHandler()->moduleExists('ldap_authentication')) {
       $form['config_authentication'] = [
         '#markup' =>
-          '<h3>' . $this->t('The LDAP authentication configuration') . '</h3>' .
-          $this->printConfig('ldap_authentication.settings')
+        '<h3>' . $this->t('The LDAP authentication configuration') . '</h3>' .
+        $this->printConfig('ldap_authentication.settings'),
       ];
     }
 
     if (\Drupal::moduleHandler()->moduleExists('ldap_help')) {
       $form['config_help'] = [
         '#markup' =>
-          '<h3>' . $this->t('The LDAP help configuration') . '</h3>' .
-          $this->printConfig('ldap_help.settings')
+        '<h3>' . $this->t('The LDAP help configuration') . '</h3>' .
+        $this->printConfig('ldap_help.settings'),
       ];
     }
 
     if (\Drupal::moduleHandler()->moduleExists('ldap_servers')) {
       $form['heading_servers'] = [
-        '#markup' => '<h2>' . $this->t('Drupal LDAP servers') . '</h2>'
+        '#markup' => '<h2>' . $this->t('Drupal LDAP servers') . '</h2>',
       ];
 
       $servers = new ServerFactory();
       foreach ($servers->getAllServers() as $sid => $server) {
-        /** @var Server $server */
+        /** @var \Drupal\ldap_servers\Entity\Server $server */
         $form['config_server_' . $sid] = [
           '#markup' =>
-            '<h3>' . $this->t('Server @name:', ['@name' => $server->label()]) . '</h3>' .
-            $this->printConfig('ldap_servers.server.' . $sid),
+          '<h3>' . $this->t('Server @name:', ['@name' => $server->label()]) . '</h3>' .
+          $this->printConfig('ldap_servers.server.' . $sid),
         ];
       }
     }
@@ -111,22 +111,21 @@ class DebuggingReviewForm extends FormBase {
     if (\Drupal::moduleHandler()->moduleExists('authorization') &&
       \Drupal::moduleHandler()->moduleExists('ldap_authorization')) {
       $form['heading_profiles'] = [
-        '#markup' => '<h2>' . $this->t('Configured authorization profiles') . '</h2>'
+        '#markup' => '<h2>' . $this->t('Configured authorization profiles') . '</h2>',
       ];
-
 
       foreach (authorization_get_profiles() as $profile) {
         $form['authorization_profile_' . $profile] = [
           '#markup' =>
-            '<h3>' . $this->t('Profile @name:', ['@name' => $profile]) . '</h3>' .
-            $this->printConfig('authorization.authorization_profile.' . $profile),
+          '<h3>' . $this->t('Profile @name:', ['@name' => $profile]) . '</h3>' .
+          $this->printConfig('authorization.authorization_profile.' . $profile),
         ];
       }
     }
 
     if (\Drupal::moduleHandler()->moduleExists('ldap_query')) {
       $form['heading_queries'] = [
-        '#markup' => '<h2>' . $this->t('Configured LDAP queries') . '</h2>'
+        '#markup' => '<h2>' . $this->t('Configured LDAP queries') . '</h2>',
       ];
 
       $controller = new QueryController();
@@ -134,15 +133,14 @@ class DebuggingReviewForm extends FormBase {
       foreach ($controller->getAllQueries() as $query) {
         $form['query_' . $query->id()] = [
           '#markup' =>
-            '<h3>' . $this->t('Query @name:', ['@name' => $query->label()]) . '</h3>' .
-            $this->printConfig('ldap_query.ldap_query_entity.' .  $query->id()),
+          '<h3>' . $this->t('Query @name:', ['@name' => $query->label()]) . '</h3>' .
+          $this->printConfig('ldap_query.ldap_query_entity.' . $query->id()),
         ];
       }
     }
 
     return $form;
   }
-
 
   /**
    * Generates an array of values from phpinfo().
@@ -159,7 +157,7 @@ class DebuggingReviewForm extends FormBase {
     $s = preg_replace('/<th[^>]*>([^<]+)<\/th>/', "<info>\\1</info>", $s);
     $s = preg_replace('/<td[^>]*>([^<]+)<\/td>/', "<info>\\1</info>", $s);
     $vtmp = preg_split('/(<h2>[^<]+<\/h2>)/', $s, -1, PREG_SPLIT_DELIM_CAPTURE);
-    $vmodules = array();
+    $vmodules = [];
     for ($i = 1; $i < count($vtmp); $i++) {
       if (preg_match('/<h2>([^<]+)<\/h2>/', $vtmp[$i], $vmat)) {
         $vname = trim($vmat[1]);
@@ -170,7 +168,7 @@ class DebuggingReviewForm extends FormBase {
           $vpat2 = "/$vpat\s*$vpat/";
           // 3cols.
           if (preg_match($vpat3, $vone, $vmat)) {
-            $vmodules[$vname][trim($vmat[1])] = array(trim($vmat[2]), trim($vmat[3]));
+            $vmodules[$vname][trim($vmat[1])] = [trim($vmat[2]), trim($vmat[3])];
           }
           // 2cols.
           elseif (preg_match($vpat2, $vone, $vmat)) {

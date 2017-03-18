@@ -36,7 +36,7 @@ class QueryTestForm extends FormBase {
       $data = $controller->query($ldap_query_entity);
 
       $form['result_count'] = [
-        '#markup' => '<h2>' . t('@count results', array('@count' => $data['count'])) . '</h2>',
+        '#markup' => '<h2>' . t('@count results', ['@count' => $data['count']]) . '</h2>',
       ];
       unset($data['count']);
 
@@ -98,7 +98,6 @@ class QueryTestForm extends FormBase {
    *
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-
 
   }
 

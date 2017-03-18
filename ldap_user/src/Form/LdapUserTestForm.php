@@ -111,7 +111,7 @@ class LdapUserTestForm extends FormBase {
 
     if ($username && count($selected_actions) > 0) {
 
-      /** @var User $account */
+      /** @var \Drupal\user\Entity\User $account */
       $account = user_load_by_name($username);
 
       $config = \Drupal::config('ldap_user.settings')->get();

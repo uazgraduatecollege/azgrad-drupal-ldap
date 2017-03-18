@@ -2,38 +2,38 @@
 
 namespace Drupal\Tests\ldap_user\Browser;
 
-use Drupal\Core\DependencyInjection\ContainerBuilder;
-use Drupal\KernelTests\KernelTestBase;
 use Drupal\ldap_user\Helper\LdapConfiguration;
 use Drupal\ldap_user\Helper\SemaphoreStorage;
-use Drupal\ldap_user\Helper\SyncMappingHelper;
 use Drupal\Tests\BrowserTestBase;
-use Drupal\Tests\UnitTestCase;
 
 /**
  * @group ldap
  */
 class LdapAccountSelfCreationTests extends BrowserTestBase {
 
-
+  /**
+   *
+   */
   protected function setUp() {
     parent::setUp();
   }
 
+  /**
+   *
+   */
   public function testUserCreation() {
-    $this->assertTrue(true);
+    $this->assertTrue(TRUE);
     return;
-    // TODO
-
+    // TODO.
     /**
      * provisionToLdapEmailVerification
      * use case where a user self creates and confirms a drupal account and
      *  a corresponding ldap entry with password is created
      */
-    $password_tests = array(
+    $password_tests = [
       '[password.user-random]' => 'goodpwd',
       '[password.random]' => 'random',
-    );
+    ];
 
     foreach ($password_tests as $password_token => $password_result) {
       $test_id = "provisionToLdapEmailVerification $password_token, $test_sid";
@@ -54,7 +54,7 @@ class LdapAccountSelfCreationTests extends BrowserTestBase {
         ])
         ->save();
 
-      $ldap_user_conf->ldapUserSyncMappings[LdapConfiguration::$provisioningDirectionToLDAPEntry]['[password]'] = array(
+      $ldap_user_conf->ldapUserSyncMappings[LdapConfiguration::$provisioningDirectionToLDAPEntry]['[password]'] = [
         'sid' => $test_sid,
         'ldap_attr' => '[password]',
         'user_attr' => 'user_tokens',
@@ -63,18 +63,18 @@ class LdapAccountSelfCreationTests extends BrowserTestBase {
         'config_module' => 'ldap_user',
         'sync_module' => 'ldap_user',
         'enabled' => 1,
-        'prov_events' => array(LdapConfiguration::$eventCreateLdapEntry, LdapConfiguration::$eventSyncToLdapEntry),
-      );
+        'prov_events' => [LdapConfiguration::$eventCreateLdapEntry, LdapConfiguration::$eventSyncToLdapEntry],
+      ];
 
       /**
        * provisionToLdapEmailVerification test
        */
       // User register form.
       $this->drupalGet('user/register');
-      $edit = array(
+      $edit = [
         'name' => $username,
         'mail' => $username . '@hogwarts.edu',
-      );
+      ];
 
       // This will create last and first name fields.
       $this->createTestUserFields();
@@ -87,23 +87,23 @@ class LdapAccountSelfCreationTests extends BrowserTestBase {
       $emails = $this->drupalGetMails();
       // Most recent email is the one of interest.
       $email_body = $emails[count($emails) - 1]['body'];
-      $result = array();
+      $result = [];
       preg_match_all('/(user\/reset\/.*)This link can only be/s', $email_body, $result, PREG_PATTERN_ORDER);
       if (count($result == 2)) {
         $login_path = trim($result[1][0]);
         // User login form.
         $this->drupalGet($login_path);
         $sstephens = user_load_by_name($username);
-        $this->drupalPost($login_path, array(), t('Log in'));
+        $this->drupalPost($login_path, [], t('Log in'));
         $sstephens = user_load_by_name($username);
 
-        $edit = array(
+        $edit = [
           'mail' => $username . '@hogwarts.edu',
           'pass[pass1]' => 'goodpwd',
           'pass[pass2]' => 'goodpwd',
           'field_fname[und][0][value]' => 'Samantha',
           'field_lname[und][0][value]' => 'Stephens',
-        );
+        ];
 
         $this->drupalPost(NULL, $edit, t('Save'));
         $sstephens = user_load_by_name($username);

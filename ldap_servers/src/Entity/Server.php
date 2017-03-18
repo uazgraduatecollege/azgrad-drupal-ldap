@@ -5,7 +5,6 @@ namespace Drupal\ldap_servers\Entity;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\file\Entity\File;
-use Drupal\file\Plugin\Field\FieldType\FileFieldItemList;
 use Drupal\ldap_servers\Helper\ConversionHelper;
 use Drupal\ldap_servers\LdapProtocol;
 use Drupal\ldap_servers\Helper\MassageAttributes;
@@ -76,7 +75,9 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
   public static $bindMethodUser = 2;
   public static $bindMethodAnon = 3;
   public static $bindMethodAnonUser = 4;
-  // Attempt to remove this later.
+  /**
+   * Attempt to remove this later.
+   */
   public static $bindMethodDefault = 1;
 
   public static $scopeBase = 1;
@@ -88,9 +89,9 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
   public $searchPageEnd = NULL;
 
   /**
-   *  Returns the formatted label of the bind method.
+   * Returns the formatted label of the bind method.
    *
-   * return string
+   * Return string.
    */
   public function getFormattedBind() {
     switch ($this->get('bind_method')) {
@@ -183,7 +184,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
   public function bind($userdn = NULL, $pass = NULL, $anon_bind = NULL) {
     // Ensure that we have an active server connection.
     if (!$this->connection) {
-      \Drupal::logger('ldap')->notice("LDAP bind failure for user %user. Not connected to LDAP server.", array('%user' => $userdn));
+      \Drupal::logger('ldap')->notice("LDAP bind failure for user %user. Not connected to LDAP server.", ['%user' => $userdn]);
       return self::LDAP_CONNECT_ERROR;
     }
 
@@ -193,7 +194,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
     if ($anon_bind === TRUE) {
       if (@!ldap_bind($this->connection)) {
         if ($this->detailedWatchdogLog) {
-          \Drupal::logger('ldap')->notice("LDAP anonymous bind error. Error %errno: %error", array('%errno' => ldap_errno($this->connection), '%error' => ldap_error($this->connection)));
+          \Drupal::logger('ldap')->notice("LDAP anonymous bind error. Error %errno: %error", ['%errno' => ldap_errno($this->connection), '%error' => ldap_error($this->connection)]);
         }
         return ldap_errno($this->connection);
       }
@@ -204,20 +205,20 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
 
       if (Unicode::strlen($pass) == 0 || Unicode::strlen($userdn) == 0) {
         \Drupal::logger('ldap')
-          ->notice("LDAP bind failure for user userdn=%userdn, pass=%pass.", array(
+          ->notice("LDAP bind failure for user userdn=%userdn, pass=%pass.", [
             '%userdn' => $userdn,
             '%pass' => $pass,
-          ));
+          ]);
         return self::LDAP_LOCAL_ERROR;
       }
       if (@!ldap_bind($this->connection, $userdn, $pass)) {
         if ($this->detailedWatchdogLog) {
           \Drupal::logger('ldap')
-            ->notice("LDAP bind failure for user %user. Error %errno: %error", array(
+            ->notice("LDAP bind failure for user %user. Error %errno: %error", [
               '%user' => $userdn,
               '%errno' => ldap_errno($this->connection),
               '%error' => ldap_error($this->connection),
-            ));
+            ]);
         }
         return ldap_errno($this->connection);
       }
@@ -264,7 +265,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
    */
   public function dnExists($dn, $return = 'boolean', $attributes = NULL) {
 
-    $params = array(
+    $params = [
       'base_dn' => $dn,
       'attributes' => $attributes,
       'attrsonly' => FALSE,
@@ -272,10 +273,10 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
       'sizelimit' => 0,
       'timelimit' => 0,
       'deref' => NULL,
-    );
+    ];
 
     if ($return == 'boolean' || !is_array($attributes)) {
-      $params['attributes'] = array('objectclass');
+      $params['attributes'] = ['objectclass'];
     }
     else {
       $params['attributes'] = $attributes;
@@ -356,7 +357,6 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
    *
    * @return boolean result per ldap_delete
    */
-
   public function deleteLdapEntry($dn) {
     if (!$this->connection) {
       $this->connect();
@@ -367,11 +367,11 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
     if (!$result) {
       \Drupal::logger('ldap_server')->error(
         "LDAP Server delete(%dn) in LdapServer::delete() Error Server ID = %id, LDAP Err No: %ldap_errno LDAP Err Message: %ldap_err2str", [
-        '%dn' => $dn,
-        '%id' => $this->id(),
-        '%ldap_errno' => ldap_errno($this->connection),
-        '%ldap_err2str' => ldap_err2str(ldap_errno($this->connection)),
-      ]);
+          '%dn' => $dn,
+          '%id' => $this->id(),
+          '%ldap_errno' => ldap_errno($this->connection),
+          '%ldap_err2str' => ldap_err2str(ldap_errno($this->connection)),
+        ]);
     }
     return $result;
   }
@@ -390,7 +390,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
       return ldap_escape($string);
     }
     else {
-      return str_replace(array('*', '\\', '(', ')'), array('\\*', '\\\\', '\\(', '\\)'), $string);
+      return str_replace(['*', '\\', '(', ')'], ['\\*', '\\\\', '\\(', '\\)'], $string);
     }
   }
 
@@ -403,7 +403,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
    *   Ldap entry in form <attribute> => array('count' => N, array(<value>,...<value>.
    *
    * @return array
-   *    Ldap entry with no values that have NOT changed.
+   *   Ldap entry with no values that have NOT changed.
    */
   public static function removeUnchangedAttributes($new_entry, $old_entry) {
 
@@ -452,7 +452,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
    *
    * @return bool
    */
-  public function modifyLdapEntry($dn, $attributes = array(), $old_attributes = FALSE) {
+  public function modifyLdapEntry($dn, $attributes = [], $old_attributes = FALSE) {
 
     $this->connectAndBindIfNotAlready();
 
@@ -492,7 +492,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
       // Remove empty attributes.
       if ($cur_val == '' && $old_value != '') {
         unset($attributes[$key]);
-        $result = @ldap_mod_del($this->connection, $dn, array($key_lcase => $old_value));
+        $result = @ldap_mod_del($this->connection, $dn, [$key_lcase => $old_value]);
         if (!$result) {
           \Drupal::logger('ldap_server')->error(
             "LDAP Server ldap_mod_del(%dn) in LdapServer::modifyLdapEntry() Error Server ID = %sid, LDAP Err No: %ldap_errno LDAP Err Message: %ldap_err2str ", [
@@ -553,11 +553,11 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
    *   An array of matching entries->attributes (will have 0 elements if search
    *   returns no results), or FALSE on error on any of the base DN queries.
    */
-  public function searchAllBaseDns($filter, $attributes = array(), $scope = NULL) {
+  public function searchAllBaseDns($filter, $attributes = [], $scope = NULL) {
     if ($scope == NULL) {
       $scope = Server::$scopeSubTree;
     }
-    $all_entries = array();
+    $all_entries = [];
 
     foreach ($this->getBaseDn() as $base_dn) {
       $relative_filter = str_replace(',' . $base_dn, '', $filter);
@@ -609,7 +609,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
    *
    * @remaining params mimick ldap_search() function params
    */
-  public function search($base_dn = NULL, $filter, $attributes = array(), $attrsonly = 0, $sizelimit = 0, $timelimit = 0, $deref = NULL, $scope = NULL) {
+  public function search($base_dn = NULL, $filter, $attributes = [], $attrsonly = 0, $sizelimit = 0, $timelimit = 0, $deref = NULL, $scope = NULL) {
     if ($scope == NULL) {
       $scope = Server::$scopeSubTree;
     }
@@ -630,7 +630,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
     }
 
     $attr_display = is_array($attributes) ? join(',', $attributes) : 'none';
-    $query = 'ldap_search() call: ' . join(",\n", array(
+    $query = 'ldap_search() call: ' . join(",\n", [
       'base_dn: ' . $base_dn,
       'filter = ' . $filter,
       'attributes: ' . $attr_display,
@@ -639,10 +639,10 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
       'timelimit = ' . $timelimit,
       'deref = ' . $deref,
       'scope = ' . $scope,
-    )
+    ]
     );
     if (\Drupal::config('ldap_help.settings')->get('watchdog_detail')) {
-      \Drupal::logger('ldap_server')->notice($query, array());
+      \Drupal::logger('ldap_server')->notice($query, []);
     }
 
     // When checking multiple servers, there's a chance we might not be connected yet.
@@ -651,7 +651,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
       $this->bind();
     }
 
-    $ldap_query_params = array(
+    $ldap_query_params = [
       'connection' => $this->connection,
       'base_dn' => $base_dn,
       'filter' => $filter,
@@ -662,7 +662,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
       'deref' => $deref,
       'query_display' => $query,
       'scope' => $scope,
-    );
+    ];
 
     if ($this->get('search_pagination')) {
       $aggregated_entries = $this->pagedLdapQuery($ldap_query_params);
@@ -722,11 +722,11 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
       return FALSE;
     }
 
-    $paged_entries = array();
+    $paged_entries = [];
     $page_token = '';
     $page = 0;
     $estimated_entries = 0;
-    $aggregated_entries = array();
+    $aggregated_entries = [];
     $aggregated_entries_count = 0;
     $has_page_results = FALSE;
 
@@ -766,7 +766,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
         // False positive error thrown.  do not set result limit error when $sizelimit specified.
       }
       elseif ($this->hasError()) {
-        \Drupal::logger('ldap_server')->error('ldap_control_paged_result_response() function error. LDAP Error: %message, ldap_list() parameters: %query', array('%message' => $this->errorMsg('ldap'), '%query' => $ldap_query_params['query_display']));
+        \Drupal::logger('ldap_server')->error('ldap_control_paged_result_response() function error. LDAP Error: %message, ldap_list() parameters: %query', ['%message' => $this->errorMsg('ldap'), '%query' => $ldap_query_params['query_display']]);
       }
 
       if (isset($ldap_query_params['sizelimit']) && $ldap_query_params['sizelimit'] && $aggregated_entries_count >= $ldap_query_params['sizelimit']) {
@@ -809,7 +809,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
           // False positive error thrown.  do not return result limit error when $sizelimit specified.
         }
         elseif ($this->hasError()) {
-          \Drupal::logger('ldap_server')->error('ldap_search() function error. LDAP Error: %message, ldap_search() parameters: %query', array('%message' => $this->errorMsg('ldap'), '%query' => $params['query_display']));
+          \Drupal::logger('ldap_server')->error('ldap_search() function error. LDAP Error: %message, ldap_search() parameters: %query', ['%message' => $this->errorMsg('ldap'), '%query' => $params['query_display']]);
         }
         break;
 
@@ -820,7 +820,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
           // False positive error thrown.  do not result limit error when $sizelimit specified.
         }
         elseif ($this->hasError()) {
-          \Drupal::logger('ldap_server')->error('ldap_read() function error.  LDAP Error: %message, ldap_read() parameters: %query', array('%message' => $this->errorMsg('ldap'), '%query' => @$params['query_display']));
+          \Drupal::logger('ldap_server')->error('ldap_read() function error.  LDAP Error: %message, ldap_read() parameters: %query', ['%message' => $this->errorMsg('ldap'), '%query' => @$params['query_display']]);
         }
         break;
 
@@ -831,7 +831,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
           // False positive error thrown.  do not result limit error when $sizelimit specified.
         }
         elseif ($this->hasError()) {
-          \Drupal::logger('ldap_server')->error('ldap_list() function error. LDAP Error: %message, ldap_list() parameters: %query', array('%message' => $this->errorMsg('ldap'), '%query' => $params['query_display']));
+          \Drupal::logger('ldap_server')->error('ldap_list() function error. LDAP Error: %message, ldap_list() parameters: %query', ['%message' => $this->errorMsg('ldap'), '%query' => $params['query_display']]);
         }
         break;
     }
@@ -950,7 +950,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
   /**
    * @param array $ldap_entry
    *   The LDAP entry.
-   * @param User $account
+   * @param \Drupal\user\Entity\User $account
    * @return bool|\Drupal\ldap_servers\Entity\File Drupal file object image user's thumbnail or FALSE if none present or ERROR happens.
    *   Drupal file object image user's thumbnail or FALSE if none present or ERROR happens.
    */
@@ -1025,7 +1025,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
    *
    * TODO: Naming and scope are unclear. Restructure if possible.
    *
-   * @param User|array|mixed $user
+   * @param \Drupal\user\Entity\User|array|mixed $user
    *
    * @return array|bool
    */
@@ -1066,13 +1066,13 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
     $sid = is_object($sid) ? $sid->value : $sid;
     $static_cache_id = ($sid) ? $ldap_context . '__' . $sid : $ldap_context;
     if (!is_array($attributes)) {
-      $attributes = array();
+      $attributes = [];
     }
     if (!isset($attributes[$static_cache_id]) || $reset) {
-      $params = array(
+      $params = [
         'sid' => $sid,
         'ldap_context' => $ldap_context,
-      );
+      ];
       \Drupal::moduleHandler()->alter('ldap_attributes_needed', $attributes[$static_cache_id], $params);
     }
     $return = $attributes[$static_cache_id];
@@ -1099,7 +1099,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
   public function userUserNameToExistingLdapEntry($drupal_user_name, $ldap_context = NULL) {
 
     if (!$ldap_context) {
-      $attributes = array();
+      $attributes = [];
     }
     else {
       $attribute_maps = $this->ldap_servers_attributes_needed($this->id(), $ldap_context);
@@ -1122,11 +1122,11 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
       // Must find exactly one user for authentication to work.
       if ($result['count'] != 1) {
         $count = $result['count'];
-        \Drupal::logger('ldap_servers')->error('Error: %count users found with %filter under %base_dn.', array(
+        \Drupal::logger('ldap_servers')->error('Error: %count users found with %filter under %base_dn.', [
           '%count' => $count,
           '%filter' => $filter,
           '%base_dn' => $basedn,
-        )
+        ]
           );
         continue;
       }
@@ -1146,12 +1146,12 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
       }
       else {
         if ($this->get('bind_method') == Server::$bindMethodAnonUser) {
-          $result = array(
+          $result = [
             'dn' => $match['dn'],
             'mail' => $this->userEmailFromLdapEntry($match),
             'attr' => $match,
             'id' => $this->id(),
-          );
+          ];
           return $result;
         }
         else {
@@ -1169,12 +1169,12 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
       // loop through all possible options.
       foreach ($match[$name_attr] as $value) {
         if (Unicode::strtolower(trim($value)) == Unicode::strtolower($drupal_user_name)) {
-          $result = array(
+          $result = [
             'dn' => $match['dn'],
             'mail' => $this->userEmailFromLdapEntry($match),
             'attr' => $match,
             'id' => $this->id(),
-          );
+          ];
           return $result;
         }
       }
@@ -1317,7 +1317,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
    *   if groups should be recursed or not.
    *
    * @return array|false
-   *    Array of group dns in mixed case or FALSE on error.
+   *   Array of group dns in mixed case or FALSE on error.
    */
   public function groupMembershipsFromUser($user, $return = 'group_dns', $nested = NULL) {
 
@@ -1388,15 +1388,15 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
     }
     // If not exited yet, $user must be user_ldap_entry.
     $user_ldap_entry = $user;
-    $all_group_dns = array();
-    $tested_group_ids = array();
+    $all_group_dns = [];
+    $tested_group_ids = [];
     $level = 0;
 
     $member_group_dns = $user_ldap_entry['attr'][$groupAttribute];
     if (isset($member_group_dns['count'])) {
       unset($member_group_dns['count']);
     }
-    $ors = array();
+    $ors = [];
     foreach ($member_group_dns as $i => $member_group_dn) {
       $all_group_dns[] = $member_group_dn;
       if ($nested) {
@@ -1466,9 +1466,9 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
     $user_ldap_entry = $this->userUserToExistingLdapEntry($user);
 
     // MIXED CASE VALUES.
-    $all_group_dns = array();
+    $all_group_dns = [];
     // Array of dns already tested to avoid excess queries MIXED CASE VALUES.
-    $tested_group_ids = array();
+    $tested_group_ids = [];
     $level = 0;
 
     if ($this->groupMembershipsAttrMatchingUserAttr() == 'dn') {
@@ -1483,7 +1483,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
     // Need to search on all basedns one at a time.
     foreach ($this->getBaseDn() as $base_dn) {
       // Only need dn, so empty array forces return of no attributes.
-      $group_entries = $this->search($base_dn, $group_query, array());
+      $group_entries = $this->search($base_dn, $group_query, []);
       if ($group_entries !== FALSE) {
         $max_levels = ($nested) ? self::LDAP_SERVER_LDAP_QUERY_RECURSION_LIMIT : 0;
         $this->groupMembershipsFromEntryResursive($group_entries, $all_group_dns, $tested_group_ids, $level, $max_levels);
@@ -1525,7 +1525,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
       unset($current_group_entries['count']);
     }
 
-    $ors = array();
+    $ors = [];
     foreach ($current_group_entries as $i => $group_entry) {
       if ($this->groupMembershipsAttrMatchingUserAttr() == 'dn') {
         $member_id = $group_entry['dn'];
@@ -1646,28 +1646,28 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
    */
   public function testBindingCredentials($bindpw = NULL, &$results_tables) {
     $errors = FALSE;
-    $results = array();
+    $results = [];
 
     $ldap_result = self::connect();
 
     if ($ldap_result != self::LDAP_SUCCESS) {
-      $results_tables['basic'][] = array(t('Failed to connect to LDAP server.  See Drupal logs for details.') .
+      $results_tables['basic'][] = [t('Failed to connect to LDAP server.  See Drupal logs for details.') .
         self::errorMsg('ldap'),
-      );
+      ];
       $errors = TRUE;
     }
 
     if (!$errors) {
       $bind_result = self::bind(self::get('binddn'), $bindpw, FALSE);
       if ($bind_result == self::LDAP_SUCCESS) {
-        $results_tables['basic'][] = array(t('Successfully bound to server'), t('PASS'));
+        $results_tables['basic'][] = [t('Successfully bound to server'), t('PASS')];
       }
       else {
-        $results_tables['basic'][] = array(t('Failed to bind to server. ldap error #') . $bind_result . ' ' . self::errorMsg('ldap'), t('FAIL'));
+        $results_tables['basic'][] = [t('Failed to bind to server. ldap error #') . $bind_result . ' ' . self::errorMsg('ldap'), t('FAIL')];
         $errors = TRUE;
       }
     }
-    return array($errors, $results);
+    return [$errors, $results];
 
   }
 
@@ -1801,7 +1801,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
     $pairs = $this->ldapExplodeDn($dn, 0);
     $count = array_shift($pairs);
     $rdn = Unicode::strtolower($rdn);
-    $rdn_values = array();
+    $rdn_values = [];
     foreach ($pairs as $p) {
       $pair = explode('=', $p);
       if (Unicode::strtolower(trim($pair[0])) == $rdn) {
@@ -1813,7 +1813,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
   }
 
   /**
-   * @param FileFieldItemList $field
+   * @param \Drupal\file\Entity\FileFieldItemList $field
    * @param $LdapUserPicture
    * @return array|bool
    */
@@ -1836,11 +1836,11 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
 
     $managed_file = file_save_data($LdapUserPicture, 'public://' . $directory . '/' . $file_name . '.' . $extension);
 
-    $validators = array(
-      'file_validate_is_image' => array(),
-      'file_validate_image_resolution' => array($fieldSettings['max_resolution']),
-      'file_validate_size' => array($fieldSettings['max_filesize']),
-    );
+    $validators = [
+      'file_validate_is_image' => [],
+      'file_validate_image_resolution' => [$fieldSettings['max_resolution']],
+      'file_validate_size' => [$fieldSettings['max_filesize']],
+    ];
 
     if ($managed_file && file_validate($managed_file, $validators)) {
       return ['target_id' => $managed_file->id()];

@@ -15,7 +15,7 @@ class ServerDeleteForm extends EntityConfirmFormBase {
    * {@inheritdoc}
    */
   public function getQuestion() {
-    return $this->t('Are you sure you want to delete entity %name?', array('%name' => $this->entity->label()));
+    return $this->t('Are you sure you want to delete entity %name?', ['%name' => $this->entity->label()]);
   }
 
   /**
@@ -39,10 +39,10 @@ class ServerDeleteForm extends EntityConfirmFormBase {
     $this->entity->delete();
 
     \Drupal::logger('ldap_servers')->notice('@type: deleted %title.',
-      array(
+      [
         '@type' => $this->entity->bundle(),
         '%title' => $this->entity->label(),
-      ));
+      ]);
 
     drupal_set_message(
       $this->t('@type: deleted @label.',

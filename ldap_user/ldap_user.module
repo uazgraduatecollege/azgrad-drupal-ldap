@@ -70,9 +70,9 @@ function ldap_user_help($route_name, RouteMatchInterface $route_match) {
   $ldap_user_help = t('LDAP user configuration determines how and when
      Drupal accounts are created based on LDAP data and which user fields
      are derived and synced to and from LDAP. See @helplink.',
-    array(
+    [
       '@helplink' => \Drupal::l('the drupal.org handbook page', Url::fromUri('http://drupal.org/node/997082')),
-    ));
+    ]);
 
   switch ($route_name) {
     case 'help.page.ldap_user':
@@ -164,10 +164,10 @@ function ldap_user_entity_base_field_info(EntityTypeInterface $entity_type) {
 }
 
 // Below are form hooks which cannot be easily moved.
-
 /**
  * Implements hook_form_FORM_ID_alter(). for user_login_block.
  */
+
 function ldap_user_form_user_login_block_alter(&$form, &$form_state) {
   array_unshift($form['#validate'], 'ldap_user_grab_password_validate');
 }
@@ -247,10 +247,10 @@ function ldap_user_form_user_register_form_alter(&$form, $form_state) {
       admin/config/people/ldap/user and "Show option on user create form..." must be selected.');
   }
 
-  $ldap_fieldset['ldap_user_create_ldap_acct'] = array(
+  $ldap_fieldset['ldap_user_create_ldap_acct'] = [
     '#type' => 'checkbox',
     '#title' => t('Create corresponding LDAP entry.'),
-  );
+  ];
   if (!LdapConfiguration::provisionAvailableToLDAP(LdapConfiguration::$provisionDrupalUserOnAllowingManualCreation)) {
     $ldap_fieldset['ldap_user_create_ldap_acct']['#disabled'] = TRUE;
     $ldap_fieldset['ldap_user_create_ldap_acct']['#description'] = t('To enable

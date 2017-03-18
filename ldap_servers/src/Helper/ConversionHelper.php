@@ -84,7 +84,7 @@ class ConversionHelper {
     // Parameter validation.
     $inputIsScalar = is_scalar($values);
     if (!is_array($values)) {
-      $values = array($values);
+      $values = [$values];
     }
 
     foreach ($values as $key => $value) {
@@ -119,7 +119,7 @@ class ConversionHelper {
     // Parameter validation.
     $inputIsScalar = is_scalar($values);
     if ($inputIsScalar) {
-      $values = array($values);
+      $values = [$values];
     }
 
     foreach ($values as $key => $val) {
@@ -181,7 +181,7 @@ class ConversionHelper {
 
     // Parameter validation.
     if (!is_array($values)) {
-      $values = array($values);
+      $values = [$values];
     }
 
     foreach ($values as $key => $val) {

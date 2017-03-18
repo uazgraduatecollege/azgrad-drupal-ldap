@@ -18,6 +18,9 @@ class SyncMappingHelperTests extends UnitTestCase {
   public $config;
   public $container;
 
+  /**
+   *
+   */
   protected function setUp() {
     parent::setUp();
 
@@ -40,27 +43,30 @@ class SyncMappingHelperTests extends UnitTestCase {
     \Drupal::setContainer($this->container);
   }
 
-
+  /**
+   *
+   */
   public function testSyncValidator() {
-    $this->assertTrue(true);
+    $this->assertTrue(TRUE);
     return;
     // TODO: This test should test if the sync mapping returns in a useful form.
     // This is currently not the case since the test data is not injected
     // as configuration yet.
-
     $syncTestData = [
       LdapConfiguration::$eventCreateDrupalUser => [
         0 => [
           '[property.fake]',
           '[property.data]',
-          '[property.uid]'],
+          '[property.uid]',
+        ],
         1 => [
           '[property.mail]',
           '[property.name]',
           '[field.ldap_user_puid]',
           '[field.ldap_user_puid_property]',
           '[field.ldap_user_puid_sid]',
-          '[field.ldap_user_current_dn]'],
+          '[field.ldap_user_current_dn]',
+        ],
       ],
       LdapConfiguration::$eventSyncToDrupalUser => [
         0 => [
@@ -69,12 +75,12 @@ class SyncMappingHelperTests extends UnitTestCase {
           '[property.uid]',
           '[field.ldap_user_puid]',
           '[field.ldap_user_puid_property]',
-          '[field.ldap_user_puid_sid]'
+          '[field.ldap_user_puid_sid]',
         ],
         1 => [
           '[property.mail]',
           '[property.name]',
-          '[field.ldap_user_current_dn]'
+          '[field.ldap_user_current_dn]',
         ],
       ],
     ];
@@ -83,7 +89,7 @@ class SyncMappingHelperTests extends UnitTestCase {
     foreach ($syncTestData as $prov_event => $tests) {
       foreach ($tests as $boolean_result => $attribute_tokens) {
         foreach ($attribute_tokens as $attribute_token) {
-          $processor =  $this->getMockBuilder('Drupal\ldap_user\Helper\SyncMappingHelper')
+          $processor = $this->getMockBuilder('Drupal\ldap_user\Helper\SyncMappingHelper')
             ->setMethods(['isSynced', 'processSyncMappings'])
             ->disableOriginalConstructor()
             ->getMock();
@@ -99,43 +105,46 @@ class SyncMappingHelperTests extends UnitTestCase {
     $this->assertFalse($failed);
   }
 
- public function testUserNameChangeProvisionPuidConflict() {
-   $this->assertTrue(true);
-   return;
-   // TODO
-
-   /**
+  /**
+   *
+   */
+  public function testUserNameChangeProvisionPuidConflict() {
+    $this->assertTrue(TRUE);
+    return;
+    // TODO.
+    /**
     * test for username change and provisioning with puid conflict
     * hpotter drupal user already exists and has correct puid
     * change samaccountname value (puid field) of hpotter ldap entry and attempt to provision account with new username (hpotterbrawn)
     * return should be old drupal account (same uid)
     */
 
-   $this->testFunctions->setFakeServerUserAttribute('activedirectory1', 'cn=hpotter,ou=people,dc=hogwarts,dc=edu', 'samaccountname', 'hpotter-granger', 0);
-   $account = NULL;
-   $user_edit = array('name' => 'hpotter-granger');
-   $processor = new DrupalUserProcessor();
+    $this->testFunctions->setFakeServerUserAttribute('activedirectory1', 'cn=hpotter,ou=people,dc=hogwarts,dc=edu', 'samaccountname', 'hpotter-granger', 0);
+    $account = NULL;
+    $user_edit = ['name' => 'hpotter-granger'];
+    $processor = new DrupalUserProcessor();
 
-   $hpottergranger = $processor->provisionDrupalAccount($account, $user_edit, NULL, TRUE);
+    $hpottergranger = $processor->provisionDrupalAccount($account, $user_edit, NULL, TRUE);
 
-   $this->testFunctions->setFakeServerUserAttribute('activedirectory1', 'cn=hpotter,ou=people,dc=hogwarts,dc=edu', 'samaccountname', 'hpotter', 0);
-   $pass = (is_object($hpottergranger) && is_object($hpotter) && $hpotter->uid == $hpottergranger->uid);
-   $this->assertTrue($pass, t('provisionDrupalAccount recognized PUID conflict and synced instead of creating a conflicted drupal account.'), $this->testId('provisionDrupalAccount function test with existing user with same puid'));
+    $this->testFunctions->setFakeServerUserAttribute('activedirectory1', 'cn=hpotter,ou=people,dc=hogwarts,dc=edu', 'samaccountname', 'hpotter', 0);
+    $pass = (is_object($hpottergranger) && is_object($hpotter) && $hpotter->uid == $hpottergranger->uid);
+    $this->assertTrue($pass, t('provisionDrupalAccount recognized PUID conflict and synced instead of creating a conflicted drupal account.'), $this->testId('provisionDrupalAccount function test with existing user with same puid'));
 
-   $authmaps = user_get_authmaps('hpotter-granger');
-   $pass = $authmaps['ldap_user'] == 'hpotter-granger';
-   $this->assertTrue($pass, t('provisionDrupalAccount recognized PUID conflict and fixed authmap.'), $this->testId());
+    $authmaps = user_get_authmaps('hpotter-granger');
+    $pass = $authmaps['ldap_user'] == 'hpotter-granger';
+    $this->assertTrue($pass, t('provisionDrupalAccount recognized PUID conflict and fixed authmap.'), $this->testId());
 
-   $pass = is_object($hpottergranger) && $hpottergranger->name == 'hpotter-granger';
-   $this->assertTrue($pass, t('provisionDrupalAccount recognized PUID conflict and fixed username.'), $this->testId());
+    $pass = is_object($hpottergranger) && $hpottergranger->name == 'hpotter-granger';
+    $this->assertTrue($pass, t('provisionDrupalAccount recognized PUID conflict and fixed username.'), $this->testId());
 
-   $factory = \Drupal::service('ldap.servers');
-   $ldap_server = $factory->getServerByIdEnabled('activedirectory1');
-   $ldap_server->refreshFakeData();
-   $account = NULL;
-   $user_edit = array('name' => 'hpotter');
-   $processor = new DrupalUserProcessor();
-   $hpotter = $processor->provisionDrupalAccount($account, $user_edit, NULL, TRUE);
+    $factory = \Drupal::service('ldap.servers');
+    $ldap_server = $factory->getServerByIdEnabled('activedirectory1');
+    $ldap_server->refreshFakeData();
+    $account = NULL;
+    $user_edit = ['name' => 'hpotter'];
+    $processor = new DrupalUserProcessor();
+    $hpotter = $processor->provisionDrupalAccount($account, $user_edit, NULL, TRUE);
 
- }
+  }
+
 }

@@ -3,10 +3,15 @@
 namespace Drupal\ldap_query\Controller;
 
 use Drupal\ldap_query\Entity\QueryEntity;
-use Drupal\ldap_servers\Entity\Server;
-use Symfony\Component\HttpFoundation\Response;
 
+/**
+ *
+ */
 class QueryController {
+
+  /**
+   *
+   */
   public function query($id) {
     $query = QueryEntity::load($id);
     $results = [];
@@ -14,7 +19,7 @@ class QueryController {
 
     if ($query) {
       $factory = \Drupal::service('ldap.servers');
-      /** @var Server $ldap_server */
+      /** @var \Drupal\ldap_servers\Entity\Server $ldap_server */
       $ldap_server = $factory->getServerById($query->get('server_id'));
       $ldap_server->connect();
       $ldap_server->bind();
@@ -36,7 +41,8 @@ class QueryController {
         }
       }
       $results['count'] = $count;
-    } else {
+    }
+    else {
       \Drupal::logger('ldap_query')->warning('Could not load query @query', ['@query' => $id]);
     }
 
@@ -69,13 +75,13 @@ class QueryController {
     static $queries;
 
     if ($reset) {
-      $queries = array();
+      $queries = [];
     }
     if (!isset($queries['all'])) {
       $queries['all'] = $this->getLdapQueryObjects('all', 'all');
     }
     if (!isset($queries['enabled'])) {
-      $queries['enabled'] = array();
+      $queries['enabled'] = [];
       foreach ($queries['all'] as $_qid => $ldap_query) {
         if ($ldap_query->status == 1) {
           $queries['enabled'][$_qid] = $ldap_query;
@@ -95,12 +101,18 @@ class QueryController {
     }
   }
 
+  /**
+   *
+   */
   public function getAllQueries() {
     $query = \Drupal::entityQuery('ldap_query_entity');
     $ids = $query->execute();
     return QueryEntity::loadMultiple($ids);
   }
 
+  /**
+   *
+   */
   public function getAllEnabledQueries() {
     $query = \Drupal::entityQuery('ldap_query_entity')
       ->condition('status', 1);
@@ -119,9 +131,11 @@ class QueryController {
     // Deprecated, see getAllEnabledQueries() / getAllQueries().
     if ($sid != 'all' && !empty($sid)) {
       return $this->query($sid);
-    } else if ($sid = 'all' && $type = 'enabled') {
+    }
+    elseif ($sid = 'all' && $type = 'enabled') {
       return $this->getAllEnabledQueries();
-    } else {
+    }
+    else {
       return $this->getAllQueries();
     }
   }

@@ -22,7 +22,7 @@ class ServerEnableDisableForm extends EntityConfirmFormBase {
    * {@inheritdoc}
    */
   public function getQuestion() {
-    return $this->t('Are you sure you want to disable/enable entity %name?', array('%name' => $this->entity->label()));
+    return $this->t('Are you sure you want to disable/enable entity %name?', ['%name' => $this->entity->label()]);
   }
 
   /**

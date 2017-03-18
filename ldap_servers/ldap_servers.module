@@ -5,9 +5,6 @@
  */
 
 use Drupal\Core\Routing\RouteMatchInterface;
-use Drupal\Core\Session\AccountInterface;
-
-
 /**
  * Implements hook_help().
  */
@@ -95,7 +92,7 @@ function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$param
 /**
  * Implements hook_user_logout().
  *
- * @param AccountInterface $account
+ * @param \Drupal\Core\Session\AccountInterface $account
  */
 function ldap_servers_user_logout($account) {
   // When the user logs out clear the LDAP cached data.

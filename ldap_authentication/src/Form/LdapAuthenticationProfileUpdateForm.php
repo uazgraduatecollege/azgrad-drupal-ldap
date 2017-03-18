@@ -35,7 +35,8 @@ class LdapAuthenticationProfileUpdateForm extends FormBase {
         '#type' => 'submit',
         '#value' => t('Update account'),
       ];
-    } else {
+    }
+    else {
       $form['submit'] = [
         '#markup' => '<h2>' . t('This form is only available to profiles which need an update.') . '</h2>',
       ];

@@ -22,7 +22,7 @@ function ldap_help_update_8301() {
   if ($data) {
     $config->set('watchdog_detail', TRUE);
   } {
-    $config->set('watchdog_detail', FALSE);
+  $config->set('watchdog_detail', FALSE);
   }
   $config->save(TRUE);
 }

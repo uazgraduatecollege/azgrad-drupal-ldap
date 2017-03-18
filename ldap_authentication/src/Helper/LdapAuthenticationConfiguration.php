@@ -2,9 +2,9 @@
 
 namespace Drupal\ldap_authentication\Helper;
 
-use Drupal\ldap_servers\ServerFactory;
-use Drupal\user\Entity\User;
-
+/**
+ *
+ */
 class LdapAuthenticationConfiguration {
 
   const MODE_MIXED = 1;
@@ -28,13 +28,19 @@ class LdapAuthenticationConfiguration {
   // Remove default later if possible, see also $emailOption.
   public static $emailFieldDefault = 3;
 
+  /**
+   *
+   */
   public static function hasEnabledAuthenticationServers() {
     return (count(self::getEnabledAuthenticationServers()) > 0) ? TRUE : FALSE;
   }
 
+  /**
+   *
+   */
   public static function getEnabledAuthenticationServers() {
     $servers = \Drupal::config('ldap_authentication.settings')->get('sids');
-    /** @var ServerFactory $factory */
+    /** @var \Drupal\ldap_servers\ServerFactory $factory */
     $factory = \Drupal::service('ldap.servers');
     $result = [];
     foreach ($servers as $server) {
@@ -72,14 +78,13 @@ class LdapAuthenticationConfiguration {
       }
     }
     else {
-      $array = array();
+      $array = [];
     }
     return $array;
   }
 
-
   /**
-   * @param User $user
+   * @param \Drupal\user\Entity\User $user
    * @return bool
    */
   public static function showPasswordField($user = NULL) {
@@ -105,6 +110,5 @@ class LdapAuthenticationConfiguration {
     return TRUE;
 
   }
-
 
 }

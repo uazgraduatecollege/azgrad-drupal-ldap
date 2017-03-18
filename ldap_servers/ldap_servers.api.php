@@ -4,7 +4,6 @@
  * @file
  * Hooks provided by ldap_servers module.
  */
-use Drupal\ldap_servers\Processor\TokenProcessor;
 
 /**
  * Allows other modules to periodically affect an ldap associated user
