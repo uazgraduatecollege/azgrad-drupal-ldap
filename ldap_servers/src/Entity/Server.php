@@ -178,7 +178,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
    * @param null $anon_bind
    *
    * @return int
-   *   Result of bind in form of LDAP_SUCESS or relevant error.
+   *   Result of bind in form of LDAP_SUCCESS or relevant error.
    */
   public function bind($userdn = NULL, $pass = NULL, $anon_bind = NULL) {
     // Ensure that we have an active server connection.

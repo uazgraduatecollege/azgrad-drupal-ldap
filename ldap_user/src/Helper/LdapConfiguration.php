@@ -9,6 +9,8 @@ class LdapConfiguration {
 
   /**
    * Provisioning events (events are triggered by triggers).
+   * @TODO Convert to string and save in configuration.
+   * @TODO Write update hook.
    */
   public static $eventCreateDrupalUser = 1;
   public static $eventSyncToDrupalUser = 2;
@@ -16,25 +18,15 @@ class LdapConfiguration {
   public static $eventSyncToLdapEntry = 4;
   public static $eventLdapAssociateDrupalAccount = 5;
 
-  public static $resultProvisionLdapEntryCreateFailed = 2;
-  public static $resultProvisionLdapEntrySyncFailed = 3;
-
   public static $provisioningDirectionToDrupalUser = 1;
   public static $provisioningDirectionToLDAPEntry = 2;
   public static $provisioningDirectionNone = 3;
   public static $provisioningDirectionAll = 4;
 
-  public static $provisioningResultNoError = 0;
-  public static $provisioningResultNoPassword = 1;
-  public static $provisioningResultBadParameters = 2;
-
-  /**
-   * Originally needed to avoid conflicting with server ids.
-   */
-  public static $noServerSID = 0;
-
   /**
    * Configurable Drupal account provision triggers.
+   * @TODO Convert to string and save in configuration.
+   * @TODO Write update hook.
    */
   public static $provisionDrupalUserOnUserUpdateCreate = 1;
   public static $provisionDrupalUserOnAuthentication = 2;
@@ -42,6 +34,8 @@ class LdapConfiguration {
 
   /**
    * Configurable ldap entry provision triggers.
+   * @TODO Convert to string and save in configuration.
+   * @TODO Write update hook.
    */
   public static $provisionLdapEntryOnUserUpdateCreate = 6;
   public static $provisionLdapEntryOnUserAuthentication = 7;
@@ -49,6 +43,8 @@ class LdapConfiguration {
 
   /**
    * Options for account creation behavior.
+   * @TODO Convert to string and save in configuration.
+   * @TODO Write update hook.
    */
   public static $accountCreationLdapBehaviour = 4;
   public static $accountCreationUserSettingsForLdap = 1;

@@ -110,6 +110,7 @@ class DrupalUserProcessor {
     if (!$ldap_user && !isset($user_values['name'])) {
       return FALSE;
     }
+    /* @var ServerFactory $factory */
     $factory = \Drupal::service('ldap.servers');
 
     // Get an LDAP user from the LDAP server.
@@ -358,6 +359,7 @@ class DrupalUserProcessor {
 
     if (!$ldap_user && $this->config['drupalAcctProvisionServer']) {
       $factory = \Drupal::service('ldap.servers');
+      /* @var ServerFactory $factory */
       $ldap_user = $factory->getUserDataFromServerByAccount($account, $this->config['drupalAcctProvisionServer'], 'ldap_user_prov_to_drupal');
     }
 

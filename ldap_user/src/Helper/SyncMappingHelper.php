@@ -113,50 +113,64 @@ class SyncMappingHelper {
   }
 
   /**
-   * Derive mapping array from ldap user configuration and other configurations.
-   * if this becomes a resource hungry function should be moved to ldap_user functions
-   * and stored with static variable. should be cached also.
-   * This should be cached and modules implementing ldap_user_sync_mapping_alter
-   * should know when to invalidate cache.
+   * Fetches the sync mappings from cache or loads them from configuration.
    */
   public function setSyncMapping() {
-    // FIXME: This cache should be invalidated when user fields are added.
-    $sync_mapping_cache = \Drupal::cache()->get('ldap_user_sync_mapping');
-    if ($sync_mapping_cache) {
-      $this->syncMapping = $sync_mapping_cache->data;
+    $syncMappingsCache = \Drupal::cache()->get('ldap_user_sync_mapping');
+    if ($syncMappingsCache) {
+      $this->syncMapping = $syncMappingsCache->data;
     }
     else {
-      $available_user_attributes = [];
-      foreach (array(LdapConfiguration::$provisioningDirectionToDrupalUser, LdapConfiguration::$provisioningDirectionToLDAPEntry) as $direction) {
-        if ($direction == LdapConfiguration::$provisioningDirectionToDrupalUser) {
-          $sid = \Drupal::config('ldap_user.settings')->get('ldap_user_conf.drupalAcctProvisionServer');
-        }
-        else {
-          $sid = \Drupal::config('ldap_user.settings')->get('ldap_user_conf.ldapEntryProvisionServer');
-        }
-        $available_user_attributes[$direction] = [];
-        $ldap_server = FALSE;
-        if ($sid) {
-          try {
-            $factory = \Drupal::service('ldap.servers');
-            $ldap_server = $factory->getServerById($sid);
-          }
-          catch (\Exception $e) {
-            \Drupal::logger('ldap_user')->error('Missing server');
-          }
-        }
-
-        $params = array(
-          'ldap_server' => $ldap_server,
-          'ldap_user_conf' => $this,
-          'direction' => $direction,
-        );
-
-        \Drupal::moduleHandler()->alter('ldap_user_attrs_list', $available_user_attributes[$direction], $params);
-      }
-      $this->syncMapping = $available_user_attributes;
+      $this->syncMapping = $this->processSyncMappings();
+      \Drupal::cache()->set('ldap_user_sync_mapping', $this->syncMapping);
     }
-    \Drupal::cache()->set('ldap_user_sync_mapping', $this->syncMapping);
+  }
+
+  /**
+   * Derive synchronization mappings from configuration.
+   *
+   * This function would be private if not for easier access for tests.
+   *
+   * return array
+   */
+  public function processSyncMappings() {
+    $available_user_attributes = [];
+    foreach (array(
+               LdapConfiguration::$provisioningDirectionToDrupalUser,
+               LdapConfiguration::$provisioningDirectionToLDAPEntry
+             ) as $direction) {
+      if ($direction == LdapConfiguration::$provisioningDirectionToDrupalUser) {
+        $sid = \Drupal::config('ldap_user.settings')
+          ->get('ldap_user_conf.drupalAcctProvisionServer');
+      }
+      else {
+        $sid = \Drupal::config('ldap_user.settings')
+          ->get('ldap_user_conf.ldapEntryProvisionServer');
+      }
+      $available_user_attributes[$direction] = [];
+      $ldap_server = FALSE;
+      if ($sid) {
+        try {
+          $factory = \Drupal::service('ldap.servers');
+          $ldap_server = $factory->getServerById($sid);
+        } catch (\Exception $e) {
+          \Drupal::logger('ldap_user')->error('Missing server');
+        }
+      }
+
+      $params = [
+        'ldap_server' => $ldap_server,
+        'ldap_user_conf' => $this,
+        'direction' => $direction,
+      ];
+
+      \Drupal::moduleHandler()->alter(
+        'ldap_user_attrs_list',
+        $available_user_attributes[$direction],
+        $params
+      );
+    }
+    return $available_user_attributes;
   }
 
   /**
@@ -172,12 +186,12 @@ class SyncMappingHelper {
     if ($direction == NULL) {
       $direction = LdapConfiguration::$provisioningDirectionAll;
     }
-    $attributes_map = array();
-    $required_attributes = array();
+    $attributes_map = [];
+    $required_attributes = [];
     if ($this->config['drupalAcctProvisionServer']) {
       $prov_events = LdapConfiguration::ldapContextToProvEvents($ldap_context);
       $attributes_map = $this->getSyncMappings($direction, $prov_events);
-      $required_attributes = array();
+      $required_attributes = [];
       foreach ($attributes_map as $detail) {
         if (count(array_intersect($prov_events, $detail['prov_events']))) {
           // Add the attribute to our array.

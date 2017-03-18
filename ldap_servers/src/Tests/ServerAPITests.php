@@ -5,7 +5,7 @@ namespace Drupal\ldap_servers\tests;
 use Drupal\Component\Utility\Unicode;
 
 /**
- * Placeholder for remaining unported functions from legacy tests.
+ * @FIXME: Placeholder for remaining unported functions from legacy tests.
  */
 class ServerAPITests {
 
@@ -53,7 +53,6 @@ class ServerAPITests {
         $ldap_error = "Credentials for $userdn failed in LdapServerTest.class.php";
       }
     }
-    // @FIXME: watchdog
     $watchdog_tokens = array('%user' => $userdn, '%errno' => $ldap_errno, '%error' => $ldap_error);
     watchdog('ldap', "LDAP bind failure for user %user. Error %errno: %error", $watchdog_tokens);
     return $ldap_errno;
