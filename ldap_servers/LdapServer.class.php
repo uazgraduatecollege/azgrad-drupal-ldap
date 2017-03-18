@@ -471,7 +471,7 @@ class LdapServer {
     if (!$result) {
       $error = "LDAP Server ldap_add(%dn) Error Server ID = %sid, LDAP Err No: %ldap_errno LDAP Err Message: %ldap_err2str ";
       $tokens = array('%dn' => $dn, '%sid' => $this->sid, '%ldap_errno' => ldap_errno($this->connection), '%ldap_err2str' => ldap_err2str(ldap_errno($this->connection)));
-      debug(t($error, $tokens));
+      //debug(t($error, $tokens));
       watchdog('ldap_server', $error, $tokens, WATCHDOG_ERROR);
     }
 
