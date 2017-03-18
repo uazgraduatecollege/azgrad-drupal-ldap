@@ -3,3 +3,7 @@ ldap_authentication.admin_form:
   title: Authentication
   weight: 40
   base_route: ldap_servers.settings
+ldap_authentication.show_user_help_link:
+  deriver: 'Drupal\ldap_authentication\Plugin\Derivative\DynamicUserHelpLink'
+  weight: 50
+  base_route: entity.user.canonical

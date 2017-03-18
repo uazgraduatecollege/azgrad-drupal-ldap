@@ -12,3 +12,10 @@ ldap_authentication.admin_form:
     _form: \Drupal\ldap_authentication\Form\LdapAuthenticationAdminForm
   requirements:
     _permission: 'administer site configuration'
+ldap_authentication.ldap_help_redirect:
+  path: '/ldap_help_redirect'
+  defaults:
+    _controller: '\Drupal\ldap_authentication\Controller\LdapHelpRedirect::redirectUrl'
+    _title: 'redirect'
+  requirements:
+    _custom_access: '\Drupal\ldap_authentication\Plugin\Derivative\DynamicUserHelpLink::routeAccess'

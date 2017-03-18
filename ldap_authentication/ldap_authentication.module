@@ -12,48 +12,6 @@ use Drupal\ldap_authentication\Helper\LdapAuthenticationConfiguration;
 use Drupal\ldap_user\Helper\ExternalAuthenticationHelper;
 
 /**
- * Implements hook_menu_alter().
- * since menu items are cached, only useful to add or alter callbacks
- * for ldap authentication driven menu items.
- *
- * @deprecated
- */
-function ldap_authentication_menu_alter(&$items) {
-  // @FIXME: Unported.
-  // Adds a menu tab (local task) to the user's page with a help text and goes to the ldapUserHelpLinkUrl.
-  // This would normally be in ldap_authentication.links.yml but it has to be dynamic.
-  if (\Drupal::config('ldap_authentication.settings')->get('ldapUserHelpLinkUrl')) {
-    $items['user/ldaphelp'] = [
-      'title' => \Drupal::config('ldap_authentication.settings')->get('ldapUserHelpLinkText'),
-      'page callback' => 'drupal_goto',
-      'page arguments' => [\Drupal::config('ldap_authentication.settings')->get('ldapUserHelpLinkUrl')],
-      'access callback' => 'ldap_authentication_show_ldap_help_link',
-      'type' => MENU_LOCAL_TASK,
-    ];
-  }
-}
-
-/**
- * TODO: Calling function unported.
- *
- * @deprecated
- */
-function ldap_authentication_show_ldap_help_link($user = NULL) {
-  $user = \Drupal::currentUser();
-  if (\Drupal::config('ldap_authentication.settings')->get('authenticationMode') == LdapAuthenticationConfiguration::MODE_MIXED) {
-    return (ldap_authentication_ldap_authenticated($user));
-  }
-  elseif (\Drupal::config('ldap_authentication.settings')->get('authenticationMode') == LdapAuthenticationConfiguration::MODE_EXCLUSIVE) {
-    if ($user->isAnonymous() || ldap_authentication_ldap_authenticated($user)) {
-      return TRUE;
-    }
-    else {
-      return FALSE;
-    }
-  }
-}
-
-/**
  * Implements hook_help().
  */
 function ldap_authentication_help($path, $arg) {
