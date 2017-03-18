@@ -8,6 +8,7 @@ use Drupal\ldap_servers\Helper\ConversionHelper;
 use Drupal\ldap_servers\Entity\Server;
 use Drupal\ldap_servers\Helper\MassageAttributes;
 use Drupal\user\Entity\User;
+use Drupal\user\UserInterface;
 
 /**
  *
@@ -390,8 +391,8 @@ class TokenProcessor {
 
   /**
    *
-   * @param User $user_account
-   * @param array|string $token_keys
+   * @param User $account
+   * @param array $token_keys
    *   'all' signifies return
    *   all token/value pairs available; otherwise array lists
    *   token keys (e.g. property.name ...NOT [property.name]).
@@ -404,42 +405,14 @@ class TokenProcessor {
    *   Should return token/value pairs in array such as 'status' => 1,
    *   'uid' => 17.
    */
-  public function tokenizeUserAccount($user_account, $token_keys = 'all', $pre = NULL, $post = NULL) {
-    if ($pre == NULL) {
-      $pre = self::PREFIX;
+  public function tokenizeUserAccount(UserInterface $account, $token_keys = [], $pre = self::PREFIX, $post = self::SUFFIX) {
+
+
+    if (empty($token_keys)) {
+      $token_keys = $this->discoverUserAttributes($account);
     }
-    if ($post == NULL) {
-      $pre = self::SUFFIX;
-    }
 
-    $tokens = array();
-
-    if ($token_keys == 'all') {
-      // Add lowercase keyed entries to ldap array.
-      foreach ((array) $user_account as $property_name => $value) {
-        if (is_scalar($value) && $property_name != 'password') {
-          $token_keys[] = 'property.' . $property_name;
-          if (Unicode::strtolower($property_name) != $property_name) {
-            $token_keys[] = 'property.' . Unicode::strtolower($property_name);
-          }
-        }
-        // @FIXME: Legacy syntax
-        elseif (isset($user_account->{$attr_name}['und'][0]['value']) && is_scalar($user_account->{$attr_name}['und'][0]['value'])) {
-          $token_keys[] = 'field.' . $property_name;
-          if (Unicode::strtolower($property_name) != $property_name) {
-            $token_keys[] = 'field.' . Unicode::strtolower($property_name);
-          }
-        }
-        else {
-          // Field or property with no value, so no token can be generated.
-        }
-      }
-
-      // TODO: Setting of LDAP passwords not handled anymore, compare with 7.
-      $token_keys[] = 'password.random';
-      $token_keys[] = 'password.user-random';
-
-    }
+    $tokens = [];
 
     foreach ($token_keys as $token_key) {
       $parts = explode('.', $token_key);
@@ -452,7 +425,7 @@ class TokenProcessor {
       switch ($attr_type) {
         case 'field':
         case 'property':
-          $value = @is_scalar($user_account->get($attr_name)->value) ? $user_account->get($attr_name)->value : '';
+          $value = @is_scalar($account->get($attr_name)->value) ? $account->get($attr_name)->value : '';
           break;
 
         case 'password':
@@ -495,9 +468,9 @@ class TokenProcessor {
             break;
         }
 
-        $tokens[$pre . $token_key . $post] = SafeMarkup::checkPlain($value);
+        $tokens[$pre . $token_key . $post] = SafeMarkup::checkPlain($value)->__toString();
         if ($token_key != Unicode::strtolower($token_key)) {
-          $tokens[$pre . Unicode::strtolower($token_key) . $post] = SafeMarkup::checkPlain($value);
+          $tokens[$pre . Unicode::strtolower($token_key) . $post] = SafeMarkup::checkPlain($value)->__toString();
         }
       }
     }
@@ -625,6 +598,29 @@ class TokenProcessor {
       }
     }
     return $attribute;
+  }
+
+  /**
+   * @param \Drupal\user\UserInterface $account
+   * @return array
+   */
+  private function discoverUserAttributes(UserInterface $account) {
+    $token_keys = [];
+    // Add lowercase keyed entries to ldap array.
+    $userData = $account->toArray();
+    foreach ($userData as $propertyName => $propertyData) {
+      if (isset($propertyData[0], $propertyData[0]['value']) && is_scalar($propertyData[0]['value'])) {
+        if (substr($propertyName, 0, strlen('field')) === 'field') {
+          $token_keys[] = 'field.' . Unicode::strtolower($propertyName);
+        }
+        else {
+          $token_keys[] = 'property.' . Unicode::strtolower($propertyName);
+        }
+      }
+    }
+    $token_keys[] = 'password.random';
+    $token_keys[] = 'password.user-random';
+    return $token_keys;
   }
 
 }
