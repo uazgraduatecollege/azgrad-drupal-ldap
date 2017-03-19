@@ -213,7 +213,7 @@ class ServerFactory {
 
       $server_edit_path = 'admin/config/people/ldap/servers/edit/' . $ldap_server->id();
 
-      if ($direction == LdapConfiguration::$provisioningDirectionToDrupalUser) {
+      if ($direction == LdapConfiguration::PROVISION_TO_DRUPAL) {
 
         /**
          * These 4 user fields identify where in ldap and which ldap server they are
@@ -241,7 +241,7 @@ class ServerFactory {
             'configurable_to_ldap' => 1,
             'source' => t('%sid', $tokens),
             'notes' => 'not configurable',
-            'direction' => LdapConfiguration::$provisioningDirectionToDrupalUser,
+            'direction' => LdapConfiguration::PROVISION_TO_DRUPAL,
             'enabled' => TRUE,
             'prov_events' => [LdapConfiguration::$eventCreateDrupalUser],
             'config_module' => 'ldap_servers',
@@ -255,7 +255,7 @@ class ServerFactory {
             'source' => '[' . $ldap_server->get('unique_persistent_attr') . ']',
             'notes' => 'configure at ' . $server_edit_path,
             'convert' => $ldap_server->get('unique_persistent_attr_binary'),
-            'direction' => LdapConfiguration::$provisioningDirectionToDrupalUser,
+            'direction' => LdapConfiguration::PROVISION_TO_DRUPAL,
             'enabled' => TRUE,
             'prov_events' => [LdapConfiguration::$eventCreateDrupalUser],
             'config_module' => 'ldap_servers',
@@ -269,7 +269,7 @@ class ServerFactory {
               'configurable_to_ldap' => 1,
               'source' => $ldap_server->get('unique_persistent_attr'),
               'notes' => 'configure at ' . $server_edit_path,
-              'direction' => LdapConfiguration::$provisioningDirectionToDrupalUser,
+              'direction' => LdapConfiguration::PROVISION_TO_DRUPAL,
               'enabled' => TRUE,
               'prov_events' => [LdapConfiguration::$eventCreateDrupalUser],
               'config_module' => 'ldap_servers',
@@ -288,7 +288,7 @@ class ServerFactory {
             'configurable_to_ldap' => 0,
             'source' => '[dn]',
             'notes' => 'not configurable',
-            'direction' => LdapConfiguration::$provisioningDirectionToDrupalUser,
+            'direction' => LdapConfiguration::PROVISION_TO_DRUPAL,
             'enabled' => TRUE,
             'prov_events' => [
               LdapConfiguration::$eventCreateDrupalUser,
@@ -305,7 +305,7 @@ class ServerFactory {
           $available_user_attrs['[property.name]'] = [
             'name' => 'Property: Username',
             'source' => '[' . $ldap_server->get('user_attr') . ']',
-            'direction' => LdapConfiguration::$provisioningDirectionToDrupalUser,
+            'direction' => LdapConfiguration::PROVISION_TO_DRUPAL,
             'enabled' => TRUE,
             'prov_events' => [
               LdapConfiguration::$eventCreateDrupalUser,
@@ -321,7 +321,7 @@ class ServerFactory {
           $available_user_attrs['[property.mail]'] = [
             'name' => 'Property: Email',
             'source' => ($ldap_server->get('mail_template')) ? $ldap_server->get('mail_template') : '[' . $ldap_server->get('mail_attr') . ']',
-            'direction' => LdapConfiguration::$provisioningDirectionToDrupalUser,
+            'direction' => LdapConfiguration::PROVISION_TO_DRUPAL,
             'enabled' => TRUE,
             'prov_events' => [
               LdapConfiguration::$eventCreateDrupalUser,
@@ -338,7 +338,7 @@ class ServerFactory {
             $available_user_attrs['[property.picture]'] = [
               'name' => 'Property: Picture',
               'source' => '[' . $ldap_server->get('picture_attr') . ']',
-              'direction' => LdapConfiguration::$provisioningDirectionToDrupalUser,
+              'direction' => LdapConfiguration::PROVISION_TO_DRUPAL,
               'enabled' => TRUE,
               'prov_events' => [
                 LdapConfiguration::$eventCreateDrupalUser,

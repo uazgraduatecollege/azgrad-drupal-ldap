@@ -52,7 +52,7 @@ class LdapUserProcessor {
       $ldap_server = $factory->getServerById($this->config['ldapEntryProvisionServer']);
 
       $params = [
-        'direction' => LdapConfiguration::$provisioningDirectionToLDAPEntry,
+        'direction' => LdapConfiguration::PROVISION_TO_LDAP,
         'prov_events' => [LdapConfiguration::$eventSyncToLdapEntry],
         'module' => 'ldap_user',
         'function' => 'syncToLdapEntry',
@@ -147,7 +147,7 @@ class LdapUserProcessor {
    *   'module' => module calling function, e.g. 'ldap_user'
    *   'function' => function calling function, e.g. 'provisionLdapEntry'
    *   'include_count' => should 'count' array key be included
-   *   'direction' => LdapConfiguration::$provisioningDirectionToLDAPEntry || LdapConfiguration::$provisioningDirectionToDrupalUser.
+   *   'direction' => LdapConfiguration::PROVISION_TO_LDAP || LdapConfiguration::PROVISION_TO_DRUPAL.
    * @param null $ldap_user_entry
    *
    * @return array (ldap entry, $result)
@@ -167,7 +167,7 @@ class LdapUserProcessor {
 
     $include_count = (isset($params['include_count']) && $params['include_count']);
 
-    $direction = isset($params['direction']) ? $params['direction'] : LdapConfiguration::$provisioningDirectionAll;
+    $direction = isset($params['direction']) ? $params['direction'] : LdapConfiguration::PROVISION_TO_ALL;
     $prov_events = empty($params['prov_events']) ? LdapConfiguration::getAllEvents() : $params['prov_events'];
 
     $tokenHelper = new TokenProcessor();
@@ -182,7 +182,7 @@ class LdapUserProcessor {
         continue;
       }
 
-      $synced = $syncMapper->isSynced($field_key, $params['prov_events'], LdapConfiguration::$provisioningDirectionToLDAPEntry);
+      $synced = $syncMapper->isSynced($field_key, $params['prov_events'], LdapConfiguration::PROVISION_TO_LDAP);
       if ($synced) {
         $token = ($field_detail['user_attr'] == 'user_tokens') ? $field_detail['user_tokens'] : $field_detail['user_attr'];
         $value = $tokenHelper->tokenReplace($account, $token, 'user_account');
@@ -269,7 +269,7 @@ class LdapUserProcessor {
     /** @var \Drupal\ldap_servers\Entity\Server $ldap_server */
     $ldap_server = $factory->getServerById($this->config['ldapEntryProvisionServer']);
     $params = [
-      'direction' => LdapConfiguration::$provisioningDirectionToLDAPEntry,
+      'direction' => LdapConfiguration::PROVISION_TO_LDAP,
       'prov_events' => [LdapConfiguration::$eventCreateLdapEntry],
       'module' => 'ldap_user',
       'function' => 'provisionLdapEntry',
@@ -460,7 +460,7 @@ class LdapUserProcessor {
     /** @var \Drupal\ldap_servers\Entity\Server $ldap_server */
     $ldap_server = $factory->getServerById($sid);
     $params = [
-      'direction' => LdapConfiguration::$provisioningDirectionToLDAPEntry,
+      'direction' => LdapConfiguration::PROVISION_TO_LDAP,
       'prov_events' => $prov_events,
       'module' => 'ldap_user',
       'function' => 'getProvisionRelatedLdapEntry',

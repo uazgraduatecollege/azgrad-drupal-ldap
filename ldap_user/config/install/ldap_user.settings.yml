@@ -1,13 +1,13 @@
 drupalAcctProvisionServer: '0'
 ldapEntryProvisionServer: '0'
 drupalAcctProvisionTriggers:
-  2: 0
-  1: 0
+  drupal_on_login: '0'
+  drupal_on_update_create: '0'
 ldapEntryProvisionTriggers:
-  6: 0
-  7: 0
-  8: 0
-  3: 0
+  ldap_on_update_create: '0'
+  ldap_on_login: '0'
+  ldap_on_delete: '0'
+  drupal_on_manual_creation: '0'
 orphanedDrupalAcctBehavior: ldap_user_orphan_email
 orphanedCheckQty: 100
 orphanedAccountCheckInterval: 'weekly'

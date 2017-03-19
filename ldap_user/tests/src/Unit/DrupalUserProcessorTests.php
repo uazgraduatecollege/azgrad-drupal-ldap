@@ -28,12 +28,12 @@ class DrupalUserProcessorTests extends UnitTestCase {
     parent::setUp();
 
     $this->provisioningEvents = [
-      LdapConfiguration::$provisioningDirectionToDrupalUser => [
+      LdapConfiguration::PROVISION_TO_DRUPAL => [
         LdapConfiguration::$eventSyncToDrupalUser,
         LdapConfiguration::$eventCreateDrupalUser,
       ],
 
-      LdapConfiguration::$provisioningDirectionToLDAPEntry => [
+      LdapConfiguration::PROVISION_TO_LDAP => [
         LdapConfiguration::$eventSyncToLdapEntry,
         LdapConfiguration::$eventCreateLdapEntry,
       ],
@@ -131,12 +131,12 @@ class DrupalUserProcessorTests extends UnitTestCase {
     $user_edit = NULL;
     $ldapUserSyncMappings = [];
     $sid = 'activedirectory1';
-    $ldapUserSyncMappings[LdapConfiguration::$provisioningDirectionToDrupalUser]['[property.mail]'] = [
+    $ldapUserSyncMappings[LdapConfiguration::PROVISION_TO_DRUPAL]['[property.mail]'] = [
       'sid' => $sid,
       'ldap_attr' => '[mail]',
       'user_attr' => '[property.mail]',
       'convert' => 0,
-      'direction' => LdapConfiguration::$provisioningDirectionToDrupalUser,
+      'direction' => LdapConfiguration::PROVISION_TO_DRUPAL,
       'ldap_contexts' => ['ldap_user_insert_drupal_user', 'ldap_user_update_drupal_user', 'ldap_authentication_authenticate'],
       'prov_events' => [LdapConfiguration::$eventSyncToDrupalUser],
       'name' => 'Property: Mail',
@@ -178,7 +178,7 @@ class DrupalUserProcessorTests extends UnitTestCase {
         'ldap_attr' => '[SN]',
         'user_attr' => '[field.field_lname]',
         'convert' => 0,
-        'direction' => LdapConfiguration::$provisioningDirectionToDrupalUser,
+        'direction' => LdapConfiguration::PROVISION_TO_DRUPAL,
         'prov_events' => [
           LdapConfiguration::$eventCreateDrupalUser,
           LdapConfiguration::$eventSyncToDrupalUser,
@@ -247,7 +247,7 @@ class DrupalUserProcessorTests extends UnitTestCase {
         'ldap_attr' => '[givenName] [sn]',
         'user_attr' => '[field.field_display_name]',
         'convert' => 0,
-        'direction' => LdapConfiguration::$provisioningDirectionToDrupalUser,
+        'direction' => LdapConfiguration::PROVISION_TO_DRUPAL,
         'prov_events' => [LdapConfiguration::$eventCreateDrupalUser, LdapConfiguration::$eventSyncToDrupalUser],
         'name' => 'Field: Display Name',
         'enabled' => TRUE,
@@ -278,7 +278,7 @@ class DrupalUserProcessorTests extends UnitTestCase {
         'ldap_attr' => 'Smith',
         'user_attr' => '[field.field_lname]',
         'convert' => 0,
-        'direction' => LdapConfiguration::$provisioningDirectionToDrupalUser,
+        'direction' => LdapConfiguration::PROVISION_TO_DRUPAL,
         'prov_events' => [LdapConfiguration::$eventCreateDrupalUser, LdapConfiguration::$eventSyncToDrupalUser],
         'user_tokens' => '',
         'config_module' => 'ldap_user',
@@ -307,7 +307,7 @@ class DrupalUserProcessorTests extends UnitTestCase {
         'ldap_attr' => '[cn]@hogwarts.edu',
         'user_attr' => '[property.signature]',
         'convert' => 0,
-        'direction' => LdapConfiguration::$provisioningDirectionToDrupalUser,
+        'direction' => LdapConfiguration::PROVISION_TO_DRUPAL,
         'prov_events' => [LdapConfiguration::$eventCreateDrupalUser, LdapConfiguration::$eventSyncToDrupalUser],
         'name' => 'Property: Signature',
         'enabled' => TRUE,
@@ -336,7 +336,7 @@ class DrupalUserProcessorTests extends UnitTestCase {
         'ldap_attr' => '[mail]',
         'user_attr' => '[property.mail]',
         'convert' => 0,
-        'direction' => LdapConfiguration::$provisioningDirectionToDrupalUser,
+        'direction' => LdapConfiguration::PROVISION_TO_DRUPAL,
         'prov_events' => [LdapConfiguration::$eventCreateDrupalUser, LdapConfiguration::$eventSyncToDrupalUser],
         'name' => 'Property: Mail',
         'enabled' => TRUE,
@@ -366,7 +366,7 @@ class DrupalUserProcessorTests extends UnitTestCase {
         // Testing of a constant mapped to property.
         'user_attr' => '[property.status]',
         'convert' => 0,
-        'direction' => LdapConfiguration::$provisioningDirectionToDrupalUser,
+        'direction' => LdapConfiguration::PROVISION_TO_DRUPAL,
         'prov_events' => [LdapConfiguration::$eventCreateDrupalUser],
         'name' => 'Property: Status',
         'enabled' => TRUE,

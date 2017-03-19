@@ -7,6 +7,18 @@ namespace Drupal\ldap_user\Helper;
  */
 class LdapConfiguration {
 
+  const PROVISION_TO_DRUPAL = 'drupal';
+  const PROVISION_TO_LDAP = 'ldap';
+  const PROVISION_TO_NONE = 'none';
+  const PROVISION_TO_ALL = 'all';
+
+  const PROVISION_DRUPAL_USER_ON_USER_UPDATE_CREATE = 'drupal_on_update_create';
+  const PROVISION_DRUPAL_USER_ON_USER_AUTHENTICATION = 'drupal_on_login';
+  const PROVISION_DRUPAL_USER_ON_USER_ON_MANUAL_CREATION = 'drupal_on_manual_creation';
+  const PROVISION_LDAP_ENTRY_ON_USER_ON_USER_UPDATE_CREATE = 'ldap_on_update_create';
+  const PROVISION_LDAP_ENTRY_ON_USER_ON_USER_AUTHENTICATION = 'ldap_on_login';
+  const PROVISION_LDAP_ENTRY_ON_USER_ON_USER_DELETE = 'ldap_on_delete';
+
   /**
    * Provisioning events (events are triggered by triggers).
    *
@@ -18,30 +30,6 @@ class LdapConfiguration {
   public static $eventCreateLdapEntry = 3;
   public static $eventSyncToLdapEntry = 4;
   public static $eventLdapAssociateDrupalAccount = 5;
-  public static $provisioningDirectionToDrupalUser = 1;
-  public static $provisioningDirectionToLDAPEntry = 2;
-  public static $provisioningDirectionNone = 3;
-  public static $provisioningDirectionAll = 4;
-
-  /**
-   * Configurable Drupal account provision triggers.
-   *
-   * @TODO Convert to string and save in configuration.
-   * @TODO Write update hook.
-   */
-  public static $provisionDrupalUserOnUserUpdateCreate = 1;
-  public static $provisionDrupalUserOnAuthentication = 2;
-  public static $provisionDrupalUserOnAllowingManualCreation = 3;
-
-  /**
-   * Configurable ldap entry provision triggers.
-   *
-   * @TODO Convert to string and save in configuration.
-   * @TODO Write update hook.
-   */
-  public static $provisionLdapEntryOnUserUpdateCreate = 6;
-  public static $provisionLdapEntryOnUserAuthentication = 7;
-  public static $provisionLdapEntryOnUserDelete = 8;
 
   /**
    * Options for account creation behavior.
@@ -185,12 +173,12 @@ class LdapConfiguration {
 
     switch ($ldapContext) {
       case 'ldap_user_prov_to_drupal':
-        $result = LdapConfiguration::$provisioningDirectionToDrupalUser;
+        $result = LdapConfiguration::PROVISION_TO_DRUPAL;
         break;
 
       case 'ldap_user_prov_to_ldap':
       case 'ldap_user_delete_drupal_user':
-        $result = LdapConfiguration::$provisioningDirectionToLDAPEntry;
+        $result = LdapConfiguration::PROVISION_TO_LDAP;
         break;
 
       // Provisioning is can happen in both directions in most contexts.
@@ -198,11 +186,11 @@ class LdapConfiguration {
       case 'ldap_user_update_drupal_user':
       case 'ldap_authentication_authenticate':
       case 'ldap_user_disable_drupal_user':
-        $result = LdapConfiguration::$provisioningDirectionAll;
+        $result = LdapConfiguration::PROVISION_TO_ALL;
         break;
 
       default:
-        $result = LdapConfiguration::$provisioningDirectionAll;
+        $result = LdapConfiguration::PROVISION_TO_ALL;
         break;
     }
     return $result;
@@ -213,7 +201,7 @@ class LdapConfiguration {
    *   this is overall, not per field syncing configuration.
    *
    * @param int $direction
-   *   LdapConfiguration::$provisioningDirectionToDrupalUser or LdapConfiguration::$provisioningDirectionToLDAPEntry.
+   *   LdapConfiguration::PROVISION_TO_DRUPAL or LdapConfiguration::PROVISION_TO_LDAP.
    *
    * @param int $provision_trigger
    *   see events above.
@@ -227,11 +215,11 @@ class LdapConfiguration {
   public static function provisionEnabled($direction, $provision_trigger) {
     $result = FALSE;
 
-    if ($direction == LdapConfiguration::$provisioningDirectionToLDAPEntry) {
+    if ($direction == LdapConfiguration::PROVISION_TO_LDAP) {
       $result = self::provisionAvailableToLDAP($provision_trigger);
 
     }
-    elseif ($direction == LdapConfiguration::$provisioningDirectionToDrupalUser) {
+    elseif ($direction == LdapConfiguration::PROVISION_TO_DRUPAL) {
       $result = self::provisionAvailableToDrupal($provision_trigger);
     }
 

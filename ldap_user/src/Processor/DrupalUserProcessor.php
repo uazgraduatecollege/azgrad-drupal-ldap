@@ -76,16 +76,18 @@ class DrupalUserProcessor {
    * @param array $userData
    *   A keyed array normally containing 'name' and optionally more.
    *
-   * @return bool|User
-   *   Return the user on success or FALSE on any problem.
+   * @param bool $save
+   *
+   * @return bool|\Drupal\user\entity\User Return the user on success or FALSE on any problem.
+   * Return the user on success or FALSE on any problem.
    */
-  public function provisionDrupalAccount($userData) {
+  public function provisionDrupalAccount($userData, $save = TRUE) {
 
     $tokens = [];
     $account = User::create($userData);
     $ldapUser = FALSE;
 
-    /* @var ServerFactory $factory */
+    /* @var \Drupal\ldap_servers\ServerFactory $factory */
     $factory = \Drupal::service('ldap.servers');
 
     // Get an LDAP user from the LDAP server.
@@ -116,7 +118,7 @@ class DrupalUserProcessor {
       'prov_event' => LdapConfiguration::$eventCreateDrupalUser,
       'module' => 'ldap_user',
       'function' => 'provisionDrupalAccount',
-      'direction' => LdapConfiguration::$provisioningDirectionToDrupalUser,
+      'direction' => LdapConfiguration::PROVISION_TO_DRUPAL,
     ];
 
     \Drupal::moduleHandler()->alter('ldap_entry', $ldapUser, $params);
@@ -128,10 +130,10 @@ class DrupalUserProcessor {
     $puid = $server->userPuidFromLdapEntry($ldapUser['attr']);
     $accountFromPuid = ($puid) ? $server->userAccountFromPuid($puid) : FALSE;
     if ($accountFromPuid) {
-      return $this->updateExistingDrupalAccount($server, $ldapUser, $accountFromPuid);
+      return $this->updateExistingDrupalAccount($server, $ldapUser, $accountFromPuid, $save);
     }
     else {
-      return $this->createDrupalUser($server, $ldapUser, $account);
+      return $this->createDrupalUser($server, $ldapUser, $account, $save);
     }
   }
 
@@ -149,7 +151,7 @@ class DrupalUserProcessor {
    */
   public function applyAttributesToAccount($ldap_user, &$account, $ldap_server, $direction = NULL, $prov_events = NULL) {
     if ($direction == NULL) {
-      $direction = LdapConfiguration::$provisioningDirectionToDrupalUser;
+      $direction = LdapConfiguration::PROVISION_TO_DRUPAL;
     }
     // Need array of user fields and which direction and when they should be synced.
     if (!$prov_events) {
@@ -180,7 +182,7 @@ class DrupalUserProcessor {
     }
 
     // Only fired on LdapConfiguration::$eventCreateDrupalUser. Shouldn't it respect the checkbox on the sync form?
-    if ($direction == LdapConfiguration::$provisioningDirectionToDrupalUser && in_array(LdapConfiguration::$eventCreateDrupalUser, $prov_events)) {
+    if ($direction == LdapConfiguration::PROVISION_TO_DRUPAL && in_array(LdapConfiguration::$eventCreateDrupalUser, $prov_events)) {
       $derived_mail = $ldap_server->userEmailFromLdapEntry($ldap_user['attr']);
       if (!$account->getEmail()) {
         $account->set('mail', $derived_mail);
@@ -295,7 +297,7 @@ class DrupalUserProcessor {
     if ($this->config['drupalAcctProvisionServer']) {
       $factory = \Drupal::service('ldap.servers');
       $ldap_server = $factory->getServerById($this->config['drupalAcctProvisionServer']);
-      $this->applyAttributesToAccount($ldap_user, $account, $ldap_server, LdapConfiguration::$provisioningDirectionToDrupalUser, [$prov_event]);
+      $this->applyAttributesToAccount($ldap_user, $account, $ldap_server, LdapConfiguration::PROVISION_TO_DRUPAL, [$prov_event]);
     }
 
     if ($save) {
@@ -395,14 +397,14 @@ class DrupalUserProcessor {
       $direction = $params['direction'];
     }
     else {
-      $direction = LdapConfiguration::$provisioningDirectionNone;
+      $direction = LdapConfiguration::PROVISION_TO_NONE;
     }
 
-    if ($direction == LdapConfiguration::$provisioningDirectionToLDAPEntry) {
+    if ($direction == LdapConfiguration::PROVISION_TO_LDAP) {
       $availableUserAttributes['[property.name]'] = [
         'name' => 'Property: Username',
         'source' => '',
-        'direction' => LdapConfiguration::$provisioningDirectionToLDAPEntry,
+        'direction' => LdapConfiguration::PROVISION_TO_LDAP,
         'enabled' => TRUE,
         'prov_events' => [
           LdapConfiguration::$eventCreateDrupalUser,
@@ -416,7 +418,7 @@ class DrupalUserProcessor {
       $availableUserAttributes['[property.mail]'] = [
         'name' => 'Property: Email',
         'source' => '',
-        'direction' => LdapConfiguration::$provisioningDirectionToLDAPEntry,
+        'direction' => LdapConfiguration::PROVISION_TO_LDAP,
         'enabled' => TRUE,
         'prov_events' => [
           LdapConfiguration::$eventCreateDrupalUser,
@@ -430,7 +432,7 @@ class DrupalUserProcessor {
       $availableUserAttributes['[property.picture]'] = [
         'name' => 'Property: picture',
         'source' => '',
-        'direction' => LdapConfiguration::$provisioningDirectionToLDAPEntry,
+        'direction' => LdapConfiguration::PROVISION_TO_LDAP,
         'enabled' => TRUE,
         'prov_events' => [
           LdapConfiguration::$eventCreateDrupalUser,
@@ -444,7 +446,7 @@ class DrupalUserProcessor {
       $availableUserAttributes['[property.uid]'] = [
         'name' => 'Property: Drupal User Id (uid)',
         'source' => '',
-        'direction' => LdapConfiguration::$provisioningDirectionToLDAPEntry,
+        'direction' => LdapConfiguration::PROVISION_TO_LDAP,
         'enabled' => TRUE,
         'prov_events' => [
           LdapConfiguration::$eventCreateDrupalUser,
@@ -520,11 +522,11 @@ class DrupalUserProcessor {
       $availableUserAttributes['[property.picture]']['config_module'] = 'ldap_user';
     }
 
-    if ($direction == LdapConfiguration::$provisioningDirectionToLDAPEntry) {
+    if ($direction == LdapConfiguration::PROVISION_TO_LDAP) {
       $availableUserAttributes['[password.random]'] = [
         'name' => 'Pwd: Random',
         'source' => '',
-        'direction' => LdapConfiguration::$provisioningDirectionToLDAPEntry,
+        'direction' => LdapConfiguration::PROVISION_TO_LDAP,
         'enabled' => TRUE,
         'prov_events' => [
           LdapConfiguration::$eventCreateDrupalUser,
@@ -539,7 +541,7 @@ class DrupalUserProcessor {
       $availableUserAttributes['[password.user-random]'] = [
         'name' => 'Pwd: User or Random',
         'source' => '',
-        'direction' => LdapConfiguration::$provisioningDirectionToLDAPEntry,
+        'direction' => LdapConfiguration::PROVISION_TO_LDAP,
         'enabled' => TRUE,
         'prov_events' => [
           LdapConfiguration::$eventCreateDrupalUser,
@@ -567,8 +569,8 @@ class DrupalUserProcessor {
    *   as drupal user object.
    * @param enum int $direction
    *   indicating which directions to test for association
-   *   LdapConfiguration::$provisioningDirectionToDrupalUser signifies test if drupal account has been provisioned or synced from ldap
-   *   LdapConfiguration::$provisioningDirectionToLDAPEntry signifies test if ldap account has been provisioned or synced from drupal
+   *   LdapConfiguration::PROVISION_TO_DRUPAL signifies test if drupal account has been provisioned or synced from ldap
+   *   LdapConfiguration::PROVISION_TO_LDAP signifies test if ldap account has been provisioned or synced from drupal
    *   NULL signifies check for either direction.
    *
    * @return boolean if user is ldap associated
@@ -578,7 +580,7 @@ class DrupalUserProcessor {
     $to_drupal_user = FALSE;
     $to_ldap_entry = FALSE;
 
-    if ($direction === NULL || $direction == LdapConfiguration::$provisioningDirectionToDrupalUser) {
+    if ($direction === NULL || $direction == LdapConfiguration::PROVISION_TO_DRUPAL) {
       if (property_exists($account, 'ldap_user_current_dn') && !empty($account->get('ldap_user_current_dn')->value)) {
         $to_drupal_user = TRUE;
       }
@@ -588,16 +590,16 @@ class DrupalUserProcessor {
       }
     }
 
-    if ($direction === NULL || $direction == LdapConfiguration::$provisioningDirectionToLDAPEntry) {
+    if ($direction === NULL || $direction == LdapConfiguration::PROVISION_TO_LDAP) {
       if (property_exists($account, 'ldap_user_prov_entries') && !empty($account->get('ldap_user_prov_entries')->value)) {
         $to_ldap_entry = TRUE;
       }
     }
 
-    if ($direction == LdapConfiguration::$provisioningDirectionToDrupalUser) {
+    if ($direction == LdapConfiguration::PROVISION_TO_DRUPAL) {
       return $to_drupal_user;
     }
-    elseif ($direction == LdapConfiguration::$provisioningDirectionToLDAPEntry) {
+    elseif ($direction == LdapConfiguration::PROVISION_TO_LDAP) {
       return $to_ldap_entry;
     }
     else {
@@ -633,12 +635,12 @@ class DrupalUserProcessor {
      * The account is already created, so do not provisionDrupalAccount(), just
      * syncToDrupalAccount(), even if action is 'provision'.
      */
-    if ($account->isActive() && LdapConfiguration::provisionAvailableToDrupal(LdapConfiguration::$provisionDrupalUserOnUserUpdateCreate)) {
+    if ($account->isActive() && LdapConfiguration::provisionAvailableToDrupal(LdapConfiguration::PROVISION_DRUPAL_USER_ON_USER_UPDATE_CREATE)) {
       $this->syncToDrupalAccount($account, LdapConfiguration::$eventCreateDrupalUser, NULL, TRUE);
     }
 
     if (LdapConfiguration::provisionsLdapEntriesFromDrupalUsers()) {
-      $prov_enabled = LdapConfiguration::provisionAvailableToLDAP(LdapConfiguration::$provisionLdapEntryOnUserUpdateCreate);
+      $prov_enabled = LdapConfiguration::provisionAvailableToLDAP(LdapConfiguration::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_UPDATE_CREATE);
       if ($prov_enabled) {
         $ldap_provision_entry = $processor->getProvisionRelatedLdapEntry($account);
         if (!$ldap_provision_entry) {
@@ -670,7 +672,7 @@ class DrupalUserProcessor {
 
     // Check for provisioning to LDAP; this will normally occur on hook_user_insert or other event when drupal user is created.
     if (LdapConfiguration::provisionsLdapEntriesFromDrupalUsers() &&
-      LdapConfiguration::provisionAvailableToLDAP(LdapConfiguration::$provisionLdapEntryOnUserUpdateCreate)) {
+      LdapConfiguration::provisionAvailableToLDAP(LdapConfiguration::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_UPDATE_CREATE)) {
 
       $already_provisioned_to_ldap = SemaphoreStorage::get('provision', $account->getUsername());
       $already_synced_to_ldap = SemaphoreStorage::get('sync', $account->getUsername());
@@ -692,7 +694,7 @@ class DrupalUserProcessor {
       // Sync if not just provisioned and enabled.
       if ($provision_result['status'] != 'success') {
         // Always check if provisioing to ldap has already occurred this page load.
-        $provision_enabled = LdapConfiguration::provisionAvailableToLDAP(LdapConfiguration::$provisionLdapEntryOnUserUpdateCreate);
+        $provision_enabled = LdapConfiguration::provisionAvailableToLDAP(LdapConfiguration::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_UPDATE_CREATE);
         $ldap_entry = $processor->getProvisionRelatedLdapEntry($account);
         if ($provision_enabled && $ldap_entry) {
           $ldapProcessor = new LdapUserProcessor();
@@ -720,10 +722,10 @@ class DrupalUserProcessor {
 
     // Check for provisioning to drupal and override synced user fields/props.
     if (LdapConfiguration::provisionsDrupalAccountsFromLdap() && in_array(LdapConfiguration::$eventSyncToDrupalUser, array_keys(LdapConfiguration::provisionsDrupalEvents()))) {
-      if ($processor->isUserLdapAssociated($account, LdapConfiguration::$provisioningDirectionToDrupalUser)) {
+      if ($processor->isUserLdapAssociated($account, LdapConfiguration::PROVISION_TO_DRUPAL)) {
         $ldap_user = $factory->getUserDataFromServerByAccount($account, $config['drupalAcctProvisionServer'], 'ldap_user_prov_to_drupal');
         $ldap_server = $factory->getServerById($config['drupalAcctProvisionServer']);
-        $processor->applyAttributesToAccount($ldap_user, $account, $ldap_server, LdapConfiguration::$provisioningDirectionToDrupalUser, [LdapConfiguration::$eventSyncToDrupalUser]);
+        $processor->applyAttributesToAccount($ldap_user, $account, $ldap_server, LdapConfiguration::PROVISION_TO_DRUPAL, [LdapConfiguration::$eventSyncToDrupalUser]);
       }
     }
   }
@@ -746,7 +748,7 @@ class DrupalUserProcessor {
       && SemaphoreStorage::get('provision', $account->getUsername()) == FALSE
       && !$processor->getProvisionRelatedLdapEntry($account)
       && \Drupal::config('ldap_user.settings')->get('ldapEntryProvisionServer')
-      && LdapConfiguration::provisionAvailableToLDAP(LdapConfiguration::$provisionLdapEntryOnUserAuthentication)
+      && LdapConfiguration::provisionAvailableToLDAP(LdapConfiguration::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_AUTHENTICATION)
     ) {
       $provision_result = $processor->provisionLdapEntry($account);
       if ($provision_result['status'] == 'success') {
@@ -758,7 +760,7 @@ class DrupalUserProcessor {
       LdapConfiguration::provisionsLdapEntriesFromDrupalUsers()
       && SemaphoreStorage::get('sync', $account->getUsername()) == FALSE
       && $provision_result['status'] != 'success'
-      && LdapConfiguration::provisionAvailableToLDAP(LdapConfiguration::$provisionLdapEntryOnUserAuthentication)
+      && LdapConfiguration::provisionAvailableToLDAP(LdapConfiguration::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_AUTHENTICATION)
     ) {
       $ldapProcessor = new LdapUserProcessor();
       $bool_result = $ldapProcessor->syncToLdapEntry($account);
@@ -775,7 +777,7 @@ class DrupalUserProcessor {
       if ($ldap_user) {
         $ldap_server = $factory->getServerById($config['drupalAcctProvisionServer']);
         $processor = new DrupalUserProcessor();
-        $processor->applyAttributesToAccount($ldap_user, $account, $ldap_server, LdapConfiguration::$provisioningDirectionToDrupalUser, [LdapConfiguration::$eventSyncToDrupalUser]);
+        $processor->applyAttributesToAccount($ldap_user, $account, $ldap_server, LdapConfiguration::PROVISION_TO_DRUPAL, [LdapConfiguration::$eventSyncToDrupalUser]);
       }
       $account->save();
     }
@@ -789,7 +791,7 @@ class DrupalUserProcessor {
 
     // Drupal user account is about to be deleted.
     if (LdapConfiguration::provisionsLdapEntriesFromDrupalUsers()
-      && LdapConfiguration::provisionAvailableToLDAP(LdapConfiguration::$provisionLdapEntryOnUserDelete)
+      && LdapConfiguration::provisionAvailableToLDAP(LdapConfiguration::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_DELETE)
     ) {
       $ldapProcessor = new LdapUserProcessor();
       $ldapProcessor->deleteProvisionedLdapEntries($account);
@@ -805,10 +807,10 @@ class DrupalUserProcessor {
    */
   private function applyUserAttributes($availableUserAttributes, $mappings, $direction) {
     foreach ($mappings[$direction] as $target_token => $mapping) {
-      if ($direction == LdapConfiguration::$provisioningDirectionToDrupalUser && isset($mapping['user_attr'])) {
+      if ($direction == LdapConfiguration::PROVISION_TO_DRUPAL && isset($mapping['user_attr'])) {
         $key = $mapping['user_attr'];
       }
-      elseif ($direction == LdapConfiguration::$provisioningDirectionToLDAPEntry && isset($mapping['ldap_attr'])) {
+      elseif ($direction == LdapConfiguration::PROVISION_TO_LDAP && isset($mapping['ldap_attr'])) {
         $key = $mapping['ldap_attr'];
       }
       else {
@@ -845,11 +847,12 @@ class DrupalUserProcessor {
    * @param $ldap_server
    * @param $ldap_user
    * @param $account
+   * @param $save
    * @return bool|User
    */
-  private function createDrupalUser($ldap_server, $ldap_user, User $account) {
+  private function createDrupalUser($ldap_server, $ldap_user, User $account, $save = TRUE) {
     $account->enforceIsNew();
-    $this->applyAttributesToAccount($ldap_user, $account, $ldap_server, LdapConfiguration::$provisioningDirectionToDrupalUser, [LdapConfiguration::$eventCreateDrupalUser]);
+    $this->applyAttributesToAccount($ldap_user, $account, $ldap_server, LdapConfiguration::PROVISION_TO_DRUPAL, [LdapConfiguration::$eventCreateDrupalUser]);
     $tokens = ['%drupal_username' => $account->get('name')];
     if (empty($account->getUsername())) {
       drupal_set_message(t('User account creation failed because of invalid, empty derived Drupal username.'), 'error');
@@ -872,7 +875,9 @@ class DrupalUserProcessor {
       drupal_set_message(t('Another user already exists in the system with the same email address. You should contact the system administrator in order to solve this conflict.'), 'error');
       return FALSE;
     }
-    $account->save();
+    if ($save == TRUE) {
+      $account->save();
+    }
     if (!$account) {
       drupal_set_message(t('User account creation failed because of system problems.'), 'error');
     }
@@ -886,15 +891,18 @@ class DrupalUserProcessor {
    * @param $ldap_server
    * @param $ldap_user
    * @param $accountFromPuid
+   * @param $save
    *
    * @return bool|\Drupal\user\entity\User|\Drupal\user\UserInterface
    */
-  private function updateExistingDrupalAccount($ldap_server, $ldap_user, $accountFromPuid) {
+  private function updateExistingDrupalAccount($ldap_server, $ldap_user, $accountFromPuid, $save) {
     // 1. correct username and authmap.
     /** @var \Drupal\user\entity\User $accountFromPuid */
-    $this->applyAttributesToAccount($ldap_user, $accountFromPuid, $ldap_server, LdapConfiguration::$provisioningDirectionToDrupalUser, [LdapConfiguration::$eventSyncToDrupalUser]);
+    $this->applyAttributesToAccount($ldap_user, $accountFromPuid, $ldap_server, LdapConfiguration::PROVISION_TO_DRUPAL, [LdapConfiguration::$eventSyncToDrupalUser]);
     $account = $accountFromPuid;
-    $account->save();
+    if ($save == TRUE) {
+      $account->save();
+    }
     // Update the identifier table.
     ExternalAuthenticationHelper::setUserIdentifier($account, $account->getUsername());
 

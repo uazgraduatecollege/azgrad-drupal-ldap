@@ -11,12 +11,12 @@ ldap_user.settings:
       label: 'drupalAcctProvisionTriggers'
       type: sequence
       sequence:
-        type: integer
+        type: string
     ldapEntryProvisionTriggers:
       label: 'ldapEntryProvisionTriggers'
       type: sequence
       sequence:
-        type: integer
+        type: string
     orphanedDrupalAcctBehavior:
       label: 'orphanedDrupalAcctBehavior'
       type: string

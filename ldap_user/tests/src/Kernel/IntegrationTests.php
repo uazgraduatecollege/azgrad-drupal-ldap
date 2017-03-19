@@ -144,8 +144,8 @@ class IntegrationTests extends KernelTestBase {
       // This will create the proper ldap_user configuration from ldap_test/ldap_user.conf.inc.
       $this->prepTestData('hogwarts', $sids, 'provisionToLdap_' . $test_sid);
 
-      if (!in_array(LdapConfiguration::$provisionLdapEntryOnUserDelete, $ldap_user_conf->ldapEntryProvisionTriggers)) {
-        $ldap_user_conf->ldapEntryProvisionTriggers[] = LdapConfiguration::$provisionLdapEntryOnUserDelete;
+      if (!in_array(LdapConfiguration::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_DELETE, $ldap_user_conf->ldapEntryProvisionTriggers)) {
+        $ldap_user_conf->ldapEntryProvisionTriggers[] = LdapConfiguration::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_DELETE;
       }
       $ldap_user_conf->save();
 

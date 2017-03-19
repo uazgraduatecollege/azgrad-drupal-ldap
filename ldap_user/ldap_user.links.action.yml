@@ -1,5 +1,5 @@
 ldap_user.test_form:
   route_name: ldap_user.test_form
-  title: 'Test LDAP User Functionality for a given user.'
+  title: 'Debug LDAP synchronization events'
   appears_on:
     - ldap_user.admin_form

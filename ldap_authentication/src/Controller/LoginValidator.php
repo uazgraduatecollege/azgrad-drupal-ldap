@@ -865,7 +865,7 @@ class LoginValidator {
     }
 
     // Do not provision Drupal account if provisioning disabled.
-    if (!LdapConfiguration::provisionAvailableToDrupal(LdapConfiguration::$provisionDrupalUserOnAuthentication)) {
+    if (!LdapConfiguration::provisionAvailableToDrupal(LdapConfiguration::PROVISION_DRUPAL_USER_ON_USER_AUTHENTICATION)) {
       \Drupal::logger('ldap_authentication')->error(
         'Drupal account for authname=%authname does not exist and provisioning of Drupal accounts on authentication is not enabled',
         ['%authname' => $this->authName]

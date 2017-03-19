@@ -69,14 +69,10 @@ function ldap_user_ldap_user_attrs_list_alter(&$available_user_attrs, &$params) 
 function ldap_user_help($route_name, RouteMatchInterface $route_match) {
   $ldap_user_help = t('LDAP user configuration determines how and when
      Drupal accounts are created based on LDAP data and which user fields
-     are derived and synced to and from LDAP. See @helplink.',
-    [
-      '@helplink' => \Drupal::l('the drupal.org handbook page', Url::fromUri('http://drupal.org/node/997082')),
-    ]);
+     are derived and synced to and from LDAP.');
 
   switch ($route_name) {
     case 'help.page.ldap_user':
-    case 'ldap_user.admin_form':
       $output = '';
       $output .= '<h3>' . t('About') . '</h3>';
       $output .= '<p>' . $ldap_user_help . '</p>';
@@ -233,7 +229,7 @@ function ldap_user_form_user_register_form_alter(&$form, $form_state) {
     '#title' => t('LDAP Entry Association.'),
   ];
 
-  if (LdapConfiguration::provisionAvailableToLDAP(LdapConfiguration::$provisionDrupalUserOnUserUpdateCreate)) {
+  if (LdapConfiguration::provisionAvailableToLDAP(LdapConfiguration::PROVISION_DRUPAL_USER_ON_USER_UPDATE_CREATE)) {
     $ldap_fieldset['ldap_user_association']['#disabled'] = TRUE;
     $ldap_fieldset['ldap_user_association']['#description'] = t('Since "Create
       or Sync to Drupal user anytime a Drupal user account is created or updated"
@@ -251,7 +247,7 @@ function ldap_user_form_user_register_form_alter(&$form, $form_state) {
     '#type' => 'checkbox',
     '#title' => t('Create corresponding LDAP entry.'),
   ];
-  if (!LdapConfiguration::provisionAvailableToLDAP(LdapConfiguration::$provisionDrupalUserOnAllowingManualCreation)) {
+  if (!LdapConfiguration::provisionAvailableToLDAP(LdapConfiguration::PROVISION_DRUPAL_USER_ON_USER_ON_MANUAL_CREATION)) {
     $ldap_fieldset['ldap_user_create_ldap_acct']['#disabled'] = TRUE;
     $ldap_fieldset['ldap_user_create_ldap_acct']['#description'] = t('To enable
       this an LDAP server must be selected for provisioning to Drupal in

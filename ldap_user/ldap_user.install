@@ -8,6 +8,7 @@
 use Drupal\Core\Url;
 use Drupal\Component\Utility\SafeMarkup;
 use Drupal\Core\Utility\UpdateException;
+use Drupal\ldap_user\Helper\LdapConfiguration;
 
 /**
  * Implements hook_install().
@@ -111,4 +112,79 @@ function ldap_user_update_8304() {
   $config->clear('ldap_user_conf');
   $config->setData($data);
   $config->save(TRUE);
+}
+
+/**
+ * Converts unreadable integers to strings for LDAP direction.
+ */
+function ldap_user_update_8305() {
+  $config_factory = \Drupal::configFactory();
+  $config = $config_factory->getEditable('ldap_user.settings');
+  $mappings = $config->get('ldapUserSyncMappings');
+  foreach ($mappings as $direction => $fields) {
+    foreach ($fields as $key => $field) {
+      if (isset($field['direction']))  {
+        if ($field['direction'] == 1 || $field['direction'] == '1') {
+          $mappings[$direction][$key]['direction'] = LdapConfiguration::PROVISION_TO_DRUPAL;
+        }
+        else {
+          $mappings[$direction][$key]['direction']  = LdapConfiguration::PROVISION_TO_LDAP;
+        }
+      }
+    }
+  }
+
+  $keyedMappings[LdapConfiguration::PROVISION_TO_DRUPAL] = $mappings[1];
+  $keyedMappings[LdapConfiguration::PROVISION_TO_LDAP] = $mappings[2];
+  $config->set('ldapUserSyncMappings', $keyedMappings);
+  $config->save();
+}
+
+/**
+ * Converts unreadable integers to strings for LDAP provision triggers.
+ */
+function ldap_user_update_8306() {
+  $config_factory = \Drupal::configFactory();
+  $config = $config_factory->getEditable('ldap_user.settings');
+  $existingDrupalTriggers = $config->get('drupalAcctProvisionTriggers');
+  $newDrupalTriggers = [];
+  foreach ($existingDrupalTriggers as $index => $trigger) {
+    switch ($index) {
+      case 1:
+        $newDrupalTriggers[LdapConfiguration::PROVISION_DRUPAL_USER_ON_USER_UPDATE_CREATE] = $trigger ?
+          LdapConfiguration::PROVISION_DRUPAL_USER_ON_USER_UPDATE_CREATE : '0';
+        break;
+      case 2:
+        $newDrupalTriggers[LdapConfiguration::PROVISION_DRUPAL_USER_ON_USER_AUTHENTICATION] = $trigger ?
+          LdapConfiguration::PROVISION_DRUPAL_USER_ON_USER_AUTHENTICATION : '0';
+        break;
+      case 3:
+        $newDrupalTriggers[LdapConfiguration::PROVISION_DRUPAL_USER_ON_USER_ON_MANUAL_CREATION] = $trigger ?
+          LdapConfiguration::PROVISION_DRUPAL_USER_ON_USER_ON_MANUAL_CREATION : '0';
+        break;
+    }
+  }
+  $config->set('drupalAcctProvisionTriggers', $newDrupalTriggers);
+
+  $existingLdapTriggers = $config->get('ldapEntryProvisionTriggers');
+  $newLdapTriggers = [];
+  foreach ($existingLdapTriggers as $index => $trigger) {
+    switch ($index) {
+      case 6:
+        $newLdapTriggers[LdapConfiguration::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_UPDATE_CREATE] = $trigger ?
+          LdapConfiguration::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_UPDATE_CREATE : '0';
+        break;
+      case 7:
+        $newLdapTriggers[LdapConfiguration::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_AUTHENTICATION] = $trigger ?
+          LdapConfiguration::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_AUTHENTICATION : '0';
+        break;
+      case 8:
+        $newLdapTriggers[LdapConfiguration::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_DELETE] = $trigger?
+          LdapConfiguration::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_DELETE : '0';
+        break;
+    }
+  }
+  $config->set('ldapEntryProvisionTriggers', $newLdapTriggers);
+
+  $config->save();
 }

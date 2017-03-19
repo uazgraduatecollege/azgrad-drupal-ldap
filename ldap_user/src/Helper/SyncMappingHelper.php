@@ -20,7 +20,7 @@ class SyncMappingHelper {
    *     'user_attr'  => e.g. [field.field_user_lname] (when this value is set to 'user_tokens', 'user_tokens' value is used.)
    *     'user_tokens' => e.g. [field.field_user_lname], [field.field_user_fname]
    *     'convert' => 1|0 boolean indicating need to covert from binary
-   *     'direction' => LdapConfiguration::$provisioningDirectionToDrupalUser | LdapConfiguration::$provisioningDirectionToLDAPEntry (redundant)
+   *     'direction' => LdapConfiguration::PROVISION_TO_DRUPAL | LdapConfiguration::PROVISION_TO_LDAP (redundant)
    *     'config_module' => 'ldap_user'
    *     'prov_module' => 'ldap_user'
    *     'enabled' => 1|0 boolean
@@ -52,7 +52,7 @@ class SyncMappingHelper {
    * @param array $prov_events
    *   e.g. array(LdapConfiguration::$eventCreateDrupalUser).  typically array with 1 element.
    * @param int $direction
-   *   LdapConfiguration::$provisioningDirectionToDrupalUser or LdapConfiguration::$provisioningDirectionToLDAPEntry.
+   *   LdapConfiguration::PROVISION_TO_DRUPAL or LdapConfiguration::PROVISION_TO_LDAP.
    *
    * @return bool
    */
@@ -78,12 +78,12 @@ class SyncMappingHelper {
       $prov_events = LdapConfiguration::getAllEvents();
     }
     if ($direction == NULL) {
-      $direction = LdapConfiguration::$provisioningDirectionAll;
+      $direction = LdapConfiguration::PROVISION_TO_ALL;
     }
 
     $mappings = [];
-    if ($direction == LdapConfiguration::$provisioningDirectionAll) {
-      $directions = [LdapConfiguration::$provisioningDirectionToDrupalUser, LdapConfiguration::$provisioningDirectionToLDAPEntry];
+    if ($direction == LdapConfiguration::PROVISION_TO_ALL) {
+      $directions = [LdapConfiguration::PROVISION_TO_DRUPAL, LdapConfiguration::PROVISION_TO_LDAP];
     }
     else {
       $directions = [$direction];
@@ -94,10 +94,10 @@ class SyncMappingHelper {
           if (!empty($mapping['prov_events'])) {
             $result = count(array_intersect($prov_events, $mapping['prov_events']));
             if ($result) {
-              if ($direction == LdapConfiguration::$provisioningDirectionToDrupalUser && isset($mapping['user_attr'])) {
+              if ($direction == LdapConfiguration::PROVISION_TO_DRUPAL && isset($mapping['user_attr'])) {
                 $key = $mapping['user_attr'];
               }
-              elseif ($direction == LdapConfiguration::$provisioningDirectionToLDAPEntry && isset($mapping['ldap_attr'])) {
+              elseif ($direction == LdapConfiguration::PROVISION_TO_LDAP && isset($mapping['ldap_attr'])) {
                 $key = $mapping['ldap_attr'];
               }
               else {
@@ -136,10 +136,10 @@ class SyncMappingHelper {
   public function processSyncMappings() {
     $available_user_attributes = [];
     foreach ([
-      LdapConfiguration::$provisioningDirectionToDrupalUser,
-      LdapConfiguration::$provisioningDirectionToLDAPEntry,
+      LdapConfiguration::PROVISION_TO_DRUPAL,
+      LdapConfiguration::PROVISION_TO_LDAP,
     ] as $direction) {
-      if ($direction == LdapConfiguration::$provisioningDirectionToDrupalUser) {
+      if ($direction == LdapConfiguration::PROVISION_TO_DRUPAL) {
         $sid = \Drupal::config('ldap_user.settings')
           ->get('drupalAcctProvisionServer');
       }
@@ -185,7 +185,7 @@ class SyncMappingHelper {
    */
   public function getLdapUserRequiredAttributes($direction = NULL, $ldap_context = NULL) {
     if ($direction == NULL) {
-      $direction = LdapConfiguration::$provisioningDirectionAll;
+      $direction = LdapConfiguration::PROVISION_TO_ALL;
     }
     $attributes_map = [];
     $required_attributes = [];

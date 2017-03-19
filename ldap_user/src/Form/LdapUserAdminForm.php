@@ -2,6 +2,8 @@
 
 namespace Drupal\ldap_user\Form;
 
+use Drupal\Core\Config\Config;
+use Drupal\Core\Config\ConfigFactory;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Config\ConfigFactoryInterface;
@@ -79,6 +81,12 @@ class LdapUserAdminForm extends ConfigFormBase {
       '#markup' => t('<h1>LDAP User Settings</h1>'),
     ];
 
+
+    $form['server_mapping_preamble'] = [
+      '#type' => 'markup',
+      '#markup' => t('The relationship between a Drupal user and an LDAP entry is defined within the LDAP server configurations. The mappings below are for user fields, properties and data that are not automatically mapped elsewhere. <br>Read-only mappings are generally configured on the server configuration page and shown here as a convenience to you.'),
+    ];
+
     $form['manual_drupal_account_editing'] = [
       '#type' => 'fieldset',
       '#title' => t('Manual Drupal Account Creation and Updates'),
@@ -115,7 +123,7 @@ class LdapUserAdminForm extends ConfigFormBase {
       '#states' => [
         // Action to take.
         'enabled' => [
-          ':input[name=drupalAcctProvisionTriggers]' => ['value' => LdapConfiguration::$provisionDrupalUserOnAuthentication],
+          ':input[name=drupalAcctProvisionTriggers]' => ['value' => LdapConfiguration::PROVISION_DRUPAL_USER_ON_USER_AUTHENTICATION],
         ],
       ],
     ];
@@ -126,8 +134,8 @@ class LdapUserAdminForm extends ConfigFormBase {
       '#required' => FALSE,
       '#default_value' => $config->get('drupalAcctProvisionTriggers'),
       '#options' => [
-        LdapConfiguration::$provisionDrupalUserOnAuthentication => t('Create or Sync to Drupal user on successful authentication with LDAP credentials. (Requires LDAP Authentication module).'),
-        LdapConfiguration::$provisionDrupalUserOnUserUpdateCreate => t('Create or Sync to Drupal user anytime a Drupal user account is created or updated. Requires a server with binding method of "Service Account Bind" or "Anonymous Bind".'),
+        LdapConfiguration::PROVISION_DRUPAL_USER_ON_USER_AUTHENTICATION => t('Create or Sync to Drupal user on successful authentication with LDAP credentials. (Requires LDAP Authentication module).'),
+        LdapConfiguration::PROVISION_DRUPAL_USER_ON_USER_UPDATE_CREATE => t('Create or Sync to Drupal user anytime a Drupal user account is created or updated. Requires a server with binding method of "Service Account Bind" or "Anonymous Bind".'),
       ],
       '#description' => t('Which user fields and properties are synced on create or sync is determined in the "Provisioning from LDAP to Drupal mappings" table below in the right two columns.'),
     ];
@@ -223,39 +231,24 @@ class LdapUserAdminForm extends ConfigFormBase {
       '#required' => FALSE,
       '#default_value' => $config->get('ldapEntryProvisionTriggers'),
       '#options' => [
-        LdapConfiguration::$provisionLdapEntryOnUserUpdateCreate => t('Create or Sync to LDAP entry when a Drupal account is created or updated.
+        LdapConfiguration::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_UPDATE_CREATE => t('Create or Sync to LDAP entry when a Drupal account is created or updated.
         Only applied to accounts with a status of approved.'),
-        LdapConfiguration::$provisionLdapEntryOnUserAuthentication => t('Create or Sync to LDAP entry when a user authenticates.'),
-        LdapConfiguration::$provisionLdapEntryOnUserDelete => t('Delete LDAP entry when the corresponding Drupal Account is deleted.  This only applies when the LDAP entry was provisioned by Drupal by the LDAP User module.'),
-        LdapConfiguration::$provisionDrupalUserOnAllowingManualCreation => t('Provide option on admin/people/create to create corresponding LDAP Entry.'),
+        LdapConfiguration::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_AUTHENTICATION => t('Create or Sync to LDAP entry when a user authenticates.'),
+        LdapConfiguration::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_DELETE => t('Delete LDAP entry when the corresponding Drupal Account is deleted.  This only applies when the LDAP entry was provisioned by Drupal by the LDAP User module.'),
+        LdapConfiguration::PROVISION_DRUPAL_USER_ON_USER_ON_MANUAL_CREATION => t('Provide option on admin/people/create to create corresponding LDAP Entry.'),
 
       ],
       '#description' => t('Which LDAP attributes are synced on create or sync is determined in the
       "Provisioning from Drupal to LDAP mappings" table below in the right two columns.'),
     ];
 
-    $form['server_mapping_preamble'] = [
-      '#type' => 'markup',
-      '#markup' => t('
-The relationship between a Drupal user and an LDAP entry is defined within the LDAP server configurations.
+    foreach ([LdapConfiguration::PROVISION_TO_DRUPAL, LdapConfiguration::PROVISION_TO_LDAP] as $direction) {
 
-
-The mappings below are for user fields, properties, and profile2 data that are not automatically mapped elsewhere.
-Mappings such as username or email address that are configured elsewhere are shown at the top for clarity.
-When more than one ldap server is enabled for provisioning data (or simply more than one configuration for the same ldap server),
-mappings need to be setup for each server.  If no tables are listed below, you have not enabled any provisioning servers at
-the top of this form.
-'),
-
-    ];
-
-    foreach ([LdapConfiguration::$provisioningDirectionToDrupalUser, LdapConfiguration::$provisioningDirectionToLDAPEntry] as $direction) {
-
-      if ($direction == LdapConfiguration::$provisioningDirectionToDrupalUser) {
+      if ($direction == LdapConfiguration::PROVISION_TO_DRUPAL) {
         $parent_fieldset = 'basic_to_drupal';
         $description = t('Provisioning from LDAP to Drupal Mappings:');
       }
-      elseif ($direction == LdapConfiguration::$provisioningDirectionToLDAPEntry) {
+      elseif ($direction == LdapConfiguration::PROVISION_TO_LDAP) {
         $parent_fieldset = 'basic_to_ldap';
         $description = t('Provisioning from Drupal to LDAP Mappings:');
       }
@@ -301,7 +294,6 @@ the top of this form.
         }
       }
 
-      // Add in all the mappings. @TODO fix the save handlers.
       $form[$parent_fieldset][$mapping_id][$table_id] += $this->getServerMappingFields($direction);
 
       $password_notes = '<h3>' . t('Password Tokens') . '</h3><ul>' .
@@ -332,7 +324,7 @@ by someone other that user.  Consider this when provisioning LDAP passwords.') .
 EOT;
 
       // Add some password notes.
-      if ($direction == LdapConfiguration::$provisioningDirectionToLDAPEntry) {
+      if ($direction == LdapConfiguration::PROVISION_TO_LDAP) {
         $form[$parent_fieldset]['password_notes'] = [
           '#type' => 'fieldset',
           '#title' => t('Password Notes'),
@@ -356,7 +348,7 @@ EOT;
       }
     }
 
-    foreach (['acctCreation', 'userConflictResolve', 'drupalAcctProvisionTriggers', 'mappings__' . LdapConfiguration::$provisioningDirectionToDrupalUser] as $input_name) {
+    foreach (['acctCreation', 'userConflictResolve', 'drupalAcctProvisionTriggers', 'mappings__' . LdapConfiguration::PROVISION_TO_DRUPAL] as $input_name) {
       $form['basic_to_drupal'][$input_name]['#states']['invisible'] =
         [
           ':input[name=drupalAcctProvisionServer]' => ['value' => 'none'],
@@ -375,7 +367,7 @@ EOT;
         ];
     }
 
-    foreach (['ldapEntryProvisionTriggers', 'password_notes', 'source_drupal_token_notes', 'mappings__' . LdapConfiguration::$provisioningDirectionToLDAPEntry] as $input_name) {
+    foreach (['ldapEntryProvisionTriggers', 'password_notes', 'source_drupal_token_notes', 'mappings__' . LdapConfiguration::PROVISION_TO_LDAP] as $input_name) {
       $form['basic_to_ldap'][$input_name]['#states']['invisible'] =
         [
           ':input[name=ldapEntryProvisionServer]' => ['value' => 'none'],
@@ -388,69 +380,119 @@ EOT;
       '#value' => 'Save',
     ];
 
+    $this->notifyMissingSyncServerCombination($config);
+
     return $form;
 
-    // @FIXME: Determine what is still needed here from this function.
-    // In theory this should also be called on validateForm. Not ideal, investigate.
-    $this->validateCurrentConfiguration($form);
   }
+
+  /**
+   * Check if the user starts with an an invalid configuration.
+   *
+   * @param \Drupal\Core\Config\Config $config
+   */
+  private function notifyMissingSyncServerCombination(Config $config) {
+
+    $hasDrupalAcctProvServers = $config->get('drupalAcctProvisionServer');
+    $hasDrupalAcctProvSettingsOptions = (count(array_filter($config->get('drupalAcctProvisionTriggers'))) > 0);
+    if (!$config->get('drupalAcctProvisionServer') && $hasDrupalAcctProvSettingsOptions) {
+      drupal_set_message(t('No servers are enabled to provide provisioning to Drupal, but Drupal account provisioning options are selected.'), 'warning');
+    }
+    else if ($hasDrupalAcctProvServers && !$hasDrupalAcctProvSettingsOptions) {
+      drupal_set_message(t('Servers are enabled to provide provisioning to Drupal, but no Drupal account provisioning options are selected. This will result in no syncing happening.'), 'warning');
+    }
+
+    $has_ldap_prov_servers = $config->get('ldapEntryProvisionServer');
+    $has_ldap_prov_settings_options = (count(array_filter($config->get('ldapEntryProvisionTriggers'))) > 0);
+    if (!$has_ldap_prov_servers && $has_ldap_prov_settings_options) {
+      drupal_set_message(t('No servers are enabled to provide provisioning to LDAP, but LDAP entry options are selected.'), 'warning');
+    }
+    if ($has_ldap_prov_servers && !$has_ldap_prov_settings_options) {
+      drupal_set_message(t('Servers are enabled to provide provisioning to LDAP, but no LDAP entry options are selected. This will result in no syncing happening.'), 'warning');
+    }
+  }
+
 
   /**
    * {@inheritdoc}
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
+    $values = $form_state->getValues();
 
-    // @TODO these form fields aren't named like this anymore
-    // since failed mapping rows in form, don't populate ->ldapUserSyncMappings, need to validate these from values
-    foreach ($form_state->getValues() as $field => $value) {
-      $parts = explode('__', $field);
-      // Since sync mapping fields are in n-tuples, process entire n-tuple at once (on field == configurable_to_drupal)
-      if (count($parts) != 4 || $parts[1] !== 'sm' || $parts[2] != 'configurable_to_drupal') {
-        continue;
-      }
-      list($direction, $discard, $column_name, $i) = $parts;
-      // $action = $storage['sync_mapping_fields'][$direction][$i]['action'];.
-      $tokens = [];
-      $row_mappings = [];
-      foreach ([
-        'remove',
-        'configurable_to_drupal',
-        'configurable_to_ldap',
-        'convert',
-        'direction',
-        'ldap_attr',
-        'user_attr',
-        'user_tokens',
-      ] as $column_name) {
-        $input_name = join('__', ['sm', $column_name, $i]);
-        $row_mappings[$column_name] = isset($values[$input_name]) ? $values[$input_name] : NULL;
-      }
+    $drupalMapKey = 'mappings__' . LdapConfiguration::PROVISION_TO_DRUPAL . '__table';
+    foreach ($values[$drupalMapKey] as $key => $mapping) {
+      if (isset($mapping['configurable_to_drupal']) && $mapping['configurable_to_drupal'] == 1) {
 
-      $has_values = $row_mappings['ldap_attr'] || $row_mappings['user_attr'];
-      if ($has_values) {
-        $tokens['%ldap_attr'] = $row_mappings['ldap_attr'];
-        $row_descriptor = t("server %sid row mapping to ldap attribute %ldap_attr", $tokens);
-        $tokens['!row_descriptor'] = $row_descriptor;
-        if (!$row_mappings['direction']) {
-          $input_name = join('__', ['sm', 'direction', $i]);
-          $errors[$input_name] = t('No mapping direction given in !row_descriptor', $tokens);
-        }
-        if ($direction == LdapConfiguration::$provisioningDirectionToDrupalUser && $row_mappings['user_attr'] == 'user_tokens') {
-          $input_name = join('__', ['sm', 'user_attr', $i]);
-          $errors[$input_name] = t('User tokens not allowed when mapping to Drupal user.  Location: !row_descriptor', $tokens);
-        }
-        if (!$row_mappings['ldap_attr']) {
-          $input_name = join('__', ['sm', 'ldap_attr', $i]);
-          $errors[$input_name] = t('No ldap attribute given in !row_descriptor', $tokens);
-        }
-        if (!$row_mappings['user_attr']) {
-          $input_name = join('__', ['sm', 'user_attr', $i]);
-          $errors[$input_name] = t('No user attribute given in !row_descriptor', $tokens);
+        // Check that source is not empty for selected field to sync to Drupal.
+        if ($mapping['user_attr'] !== '0') {
+          if ($mapping['ldap_attr'] == NULL) {
+            $formElement = $form['basic_to_drupal']['mappings__' . LdapConfiguration::PROVISION_TO_DRUPAL][$drupalMapKey][$key];
+            $form_state->setError($formElement, t('Missing LDAP attribute'));
+          }
         }
       }
-
     }
 
+    $ldapMapKey = 'mappings__' . LdapConfiguration::PROVISION_TO_LDAP . '__table';
+    foreach ($values[$ldapMapKey] as $key => $mapping) {
+      if (isset($mapping['configurable_to_drupal']) && $mapping['configurable_to_drupal'] == 1) {
+
+        // Check that field is not if a user token is in use.
+        if (isset($mapping['user_attr']) && $mapping['user_attr'] == 'user_tokens') {
+          if (isset($mapping['user_tokens']) && empty(trim($mapping['user_tokens']))) {
+            $formElement = $form['basic_to_ldap']['mappings__' . LdapConfiguration::PROVISION_TO_LDAP][$ldapMapKey][$key];
+            $form_state->setError($formElement, t('Missing user token.'));
+          }
+        }
+
+        // Check that
+        if ($mapping['user_attr'] !== '0') {
+          if ($mapping['ldap_attr'] == NULL) {
+            $formElement = $form['basic_to_ldap']['mappings__' . LdapConfiguration::PROVISION_TO_LDAP][$ldapMapKey][$key];
+            $form_state->setError($formElement, t('Missing LDAP attribute'));
+          }
+        }
+      }
+    }
+
+    $processedLdapSyncMappings = $this->syncMappingsFromForm($form_state->getValues(), LdapConfiguration::PROVISION_TO_LDAP);
+    $processedDrupalSyncMappings = $this->syncMappingsFromForm($form_state->getValues(), LdapConfiguration::PROVISION_TO_DRUPAL);
+
+    // Set error for entire table if [dn] is missing.
+    if (!isset($processedLdapSyncMappings['dn'])) {
+      $form_state->setErrorByName($ldapMapKey,
+        t('Mapping rows exist for provisioning to LDAP, but no LDAP attribute is targeted for [dn]. One row must map to [dn]. This row will have a user token like cn=[property.name],ou=users,dc=ldap,dc=mycompany,dc=com')
+      );
+    }
+
+    // Make sure only one attribute column is present.
+    $tokenHelper = new TokenProcessor();
+    foreach ($processedLdapSyncMappings as $key => $mapping) {
+      $maps = $tokenHelper->getTokenAttributes($mapping['ldap_attr']);
+      if (count(array_keys($maps)) > 1) {
+        // TODO: Move this check out of processed mappings to be able to set the error by field.
+        $form_state->setErrorByName($ldapMapKey,
+          t('When provisioning to ldap, ldap attribute column must be singular token such as [cn]. %ldap_attr is not. Do not use compound tokens such as "[displayName] [sn]" or literals such as "physics".',
+            ['%ldap_attr' => $mapping['ldap_attr']]
+          )
+        );
+      }
+    }
+
+    // Notify the user if no actual synchronization event is active for a field.
+    $this->checkEmptyEvents($processedLdapSyncMappings);
+    $this->checkEmptyEvents($processedDrupalSyncMappings);
+
+  }
+
+  private function checkEmptyEvents($mappings) {
+    foreach ($mappings as $mapping) {
+      if (empty($mapping['prov_events'])) {
+        drupal_set_message(t('No synchronization events checked in %item. This field will not be synchronized until some are checked.',
+          ['%item' => $mapping['ldap_attr']]
+        ), 'warning');
+      }
+    }
   }
 
   /**
@@ -461,7 +503,8 @@ EOT;
     $drupalAcctProvisionServer = ($form_state->getValue('drupalAcctProvisionServer') == 'none') ? NULL : $form_state->getValue('drupalAcctProvisionServer');
     $ldapEntryProvisionServer = ($form_state->getValue('ldapEntryProvisionServer') == 'none') ? NULL : $form_state->getValue('ldapEntryProvisionServer');
 
-    $processedSyncMappings = $this->syncMappingsFromForm($form_state->getValues());
+    $processedSyncMappings[LdapConfiguration::PROVISION_TO_DRUPAL] = $this->syncMappingsFromForm($form_state->getValues(), LdapConfiguration::PROVISION_TO_DRUPAL);
+    $processedSyncMappings[LdapConfiguration::PROVISION_TO_LDAP] = $this->syncMappingsFromForm($form_state->getValues(), LdapConfiguration::PROVISION_TO_LDAP);
 
     $this->config('ldap_user.settings')
       ->set('drupalAcctProvisionServer', $drupalAcctProvisionServer)
@@ -480,6 +523,7 @@ EOT;
 
     SemaphoreStorage::flushAllValues();
     \Drupal::cache()->invalidate('ldap_user_sync_mapping');
+    drupal_set_message(t('User synchronization configuration updated.'));
   }
 
   /**
@@ -487,15 +531,8 @@ EOT;
    */
   private function getServerMappingHeader($direction) {
 
-    if ($direction == LdapConfiguration::$provisioningDirectionToDrupalUser) {
-
-      $direction_text = 'todrupal';
-
+    if ($direction == LdapConfiguration::PROVISION_TO_DRUPAL) {
       $header = [
-        [
-          'data' => t('Remove'),
-          'rowspan' => 1,
-        ],
         [
           'data' => t('Source LDAP tokens') ,
           'rowspan' => 1,
@@ -514,10 +551,6 @@ EOT;
       ];
 
       $second_header = [
-        [
-          'data' => '',
-          'header' => TRUE,
-        ],
         [
           'data' => t('Examples:<ul><li>[sn]</li><li>[mail:0]</li><li>[ou:last]</li><li>[sn], [givenName]</li></ul>
                 Constants such as <em>17</em> or <em>imported</em> should not be enclosed in [].'),
@@ -539,14 +572,7 @@ EOT;
     }
     // To ldap.
     else {
-
-      $direction_text = 'toldap';
-
       $header = [
-        [
-          'data' => t('Remove'),
-          'rowspan' => 1,
-        ],
         [
           'data' => t('Source Drupal user attribute') ,
           'rowspan' => 1,
@@ -564,10 +590,6 @@ EOT;
       ];
 
       $second_header = [
-        [
-          'data' => '',
-          'header' => TRUE,
-        ],
         [
           'data' => t('Note: Select <em>user tokens</em> to use token field.'),
           'header' => TRUE,
@@ -593,16 +615,17 @@ EOT;
   }
 
   /**
-   *
+   * @param $direction
+   * @return array
    */
   private function getServerMappingFields($direction) {
-    if ($direction == LdapConfiguration::$provisioningDirectionNone) {
+    if ($direction == LdapConfiguration::PROVISION_TO_NONE) {
       return;
     }
 
     $rows = [];
 
-    $text = ($direction == LdapConfiguration::$provisioningDirectionToDrupalUser) ? 'target' : 'source';
+    $text = ($direction == LdapConfiguration::PROVISION_TO_DRUPAL) ? 'target' : 'source';
     $user_attr_options = ['0' => t('Select') . ' ' . $text];
     $syncMappings = new SyncMappingHelper();
     if (!empty($syncMappings->syncMapping[$direction])) {
@@ -612,16 +635,18 @@ EOT;
           continue;
         }
         if (
-          (isset($mapping['configurable_to_drupal']) && $mapping['configurable_to_drupal'] && $direction == LdapConfiguration::$provisioningDirectionToDrupalUser)
+          (isset($mapping['configurable_to_drupal']) && $mapping['configurable_to_drupal'] && $direction == LdapConfiguration::PROVISION_TO_DRUPAL)
           ||
-          (isset($mapping['configurable_to_ldap']) && $mapping['configurable_to_ldap']  && $direction == LdapConfiguration::$provisioningDirectionToLDAPEntry)
+          (isset($mapping['configurable_to_ldap']) && $mapping['configurable_to_ldap']  && $direction == LdapConfiguration::PROVISION_TO_LDAP)
         ) {
           $user_attr_options[$target_id] = $mapping['name'];
         }
       }
     }
 
-    $user_attr_options['user_tokens'] = '-- user tokens --';
+    if ($direction != LdapConfiguration::PROVISION_TO_DRUPAL) {
+      $user_attr_options['user_tokens'] = '-- user tokens --';
+    }
 
     $row = 0;
 
@@ -632,7 +657,7 @@ EOT;
         continue;
       }
       // Is configurable by ldap_user module (not direction to ldap_user)
-      if (!$this->isMappingConfigurable($mapping, 'ldap_user') && ($mapping['direction'] == $direction || $mapping['direction'] == LdapConfiguration::$provisioningDirectionAll)) {
+      if (!$this->isMappingConfigurable($mapping, 'ldap_user') && ($mapping['direction'] == $direction || $mapping['direction'] == LdapConfiguration::PROVISION_TO_ALL)) {
         $rows[$row_id] = $this->getSyncFormRow('nonconfigurable', $direction, $mapping, $user_attr_options, $row_id);
         $row++;
       }
@@ -643,7 +668,7 @@ EOT;
     if (!empty($config->get('ldapUserSyncMappings')[$direction])) {
       // Key could be ldap attribute name or user attribute name.
       foreach ($config->get('ldapUserSyncMappings')[$direction] as $target_attr_token => $mapping) {
-        if ($direction == LdapConfiguration::$provisioningDirectionToDrupalUser) {
+        if ($direction == LdapConfiguration::PROVISION_TO_DRUPAL) {
           $mapping_key = $mapping['user_attr'];
         }
         else {
@@ -673,7 +698,7 @@ EOT;
    * @param string $action
    *   is 'add', 'update', or 'nonconfigurable'.
    * @param string $direction
-   *   LdapConfiguration::$provisioningDirectionToDrupalUser or LdapConfiguration::$provisioningDirectionToLDAPEntry.
+   *   LdapConfiguration::PROVISION_TO_DRUPAL or LdapConfiguration::PROVISION_TO_LDAP.
    * @param array $mapping
    *   is current setting for updates or nonconfigurable items.
    * @param array $user_attr_options
@@ -689,14 +714,6 @@ EOT;
     $result = [];
     $id_prefix = 'mappings__' . $direction . '__table';
     $user_attr_input_id = $id_prefix . "[$row_id][user_attr]";
-
-    $result['remove'] = [
-      '#type' => 'checkbox',
-      '#title' => 'Remove',
-      '#title_display' => 'invisible',
-      '#default_value' => NULL,
-      '#disabled' => ($action == 'add' || $action == 'nonconfigurable'),
-    ];
 
     if ($action == 'nonconfigurable') {
       $ldap_attr = [
@@ -716,8 +733,8 @@ EOT;
         '#maxlength' => 255,
         '#attributes' => ['class' => ['ldap-attr']],
       ];
-      // Change the visibility rules for LdapConfiguration::$provisioningDirectionToLDAPEntry.
-      if ($direction == LdapConfiguration::$provisioningDirectionToLDAPEntry) {
+      // Change the visibility rules for LdapConfiguration::PROVISION_TO_LDAP.
+      if ($direction == LdapConfiguration::PROVISION_TO_LDAP) {
         $user_tokens = [
           '#type' => 'textfield',
           '#title' => 'User tokens',
@@ -763,7 +780,7 @@ EOT;
     }
 
     // Get the order of the columns correctly.
-    if ($direction == LdapConfiguration::$provisioningDirectionToLDAPEntry) {
+    if ($direction == LdapConfiguration::PROVISION_TO_LDAP) {
       $result['user_attr'] = $user_attr;
       $result['user_tokens'] = $user_tokens;
       $result['convert'] = $convert;
@@ -782,8 +799,8 @@ EOT;
     // FIXME: Add table selection / ordering back:
     // $col and $row used to be paremeters to $result[$prov_event]. ID possible
     // not need needed anymore. Row used to be a parameter to this function.
-    // $col = ($direction == LdapConfiguration::$provisioningDirectionToLDAPEntry) ? 5 : 4;.
-    if (($direction == LdapConfiguration::$provisioningDirectionToDrupalUser)) {
+    // $col = ($direction == LdapConfiguration::PROVISION_TO_LDAP) ? 5 : 4;.
+    if (($direction == LdapConfiguration::PROVISION_TO_DRUPAL)) {
       $syncEvents = LdapConfiguration::provisionsDrupalEvents();
     }
     else {
@@ -878,48 +895,25 @@ EOT;
     return str_replace(['.', '[', ']'], ['-', '', ''], $string);
   }
 
+
   /**
    * Extract sync mappings array from mapping table in admin form.
    *
    * @param array $values
    *   as $form_state['values'] from drupal form api.
+   * @param $direction
    *
-   *   WARNING: Rewritten using nested forms. This may no longer apply.
-   *
-   *   $values input names in form:
-   *   1__sm__configurable__5,
-   *   1__sm__remove__5,
-   *   1__sm__ldap_attr__5,
-   *   1__sm__convert__5,
-   *   1__sm__direction__5,
-   *   1__sm__user_attr__5,
-   *   1__sm__user_tokens__5
-   *   1__sm__1__5,
-   *   1__sm__2__5,
-   *   ...where
-   *    -- first arg is direction, eg 1 or 2 LdapConfiguration::$provisioningDirectionToDrupalUser or LdapConfiguration::$provisioningDirectionToLDAPEntry
-   *    -- second arg is discarded ('sm')
-   *    -- third part is field, e.g. user_attr
-   *    -- fourth is the row in the configuration form, e.g. 5
-   *
-   *   where additiond data is in $form['#storage'][<direction>]['sync_mapping_fields'][N]
-   *   $form['#storage']['sync_mapping_fields'][<direction>][N] = array(
-   *    'sid' => $sid,
-   *    'action' => 'add',
-   *   );.
-   *
-   * @return array
-   *   Returns the relevant mappings.
+   * @return array Returns the relevant mappings.
+   * Returns the relevant mappings.
    */
-  private function syncMappingsFromForm($values) {
+  private function syncMappingsFromForm($values, $direction) {
     $mappings = [];
     foreach ($values as $field_name => $value) {
 
       $parts = explode('__', $field_name);
-      if ($parts[0] != 'mappings') {
+      if ($parts[0] != 'mappings' || !isset($parts[1]) || $parts[1] != $direction) {
         continue;
       }
-      $direction = $parts[1];
 
       // These are our rows.
       foreach ($value as $row_descriptor => $columns) {
@@ -927,152 +921,30 @@ EOT;
           continue;
         }
 
-        $key = ($direction == LdapConfiguration::$provisioningDirectionToDrupalUser) ? $this->sanitise_machine_name($columns['user_attr']) : $this->sanitise_machine_name($columns['ldap_attr']);
+        $key = ($direction == LdapConfiguration::PROVISION_TO_DRUPAL) ? $this->sanitise_machine_name($columns['user_attr']) : $this->sanitise_machine_name($columns['ldap_attr']);
         // Only save if its configurable and has an ldap and drupal attributes. The others are optional.
         if ($columns['configurable_to_drupal'] && $columns['ldap_attr'] && $columns['user_attr']) {
-          $mappings[$direction][$key] = [
+          $mappings[$key] = [
             'ldap_attr'   => $columns['ldap_attr'],
             'user_attr'   => $columns['user_attr'],
             'convert'     => $columns['convert'],
             'direction'   => $direction,
-           // @FIXME: user_tokens is missing
             'user_tokens' => isset($columns['user_tokens']) ? $columns['user_tokens'] : '',
             'config_module' => 'ldap_user',
             'prov_module' => 'ldap_user',
             'enabled'     => 1,
           ];
 
-          $syncEvents = ($direction == LdapConfiguration::$provisioningDirectionToDrupalUser) ? LdapConfiguration::provisionsDrupalEvents() : LdapConfiguration::provisionsLdapEvents();
+          $syncEvents = ($direction == LdapConfiguration::PROVISION_TO_DRUPAL) ? LdapConfiguration::provisionsDrupalEvents() : LdapConfiguration::provisionsLdapEvents();
           foreach ($syncEvents as $prov_event => $discard) {
             if (isset($columns[$prov_event]) && $columns[$prov_event]) {
-              $mappings[$direction][$key]['prov_events'][] = $prov_event;
+              $mappings[$key]['prov_events'][] = $prov_event;
             }
           }
         }
       }
     }
     return $mappings;
-  }
-
-  /**
-   * Validate object, not form.
-   *
-   * @param array $values
-   *   as $form_state['values'] from drupal form api.
-   *
-   * @return array in form array($errors, $warnings)to be thrown by form api
-   *
-   * @todo validate that a user field exists, such as field.field_user_lname
-   */
-  private function validateCurrentConfiguration($values) {
-    $errors = [];
-    $warnings = [];
-    $tokens = [];
-    $has_drupal_acct_prov_servers = FALSE;
-
-    if (\Drupal::config('ldap_user.settings')->get('drupalAcctProvisionServer')) {
-      $has_drupal_acct_prov_servers = TRUE;
-    }
-
-    $has_drupal_acct_prov_settings_options = (count(array_filter(\Drupal::config('ldap_user.settings')->get('drupalAcctProvisionTriggers'))) > 0);
-
-    if (!$has_drupal_acct_prov_servers && $has_drupal_acct_prov_settings_options) {
-      $warnings['drupalAcctProvisionServer'] = t('No Servers are enabled to provide provisioning to Drupal, but Drupal Account Provisioning Options are selected.', $tokens);
-    }
-    if ($has_drupal_acct_prov_servers && !$has_drupal_acct_prov_settings_options) {
-      $warnings['drupalAcctProvisionTriggers'] = t('Servers are enabled to provide provisioning to Drupal, but no Drupal Account Provisioning Options are selected.  This will result in no syncing happening.', $tokens);
-    }
-
-    $has_ldap_prov_servers = FALSE;
-    if (\Drupal::config('ldap_user.settings')->get('ldapEntryProvisionServer')) {
-      $has_ldap_prov_servers = TRUE;
-    }
-
-    $has_ldap_prov_settings_options = (count(array_filter(\Drupal::config('ldap_user.settings')->get('ldapEntryProvisionTriggers'))) > 0);
-    if (!$has_ldap_prov_servers && $has_ldap_prov_settings_options) {
-      $warnings['ldapEntryProvisionServer'] = t('No Servers are enabled to provide provisioning to ldap, but LDAP Entry Options are selected.', $tokens);
-    }
-    if ($has_ldap_prov_servers && !$has_ldap_prov_settings_options) {
-      $warnings['ldapEntryProvisionTriggers'] = t('Servers are enabled to provide provisioning to ldap, but no LDAP Entry Options are selected.  This will result in no syncing happening.', $tokens);
-    }
-
-    if (isset($config['ldapUserSyncMappings'])) {
-      $to_ldap_entries_mappings_exist = FALSE;
-      foreach ($config['ldapUserSyncMappings'] as $sync_direction => $mappings) {
-        $map_index = [];
-        $tokens['%sid'] = $config['drupalAcctProvisionServer'];
-        $to_drupal_user_mappings_exist = FALSE;
-        $to_ldap_entries_mappings_exist = FALSE;
-
-        foreach ($mappings as $target_attr => $mapping) {
-          if ($mapping['direction'] == LdapConfiguration::$provisioningDirectionToDrupalUser) {
-            $attr_value = $mapping['user_attr'];
-            $attr_name = 'user_attr';
-          }
-          if ($mapping['direction'] == LdapConfiguration::$provisioningDirectionToLDAPEntry) {
-            $attr_value = $mapping['ldap_attr'];
-            $attr_name = 'ldap_attr';
-          }
-          foreach ($values as $field => $value) {
-            $parts = explode('__', $field);
-            if (count($parts) == 4 && $parts[2] == $attr_name && $value == $attr_value) {
-              $map_index[$attr_value] = $parts[3];
-            }
-          }
-        }
-
-        foreach ($mappings as $target_attr => $mapping) {
-          foreach ($mapping as $key => $value) {
-            if (is_scalar($value)) {
-              $tokens['%' . $key] = $value;
-            }
-          }
-          $row_descriptor = t("server %sid row mapping to ldap attribute %ldap_attr", $tokens);
-          $tokens['!row_descriptor'] = $row_descriptor;
-          $ldap_attribute_maps_in_token = [];
-          $tokenHelper = new TokenProcessor();
-          $tokenHelper->extractTokenAttributes($ldap_attribute_maps_in_token, $mapping['ldap_attr']);
-
-          if ($mapping['direction'] == LdapConfiguration::$provisioningDirectionToDrupalUser) {
-            $row_id = $map_index[$mapping['user_attr']];
-            $to_drupal_user_mappings_exist = TRUE;
-          }
-          if ($mapping['direction'] == LdapConfiguration::$provisioningDirectionToLDAPEntry) {
-            $row_id = $map_index[$mapping['ldap_attr']];
-            $to_ldap_entries_mappings_exist = TRUE;
-
-            if (count(array_keys($ldap_attribute_maps_in_token)) != 1) {
-              $token_field_id = join('__', ['sm', 'user_tokens', $row_id]);
-              $errors[$token_field_id] = t('When provisioning to ldap, ldap attribute column must be singular token such as [cn]. %ldap_attr is not.
-                Do not use compound tokens such as "[displayName] [sn]" or literals such as "physics". Location: !row_descriptor', $tokens);
-            }
-
-          }
-          // FIXME none of these id's should be working.
-          $ldap_attr_field_id = join('__', ['sm', 'ldap_attr', $row_id]);
-          $user_attr_field_id = join('__', ['sm', 'user_attr', $row_id]);
-          $first_context_field_id = join('__', ['sm', 1, $row_id]);
-          $user_tokens_field_id = join('__', ['sm', 'user_tokens', $row_id]);
-
-          if (!$mapping['ldap_attr']) {
-            $errors[$ldap_attr_field_id] = t('No LDAP Attribute given in !row_descriptor', $tokens);
-          }
-          if ($mapping['user_attr'] == 'user_tokens' && !$mapping['user_tokens']) {
-            $errors[$user_tokens_field_id] = t('User tokens selected in !row_descriptor, but user tokens column empty.', $tokens);
-          }
-
-          if (isset($mapping['prov_events']) && count($mapping['prov_events']) == 0) {
-            $warnings[$first_context_field_id] = t('No synchronization events checked in !row_descriptor.
-              This field will not be synchronized until some are checked.', $tokens);
-          }
-        }
-      }
-      if ($to_ldap_entries_mappings_exist && !isset($mappings['dn'])) {
-        $errors['mappings__' . $sync_direction] = t('Mapping rows exist for provisioning to LDAP, but no LDAP attribute is targeted for [dn].
-          One row must map to [dn].  This row will have a user token like cn=[property.name],ou=users,dc=ldap,dc=mycompany,dc=com');
-      }
-    }
-    return [$errors, $warnings];
   }
 
 }

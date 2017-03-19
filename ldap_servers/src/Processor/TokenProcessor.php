@@ -160,6 +160,12 @@ class TokenProcessor {
     }
   }
 
+  public function getTokenAttributes($text) {
+    $maps = [];
+    $this->extractTokenAttributes($maps, $text);
+    return $maps;
+  }
+
   /**
    * @param string $token
    *   or token expression with singular token in it, eg. [dn], [dn;binary], [titles:0;binary] [cn]@mycompany.com.

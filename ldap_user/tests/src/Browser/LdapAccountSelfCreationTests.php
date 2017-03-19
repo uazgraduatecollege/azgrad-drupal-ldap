@@ -49,12 +49,12 @@ class LdapAccountSelfCreationTests extends BrowserTestBase {
       $config->set('drupalAcctProvisionServer', 0)
         ->set('ldapEntryProvisionServer', $test_id)
         ->set('ldapEntryProvisionTriggers', [
-          LdapConfiguration::$provisionLdapEntryOnUserUpdateCreate,
-          LdapConfiguration::$provisionLdapEntryOnUserAuthentication,
+          LdapConfiguration::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_UPDATE_CREATE,
+          LdapConfiguration::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_AUTHENTICATION,
         ])
         ->save();
 
-      $ldap_user_conf->ldapUserSyncMappings[LdapConfiguration::$provisioningDirectionToLDAPEntry]['[password]'] = [
+      $ldap_user_conf->ldapUserSyncMappings[LdapConfiguration::PROVISION_TO_LDAP]['[password]'] = [
         'sid' => $test_sid,
         'ldap_attr' => '[password]',
         'user_attr' => 'user_tokens',

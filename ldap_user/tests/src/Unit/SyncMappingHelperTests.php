@@ -94,7 +94,7 @@ class SyncMappingHelperTests extends UnitTestCase {
             ->disableOriginalConstructor()
             ->getMock();
           $processor->processSyncMappings();
-          $isSynced = $processor->isSynced($attribute_token, [$prov_event], LdapConfiguration::$provisioningDirectionToDrupalUser);
+          $isSynced = $processor->isSynced($attribute_token, [$prov_event], LdapConfiguration::PROVISION_TO_DRUPAL);
           if ((int) $isSynced !== (int) $boolean_result) {
             $failed = TRUE;
           }
@@ -124,7 +124,7 @@ class SyncMappingHelperTests extends UnitTestCase {
     $user_edit = ['name' => 'hpotter-granger'];
     $processor = new DrupalUserProcessor();
 
-    $hpottergranger = $processor->provisionDrupalAccount($account, $user_edit, NULL, TRUE);
+    $hpottergranger = $processor->provisionDrupalAccount($user_edit);
 
     $this->testFunctions->setFakeServerUserAttribute('activedirectory1', 'cn=hpotter,ou=people,dc=hogwarts,dc=edu', 'samaccountname', 'hpotter', 0);
     $pass = (is_object($hpottergranger) && is_object($hpotter) && $hpotter->uid == $hpottergranger->uid);

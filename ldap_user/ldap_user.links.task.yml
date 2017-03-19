@@ -1,5 +1,5 @@
 ldap_user.admin_form:
   route_name: ldap_user.admin_form
-  title: '3. User'
+  title: 'User mappings'
   weight: 30
   base_route: ldap_servers.settings
