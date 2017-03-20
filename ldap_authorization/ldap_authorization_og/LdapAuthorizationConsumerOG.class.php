@@ -886,28 +886,26 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
 
       if (!empty($og_fields['bundles'])) {
         foreach ($og_fields['bundles'] as $entity_type => $bundles) {
-
           foreach ($bundles as $i => $bundle) {
-
             $query = new EntityFieldQuery();
             $query->entityCondition('entity_type', $entity_type)
               ->entityCondition('bundle', $bundle)
               ->range(0, 5)
               ->addMetaData('account', user_load(1)); // run the query as user 1
             $result = $query->execute();
-            $entities = entity_load($entity_type, array_keys($result[$entity_type]));
-            $i=0;
-            foreach ($entities as $entity_id => $entity) {
-              $i++;
-              $rid = ldap_authorization_og2_rid_from_role_name($entity_type, $bundle, $entity_id, OG_AUTHENTICATED_ROLE);
-              $title = (is_object($entity) && property_exists($entity, 'title')) ? $entity->title : '';
-              $middle = ($title && $i < 3) ? $title : $entity_id;
-              $group_role_identifier = ldap_authorization_og_authorization_id($middle, $rid, $entity_type);
-              $example = "<code>ou=IT,dc=myorg,dc=mytld,dc=edu|$group_role_identifier</code>";
-              $rows[] = array("$entity_type $title - $role_name", $example);
-
+            if (!empty($result)) {
+              $entities = entity_load($entity_type, array_keys($result[$entity_type]));
+              $i=0;
+              foreach ($entities as $entity_id => $entity) {
+                $i++;
+                $rid = ldap_authorization_og2_rid_from_role_name($entity_type, $bundle, $entity_id, OG_AUTHENTICATED_ROLE);
+                $title = (is_object($entity) && property_exists($entity, 'title')) ? $entity->title : '';
+                $middle = ($title && $i < 3) ? $title : $entity_id;
+                $group_role_identifier = ldap_authorization_og_authorization_id($middle, $rid, $entity_type);
+                $example = "<code>ou=IT,dc=myorg,dc=mytld,dc=edu|$group_role_identifier</code>";
+                $rows[] = array("$entity_type $title - $role_name", $example);
+              }
             }
-
           }
         }
       }
