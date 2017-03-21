@@ -248,7 +248,7 @@ class LdapUserAdminForm extends ConfigFormBase {
         $parent_fieldset = 'basic_to_drupal';
         $description = t('Provisioning from LDAP to Drupal Mappings:');
       }
-      elseif ($direction == LdapConfiguration::PROVISION_TO_LDAP) {
+      else {
         $parent_fieldset = 'basic_to_ldap';
         $description = t('Provisioning from Drupal to LDAP Mappings:');
       }

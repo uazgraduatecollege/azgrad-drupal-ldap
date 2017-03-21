@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\ldap_authorization\Plugin\authorization\provider;
+namespace Drupal\ldap_authorization\Plugin\authorization\Provider;
 
 use Drupal\authorization\AuthorizationSkipAuthorization;
 use Drupal\Component\Utility\Unicode;
