@@ -420,36 +420,40 @@ EOT;
     $values = $form_state->getValues();
 
     $drupalMapKey = 'mappings__' . LdapConfiguration::PROVISION_TO_DRUPAL . '__table';
-    foreach ($values[$drupalMapKey] as $key => $mapping) {
-      if (isset($mapping['configurable_to_drupal']) && $mapping['configurable_to_drupal'] == 1) {
+    $ldapMapKey = 'mappings__' . LdapConfiguration::PROVISION_TO_LDAP . '__table';
 
-        // Check that source is not empty for selected field to sync to Drupal.
-        if ($mapping['user_attr'] !== '0') {
-          if ($mapping['ldap_attr'] == NULL) {
-            $formElement = $form['basic_to_drupal']['mappings__' . LdapConfiguration::PROVISION_TO_DRUPAL][$drupalMapKey][$key];
-            $form_state->setError($formElement, t('Missing LDAP attribute'));
+    if ($values['drupalAcctProvisionServer'] != 'none') {
+      foreach ($values[$drupalMapKey] as $key => $mapping) {
+        if (isset($mapping['configurable_to_drupal']) && $mapping['configurable_to_drupal'] == 1) {
+
+          // Check that source is not empty for selected field to sync to Drupal.
+          if ($mapping['user_attr'] !== '0') {
+            if ($mapping['ldap_attr'] == NULL) {
+              $formElement = $form['basic_to_drupal']['mappings__' . LdapConfiguration::PROVISION_TO_DRUPAL][$drupalMapKey][$key];
+              $form_state->setError($formElement, t('Missing LDAP attribute'));
+            }
           }
         }
       }
     }
 
-    $ldapMapKey = 'mappings__' . LdapConfiguration::PROVISION_TO_LDAP . '__table';
-    foreach ($values[$ldapMapKey] as $key => $mapping) {
-      if (isset($mapping['configurable_to_drupal']) && $mapping['configurable_to_drupal'] == 1) {
-
-        // Check that field is not if a user token is in use.
-        if (isset($mapping['user_attr']) && $mapping['user_attr'] == 'user_tokens') {
-          if (isset($mapping['user_tokens']) && empty(trim($mapping['user_tokens']))) {
-            $formElement = $form['basic_to_ldap']['mappings__' . LdapConfiguration::PROVISION_TO_LDAP][$ldapMapKey][$key];
-            $form_state->setError($formElement, t('Missing user token.'));
+    if ($values['ldapEntryProvisionServer'] != 'none') {
+      foreach ($values[$ldapMapKey] as $key => $mapping) {
+        if (isset($mapping['configurable_to_drupal']) && $mapping['configurable_to_drupal'] == 1) {
+          // Check that the token is not empty if a user token is in use.
+          if (isset($mapping['user_attr']) && $mapping['user_attr'] == 'user_tokens') {
+            if (isset($mapping['user_tokens']) && empty(trim($mapping['user_tokens']))) {
+              $formElement = $form['basic_to_ldap']['mappings__' . LdapConfiguration::PROVISION_TO_LDAP][$ldapMapKey][$key];
+              $form_state->setError($formElement, t('Missing user token.'));
+            }
           }
-        }
 
-        // Check that
-        if ($mapping['user_attr'] !== '0') {
-          if ($mapping['ldap_attr'] == NULL) {
-            $formElement = $form['basic_to_ldap']['mappings__' . LdapConfiguration::PROVISION_TO_LDAP][$ldapMapKey][$key];
-            $form_state->setError($formElement, t('Missing LDAP attribute'));
+          // Check that a target attribute is set.
+          if ($mapping['user_attr'] !== '0') {
+            if ($mapping['ldap_attr'] == NULL) {
+              $formElement = $form['basic_to_ldap']['mappings__' . LdapConfiguration::PROVISION_TO_LDAP][$ldapMapKey][$key];
+              $form_state->setError($formElement, t('Missing LDAP attribute'));
+            }
           }
         }
       }
@@ -459,7 +463,7 @@ EOT;
     $processedDrupalSyncMappings = $this->syncMappingsFromForm($form_state->getValues(), LdapConfiguration::PROVISION_TO_DRUPAL);
 
     // Set error for entire table if [dn] is missing.
-    if (!isset($processedLdapSyncMappings['dn'])) {
+    if ($values['ldapEntryProvisionServer'] != 'none' && !isset($processedLdapSyncMappings['dn'])) {
       $form_state->setErrorByName($ldapMapKey,
         t('Mapping rows exist for provisioning to LDAP, but no LDAP attribute is targeted for [dn]. One row must map to [dn]. This row will have a user token like cn=[property.name],ou=users,dc=ldap,dc=mycompany,dc=com')
       );
