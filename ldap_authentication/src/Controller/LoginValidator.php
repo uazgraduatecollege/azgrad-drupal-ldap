@@ -567,7 +567,8 @@ class LoginValidator {
      * Handle excludeIfNoAuthorizations enabled and user has no groups.
      */
 
-    if (\Drupal::config('ldap_authentication.settings')->get('excludeIfNoAuthorizations')) {
+    if (\Drupal::moduleHandler()->moduleExists('ldap_authorization') &&
+      \Drupal::config('ldap_authentication.settings')->get('excludeIfNoAuthorizations')) {
 
       $user = User::load($authName);
 

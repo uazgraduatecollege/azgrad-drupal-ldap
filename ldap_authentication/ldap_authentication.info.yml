@@ -7,6 +7,5 @@ dependencies:
   - ldap:ldap_servers
   - ldap:ldap_user
   - externalauth
-  - authorization
 
 configure: ldap_authentication.admin_form
