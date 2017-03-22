@@ -300,6 +300,9 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
     elseif (!$dn) {
       return FALSE;
     }
+    if (!empty($attributes['unicodePwd']) && $this->get('type') == 'ad') {
+      $attributes['unicodePwd'] = $this->convert_password_for_active_directory_unicodePwd($attributes['unicodePwd']);
+    }
 
     $result = @ldap_add($this->connection, $dn, $attributes);
     if (!$result) {
@@ -442,6 +445,10 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
         $old_attributes = $entries[0];
       }
     }
+    if (!empty($attributes['unicodePwd']) && $this->get('type') == 'ad') {
+      $attributes['unicodePwd'] = $this->convert_password_for_active_directory_unicodePwd($attributes['unicodePwd']);
+    }
+
     $attributes = $this->removeUnchangedAttributes($attributes, $old_attributes);
 
     foreach ($attributes as $key => $cur_val) {
@@ -1830,6 +1837,32 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
    */
   public function ldapExplodeDn($dn, $attribute) {
     return ldap_explode_dn($dn, $attribute);
+  }
+
+  /**
+   * Converts a password to the format that Active Directory supports (for the
+   * purpose of changing or setting).  Note that AD needs the field to be called
+   * unicodePwd (as opposed to userPassword)
+   *
+   * @param string $password
+   *   The password that is being formatted for Active Directory unicodePwd field.
+   *
+   * @return string
+   *   $password surrounded with quotes and in UTF-16LE encoding
+   */
+  public function convert_password_for_active_directory_unicodePwd($password) {
+    // This function can be called with $attributes['unicodePwd'] as an array.
+    if (!is_array($password)) {
+      \Drupal::logger('ldap_servers')->error('Error: password_modify() failed to modify ldap password w/ base DN "!dn"', ['!dn' => $password]);
+
+      return mb_convert_encoding("\"{$password}\"", "UTF-16LE");
+    }
+    else {
+      \Drupal::logger('ldap_servers')->error('Error: password_modify() failed to modify ldap password w/ base DN "!dn"', ['!dn' => $password]);
+      // Presumably there is no use case for there being more than one password in
+      // the $attributes array, hence it will be at index 0 and we return in kind.
+      return [mb_convert_encoding("\"{$password[0]}\"", "UTF-16LE")];
+    }
   }
 
 }
