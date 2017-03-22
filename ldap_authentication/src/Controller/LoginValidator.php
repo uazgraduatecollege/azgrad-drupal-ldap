@@ -581,6 +581,8 @@ class LoginValidator {
       foreach ($profiles as $profile_id) {
         $profile = AuthorizationProfile::load($profile_id);
         if ($profile->getProviderId() == 'ldap_provider') {
+          //@TODO: https://www.drupal.org/node/2849865
+          module_load_include('inc', 'authorization', 'authorization');
           list($new_authorizations_i, $notifications_i) = _authorizations_user_authorizations($user, 'query', $profile_id, NULL);
           $authorizations = $authorizations + $new_authorizations_i;
         }
