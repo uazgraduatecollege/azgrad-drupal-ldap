@@ -784,11 +784,11 @@ class LoginValidator {
    * @return bool
    */
   private function matchExistingUserWithLdap() {
-    if (\Drupal::config('ldapUser.settings')
+    if (\Drupal::config('ldap_user.settings')
       ->get('userConflictResolve') == LdapConfiguration::$userConflictLog
     ) {
       if ($account_with_same_email = user_load_by_mail($this->ldapUser['mail'])) {
-        /** @var \Drupal\user\Entity\UserInterface $account_with_same_email */
+        /** @var \Drupal\user\UserInterface $account_with_same_email */
         \Drupal::logger('ldap_authentication')
           ->error('LDAP user with DN %dn has a naming conflict with a local drupal user %conflict_name',
             [
@@ -885,7 +885,7 @@ class LoginValidator {
      * it here.
      */
 
-    if (\Drupal::config('ldapUser.settings')->get('acctCreation') == LdapConfiguration::$accountCreationUserSettingsForLdap &&
+    if (\Drupal::config('ldap_user.settings')->get('acctCreation') == LdapConfiguration::$accountCreationUserSettingsForLdap &&
       \Drupal::config('user.settings')->get('register') == USER_REGISTER_VISITORS_ADMINISTRATIVE_APPROVAL
     ) {
       // If admin approval required, set status to 0.

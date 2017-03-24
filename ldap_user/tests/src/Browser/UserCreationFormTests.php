@@ -26,12 +26,13 @@ class UserCreationFormTests extends BrowserTestBase {
     return;
     // TODO.
     /**
-    * manually create drupal user with option of not ldap associated checked
+    * Manually create Drupal user with option of not LDAP associated checked
     */
 
-    if ($hpotter = user_load_by_name('hpotter')) {
-      $hpotter->uid->delete();
+    if ($account = user_load_by_name('hpotter')) {
+      $account->delete();
     }
+
     $this->assertFalse(user_load_by_name('hpotter'), t('hpotter removed before manual account creation test'), $this->testId('manual non ldap account created'));
 
     $this->drupalLogout();

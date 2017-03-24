@@ -143,7 +143,7 @@ class DrupalUserProcessor {
    *
    * @param array $ldap_user
    *   Ldap entry.
-   * @param \Drupal\user\entity\UserInterface $account
+   * @param \Drupal\user\UserInterface $account
    *   see hook_user_save, hook_user_update, etc.
    * @param \Drupal\ldap_servers\Entity\Server $ldap_server
    * @param int $direction
@@ -609,7 +609,7 @@ class DrupalUserProcessor {
   }
 
   /**
-   * @param \Drupal\user\entity\UserInterface $account
+   * @param \Drupal\user\UserInterface $account
    */
   public function newDrupalUserCreated($account) {
 
@@ -662,7 +662,7 @@ class DrupalUserProcessor {
   }
 
   /**
-   * @param \Drupal\user\entity\UserInterface $account
+   * @param \Drupal\user\UserInterface $account
    */
   public function drupalUserUpdated($account) {
 
@@ -708,7 +708,7 @@ class DrupalUserProcessor {
   }
 
   /**
-   * @param \Drupal\user\entity\UserInterface $account
+   * @param \Drupal\user\UserInterface $account
    */
   public function drupalUserPreSave($account) {
 
@@ -731,7 +731,7 @@ class DrupalUserProcessor {
   }
 
   /**
-   * @param \Drupal\user\entity\UserInterface $account
+   * @param \Drupal\user\UserInterface $account
    */
   public function drupalUserLogsIn($account) {
     if (ExternalAuthenticationHelper::excludeUser($account)) {
@@ -784,11 +784,9 @@ class DrupalUserProcessor {
   }
 
   /**
-   * @param \Drupal\user\entity\UserInterface $account
+   * @param \Drupal\user\UserInterface $account
    */
   public function drupalUserDeleted($account) {
-    /** @var \Drupal\user\entity\UserInterface $account */
-
     // Drupal user account is about to be deleted.
     if (LdapConfiguration::provisionsLdapEntriesFromDrupalUsers()
       && LdapConfiguration::provisionAvailableToLDAP(LdapConfiguration::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_DELETE)
@@ -890,14 +888,13 @@ class DrupalUserProcessor {
   /**
    * @param $ldap_server
    * @param $ldap_user
-   * @param $accountFromPuid
+   * @param \Drupal\user\UserInterface $accountFromPuid
    * @param $save
    *
    * @return bool|\Drupal\user\entity\User|\Drupal\user\UserInterface
    */
   private function updateExistingDrupalAccount($ldap_server, $ldap_user, $accountFromPuid, $save) {
     // 1. correct username and authmap.
-    /** @var \Drupal\user\entity\User $accountFromPuid */
     $this->applyAttributesToAccount($ldap_user, $accountFromPuid, $ldap_server, LdapConfiguration::PROVISION_TO_DRUPAL, [LdapConfiguration::$eventSyncToDrupalUser]);
     $account = $accountFromPuid;
     if ($save == TRUE) {
