@@ -104,7 +104,10 @@ class ServerForm extends EntityForm {
       '#title' => t('Binding Method for Searches'),
       '#options' => [
         'service_account' => t('Service Account Bind: Use credentials in the
-        Service Account field below to bind to LDAP <br><div class="description">This option is usually a best practice.</div>'),
+        Service Account field below to bind to LDAP <br>
+        <div class="description">This option is usually a best practice.<br>
+        This is also required for provisioning LDAP accounts and groups.<br>
+        For security reasons, this pair should belong to an  LDAP account with stripped down permissions.</div>'),
 
         'user' => t('Bind with Users Credentials: Use user\'s entered credentials
         to bind to LDAP<br><div class="description">This is only useful for modules that execute during user logon such
@@ -121,15 +124,6 @@ class ServerForm extends EntityForm {
       ],
     ];
 
-    $form['bind']['binding_service_acct'] = [
-      '#default_value' => $server->get('binding_service_acct'),
-      '#type' => 'markup',
-      '#markup' => t('<label>Service Account</label> <div class="description">Some LDAP configurations prohibit or restrict the results of anonymous searches. These LDAPs require a DN/password pair for binding.<br>
-        For security reasons, this pair should belong to an  LDAP account with stripped down permissions.<br>  
-        This is also required for provisioning LDAP accounts and groups.</div>'
-      ),
-    ];
-
     $form['bind']['binddn'] = [
       '#default_value' => $server->get('binddn'),
       '#type' => 'textfield',
@@ -137,7 +131,10 @@ class ServerForm extends EntityForm {
       '#size' => 80,
       '#maxlength' => 512,
       '#states' => [
-        'enabled' => [
+        'visible' => [
+          ':input[name=bind_method]' => ['value' => strval('service_account')],
+        ],
+        'required' => [
           ':input[name=bind_method]' => ['value' => strval('service_account')],
         ],
       ],
@@ -149,22 +146,14 @@ class ServerForm extends EntityForm {
       '#placeholder' => $server->get('bindpw') ? t("Password exists in database.") : t("Warning: No password exists in database."),
       '#size' => 80,
       '#states' => [
-        'enabled' => [
+        'visible' => [
+          ':input[name=bind_method]' => ['value' => strval('service_account')],
+        ],
+        'required' => [
           ':input[name=bind_method]' => ['value' => strval('service_account')],
         ],
       ],
     ];
-
-    $form['bind']['bindpw_clear'] = [
-      '#type' => 'checkbox',
-      '#title' => t('Clear existing password from database.'),
-      '#description' => t('Check this when switching away from Service Account binding.'),
-      '#default_value' => 0,
-    ];
-
-    if (empty($server->get('bindpw'))) {
-      $form['bind']['bindpw_clear']['#type'] = 'hidden';
-    }
 
     $form['users'] = [
       '#type' => 'details',
@@ -498,10 +487,6 @@ class ServerForm extends EntityForm {
     if (NULL !== $form_state->getValue('bindpw') && $form_state->getValue('bindpw')) {
       $new_configuration->set('bindpw', $form_state->getValue('bindpw'));
     }
-    // If the bindpw_clear is checked clear the password from the database.
-    elseif ($form_state->getValue('bindpw_clear')) {
-      $new_configuration->set('bindpw', NULL);
-    }
     // If there isn't a password then load the existing one (unless this an anonymous bind server)
     elseif ($form_state->getValue('bind_method') != 'anon' || $form_state->getValue('bind_method') != 'anon_user') {
       $factory = \Drupal::service('ldap.servers');
@@ -510,6 +495,11 @@ class ServerForm extends EntityForm {
       if ($existing_configuration && $existing_configuration->get('bindpw')) {
         $new_configuration->set('bindpw', $existing_configuration->get('bindpw'));
       }
+    }
+
+    if ($form_state->getValue('bind_method') != 'service_Account') {
+      $new_configuration->set('binddn', NULL);
+      $new_configuration->set('bindpw', NULL);
     }
 
     $status = $new_configuration->save();

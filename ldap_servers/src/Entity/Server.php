@@ -1622,36 +1622,6 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
   }
 
   /**
-   * {@inheritdoc}
-   */
-  public function testBindingCredentials($bindpw = NULL, &$results_tables) {
-    $errors = FALSE;
-    $results = [];
-
-    $ldap_result = self::connect();
-
-    if ($ldap_result != self::LDAP_SUCCESS) {
-      $results_tables['basic'][] = [t('Failed to connect to LDAP server. See Drupal logs for details.') .
-        self::errorMsg('ldap'),
-      ];
-      $errors = TRUE;
-    }
-
-    if (!$errors) {
-      $bind_result = self::bind(self::get('binddn'), $bindpw, FALSE);
-      if ($bind_result == self::LDAP_SUCCESS) {
-        $results_tables['basic'][] = [t('Successfully bound to server'), t('PASS')];
-      }
-      else {
-        $results_tables['basic'][] = [t('Failed to bind to server. LDAP error: @error', ['@error' => self::formattedError($bind_result)]), t('FAIL')];
-        $errors = TRUE;
-      }
-    }
-    return [$errors, $results];
-
-  }
-
-  /**
    * Replicating 7.x properties.
    *
    * Grp_unused

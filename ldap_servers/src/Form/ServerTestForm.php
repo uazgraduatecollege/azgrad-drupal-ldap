@@ -17,6 +17,8 @@ class ServerTestForm extends EntityForm {
   /**  @var \Drupal\ldap_servers\Entity\Server */
   protected $ldapServer;
 
+  protected $resultsTables = [];
+
   /**
    * {@inheritdoc}
    */
@@ -66,7 +68,6 @@ class ServerTestForm extends EntityForm {
       $userCredentialsRequired = TRUE;
     } else {
       $userCredentialsRequired = FALSE;
-
     }
 
     $form['testing_drupal_username'] = [
@@ -76,7 +77,9 @@ class ServerTestForm extends EntityForm {
       '#size' => 30,
       '#maxlength' => 255,
       '#required' => $userCredentialsRequired,
-      '#description' => t('This is normally optional and used for testing this server\'s configuration against an actual username.<br>The user need not exist in Drupal and testing will not affect the user\'s LDAP or Drupal account. <br>Credentials required for testing with user binding.'),
+      '#description' => t('This is normally optional and used for testing this server\'s configuration against an actual username.<br>
+        The user need not exist in Drupal and testing will not affect the user\'s LDAP or Drupal account. <br>
+        You need to either supply the username or DN for testing with user binding.'),
     ];
 
     if ($userCredentialsRequired) {
@@ -96,7 +99,8 @@ class ServerTestForm extends EntityForm {
       '#default_value' => $this->ldapServer->get('testing_drupal_user_dn'),
       '#size' => 120,
       '#maxlength' => 255,
-      '#description' => t('This is optional and used for testing this server\'s configuration against an actual username.<br>The user need not exist in Drupal and testing will not affect the user\'s LDAP or Drupal Account.'),
+      '#description' => t('This is optional and used for testing this server\'s configuration against an actual username.<br>
+        The user need not exist in Drupal and testing will not affect the user\'s LDAP or Drupal Account.'),
     ];
 
     $form['grp_test_grp_dn'] = [
@@ -114,7 +118,9 @@ class ServerTestForm extends EntityForm {
       '#default_value' => $this->ldapServer->get('grp_test_grp_dn_writeable'),
       '#size' => 120,
       '#maxlength' => 255,
-      '#description' => t('<strong>Notice: Functionality not fully ported.</strong><br><strong>Warning: Setting this field means that groups can be deleted, created or have members added to it!</strong><br>This is optional and used for testing this server\'s group configuration.'),
+      '#description' => t('<strong>Notice: Functionality not fully ported.</strong><br>
+        <strong>Warning: Setting this field means that groups can be deleted, created or have members added to it!</strong><br>
+        This is optional and used for testing this server\'s group configuration.'),
     ];
 
 
@@ -169,7 +175,7 @@ class ServerTestForm extends EntityForm {
           '#rows' => $rows,
         ];
 
-        $form['#suffix'] = '<div class="content">
+        $form['#suffix'] .= '<div class="content">
         <h2>' . t('LDAP Entry for %username (dn: %dn)', ['%dn' => $test_data['ldap_user']['dn'], '%username' => $test_data['username']]) . '</h2>'
           . drupal_render($settings) . '</div>';
       }
@@ -185,7 +191,7 @@ class ServerTestForm extends EntityForm {
       foreach ($test_data['results_tables'] as $table_name => $table_data) {
         $settings = [
           '#theme' => 'table',
-          '#header' => ['Test', 'Result'],
+          '#header' => $table_name == 'basic' ? ['Test'] : ['Test', 'Result'],
           '#rows' => $table_data,
         ];
         $form['#suffix'] .= '<h2>' . $titles[$table_name] . '</h2>' . drupal_render($settings);
@@ -225,6 +231,7 @@ class ServerTestForm extends EntityForm {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
+    $has_errors = FALSE;
 
     // Pass data back to form builder.
     $form_state->setRebuild(TRUE);
@@ -233,118 +240,19 @@ class ServerTestForm extends EntityForm {
     $id = $values['id'];
     $this->ldapServer = Server::load($id);
 
-    // $result = t('<h1>Test of name </h2>',$server_conf);.
-    $results = [];
-    $results_tables = [];
-
-    $bindpw = NULL;
-
     if ($this->ldapServer->get('bind_method') == 'service_account') {
-      $results_tables['basic'][] = [
-        t('Binding with DN for non-anonymous search (%bind_dn).', ['%bind_dn' => $this->ldapServer->get('binddn')]), '',
-      ];
+      $this->resultsTables['basic'][] = [t('Binding with DN for non-anonymous search (%bind_dn).', ['%bind_dn' => $this->ldapServer->get('binddn')])];
+      $has_errors = $this->testBindingCredentials();
     }
     else {
-      $results_tables['basic'][] = [
-        t('Binding with null DN for anonymous search.'), '',
-      ];
+      $this->resultsTables['basic'][] = [t('Binding with null DN for anonymous search.')];
+      $has_errors = $this->testAnonymousBind();
     }
 
-    if (@$values['grp_test_grp_dn_writeable'] && @$values['grp_test_grp_dn']) {
-      $user_test_dn = @$values['grp_test_grp_dn'];
-      $group_create_test_dn = $values['grp_test_grp_dn_writeable'];
-      $group_create_test_attr = [
-        'objectClass' => [
-          $this->ldapServer->get('grp_object_cat'),
-          'top',
-        ],
-      ];
-
-      // 1. delete test group if it exists.
-      if ($this->ldapServer->dnExists($group_create_test_dn, 'ldap_entry', ['cn', 'member'])) {
-        $this->ldapServer->groupRemoveGroup($group_create_test_dn, FALSE);
-      }
-
-      $group_exists = $this->ldapServer->dnExists($group_create_test_dn, 'ldap_entry', ['cn', 'member']);
-      $result = ($group_exists === FALSE) ? "PASS" : "FAIL";
-      $results_tables['group1'][] = [
-        "Starting test without group: $group_create_test_dn ",
-        $result,
-      ];
-
-      // 2. make sure call to members in empty group returns false.
-      $result = $this->ldapServer->groupAllMembers($group_create_test_dn);
-      $result = ($result === FALSE) ? "PASS" : 'FAIL';
-      $results_tables['group1'][] = [
-        "LdapServer::groupAllMembers($group_create_test_dn) call on nonexistent group returns FALSE",
-        $result,
-      ];
-
-      // 3. add group.
-      $result = $this->ldapServer->groupAddGroup($group_create_test_dn, $group_create_test_attr);
-      $result = ($result) ? "PASS" : 'FAIL';
-      $attr = serialize($group_create_test_attr);
-      $results_tables['group1'][] = [
-        "LdapServer::groupAddGroup($group_create_test_dn, $attr)",
-        $result,
-      ];
-
-      // 4. call to all members in an empty group returns emtpy array, not FALSE.
-      $result = $this->ldapServer->groupAllMembers($group_create_test_dn);
-      $result = (is_array($result) && count($result) == 0) ? 'PASS' : 'FAIL';
-      $results_tables['group1'][] = [
-        "LdapServer::groupAllMembers($group_create_test_dn) returns empty array for empty group ",
-        $result,
-      ];
-
-      // 5. add member to group.
-      $result = $this->ldapServer->groupAddMember($group_create_test_dn, $user_test_dn);
-      $result = is_array($this->ldapServer->groupAllMembers($group_create_test_dn)) ? 'PASS' : 'FAIL';
-      $results_tables['group1'][] = [
-        "LdapServer::groupAddMember($group_create_test_dn, $user_test_dn)",
-        $result,
-      ];
-
-      // 6. try to remove group with member in it.
-      $only_if_group_empty = TRUE;
-      $result = $this->ldapServer->groupRemoveGroup($group_create_test_dn, $only_if_group_empty);
-      $result = ($result) ? 'FAIL' : 'PASS';
-      $results_tables['group1'][] = [
-        "LdapServer::groupRemoveGroup($group_create_test_dn, $only_if_group_empty)",
-        $result,
-      ];
-
-      // 7. remove group member.
-      $result = $this->ldapServer->groupRemoveMember($group_create_test_dn, $user_test_dn);
-      $result = $this->ldapServer->groupAllMembers($group_create_test_dn);
-      $result = (is_array($result) && count($result) == 0) ? 'PASS' : 'FAIL';
-      $results_tables['group1'][] = [
-        "LdapServer::groupRemoveMember($group_create_test_dn, $user_test_dn)",
-        $result,
-      ];
-
-      $only_if_group_empty = TRUE;
-      $result = $this->ldapServer->groupRemoveGroup($group_create_test_dn, $only_if_group_empty);
-      $result = ($this->ldapServer->dnExists($group_create_test_dn, 'ldap_entry', [
-        'cn',
-        'member',
-      ])) ? "FAIL" : 'PASS';
-      $results_tables['group1'][] = [
-        "LdapServer::groupRemoveGroup($group_create_test_dn, $only_if_group_empty)",
-        $result,
-      ];
-    }
-
-    // Connect to ldap.
-    // @FIXME: testBindingCredentials call function bind and throw an error (no error log)
-    list($has_errors, $more_results) = $this->ldapServer->testBindingCredentials($bindpw, $results_tables);
-
-    $results = array_merge($results, $more_results);
 
     if ($this->ldapServer->get('bind_method') == 'anon_user') {
-      drupal_set_message('Bind method anonymous, user.');
-      list($has_errors, $more_results, $ldap_user) = $this->testUserMapping($values['testing_drupal_username']);
-      $results = array_merge($results, $more_results);
+      $this->resultsTables['basic'][] = [t('Binding with user credentials (%bind_dn).', ['%bind_dn' => $values['testing_drupal_username']])];
+      list($has_errors, $ldap_user) = $this->testUserMapping($values['testing_drupal_username']);
       if (!$has_errors) {
         $mapping[] = "dn = " . $ldap_user['dn'];
         foreach ($ldap_user['attr'] as $key => $value) {
@@ -361,40 +269,51 @@ class ServerTestForm extends EntityForm {
             '%bind_dn' => $this->ldapServer->get('binddn'),
           ]),
         ];
-        $results_tables['basic'][] = [
-          render($item_list),
-        ];
+        $this->resultsTables['basic'][] = [render($item_list)];
       }
-      $results_tables['basic'][] = [
+      $this->resultsTables['basic'][] = [
         t('Binding with DN (%bind_dn).  Using supplied password ', [
           '%bind_dn' => $ldap_user['dn'],
-        ]),
+        ])
       ];
       $result = $this->ldapServer->bind($ldap_user['dn'], $values['testing_drupal_userpw'], FALSE);
       if ($result == Server::LDAP_SUCCESS) {
-        $results_tables['basic'][] = [
-          t('Successfully bound to server'),
-          t('PASS'),
+        $this->resultsTables['basic'][] = [
+          'class' => 'color-success',
+          'data' => [t('Successfully bound to server')],
         ];
       }
       else {
-        $results_tables['basic'][] = [t('Failed to bind to server. LDAP error: @error', ['@error' => $this->ldapServer->formattedError($result)]), t('FAIL')];
+        $this->resultsTables['basic'][] = [
+          'class' => 'color-error',
+          'data' => [
+              t('Failed to bind to server. LDAP error: @error', [
+                '@error' => $this->ldapServer->formattedError($result)
+                ]
+              )
+            ]
+        ];
       }
     }
 
-    if (!$has_errors && isset($values['grp_test_grp_dn'])) {
-      list($group_entry, $values, $results_tables) = $this->testGroupDN($values, $results_tables);
+
+    if (@$values['grp_test_grp_dn_writeable'] && @$values['grp_test_grp_dn']) {
+      $this->testwritableGroup($values);
     }
 
-    list($has_errors, $more_results, $ldap_user) = $this->testUserMapping($values['testing_drupal_username']);
+    if (!$has_errors && isset($values['grp_test_grp_dn'])) {
+      list($group_entry, $values) = $this->testGroupDN($values);
+    }
+
+    list($has_errors, $ldap_user) = $this->testUserMapping($values['testing_drupal_username']);
     $tokenHelper = new TokenProcessor();
     $tokens = ($ldap_user && isset($ldap_user['attr'])) ? $tokenHelper->tokenizeEntry($ldap_user['attr'], 'all', TokenProcessor::PREFIX, TokenProcessor::SUFFIX) : [];
     foreach ($tokens as $key => $value) {
-      $results_tables['tokens'][] = [$key, $this->binaryCheck($value)];
+      $this->resultsTables['tokens'][] = [$key, $this->binaryCheck($value)];
     }
     $form_state->set(['ldap_server_test_data'], [
       'username' => $values['testing_drupal_username'],
-      'results_tables' => $results_tables,
+      'results_tables' => $this->resultsTables,
     ]);
 
     if (isset($ldap_user)) {
@@ -409,10 +328,9 @@ class ServerTestForm extends EntityForm {
 
   /**
    * @param $values
-   * @param $results_tables
    * @return array
    */
-  private function testGroupDN($values, $results_tables) {
+  private function testGroupDN($values) {
     $group_dn = $values['grp_test_grp_dn'];
     $group_entry = $this->ldapServer->search($group_dn, 'objectClass=*');
     $user = isset($values['testing_drupal_username']) ? $values['testing_drupal_username'] : NULL;
@@ -430,7 +348,7 @@ class ServerTestForm extends EntityForm {
         ];
         $result = drupal_render($settings);
 
-        $results_tables['group2'][] = [
+        $this->resultsTables['group2'][] = [
           'Group memberships from user ("group_dns", nested=' . $nested_display . ') (' . count($memberships) . ' found)',
           $result,
         ];
@@ -457,7 +375,7 @@ class ServerTestForm extends EntityForm {
           $groupUserMembershipsFromUserAttributes = [];
           $result = "'A user LDAP attribute such as memberOf exists that contains a list of their group' is not configured.";
         }
-        $results_tables['group2'][] = [
+        $this->resultsTables['group2'][] = [
           'Group memberships from user attribute for ' . $user . ' (nested=' . $nested_display . ') (' . count($groupUserMembershipsFromUserAttributes) . ' found)',
           $result,
         ];
@@ -476,7 +394,7 @@ class ServerTestForm extends EntityForm {
           $groupUserMembershipsFromEntry = [];
           $result = "Groups by entry not configured.";
         }
-        $results_tables['group2'][] = [
+        $this->resultsTables['group2'][] = [
           'Group memberships from entry for ' . $user . ' (nested=' . $nested_display . ') (' . count($groupUserMembershipsFromEntry) . ' found)',
           $result,
         ];
@@ -498,11 +416,11 @@ class ServerTestForm extends EntityForm {
           ];
           $result2 = drupal_render($settings);
 
-          $results_tables['group2'][] = [
+          $this->resultsTables['group2'][] = [
             "groupUserMembershipsFromEntry and FromUserAttr Diff)",
             $result1,
           ];
-          $results_tables['group2'][] = [
+          $this->resultsTables['group2'][] = [
             "FromUserAttr and groupUserMembershipsFromEntry Diff)",
             $result2,
           ];
@@ -516,10 +434,10 @@ class ServerTestForm extends EntityForm {
         '#items' => $groups_from_dn,
         '#list_type' => 'ul',
       ];
+      $result = drupal_render($settings);
+      $this->resultsTables['groupfromDN'][] = ["Groups from DN", $result];
     }
-    $result = drupal_render($settings);
-    $results_tables['groupfromDN'][] = ["Groups from DN", $result];
-    return [$group_entry, $values, $results_tables];
+    return [$group_entry, $values];
   }
 
   /**
@@ -737,21 +655,197 @@ class ServerTestForm extends EntityForm {
 
     $errors = FALSE;
     if (!$ldap_user) {
-
-      $results[] = t('Failed to find test user %username by searching on  %user_attr = %username.',
+      $this->resultsTables['basic'][] = [
+        'class' => 'color-error',
+        'data' => [t('Failed to find test user %username by searching on %user_attr = %username. Error: %error',
           [
             '%username' => $drupal_username,
             '%user_attr' => $this->ldapServer->get('user_attr'),
+            '%error' => $this->ldapServer->formattedError($this->ldapServer->ldapErrorNumber()),
           ]
-        )
-        . ' ' . t('Error Message:') . ' ' . $this->ldapServer->errorMsg('ldap');
+        )]
+      ];
       $errors = TRUE;
     }
     else {
-      $results[] = t('Found test user %username by searching on  %user_attr = %username.',
-        ['%username' => $drupal_username, '%user_attr' => $this->ldapServer->get('user_attr')]);
+      $this->resultsTables['basic'][] = [
+        'class' => 'color-success',
+        'data' => [
+          t('Found test user %username by searching on  %user_attr = %username.',
+            ['%username' => $drupal_username, '%user_attr' => $this->ldapServer->get('user_attr')]
+          )
+        ]
+      ];
     }
-    return [$errors, $results, $ldap_user];
+    return [$errors, $ldap_user];
   }
 
+  /**
+   * @TODO: Unported.
+   *
+   * @param $values
+   */
+  private function testwritableGroup($values) {
+    $user_test_dn = @$values['grp_test_grp_dn'];
+    $group_create_test_dn = $values['grp_test_grp_dn_writeable'];
+    $group_create_test_attr = [
+      'objectClass' => [
+        $this->ldapServer->get('grp_object_cat'),
+        'top',
+      ],
+    ];
+
+    // 1. delete test group if it exists.
+    if ($this->ldapServer->dnExists($group_create_test_dn, 'ldap_entry', ['cn', 'member'])
+    ) {
+      $this->ldapServer->groupRemoveGroup($group_create_test_dn, FALSE);
+    }
+
+    $group_exists = $this->ldapServer->dnExists($group_create_test_dn, 'ldap_entry', [
+      'cn',
+      'member'
+    ]);
+    $result = ($group_exists === FALSE) ? "PASS" : "FAIL";
+    $this->resultsTables['group1'][] = [
+      "Starting test without group: $group_create_test_dn ",
+      $result,
+    ];
+
+    // 2. make sure call to members in empty group returns false.
+    $result = $this->ldapServer->groupAllMembers($group_create_test_dn);
+    $result = ($result === FALSE) ? "PASS" : 'FAIL';
+    $this->resultsTables['group1'][] = [
+      "LdapServer::groupAllMembers($group_create_test_dn) call on nonexistent group returns FALSE",
+      $result,
+    ];
+
+    // 3. add group.
+    $result = $this->ldapServer->groupAddGroup($group_create_test_dn, $group_create_test_attr);
+    $result = ($result) ? "PASS" : 'FAIL';
+    $attr = serialize($group_create_test_attr);
+    $this->resultsTables['group1'][] = [
+      "LdapServer::groupAddGroup($group_create_test_dn, $attr)",
+      $result,
+    ];
+
+    // 4. call to all members in an empty group returns emtpy array, not FALSE.
+    $result = $this->ldapServer->groupAllMembers($group_create_test_dn);
+    $result = (is_array($result) && count($result) == 0) ? 'PASS' : 'FAIL';
+    $this->resultsTables['group1'][] = [
+      "LdapServer::groupAllMembers($group_create_test_dn) returns empty array for empty group ",
+      $result,
+    ];
+
+    // 5. add member to group.
+    $this->ldapServer->groupAddMember($group_create_test_dn, $user_test_dn);
+    $result = is_array($this->ldapServer->groupAllMembers($group_create_test_dn)) ? 'PASS' : 'FAIL';
+    $this->resultsTables['group1'][] = [
+      "LdapServer::groupAddMember($group_create_test_dn, $user_test_dn)",
+      $result,
+    ];
+
+    // 6. try to remove group with member in it.
+    $only_if_group_empty = TRUE;
+    $result = $this->ldapServer->groupRemoveGroup($group_create_test_dn, $only_if_group_empty);
+    $result = ($result) ? 'FAIL' : 'PASS';
+    $this->resultsTables['group1'][] = [
+      "LdapServer::groupRemoveGroup($group_create_test_dn, $only_if_group_empty)",
+      $result,
+    ];
+
+    // 7. remove group member.
+    $this->ldapServer->groupRemoveMember($group_create_test_dn, $user_test_dn);
+    $result = $this->ldapServer->groupAllMembers($group_create_test_dn);
+    $result = (is_array($result) && count($result) == 0) ? 'PASS' : 'FAIL';
+    $this->resultsTables['group1'][] = [
+      "LdapServer::groupRemoveMember($group_create_test_dn, $user_test_dn)",
+      $result,
+    ];
+
+    $only_if_group_empty = TRUE;
+    $this->ldapServer->groupRemoveGroup($group_create_test_dn, $only_if_group_empty);
+    $result = ($this->ldapServer->dnExists($group_create_test_dn, 'ldap_entry', [
+      'cn',
+      'member',
+    ])) ? "FAIL" : 'PASS';
+    $this->resultsTables['group1'][] = [
+      "LdapServer::groupRemoveGroup($group_create_test_dn, $only_if_group_empty)",
+      $result,
+    ];
+  }
+
+  private function testAnonymousBind(){
+    $errors = FALSE;
+    $ldap_result = $this->ldapServer->connect();
+
+    if ($ldap_result != Server::LDAP_SUCCESS) {
+
+      $this->resultsTables['basic'][] = [
+        'class' => 'color-error',
+        'data' => [t('Failed to connect to LDAP server: @error', $this->ldapServer->formattedError($ldap_result))]
+      ];
+      $errors = TRUE;
+    }
+
+    if (!$errors) {
+        $bind_result = $this->ldapServer->bind(NULL, NULL, TRUE);
+        if ($bind_result == Server::LDAP_SUCCESS) {
+          $this->resultsTables['basic'][] = [
+            'class' => 'color-success',
+            'data' => [t('Successfully bound to server')]
+          ];
+        }
+        else {
+          $this->resultsTables['basic'][] = [
+            'class' => 'color-error',
+            'data' => [t('Failed to bind anonymously. LDAP error: @error', ['@error' => $this->ldapServer->formattedError($bind_result)])]
+          ];
+          $errors = TRUE;
+        }
+      }
+      else {
+        $this->resultsTables['basic'][] = [t('No service account set to bind with.')];
+      }
+    return $errors;
+  }
+
+  /**
+   * Helper function to bind as required for testing.
+   */
+  public function testBindingCredentials() {
+    $errors = FALSE;
+    $ldap_result = $this->ldapServer->connect();
+
+    if ($ldap_result != Server::LDAP_SUCCESS) {
+
+      $this->resultsTables['basic'][] = [
+        'class' => 'color-error',
+        'data' => [t('Failed to connect to LDAP server: @error', $this->ldapServer->formattedError($ldap_result))]
+      ];
+      $errors = TRUE;
+    }
+
+    if (!$errors) {
+      if (!empty($this->ldapServer->get('binddn')) && !empty($this->ldapServer->get('bindpw'))) {
+        $bind_result = $this->ldapServer->bind($this->ldapServer->get('binddn'), $this->ldapServer->get('bindpw'), FALSE);
+        if ($bind_result == Server::LDAP_SUCCESS) {
+          $this->resultsTables['basic'][] = [
+            'class' => 'color-success',
+            'data' => [t('Successfully bound to server')]
+          ];
+        }
+        else {
+          $this->resultsTables['basic'][] = [
+            'class' => 'color-error',
+            'data' => [t('Failed to bind with service account. LDAP error: @error', ['@error' => $this->ldapServer->formattedError($bind_result)])]
+          ];
+          $errors = TRUE;
+        }
+      }
+      else {
+        $this->resultsTables['basic'][] = [t('No service account set to bind with.')];
+      }
+    }
+    return $errors;
+  }
 }
