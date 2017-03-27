@@ -73,15 +73,11 @@ class DrupalUserProcessorTests extends UnitTestCase {
   public function testprovisionDrupalAccount() {
     $this->assertTrue(TRUE);
     return;
-    // TODO.
-    $account = NULL;
-    $user_edit = ['name' => 'hpotter'];
+    // @TODO: Write test.
 
-    // Test method provisionDrupalAccount()
+    $userData = ['name' => 'hpotter'];
     $processor = new DrupalUserProcessor();
-    $hpotter = $processor->provisionDrupalAccount($account, $user_edit, NULL, TRUE);
-
-    $hpotter = user_load_by_name('hpotter');
+    $provisionedAccount = $processor->provisionDrupalAccount($userData, FALSE);
 
     $properties_set = (
       $hpotter->name == 'hpotter' &&
@@ -123,7 +119,7 @@ class DrupalUserProcessorTests extends UnitTestCase {
   public function testSyncToDrupalUser() {
     $this->assertTrue(TRUE);
     return;
-    // TODO.
+    // @TODO: Write test.
     // Test account exists with correct username, mail, fname, puid, puidfield, dn
     // Change some user mock ldap data first, (mail and fname) then sync.
     $account = user_load_by_name('hpotter');
@@ -160,7 +156,7 @@ class DrupalUserProcessorTests extends UnitTestCase {
   public function testApplyAttributesGeneric() {
     $this->assertTrue(TRUE);
     return;
-    // TODO.
+    // @TODO: Write test.
     $sid = 'activedirectory1';
     $tests = [];
 
@@ -234,7 +230,7 @@ class DrupalUserProcessorTests extends UnitTestCase {
   public function testApplyAttributeCompoundToken() {
     $this->assertTrue(TRUE);
     return;
-    // TODO.
+    // @TODO: Write test.
     // Test for compound tokens on create/sync to Drupal user.
     $tests[] = [
       'disabled' => 0,
@@ -264,7 +260,7 @@ class DrupalUserProcessorTests extends UnitTestCase {
   public function testApplyAttributeConstants() {
     $this->assertTrue(TRUE);
     return;
-    // TODO.
+    // @TODO: Write test.
     // Test for constants in use (e.g. "Smith" and "0") instead of tokens e.g. "[sn]" and "[enabled]" on create/sync to Drupal user.
     $tests[] = [
       'disabled' => 0,
@@ -295,7 +291,7 @@ class DrupalUserProcessorTests extends UnitTestCase {
   public function testApplyAttributeCompoundTokens() {
     $this->assertTrue(TRUE);
     return;
-    // TODO.
+    // @TODO: Write test.
     // Test for compound tokens on create/sync to Drupal user.
     $tests[] = [
       'disabled' => 0,
@@ -324,7 +320,7 @@ class DrupalUserProcessorTests extends UnitTestCase {
   public function testApplyAttributeMultipleMailProperty() {
     $this->assertTrue(TRUE);
     return;
-    // TODO.
+    // @TODO: Write test.
     // Test sync of mail property with multiple mail on create/sync to Drupal user.
     $tests[] = [
       'disabled' => 0,
@@ -353,7 +349,7 @@ class DrupalUserProcessorTests extends UnitTestCase {
   public function testApplyAttributeStatusZ() {
     $this->assertTrue(TRUE);
     return;
-    // TODO.
+    // @TODO: Write test.
     // Test sync of status property with value 'z' on create to Drupal user.
     $tests[] = [
       'disabled' => 0,
