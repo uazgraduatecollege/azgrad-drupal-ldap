@@ -127,6 +127,7 @@ class ServerTestForm extends EntityForm {
 
     if ($form_state->get(['ldap_server_test_data'])) {
       $test_data = $form_state->get(['ldap_server_test_data']);
+      $form['#suffix'] = '';
 
       if (isset($test_data['username']) && isset($test_data['ldap_user'])) {
         // This used to be done by theme_ldap_server_ldap_entry_table.
@@ -348,7 +349,7 @@ class ServerTestForm extends EntityForm {
         $mapping[] = "dn = " . $ldap_user['dn'];
         foreach ($ldap_user['attr'] as $key => $value) {
           if (is_array($value)) {
-            $mapping[] = "$key = " . $value[0];
+            $mapping[] = "$key = " . $this->binaryCheck($value[0]);
           }
         }
 
