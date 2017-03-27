@@ -399,10 +399,7 @@ class ServerTestForm extends EntityForm {
         ];
       }
       else {
-        $results_tables['basic'][] = [
-          t('Failed to bind to server. ldap error #') . $result . ' ' . $this->ldapServer->errorMsg('ldap'),
-          t('FAIL'),
-        ];
+        $results_tables['basic'][] = [t('Failed to bind to server. LDAP error: @error', ['@error' => $this->ldapServer->formattedError($result)]), t('FAIL')];
       }
     }
 

@@ -1573,14 +1573,31 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
   public $detailedWatchdogLog = FALSE;
 
   /**
-   *
+   * @TODO: This should only return boolean, not error codes.
    */
   public function hasError() {
     return $this->ldapErrorNumber();
   }
 
   /**
+   * Returns a string for the error to show administrators and in logs.
    *
+   * @param $number
+   * @return string
+   */
+  public function formattedError($number) {
+    return ldap_err2str($number) . ' (' . $number . ')';
+  }
+
+  /**
+   * Do not use, derive from error code directly, since error codes
+   * sometimes are returned by hand and not from connection itself.
+   *
+   * @deprecated
+   *
+   * @param null $type
+   *
+   * @return null|string
    */
   public function errorMsg($type = NULL) {
     if ($type == 'ldap' && $this->connection) {
@@ -1592,19 +1609,8 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
   }
 
   /**
-   *
-   */
-  public function errorName($type = NULL) {
-    if ($type == 'ldap' && $this->connection) {
-      return "LDAP Error: " . ldap_error($this->connection);
-    }
-    else {
-      return NULL;
-    }
-  }
-
-  /**
-   *
+   * TODO: Verify that this comparion is correct and shouldn't be ldap_errno($this->connection) != LDAP_SUCCESS.
+   * TODO: This function should only return error codes, see hasError().
    */
   public function ldapErrorNumber() {
     if ($this->connection && ldap_errno($this->connection)) {
@@ -1625,7 +1631,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
     $ldap_result = self::connect();
 
     if ($ldap_result != self::LDAP_SUCCESS) {
-      $results_tables['basic'][] = [t('Failed to connect to LDAP server.  See Drupal logs for details.') .
+      $results_tables['basic'][] = [t('Failed to connect to LDAP server. See Drupal logs for details.') .
         self::errorMsg('ldap'),
       ];
       $errors = TRUE;
@@ -1637,7 +1643,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
         $results_tables['basic'][] = [t('Successfully bound to server'), t('PASS')];
       }
       else {
-        $results_tables['basic'][] = [t('Failed to bind to server. ldap error #') . $bind_result . ' ' . self::errorMsg('ldap'), t('FAIL')];
+        $results_tables['basic'][] = [t('Failed to bind to server. LDAP error: @error', ['@error' => self::formattedError($bind_result)]), t('FAIL')];
         $errors = TRUE;
       }
     }
