@@ -25,7 +25,7 @@ class ServerTestForm extends EntityForm {
   }
 
   /**
-   *
+   * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state, $ldap_server = NULL) {
     if ($ldap_server) {
@@ -62,13 +62,12 @@ class ServerTestForm extends EntityForm {
       '#default_value' => $this->ldapServer->id(),
     ];
 
-    $form['binding']['bindpw'] = [
-      '#type' => 'password',
-      '#title' => t('Password for non-anonymous search'),
-      '#size' => 20,
-      '#maxlength' => 255,
-      '#description' => t('Leave empty to test with currently stored password.'),
-    ];
+    if ($this->ldapServer->get('bind_method') == 'anon_user' || $this->ldapServer->get('bind_method') == 'user') {
+      $userCredentialsRequired = TRUE;
+    } else {
+      $userCredentialsRequired = FALSE;
+
+    }
 
     $form['testing_drupal_username'] = [
       '#type' => 'textfield',
@@ -76,8 +75,20 @@ class ServerTestForm extends EntityForm {
       '#default_value' => $this->ldapServer->get('testing_drupal_username'),
       '#size' => 30,
       '#maxlength' => 255,
-      '#description' => t('This is optional and used for testing this server\'s configuration against an actual username.  The user need not exist in Drupal and testing will not affect the user\'s LDAP or Drupal Account.'),
+      '#required' => $userCredentialsRequired,
+      '#description' => t('This is normally optional and used for testing this server\'s configuration against an actual username.<br>The user need not exist in Drupal and testing will not affect the user\'s LDAP or Drupal account. <br>Credentials required for testing with user binding.'),
     ];
+
+    if ($userCredentialsRequired) {
+      $form['testing_drupal_userpw'] = [
+        '#type' => 'password',
+        '#title' => t('Testing Drupal User Password'),
+        '#size' => 30,
+        '#maxlength' => 255,
+        '#required' => TRUE,
+        '#description' => t('Credentials required for testing with user binding.'),
+      ];
+    }
 
     $form['testing_drupal_user_dn'] = [
       '#type' => 'textfield',
@@ -85,7 +96,7 @@ class ServerTestForm extends EntityForm {
       '#default_value' => $this->ldapServer->get('testing_drupal_user_dn'),
       '#size' => 120,
       '#maxlength' => 255,
-      '#description' => t('This is optional and used for testing this server\'s configuration against an actual username.  The user need not exist in Drupal and testing will not affect the user\'s LDAP or Drupal Account.'),
+      '#description' => t('This is optional and used for testing this server\'s configuration against an actual username.<br>The user need not exist in Drupal and testing will not affect the user\'s LDAP or Drupal Account.'),
     ];
 
     $form['grp_test_grp_dn'] = [
@@ -99,22 +110,14 @@ class ServerTestForm extends EntityForm {
 
     $form['grp_test_grp_dn_writeable'] = [
       '#type' => 'textfield',
-      '#title' => t('Testing Group DN that is writeable. Warning!  In test, this group will be deleted, created, have members added to it!'),
+      '#title' => t('Testing Group DN that is writeable.'),
       '#default_value' => $this->ldapServer->get('grp_test_grp_dn_writeable'),
       '#size' => 120,
       '#maxlength' => 255,
-      '#description' => t('This is optional and used for testing this server\'s group configuration.'),
+      '#description' => t('<strong>Notice: Functionality not fully ported.</strong><br><strong>Warning: Setting this field means that groups can be deleted, created or have members added to it!</strong><br>This is optional and used for testing this server\'s group configuration.'),
     ];
 
-    if ($this->ldapServer->get('bind_method') == 'anon_user') {
-      $form['testing_drupal_userpw'] = [
-        '#type' => 'password',
-        '#title' => t('Testing Drupal User Password'),
-        '#size' => 30,
-        '#maxlength' => 255,
-        '#description' => t('This is optional and used for testing this server\'s configuration against the username above.'),
-      ];
-    }
+
 
     $form['submit'] = [
       '#type' => 'submit',
@@ -187,19 +190,13 @@ class ServerTestForm extends EntityForm {
         $form['#suffix'] .= '<h2>' . $titles[$table_name] . '</h2>' . drupal_render($settings);
       }
 
-      if (function_exists('dpm') && !empty($test_data['username'])) {
+      if (!empty($test_data['username'])) {
         $user_name = $test_data['username'];
         if ($user = user_load_by_name($user_name)) {
-          dpm("Corresponding Drupal user object for: $user_name");
-          dpm($user);
-          if (function_exists('entity_load_single')) {
-            $user_entity = entity_load_single('user', $user->uid);
-            dpm("Drupal user entity for: $user_name");
-            dpm($user_entity);
-          }
-          dpm("Test Group LDAP Entry");
-          // @FIXME: group_entry is undefined.
-          dpm($test_data['group_entry'][0]);
+          $form['#suffix'] .= '<h3>' . t('Corresponding Drupal user object for @user:', ['@user' => $user_name]) . '</h3>';
+          $form['#suffix'] .= '<pre>' . json_encode($user->toArray(), JSON_PRETTY_PRINT) . '</pre>';
+          $form['#suffix'] .= '<h3>' . t('Corresponding test group LDAP entry:') . '</h3>';
+          $form['#suffix'] .= '<pre>' . json_encode($test_data['group_entry'][0], JSON_PRETTY_PRINT) . '</pre>';
         }
       }
     }
@@ -207,7 +204,7 @@ class ServerTestForm extends EntityForm {
   }
 
   /**
-   *
+   * {@inheritdoc}
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
     $values = $form_state->getValues();
@@ -224,15 +221,13 @@ class ServerTestForm extends EntityForm {
   }
 
   /**
-   *
+   * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
 
     // Pass data back to form builder.
     $form_state->setRebuild(TRUE);
 
-    $errors = FALSE;
-    $has_errors = FALSE;
     $values = $form_state->getValues();
     $id = $values['id'];
     $this->ldapServer = Server::load($id);
@@ -240,27 +235,17 @@ class ServerTestForm extends EntityForm {
     // $result = t('<h1>Test of name </h2>',$server_conf);.
     $results = [];
     $results_tables = [];
-    if ($values['bindpw']) {
-      $bindpw = $values['bindpw'];
-      $bindpw_type = t('entered in form.');
-    }
-    else {
-      $bindpw = NULL;
-      $bindpw_type = t('stored in configuration');
-    }
+
+    $bindpw = NULL;
 
     if ($this->ldapServer->get('bind_method') == 'service_account') {
       $results_tables['basic'][] = [
-        t('Binding with DN for non-anonymous search (%bind_dn).  Using password ', [
-          '%bind_dn' => $this->ldapServer->get('binddn'),
-        ]) . ' ' . $bindpw_type . '.',
-        '',
+        t('Binding with DN for non-anonymous search (%bind_dn).', ['%bind_dn' => $this->ldapServer->get('binddn')]), '',
       ];
     }
     else {
       $results_tables['basic'][] = [
-        t('Binding with null DN for anonymous search.'),
-        '',
+        t('Binding with null DN for anonymous search.'), '',
       ];
     }
 
@@ -275,18 +260,11 @@ class ServerTestForm extends EntityForm {
       ];
 
       // 1. delete test group if it exists.
-      if ($this->ldapServer->dnExists($group_create_test_dn, 'ldap_entry', [
-        'cn',
-        'member',
-      ])
-      ) {
-        $result = $this->ldapServer->groupRemoveGroup($group_create_test_dn, FALSE);
+      if ($this->ldapServer->dnExists($group_create_test_dn, 'ldap_entry', ['cn', 'member'])) {
+        $this->ldapServer->groupRemoveGroup($group_create_test_dn, FALSE);
       }
 
-      $group_exists = $this->ldapServer->dnExists($group_create_test_dn, 'ldap_entry', [
-        'cn',
-        'member',
-      ]);
+      $group_exists = $this->ldapServer->dnExists($group_create_test_dn, 'ldap_entry', ['cn', 'member']);
       $result = ($group_exists === FALSE) ? "PASS" : "FAIL";
       $results_tables['group1'][] = [
         "Starting test without group: $group_create_test_dn ",
