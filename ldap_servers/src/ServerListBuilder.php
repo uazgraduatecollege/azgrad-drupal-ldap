@@ -50,7 +50,11 @@ class ServerListBuilder extends ConfigEntityListBuilder {
     $connection_result = $server->connect();
     if ($server->get('status')) {
       if ($connection_result == Server::LDAP_SUCCESS) {
-        $bind_result = $server->bind();
+        if ($server->get('bind_method') == 'anon' || $server->get('bind_method') == 'anon_user') {
+          $bind_result = $server->bind(NULL, NULL, TRUE);
+        } else {
+          $bind_result = $server->bind();
+        }
         if ($bind_result == Server::LDAP_SUCCESS) {
           return t('Server available');
         }

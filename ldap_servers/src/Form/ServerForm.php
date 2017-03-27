@@ -497,7 +497,7 @@ class ServerForm extends EntityForm {
       }
     }
 
-    if ($form_state->getValue('bind_method') != 'service_Account') {
+    if ($form_state->getValue('bind_method') != 'service_account') {
       $new_configuration->set('binddn', NULL);
       $new_configuration->set('bindpw', NULL);
     }
