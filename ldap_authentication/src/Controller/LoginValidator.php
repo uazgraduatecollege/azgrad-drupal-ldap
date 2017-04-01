@@ -266,7 +266,7 @@ class LoginValidator {
 
       if (!$this->ldapUser) {
         if ($this->detailedLogging) {
-          \Drupal::logger('ldap_authentication')->debug('%username: Error trying server %id with %bind_method: %error', [
+          \Drupal::logger('ldap_authentication')->debug('%username: User not found for server %id with %bind_method.', [
             '%username' => $this->authName,
             '%error' => $this->serverDrupalUser->formattedError($this->serverDrupalUser->ldapErrorNumber()),
             '%bind_method' => $this->serverDrupalUser->getFormattedBind(),
