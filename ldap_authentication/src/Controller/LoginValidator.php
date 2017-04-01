@@ -266,15 +266,15 @@ class LoginValidator {
 
       if (!$this->ldapUser) {
         if ($this->detailedLogging) {
-          \Drupal::logger('ldap_authentication')->debug('%username: Error trying server %id with %bind_method: %err_text', [
+          \Drupal::logger('ldap_authentication')->debug('%username: Error trying server %id with %bind_method: %error', [
             '%username' => $this->authName,
-            '%err_text' => $this->serverDrupalUser->errorMsg('ldap'),
+            '%error' => $this->serverDrupalUser->formattedError($this->serverDrupalUser->ldapErrorNumber()),
             '%bind_method' => $this->serverDrupalUser->getFormattedBind(),
             '%id' => $this->serverDrupalUser->id(),
           ]
           );
         }
-        if ($this->serverDrupalUser->ldapErrorNumber()) {
+        if ($this->serverDrupalUser->hasError()) {
           $authenticationResult = self::AUTHENTICATION_FAILURE_SERVER;
           break;
         }
@@ -339,19 +339,22 @@ class LoginValidator {
     if ($this->serverDrupalUser->get('bind_method') == 'user') {
       $loginValid = TRUE;
     }
-    elseif ($this->serverDrupalUser->bind($this->ldapUser['dn'], $password, FALSE) == Server::LDAP_SUCCESS) {
-      $loginValid = TRUE;
-    }
     else {
-      if ($this->detailedLogging) {
-        \Drupal::logger('ldap_authentication')->debug('%username: Error testing user credentials on server %id with %bind_method. Error: %err_text', [
-          '%username' => $this->authName,
-          '%bind_method' => $this->serverDrupalUser->getFormattedBind(),
-          '%id' => $this->serverDrupalUser->id(),
-          '%err_text' => $this->serverDrupalUser->errorMsg('ldap'),
-        ]);
+      $bindResult = $this->serverDrupalUser->bind($this->ldapUser['dn'], $password, FALSE);
+      if ($bindResult == Server::LDAP_SUCCESS) {
+        $loginValid = TRUE;
+      } else {
+        if ($this->detailedLogging) {
+          \Drupal::logger('ldap_authentication')->debug('%username: Error testing user credentials on server %id with %bind_method. Error: %err_text', [
+            '%username' => $this->authName,
+            '%bind_method' => $this->serverDrupalUser->getFormattedBind(),
+            '%id' => $this->serverDrupalUser->id(),
+            '%err_text' => $this->serverDrupalUser->formattedError($bindResult),
+          ]);
+        }
       }
     }
+
     return $loginValid;
   }
 
@@ -396,11 +399,11 @@ class LoginValidator {
             '%username: Trying server %id where bind_method = %bind_method.  Error: %err_text', [
               '%username' => $authName,
               '%bind_method' => $this->serverDrupalUser->get('bind_method'),
-              '%err_text' => $this->serverDrupalUser->errorMsg('ldap'),
+              '%err_text' => $this->serverDrupalUser->formattedError($this->serverDrupalUser->ldapErrorNumber()),
             ]
           );
         }
-        if ($this->serverDrupalUser->ldapErrorNumber()) {
+        if ($this->serverDrupalUser->hasError()) {
           $authenticationResult = self::AUTHENTICATION_FAILURE_SERVER;
           break;
         }
@@ -981,7 +984,7 @@ class LoginValidator {
         \Drupal::logger('ldap_authentication')
           ->debug('%username: Trying server %id where bind_method = %bind_method.  Error: %err_text', [
             '%username' => $this->authName,
-            '%err_text' => $this->serverDrupalUser->errorMsg('ldap'),
+            '%err_text' => $this->serverDrupalUser->formattedError($bind_success),
             '%bind_method' => $this->serverDrupalUser->get('bind_method'),
           ]);
       }
@@ -1018,16 +1021,14 @@ class LoginValidator {
 
     if (!$bind_success) {
       if ($this->detailedLogging) {
-        $tokens['%err_text'] = $this->serverDrupalUser->errorMsg('ldap');
         \Drupal::logger('ldap_authentication')
           ->debug('%username: Trying server %id where bind_method = %bind_method.  Error: %err_text',
             [
               '%username' => $this->authName,
               '%bind_method' => $this->serverDrupalUser->get('bind_method'),
-              '%err_text' => $this->serverDrupalUser->errorMsg('ldap'),
+              '%err_text' => $this->serverDrupalUser->formattedError($bind_success),
             ]
           );
-        $tokens['%err_text'] = NULL;
       }
       if ($this->serverDrupalUser->get('bind_method') == 'user') {
         return self::AUTHENTICATION_FAILURE_CREDENTIALS;
