@@ -237,6 +237,7 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state, $re
    * IV. test credentials and if available get corresponding ldap user and ldap server
    */
   list($authentication_result, $ldap_user, $ldap_server_authenticated_on) = ldap_authentication_test_credentials($auth_conf, $sso_login, $authname, $form_state['values']['pass'], $watchdog_tokens);
+  drupal_alter('ldap_entry', $ldap_user);
   if ($authentication_result != LDAP_AUTHENTICATION_RESULT_SUCCESS) {
     ldap_authentication_fail_response($authentication_result, $auth_conf, $detailed_watchdog_log, $watchdog_tokens);
     return;
