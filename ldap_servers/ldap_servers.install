@@ -761,7 +761,7 @@ function ldap_servers_update_7201() {
       'title' => 'Changes in 7.x-1.x to 7.x-2.x update')
     );
 
-  watchdog('ldap_servers', $summary, WATCHDOG_INFO);
+  watchdog('ldap_servers', $summary, array(), WATCHDOG_INFO);
   return $summary;
 
 
