@@ -12,9 +12,11 @@ class DynamicUserHelpLink extends DeriverBase {
    * {@inheritdoc}
    */
   public function getDerivativeDefinitions($base_plugin_definition) {
+    $definitions = array();
     if ($this->accessLdapHelpTab()) {
-      return $this->addLink($base_plugin_definition);
+      $definitions = $this->addLink($base_plugin_definition);
     }
+    return $definitions;
   }
 
   private function accessLdapHelpTab() {
