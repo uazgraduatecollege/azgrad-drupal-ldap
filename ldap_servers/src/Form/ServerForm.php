@@ -143,7 +143,6 @@ class ServerForm extends EntityForm {
     $form['bind']['bindpw'] = [
       '#type' => 'password',
       '#title' => t('Password for non-anonymous search'),
-      '#placeholder' => $server->get('bindpw') ? t("Password exists in database.") : t("Warning: No password exists in database."),
       '#size' => 80,
       '#states' => [
         'visible' => [
@@ -154,6 +153,10 @@ class ServerForm extends EntityForm {
         ],
       ],
     ];
+
+    if ($server->get('bindpw')) {
+      $form['bind']['bindpw']['#attributes'] = ['value' => '****'];
+    }
 
     $form['users'] = [
       '#type' => 'details',
@@ -480,43 +483,38 @@ class ServerForm extends EntityForm {
    * {@inheritdoc}
    */
   public function save(array $form, FormStateInterface $form_state) {
-    /** @var \Drupal\ldap_servers\Entity\Server $new_configuration */
-    $new_configuration = $this->entity;
-
-    // Handle the password as the form is empty.
-    if (NULL !== $form_state->getValue('bindpw') && $form_state->getValue('bindpw')) {
-      $new_configuration->set('bindpw', $form_state->getValue('bindpw'));
-    }
-    // If there isn't a password then load the existing one (unless this an anonymous bind server)
-    elseif ($form_state->getValue('bind_method') != 'anon' || $form_state->getValue('bind_method') != 'anon_user') {
-      $factory = \Drupal::service('ldap.servers');
-      /** @var \Drupal\ldap_servers\Entity\Server $existing_configuration */
-      $existing_configuration = $factory->getServerById($new_configuration->id());
-      if ($existing_configuration && $existing_configuration->get('bindpw')) {
-        $new_configuration->set('bindpw', $existing_configuration->get('bindpw'));
+    /** @var \Drupal\ldap_servers\Entity\Server $this->entity */
+    if ($form_state->getValue('bind_method') != 'service_account') {
+      $this->entity->set('binddn', NULL);
+      $this->entity->set('bindpw', NULL);
+    } else {
+      if ($form_state->getValue('bindpw') != '****') {
+        $this->entity->set('bindpw', $form_state->getValue('bindpw'));
+      }
+      else {
+        // Fetch existing password since the placeholder is present.
+        $oldConfiguration = Server::load($this->entity->id());
+        if ($oldConfiguration && $oldConfiguration->get('bindpw')) {
+          $this->entity->set('bindpw', $oldConfiguration->get('bindpw'));
+        }
       }
     }
 
-    if ($form_state->getValue('bind_method') != 'service_account') {
-      $new_configuration->set('binddn', NULL);
-      $new_configuration->set('bindpw', NULL);
-    }
-
-    $status = $new_configuration->save();
+    $status = $this->entity->save();
 
     switch ($status) {
       case SAVED_NEW:
         drupal_set_message($this->t('Created the %label Server.', [
-          '%label' => $new_configuration->label(),
+          '%label' => $this->entity->label(),
         ]));
         break;
 
       default:
         drupal_set_message($this->t('Saved the %label Server.', [
-          '%label' => $new_configuration->label(),
+          '%label' => $this->entity->label(),
         ]));
     }
-    $form_state->setRedirectUrl($new_configuration->urlInfo('collection'));
+    $form_state->setRedirectUrl($this->entity->urlInfo('collection'));
   }
 
 }
