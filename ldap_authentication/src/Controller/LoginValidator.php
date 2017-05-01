@@ -622,7 +622,7 @@ class LoginValidator {
    */
   private function fixOutdatedEmailAddress() {
 
-    if (!($this->config->get('emailTemplateUsageNeverUpdate') && $this->emailTemplateUsed)) {
+    if ($this->config->get('emailTemplateUsageNeverUpdate') && $this->emailTemplateUsed) {
       return FALSE;
     }
 
