@@ -436,7 +436,9 @@ class TokenProcessor {
           switch ($attr_name) {
 
             case 'user':
+            case 'user-only':
               $pwd = self::passwordStorage('get');
+              $value = ($pwd) ? $pwd : NULL;
               break;
 
             case 'user-random':
@@ -623,6 +625,7 @@ class TokenProcessor {
     }
     $token_keys[] = 'password.random';
     $token_keys[] = 'password.user-random';
+    $token_keys[] = 'password.user-only';
     return $token_keys;
   }
 

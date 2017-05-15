@@ -524,7 +524,7 @@ class DrupalUserProcessor {
 
     if ($direction == LdapConfiguration::PROVISION_TO_LDAP) {
       $availableUserAttributes['[password.random]'] = [
-        'name' => 'Pwd: Random',
+        'name' => 'Password: Random password',
         'source' => '',
         'direction' => LdapConfiguration::PROVISION_TO_LDAP,
         'enabled' => TRUE,
@@ -539,7 +539,22 @@ class DrupalUserProcessor {
 
       // Use user password when available fall back to random pwd.
       $availableUserAttributes['[password.user-random]'] = [
-        'name' => 'Pwd: User or Random',
+        'name' => 'Password: Plain user password or random',
+        'source' => '',
+        'direction' => LdapConfiguration::PROVISION_TO_LDAP,
+        'enabled' => TRUE,
+        'prov_events' => [
+          LdapConfiguration::$eventCreateDrupalUser,
+          LdapConfiguration::$eventSyncToDrupalUser,
+        ],
+        'config_module' => 'ldap_user',
+        'prov_module' => 'ldap_user',
+        'configurable_to_ldap' => TRUE,
+      ];
+
+      // use user password, do not modify if unavailable
+      $availableUserAttributes['[password.user-only]'] = [
+        'name' => 'Password: Plain user password',
         'source' => '',
         'direction' => LdapConfiguration::PROVISION_TO_LDAP,
         'enabled' => TRUE,

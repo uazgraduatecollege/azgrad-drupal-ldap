@@ -176,10 +176,17 @@ function ldap_user_form_user_login_form_alter(&$form, FormStateInterface $form_s
 }
 
 /**
+ * Implements hook_form_FORM_ID_alter(). for user profile form.
+ */
+function ldap_user_form_user_form_alter(&$form, $form_state) {
+  array_unshift($form['#validate'], 'ldap_user_grab_password_validate');
+}
+
+/**
  * Implements hook_form_FORM_ID_alter(). for user_register_form.
  */
 function ldap_user_form_user_profile_form_alter(&$form, $form_state) {
-  array_unshift($form['#submit'], 'ldap_user_grab_password_validate');
+  array_unshift($form['#validate'], 'ldap_user_grab_password_validate');
 }
 
 /**
