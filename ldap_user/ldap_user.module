@@ -217,50 +217,37 @@ function ldap_user_form_user_register_form_alter(&$form, $form_state) {
     return;
   }
 
-  $ldap_fieldset = [];
-  $ldap_fieldset['ldap_user_association'] = [
+  $form['ldap_user_fields']['#type'] = 'fieldset';
+  $form['ldap_user_fields']['#title'] = t('LDAP Options');
+  $form['ldap_user_fields']['#description'] = t('By enabling options in the LDAP user configuration, you can allow the creation of LDAP accounts and define the conflict resolution for associated accounts.');
+  $form['ldap_user_fields']['#collapsible'] = TRUE;
+  $form['ldap_user_fields']['#collapsed'] = FALSE;
+
+  $form['ldap_user_fields']['ldap_user_association'] = [
     '#type' => 'radios',
     '#options' => [
       LdapConfiguration::$manualAccountConflictLdapAssociate => t('Make this an LDAP associated account.'),
       LdapConfiguration::$manualAccountConflictNoLdapAssociate => t('Do not make this an LDAP associated account.'),
     ],
-    '#default_value' => LdapConfiguration::$manualAccountConflictNoLdapAssociate,
-    '#description' => t('If a related LDAP account can not be found, a validation error will appear and the account will not be created.'),
+    '#description' => t('If you choose associated account and an LDAP account cannot be found, a validation error will appear and the account will not be created.'),
     '#title' => t('LDAP Entry Association.'),
   ];
 
   if (LdapConfiguration::provisionAvailableToLDAP(LdapConfiguration::PROVISION_DRUPAL_USER_ON_USER_UPDATE_CREATE)) {
-    $ldap_fieldset['ldap_user_association']['#disabled'] = TRUE;
-    $ldap_fieldset['ldap_user_association']['#description'] = t('Since "Create
-      or Sync to Drupal user anytime a Drupal user account is created or updated"
-      is selected at admin/config/people/ldap/user, this option will have no
-      effect so its disabled.');
+    $form['ldap_user_fields']['ldap_user_association']['#type'] = 'hidden';
   }
   elseif (\Drupal::config('ldap_user.settings')->get('manualAccountConflict') != LdapConfiguration::$manualAccountConflictShowOptionOnForm) {
-    $ldap_fieldset['ldap_user_association']['#disabled'] = TRUE;
-    $ldap_fieldset['ldap_user_association']['#description'] = t('To enable
-      this an LDAP server must be selected for provisioning to Drupal in
-      admin/config/people/ldap/user and "Show option on user create form..." must be selected.');
+    $form['ldap_user_fields']['ldap_user_association']['#type'] = 'hidden';
+  } else {
+    $form['ldap_user_fields']['ldap_user_association']['#default_value'] = LdapConfiguration::$manualAccountConflictLdapAssociate;
   }
 
-  $ldap_fieldset['ldap_user_create_ldap_acct'] = [
+  $form['ldap_user_fields']['ldap_user_create_ldap_acct'] = [
     '#type' => 'checkbox',
     '#title' => t('Create corresponding LDAP entry.'),
   ];
   if (!LdapConfiguration::provisionAvailableToLDAP(LdapConfiguration::PROVISION_DRUPAL_USER_ON_USER_ON_MANUAL_CREATION)) {
-    $ldap_fieldset['ldap_user_create_ldap_acct']['#disabled'] = TRUE;
-    $ldap_fieldset['ldap_user_create_ldap_acct']['#description'] = t('To enable
-      this an LDAP server must be selected for provisioning to Drupal in
-      admin/config/people/ldap/user and manual creation of LDAP accounts
-      must be enabled also.');
-  }
-
-  if (count($ldap_fieldset) > 0) {
-    $form['ldap_user_fields'] = $ldap_fieldset;
-    $form['ldap_user_fields']['#type'] = 'fieldset';
-    $form['ldap_user_fields']['#title'] = t('LDAP Options');
-    $form['ldap_user_fields']['#collapsible'] = TRUE;
-    $form['ldap_user_fields']['#collapsed'] = FALSE;
+    $form['ldap_user_fields']['ldap_user_create_ldap_acct']['#type'] = 'hidden';
   }
 
   $form['#validate'][] = 'ldap_user_form_register_form_validate';
