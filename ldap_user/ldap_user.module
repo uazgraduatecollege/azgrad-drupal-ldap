@@ -965,7 +965,6 @@ function ldap_user_user_insert(&$user_edit, $account, $category) {
  */
 
 function ldap_user_user_update(&$user_edit, $account, $category) {
-  //debug("ldap_user_user_update, category=$category"); debug($user_edit); debug($account); // ldap_user_user_insert, category='. $category . 'account->status = ' . $account->status);
   if (ldap_user_ldap_exclude($account, $user_edit)) {
     return;
   }
@@ -1011,7 +1010,6 @@ function ldap_user_user_update(&$user_edit, $account, $category) {
  */
 
 function ldap_user_user_presave(&$user_edit, $account, $category) {
- //debug("ldap_user_user_presave, category=$category"); debug($user_edit); debug($account); // ldap_user_user_insert, category='. $category . 'account->status = ' . $account->status);
 
   if (ldap_user_ldap_exclude($account, $user_edit)) {
     return;
