@@ -100,7 +100,8 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
         <li><code>cn=students,ou=groups,dc=hogwarts,dc=edu</code></li>
         <li><code>cn=gryffindor,ou=groups,dc=hogwarts,dc=edu</code></li>
         <li><code>cn=faculty,ou=groups,dc=hogwarts,dc=edu</code></li>
-        </ul>'),
+        </ul>
+        <strong>Warning: If you enable "Create <em>@consumer_namePlural</em> if they do not exist" under conditions, all LDAP groups will be synced!</strong>', $tokens),
       '#collapsible' => TRUE,
     ];
 
@@ -109,16 +110,6 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
       '#title' => t('Convert full DN to value of first attribute before mapping'),
       '#description' => t('Example: <code>cn=students,ou=groups,dc=hogwarts,dc=edu</code> would be converted to <code>students</code>'),
       '#default_value' => isset($provider_config['filter_and_mappings'], $provider_config['filter_and_mappings']['use_first_attr_as_groupid']) ? $provider_config['filter_and_mappings']['use_first_attr_as_groupid'] : '',
-    ];
-
-    $form['filter_and_mappings']['use_filter'] = [
-      '#type' => 'checkbox',
-      '#title' => t('Only grant "@consumer_namePlural" that match a filter below. (Granting without filters currently unavailable)', $tokens),
-      '#default_value' => isset($provider_config['filter_and_mappings'], $provider_config['filter_and_mappings']['use_filter']) ? $provider_config['filter_and_mappings']['use_filter'] : 1,
-      '#disabled' => TRUE,
-      '#description' => t('If enabled, only below mapped @consumer_namePlural will be assigned (e.g. students and administrator).<br>
-        <strong>If not checked, @consumer_namePlural not mapped below also may be created and granted.</strong><br>This can lead to hundreds of @consumer_namePlural being created if "Create @consumer_namePlural if they do not exist" is enabled below.',
-        $tokens),
     ];
 
     return $form;

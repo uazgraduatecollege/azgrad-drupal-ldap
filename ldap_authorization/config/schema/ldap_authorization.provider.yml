@@ -12,9 +12,6 @@ authorization.provider.plugin.ldap_authorization:
       type: boolean
       label: 'Convert full dn to value of first attribute before mapping.'
     # The below should be in Drupal roles not LDAP
-    use_filter:
-      type: boolean
-      label: 'Only grant the roles that match a filter below.'
     synchronization_modes:
       type: boolean
       label: 'When should roles be granted/revoked from user?'
