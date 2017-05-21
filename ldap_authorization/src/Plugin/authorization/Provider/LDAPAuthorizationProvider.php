@@ -3,6 +3,7 @@
 namespace Drupal\ldap_authorization\Plugin\authorization\Provider;
 
 use Drupal\authorization\AuthorizationSkipAuthorization;
+use Drupal\authorization\Entity\AuthorizationProfile;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\authorization\Provider\ProviderPluginBase;
@@ -13,7 +14,7 @@ use Drupal\ldap_user\Helper\ExternalAuthenticationHelper;
  * @AuthorizationProvider(
  *   id = "ldap_provider",
  *   label = @Translation("LDAP Authorization"),
- *   description = @Translation("LDAP provider to the Authorization API.")
+ *   description = @Translation("Provider for LDAP group authorization.")
  * )
  */
 class LDAPAuthorizationProvider extends ProviderPluginBase {
@@ -99,9 +100,7 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
         <li><code>cn=students,ou=groups,dc=hogwarts,dc=edu</code></li>
         <li><code>cn=gryffindor,ou=groups,dc=hogwarts,dc=edu</code></li>
         <li><code>cn=faculty,ou=groups,dc=hogwarts,dc=edu</code></li>
-        <li><code>cn=probation students,ou=groups,dc=hogwarts,dc=edu</code></li>
-        </ul>
-        <p><strong>Mappings are used to convert and filter these group representations to @consumer_namePlural.</strong></p> @consumer_mappingDirections', $tokens),
+        </ul>'),
       '#collapsible' => TRUE,
     ];
 
@@ -114,28 +113,15 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
 
     $form['filter_and_mappings']['use_filter'] = [
       '#type' => 'checkbox',
-      '#title' => t('Only grant "@consumer_namePlural" that match a filter below.', $tokens),
-      '#default_value' => isset($provider_config['filter_and_mappings'], $provider_config['filter_and_mappings']['use_filter']) ? $provider_config['filter_and_mappings']['use_filter'] : '',
+      '#title' => t('Only grant "@consumer_namePlural" that match a filter below. (Granting without filters currently unavailable)', $tokens),
+      '#default_value' => isset($provider_config['filter_and_mappings'], $provider_config['filter_and_mappings']['use_filter']) ? $provider_config['filter_and_mappings']['use_filter'] : 1,
+      '#disabled' => TRUE,
       '#description' => t('If enabled, only below mapped @consumer_namePlural will be assigned (e.g. students and administrator).<br>
-        <strong>If not checked, @consumer_namePlural not mapped below also may be created and granted (e.g. gryffindor and probation students).  In some LDAPs this can lead to hundreds of @consumer_namePlural being created if "Create @consumer_namePlural if they do not exist" is enabled below.</strong>',
+        <strong>If not checked, @consumer_namePlural not mapped below also may be created and granted.</strong><br>This can lead to hundreds of @consumer_namePlural being created if "Create @consumer_namePlural if they do not exist" is enabled below.',
         $tokens),
     ];
 
     return $form;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function validateConfigurationForm(array &$form, FormStateInterface $form_state) {
-    $values = $form_state->getValues();
-    if (isset($values['filter_and_mappings']['mappings'])) {
-      // @FIXME: Mappings is never present, see if we can move this to authorization.
-      $mappings = $values['filter_and_mappings']['mappings'];
-      $mappings = $this->normalizeMappings($this->pipeListToArray($mappings, TRUE));
-      $values['filter_and_mappings']['mappings'] = $mappings;
-      $form_state->setValues($values);
-    }
   }
 
   /**
@@ -231,13 +217,12 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
   public function filterProposals($proposed_ldap_authorizations, $op = NULL, $provider_mapping) {
     $filtered_proposals = [];
     foreach ($proposed_ldap_authorizations as $key => $value) {
-      // Match regular expressions.
       if ($provider_mapping['is_regex']) {
         $pattern = $provider_mapping['query'];
         try {
           if (preg_match($pattern, $value, $matches)) {
-            // If there is a subpattern then return the first one.
-            // @TODO support named subpatterns
+            // If there is a sub-pattern then return the first one.
+            // @TODO support named sub-patterns.
             if (count($matches) > 1) {
               $filtered_proposals[$key] = $matches[1];
             }
@@ -247,7 +232,7 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
           }
         }
         catch (\Exception $e) {
-          // @TODO log errors.
+          \Drupal::loggger('ldap')->error('Error in matching regular expression @regex', ['@regex' => $pattern]);
         }
       }
       elseif ($value == $provider_mapping['query']) {
@@ -289,56 +274,18 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
     return $proposals;
   }
 
-  /**
-   * @param $mappings
-   * @return string
-   */
-  protected function mappingsToPipeList($mappings) {
-    $result_text = "";
-    foreach ($mappings as $map) {
-      $result_text .= $map['from'] . '|' . $map['user_entered'] . "\n";
-    }
-    return $result_text;
-  }
+  public function validateRowForm(array &$form, FormStateInterface $form_state) {
+    parent::validateRowForm($form, $form_state);
 
-  /**
-   * @param $mapping_list_txt
-   * @param bool $make_item0_lowercase
-   * @return array
-   */
-  protected function pipeListToArray($mapping_list_txt, $make_item0_lowercase = FALSE) {
-    $result_array = [];
-    $mappings = preg_split('/[\n\r]+/', $mapping_list_txt);
-    foreach ($mappings as $line) {
-      if (count($mapping = explode('|', trim($line))) == 2) {
-        $item_0 = ($make_item0_lowercase) ? Unicode::strtolower(trim($mapping[0])) : trim($mapping[0]);
-        $result_array[] = [$item_0, trim($mapping[1])];
+    foreach ($form_state->getValues() as $value) {
+      if (isset($value['provider_mappings'])) {
+        if ($value['provider_mappings']['is_regex'] == 1) {
+          if (@preg_match($value['provider_mappings']['query'], NULL) === FALSE) {
+            $form_state->setErrorByName('mapping', t('Invalid regular expression'));
+          }
+        }
       }
     }
-    return $result_array;
-  }
-
-  /**
-   * @see LdapAuthorizationConsumerAbstract::normalizeMappings
-   * @param $mappings
-   * @return array
-   */
-  public function normalizeMappings($mappings) {
-    $new_mappings = [];
-    // In rid => role name format.
-    $roles_by_name = user_roles(TRUE);
-    foreach ($mappings as $i => $mapping) {
-      $new_mapping = [];
-      $new_mapping['user_entered'] = $mapping[1];
-      $new_mapping['from'] = $mapping[0];
-      $new_mapping['normalized'] = $mapping[1];
-      $new_mapping['simplified'] = $mapping[1];
-      $new_mapping['valid'] = (boolean) (!empty($roles_by_name[$mapping[1]]));
-      $new_mapping['error_message'] = ($new_mapping['valid']) ? '' : t("Role %role_name does not exist and role creation is not enabled.", ['%role' => $mapping[1]]);
-      $new_mappings[] = $new_mapping;
-    }
-
-    return $new_mappings;
   }
 
 }
