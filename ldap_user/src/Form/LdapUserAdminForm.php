@@ -97,11 +97,12 @@ class LdapUserAdminForm extends ConfigFormBase {
     $form['manual_drupal_account_editing']['manualAccountConflict'] = [
       '#type' => 'radios',
       '#options' => [
-        LdapConfiguration::$manualAccountConflictReject => t('Reject manual creation of Drupal accounts which conflict with LDAP accounts.'),
-        LdapConfiguration::$manualAccountConflictLdapAssociate => t('Associate manually created Drupal accounts with related LDAP accounts, if available.'),
-        LdapConfiguration::$manualAccountConflictShowOptionOnForm => t('Show option on user create form to determine if accounts should be associated.'),
+        LdapConfiguration::$manualAccountConflictLdapAssociate => t('Associate accounts, if available.'),
+        LdapConfiguration::$manualAccountConflictNoLdapAssociate => t('Do not associate accounts, allow conflicting accounts.'),
+        LdapConfiguration::$manualAccountConflictReject => t('Do not associate accounts, reject conflicting accounts.'),
+        LdapConfiguration::$manualAccountConflictShowOptionOnForm => t('Show option on user create form to associate or not.'),
       ],
-      '#title' => t('How to resolve LDAP conflicts with manually  created Drupal accounts.'),
+      '#title' => t('How to resolve LDAP conflicts with manually created user accounts.'),
       '#description' => t('This applies only to accounts created manually through admin/people/create for which an LDAP entry can be found on the LDAP server selected in "LDAP Servers Providing Provisioning Data"'),
       '#default_value' => $config->get('manualAccountConflict'),
     ];

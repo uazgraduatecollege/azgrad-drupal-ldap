@@ -226,18 +226,18 @@ function ldap_user_form_user_register_form_alter(&$form, $form_state) {
   $form['ldap_user_fields']['ldap_user_association'] = [
     '#type' => 'radios',
     '#options' => [
-      LdapConfiguration::$manualAccountConflictLdapAssociate => t('Make this an LDAP associated account.'),
-      LdapConfiguration::$manualAccountConflictNoLdapAssociate => t('Do not make this an LDAP associated account.'),
+      LdapConfiguration::$manualAccountConflictLdapAssociate => t('Associate account'),
+      LdapConfiguration::$manualAccountConflictNoLdapAssociate => t('Do not associated account'),
     ],
     '#description' => t('If you choose associated account and an LDAP account cannot be found, a validation error will appear and the account will not be created.'),
     '#title' => t('LDAP Entry Association.'),
   ];
 
   if (LdapConfiguration::provisionAvailableToLDAP(LdapConfiguration::PROVISION_DRUPAL_USER_ON_USER_UPDATE_CREATE)) {
-    $form['ldap_user_fields']['ldap_user_association']['#type'] = 'hidden';
+    $form['ldap_user_fields']['ldap_user_association']['#access'] = FALSE;
   }
   elseif (\Drupal::config('ldap_user.settings')->get('manualAccountConflict') != LdapConfiguration::$manualAccountConflictShowOptionOnForm) {
-    $form['ldap_user_fields']['ldap_user_association']['#type'] = 'hidden';
+    $form['ldap_user_fields']['ldap_user_association']['#access'] = FALSE;
   } else {
     $form['ldap_user_fields']['ldap_user_association']['#default_value'] = LdapConfiguration::$manualAccountConflictLdapAssociate;
   }
@@ -247,7 +247,7 @@ function ldap_user_form_user_register_form_alter(&$form, $form_state) {
     '#title' => t('Create corresponding LDAP entry.'),
   ];
   if (!LdapConfiguration::provisionAvailableToLDAP(LdapConfiguration::PROVISION_DRUPAL_USER_ON_USER_ON_MANUAL_CREATION)) {
-    $form['ldap_user_fields']['ldap_user_create_ldap_acct']['#type'] = 'hidden';
+    $form['ldap_user_fields']['ldap_user_create_ldap_acct']['#access'] = FALSE;
   }
 
   $form['#validate'][] = 'ldap_user_form_register_form_validate';
@@ -265,9 +265,14 @@ function ldap_user_form_user_register_form_alter(&$form, $form_state) {
 function ldap_user_form_register_form_validate($form, FormStateInterface &$form_state) {
   $config = \Drupal::config('ldap_user.settings');
 
+  if (empty($form_state->getValue('ldap_user_association'))) {
+    $form_state->setValue('ldap_user_association', $config->get('manualAccountConflict'));
+  }
+
   if ($form_state->getValue('ldap_user_association') == LdapConfiguration::$manualAccountConflictNoLdapAssociate) {
     $form_state->set('ldap_user_ldap_exclude', 1);
   }
+
   $factory = \Drupal::service('ldap.servers');
 
   /**
@@ -278,16 +283,8 @@ function ldap_user_form_register_form_validate($form, FormStateInterface &$form_
     $form_state->getValue('ldap_user_association') == LdapConfiguration::$manualAccountConflictLdapAssociate) {
     if (empty($config->get('drupalAcctProvisionServer'))) {
       $form_state->setErrorByName('ldap_user_missing_', t('The provisioning server is not set up correctly.'));
-      \Drupal::logger('ldap_user')->error('No server available for provisioning to Drupal.');
-    }
-    else {
-      $ldap_user = $factory->getUserDataFromServerByIdentifier($form_state->getValue('name'), $config->get('drupalAcctProvisionServer'), 'ldap_user_prov_to_drupal');
-      if (!$ldap_user) {
-        $form_state->setErrorByName('ldap_user_association', t(
-            'User %name does not have a corresponding LDAP Entry (dn). Under LDAP options, you may NOT select "Make this an LDAP Associated Account"',
-            ['%name' => $form_state->getValue('name')])
-        );
-      }
+      \Drupal::logger('ldap_user')
+        ->error('No server available for provisioning to Drupal.');
     }
   }
 
@@ -295,7 +292,8 @@ function ldap_user_form_register_form_validate($form, FormStateInterface &$form_
   if ($form_state->getValue('ldap_user_create_ldap_acct')) {
     if (empty($config->get('ldapEntryProvisionServer'))) {
       $form_state->setErrorByName('ldap_user_missing_', t('The provisioning server is not set up correctly.'));
-      \Drupal::logger('ldap_user')->error('No server available for provisioning to LDAP.');
+      \Drupal::logger('ldap_user')
+        ->error('No server available for provisioning to LDAP.');
     }
     else {
       $ldap_user = $factory->getUserDataFromServerByIdentifier($form_state->getValue('name'), $config->get('ldapEntryProvisionServer'), 'ldap_user_prov_to_ldap');
@@ -303,12 +301,26 @@ function ldap_user_form_register_form_validate($form, FormStateInterface &$form_
         $form_state->setErrorByName(
           'ldap_user_create_ldap_acct', t(
             'User %name already has a corresponding LDAP Entry (%dn). Uncheck "Create corresponding LDAP entry" to allow this Drupal user to be created. Select "Make this an LDAP associated account" to associate this account with the ldap entry.',
-            ['%dn' => $ldap_user['dn'], '%name' => $form_state->getValue('name')])
+            [
+              '%dn' => $ldap_user['dn'],
+              '%name' => $form_state->getValue('name')
+            ])
         );
       }
     }
   }
 
+  // If a conflict with an LDAP account exists (no association), throw error.
+  if ($form_state->getValue('ldap_user_association') == LdapConfiguration::$manualAccountConflictReject) {
+    $ldap_user = $factory->getUserDataFromServerByIdentifier($form_state->getValue('name'), $config->get('drupalAcctProvisionServer'));
+    if ($ldap_user) {
+      $form_state->setErrorByName(
+        'name', t(
+          'User %name conflicts with an LDAP Entry (%dn). Creation blocked per your configuration.',
+          ['%dn' => $ldap_user['dn'], '%name' => $form_state->getValue('name')])
+      );
+    }
+  }
 }
 
 /**
@@ -319,22 +331,22 @@ function ldap_user_form_register_form_submit2(&$form, FormState $form_state) {
   $values = $form_state->getValues();
   $ldap_user_association_set = FALSE;
 
-  // Create LDAP account?
-  if (@$values['ldap_user_create_ldap_acct']) {
+  // Create LDAP account.
+  if ($values['ldap_user_create_ldap_acct']) {
     if ($account = user_load_by_name($values['name'])) {
       $ldapProcessor = new LdapUserProcessor();
+      // We check that the entry does not exist, validation should prevent this in nearly all cases.
       $ldap_provision_entry = $ldapProcessor->getProvisionRelatedLdapEntry($account);
-      // Does the LDAP user exist? If not then create it.
       if (!$ldap_provision_entry) {
         $provision_result = $ldapProcessor->provisionLdapEntry($account);
+        if ($provision_result['status'] == 'fail') {
+          drupal_set_message(t('An error occurred while creating your LDAP entry, please see the log for details.'), 'error');
+        }
       }
-      // If so then associate it.
       else {
+        // Fallback for collisions in registration process.
         $ldap_user_association_set = TRUE;
       }
-    }
-    else {
-      // don't do anything here.  If account is not created, other user module warnings will exist.
     }
   }
 
@@ -343,12 +355,15 @@ function ldap_user_form_register_form_submit2(&$form, FormState $form_state) {
     $userProcessor->ldapExcludeDrupalAccount($values['name']);
   }
   elseif ($ldap_user_association_set ||
-    @$values['ldap_user_association'] == LdapConfiguration::$manualAccountConflictLdapAssociate ||
-    \Drupal::config('ldap_user.settings')->get('manualAccountConflict') == LdapConfiguration::$manualAccountConflictLdapAssociate) {
+    $values['ldap_user_association'] == LdapConfiguration::$manualAccountConflictLdapAssociate) {
     // Either LDAP provision (above) has said "associate" or the person creating
     // the account has said "associate" or the LDAP user settings says
     // "Associate manually created Drupal accounts with related LDAP Account if one exists.".
-    $userProcessor->ldapAssociateDrupalAccount($values['name']);
+    $association = $userProcessor->ldapAssociateDrupalAccount($values['name']);
+
+    if (!$association) {
+      drupal_set_message(t('Account created but no LDAP account found to associate with.'), 'warning');
+    }
   }
 
 }

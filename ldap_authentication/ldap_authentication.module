@@ -117,7 +117,7 @@ function ldap_authentication_form_user_form_alter(&$form, FormStateInterface $fo
   $config = \Drupal::config('ldap_authentication.settings');
   if (ldap_authentication_ldap_authenticated($user)) {
     if ($config->get('emailOption') == LdapAuthenticationConfiguration::$emailFieldRemove) {
-      $form['account']['mail']['#type'] = 'hidden';
+      $form['account']['mail']['#access'] = FALSE;
     }
     elseif ($config->get('emailOption') == LdapAuthenticationConfiguration::$emailFieldDisable) {
       $form['account']['mail']['#disabled'] = TRUE;
@@ -129,8 +129,9 @@ function ldap_authentication_form_user_form_alter(&$form, FormStateInterface $fo
 
     if (!LdapAuthenticationConfiguration::showPasswordField($user)) {
       if ($config->get('passwordOption') == LdapAuthenticationConfiguration::$passwordFieldHide) {
-        $form['account']['current_pass']['#type'] = 'hidden';
-        $form['account']['pass']['#type'] = 'hidden';
+        // TODO: Allow for the case where email changes are allowed to show current pass.
+        $form['account']['current_pass']['#access'] = FALSE;
+        $form['account']['pass']['#access'] = FALSE;
       }
       elseif ($config->get('emailOption') == LdapAuthenticationConfiguration::$emailFieldDisable) {
         $form['account']['current_pass']['#disabled'] = TRUE;
