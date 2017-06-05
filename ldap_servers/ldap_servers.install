@@ -92,3 +92,15 @@ function ldap_servers_update_8301() {
     $server->save();
   }
 }
+
+/**
+ * Removes HTTPS checking.
+ */
+function ldap_servers_update_8302() {
+  $config_factory = \Drupal::configFactory();
+  $config = $config_factory->getEditable('ldap_servers.settings');
+  $config->delete();
+
+  return t('HTTPS validation was removed, if you need mixed mode consider another module such as securelogin for this. Mixed mode is strongly discouraged.');
+
+}

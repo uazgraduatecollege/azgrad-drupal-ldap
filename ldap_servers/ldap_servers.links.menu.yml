@@ -1,10 +1,5 @@
-ldap_servers.settings:
-  route_name: ldap_servers.settings
-  title: 'LDAP Configuration'
-  description: 'LDAP authentication, authorization, provisioning, etc.'
-  parent: user.admin_index
 entity.ldap_server.collection:
   title: 'LDAP Servers'
   route_name: entity.ldap_server.collection
   description: 'List LDAP Servers'
-  parent: ldap_servers.settings
+  parent: user.admin_index

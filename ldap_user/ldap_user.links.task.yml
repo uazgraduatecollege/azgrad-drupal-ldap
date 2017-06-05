@@ -2,4 +2,4 @@ ldap_user.admin_form:
   route_name: ldap_user.admin_form
   title: 'User mappings'
   weight: 30
-  base_route: ldap_servers.settings
+  base_route: entity.ldap_server.collection

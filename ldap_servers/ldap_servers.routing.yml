@@ -1,17 +1,9 @@
-ldap_servers.settings:
-  path: /admin/config/people/ldap
-  defaults:
-    _title: 'LDAP Configuration'
-    _form: \Drupal\ldap_servers\Form\LdapServersSettings
-  requirements:
-    _permission: 'administer site configuration'
-
 # Server routing definition
 entity.ldap_server.collection:
   path: '/admin/config/people/ldap/server'
   defaults:
     _entity_list: 'ldap_server'
-    _title: '2. Servers'
+    _title: 'Servers'
   requirements:
     _permission: 'administer site configuration'
   options:

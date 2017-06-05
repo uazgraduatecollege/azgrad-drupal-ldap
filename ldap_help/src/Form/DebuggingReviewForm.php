@@ -55,14 +55,6 @@ class DebuggingReviewForm extends FormBase {
       '#markup' => '<h2>' . $this->t('Drupal LDAP modules') . '</h2>',
     ];
 
-    if (\Drupal::moduleHandler()->moduleExists('ldap_servers')) {
-      $form['config_servers'] = [
-        '#markup' =>
-        '<h3>' . $this->t('The LDAP servers base configuration') . '</h3>' .
-        $this->printConfig('ldap_servers.settings'),
-      ];
-    }
-
     if (\Drupal::moduleHandler()->moduleExists('ldap_user')) {
       $form['config_users'] = [
         '#markup' =>

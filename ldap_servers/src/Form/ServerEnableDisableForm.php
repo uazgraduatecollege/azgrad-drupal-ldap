@@ -31,7 +31,7 @@ class ServerEnableDisableForm extends EntityConfirmFormBase {
    * If the delete command is canceled, return to the lti_tool_provider_consumer list.
    */
   public function getCancelUrl() {
-    return new Url('ldap_servers.settings');
+    return new Url('entity.ldap_server.collection');
   }
 
   /**

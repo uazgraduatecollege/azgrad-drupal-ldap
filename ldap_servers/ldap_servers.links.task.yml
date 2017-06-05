@@ -1,10 +1,5 @@
-ldap_servers.settings:
-  route_name: ldap_servers.settings
-  title: 'General Settings'
-  weight: 10
-  base_route: ldap_servers.settings
 entity.ldap_server.collection:
   route_name: entity.ldap_server.collection
   title: 'Servers'
   weight: 20
-  base_route: ldap_servers.settings
+  base_route: entity.ldap_server.collection

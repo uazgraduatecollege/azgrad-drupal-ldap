@@ -1,9 +1,0 @@
-ldap_servers.settings:
-  type: config_object
-  mapping:
-    require_ssl_for_credentials:
-      type: boolean
-      label: 'Require HTTPS on credential pages'
-    langcode:
-      type: string
-      label: 'Default language'

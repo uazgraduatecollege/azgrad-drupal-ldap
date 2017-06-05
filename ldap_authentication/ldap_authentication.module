@@ -212,8 +212,6 @@ function _ldap_authentication_login_form_alter(&$form, &$form_state, $form_id) {
     array_splice($form['#validate'], $key + 1, 0, 'ldap_authentication_user_login_authenticate_validate');
   }
 
-  _ldap_authentication_disable_http_check($form);
-
   // Add help information for entering in username/password.
   if ($config->get('loginUIUsernameTxt')) {
     $form['name']['#description'] = t($config->get('loginUIUsernameTxt'));
@@ -224,34 +222,5 @@ function _ldap_authentication_login_form_alter(&$form, &$form_state, $form_id) {
 
   if ($config->get('emailTemplateUsageRedirectOnLogin')) {
     $form['#submit'][] = 'Drupal\ldap_authentication\Routing\EmailTemplateService::checkForEmailTemplate';
-  }
-}
-
-/**
- * Disable a logon form if ldap preferences exclude http logon forms.
- *
- * @param array $form
- *   drupal logon form.
- */
-function _ldap_authentication_disable_http_check(&$form) {
-
-  if (\Drupal::config('ldap_servers.settings')->get('require_ssl_for_credentials') == 1) {
-    \Drupal::service('page_cache_kill_switch')->trigger();
-    if (!\Drupal::request()->isSecure()) {
-      $tokens = [
-        '%site_name' => \Drupal::config('system.site')->get('name'),
-        '%site_contact_link' => \Drupal::config('system.site')->get('mail'),
-      ];
-
-      if (empty($tokens['%site_contact_link'])) {
-        $tokens['%site_contact_link'] = 'the site admin';
-      }
-      drupal_set_message(t('You are accessing %site_name using an unencrypted connection. For your security,
-     %site_name only supports account logins using a secure protocol such as HTTPS. You can switch
-     to HTTPS by trying to view this page again after changing the URL in your browser \'s
-     location bar to begin with "https" instead of "http". Please contact
-      %site_contact_link for help if this error continues.', $tokens), 'error');
-      $form['#disabled'] = TRUE;
-    }
   }
 }
