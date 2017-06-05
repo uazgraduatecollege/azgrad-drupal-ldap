@@ -23,7 +23,7 @@ class ServerForm extends EntityForm {
     $server = $this->entity;
 
     $form['server'] = [
-      '#type' => 'details',
+      '#type' => 'fieldset',
       '#title' => t('Server'),
       '#open' => TRUE,
     ];
@@ -94,7 +94,7 @@ class ServerForm extends EntityForm {
     ];
 
     $form['bind'] = [
-      '#type' => 'details',
+      '#type' => 'fieldset',
       '#title' => t('Binding'),
     ];
 
@@ -159,7 +159,7 @@ class ServerForm extends EntityForm {
     }
 
     $form['users'] = [
-      '#type' => 'details',
+      '#type' => 'fieldset',
       '#title' => t('Users'),
     ];
 
@@ -269,7 +269,7 @@ class ServerForm extends EntityForm {
     ];
 
     $form['groups'] = [
-      '#type' => 'details',
+      '#type' => 'fieldset',
       '#title' => t('Groups'),
     ];
 
@@ -449,7 +449,7 @@ class ServerForm extends EntityForm {
     ];
 
     $form['pagination'] = [
-      '#type' => 'details',
+      '#type' => 'fieldset',
       '#title' => t('Pagination'),
     ];
 
