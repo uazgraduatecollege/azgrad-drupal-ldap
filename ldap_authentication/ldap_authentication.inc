@@ -49,7 +49,6 @@ function _ldap_authentication_login_form_alter(&$form, &$form_state, $form_id) {
 
     $form['links']['#markup'] = theme('ldap_authentication_user_login_block_links', $vars);
   }
-  ldap_servers_disable_http_check($form);
 
   // Add help information for entering in username/password
   $auth_conf = ldap_authentication_get_valid_conf();
