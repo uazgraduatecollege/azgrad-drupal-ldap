@@ -8,7 +8,6 @@ use Drupal\ldap_user\Helper\ExternalAuthenticationHelper;
 use Drupal\ldap_user\Helper\LdapConfiguration;
 use Drupal\ldap_user\Processor\DrupalUserProcessor;
 use Drupal\ldap_user\Processor\LdapUserProcessor;
-use Drupal\user\Entity\User;
 
 /**
  *
@@ -53,7 +52,6 @@ class LdapUserTestForm extends FormBase {
     $form['warning'] = [
       '#markup' => '<h3>' . t('If you trigger the event and have sync operations enabled on the LDAP Users page, these can run and modify data.') . '</h3>',
     ];
-
 
     $form['testing_drupal_username'] = [
       '#type' => 'textfield',
@@ -116,8 +114,6 @@ class LdapUserTestForm extends FormBase {
 
     if ($username && count($selected_action) > 0) {
 
-
-
       $config = \Drupal::config('ldap_user.settings')->get();
       $processor = new DrupalUserProcessor();
       $ldapProcessor = new LdapUserProcessor();
@@ -154,7 +150,7 @@ class LdapUserTestForm extends FormBase {
       $test_query = ($form_state->getValue(['test_mode']) != 'execute');
       $account = ['name' => $username];
       $sync_trigger_description = self::$sync_trigger_options[$selected_action];
-      foreach ([LdapConfiguration::PROVISION_TO_DRUPAL,  LdapConfiguration::PROVISION_TO_LDAP] as $direction) {
+      foreach ([LdapConfiguration::PROVISION_TO_DRUPAL, LdapConfiguration::PROVISION_TO_LDAP] as $direction) {
         if (LdapConfiguration::provisionEnabled($direction, $selected_action)) {
           if ($direction == LdapConfiguration::PROVISION_TO_DRUPAL) {
             $processor->provisionDrupalAccount($account, $save);

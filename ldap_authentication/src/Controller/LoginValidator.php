@@ -14,7 +14,7 @@ use Drupal\user\Entity\User;
 use Drupal\Core\Form\FormStateInterface;
 
 /**
- *
+ * Handles the actual testing of credentials and authentication of users.
  */
 class LoginValidator {
 
@@ -54,7 +54,11 @@ class LoginValidator {
   }
 
   /**
+   * Starts login process.
    *
+   * @param \Drupal\Core\Form\FormStateInterface $formState
+   *
+   * @return \Drupal\Core\Form\FormStateInterface
    */
   public function validateLogin(FormStateInterface $formState) {
     $this->authName = trim($formState->getValue('name'));
@@ -70,7 +74,10 @@ class LoginValidator {
   }
 
   /**
+   * Perform the actual logging in.
+   *
    * @return bool
+   *   Success or failure of authentication.
    */
   private function processLogin() {
     if (!$this->validateAlreadyAuthenticated()) {
@@ -135,11 +142,14 @@ class LoginValidator {
   }
 
   /**
+   * Processes an SSO login.
+   *
    * Todo: Postprocessing could be wrapped in a function, identical in processLogin().
    *
    * @param $authName
    *
    * @return bool
+   *   Success or failure of authentication.
    */
   public function processSsoLogin($authName) {
     $this->authName = $authName;
@@ -198,7 +208,9 @@ class LoginValidator {
   }
 
   /**
-   * Given authname, determine if corresponding drupal account exists and is authmapped.
+   * Determine if the corresponding Drupal account exists and is mapped.
+   *
+   * The authName property is checked against external authentication mapping.
    *
    * @return array
    */
@@ -232,7 +244,10 @@ class LoginValidator {
   }
 
   /**
+   * Credentials are tested.
    *
+   * @return int
+   *   Returns the authentication result.
    */
   private function testCredentials($password) {
     $authenticationResult = self::AUTHENTICATION_FAILURE_GENERIC;
@@ -343,7 +358,8 @@ class LoginValidator {
       $bindResult = $this->serverDrupalUser->bind($this->ldapUser['dn'], $password, FALSE);
       if ($bindResult == Server::LDAP_SUCCESS) {
         $loginValid = TRUE;
-      } else {
+      }
+      else {
         if ($this->detailedLogging) {
           \Drupal::logger('ldap_authentication')->debug('%username: Error testing user credentials on server %id with %bind_method. Error: %err_text', [
             '%username' => $this->authName,
@@ -584,7 +600,7 @@ class LoginValidator {
       foreach ($profiles as $profile_id) {
         $profile = AuthorizationProfile::load($profile_id);
         if ($profile->getProviderId() == 'ldap_provider') {
-          //@TODO: https://www.drupal.org/node/2849865
+          // @TODO: https://www.drupal.org/node/2849865
           module_load_include('inc', 'authorization', 'authorization');
           list($new_authorizations_i, $notifications_i) = _authorizations_user_authorizations($user, 'query', $profile_id, NULL);
           $authorizations = $authorizations + $new_authorizations_i;
@@ -730,6 +746,8 @@ class LoginValidator {
   }
 
   /**
+   * Derives the Drupal user name from server configuration.
+   *
    * @return bool
    */
   private function deriveDrupalUserName() {

@@ -52,7 +52,8 @@ class ServerListBuilder extends ConfigEntityListBuilder {
       if ($connection_result == Server::LDAP_SUCCESS) {
         if ($server->get('bind_method') == 'anon' || $server->get('bind_method') == 'anon_user') {
           $bind_result = $server->bind(NULL, NULL, TRUE);
-        } else {
+        }
+        else {
           $bind_result = $server->bind();
         }
         if ($bind_result == Server::LDAP_SUCCESS) {

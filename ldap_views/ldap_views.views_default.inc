@@ -14,7 +14,7 @@ function ldap_views_views_default_views() {
    */
   $view = new view();
   $view->name = 'ad_users_example';
-  $view->description = 'Users from AD. You must define a ldap data source whith ad_users identifier, and mail, name and samaccountname attributes';
+  $view->description = 'Users from AD. You must define an LDAP data source with ad_users identifier, and mail, name and samaccountname attributes';
   $view->tag = 'default';
   $view->base_table = 'ldap';
   $view->human_name = 'AD Users example';

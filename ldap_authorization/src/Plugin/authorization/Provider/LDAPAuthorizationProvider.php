@@ -3,7 +3,6 @@
 namespace Drupal\ldap_authorization\Plugin\authorization\Provider;
 
 use Drupal\authorization\AuthorizationSkipAuthorization;
-use Drupal\authorization\Entity\AuthorizationProfile;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\authorization\Provider\ProviderPluginBase;
@@ -265,6 +264,9 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
     return $proposals;
   }
 
+  /**
+   *
+   */
   public function validateRowForm(array &$form, FormStateInterface $form_state) {
     parent::validateRowForm($form, $form_state);
 

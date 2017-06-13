@@ -16,7 +16,6 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Form\FormState;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
-use Drupal\Core\Url;
 
 /**
  * Implements hook_cron().
@@ -238,7 +237,8 @@ function ldap_user_form_user_register_form_alter(&$form, $form_state) {
   }
   elseif (\Drupal::config('ldap_user.settings')->get('manualAccountConflict') != LdapConfiguration::$manualAccountConflictShowOptionOnForm) {
     $form['ldap_user_fields']['ldap_user_association']['#access'] = FALSE;
-  } else {
+  }
+  else {
     $form['ldap_user_fields']['ldap_user_association']['#default_value'] = LdapConfiguration::$manualAccountConflictLdapAssociate;
   }
 
@@ -303,7 +303,7 @@ function ldap_user_form_register_form_validate($form, FormStateInterface &$form_
             'User %name already has a corresponding LDAP Entry (%dn). Uncheck "Create corresponding LDAP entry" to allow this Drupal user to be created. Select "Make this an LDAP associated account" to associate this account with the ldap entry.',
             [
               '%dn' => $ldap_user['dn'],
-              '%name' => $form_state->getValue('name')
+              '%name' => $form_state->getValue('name'),
             ])
         );
       }

@@ -160,6 +160,9 @@ class TokenProcessor {
     }
   }
 
+  /**
+   *
+   */
   public function getTokenAttributes($text) {
     $maps = [];
     $this->extractTokenAttributes($maps, $text);

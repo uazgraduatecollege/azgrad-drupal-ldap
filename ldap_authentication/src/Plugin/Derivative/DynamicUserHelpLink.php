@@ -6,19 +6,25 @@ use Drupal\Component\Plugin\Derivative\DeriverBase;
 use Drupal\Core\Access\AccessResultAllowed;
 use Drupal\ldap_authentication\Helper\LdapAuthenticationConfiguration;
 
+/**
+ *
+ */
 class DynamicUserHelpLink extends DeriverBase {
 
   /**
    * {@inheritdoc}
    */
   public function getDerivativeDefinitions($base_plugin_definition) {
-    $definitions = array();
+    $definitions = [];
     if ($this->accessLdapHelpTab()) {
       $definitions = $this->addLink($base_plugin_definition);
     }
     return $definitions;
   }
 
+  /**
+   *
+   */
   private function accessLdapHelpTab() {
     $user = \Drupal::currentUser();
     $mode = \Drupal::config('ldap_authentication.settings')
@@ -36,18 +42,25 @@ class DynamicUserHelpLink extends DeriverBase {
     return FALSE;
   }
 
+  /**
+   *
+   */
   public function routeAccess() {
     if ($this->accessLdapHelpTab()) {
       return AccessResultAllowed::allowed();
-    } else {
+    }
+    else {
       return AccessResultAllowed::forbidden();
     }
   }
 
+  /**
+   *
+   */
   private function addLink($base_plugin_definition) {
     if (\Drupal::config('ldap_authentication.settings')
       ->get('ldapUserHelpLinkText') && \Drupal::config('ldap_authentication.settings')
-        ->get('ldapUserHelpLinkUrl')) {
+      ->get('ldapUserHelpLinkUrl')) {
       $this->derivatives['ldap_authentication.show_user_help_link'] = $base_plugin_definition;
       $this->derivatives['ldap_authentication.show_user_help_link']['title'] = \Drupal::config('ldap_authentication.settings')
         ->get('ldapUserHelpLinkText');
@@ -55,4 +68,5 @@ class DynamicUserHelpLink extends DeriverBase {
       return $this->derivatives;
     }
   }
+
 }

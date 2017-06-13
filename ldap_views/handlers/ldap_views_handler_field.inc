@@ -50,7 +50,7 @@ class ldap_views_handler_field extends views_handler_field {
     // It should be 'radios', but it makes #dependency not to work.
       '#type' => 'select',
       '#title' => t('Values to show'),
-      '#description' => t('What to do whith  multivalue attributes'),
+      '#description' => t('What to do with multi-value attributes'),
       '#options' => [
         'v-all' => t('All values'),
         'v-index' => t('Show Nth value'),

@@ -3,7 +3,6 @@
 namespace Drupal\ldap_user\Form;
 
 use Drupal\Core\Config\Config;
-use Drupal\Core\Config\ConfigFactory;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Config\ConfigFactoryInterface;
@@ -80,7 +79,6 @@ class LdapUserAdminForm extends ConfigFormBase {
       '#type' => 'item',
       '#markup' => t('<h1>LDAP User Settings</h1>'),
     ];
-
 
     $form['server_mapping_preamble'] = [
       '#type' => 'markup',
@@ -399,7 +397,7 @@ EOT;
     if (!$config->get('drupalAcctProvisionServer') && $hasDrupalAcctProvSettingsOptions) {
       drupal_set_message(t('No servers are enabled to provide provisioning to Drupal, but Drupal account provisioning options are selected.'), 'warning');
     }
-    else if ($hasDrupalAcctProvServers && !$hasDrupalAcctProvSettingsOptions) {
+    elseif ($hasDrupalAcctProvServers && !$hasDrupalAcctProvSettingsOptions) {
       drupal_set_message(t('Servers are enabled to provide provisioning to Drupal, but no Drupal account provisioning options are selected. This will result in no syncing happening.'), 'warning');
     }
 
@@ -412,7 +410,6 @@ EOT;
       drupal_set_message(t('Servers are enabled to provide provisioning to LDAP, but no LDAP entry options are selected. This will result in no syncing happening.'), 'warning');
     }
   }
-
 
   /**
    * {@inheritdoc}
@@ -490,6 +487,9 @@ EOT;
 
   }
 
+  /**
+   *
+   */
   private function checkEmptyEvents($mappings) {
     foreach ($mappings as $mapping) {
       if (empty($mapping['prov_events'])) {
@@ -900,7 +900,6 @@ EOT;
     return str_replace(['.', '[', ']'], ['-', '', ''], $string);
   }
 
-
   /**
    * Extract sync mappings array from mapping table in admin form.
    *
@@ -909,7 +908,7 @@ EOT;
    * @param $direction
    *
    * @return array Returns the relevant mappings.
-   * Returns the relevant mappings.
+   *   Returns the relevant mappings.
    */
   private function syncMappingsFromForm($values, $direction) {
     $mappings = [];

@@ -1,13 +1,9 @@
 <?php
 
 /**
- * @file
- * Basic textfield filter to handle string filtering commands for a generic ldap attribute
- * Includes new criterias.
- */
-
-/**
+ * Basic text field filter for a generic LDAP attribute.
  *
+ * Handles string filtering.
  */
 class ldap_views_handler_filter_attribute extends ldap_views_handler_filter {
 

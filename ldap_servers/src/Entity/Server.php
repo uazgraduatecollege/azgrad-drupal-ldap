@@ -63,7 +63,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
   /**
    * Returns the formatted label of the bind method.
    *
-   * return string.
+   * Return string.
    */
   public function getFormattedBind() {
     switch ($this->get('bind_method')) {
@@ -602,17 +602,17 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
     }
 
     if (\Drupal::config('ldap_help.settings')->get('watchdog_detail')) {
-      \Drupal::logger('ldap_servers')->notice( "LDAP search call with base_dn '%base_dn'. Filter is '%filter' with attributes '%attributes'. Only attributes %attrs_only, size limit %size_limit, time limit %time_limit, dereference %deref, scope %scope.", [
-          '%base_dn' => $base_dn,
-          '%filter' => $filter,
-          '%attributes' => is_array($attributes) ? join(',', $attributes) : 'none',
-          '%attrs_only' => $attrsonly,
-          '%size_limit' => $sizelimit,
-          '%time_limit' => $timelimit,
-          '%deref' => $deref ? $deref : 'null',
-          '%scope' => $scope ? $scope : 'null',
+      \Drupal::logger('ldap_servers')->notice("LDAP search call with base_dn '%base_dn'. Filter is '%filter' with attributes '%attributes'. Only attributes %attrs_only, size limit %size_limit, time limit %time_limit, dereference %deref, scope %scope.", [
+        '%base_dn' => $base_dn,
+        '%filter' => $filter,
+        '%attributes' => is_array($attributes) ? join(',', $attributes) : 'none',
+        '%attrs_only' => $attrsonly,
+        '%size_limit' => $sizelimit,
+        '%time_limit' => $timelimit,
+        '%deref' => $deref ? $deref : 'null',
+        '%scope' => $scope ? $scope : 'null',
 
-        ]
+      ]
       );
     }
 
@@ -735,12 +735,12 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
       }
       elseif ($this->hasError()) {
         \Drupal::logger('ldap_servers')->error('Paged query error: %error. Base DN: %base_dn | filter: %filter | attributes: %attributes.', [
-            '%error' => $this->formattedError($this->ldapErrorNumber()),
-            '%base_dn' => $queryParameters['base_dn'],
-            '%filter' => $queryParameters['filter'],
-            '%attributes' => json_encode($queryParameters['attributes']),
-            '%query' => $queryParameters['query_display']
-          ]
+          '%error' => $this->formattedError($this->ldapErrorNumber()),
+          '%base_dn' => $queryParameters['base_dn'],
+          '%filter' => $queryParameters['filter'],
+          '%attributes' => json_encode($queryParameters['attributes']),
+          '%query' => $queryParameters['query_display'],
+        ]
         );
       }
 
@@ -785,9 +785,9 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
         }
         elseif ($this->hasError()) {
           \Drupal::logger('ldap_servers')->error('ldap_search() function error. LDAP Error: %message, ldap_search() parameters: %query', [
-              '%message' => $this->formattedError($this->ldapErrorNumber()),
-              '%query' => $params['query_display']
-            ]
+            '%message' => $this->formattedError($this->ldapErrorNumber()),
+            '%query' => $params['query_display'],
+          ]
           );
         }
         break;
@@ -800,9 +800,9 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
         }
         elseif ($this->hasError()) {
           \Drupal::logger('ldap_servers')->error('ldap_read() function error.  LDAP Error: %message, ldap_read() parameters: %query', [
-              '%message' => $this->formattedError($this->ldapErrorNumber()),
-              '%query' => @$params['query_display']
-            ]
+            '%message' => $this->formattedError($this->ldapErrorNumber()),
+            '%query' => @$params['query_display'],
+          ]
           );
         }
         break;
@@ -816,8 +816,8 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
         elseif ($this->hasError()) {
           \Drupal::logger('ldap_servers')->error('ldap_list() function error. LDAP Error: %message, ldap_list() parameters: %query', [
             '%message' => $this->formattedError($this->ldapErrorNumber()),
-            '%query' => $params['query_display']
-           ]
+            '%query' => $params['query_display'],
+          ]
           );
         }
         break;
@@ -995,19 +995,6 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
   }
 
   /**
-   * @param mixed $user
-   *    - drupal user object (stdClass Object)
-   *    - ldap entry of user (array)
-   *    - ldap dn of user (string)
-   *    - drupal username of user (string)
-   *
-   * @return array $ldap_user_entry (with top level keys of 'dn', 'mail', 'sid' and 'attr' )
-   */
-  public function user_lookup($user) {
-    return $this->userUserToExistingLdapEntry($user);
-  }
-
-  /**
    * Undocumented.
    *
    * TODO: Naming and scope are unclear. Restructure if possible.
@@ -1172,14 +1159,12 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
    * Is a user a member of group?
    *
    * @param string $group_dn
-   *   MIXED CASE.
+   *   Group DN in mixed case.
    * @param mixed $user
-   *    - drupal user object (stdClass Object)
-   *    - ldap entry of user (array)
-   *    - ldap dn of user (array)
-   *    - drupal user name (string)
+   *   A Drupal user entity, an LDAP entry array of a user  or a username.
    * @param bool $nested
-   *   TRUE, or FALSE indicating to test for nested groups, by default set to NULL.
+   *   TRUE, or FALSE indicating to test for nested groups, by default set
+   *   to NULL.
    *
    * @return bool
    */
@@ -1286,27 +1271,21 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
   /**
    * Get list of all groups that a user is a member of.
    *
-   *    If $nested = TRUE,
-   *    list will include all parent group.  That is if user is a member of "programmer" group
-   *    and "programmer" group is a member of "it" group, user is a member of
-   *    both "programmer" and "it" groups.
+   * If $nested is TRUE, the list will include all parent groups. For example,
+   * if the user is a member of the "programmer" group and the "programmer"
+   * group is a member of the "it" group, the user is a member of both the
+   * "programmer" and the "it" group. If $nested is FALSE, the list will only
+   * include groups which are directly assigned to the user.
    *
-   *    If $nested = FALSE, list will only include groups user is in directly.
-   *
-   * @param mixed
-   *    - drupal user object (stdClass Object)
-   *    - ldap entry of user (array) (with top level keys of 'dn', 'mail', 'sid' and 'attr' )
-   *    - ldap dn of user (array)
-   *    - drupal username of user (string)
-   * @param string $return
-   *   = 'group_dns'.
+   * @param mixed $user
+   *   A Drupal user entity, an LDAP entry array of a user  or a username.
    * @param bool $nested
-   *   if groups should be recursed or not.
+   *   If groups should be checked recursively, or not.
    *
    * @return array|false
    *   Array of group dns in mixed case or FALSE on error.
    */
-  public function groupMembershipsFromUser($user, $return = 'group_dns', $nested = NULL) {
+  public function groupMembershipsFromUser($user, $nested = NULL) {
 
     $group_dns = FALSE;
     $user_ldap_entry = @$this->userUserToExistingLdapEntry($user);
@@ -1324,34 +1303,22 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
     elseif ($this->groupGroupEntryMembershipsConfigured()) {
       $group_dns = $this->groupUserMembershipsFromEntry($user_ldap_entry, $nested);
     }
-
-    if ($return == 'group_dns') {
-      return $group_dns;
-    }
+    return $group_dns;
 
   }
 
   /**
-   * Get list of all groups that a user is a member of by using memberOf attribute first,
-   *    then if nesting is true, using group entries to find parent groups.
+   * Get list of groups that a user is a member of using the memberOf attribute.
    *
-   *    If $nested = TRUE,
-   *    list will include all parent group.  That is if user is a member of "programmer" group
-   *    and "programmer" group is a member of "it" group, user is a member of
-   *    both "programmer" and "it" groups.
-   *
-   *    If $nested = FALSE, list will only include groups user is in directly.
+   * @see groupMembershipsFromUser() for handling of nesting.
    *
    * @param mixed
-   *    - drupal user object (stdClass Object)
-   *    - ldap entry of user (array) (with top level keys of 'dn', 'mail', 'sid' and 'attr' )
-   *    - ldap dn of user (array)
-   *    - drupal username of user (string)
+   *   A Drupal user entity, an LDAP entry array of a user  or a username.
    * @param bool $nested
-   *   if groups should be recursed or not.
+   *   If groups should be checked recursively, or not.
    *
-   * @return bool|array
-   *   Array of group dns or false.
+   * @return array|false
+   *   Array of group dns in mixed case or FALSE on error.
    */
   public function groupUserMembershipsFromUserAttr($user, $nested = NULL) {
     if (!$this->groupUserMembershipsFromAttributeConfigured()) {
@@ -1422,25 +1389,15 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
   /**
    * Get list of all groups that a user is a member of by querying groups.
    *
-   *    If $nested = TRUE,
-   *    list will include all parent group.  That is if user is a member of "programmer" group
-   *    and "programmer" group is a member of "it" group, user is a member of
-   *    both "programmer" and "it" groups.
-   *
-   *    If $nested = FALSE, list will only include groups user is in directly.
+   * @see groupMembershipsFromUser() for handling of nesting.
    *
    * @param mixed
-   *    - drupal user object (stdClass Object)
-   *    - ldap entry of user (array) (with top level keys of 'dn', 'mail', 'sid' and 'attr' )
-   *    - ldap dn of user (array)
-   *    - drupal username of user (string)
+   *   A Drupal user entity, an LDAP entry array of a user or a username.
    * @param bool $nested
-   *   if groups should be recursed or not.
+   *   If groups should be checked recursively, or not.
    *
    * @return array|false
-   *   Array of group dns with MIXED CASE VALUES.
-   *
-   * @see tests/DeriveFromEntry/ldap_servers.inc for fuller notes and test example
+   *   Array of group dns in mixed case or FALSE on error.
    */
   public function groupUserMembershipsFromEntry($user, $nested = NULL) {
     if (!$this->groupGroupEntryMembershipsConfigured()) {
@@ -1484,24 +1441,23 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
    * Recurse through all groups, adding parent groups to $all_group_dns array.
    *
    * @param array $current_group_entries
-   *   of ldap group entries that are starting point.  should include at least 1 entry.
+   *   Entries of LDAP groups, which are that are starting point. Should include
+   *   at least one entry.
    * @param array $all_group_dns
-   *   as array of all groups user is a member of.  MIXED CASE VALUES.
+   *   An array of all groups the user is a member of in mixed-case.
    * @param array $tested_group_ids
-   *   as array of tested group dn, cn, uid, etc.  MIXED CASE VALUES
-   *   whether these value are dn, cn, uid, etc depends on what attribute members, uniquemember, memberUid contains
-   *   whatever attribute is in $this->$tested_group_ids to avoid redundant recursing.
+   *   An array of tested group DN, CN, UID, etc. in mixed-case. Whether these
+   *   value are DN, CN, UID, etc. depends on what attribute members,
+   *   uniquemember, or memberUid contains whatever attribute in
+   *   $this->$tested_group_ids to avoid redundant recursion.
    * @param int $level
-   *   of recursion.
+   *   Levels of recursion.
    * @param int $max_levels
-   *   as max recursion allowed
+   *   Maximum levels of recursion allowed.
    *
-   *   given set of groups entries ($current_group_entries such as it, hr, accounting),
-   *   find parent groups (such as staff, people, users) and add them to list of group memberships ($all_group_dns)
-   *
-   *   (&(objectClass=[$this->groupObjectClass])(|([$this->groupMembershipsAttr]=groupid1)([$this->groupMembershipsAttr]=groupid2))
-   *
-   * @return FALSE for error or misconfiguration, otherwise TRUE.  results are passed by reference.
+   * @return bool
+   *   False for error or misconfiguration, otherwise TRUE. Results are passed
+   *   by reference.
    */
   public function groupMembershipsFromEntryResursive($current_group_entries, &$all_group_dns, &$tested_group_ids, $level, $max_levels) {
 
@@ -1557,10 +1513,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
    * Get "groups" from derived from DN.  Has limited usefulness.
    *
    * @param mixed
-   *    - drupal user object (stdClass Object)
-   *    - ldap entry of user (array) (with top level keys of 'dn', 'mail', 'sid' and 'attr' )
-   *    - ldap dn of user (array)
-   *    - drupal username of user (string)
+   *   A Drupal user entity, an LDAP entry array of a user or a username.
    *
    * @return array|bool
    *   Array of group strings.
@@ -1591,7 +1544,8 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
   public function hasError() {
     if ($this->ldapErrorNumber() != Server::LDAP_SUCCESS) {
       return TRUE;
-    } else {
+    }
+    else {
       return FALSE;
     }
   }
@@ -1600,6 +1554,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
    * Returns a string for the error to show administrators and in logs.
    *
    * @param $number
+   *
    * @return string
    */
   public function formattedError($number) {
@@ -1607,31 +1562,21 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
   }
 
   /**
-   *
+   * Returns the raw LDAP error code.
    */
   public function ldapErrorNumber() {
     return ldap_errno($this->connection);
   }
 
   /**
-   * Replicating 7.x properties.
-   *
-   * Grp_unused
-   * grp_user_memb_attr_exists
-   * grp_user_memb_attr
-   * grp_memb_attr
-   * grp_memb_attr_match_user_attr
-   * grp_nested
-   * grp_object_cat
-   * grp_derive_from_dn
-   * grp_derive_from_dn_attr.
-   */
+   * Returns whether groups are in use.
+   **/
   protected function groupFunctionalityUnused() {
     return $this->get('grp_unused');
   }
 
   /**
-   *
+   * Returns whether groups are nested.
    */
   protected function groupNested() {
     return $this->get('grp_nested');
@@ -1703,14 +1648,16 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
   }
 
   /**
-   * Given a dn (such as cn=jdoe,ou=people)
-   * and an rdn (such as cn)
-   * determine that rdn value (such as jdoe)
+   * Return the first RDN Value from DN.
+   *
+   * Given a DN (such as cn=jdoe,ou=people) and an RDN (such as cn),
+   * determine that RND value (such as jdoe).
    *
    * @param string $dn
    * @param string $rdn
    *
-   * @return string value of rdn
+   * @return string
+   *   Value of RDN.
    */
   private function getFirstRDNValueFromDN($dn, $rdn) {
     // Escapes attribute values, need to be unescaped later.
@@ -1729,14 +1676,16 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
   }
 
   /**
-   * Given a dn (such as cn=jdoe,ou=people)
-   * and an rdn (such as cn)
-   * determine that rdn value (such as jdoe)
+   * Returns all RDN values from DN.
+   *
+   * Given a DN (such as cn=jdoe,ou=people) and an rdn (such as cn),
+   * determine that RDN value (such as jdoe).
    *
    * @param string $dn
    * @param string $rdn
    *
-   * @return array of all values of rdn
+   * @return array
+   *   All values of RDN.
    */
   private function getAllRDNValuesFromDN($dn, $rdn) {
     // Escapes attribute values, need to be unescaped later.

@@ -258,7 +258,7 @@ class ServerTests extends UnitTestCase {
 
       /** @var \Drupal\ldap_servers\Entity\Server $ldap_server */
       // Test parent function groupMembershipsFromUser.
-      $groups = $ldap_server->groupMembershipsFromUser($ldap_module_user_entry, 'group_dns', $nested);
+      $groups = $ldap_server->groupMembershipsFromUser($ldap_module_user_entry, $nested);
       $count = count($groups);
       $diff1 = array_diff($groups_desired, $groups);
       $diff2 = array_diff($groups, $groups_desired);

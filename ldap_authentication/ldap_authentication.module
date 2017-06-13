@@ -59,6 +59,7 @@ function ldap_authentication_form_user_pass_alter(&$form, $form_state) {
  *
  * Check supplied username/password against local users table. If successful,
  * the UID from $form_state is set to the matching user ID.
+ *
  * @param array $form
  * @param \Drupal\Core\Form\FormStateInterface $form_state
  */

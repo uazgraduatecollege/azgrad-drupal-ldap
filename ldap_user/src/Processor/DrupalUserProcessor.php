@@ -79,7 +79,7 @@ class DrupalUserProcessor {
    * @param bool $save
    *
    * @return bool|\Drupal\user\entity\User Return the user on success or FALSE on any problem.
-   * Return the user on success or FALSE on any problem.
+   *   Return the user on success or FALSE on any problem.
    */
   public function provisionDrupalAccount($userData, $save = TRUE) {
 
@@ -552,7 +552,7 @@ class DrupalUserProcessor {
         'configurable_to_ldap' => TRUE,
       ];
 
-      // use user password, do not modify if unavailable
+      // Use user password, do not modify if unavailable.
       $availableUserAttributes['[password.user-only]'] = [
         'name' => 'Password: Plain user password',
         'source' => '',

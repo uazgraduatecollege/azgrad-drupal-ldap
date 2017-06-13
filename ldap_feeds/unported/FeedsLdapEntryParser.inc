@@ -29,7 +29,10 @@ class FeedsLdapEntryParser extends FeedsParser {
         $source_lcase = drupal_strtolower($map['source']);
         $source = $map['source'];
         if (isset($ldap_entry['attr'])) {
-          // Exception need because of unconvential format of ldap data returned from $ldap_server->userUserNameToExistingLdapEntry.
+          /**
+           * Exception need because of unconventional format of LDAP data
+           * returned from $ldap_server->userUserNameToExistingLdapEntry.
+           */
           $ldap_attributes = $ldap_entry['attr'];
         }
         else {

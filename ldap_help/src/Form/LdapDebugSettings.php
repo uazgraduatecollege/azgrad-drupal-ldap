@@ -62,4 +62,5 @@ class LdapDebugSettings extends ConfigFormBase {
       ->set('watchdog_detail', $form_state->getValue('watchdog_detail'))
       ->save();
   }
+
 }

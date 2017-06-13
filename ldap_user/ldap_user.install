@@ -84,7 +84,7 @@ function ldap_user_update_8302(&$sandbox) {
     db_query("DROP TABLE {ldap_user_identities}");
   }
   catch (Exception $e) {
-    drupal_set_message("Couldn't drop the table 'ldap_user_identities'. Maybe it's been dropped aleady?", "warning");
+    drupal_set_message("Couldn't drop the table 'ldap_user_identities'. Maybe it's been dropped already?", "warning");
   }
 }
 
@@ -123,12 +123,12 @@ function ldap_user_update_8305() {
   $mappings = $config->get('ldapUserSyncMappings');
   foreach ($mappings as $direction => $fields) {
     foreach ($fields as $key => $field) {
-      if (isset($field['direction']))  {
+      if (isset($field['direction'])) {
         if ($field['direction'] == 1 || $field['direction'] == '1') {
           $mappings[$direction][$key]['direction'] = LdapConfiguration::PROVISION_TO_DRUPAL;
         }
         else {
-          $mappings[$direction][$key]['direction']  = LdapConfiguration::PROVISION_TO_LDAP;
+          $mappings[$direction][$key]['direction'] = LdapConfiguration::PROVISION_TO_LDAP;
         }
       }
     }
@@ -154,10 +154,12 @@ function ldap_user_update_8306() {
         $newDrupalTriggers[LdapConfiguration::PROVISION_DRUPAL_USER_ON_USER_UPDATE_CREATE] = $trigger ?
           LdapConfiguration::PROVISION_DRUPAL_USER_ON_USER_UPDATE_CREATE : '0';
         break;
+
       case 2:
         $newDrupalTriggers[LdapConfiguration::PROVISION_DRUPAL_USER_ON_USER_AUTHENTICATION] = $trigger ?
           LdapConfiguration::PROVISION_DRUPAL_USER_ON_USER_AUTHENTICATION : '0';
         break;
+
       case 3:
         $newDrupalTriggers[LdapConfiguration::PROVISION_DRUPAL_USER_ON_USER_ON_MANUAL_CREATION] = $trigger ?
           LdapConfiguration::PROVISION_DRUPAL_USER_ON_USER_ON_MANUAL_CREATION : '0';
@@ -174,12 +176,14 @@ function ldap_user_update_8306() {
         $newLdapTriggers[LdapConfiguration::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_UPDATE_CREATE] = $trigger ?
           LdapConfiguration::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_UPDATE_CREATE : '0';
         break;
+
       case 7:
         $newLdapTriggers[LdapConfiguration::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_AUTHENTICATION] = $trigger ?
           LdapConfiguration::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_AUTHENTICATION : '0';
         break;
+
       case 8:
-        $newLdapTriggers[LdapConfiguration::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_DELETE] = $trigger?
+        $newLdapTriggers[LdapConfiguration::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_DELETE] = $trigger ?
           LdapConfiguration::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_DELETE : '0';
         break;
     }

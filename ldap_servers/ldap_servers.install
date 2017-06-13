@@ -80,13 +80,13 @@ function ldap_servers_update_8301() {
     if ($currentMethod == 1) {
       $server->set('bind_method', 'service_account');
     }
-    else if ($currentMethod == 2) {
+    elseif ($currentMethod == 2) {
       $server->set('bind_method', 'user');
     }
-    else if ($currentMethod == 3) {
+    elseif ($currentMethod == 3) {
       $server->set('bind_method', 'anon');
     }
-    else if ($currentMethod == 4) {
+    elseif ($currentMethod == 4) {
       $server->set('bind_method', 'anon_user');
     }
     $server->save();
