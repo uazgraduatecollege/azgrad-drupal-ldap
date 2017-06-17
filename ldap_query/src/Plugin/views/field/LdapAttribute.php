@@ -1,27 +1,33 @@
 <?php
 
-/**
- * @file
- * LDAP field handler.
- *
- * Defines a new class field handler for a default ldap field.
- */
+namespace Drupal\ldap_query\Plugin\views\field;
+
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\views\Plugin\views\field\FieldPluginBase;
+use Drupal\views\ResultRow;
 
 /**
+ * The handler for loading a specific LDAP field.
  *
+ * @ingroup views_field_handlers
+ *
+ * @ViewsField("ldap_attribute")
  */
-class ldap_views_handler_field extends views_handler_field {
+class LdapAttribute extends FieldPluginBase {
 
   /**
    *
    */
-  public function render($values) {
-    return array_key_exists($this->field_alias, $values) ? check_plain($values[$this->field_alias]) : '';
+  public function render(ResultRow $values) {
+    // TODO: Check plain
+    if ($this->getValue($values)) {
+      return $this->getValue($values);
+    }
   }
 
   /**
    *
-   */
+
   public function element_type($none_supported = FALSE, $default_empty = FALSE, $inline = FALSE) {
     if (isset($this->definition['element type'])) {
       return $this->definition['element type'];
@@ -29,21 +35,21 @@ class ldap_views_handler_field extends views_handler_field {
 
     return 'div';
   }
-
+*/
   /**
    *
-   */
+
   public function option_definition() {
     $options                    = parent::option_definition();
     $options['multivalue']      = ['default' => 'v-all'];
     $options['value_separator'] = ['default' => ''];
     $options['index_value']     = ['default' => 0];
     return $options;
-  }
+  }*/
 
   /**
    * Add the field for the LDAP Attribute.
-   */
+
   public function options_form(&$form, &$form_state) {
     parent::options_form($form, $form_state);
     $form['multivalue'] = [
@@ -77,6 +83,32 @@ class ldap_views_handler_field extends views_handler_field {
         'edit-options-multivalue' => ['v-index'],
       ],
     ];
+  }*/
+
+  /**
+   * {@inheritdoc}
+   */
+  public function usesGroupBy() {
+    return FALSE;
+  }
+
+
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function defineOptions() {
+    $options = parent::defineOptions();
+
+    $options['hide_alter_empty'] = ['default' => FALSE];
+    return $options;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function buildOptionsForm(&$form, FormStateInterface $form_state) {
+    parent::buildOptionsForm($form, $form_state);
   }
 
 }

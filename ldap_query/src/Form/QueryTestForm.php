@@ -32,8 +32,9 @@ class QueryTestForm extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state, $ldap_query_entity = NULL) {
     if ($ldap_query_entity) {
-      $controller = new QueryController();
-      $data = $controller->query($ldap_query_entity);
+      $controller = new QueryController($ldap_query_entity);
+      $controller->execute();
+      $data = $controller->getRawResults();
 
       $form['result_count'] = [
         '#markup' => '<h2>' . t('@count results', ['@count' => $data['count']]) . '</h2>',
@@ -42,15 +43,7 @@ class QueryTestForm extends FormBase {
 
       $header[] = 'DN';
 
-      $attributes = [];
-      // Use the first result to determine available attributes.
-      if (isset($data[0]) && $data[0]) {
-        foreach ($data[0] as $k => $v) {
-          if (is_numeric($k)) {
-            $attributes[] = $v;
-          }
-        }
-      }
+      $attributes = $controller->availableFields();
 
       foreach ($attributes as $attribute) {
         $header[] = $attribute;

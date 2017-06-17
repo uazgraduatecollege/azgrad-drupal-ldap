@@ -120,6 +120,7 @@ class DebuggingReviewForm extends FormBase {
         '#markup' => '<h2>' . $this->t('Configured LDAP queries') . '</h2>',
       ];
 
+      // TODO: Remove this controller, use entity API.
       $controller = new QueryController();
 
       foreach ($controller->getAllQueries() as $query) {

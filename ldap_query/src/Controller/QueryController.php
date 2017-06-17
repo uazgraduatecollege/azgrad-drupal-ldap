@@ -9,12 +9,18 @@ use Drupal\ldap_query\Entity\QueryEntity;
  */
 class QueryController {
 
+  private $results = [];
+  private $qid;
+
+  public function __construct($id) {
+    $this->qid = $id;
+  }
+
   /**
    *
    */
-  public function query($id) {
-    $query = QueryEntity::load($id);
-    $results = [];
+  public function execute() {
+    $query = QueryEntity::load($this->qid);
     $count = 0;
 
     if ($query) {
@@ -37,16 +43,36 @@ class QueryController {
 
         if ($result !== FALSE && $result['count'] > 0) {
           $count = $count + $result['count'];
-          $results = array_merge($results, $result);
+          $this->results = array_merge($this->results, $result);
         }
       }
-      $results['count'] = $count;
+      $this->results['count'] = $count;
     }
     else {
       \Drupal::logger('ldap_query')->warning('Could not load query @query', ['@query' => $id]);
     }
+  }
 
-    return $results;
+  public function getRawResults() {
+    return $this->results;
+  }
+
+  public function availableFields() {
+    $attributes = [];
+    /**
+     * We loop through all results since some users might not have fields set
+     * for them and those are missing and not null.
+     */
+    foreach ($this->results as $result) {
+      if (is_array($result)) {
+        foreach ($result as $k => $v) {
+          if (is_numeric($k)) {
+            $attributes[$v] = $v;
+          }
+        }
+      }
+    }
+    return $attributes;
   }
 
   /**
