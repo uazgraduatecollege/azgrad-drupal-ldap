@@ -258,7 +258,10 @@ class ldap_views_plugin_query_ldap extends views_plugin_query {
 
     foreach ($entries as $key => &$entry) {
       if (isset($entry['jpegphoto'])) {
-        $entry['jpegphoto'][0] = "<img src='data:image/jpeg;base64," . base64_encode($entry['jpegphoto'][0]) . "' alt='photo' />";
+        $entry['jpegphoto'][0] = '<img src="data:image/jpeg;base64,' . base64_encode($entry['jpegphoto'][0]) . '" alt="photo" />';
+      }
+      if (isset($entry['thumbnailphoto'])) {
+        $entry['thumbnailphoto'][0] = '<img src="data:image/jpeg;base64,' . base64_encode($entry['thumbnailphoto'][0]) . '" alt="photo" />';
       }
       foreach ($view->field as $field) {
         if (! isset($field_alias[$field->field_alias])) {
