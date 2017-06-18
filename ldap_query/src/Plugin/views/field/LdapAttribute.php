@@ -19,71 +19,85 @@ class LdapAttribute extends FieldPluginBase {
    *
    */
   public function render(ResultRow $values) {
-    // TODO: Check plain
-    if ($this->getValue($values)) {
-      return $this->getValue($values);
+    if ($value = $this->getValue($values)) {
+      switch ($this->options['multi_value']) {
+      case 'v-all':
+        $output = implode($this->options['value_separator'], $value);
+        break;
+
+      case 'v-count':
+        $output = count($value);
+        break;
+
+      case 'v-index':
+        if ($this->options['index_value'] >= 0) {
+          $index = intval($this->options['index_value']);
+        }
+        else {
+          // Allows for negative offset.
+          $index = count($value) + $this->options['index_value'];
+        }
+        $output = array_key_exists($index, $value) ? $value[$index] : $value[0];
+        break;
+    }
+      return ['#plain_text' => $output];
     }
   }
 
   /**
-   *
-
-  public function element_type($none_supported = FALSE, $default_empty = FALSE, $inline = FALSE) {
-    if (isset($this->definition['element type'])) {
-      return $this->definition['element type'];
-    }
-
-    return 'div';
-  }
-*/
-  /**
-   *
-
-  public function option_definition() {
-    $options                    = parent::option_definition();
-    $options['multivalue']      = ['default' => 'v-all'];
+   * {@inheritdoc}
+   */
+  protected function defineOptions() {
+    $options = parent::defineOptions();
+    $options['multi_value']  = ['default' => 'v-all'];
     $options['value_separator'] = ['default' => ''];
-    $options['index_value']     = ['default' => 0];
+    $options['index_value'] = ['default' => 0];
     return $options;
-  }*/
-
+  }
   /**
-   * Add the field for the LDAP Attribute.
-
-  public function options_form(&$form, &$form_state) {
-    parent::options_form($form, $form_state);
-    $form['multivalue'] = [
-    // It should be 'radios', but it makes #dependency not to work.
+   * {@inheritdoc}
+   */
+  public function buildOptionsForm(&$form, FormStateInterface $form_state) {
+    $form['multi_value'] = [
       '#type' => 'select',
-      '#title' => t('Values to show'),
+      '#title' => $this->t('Values to show'),
       '#description' => t('What to do with multi-value attributes'),
       '#options' => [
-        'v-all' => t('All values'),
-        'v-index' => t('Show Nth value'),
-        'v-count' => t('Count values'),
+        'v-all' => $this->t('All values'),
+        'v-index' => $this->t('Show Nth value'),
+        'v-count' => $this->t('Count values'),
       ],
-      '#default_value' => $this->options['multivalue'],
+      '#default_value' => $this->options['multi_value'],
       '#required' => TRUE,
     ];
     $form['value_separator'] = [
       '#type' => 'textfield',
-      '#title' => t('Value separator'),
-      '#description' => t('Separator to use between values in multivalued attributes'),
+      '#title' => $this->t('Value separator'),
+      '#description' => $this->t('Separator to use between values in multivalued attributes'),
       '#default_value' => $this->options['value_separator'],
-      '#dependency' => [
-        'edit-options-multivalue' => ['v-all'],
+      '#states' => [
+        'visible' => [
+          [
+            ':input[name="options[multi_value]"]' => ['value' => 'v-all'],
+          ],
+        ],
       ],
     ];
     $form['index_value'] = [
       '#type' => 'textfield',
-      '#title' => t('Index'),
-      '#description' => t('Index of the value to show. Use negative numbers to index from last item (0=First, -1=Last)'),
+      '#title' => $this->t('Index'),
+      '#description' => $this->t('Index of the value to show. Use negative numbers to index from last item (0=First, -1=Last)'),
       '#default_value' => $this->options['index_value'],
-      '#dependency' => [
-        'edit-options-multivalue' => ['v-index'],
+      '#states' => [
+        'visible' => [
+          [
+            ':input[name="options[multi_value]"]' => ['value' => 'v-index'],
+          ],
+        ],
       ],
     ];
-  }*/
+    parent::buildOptionsForm($form, $form_state);
+  }
 
   /**
    * {@inheritdoc}
@@ -91,24 +105,4 @@ class LdapAttribute extends FieldPluginBase {
   public function usesGroupBy() {
     return FALSE;
   }
-
-
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function defineOptions() {
-    $options = parent::defineOptions();
-
-    $options['hide_alter_empty'] = ['default' => FALSE];
-    return $options;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function buildOptionsForm(&$form, FormStateInterface $form_state) {
-    parent::buildOptionsForm($form, $form_state);
-  }
-
 }

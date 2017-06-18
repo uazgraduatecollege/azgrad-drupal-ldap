@@ -11,34 +11,46 @@ class QueryController {
 
   private $results = [];
   private $qid;
+  private $query;
 
   public function __construct($id) {
     $this->qid = $id;
+    $this->query = QueryEntity::load($this->qid);
+  }
+
+  public function getFilter() {
+    return $this->query->get('filter');
   }
 
   /**
-   *
+   * @param null|string $filter
+   *   Optional parameter to override filters. Useful for Views and other
+   *   queries requiring filtering.
    */
-  public function execute() {
-    $query = QueryEntity::load($this->qid);
+  public function execute($filter = NULL) {
     $count = 0;
 
-    if ($query) {
+    if ($this->query) {
       $factory = \Drupal::service('ldap.servers');
       /** @var \Drupal\ldap_servers\Entity\Server $ldap_server */
-      $ldap_server = $factory->getServerById($query->get('server_id'));
+      $ldap_server = $factory->getServerById($this->query->get('server_id'));
       $ldap_server->connect();
       $ldap_server->bind();
-      foreach ($query->getProcessedBaseDns() as $base_dn) {
+
+      if ($filter == NULL) {
+        $filter = $this->query->get('filter');
+      }
+
+      foreach ($this->query->getProcessedBaseDns() as $base_dn) {
         $result = $ldap_server->search(
           $base_dn,
-          $query->get('filter'),
-          $query->getProcessedAttributes(),
+          $filter,
+          $this->query->getProcessedAttributes(),
           0,
-          $query->get('size_limit'),
-          $query->get('time_limit'),
-          $query->get('dereference'),
-          $query->get('scope')
+          $this->query->get('size_limit'),
+          $this->query->get('time_limit'),
+          $this->query->get('dereference'),
+          $this->query->get('scope')
         );
 
         if ($result !== FALSE && $result['count'] > 0) {
@@ -49,7 +61,7 @@ class QueryController {
       $this->results['count'] = $count;
     }
     else {
-      \Drupal::logger('ldap_query')->warning('Could not load query @query', ['@query' => $id]);
+      \Drupal::logger('ldap_query')->warning('Could not load query @query', ['@query' => $this->qid]);
     }
   }
 
@@ -77,12 +89,14 @@ class QueryController {
 
   /**
    * TODO: Unported.
+   * @deprecated
    */
   public function ldap_query_cache_clear() {
     $this->ldap_query_get_queries(NULL, 'all', FALSE, TRUE);
   }
 
   /**
+   * @deprecated
    * Return ldap query objects.
    *
    * @param string $qid
