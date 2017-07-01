@@ -480,7 +480,7 @@ class ServerForm extends EntityForm {
           '%label' => $this->entity->label(),
         ]));
     }
-    $form_state->setRedirectUrl($this->entity->urlInfo('collection'));
+    $form_state->setRedirectUrl($this->entity->toUrl('collection'));
   }
 
 }

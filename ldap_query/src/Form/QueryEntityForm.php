@@ -169,7 +169,7 @@ class QueryEntityForm extends EntityForm {
           '%label' => $ldap_query_entity->label(),
         ]));
     }
-    $form_state->setRedirectUrl($ldap_query_entity->urlInfo('collection'));
+    $form_state->setRedirectUrl($ldap_query_entity->toUrl('collection'));
   }
 
 }
