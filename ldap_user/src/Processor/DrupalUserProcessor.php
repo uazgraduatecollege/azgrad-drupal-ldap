@@ -893,7 +893,7 @@ class DrupalUserProcessor {
    * @return bool|User
    */
   private function createDrupalUser($ldap_user) {
-    /** @var \Drupal\user\UserInterface $this->account */
+    /** @var \Drupal\user\Entity\User $this->account */
     $this->account->enforceIsNew();
     $this->applyAttributesToAccount($ldap_user, LdapConfiguration::PROVISION_TO_DRUPAL, [LdapConfiguration::$eventCreateDrupalUser]);
     $tokens = ['%drupal_username' => $this->account->get('name')];

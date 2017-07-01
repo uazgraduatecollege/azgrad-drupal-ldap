@@ -47,33 +47,33 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
       $url = Url::fromRoute('entity.ldap_server.collection');
       $edit_server_link = \Drupal::l(t('@path', ['@path' => 'LDAP Servers']), $url);
 
-      $message = t('At least one LDAP server must configured and <em>enabled</em>
+      $message = $this->t('At least one LDAP server must configured and <em>enabled</em>
  before configuring LDAP authentication. Please go to @link to configure an LDAP server.',
         ['@link' => $edit_server_link]
       );
 
       $form['intro'] = [
         '#type' => 'item',
-        '#markup' => t('<h1>LDAP Authentication Settings</h1>') . $message,
+        '#markup' => $this->t('<h1>LDAP Authentication Settings</h1>') . $message,
       ];
       return $form;
     }
 
     $form['intro'] = [
       '#type' => 'item',
-      '#markup' => t('<h1>LDAP Authentication Settings</h1>'),
+      '#markup' => $this->t('<h1>LDAP Authentication Settings</h1>'),
     ];
 
     $form['logon'] = [
       '#type' => 'fieldset',
-      '#title' => t('Logon Options'),
+      '#title' => $this->t('Logon Options'),
       '#collapsible' => TRUE,
       '#collapsed' => FALSE,
     ];
 
     $form['logon']['authenticationMode'] = [
       '#type' => 'radios',
-      '#title' => t('Allowable Authentications'),
+      '#title' => $this->t('Allowable Authentications'),
       '#required' => 1,
       '#default_value' => $config->get('authenticationMode'),
       '#options' => [
@@ -87,25 +87,25 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
 
     $form['logon']['authenticationServers'] = [
       '#type' => 'checkboxes',
-      '#title' => t('Authentication LDAP Server Configurations'),
+      '#title' => $this->t('Authentication LDAP Server Configurations'),
       '#required' => FALSE,
       '#default_value' => $config->get('sids'),
       '#options' => $authenticationServers,
-      '#description' => t('Check all LDAP server configurations to use in authentication.
+      '#description' => $this->t('Check all LDAP server configurations to use in authentication.
      Each will be tested for authentication until successful or
      until each is exhausted.  In most cases only one server configuration is selected.'),
     ];
 
     $form['login_UI'] = [
       '#type' => 'fieldset',
-      '#title' => t('User Login Interface'),
+      '#title' => $this->t('User Login Interface'),
       '#collapsible' => TRUE,
       '#collapsed' => FALSE,
     ];
 
     $form['login_UI']['loginUIUsernameTxt'] = [
       '#type' => 'textfield',
-      '#title' => t('Username Description Text'),
+      '#title' => $this->t('Username Description Text'),
       '#required' => 0,
       '#default_value' => $config->get('loginUIUsernameTxt'),
       '#description' => $this->t('Text to be displayed to user below the username field of the user login screen.'),
@@ -113,7 +113,7 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
 
     $form['login_UI']['loginUIPasswordTxt'] = [
       '#type' => 'textfield',
-      '#title' => t('Password Description Text'),
+      '#title' => $this->t('Password Description Text'),
       '#required' => 0,
       '#default_value' => $config->get('loginUIPasswordTxt'),
       '#description' => $this->t('Text to be displayed to user below the password field of the user login screen.'),
@@ -121,7 +121,7 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
 
     $form['login_UI']['ldapUserHelpLinkUrl'] = [
       '#type' => 'textfield',
-      '#title' => t('LDAP Account User Help URL'),
+      '#title' => $this->t('LDAP Account User Help URL'),
       '#required' => 0,
       '#default_value' => $config->get('ldapUserHelpLinkUrl'),
       '#description' => $this->t('URL to LDAP user help/documentation for users resetting
@@ -131,7 +131,7 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
 
     $form['login_UI']['ldapUserHelpLinkText'] = [
       '#type' => 'textfield',
-      '#title' => t('LDAP Account User Help Link Text'),
+      '#title' => $this->t('LDAP Account User Help Link Text'),
       '#required' => 0,
       '#default_value' => $config->get('ldapUserHelpLinkText'),
       '#description' => $this->t('Text for above link e.g. Account Help or Campus Password Help Page'),
@@ -139,14 +139,14 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
 
     $form['restrictions'] = [
       '#type' => 'fieldset',
-      '#title' => t('LDAP User "Whitelists" and Restrictions'),
+      '#title' => $this->t('LDAP User "Whitelists" and Restrictions'),
       '#collapsible' => TRUE,
       '#collapsed' => FALSE,
     ];
 
     $form['restrictions']['allowOnlyIfTextInDn'] = [
       '#type' => 'textarea',
-      '#title' => t('Allow Only Text Test'),
+      '#title' => $this->t('Allow Only Text Test'),
       '#default_value' => LdapAuthenticationConfiguration::arrayToLines($config->get('allowOnlyIfTextInDn')),
       '#cols' => 50,
       '#rows' => 3,
@@ -157,7 +157,7 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
 
     $form['restrictions']['excludeIfTextInDn'] = [
       '#type' => 'textarea',
-      '#title' => t('Excluded Text Test'),
+      '#title' => $this->t('Excluded Text Test'),
       '#default_value' => LdapAuthenticationConfiguration::arrayToLines($config->get('excludeIfTextInDn')),
       '#cols' => 50,
       '#rows' => 3,
@@ -168,7 +168,7 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
 
     $form['restrictions']['excludeIfNoAuthorizations'] = [
       '#type' => 'checkbox',
-      '#title' => t('Deny access to users without Ldap Authorization Module
+      '#title' => $this->t('Deny access to users without Ldap Authorization Module
         authorization mappings such as Drupal roles.
         Requires LDAP Authorization to be enabled and configured!'),
       '#default_value' => $config->get('excludeIfNoAuthorizations'),
@@ -180,107 +180,107 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
 
     $form['email'] = [
       '#type' => 'fieldset',
-      '#title' => t('Email'),
+      '#title' => $this->t('Email'),
     ];
 
     $form['email']['emailOption'] = [
       '#type' => 'radios',
-      '#title' => t('Email Behavior'),
+      '#title' => $this->t('Email Behavior'),
       '#required' => 1,
       '#default_value' => $config->get('emailOption'),
       '#options' => [
-        LdapAuthenticationConfiguration::$emailFieldRemove => t('Don\'t show an email field on user forms. LDAP derived email will be used for user and cannot be changed by user.'),
-        LdapAuthenticationConfiguration::$emailFieldDisable => t('Show disabled email field on user forms with LDAP derived email. LDAP derived email will be used for user and cannot be changed by user.'),
-        LdapAuthenticationConfiguration::$emailFieldAllow => t('Leave email field on user forms enabled. Generally used when provisioning to LDAP or not using email derived from LDAP.'),
+        LdapAuthenticationConfiguration::$emailFieldRemove => $this->t('Don\'t show an email field on user forms. LDAP derived email will be used for user and cannot be changed by user.'),
+        LdapAuthenticationConfiguration::$emailFieldDisable => $this->t('Show disabled email field on user forms with LDAP derived email. LDAP derived email will be used for user and cannot be changed by user.'),
+        LdapAuthenticationConfiguration::$emailFieldAllow => $this->t('Leave email field on user forms enabled. Generally used when provisioning to LDAP or not using email derived from LDAP.'),
       ],
     ];
 
     $form['email']['emailUpdate'] = [
       '#type' => 'radios',
-      '#title' => t('Email Update'),
+      '#title' => $this->t('Email Update'),
       '#required' => 1,
       '#default_value' => $config->get('emailUpdate'),
       '#options' => [
-        LdapAuthenticationConfiguration::$emailUpdateOnLdapChangeEnableNotify => t('Update stored email if LDAP email differs at login and notify user.'),
-        LdapAuthenticationConfiguration::$emailUpdateOnLdapChangeEnable => t('Update stored email if LDAP email differs at login but don\'t notify user.'),
-        LdapAuthenticationConfiguration::$emailUpdateOnLdapChangeDisable => t('Don\'t update stored email if LDAP email differs at login.'),
+        LdapAuthenticationConfiguration::$emailUpdateOnLdapChangeEnableNotify => $this->t('Update stored email if LDAP email differs at login and notify user.'),
+        LdapAuthenticationConfiguration::$emailUpdateOnLdapChangeEnable => $this->t('Update stored email if LDAP email differs at login but don\'t notify user.'),
+        LdapAuthenticationConfiguration::$emailUpdateOnLdapChangeDisable => $this->t('Don\'t update stored email if LDAP email differs at login.'),
       ],
     ];
 
     $form['email']['template'] = [
       '#type' => 'fieldset',
-      '#title' => t('Email Templates'),
+      '#title' => $this->t('Email Templates'),
     ];
 
     $form['email']['template']['emailTemplateHandling'] = [
       '#type' => 'radios',
-      '#title' => t('Email Template Handling'),
+      '#title' => $this->t('Email Template Handling'),
       '#required' => 1,
       '#default_value' => $config->get('emailTemplateHandling'),
       '#options' => [
-        'none' => t('Never use the template.'),
-        'if_empty' => t('Use the template if no email address was provided by the LDAP server.'),
-        'always' => t('Always use the template.'),
+        'none' => $this->t('Never use the template.'),
+        'if_empty' => $this->t('Use the template if no email address was provided by the LDAP server.'),
+        'always' => $this->t('Always use the template.'),
       ],
     ];
 
     $form['email']['template']['emailTemplate'] = [
       '#type' => 'textfield',
-      '#title' => t('Email Template'),
+      '#title' => $this->t('Email Template'),
       '#required' => 0,
       '#default_value' => $config->get('emailTemplate'),
     ];
 
     $form['email']['template']['templateUsageResolveConflict'] = [
       '#type' => 'checkbox',
-      '#title' => t('If a Drupal account already exists with the same email, but different account name, use the email template instead of the LDAP email.'),
+      '#title' => $this->t('If a Drupal account already exists with the same email, but different account name, use the email template instead of the LDAP email.'),
       '#default_value' => $config->get('emailTemplateUsageResolveConflict'),
     ];
 
     $form['email']['template']['templateUsageNeverUpdate'] = [
       '#type' => 'checkbox',
-      '#title' => t('Ignore the Email Update settings and never update the stored email if the template is used.'),
+      '#title' => $this->t('Ignore the Email Update settings and never update the stored email if the template is used.'),
       '#default_value' => $config->get('emailTemplateUsageNeverUpdate'),
     ];
 
     $form['email']['prompts'] = [
       '#type' => 'fieldset',
-      '#title' => t('User Email Prompt'),
-      '#description' => t('These settings allow the user to fill in their email address after logging in if the template was used to generate their email address.'),
+      '#title' => $this->t('User Email Prompt'),
+      '#description' => $this->t('These settings allow the user to fill in their email address after logging in if the template was used to generate their email address.'),
     ];
 
     $form['email']['prompts']['templateUsagePromptUser'] = [
       '#type' => 'checkbox',
-      '#title' => t('Prompt user for email on every page load.'),
+      '#title' => $this->t('Prompt user for email on every page load.'),
       '#default_value' => $config->get('emailTemplateUsagePromptUser'),
     ];
 
     $form['email']['prompts']['templateUsageRedirectOnLogin'] = [
       '#type' => 'checkbox',
-      '#title' => t('Redirect the user to the form after logging in.'),
+      '#title' => $this->t('Redirect the user to the form after logging in.'),
       '#default_value' => $config->get('emailTemplateUsageRedirectOnLogin'),
     ];
 
     $form['email']['prompts']['templateUsagePromptRegex'] = [
       '#type' => 'textfield',
       '#default_value' => $config->get('emailTemplateUsagePromptRegex'),
-      '#title' => t('Template Regex'),
-      '#description' => t('This regex will be used to determine if the template was used to create an account.'),
+      '#title' => $this->t('Template Regex'),
+      '#description' => $this->t('This regex will be used to determine if the template was used to create an account.'),
     ];
 
     $form['password'] = [
       '#type' => 'fieldset',
-      '#title' => t('Password'),
+      '#title' => $this->t('Password'),
     ];
     $form['password']['passwordOption'] = [
       '#type' => 'radios',
-      '#title' => t('Password Behavior'),
+      '#title' => $this->t('Password Behavior'),
       '#required' => 1,
       '#default_value' => $config->get('passwordOption'),
       '#options' => [
-        LdapAuthenticationConfiguration::$passwordFieldShowDisabled => t('Display password field disabled (Prevents password updates).'),
-        LdapAuthenticationConfiguration::$passwordFieldHide => t('Don\'t show password field on user forms except login form.'),
-        LdapAuthenticationConfiguration::$passwordFieldAllow => t('Display password field and allow updating it. In order to change password in LDAP, LDAP provisioning for this field must be enabled.'),
+        LdapAuthenticationConfiguration::$passwordFieldShowDisabled => $this->t('Display password field disabled (Prevents password updates).'),
+        LdapAuthenticationConfiguration::$passwordFieldHide => $this->t('Don\'t show password field on user forms except login form.'),
+        LdapAuthenticationConfiguration::$passwordFieldAllow => $this->t('Display password field and allow updating it. In order to change password in LDAP, LDAP provisioning for this field must be enabled.'),
       ],
     ];
 

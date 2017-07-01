@@ -28,11 +28,8 @@ class ExternalAuthenticationHelper {
    * Replaces the authmap table retired in Drupal 8.
    */
   public static function getUidFromIdentifierMap($identifier) {
-    $externalauth = \Drupal::service('externalauth.externalauth');
-    $externalauth->load($identifier, 'ldap_user');
-    if (property_exists($externalauth, 'uid')) {
-      return $externalauth->uid;
-    }
+    $authmap = \Drupal::service('externalauth.authmap');
+    return $authmap->getUid($identifier, 'ldap_user');
   }
 
   /**
