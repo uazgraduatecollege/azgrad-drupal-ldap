@@ -35,7 +35,7 @@ class GroupUserUpdateProcessor {
     // @TODO: Make query dynamic through ldap_user form.
     // @TODO: Move from controller into cron.
     // @TODO: Batch users as orphanprocessor does.
-    // @TODO: Fix issue with missing authorization / status blocked.
+    // @TODO: Fix issue with missing authorizations.
 
     $queryController = new QueryController('TEMP');
     $queryController->execute();
@@ -57,7 +57,7 @@ class GroupUserUpdateProcessor {
             }
           }
           else {
-            $drupalAccount = $this->ldapDrupalUserProcessor->provisionDrupalAccount(['name' => $username]);
+            $drupalAccount = $this->ldapDrupalUserProcessor->provisionDrupalAccount(['name' => $username, 'status' => TRUE]);
             $this->ldapDrupalUserProcessor->drupalUserLogsIn($drupalAccount);
             if ($this->detailedWatchdog) {
               \Drupal::logger('ldap_user')->notice('Periodic update: @name created', ['@name' => $username]);
