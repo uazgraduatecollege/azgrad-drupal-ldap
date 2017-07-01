@@ -572,7 +572,11 @@ EOT;
       ];
 
       foreach (LdapConfiguration::provisionsDrupalEvents() as $col_id => $col_name) {
-        $second_header[] = ['data' => $col_name, 'header' => TRUE, 'class' => 'header-provisioning'];
+        $second_header[] = [
+          'data' => $col_name,
+          'header' => TRUE,
+          'class' => 'header-provisioning',
+        ];
       }
     }
     // To ldap.
@@ -632,9 +636,10 @@ EOT;
 
     $text = ($direction == LdapConfiguration::PROVISION_TO_DRUPAL) ? 'target' : 'source';
     $user_attr_options = ['0' => t('Select') . ' ' . $text];
-    $syncMappings = new SyncMappingHelper();
-    if (!empty($syncMappings->syncMapping[$direction])) {
-      foreach ($syncMappings->syncMapping[$direction] as $target_id => $mapping) {
+    $syncMappingsHelper = new SyncMappingHelper();
+    $syncMappings = $syncMappingsHelper->getAllSyncMappings();
+    if (!empty($syncMappings[$direction])) {
+      foreach ($syncMappings[$direction] as $target_id => $mapping) {
 
         if (!isset($mapping['name']) || isset($mapping['exclude_from_mapping_ui']) && $mapping['exclude_from_mapping_ui']) {
           continue;
@@ -656,7 +661,7 @@ EOT;
     $row = 0;
 
     // 1. non configurable mapping rows.
-    foreach ($syncMappings->syncMapping[$direction] as $target_id => $mapping) {
+    foreach ($syncMappings[$direction] as $target_id => $mapping) {
       $row_id = $this->sanitise_machine_name($target_id);
       if (isset($mapping['exclude_from_mapping_ui']) && $mapping['exclude_from_mapping_ui']) {
         continue;
@@ -679,7 +684,7 @@ EOT;
         else {
           $mapping_key = $mapping['ldap_attr'];
         }
-        if (isset($mapping['enabled']) && $mapping['enabled'] && $this->isMappingConfigurable($syncMappings->syncMapping[$direction][$mapping_key], 'ldap_user')) {
+        if (isset($mapping['enabled']) && $mapping['enabled'] && $this->isMappingConfigurable($syncMappings[$direction][$mapping_key], 'ldap_user')) {
           $row_id = 'row-' . $row;
           $rows[$row_id] = $this->getSyncFormRow('update', $direction, $mapping, $user_attr_options, $row_id);
           $row++;
@@ -815,7 +820,7 @@ EOT;
     foreach ($syncEvents as $prov_event => $prov_event_name) {
       // See above.
       // $col++;
-      // $id = $id_prefix . join('__', array('sm', $prov_event, $row));.
+      // $id = $id_prefix . implode('__', array('sm', $prov_event, $row));.
       $result[$prov_event] = [
         '#type' => 'checkbox',
         '#title' => $prov_event,

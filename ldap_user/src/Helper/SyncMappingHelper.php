@@ -5,58 +5,65 @@ namespace Drupal\ldap_user\Helper;
 use Drupal\ldap_servers\Processor\TokenProcessor;
 
 /**
- *
+ * Helper class to process user field synchronisation mappings.
  */
 class SyncMappingHelper {
 
 
   /**
-   * Array of field sync mappings provided by all modules (via hook_ldap_user_attrs_list_alter())
-   * array of the form: array(
-   * LdapConfiguration:: | s => array(
-   *   <server_id> => array(
-   *     'sid' => <server_id> (redundant)
-   *     'ldap_attr' => e.g. [sn]
-   *     'user_attr'  => e.g. [field.field_user_lname] (when this value is set to 'user_tokens', 'user_tokens' value is used.)
-   *     'user_tokens' => e.g. [field.field_user_lname], [field.field_user_fname]
-   *     'convert' => 1|0 boolean indicating need to covert from binary
-   *     'direction' => LdapConfiguration::PROVISION_TO_DRUPAL | LdapConfiguration::PROVISION_TO_LDAP (redundant)
-   *     'config_module' => 'ldap_user'
-   *     'prov_module' => 'ldap_user'
-   *     'enabled' => 1|0 boolean
-   *      prov_events' => array( see events above )
-   *  )
+   * @var array
+   *  Array of field sync mappings provided by all modules.
    *
-   * Array of field syncing directions for each operation.  should include ldapUserSyncMappings.
-   * Keyed on direction => property, ldap, or field token such as '[field.field_lname] with brackets in them.
+   * Via hook_ldap_user_attrs_list_alter(). Array has the form of [
+   * LdapConfiguration:: | s => [
+   *   <server_id> => array(
+   *   'sid' => <server_id> (redundant)
+   *   'ldap_attr' => e.g. [sn]
+   *   'user_attr'  => e.g. [field.field_user_lname]
+   *     (when this value is set to 'user_tokens', 'user_tokens' value is used.)
+   *   'user_tokens' => e.g. [field.field_user_lname], [field.field_user_fname]
+   *   'convert' => 1|0 boolean indicating need to covert from binary
+   *   'direction' => LdapConfiguration::PROVISION_TO_DRUPAL |
+   *     LdapConfiguration::PROVISION_TO_LDAP (redundant)
+   *   'config_module' => 'ldap_user'
+   *   'prov_module' => 'ldap_user'
+   *   'enabled' => 1|0 boolean
+   *   prov_events' => [( see events above )]
+   *  ]
+   *
+   * Array of field syncing directions for each operation. Should include
+   * ldapUserSyncMappings. Keyed on direction => property, ldap, or field token
+   * such as '[field.field_lname] with brackets in them.
    */
-
-  public $syncMapping = NULL;
-
+  private $syncMapping;
 
   private $config;
 
   /**
-   *
+   * Constructor.
    */
   public function __construct() {
-    $this->config = \Drupal::config('ldap_user.settings')->get();
-    $this->setSyncMapping();
+    $this->config = \Drupal::config('ldap_user.settings');
+    $this->loadSyncMappings();
   }
 
   /**
    * Given configuration of syncing, determine is a given sync should occur.
    *
    * @param string $attr_token
-   *   e.g. [property.mail], [field.ldap_user_puid_property].
+   *   Attribute token such as [property.mail], or
+   *   [field.ldap_user_puid_property].
    * @param array $prov_events
-   *   e.g. array(LdapConfiguration::$eventCreateDrupalUser).  typically array with 1 element.
+   *   Provisioning events such as LdapConfiguration::$eventCreateDrupalUser.
+   *   Typically an array with one element.
    * @param int $direction
-   *   LdapConfiguration::PROVISION_TO_DRUPAL or LdapConfiguration::PROVISION_TO_LDAP.
+   *   Either LdapConfiguration::PROVISION_TO_DRUPAL or
+   *   LdapConfiguration::PROVISION_TO_LDAP.
    *
    * @return bool
+   *   If sync should occur.
    */
-  public function isSynced($attr_token, $prov_events, $direction) {
+  public function isSynced($attr_token, array $prov_events, $direction) {
     $result = (boolean) (
       isset($this->syncMapping[$direction][$attr_token]['prov_events']) &&
       count(array_intersect($prov_events, $this->syncMapping[$direction][$attr_token]['prov_events']))
@@ -68,12 +75,14 @@ class SyncMappingHelper {
    * Util to fetch mappings for a given direction.
    *
    * @param string $direction
+   *   Direction to sync in.
    * @param array $prov_events
+   *   Events to act upon.
    *
    * @return array|bool
    *   Array of mappings (may be empty array)
    */
-  public function getSyncMappings($direction = NULL, $prov_events = NULL) {
+  public function getSyncMappings($direction = NULL, array $prov_events = NULL) {
     if (!$prov_events) {
       $prov_events = LdapConfiguration::getAllEvents();
     }
@@ -88,9 +97,11 @@ class SyncMappingHelper {
     else {
       $directions = [$direction];
     }
+    // TODO: Note that we again query the DB, getSyncMappings() goes around the
+    // general implementation and could be its own class.
     foreach ($directions as $direction) {
-      if (!empty($this->config['ldapUserSyncMappings'][$direction])) {
-        foreach ($this->config['ldapUserSyncMappings'][$direction] as $attribute => $mapping) {
+      if (!empty($this->config->get('ldapUserSyncMappings')[$direction])) {
+        foreach ($this->config->get('ldapUserSyncMappings')[$direction] as $attribute => $mapping) {
           if (!empty($mapping['prov_events'])) {
             $result = count(array_intersect($prov_events, $mapping['prov_events']));
             if ($result) {
@@ -113,15 +124,38 @@ class SyncMappingHelper {
   }
 
   /**
+   * Returns all available mappings.
+   *
+   * @TODO: Try to remove this, parsing of arrays as in LdapUserAdminForm is
+   * not ideal.
+   *
+   * @return array
+   *   All sync mappings.
+   */
+  public function getAllSyncMappings() {
+    return $this->syncMapping;
+  }
+
+  /**
+   * Setter function to ease testing.
+   *
+   * @param $mappings
+   *   Set all mappings.
+   */
+  private function setAllSyncMappings($mappings) {
+    $this->syncMapping = $mappings;
+  }
+
+  /**
    * Fetches the sync mappings from cache or loads them from configuration.
    */
-  public function setSyncMapping() {
+  public function loadSyncMappings() {
     $syncMappingsCache = \Drupal::cache()->get('ldap_user_sync_mapping');
     if ($syncMappingsCache) {
       $this->syncMapping = $syncMappingsCache->data;
     }
     else {
-      $this->syncMapping = $this->processSyncMappings();
+      $this->processSyncMappings();
       \Drupal::cache()->set('ldap_user_sync_mapping', $this->syncMapping);
     }
   }
@@ -133,19 +167,17 @@ class SyncMappingHelper {
    *
    * return array
    */
-  public function processSyncMappings() {
+  private function processSyncMappings() {
     $available_user_attributes = [];
     foreach ([
       LdapConfiguration::PROVISION_TO_DRUPAL,
       LdapConfiguration::PROVISION_TO_LDAP,
     ] as $direction) {
       if ($direction == LdapConfiguration::PROVISION_TO_DRUPAL) {
-        $sid = \Drupal::config('ldap_user.settings')
-          ->get('drupalAcctProvisionServer');
+        $sid = $this->config->get('drupalAcctProvisionServer');
       }
       else {
-        $sid = \Drupal::config('ldap_user.settings')
-          ->get('ldapEntryProvisionServer');
+        $sid = $this->config->get('ldapEntryProvisionServer');
       }
       $available_user_attributes[$direction] = [];
       $ldap_server = FALSE;
@@ -161,35 +193,37 @@ class SyncMappingHelper {
 
       $params = [
         'ldap_server' => $ldap_server,
-        'ldap_user_conf' => $this,
         'direction' => $direction,
       ];
 
+      // This function does not add any attributes by itself but allows modules
+      // such as ldap_user to inject them through this hook.
       \Drupal::moduleHandler()->alter(
         'ldap_user_attrs_list',
         $available_user_attributes[$direction],
         $params
       );
     }
-    return $available_user_attributes;
+    $this->setAllSyncMappings($available_user_attributes);
   }
 
   /**
    * Util to fetch attributes required for this user conf, not other modules.
    *
-   * @param enum $direction
+   * @param int $direction
    *   LDAP_USER_PROV_DIRECTION_* constants.
    * @param string $ldap_context
+   *   LDAP context.
    *
    * @return array
+   *   Required attributes.
    */
   public function getLdapUserRequiredAttributes($direction = NULL, $ldap_context = NULL) {
     if ($direction == NULL) {
       $direction = LdapConfiguration::PROVISION_TO_ALL;
     }
-    $attributes_map = [];
     $required_attributes = [];
-    if ($this->config['drupalAcctProvisionServer']) {
+    if ($this->config->get('drupalAcctProvisionServer')) {
       $prov_events = LdapConfiguration::ldapContextToProvEvents($ldap_context);
       $attributes_map = $this->getSyncMappings($direction, $prov_events);
       $required_attributes = [];

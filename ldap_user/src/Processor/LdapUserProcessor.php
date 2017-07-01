@@ -233,7 +233,7 @@ class LdapUserProcessor {
    *     array('existing' => existing ldap entry),
    *     array('description' = > blah blah)
    */
-  public function provisionLdapEntry($account, $ldap_user = NULL, $test_query = FALSE) {
+  public function provisionLdapEntry($account, $ldap_user = NULL) {
 
     $result = [
       'status' => NULL,
@@ -306,12 +306,6 @@ class LdapUserProcessor {
       $result['proposed'] = $proposed_ldap_entry;
       $result['ldap_server'] = $ldap_server;
     }
-    elseif ($test_query) {
-      $result['status'] = 'fail';
-      $result['description'] = 'not created because flagged as test query';
-      $result['proposed'] = $proposed_ldap_entry;
-      $result['ldap_server'] = $ldap_server;
-    }
     else {
       // Stick $proposed_ldap_entry in $ldap_entries array for drupal_alter call.
       $ldap_entries = [$proposed_dn_lcase => $proposed_ldap_entry];
@@ -378,7 +372,7 @@ class LdapUserProcessor {
       '%uid' => @$account->id(),
       '%description' => @$result['description'],
     ];
-    if (!$test_query && isset($result['status'])) {
+    if (isset($result['status'])) {
       if ($result['status'] == 'success') {
         if ($this->detailedWatchdog) {
           \Drupal::logger('ldap_user')->info('LDAP entry on server %sid created dn=%dn.  %description. username=%username, uid=%uid', $tokens);

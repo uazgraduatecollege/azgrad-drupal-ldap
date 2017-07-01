@@ -52,9 +52,12 @@ class LdapQuery extends QueryPluginBase {
     $view->build_info['count_query'] = $this->query(TRUE);
   }
 
+  /**
+   *
+   */
   public function execute(ViewExecutable $view) {
     if (!isset($this->options['query_id']) || empty($this->options['query_id'])) {
-     \Drupal::logger('ldap')->error('You are trying to use Views without having chosen an LDAP Query under Advanced => Query settings.');
+      \Drupal::logger('ldap')->error('You are trying to use Views without having chosen an LDAP Query under Advanced => Query settings.');
       return FALSE;
     }
     $start = microtime(TRUE);
@@ -106,6 +109,9 @@ class LdapQuery extends QueryPluginBase {
     $view->execute_time = microtime(TRUE) - $start;
   }
 
+  /**
+   *
+   */
   private function sortResults($results) {
     $parameters = [];
     $orders = $this->orderby;
@@ -136,17 +142,27 @@ class LdapQuery extends QueryPluginBase {
     return $processedResults;
   }
 
+  /**
+   *
+   */
   public function ensureTable($table, $relationship = NULL) {
     return '';
   }
+
+  /**
+   *
+   */
   public function addField($table, $field, $alias = '', $params = []) {
     return $field;
   }
 
+  /**
+   *
+   */
   public function addOrderBy($table, $field, $order, $alias = '', $params = []) {
     $this->orderby[] = [
       'field' => $field,
-      'direction' => $order
+      'direction' => $order,
     ];
   }
 
@@ -155,11 +171,12 @@ class LdapQuery extends QueryPluginBase {
    */
   protected function defineOptions() {
     $options = parent::defineOptions();
-    $options['query_id'] = array(
+    $options['query_id'] = [
       'default' => NULL,
-    );
+    ];
     return $options;
   }
+
   /**
    * {@inheritdoc}
    */
@@ -193,18 +210,20 @@ class LdapQuery extends QueryPluginBase {
     if (!isset($this->where[$group])) {
       $this->setWhereGroup('AND', $group);
     }
-    if (!empty($operator) && $operator != 'LIKE')
-    $this->where[$group]['conditions'][] = [
-      'field' => $field,
-      'value' => $value,
-      'operator' => $operator,
-    ];
+    if (!empty($operator) && $operator != 'LIKE') {
+      $this->where[$group]['conditions'][] = [
+        'field' => $field,
+        'value' => $value,
+        'operator' => $operator,
+      ];
+    }
   }
 
   /**
    * Compiles all conditions into a set of LDAP requirements.
    *
    * @return string
+   *   Condition string.
    */
   public function buildConditions() {
     $operator = ['AND' => '&', 'OR' => '|'];
@@ -216,8 +235,9 @@ class LdapQuery extends QueryPluginBase {
           $item = '(' . $clause['field'] . '=' . SafeMarkup::checkPlain($clause['value']) . ')';
           if (Unicode::substr($clause['operator'], 0, 1) == '!') {
             $subGroup .= "(!$item)";
-          } else {
-            $subGroup .=  $item;
+          }
+          else {
+            $subGroup .= $item;
           }
         }
         if (count($info['conditions']) <= 1) {
@@ -233,19 +253,20 @@ class LdapQuery extends QueryPluginBase {
       $output = $mainGroup;
     }
     else {
-      // TODO: Bug hidden here regarding multiple groups, which are not working properly.
+      // TODO: Bug hidden here regarding multiple groups, which are not working
+      // properly.
       $output = '(' . $operator[$this->group_operator] . $mainGroup . ')';
     }
 
     return $output;
   }
 
-
   /**
    * Collates Views arguments and filters for a modified query.
    *
-   * @param $standardFilter
+   * @param string $standardFilter
    *   The filter in LDAP query which gets overwritten.
+   *
    * @return string
    *   Combined string.
    */
@@ -253,7 +274,8 @@ class LdapQuery extends QueryPluginBase {
     $searchFilter = $this->buildConditions();
     if (!empty($searchFilter)) {
       $finalFilter = '(&' . $standardFilter . $searchFilter . ')';
-    } else {
+    }
+    else {
       $finalFilter = $standardFilter;
     }
     return $finalFilter;

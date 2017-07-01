@@ -11,39 +11,65 @@ use Drupal\views\Plugin\views\filter\StringFilter;
  */
 class LdapAttribute extends StringFilter {
 
-
+  /**
+   * {@inheritdoc}
+   */
   public function operator() {
     return $this->operator == '=' ? '=' : '!=';
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function opEqual($field) {
     $this->query->addWhere($this->options['group'], $this->realField, $this->value, $this->operator());
   }
 
+  /**
+   * {@inheritdoc}
+   */
   protected function opContains($field) {
     $this->query->addWhere($this->options['group'], $this->realField, "*$this->value*", '=');
   }
 
+  /**
+   * {@inheritdoc}
+   */
   protected function opStartsWith($field) {
     $this->query->addWhere($this->options['group'], $this->realField, "$this->value*", '=');
   }
 
+  /**
+   * {@inheritdoc}
+   */
   protected function opNotStartsWith($field) {
     $this->query->addWhere($this->options['group'], $this->realField, "$this->value*", '!=');
   }
 
+  /**
+   * {@inheritdoc}
+   */
   protected function opEndsWith($field) {
     $this->query->addWhere($this->options['group'], $this->realField, "*$this->value", '=');
   }
 
+  /**
+   * {@inheritdoc}
+   */
   protected function opNotEndsWith($field) {
     $this->query->addWhere($this->options['group'], $this->realField, "*$this->value", '!=');
   }
 
+  /**
+   * {@inheritdoc}
+   */
   protected function opNotLike($field) {
     $this->query->addWhere($this->options['group'], $this->realField, "*$this->value*", '!=');
   }
 
+  /**
+   * {@inheritdoc}
+   */
   protected function opEmpty($field) {
     if ($this->operator == 'empty') {
       $this->query->addWhere($this->options['group'], $this->realField, '*', '!=');
@@ -53,6 +79,5 @@ class LdapAttribute extends StringFilter {
     }
   }
 
-   // TODO: Port numerical comparisons. Requires change of base type.
-
+  // TODO: Port numerical comparisons. Requires change of base type.
 }

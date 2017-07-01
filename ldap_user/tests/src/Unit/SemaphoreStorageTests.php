@@ -12,14 +12,7 @@ use Drupal\Tests\UnitTestCase;
 class SemaphoreStorageTests extends UnitTestCase {
 
   /**
-   *
-   */
-  protected function setUp() {
-    parent::setUp();
-  }
-
-  /**
-   *
+   * Tests the password storage.
    */
   public function testPasswordStorage() {
 

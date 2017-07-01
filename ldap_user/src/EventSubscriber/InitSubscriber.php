@@ -7,7 +7,7 @@ use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
- *
+ * Subscriber for the semaphore storage.
  */
 class InitSubscriber implements EventSubscriberInterface {
 

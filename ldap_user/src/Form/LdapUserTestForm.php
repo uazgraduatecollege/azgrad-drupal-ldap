@@ -50,7 +50,7 @@ class LdapUserTestForm extends FormBase {
       '#markup' => t('This form is for debugging issues with specific provisioning events. If you want to test your setup in general, try the server\'s test page first.'),
     ];
     $form['warning'] = [
-      '#markup' => '<h3>' . t('If you trigger the event and have sync operations enabled on the LDAP Users page, these can run and modify data.') . '</h3>',
+      '#markup' => '<h3>' . $this->t('If you trigger the event this will modify your data.') . '</h3>' . $this->t('When in doubt, always work on a staging environment.'),
     ];
 
     $form['testing_drupal_username'] = [
@@ -61,17 +61,6 @@ class LdapUserTestForm extends FormBase {
       '#size' => 30,
       '#maxlength' => 255,
       '#description' => t('The user need not exist in Drupal and testing will not affect the user\'s LDAP or Drupal Account.'),
-    ];
-
-    $form['test_mode'] = [
-      '#type' => 'radios',
-      '#title' => t('Testing Mode'),
-      '#required' => 0,
-      '#default_value' => isset($_SESSION['ldap_user_test_form']['test_mode']) ? $_SESSION['ldap_user_test_form']['test_mode'] : 'query',
-      '#options' => [
-        'query' => t('Test Query.  Will not alter anything in drupal or LDAP'),
-        'execute' => t('Execute Action.  Will perform provisioning configured for events below. If this is selected only one action should be selected below'),
-      ],
     ];
 
     $selected_actions = isset($_SESSION['ldap_user_test_form']['action']) ? $_SESSION['ldap_user_test_form']['action'] : [];
@@ -96,16 +85,17 @@ class LdapUserTestForm extends FormBase {
    *
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
-    if ($form_state->getValue(['test_mode']) == 'execute' && count(array_filter($form_state->getValue([
-      'action',
-    ]))) > 1) {
-      $form_state->setErrorByName('test_mode', t('Only one action may be selected for "Execute Action" testing mode.'));
+    if (count(array_filter($form_state->getValue(['action']))) > 1) {
+      $form_state->setErrorByName(
+        'action',
+        t('Only one action may be selected for "Execute Action" testing mode.')
+      );
     }
 
   }
 
   /**
-   *
+   * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
 
@@ -146,18 +136,16 @@ class LdapUserTestForm extends FormBase {
         $results['User Authmap'] = 'No authmaps available.  Authmaps only shown if user account exists beforehand';
       }
 
-      $save = ($form_state->getValue(['test_mode']) == 'execute');
-      $test_query = ($form_state->getValue(['test_mode']) != 'execute');
       $account = ['name' => $username];
       $sync_trigger_description = self::$sync_trigger_options[$selected_action];
       foreach ([LdapConfiguration::PROVISION_TO_DRUPAL, LdapConfiguration::PROVISION_TO_LDAP] as $direction) {
         if (LdapConfiguration::provisionEnabled($direction, $selected_action)) {
           if ($direction == LdapConfiguration::PROVISION_TO_DRUPAL) {
-            $processor->provisionDrupalAccount($account, $save);
+            $processor->provisionDrupalAccount($account);
             $results['provisionDrupalAccount method results']["context = $sync_trigger_description"]['proposed'] = $account;
           }
           else {
-            $provision_result = $ldapProcessor->provisionLdapEntry($username, NULL, $test_query);
+            $provision_result = $ldapProcessor->provisionLdapEntry($username, NULL);
             $results['provisionLdapEntry method results']["context = $sync_trigger_description"] = $provision_result;
           }
         }

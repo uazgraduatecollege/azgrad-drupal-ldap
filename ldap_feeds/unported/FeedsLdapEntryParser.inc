@@ -31,7 +31,7 @@ class FeedsLdapEntryParser extends FeedsParser {
         if (isset($ldap_entry['attr'])) {
           /**
            * Exception need because of unconventional format of LDAP data
-           * returned from $ldap_server->userUserNameToExistingLdapEntry.
+           * returned from $ldap_server->matchUsernameToExistingLdapEntry.
            */
           $ldap_attributes = $ldap_entry['attr'];
         }

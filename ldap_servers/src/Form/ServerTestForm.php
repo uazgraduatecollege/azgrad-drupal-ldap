@@ -602,12 +602,8 @@ class ServerTestForm extends EntityForm {
    * @param null $ldap_context
    * @return array
    */
-  public function testUserMapping($drupal_username, $direction = NULL, $ldap_context = NULL) {
-    if ($direction == NULL) {
-      $direction = LdapConfiguration::PROVISION_TO_ALL;
-      // TODO: Remove unused parameter, if really not needed.
-    }
-    $ldap_user = $this->ldapServer->userUserNameToExistingLdapEntry($drupal_username, $ldap_context);
+  public function testUserMapping($drupal_username) {
+    $ldap_user = $this->ldapServer->matchUsernameToExistingLdapEntry($drupal_username);
 
     $errors = FALSE;
     if (!$ldap_user) {

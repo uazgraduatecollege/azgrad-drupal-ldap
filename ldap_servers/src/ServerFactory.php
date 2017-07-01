@@ -7,6 +7,7 @@ use Drupal\ldap_servers\Entity\Server;
 use Drupal\ldap_servers\Processor\TokenProcessor;
 use Drupal\ldap_user\Helper\ExternalAuthenticationHelper;
 use Drupal\ldap_user\Helper\LdapConfiguration;
+use Drupal\user\UserInterface;
 
 /**
  *
@@ -14,14 +15,26 @@ use Drupal\ldap_user\Helper\LdapConfiguration;
 class ServerFactory {
 
   /**
+   * Fetch server by ID.
+   *
+   * @param string $sid
+   *   Server id.
+   *
    * @return \Drupal\ldap_servers\Entity\Server
+   *   Server entity.
    */
   public function getServerById($sid) {
     return Server::load($sid);
   }
 
   /**
-   * @return \Drupal\ldap_servers\Entity\Server|bool
+   * Fetch server by ID if enabled.
+   *
+   * @param string $sid
+   *   Server id.
+   *
+   * @return bool|\Drupal\ldap_servers\Entity\Server
+   *   Server entity if enabled or false.
    */
   public function getServerByIdEnabled($sid) {
     $server = Server::load($sid);
@@ -34,7 +47,10 @@ class ServerFactory {
   }
 
   /**
+   * Fetch all servers.
+   *
    * @return \Drupal\ldap_servers\Entity\Server[]
+   *   An array of all servers.
    */
   public function getAllServers() {
     $query = \Drupal::entityQuery('ldap_server');
@@ -43,7 +59,10 @@ class ServerFactory {
   }
 
   /**
+   * Fetch all enabled servers.
+   *
    * @return \Drupal\ldap_servers\Entity\Server[]
+   *   An array of all enabled servers.
    */
   public function getEnabledServers() {
     $query = \Drupal::entityQuery('ldap_server')
@@ -53,11 +72,17 @@ class ServerFactory {
   }
 
   /**
-   * @param $identifier
-   * @param $id
-   * @param null $ldap_context
+   * Fetch user data from server by Identifier.
+   *
+   * @param string $identifier
+   *   User identifier.
+   * @param string $id
+   *   Server id.
+   * @param array $ldap_context
+   *   Provisioning context.
    *
    * @return array|bool
+   *   Result data or false.
    */
   public function getUserDataFromServerByIdentifier($identifier, $id, $ldap_context = NULL) {
     // Try to retrieve the user from the cache.
@@ -73,7 +98,7 @@ class ServerFactory {
       return FALSE;
     }
 
-    $ldap_user = $server->userUserNameToExistingLdapEntry($identifier, $ldap_context);
+    $ldap_user = $server->matchUsernameToExistingLdapEntry($identifier, $ldap_context);
 
     if ($ldap_user) {
       $ldap_user['id'] = $id;
@@ -86,12 +111,19 @@ class ServerFactory {
   }
 
   /**
+   * Fetch user data from server by user account.
+   *
    * @param \Drupal\user\UserInterface $account
+   *   Drupal user account.
    * @param string $id
-   * @param null $ldap_context
-   * @return mixed
+   *   Server id.
+   * @param string $ldap_context
+   *   Provisioning direction.
+   *
+   * @return array|bool
+   *   Returns data or FALSE.
    */
-  public function getUserDataFromServerByAccount($account, $id, $ldap_context = NULL) {
+  public function getUserDataFromServerByAccount(UserInterface $account, $id, $ldap_context = NULL) {
     $identifier = ExternalAuthenticationHelper::getUserIdentifierFromMap($account->id());
     if ($identifier) {
       return $this->getUserDataFromServerByIdentifier($identifier, $id, $ldap_context);
@@ -102,23 +134,29 @@ class ServerFactory {
   }
 
   /**
+   * Fetch user data from account.
+   *
+   *  Uses the regular provisioning server.
+   *
    * @param \Drupal\user\UserInterface $account
-   * @param $ldap_context
-   * @return mixed
+   *   Drupal user account.
+   * @param array $ldap_context
+   *   LDAP context.
+   *
+   * @return array|bool
+   *   Returns data or FALSE.
    */
-  public function getUserDataByAccount($account, $ldap_context = NULL) {
+  public function getUserDataByAccount(UserInterface $account, $ldap_context = NULL) {
     $provisioningServer = \Drupal::config('ldap_user.settings')->get('drupalAcctProvisionServer');
     $id = NULL;
     if (!$account) {
       return FALSE;
     }
 
-    /*
-     * TODO: While this functionality is now consistent with 7.x, it hides
-     * a corner case: server which are no longer available can still be set in
-     * the user as a preference and those users will not be able to sync.
-     * This needs to get cleaned up or fallback differently.
-     */
+    // TODO: While this functionality is now consistent with 7.x, it hides
+    // a corner case: server which are no longer available can still be set in
+    // the user as a preference and those users will not be able to sync.
+    // This needs to get cleaned up or fallback differently.
     if (property_exists($account, 'ldap_user_puid_sid') &&
       !empty($account->get('ldap_user_puid_sid')->value)) {
       $id = $account->get('ldap_user_puid_sid')->value;
@@ -143,8 +181,10 @@ class ServerFactory {
   /**
    * Duplicate function in Server due to test complications.
    *
-   * @param $dn
-   * @param $attribute
+   * @param string $dn
+   *   DN to process.
+   * @param int $attribute
+   *   Attributes to explode.
    *
    * @return array
    */
@@ -168,7 +208,9 @@ class ServerFactory {
         $ldap_server = $this->getServerById($params['sid']);
 
         if ($ldap_server) {
-          // mail, unique_persistent_attr, user_attr, mail_template, and user_dn_expression are needed for all functionality.
+          // The attributes mail, unique_persistent_attr, user_attr,
+          // mail_template, and user_dn_expression are needed for all
+          // functionality.
           if (!isset($attributes[$ldap_server->get('mail_attr')])) {
             $attributes[$ldap_server->get('mail_attr')] = TokenProcessor::setAttributeMap();
           }
@@ -215,13 +257,10 @@ class ServerFactory {
 
       if ($direction == LdapConfiguration::PROVISION_TO_DRUPAL) {
 
-        /**
-         * These 4 user fields identify where in ldap and which ldap server they are
-         * associated with. They are required for a Drupal account to be
-         * "ldap associated" regardless of if any other fields/properties are
-         * provisioned or synced.
-         */
-
+        // These 4 user fields identify where in ldap and which ldap server they
+        // are associated with. They are required for a Drupal account to be
+        // "LDAP associated" regardless of if any other fields/properties are
+        // provisioned or synced.
         if ($ldap_server->get('unique_persistent_attr')) {
           $attributes = [
             'field.ldap_user_puid_sid',

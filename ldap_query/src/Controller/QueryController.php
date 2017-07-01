@@ -13,11 +13,17 @@ class QueryController {
   private $qid;
   private $query;
 
+  /**
+   *
+   */
   public function __construct($id) {
     $this->qid = $id;
     $this->query = QueryEntity::load($this->qid);
   }
 
+  /**
+   *
+   */
   public function getFilter() {
     return $this->query->get('filter');
   }
@@ -65,10 +71,16 @@ class QueryController {
     }
   }
 
+  /**
+   *
+   */
   public function getRawResults() {
     return $this->results;
   }
 
+  /**
+   *
+   */
   public function availableFields() {
     $attributes = [];
     /**
@@ -89,6 +101,7 @@ class QueryController {
 
   /**
    * TODO: Unported.
+   *
    * @deprecated
    */
   public function ldap_query_cache_clear() {

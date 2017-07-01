@@ -398,11 +398,13 @@ class TokenProcessor {
 
   /**
    *
-   * @param \Drupal\user\Entity\User $account
+   * @param \Drupal\user\UserInterface $account
+   *   The Drupal user account.
    * @param array $token_keys
-   *   'all' signifies return
-   *   all token/value pairs available; otherwise array lists
-   *   token keys (e.g. property.name ...NOT [property.name]).
+   *   Keys for tokens:
+   *     'all' signifies return
+   *     all token/value pairs available; otherwise array lists
+   *     token keys (e.g. property.name ...NOT [property.name])
    * @param string $pre
    *   Prefix of token.
    * @param string $post
@@ -412,7 +414,7 @@ class TokenProcessor {
    *   Should return token/value pairs in array such as 'status' => 1,
    *   'uid' => 17.
    */
-  public function tokenizeUserAccount(UserInterface $account, $token_keys = [], $pre = self::PREFIX, $post = self::SUFFIX) {
+  public function tokenizeUserAccount(UserInterface $account, array $token_keys = [], $pre = self::PREFIX, $post = self::SUFFIX) {
 
     if (empty($token_keys)) {
       $token_keys = $this->discoverUserAttributes($account);
@@ -486,8 +488,10 @@ class TokenProcessor {
   }
 
   /**
+   * Find the tokens needed for the template.
+   *
    * @param string $template
-   *   in form [cn]@myuniversity.edu.
+   *   In the form of [cn]@myuniversity.edu.
    * @return array of all tokens in the template such as array('cn')
    */
   public function findTokensNeededForTemplate($template) {

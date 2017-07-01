@@ -13,6 +13,6 @@ use Drupal\ldap_query\Plugin\views\VariableAttributeCustomization;
  */
 class LdapVariableAttribute extends LdapAttribute {
 
- use VariableAttributeCustomization;
+  use VariableAttributeCustomization;
 
 }

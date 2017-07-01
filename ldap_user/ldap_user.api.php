@@ -52,7 +52,7 @@ function hook_ldap_user_attrs_list_alter(&$available_user_attrs, &$params) {
  *   The edit array (see hook_user_insert). Make changes to this object as
  *   required.
  * @param array $ldap_user,
- *   For structure @see LdapServer::userUserNameToExistingLdapEntry()
+ *   For structure @see LdapServer::matchUsernameToExistingLdapEntry()
  *   Array, the ldap user object relating to the drupal user.
  * @param array $context
  *   Contains ldap_server and provisioning events.

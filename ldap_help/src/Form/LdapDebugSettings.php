@@ -11,20 +11,6 @@ use Drupal\Core\Form\FormStateInterface;
 class LdapDebugSettings extends ConfigFormBase {
 
   /**
-   *
-  function ldap_help_form_ldap_servers_settings_alter(&$form, FormStateInterface $form_state) {
-    $form['watchdog_detail'] = ['#type' => 'fieldset', '#title' => t('Debugging')];
-    $form['watchdog_detail']
-  }
-
-  function ldap_help_watchdog_detail_submit(array &$form, FormStateInterface $form_state) {
-    if ($form_state->isSubmitted()) {
-
-    }
-  }
-   */
-
-  /**
    * {@inheritdoc}
    */
   public function getFormId() {
@@ -39,7 +25,7 @@ class LdapDebugSettings extends ConfigFormBase {
   }
 
   /**
-   *
+   * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
 

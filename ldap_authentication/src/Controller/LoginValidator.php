@@ -277,7 +277,7 @@ class LoginValidator {
       }
 
       // Check if user exists in LDAP.
-      $this->ldapUser = $this->serverDrupalUser->userUserNameToExistingLdapEntry($this->authName);
+      $this->ldapUser = $this->serverDrupalUser->matchUsernameToExistingLdapEntry($this->authName);
 
       if (!$this->ldapUser) {
         if ($this->detailedLogging) {
@@ -318,7 +318,7 @@ class LoginValidator {
         $authenticationResult = self::AUTHENTICATION_SUCCESS;
         if ($this->serverDrupalUser->get('bind_method') == 'anon_user') {
           // After successful bind, lookup user again to get private attributes.
-          $this->ldapUser = $this->serverDrupalUser->userUserNameToExistingLdapEntry($this->authName);
+          $this->ldapUser = $this->serverDrupalUser->matchUsernameToExistingLdapEntry($this->authName);
         }
         if ($this->serverDrupalUser->get('bind_method') == 'service_account' ||
           $this->serverDrupalUser->get('bind_method') == 'anon_user') {
@@ -407,7 +407,7 @@ class LoginValidator {
         continue;
       }
 
-      $this->ldapUser = $this->serverDrupalUser->userUserNameToExistingLdapEntry($authName);
+      $this->ldapUser = $this->serverDrupalUser->matchUsernameToExistingLdapEntry($authName);
 
       if (!$this->ldapUser) {
         if ($this->detailedLogging) {
@@ -437,7 +437,7 @@ class LoginValidator {
       $authenticationResult = self::AUTHENTICATION_SUCCESS;
       if ($this->serverDrupalUser->get('bind_method') == 'anon_user') {
         // After successful bind, lookup user again to get private attributes.
-        $this->ldapUser = $this->serverDrupalUser->userUserNameToExistingLdapEntry($authName);
+        $this->ldapUser = $this->serverDrupalUser->matchUsernameToExistingLdapEntry($authName);
       }
       if ($this->serverDrupalUser->get('bind_method') == 'service_account' ||
         $this->serverDrupalUser->get('bind_method') == 'anon_user') {

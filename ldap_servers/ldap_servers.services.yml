@@ -1,3 +1,6 @@
 services:
+  logger.channel.ldap_servers:
+    parent: logger.channel_base
+    arguments: ['ldap_servers']
   ldap.servers:
     class: Drupal\ldap_servers\ServerFactory

@@ -24,13 +24,16 @@ class LdapVariableImageAttribute extends LdapVariableAttribute {
       $data = $this->getValue($values)[0];
       $formatter = new FormattableMarkup(
         '<img src="data:image/jpeg;base64,:src"/>', [
-          ':src' => base64_encode($data)
+          ':src' => base64_encode($data),
         ]
       );
       return ['#markup' => $formatter];
     }
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function buildOptionsForm(&$form, FormStateInterface $form_state) {
     parent::buildOptionsForm($form, $form_state);
     // To avoid code complexity, multi-value is removed for images, since

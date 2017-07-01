@@ -12,14 +12,7 @@ use Drupal\Tests\UnitTestCase;
 class ExternalAuthenticationHelperTests extends UnitTestCase {
 
   /**
-   *
-   */
-  protected function setUp() {
-    parent::setUp();
-  }
-
-  /**
-   *
+   * Tests user exclusion for the authentication helper.
    */
   public function testUserExclusion() {
 

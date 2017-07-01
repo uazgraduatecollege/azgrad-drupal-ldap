@@ -12,4 +12,5 @@ use Drupal\views\Plugin\views\sort\Standard;
  */
 class LdapVariableAttribute extends Standard {
   use VariableAttributeCustomization;
+
 }

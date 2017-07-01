@@ -5,8 +5,14 @@ namespace Drupal\ldap_query\Plugin\views;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\ldap_query\Controller\QueryController;
 
+/**
+ *
+ */
 trait VariableAttributeCustomization {
 
+  /**
+   * {@inheritdoc}
+   */
   protected function defineOptions() {
     $options = parent::defineOptions();
     $options['attribute_name'] = ['default' => ''];

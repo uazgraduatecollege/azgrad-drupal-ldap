@@ -11,8 +11,12 @@ use Drupal\views\Plugin\views\argument\Standard;
  */
 class LdapAttribute extends Standard {
 
+  /**
+   * {@inheritdoc}
+   */
   public function query($group_by = FALSE) {
     parent::query($group_by);
     $this->query->addWhere(0, $this->realField, $this->argument, '=');
   }
+
 }

@@ -15,6 +15,9 @@ class LdapVariableAttribute extends LdapAttribute {
 
   use VariableAttributeCustomization;
 
+  /**
+   *
+   */
   public function query() {
     $this->ensureMyTable();
     $this->realField = $this->options['attribute_name'];

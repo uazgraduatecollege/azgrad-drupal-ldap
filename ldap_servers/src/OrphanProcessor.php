@@ -151,7 +151,7 @@ class OrphanProcessor {
       }
       foreach ($persistentUidAttributes as $persistentUidProperty => $OrElement) {
         // Query should look like (|(guid=3243243)(guid=3243243)(guid=3243243))
-        $ldapFilter = '(|' . join("", $OrElement) . ')';
+        $ldapFilter = '(|' . implode("", $OrElement) . ')';
         $ldapEntries = $servers[$serverId]->searchAllBaseDns($ldapFilter, [$persistentUidProperty]);
         if ($ldapEntries === FALSE) {
           // If the query returns an error, ignore the entire server.

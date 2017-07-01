@@ -4,8 +4,8 @@ namespace Drupal\Tests\ldap_user\Unit;
 
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\ldap_user\Helper\LdapConfiguration;
-use Drupal\ldap_user\Processor\DrupalUserProcessor;
 use Drupal\Tests\UnitTestCase;
+use ReflectionClass;
 
 /**
  * @coversDefaultClass \Drupal\ldap_user\Helper\SyncMappingHelper
@@ -19,7 +19,7 @@ class SyncMappingHelperTests extends UnitTestCase {
   public $container;
 
   /**
-   *
+   * Prepare the sync mapping tests.
    */
   protected function setUp() {
     parent::setUp();
@@ -44,107 +44,87 @@ class SyncMappingHelperTests extends UnitTestCase {
   }
 
   /**
-   *
+   * Prove that field syncs work and provide the demo data here.
    */
-  public function testSyncValidator() {
-    $this->assertTrue(TRUE);
-    return;
-    // TODO: This test should test if the sync mapping returns in a useful form.
-    // This is currently not the case since the test data is not injected
-    // as configuration yet.
+  public function testSyncValidatorIsSynced() {
     $syncTestData = [
-      LdapConfiguration::$eventCreateDrupalUser => [
-        0 => [
-          '[property.fake]',
-          '[property.data]',
-          '[property.uid]',
+      'drupal' => [
+        '[field.ldap_user_puid_sid]' => [
+          // Actually TranslatableMarkup.
+          'name' => 'SID',
+          'configurable_to_drupal' => 0,
+          'configurable_to_ldap' => 1,
+          'notes' => 'not configurable',
+          'direction' => 'drupal',
+          'enabled' => TRUE,
+          'prov_events' => [
+            LdapConfiguration::$eventCreateDrupalUser,
+          ],
         ],
-        1 => [
-          '[property.mail]',
-          '[property.name]',
-          '[field.ldap_user_puid]',
-          '[field.ldap_user_puid_property]',
-          '[field.ldap_user_puid_sid]',
-          '[field.ldap_user_current_dn]',
+        '[property.name]' => [
+          // Actually TranslatableMarkup.
+          'name' => 'Name',
+          'source' => '[cn]',
+          'direction' => 'drupal',
+          'enabled' => TRUE,
+          'prov_events' => [
+            LdapConfiguration::$eventCreateDrupalUser,
+            LdapConfiguration::$eventSyncToDrupalUser,
+          ],
         ],
       ],
-      LdapConfiguration::$eventSyncToDrupalUser => [
-        0 => [
-          '[property.fake]',
-          '[property.data]',
-          '[property.uid]',
-          '[field.ldap_user_puid]',
-          '[field.ldap_user_puid_property]',
-          '[field.ldap_user_puid_sid]',
-        ],
-        1 => [
-          '[property.mail]',
-          '[property.name]',
-          '[field.ldap_user_current_dn]',
+      'ldap' => [
+        '[property.name]' => [
+          // Actually TranslatableMarkup.
+          'name' => 'Name',
+          'source' => '',
+          'direction' => 'ldap',
+          'enabled' => TRUE,
+          'prov_events' => [
+            LdapConfiguration::$eventCreateLdapEntry,
+            LdapConfiguration::$eventSyncToLdapEntry,
+          ],
+          'configurable_to_ldap' => TRUE,
         ],
       ],
     ];
 
-    $failed = FALSE;
-    foreach ($syncTestData as $prov_event => $tests) {
-      foreach ($tests as $boolean_result => $attribute_tokens) {
-        foreach ($attribute_tokens as $attribute_token) {
-          $processor = $this->getMockBuilder('Drupal\ldap_user\Helper\SyncMappingHelper')
-            ->setMethods(['isSynced', 'processSyncMappings'])
-            ->disableOriginalConstructor()
-            ->getMock();
-          $processor->processSyncMappings();
-          $isSynced = $processor->isSynced($attribute_token, [$prov_event], LdapConfiguration::PROVISION_TO_DRUPAL);
-          if ((int) $isSynced !== (int) $boolean_result) {
-            $failed = TRUE;
-          }
-        }
-      }
-    }
+    $processor = $this->getMockBuilder('Drupal\ldap_user\Helper\SyncMappingHelper')
+      ->setMethods(['processSyncMappings'])
+      ->disableOriginalConstructor()
+      ->getMock();
 
-    $this->assertFalse($failed);
-  }
+    $reflection = new ReflectionClass(get_class($processor));
+    $method = $reflection->getMethod('setAllSyncMappings');
+    $method->setAccessible(TRUE);
+    $method->invoke($processor, $syncTestData);
 
-  /**
-   *
-   */
-  public function testUserNameChangeProvisionPuidConflict() {
-    $this->assertTrue(TRUE);
-    return;
-    // TODO.
-    /**
-    * test for username change and provisioning with puid conflict
-    * hpotter drupal user already exists and has correct puid
-    * change samaccountname value (puid field) of hpotter ldap entry and attempt to provision account with new username (hpotterbrawn)
-    * return should be old drupal account (same uid)
-    */
+    /** @var \Drupal\ldap_user\Helper\SyncMappingHelper $processor */
+    $isSynced = $processor->isSynced('[field.ldap_user_puid_sid]', [LdapConfiguration::$eventCreateDrupalUser], LdapConfiguration::PROVISION_TO_DRUPAL);
+    $this->assertTrue($isSynced);
 
-    $this->testFunctions->setFakeServerUserAttribute('activedirectory1', 'cn=hpotter,ou=people,dc=hogwarts,dc=edu', 'samaccountname', 'hpotter-granger', 0);
-    $account = NULL;
-    $user_edit = ['name' => 'hpotter-granger'];
-    $processor = new DrupalUserProcessor();
+    $isSynced = $processor->isSynced('[field.ldap_user_puid_sid]', [LdapConfiguration::$eventCreateDrupalUser], LdapConfiguration::PROVISION_TO_LDAP);
+    $this->assertFalse($isSynced);
 
-    $hpottergranger = $processor->provisionDrupalAccount($user_edit);
+    $isSynced = $processor->isSynced('[field.ldap_user_puid_sid]', [LdapConfiguration::$eventCreateLdapEntry], LdapConfiguration::PROVISION_TO_LDAP);
+    $this->assertFalse($isSynced);
 
-    $this->testFunctions->setFakeServerUserAttribute('activedirectory1', 'cn=hpotter,ou=people,dc=hogwarts,dc=edu', 'samaccountname', 'hpotter', 0);
-    $pass = (is_object($hpottergranger) && is_object($hpotter) && $hpotter->uid == $hpottergranger->uid);
-    $this->assertTrue($pass, t('provisionDrupalAccount recognized PUID conflict and synced instead of creating a conflicted drupal account.'), $this->testId('provisionDrupalAccount function test with existing user with same puid'));
+    $isSynced = $processor->isSynced('[field.ldap_user_puid_sid]', [LdapConfiguration::$eventCreateLdapEntry], LdapConfiguration::PROVISION_TO_LDAP);
+    $this->assertFalse($isSynced);
 
-    $authmaps = user_get_authmaps('hpotter-granger');
-    $pass = $authmaps['ldap_user'] == 'hpotter-granger';
-    $this->assertTrue($pass, t('provisionDrupalAccount recognized PUID conflict and fixed authmap.'), $this->testId());
+    $isSynced = $processor->isSynced('[property.name]', [LdapConfiguration::$eventCreateLdapEntry], LdapConfiguration::PROVISION_TO_LDAP);
+    $this->assertTrue($isSynced);
 
-    $pass = is_object($hpottergranger) && $hpottergranger->name == 'hpotter-granger';
-    $this->assertTrue($pass, t('provisionDrupalAccount recognized PUID conflict and fixed username.'), $this->testId());
+    $isSynced = $processor->isSynced('[property.xyz]', [LdapConfiguration::$eventCreateDrupalUser], LdapConfiguration::PROVISION_TO_DRUPAL);
+    $this->assertFalse($isSynced);
 
-    $factory = \Drupal::service('ldap.servers');
-    $ldap_server = $factory->getServerByIdEnabled('activedirectory1');
-    $ldap_server->refreshFakeData();
-    $account = NULL;
-    $user_edit = ['name' => 'hpotter'];
-    $processor = new DrupalUserProcessor();
-    $hpotter = $processor->provisionDrupalAccount($account, $user_edit, NULL, TRUE);
+    // TODO: Review behaviour. Should this actually be allowed that one of many
+    // events returns true?
+    $isSynced = $processor->isSynced('[field.ldap_user_puid_sid]', [LdapConfiguration::$eventCreateDrupalUser, LdapConfiguration::$eventSyncToDrupalUser], LdapConfiguration::PROVISION_TO_DRUPAL);
+    $this->assertTrue($isSynced);
 
   }
 
+  // TODO: Write test for getSyncMappings().
+  // TODO: Write test for getLdapUserRequiredAttributes().
 }

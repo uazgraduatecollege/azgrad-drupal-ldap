@@ -1,8 +1,9 @@
-The current state of the LDAP module is still in-flux while the port to Drupal 8 is ongoing. The majority of the
-core functionality is available and usable but caution should be taken for more complex scenarios such as provisioning
-to LDAP.
+The current state of the LDAP module is still in-flux while the port to Drupal 8
+is ongoing. The majority of the core functionality is available and usable but
+caution should be taken for more complex scenarios such as provisioning to LDAP.
 
-Please see INSTALL.md for specific information on setting up the Drupal LDAP suite.
+Please see INSTALL.md for specific information on setting up the Drupal LDAP
+suite.
 
 For more information review the following resources:
 
@@ -28,11 +29,12 @@ ldap_authentication, ldap_authorization, ldap_servers, ldap_user.
 
 ## Additional information
 
-If you are not yet familiar with how LDAP operates or how directory services work in general, the following links can be
-helpful resources. 
+If you are not yet familiar with how LDAP operates or how directory services
+work in general, the following links can be helpful resources. 
 
-However, we recommend in any case that you contact your organization's directory maintainer, since
-their help can often save you a significant amount of time in debugging.
+However, we recommend in any case that you contact your organization's directory
+maintainer, since their help can often save you a significant amount of time in
+debugging.
 
 ### General LDAP resources
 

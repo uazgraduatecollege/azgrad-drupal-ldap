@@ -21,25 +21,25 @@ class LdapAttribute extends FieldPluginBase {
   public function render(ResultRow $values) {
     if ($value = $this->getValue($values)) {
       switch ($this->options['multi_value']) {
-      case 'v-all':
-        $output = implode($this->options['value_separator'], $value);
-        break;
+        case 'v-all':
+          $output = implode($this->options['value_separator'], $value);
+          break;
 
-      case 'v-count':
-        $output = count($value);
-        break;
+        case 'v-count':
+          $output = count($value);
+          break;
 
-      case 'v-index':
-        if ($this->options['index_value'] >= 0) {
-          $index = intval($this->options['index_value']);
-        }
-        else {
-          // Allows for negative offset.
-          $index = count($value) + $this->options['index_value'];
-        }
-        $output = array_key_exists($index, $value) ? $value[$index] : $value[0];
-        break;
-    }
+        case 'v-index':
+          if ($this->options['index_value'] >= 0) {
+            $index = intval($this->options['index_value']);
+          }
+          else {
+            // Allows for negative offset.
+            $index = count($value) + $this->options['index_value'];
+          }
+          $output = array_key_exists($index, $value) ? $value[$index] : $value[0];
+          break;
+      }
       return ['#plain_text' => $output];
     }
   }
@@ -49,11 +49,12 @@ class LdapAttribute extends FieldPluginBase {
    */
   protected function defineOptions() {
     $options = parent::defineOptions();
-    $options['multi_value']  = ['default' => 'v-all'];
+    $options['multi_value'] = ['default' => 'v-all'];
     $options['value_separator'] = ['default' => ''];
     $options['index_value'] = ['default' => 0];
     return $options;
   }
+
   /**
    * {@inheritdoc}
    */
@@ -105,4 +106,5 @@ class LdapAttribute extends FieldPluginBase {
   public function usesGroupBy() {
     return FALSE;
   }
+
 }
