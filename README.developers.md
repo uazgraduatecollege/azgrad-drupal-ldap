@@ -10,13 +10,30 @@ this testing architecture is being phased out step by step.
 
 ## Setting up a development environment
 
-To quickly get up and running without using a production system to query against you can make use of Docker. An example
-configuration is provided in the docs directory based on the Harry Potter schools. That script - based on a script by
-[Laudanum](https://github.com/Laudanum) - populates a Docker instance with users and groups. A matching server template
-can be used to configure Drupal LDAP.
+To quickly get up and running without using a production system to query against you can make use of Docker. 
 
-Note that in group configuration you could use businessCategory do derive user groups from attributes but this is
+An example configuration is provided in the docs directory based on the Harry Potter schools. That script - based on a
+script by [Laudanum](https://github.com/Laudanum) - populates a Docker instance with users and groups. A matching 
+server template for LDAP is provided as well.
+
+Note that in group configuration you could use businessCategory to derive user groups from attributes but this is
 disabled so that group DNs are queried.
+
+### User binding
+
+If you want to bind with user credentials, you only need to modify the grants.ldif to allow for it. Here is an example
+which simply allows anyone:
+
+```
+11,12c11,13
+<   by dn="cn=admin,dc=hogwarts,dc=edu" write
+<   by * read
+\ No newline at end of file
+---
+>   by anonymous auth
+>   by dn="cn=admin,dc=hogwarts,dc=edu" write
+>   by * read
+```
 
 ## Various LDAP Project Notes
 
