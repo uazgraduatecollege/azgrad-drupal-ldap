@@ -38,8 +38,8 @@ class OrphanProcessor {
     if (!empty($uids)) {
       $processedUsers = [];
 
-      // To avoid query limits, queries are batched by the limit, for example with
-      // 175 users and a limit of 30, 6 batches are run.
+      // To avoid query limits, queries are batched by the limit, for example
+      // with 175 users and a limit of 30, 6 batches are run.
       $batches = floor(count($uids) / $this->ldapQueryOrLimit) + 1;
       for ($batch = 1; $batch <= $batches; $batch++) {
         $processedUsers += $this->batchQueryUsers($batch, $uids);
@@ -106,6 +106,7 @@ class OrphanProcessor {
   private function batchQueryUsers($batch, $uids) {
 
     $factory = \Drupal::service('ldap.servers');
+    /** @var \Drupal\ldap_servers\ServerFactory $factory */
     $servers = $factory->getEnabledServers();
 
     $users = [];
@@ -116,8 +117,10 @@ class OrphanProcessor {
     $batch_uids = array_slice($uids, $start, ($end_plus_1 - $start));
 
     $accounts = User::loadMultiple($batch_uids);
+    $filters = [];
 
     foreach ($accounts as $uid => $user) {
+      /** @var \Drupal\user\Entity\User $user */
       $serverId = $user->get('ldap_user_puid_sid')->value;
       $persistentUid = $user->get('ldap_user_puid')->value;
       $persistentUidProperty = $user->get('ldap_user_puid_property')->value;
@@ -126,7 +129,7 @@ class OrphanProcessor {
           $filters[$serverId][$persistentUidProperty][] = "($persistentUidProperty=" . $this->binaryFilter($persistentUid) . ")";
         }
         else {
-          $filters[$serverId][$persistentUidProperty][] = "($persistentUid)";
+          $filters[$serverId][$persistentUidProperty][] = "($persistentUidProperty=$persistentUid)";
         }
         $users[$serverId][$persistentUidProperty][$persistentUid]['uid'] = $uid;
         $users[$serverId][$persistentUidProperty][$persistentUid]['exists'] = FALSE;
@@ -149,9 +152,9 @@ class OrphanProcessor {
         }
         continue;
       }
-      foreach ($persistentUidAttributes as $persistentUidProperty => $OrElement) {
+      foreach ($persistentUidAttributes as $persistentUidProperty => $orElement) {
         // Query should look like (|(guid=3243243)(guid=3243243)(guid=3243243))
-        $ldapFilter = '(|' . implode("", $OrElement) . ')';
+        $ldapFilter = '(|' . implode("", $orElement) . ')';
         $ldapEntries = $servers[$serverId]->searchAllBaseDns($ldapFilter, [$persistentUidProperty]);
         if ($ldapEntries === FALSE) {
           // If the query returns an error, ignore the entire server.
@@ -233,22 +236,24 @@ class OrphanProcessor {
     foreach ($processedUsers as $serverId => $persistentAttributes) {
       foreach ($persistentAttributes as $attribute => $persistentUids) {
         foreach ($persistentUids as $persistentUid => $user_data) {
-          $account = User::load($user_data['uid']);
-          $account->set('ldap_user_last_checked', time());
-          $account->save();
-          global $base_url;
-          if (!$user_data['exists']) {
-            switch ($this->config['orphanedDrupalAcctBehavior']) {
-              case 'ldap_user_orphan_email';
-                $this->emailList[] = $account->getAccountName() . "," . $account->getEmail() . "," . $base_url . "/user/" . $user_data['uid'] . "/edit";
-                break;
+          if (isset($user_data['uid'])) {
+            $account = User::load($user_data['uid']);
+            $account->set('ldap_user_last_checked', time());
+            $account->save();
+            global $base_url;
+            if (!$user_data['exists']) {
+              switch ($this->config['orphanedDrupalAcctBehavior']) {
+                case 'ldap_user_orphan_email';
+                  $this->emailList[] = $account->getAccountName() . "," . $account->getEmail() . "," . $base_url . "/user/" . $user_data['uid'] . "/edit";
+                  break;
 
-              case 'user_cancel_block':
-              case 'user_cancel_block_unpublish':
-              case 'user_cancel_reassign':
-              case 'user_cancel_delete':
-                _user_cancel([], $account, $this->config['orphanedDrupalAcctBehavior']);
-                break;
+                case 'user_cancel_block':
+                case 'user_cancel_block_unpublish':
+                case 'user_cancel_reassign':
+                case 'user_cancel_delete':
+                  _user_cancel([], $account, $this->config['orphanedDrupalAcctBehavior']);
+                  break;
+              }
             }
           }
         }

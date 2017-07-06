@@ -284,7 +284,7 @@ class ServerFactory implements LdapUserAttributesInterface {
             'notes' => 'not configurable',
             'direction' => self::PROVISION_TO_DRUPAL,
             'enabled' => TRUE,
-            'prov_events' => [self::EVENT_CREATE_LDAP_ENTRY],
+            'prov_events' => [self::EVENT_CREATE_DRUPAL_USER],
             'config_module' => 'ldap_servers',
             'prov_module' => 'ldap_user',
           ] + $available_user_attrs['[field.ldap_user_puid_sid]'];

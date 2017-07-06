@@ -39,10 +39,10 @@ function ldap_user_mail($key, &$message, $params) {
   switch ($key) {
     case 'orphaned_accounts':
       $message['subject'] = \Drupal::config('system.site')->get('name') . ' ' . t('Orphaned LDAP Users');
-      $message['body'][] = t('The following %count Drupal users no longer have corresponding LDAP Entries. Perhaps they have been removed from the LDAP and should be removed from your site.',
+      $message['body'][] = t('The following %count Drupal users no longer have corresponding LDAP entries. They probably have been removed from the directory and might need to be removed from your site.',
           ['%count' => count($params['accounts'])]
         );
-      $message['body'][] .= "\n" . t('username,mail,edit url') . "\n" . implode("\n", $params['accounts']);
+      $message['body'][] .= "\n" . t('Username,Mail,Link') . "\n" . implode("\n", $params['accounts']);
       break;
   }
 }

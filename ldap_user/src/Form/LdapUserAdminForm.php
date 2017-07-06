@@ -90,8 +90,6 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
     $form['manual_drupal_account_editing'] = [
       '#type' => 'fieldset',
       '#title' => $this->t('Manual Drupal Account Creation'),
-      '#collapsible' => TRUE,
-      '#collapsed' => FALSE,
     ];
 
     $form['manual_drupal_account_editing']['manualAccountConflict'] = [
@@ -110,8 +108,6 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
     $form['basic_to_drupal'] = [
       '#type' => 'fieldset',
       '#title' => $this->t('Basic Provisioning to Drupal Account Settings'),
-      '#collapsible' => TRUE,
-      '#collapsed' => !($config->get('drupalAcctProvisionServer')),
     ];
 
     $form['basic_to_drupal']['drupalAcctProvisionServer'] = [
@@ -210,8 +206,6 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
     $form['basic_to_ldap'] = [
       '#type' => 'fieldset',
       '#title' => $this->t('Basic Provisioning to LDAP Settings'),
-      '#collapsible' => TRUE,
-      '#collapsed' => !($config->get('ldapEntryProvisionServer')),
     ];
 
     $form['basic_to_ldap']['ldapEntryProvisionServer'] = [
@@ -331,7 +325,6 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
           '#collapsible' => TRUE,
           '#collapsed' => TRUE,
           'directions' => [
-            '#type' => 'markup',
             '#markup' => $moreLdapInfo,
           ],
         ];
@@ -366,8 +359,7 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
 
     $inputs = [
       'ldapEntryProvisionTriggers',
-      'moreLdapInfo',
-      'source_drupal_token_notes',
+      'additional_ldap_hints',
       'mappings__' . self::PROVISION_TO_LDAP,
     ];
     foreach ($inputs as $inputName) {
