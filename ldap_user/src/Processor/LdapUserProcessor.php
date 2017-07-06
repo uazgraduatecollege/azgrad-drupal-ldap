@@ -6,13 +6,14 @@ use Drupal\Component\Utility\Unicode;
 use Drupal\ldap_servers\Processor\TokenProcessor;
 use Drupal\ldap_user\Exception\LdapBadParamsException;
 use Drupal\ldap_user\Helper\LdapConfiguration;
+use Drupal\ldap_user\LdapUserAttributesInterface;
 use Drupal\ldap_user\Helper\SyncMappingHelper;
 use Drupal\user\Entity\User;
 
 /**
  *
  */
-class LdapUserProcessor {
+class LdapUserProcessor implements LdapUserAttributesInterface {
 
   private $config;
   private $detailedWatchdog = FALSE;
@@ -52,8 +53,8 @@ class LdapUserProcessor {
       $ldap_server = $factory->getServerById($this->config['ldapEntryProvisionServer']);
 
       $params = [
-        'direction' => LdapConfiguration::PROVISION_TO_LDAP,
-        'prov_events' => [LdapConfiguration::$eventSyncToLdapEntry],
+        'direction' => self::PROVISION_TO_LDAP,
+        'prov_events' => [self::EVENT_SYNC_TO_LDAP_ENTRY],
         'module' => 'ldap_user',
         'function' => 'syncToLdapEntry',
         'include_count' => FALSE,
@@ -70,7 +71,8 @@ class LdapUserProcessor {
 
       if (is_array($proposed_ldap_entry) && isset($proposed_ldap_entry['dn'])) {
         $existing_ldap_entry = $ldap_server->dnExists($proposed_ldap_entry['dn'], 'ldap_entry');
-        // This array represents attributes to be modified; not comprehensive list of attributes.
+        // This array represents attributes to be modified; not comprehensive
+        // list of attributes.
         $attributes = [];
         foreach ($proposed_ldap_entry as $attr_name => $attr_values) {
           if ($attr_name != 'dn') {
@@ -147,7 +149,7 @@ class LdapUserProcessor {
    *   'module' => module calling function, e.g. 'ldap_user'
    *   'function' => function calling function, e.g. 'provisionLdapEntry'
    *   'include_count' => should 'count' array key be included
-   *   'direction' => LdapConfiguration::PROVISION_TO_LDAP || LdapConfiguration::PROVISION_TO_DRUPAL.
+   *   'direction' => self::PROVISION_TO_LDAP || self::PROVISION_TO_DRUPAL.
    * @param null $ldap_user_entry
    *
    * @return array (ldap entry, $result)
@@ -167,7 +169,7 @@ class LdapUserProcessor {
 
     $include_count = (isset($params['include_count']) && $params['include_count']);
 
-    $direction = isset($params['direction']) ? $params['direction'] : LdapConfiguration::PROVISION_TO_ALL;
+    $direction = isset($params['direction']) ? $params['direction'] : self::PROVISION_TO_ALL;
     $prov_events = empty($params['prov_events']) ? LdapConfiguration::getAllEvents() : $params['prov_events'];
 
     $tokenHelper = new TokenProcessor();
@@ -182,7 +184,7 @@ class LdapUserProcessor {
         continue;
       }
 
-      $synced = $syncMapper->isSynced($field_key, $params['prov_events'], LdapConfiguration::PROVISION_TO_LDAP);
+      $synced = $syncMapper->isSynced($field_key, $params['prov_events'], self::PROVISION_TO_LDAP);
       if ($synced) {
         $token = ($field_detail['user_attr'] == 'user_tokens') ? $field_detail['user_tokens'] : $field_detail['user_attr'];
         $value = $tokenHelper->tokenReplace($account, $token, 'user_account');
@@ -269,8 +271,8 @@ class LdapUserProcessor {
     /** @var \Drupal\ldap_servers\Entity\Server $ldap_server */
     $ldap_server = $factory->getServerById($this->config['ldapEntryProvisionServer']);
     $params = [
-      'direction' => LdapConfiguration::PROVISION_TO_LDAP,
-      'prov_events' => [LdapConfiguration::$eventCreateLdapEntry],
+      'direction' => self::PROVISION_TO_LDAP,
+      'prov_events' => [self::EVENT_CREATE_LDAP_ENTRY],
       'module' => 'ldap_user',
       'function' => 'provisionLdapEntry',
       'include_count' => FALSE,
@@ -454,7 +456,7 @@ class LdapUserProcessor {
     /** @var \Drupal\ldap_servers\Entity\Server $ldap_server */
     $ldap_server = $factory->getServerById($sid);
     $params = [
-      'direction' => LdapConfiguration::PROVISION_TO_LDAP,
+      'direction' => self::PROVISION_TO_LDAP,
       'prov_events' => $prov_events,
       'module' => 'ldap_user',
       'function' => 'getProvisionRelatedLdapEntry',

@@ -28,13 +28,13 @@ ldap_user.settings:
       type: string
     userConflictResolve:
       label: 'userConflictResolve'
-      type: integer
+      type: string
     manualAccountConflict:
       label: 'manualAccountConflict'
-      type: integer
+      type: string
     acctCreation:
       label: 'Application of Drupal account settings to LDAP authenticated users'
-      type: integer
+      type: string
     ldapUserSyncMappings:
       label: 'ldapUserSyncMappings'
       type: mapping

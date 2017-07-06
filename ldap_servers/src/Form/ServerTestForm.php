@@ -7,7 +7,6 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Entity\EntityForm;
 use Drupal\ldap_servers\Entity\Server;
 use Drupal\ldap_servers\Processor\TokenProcessor;
-use Drupal\ldap_user\Helper\LdapConfiguration;
 
 /**
  * Use Drupal\Core\Form\FormBase;.
@@ -78,7 +77,7 @@ class ServerTestForm extends EntityForm {
       '#size' => 30,
       '#maxlength' => 255,
       '#required' => $userCredentialsRequired,
-      '#description' => $this->t('This is normally optional and used for testing this server\'s configuration against an actual username.<br> The user need not exist in Drupal and testing will not affect the user\'s LDAP or Drupal account. <br> You need to either supply the username or DN for testing with user binding.'),
+      '#description' => $this->t("This is normally optional and used for testing this server's configuration against an actual username.<br> The user need not exist in Drupal and testing will not affect the user's LDAP or Drupal account. <br> You need to either supply the username or DN for testing with user binding."),
     ];
 
     if ($userCredentialsRequired) {
@@ -98,7 +97,7 @@ class ServerTestForm extends EntityForm {
       '#default_value' => $this->ldapServer->get('testing_drupal_user_dn'),
       '#size' => 120,
       '#maxlength' => 255,
-      '#description' => $this->t('This is optional and used for testing this server\'s configuration against an actual username.<br> The user need not exist in Drupal and testing will not affect the user\'s LDAP or Drupal Account.'),
+      '#description' => $this->t("This is optional and used for testing this server's configuration against an actual username.<br> The user need not exist in Drupal and testing will not affect the user's LDAP or Drupal Account."),
     ];
 
     $form['grp_test_grp_dn'] = [
@@ -107,7 +106,7 @@ class ServerTestForm extends EntityForm {
       '#default_value' => $this->ldapServer->get('grp_test_grp_dn'),
       '#size' => 120,
       '#maxlength' => 255,
-      '#description' => $this->t('This is optional and used for testing this server\'s group configuration.'),
+      '#description' => $this->t("This is optional and used for testing this server\'s group configuration."),
     ];
 
     $form['grp_test_grp_dn_writeable'] = [
@@ -235,7 +234,7 @@ class ServerTestForm extends EntityForm {
         $this->resultsTables['basic'][] = [render($item_list)];
       }
       $this->resultsTables['basic'][] = [
-        $this->t('Binding with DN (%bind_dn).  Using supplied password ', [
+        $this->t('Binding with DN (%bind_dn), using supplied password.', [
           '%bind_dn' => $ldap_user['dn'],
         ]),
       ];
@@ -243,7 +242,7 @@ class ServerTestForm extends EntityForm {
       if ($result == Server::LDAP_SUCCESS) {
         $this->resultsTables['basic'][] = [
           'class' => 'color-success',
-          'data' => [$this->tt('Successfully bound to server')],
+          'data' => [$this->t('Successfully bound to server')],
         ];
       }
       else {

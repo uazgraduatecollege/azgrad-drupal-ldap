@@ -492,6 +492,7 @@ class TokenProcessor {
    *
    * @param string $template
    *   In the form of [cn]@myuniversity.edu.
+   *
    * @return array of all tokens in the template such as array('cn')
    */
   public function findTokensNeededForTemplate($template) {

@@ -34,7 +34,6 @@ class IntegrationTests extends KernelTestBase {
     $this->assertEquals('weekly', $value);
   }
 
-
   /**
    * Test the integration of the user processor.
    */

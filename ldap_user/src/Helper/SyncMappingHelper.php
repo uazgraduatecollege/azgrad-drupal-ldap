@@ -3,11 +3,12 @@
 namespace Drupal\ldap_user\Helper;
 
 use Drupal\ldap_servers\Processor\TokenProcessor;
+use Drupal\ldap_user\LdapUserAttributesInterface;
 
 /**
  * Helper class to process user field synchronisation mappings.
  */
-class SyncMappingHelper {
+class SyncMappingHelper implements LdapUserAttributesInterface {
 
 
   /**
@@ -23,8 +24,8 @@ class SyncMappingHelper {
    *     (when this value is set to 'user_tokens', 'user_tokens' value is used.)
    *   'user_tokens' => e.g. [field.field_user_lname], [field.field_user_fname]
    *   'convert' => 1|0 boolean indicating need to covert from binary
-   *   'direction' => LdapConfiguration::PROVISION_TO_DRUPAL |
-   *     LdapConfiguration::PROVISION_TO_LDAP (redundant)
+   *   'direction' => LdapUserAttributesInterface::PROVISION_TO_DRUPAL ||
+   *     LdapUserAttributesInterface::PROVISION_TO_LDAP (redundant)
    *   'config_module' => 'ldap_user'
    *   'prov_module' => 'ldap_user'
    *   'enabled' => 1|0 boolean
@@ -54,7 +55,8 @@ class SyncMappingHelper {
    *   Attribute token such as [property.mail], or
    *   [field.ldap_user_puid_property].
    * @param array $prov_events
-   *   Provisioning events such as LdapConfiguration::$eventCreateDrupalUser.
+   *   Provisioning events such as
+   *   LdapUserAttributesInterface::EVENT_CREATE_DRUPAL_USER.
    *   Typically an array with one element.
    * @param int $direction
    *   Either LdapConfiguration::PROVISION_TO_DRUPAL or
@@ -87,12 +89,12 @@ class SyncMappingHelper {
       $prov_events = LdapConfiguration::getAllEvents();
     }
     if ($direction == NULL) {
-      $direction = LdapConfiguration::PROVISION_TO_ALL;
+      $direction = self::PROVISION_TO_ALL;
     }
 
     $mappings = [];
-    if ($direction == LdapConfiguration::PROVISION_TO_ALL) {
-      $directions = [LdapConfiguration::PROVISION_TO_DRUPAL, LdapConfiguration::PROVISION_TO_LDAP];
+    if ($direction == self::PROVISION_TO_ALL) {
+      $directions = [self::PROVISION_TO_DRUPAL, self::PROVISION_TO_LDAP];
     }
     else {
       $directions = [$direction];
@@ -105,10 +107,10 @@ class SyncMappingHelper {
           if (!empty($mapping['prov_events'])) {
             $result = count(array_intersect($prov_events, $mapping['prov_events']));
             if ($result) {
-              if ($direction == LdapConfiguration::PROVISION_TO_DRUPAL && isset($mapping['user_attr'])) {
+              if ($direction == self::PROVISION_TO_DRUPAL && isset($mapping['user_attr'])) {
                 $key = $mapping['user_attr'];
               }
-              elseif ($direction == LdapConfiguration::PROVISION_TO_LDAP && isset($mapping['ldap_attr'])) {
+              elseif ($direction == self::PROVISION_TO_LDAP && isset($mapping['ldap_attr'])) {
                 $key = $mapping['ldap_attr'];
               }
               else {
@@ -170,10 +172,10 @@ class SyncMappingHelper {
   private function processSyncMappings() {
     $available_user_attributes = [];
     foreach ([
-      LdapConfiguration::PROVISION_TO_DRUPAL,
-      LdapConfiguration::PROVISION_TO_LDAP,
+      self::PROVISION_TO_DRUPAL,
+      self::PROVISION_TO_LDAP,
     ] as $direction) {
-      if ($direction == LdapConfiguration::PROVISION_TO_DRUPAL) {
+      if ($direction == self::PROVISION_TO_DRUPAL) {
         $sid = $this->config->get('drupalAcctProvisionServer');
       }
       else {
@@ -220,11 +222,11 @@ class SyncMappingHelper {
    */
   public function getLdapUserRequiredAttributes($direction = NULL, $ldap_context = NULL) {
     if ($direction == NULL) {
-      $direction = LdapConfiguration::PROVISION_TO_ALL;
+      $direction = self::PROVISION_TO_ALL;
     }
     $required_attributes = [];
     if ($this->config->get('drupalAcctProvisionServer')) {
-      $prov_events = LdapConfiguration::ldapContextToProvEvents($ldap_context);
+      $prov_events = $this->ldapContextToProvEvents($ldap_context);
       $attributes_map = $this->getSyncMappings($direction, $prov_events);
       $required_attributes = [];
       foreach ($attributes_map as $detail) {
@@ -238,6 +240,39 @@ class SyncMappingHelper {
       }
     }
     return $required_attributes;
+  }
+
+  /**
+   * Converts the more general ldap_context string to its associated ldap user
+   * event.
+   *
+   * @param string|null $ldapContext
+   *
+   * @return array
+   */
+  public static function ldapContextToProvEvents($ldapContext = NULL) {
+
+    switch ($ldapContext) {
+      case 'ldap_user_prov_to_drupal':
+        $result = [
+          self::EVENT_SYNC_TO_DRUPAL_USER,
+          self::EVENT_CREATE_DRUPAL_USER,
+          self::EVENT_LDAP_ASSOCIATE_DRUPAL_USER,
+        ];
+        break;
+
+      case 'ldap_user_prov_to_ldap':
+        $result = [
+          self::EVENT_SYNC_TO_LDAP_ENTRY,
+          self::EVENT_CREATE_LDAP_ENTRY,
+        ];
+        break;
+
+      default:
+        $result = LdapConfiguration::getAllEvents();
+        break;
+    }
+    return $result;
   }
 
 }

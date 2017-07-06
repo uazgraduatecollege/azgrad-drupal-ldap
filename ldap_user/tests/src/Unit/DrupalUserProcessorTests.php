@@ -4,13 +4,14 @@ namespace Drupal\Tests\ldap_user\Unit;
 
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\ldap_user\Helper\LdapConfiguration;
+use Drupal\ldap_user\LdapUserAttributesInterface;
 use Drupal\Tests\UnitTestCase;
 
 /**
  * @coversDefaultClass \Drupal\ldap_user\Processor\DrupalUserProcessor
  * @group ldap
  */
-class DrupalUserProcessorTests extends UnitTestCase {
+class DrupalUserProcessorTests extends UnitTestCase implements LdapUserAttributesInterface {
 
   public $cacheFactory;
   public $configFactory;
@@ -27,14 +28,14 @@ class DrupalUserProcessorTests extends UnitTestCase {
     parent::setUp();
 
     $this->provisioningEvents = [
-      LdapConfiguration::PROVISION_TO_DRUPAL => [
-        LdapConfiguration::$eventSyncToDrupalUser,
-        LdapConfiguration::$eventCreateDrupalUser,
+      self::PROVISION_TO_DRUPAL => [
+        self::EVENT_SYNC_TO_DRUPAL_USER,
+        self::EVENT_SYNC_TO_DRUPAL_USER,
       ],
 
-      LdapConfiguration::PROVISION_TO_LDAP => [
-        LdapConfiguration::$eventSyncToLdapEntry,
-        LdapConfiguration::$eventCreateLdapEntry,
+      self::PROVISION_TO_LDAP => [
+        self::EVENT_SYNC_TO_LDAP_ENTRY,
+        self::EVENT_CREATE_LDAP_ENTRY,
       ],
     ];
 

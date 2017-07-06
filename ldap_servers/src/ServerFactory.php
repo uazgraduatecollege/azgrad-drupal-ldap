@@ -6,13 +6,14 @@ use Drupal\Core\Url;
 use Drupal\ldap_servers\Entity\Server;
 use Drupal\ldap_servers\Processor\TokenProcessor;
 use Drupal\ldap_user\Helper\ExternalAuthenticationHelper;
+use Drupal\ldap_user\LdapUserAttributesInterface;
 use Drupal\ldap_user\Helper\LdapConfiguration;
 use Drupal\user\UserInterface;
 
 /**
  *
  */
-class ServerFactory {
+class ServerFactory implements LdapUserAttributesInterface {
 
   /**
    * Fetch server by ID.
@@ -84,7 +85,7 @@ class ServerFactory {
    * @return array|bool
    *   Result data or false.
    */
-  public function getUserDataFromServerByIdentifier($identifier, $id, $ldap_context = NULL) {
+  public function getUserDataFromServerByIdentifier($identifier, $id) {
     // Try to retrieve the user from the cache.
     $cache = \Drupal::cache()->get('ldap_servers:user_data:' . $identifier);
     if ($cache && $cache->data) {
@@ -98,7 +99,7 @@ class ServerFactory {
       return FALSE;
     }
 
-    $ldap_user = $server->matchUsernameToExistingLdapEntry($identifier, $ldap_context);
+    $ldap_user = $server->matchUsernameToExistingLdapEntry($identifier);
 
     if ($ldap_user) {
       $ldap_user['id'] = $id;
@@ -126,6 +127,7 @@ class ServerFactory {
   public function getUserDataFromServerByAccount(UserInterface $account, $id, $ldap_context = NULL) {
     $identifier = ExternalAuthenticationHelper::getUserIdentifierFromMap($account->id());
     if ($identifier) {
+      // TODO: Fix parameters.
       return $this->getUserDataFromServerByIdentifier($identifier, $id, $ldap_context);
     }
     else {
@@ -255,7 +257,7 @@ class ServerFactory {
 
       $server_edit_path = 'admin/config/people/ldap/servers/edit/' . $ldap_server->id();
 
-      if ($direction == LdapConfiguration::PROVISION_TO_DRUPAL) {
+      if ($direction == self::PROVISION_TO_DRUPAL) {
 
         // These 4 user fields identify where in ldap and which ldap server they
         // are associated with. They are required for a Drupal account to be
@@ -280,9 +282,9 @@ class ServerFactory {
             'configurable_to_ldap' => 1,
             'source' => t('%sid', $tokens),
             'notes' => 'not configurable',
-            'direction' => LdapConfiguration::PROVISION_TO_DRUPAL,
+            'direction' => self::PROVISION_TO_DRUPAL,
             'enabled' => TRUE,
-            'prov_events' => [LdapConfiguration::$eventCreateDrupalUser],
+            'prov_events' => [self::EVENT_CREATE_LDAP_ENTRY],
             'config_module' => 'ldap_servers',
             'prov_module' => 'ldap_user',
           ] + $available_user_attrs['[field.ldap_user_puid_sid]'];
@@ -294,9 +296,9 @@ class ServerFactory {
             'source' => '[' . $ldap_server->get('unique_persistent_attr') . ']',
             'notes' => 'configure at ' . $server_edit_path,
             'convert' => $ldap_server->get('unique_persistent_attr_binary'),
-            'direction' => LdapConfiguration::PROVISION_TO_DRUPAL,
+            'direction' => self::PROVISION_TO_DRUPAL,
             'enabled' => TRUE,
-            'prov_events' => [LdapConfiguration::$eventCreateDrupalUser],
+            'prov_events' => [self::EVENT_CREATE_DRUPAL_USER],
             'config_module' => 'ldap_servers',
             'prov_module' => 'ldap_user',
           ] + $available_user_attrs['[field.ldap_user_puid]'];
@@ -308,9 +310,9 @@ class ServerFactory {
               'configurable_to_ldap' => 1,
               'source' => $ldap_server->get('unique_persistent_attr'),
               'notes' => 'configure at ' . $server_edit_path,
-              'direction' => LdapConfiguration::PROVISION_TO_DRUPAL,
+              'direction' => self::PROVISION_TO_DRUPAL,
               'enabled' => TRUE,
-              'prov_events' => [LdapConfiguration::$eventCreateDrupalUser],
+              'prov_events' => [self::EVENT_CREATE_DRUPAL_USER],
               'config_module' => 'ldap_servers',
               'prov_module' => 'ldap_user',
             ] + $available_user_attrs['[field.ldap_user_puid_property]'];
@@ -327,11 +329,11 @@ class ServerFactory {
             'configurable_to_ldap' => 0,
             'source' => '[dn]',
             'notes' => 'not configurable',
-            'direction' => LdapConfiguration::PROVISION_TO_DRUPAL,
+            'direction' => self::PROVISION_TO_DRUPAL,
             'enabled' => TRUE,
             'prov_events' => [
-              LdapConfiguration::$eventCreateDrupalUser,
-              LdapConfiguration::$eventSyncToDrupalUser,
+              self::EVENT_CREATE_DRUPAL_USER,
+              self::EVENT_SYNC_TO_DRUPAL_USER,
             ],
             'config_module' => 'ldap_servers',
             'prov_module' => 'ldap_user',
@@ -344,11 +346,11 @@ class ServerFactory {
           $available_user_attrs['[property.name]'] = [
             'name' => 'Property: Username',
             'source' => '[' . $ldap_server->get('user_attr') . ']',
-            'direction' => LdapConfiguration::PROVISION_TO_DRUPAL,
+            'direction' => self::PROVISION_TO_DRUPAL,
             'enabled' => TRUE,
             'prov_events' => [
-              LdapConfiguration::$eventCreateDrupalUser,
-              LdapConfiguration::$eventSyncToDrupalUser,
+              self::EVENT_CREATE_DRUPAL_USER,
+              self::EVENT_SYNC_TO_DRUPAL_USER,
             ],
             'config_module' => 'ldap_servers',
             'prov_module' => 'ldap_user',
@@ -360,11 +362,11 @@ class ServerFactory {
           $available_user_attrs['[property.mail]'] = [
             'name' => 'Property: Email',
             'source' => ($ldap_server->get('mail_template')) ? $ldap_server->get('mail_template') : '[' . $ldap_server->get('mail_attr') . ']',
-            'direction' => LdapConfiguration::PROVISION_TO_DRUPAL,
+            'direction' => self::PROVISION_TO_DRUPAL,
             'enabled' => TRUE,
             'prov_events' => [
-              LdapConfiguration::$eventCreateDrupalUser,
-              LdapConfiguration::$eventSyncToDrupalUser,
+              self::EVENT_CREATE_DRUPAL_USER,
+              self::EVENT_SYNC_TO_DRUPAL_USER,
             ],
             'config_module' => 'ldap_servers',
             'prov_module' => 'ldap_user',
@@ -377,11 +379,11 @@ class ServerFactory {
             $available_user_attrs['[property.picture]'] = [
               'name' => 'Property: Picture',
               'source' => '[' . $ldap_server->get('picture_attr') . ']',
-              'direction' => LdapConfiguration::PROVISION_TO_DRUPAL,
+              'direction' => self::PROVISION_TO_DRUPAL,
               'enabled' => TRUE,
               'prov_events' => [
-                LdapConfiguration::$eventCreateDrupalUser,
-                LdapConfiguration::$eventSyncToDrupalUser,
+                self::EVENT_CREATE_DRUPAL_USER,
+                self::EVENT_SYNC_TO_DRUPAL_USER,
               ],
               'config_module' => 'ldap_servers',
               'prov_module' => 'ldap_user',

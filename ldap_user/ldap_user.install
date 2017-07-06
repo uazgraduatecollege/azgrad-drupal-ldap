@@ -8,18 +8,13 @@
 use Drupal\Core\Url;
 use Drupal\Component\Utility\SafeMarkup;
 use Drupal\Core\Utility\UpdateException;
-use Drupal\ldap_user\Helper\LdapConfiguration;
+use Drupal\ldap_user\LdapUserAttributesInterface;
 
 /**
  * Implements hook_install().
  */
 function ldap_user_install() {
-
-  // // make ldap user weight slightly less than other ldap modules so it can load
-  // // user's associated ldap data first and save on ldap queries.
-  // db_query("UPDATE {system} SET weight = -1 WHERE name = 'ldap_user'");.
   \Drupal::service('router.builder')->rebuild();
-
 }
 
 /**
@@ -125,17 +120,17 @@ function ldap_user_update_8305() {
     foreach ($fields as $key => $field) {
       if (isset($field['direction'])) {
         if ($field['direction'] == 1 || $field['direction'] == '1') {
-          $mappings[$direction][$key]['direction'] = LdapConfiguration::PROVISION_TO_DRUPAL;
+          $mappings[$direction][$key]['direction'] = LdapUserAttributesInterface::PROVISION_TO_DRUPAL;
         }
         else {
-          $mappings[$direction][$key]['direction'] = LdapConfiguration::PROVISION_TO_LDAP;
+          $mappings[$direction][$key]['direction'] = LdapUserAttributesInterface::PROVISION_TO_LDAP;
         }
       }
     }
   }
 
-  $keyedMappings[LdapConfiguration::PROVISION_TO_DRUPAL] = $mappings[1];
-  $keyedMappings[LdapConfiguration::PROVISION_TO_LDAP] = $mappings[2];
+  $keyedMappings[LdapUserAttributesInterface::PROVISION_TO_DRUPAL] = $mappings[1];
+  $keyedMappings[LdapUserAttributesInterface::PROVISION_TO_LDAP] = $mappings[2];
   $config->set('ldapUserSyncMappings', $keyedMappings);
   $config->save();
 }
@@ -151,18 +146,18 @@ function ldap_user_update_8306() {
   foreach ($existingDrupalTriggers as $index => $trigger) {
     switch ($index) {
       case 1:
-        $newDrupalTriggers[LdapConfiguration::PROVISION_DRUPAL_USER_ON_USER_UPDATE_CREATE] = $trigger ?
-          LdapConfiguration::PROVISION_DRUPAL_USER_ON_USER_UPDATE_CREATE : '0';
+        $newDrupalTriggers[LdapUserAttributesInterface::PROVISION_DRUPAL_USER_ON_USER_UPDATE_CREATE] = $trigger ?
+          LdapUserAttributesInterface::PROVISION_DRUPAL_USER_ON_USER_UPDATE_CREATE : '0';
         break;
 
       case 2:
-        $newDrupalTriggers[LdapConfiguration::PROVISION_DRUPAL_USER_ON_USER_AUTHENTICATION] = $trigger ?
-          LdapConfiguration::PROVISION_DRUPAL_USER_ON_USER_AUTHENTICATION : '0';
+        $newDrupalTriggers[LdapUserAttributesInterface::PROVISION_DRUPAL_USER_ON_USER_AUTHENTICATION] = $trigger ?
+          LdapUserAttributesInterface::PROVISION_DRUPAL_USER_ON_USER_AUTHENTICATION : '0';
         break;
 
       case 3:
-        $newDrupalTriggers[LdapConfiguration::PROVISION_DRUPAL_USER_ON_USER_ON_MANUAL_CREATION] = $trigger ?
-          LdapConfiguration::PROVISION_DRUPAL_USER_ON_USER_ON_MANUAL_CREATION : '0';
+        $newDrupalTriggers[LdapUserAttributesInterface::PROVISION_DRUPAL_USER_ON_USER_ON_MANUAL_CREATION] = $trigger ?
+          LdapUserAttributesInterface::PROVISION_DRUPAL_USER_ON_USER_ON_MANUAL_CREATION : '0';
         break;
     }
   }
@@ -173,22 +168,106 @@ function ldap_user_update_8306() {
   foreach ($existingLdapTriggers as $index => $trigger) {
     switch ($index) {
       case 6:
-        $newLdapTriggers[LdapConfiguration::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_UPDATE_CREATE] = $trigger ?
-          LdapConfiguration::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_UPDATE_CREATE : '0';
+        $newLdapTriggers[LdapUserAttributesInterface::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_UPDATE_CREATE] = $trigger ?
+          LdapUserAttributesInterface::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_UPDATE_CREATE : '0';
         break;
 
       case 7:
-        $newLdapTriggers[LdapConfiguration::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_AUTHENTICATION] = $trigger ?
-          LdapConfiguration::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_AUTHENTICATION : '0';
+        $newLdapTriggers[LdapUserAttributesInterface::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_AUTHENTICATION] = $trigger ?
+          LdapUserAttributesInterface::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_AUTHENTICATION : '0';
         break;
 
       case 8:
-        $newLdapTriggers[LdapConfiguration::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_DELETE] = $trigger ?
-          LdapConfiguration::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_DELETE : '0';
+        $newLdapTriggers[LdapUserAttributesInterface::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_DELETE] = $trigger ?
+          LdapUserAttributesInterface::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_DELETE : '0';
         break;
     }
   }
   $config->set('ldapEntryProvisionTriggers', $newLdapTriggers);
 
+  $config->save();
+}
+
+/**
+ * Converts unreadable integers to strings for LDAP provision triggers.
+ */
+function ldap_user_update_8307() {
+  $config_factory = \Drupal::configFactory();
+  $config = $config_factory->getEditable('ldap_user.settings');
+  switch ($config->get('acctCreation')) {
+    case 1:
+      $value = LdapUserAttributesInterface::ACCOUNT_CREATION_USER_SETTINGS_FOR_LDAP;
+      break;
+
+    default:
+    case 4:
+      $value = LdapUserAttributesInterface::ACCOUNT_CREATION_LDAP_BEHAVIOUR;
+      break;
+  }
+  $config->set('acctCreation', $value);
+
+  switch ($config->get('userConflictResolve')) {
+    case 1:
+      $value = LdapUserAttributesInterface::USER_CONFLICT_LOG;
+      break;
+
+    default:
+    case 2:
+      $value = LdapUserAttributesInterface::USER_CONFLICT_ATTEMPT_RESOLVE;
+      break;
+  }
+  $config->set('userConflictResolve', $value);
+
+  switch ($config->get('manualAccountConflict')) {
+    case 1:
+      $value = LdapUserAttributesInterface::MANUAL_ACCOUNT_CONFLICT_REJECT;
+      break;
+
+    case 2:
+      $value = LdapUserAttributesInterface::MANUAL_ACCOUNT_CONFLICT_LDAP_ASSOCIATE;
+      break;
+
+    case 3:
+      $value = LdapUserAttributesInterface::MANUAL_ACCOUNT_CONFLICT_SHOW_OPTION_ON_FORM;
+      break;
+
+    default:
+    case 4:
+      $value = LdapUserAttributesInterface::MANUAL_ACCOUNT_CONFLICT_NO_LDAP_ASSOCIATE;
+      break;
+  }
+  $config->set('manualAccountConflict', $value);
+
+  $syncMappings = $config->get('ldapUserSyncMappings');
+  foreach ($syncMappings as $direction => $data) {
+    foreach ($data as $key => $mapping) {
+      $events = [];
+      foreach ($mapping['prov_events'] as $provEvent) {
+        switch ($provEvent) {
+          case 1:
+            $events[] = LdapUserAttributesInterface::EVENT_CREATE_DRUPAL_USER;
+            break;
+
+          case 2:
+            $events[] = LdapUserAttributesInterface::EVENT_SYNC_TO_DRUPAL_USER;
+            break;
+
+          case 3:
+            $events[] = LdapUserAttributesInterface::EVENT_CREATE_LDAP_ENTRY;
+            break;
+
+          case 4:
+            $events[] = LdapUserAttributesInterface::EVENT_SYNC_TO_LDAP_ENTRY;
+            break;
+
+          case 5:
+            $events[] = LdapUserAttributesInterface::EVENT_LDAP_ASSOCIATE_DRUPAL_USER;
+            break;
+        }
+      }
+      $syncMappings[$direction][$key]['prov_events'] = $events;
+    }
+  }
+  $config->set('ldapUserSyncMappings', $syncMappings);
   $config->save();
 }
