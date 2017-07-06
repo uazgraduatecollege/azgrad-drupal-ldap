@@ -10,8 +10,8 @@ ldapEntryProvisionTriggers:
   drupal_on_manual_creation: '0'
 orphanedDrupalAcctBehavior: ldap_user_orphan_email
 orphanedCheckQty: 100
-orphanedAccountCheckInterval: 'weekly'
-userConflictResolve: 2
-manualAccountConflict: 1
-acctCreation: 4
+orphanedAccountCheckInterval: weekly
+userConflictResolve: resolve
+manualAccountConflict: conflict_reject
+acctCreation: ldap_behaviour
 ldapUserSyncMappings: {  }
