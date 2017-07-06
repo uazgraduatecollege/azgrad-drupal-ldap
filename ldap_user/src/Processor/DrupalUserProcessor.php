@@ -912,10 +912,12 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
     }
 
     if ($account_with_same_email = user_load_by_mail($mail)) {
-      $tokens['%email'] = $mail;
-      $tokens['%duplicate_name'] = $account_with_same_email->name;
-      \Drupal::logger('ldap_user')->error('LDAP user %drupal_username has email address
-            (%email) conflict with a drupal user %duplicate_name', []);
+      \Drupal::logger('ldap_user')
+        ->error('LDAP user %drupal_username has email address (%email) conflict with a drupal user %duplicate_name', [
+          '%email' => $mail,
+          '%duplicate_name' => $account_with_same_email->name,
+        ]
+      );
       drupal_set_message(t('Another user already exists in the system with the same email address. You should contact the system administrator in order to solve this conflict.'), 'error');
       return FALSE;
     }
