@@ -370,7 +370,7 @@ class LdapUserProcessor implements LdapUserAttributesInterface {
     $tokens = [
       '%dn' => isset($result['proposed']['dn']) ? $result['proposed']['dn'] : NULL,
       '%sid' => (isset($result['ldap_server']) && $result['ldap_server']) ? $result['ldap_server']->id() : 0,
-      '%username' => @$account->getUsername(),
+      '%username' => @$account->getAccountName(),
       '%uid' => @$account->id(),
       '%description' => @$result['description'],
     ];
@@ -418,7 +418,7 @@ class LdapUserProcessor implements LdapUserAttributesInterface {
         if (is_object($ldap_server) && $dn) {
           /** @var \Drupal\ldap_servers\Entity\Server $ldap_server */
           $result = $ldap_server->deleteLdapEntry($dn);
-          $tokens = ['%sid' => $sid, '%dn' => $dn, '%username' => $account->getUsername(), '%uid' => $account->id()];
+          $tokens = ['%sid' => $sid, '%dn' => $dn, '%username' => $account->getAccountName(), '%uid' => $account->id()];
           if ($result) {
             \Drupal::logger('ldap_user')->info('LDAP entry on server %sid deleted dn=%dn. username=%username, uid=%uid', $tokens);
           }

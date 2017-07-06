@@ -671,7 +671,7 @@ class LoginValidator implements LdapUserAttributesInterface {
       if (!$this->drupalUser->save()) {
         \Drupal::logger('ldap_authentication')
           ->error('Failed to make changes to user %username updated %changed.', [
-            '%username' => $this->drupalUser->getUsername(),
+            '%username' => $this->drupalUser->getAccountName(),
             '%changed' => $this->ldapUser['mail'],
           ]
           );
@@ -828,7 +828,7 @@ class LoginValidator implements LdapUserAttributesInterface {
           ->error('LDAP user with DN %dn has a naming conflict with a local drupal user %conflict_name',
             [
               '%dn' => $this->ldapUser['dn'],
-              '%conflict_name' => $account_with_same_email->getUsername(),
+              '%conflict_name' => $account_with_same_email->getAccountName(),
             ]
           );
       }
@@ -869,7 +869,7 @@ class LoginValidator implements LdapUserAttributesInterface {
       if ($this->config->get('emailTemplateUsageResolveConflict') && (!$this->emailTemplateUsed)) {
         if ($this->detailedLogging) {
           \Drupal::logger('ldap_authentication')->debug('Conflict detected, using template generated email for %username', [
-            '%duplicate_name' => $accountDuplicateMail->getUsername(),
+            '%duplicate_name' => $accountDuplicateMail->getAccountName(),
           ]);
         }
         $this->replaceUserMailWithTemplate();
@@ -892,7 +892,7 @@ class LoginValidator implements LdapUserAttributesInterface {
         \Drupal::logger('ldap_authentication')->error(
           'LDAP user with DN %dn has email address (%mail) conflict with a drupal user %duplicate_name', [
             '%dn' => $this->ldapUser['dn'],
-            '%duplicate_name' => $accountDuplicateMail->getUsername(),
+            '%duplicate_name' => $accountDuplicateMail->getAccountName(),
           ]
         );
 

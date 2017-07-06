@@ -120,7 +120,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
     $this->server = $factory->getServerByIdEnabled($this->config->get('drupalAcctProvisionServer'));
 
     // If we don't have an account name already we should set one.
-    if (!$this->account->getUsername()) {
+    if (!$this->account->getAccountName()) {
       $this->account->set('name', $ldapUser[$this->server->get('user_attr')]);
     }
 
@@ -191,7 +191,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
       }
     }
 
-    if ($processor->isSynced('[property.name]', $prov_events, $direction) && !$this->account->getUsername() && $drupal_username) {
+    if ($processor->isSynced('[property.name]', $prov_events, $direction) && !$this->account->getAccountName() && $drupal_username) {
       $this->account->set('name', $drupal_username);
     }
 
@@ -265,7 +265,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
     \Drupal::moduleHandler()->alter('ldap_user_edit_user', $this->account, $ldap_user, $context);
 
     // Don't let empty 'name' value pass for user.
-    if (empty($this->account->getUsername())) {
+    if (empty($this->account->getAccountName())) {
       $this->account->set('name', $ldap_user[$this->server->get('user_attr')]);
     }
 
@@ -653,12 +653,12 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
       return;
     }
 
-    if (is_object($account) && $account->getUsername()) {
+    if (is_object($account) && $account->getAccountName()) {
       // Check for first time user.
       $new_account_request = (boolean) (\Drupal::currentUser()
         ->isAnonymous() && $account->isNew());
-      $already_provisioned_to_ldap = SemaphoreStorage::get('provision', $account->getUsername());
-      $already_synced_to_ldap = SemaphoreStorage::get('sync', $account->getUsername());
+      $already_provisioned_to_ldap = SemaphoreStorage::get('provision', $account->getAccountName());
+      $already_synced_to_ldap = SemaphoreStorage::get('sync', $account->getAccountName());
       if ($already_provisioned_to_ldap || $already_synced_to_ldap || $new_account_request) {
         return;
       }
@@ -680,14 +680,14 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
           $ldapProcessor = new LdapUserProcessor();
           $provision_result = $ldapProcessor->provisionLdapEntry($account);
           if ($provision_result['status'] == 'success') {
-            SemaphoreStorage::set('provision', $account->getUsername());
+            SemaphoreStorage::set('provision', $account->getAccountName());
           }
         }
         elseif ($ldap_provision_entry) {
           $ldapProcessor = new LdapUserProcessor();
           $bool_result = $ldapProcessor->syncToLdapEntry($account);
           if ($bool_result) {
-            SemaphoreStorage::set('sync', $account->getUsername());
+            SemaphoreStorage::set('sync', $account->getAccountName());
           }
         }
       }
@@ -710,8 +710,8 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
     if ($this->provisionsLdapEntriesFromDrupalUsers() &&
       LdapConfiguration::provisionAvailableToLDAP(self::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_UPDATE_CREATE)) {
 
-      $already_provisioned_to_ldap = SemaphoreStorage::get('provision', $account->getUsername());
-      $already_synced_to_ldap = SemaphoreStorage::get('sync', $account->getUsername());
+      $already_provisioned_to_ldap = SemaphoreStorage::get('provision', $account->getAccountName());
+      $already_synced_to_ldap = SemaphoreStorage::get('sync', $account->getAccountName());
       if ($already_provisioned_to_ldap || $already_synced_to_ldap) {
         return;
       }
@@ -724,7 +724,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
       if (!$ldap_entry) {
         $provision_result = $processor->provisionLdapEntry($account);
         if ($provision_result['status'] == 'success') {
-          SemaphoreStorage::set('provision', $account->getUsername());
+          SemaphoreStorage::set('provision', $account->getAccountName());
         }
       }
       // Sync if not just provisioned and enabled.
@@ -736,7 +736,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
           $ldapProcessor = new LdapUserProcessor();
           $bool_result = $ldapProcessor->syncToLdapEntry($account);
           if ($bool_result) {
-            SemaphoreStorage::set('sync', $account->getUsername());
+            SemaphoreStorage::set('sync', $account->getAccountName());
           }
         }
       }
@@ -751,7 +751,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
   public function drupalUserPreSave(UserInterface $account) {
     $this->account = $account;
 
-    if (ExternalAuthenticationHelper::excludeUser($this->account) || !$this->account->getUsername()) {
+    if (ExternalAuthenticationHelper::excludeUser($this->account) || !$this->account->getAccountName()) {
       return;
     }
 
@@ -798,20 +798,20 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
     ) {
       $provision_result = $processor->provisionLdapEntry($this->account);
       if ($provision_result['status'] == 'success') {
-        SemaphoreStorage::set('provision', $this->account->getUsername());
+        SemaphoreStorage::set('provision', $this->account->getAccountName());
       }
     }
     // Don't sync, if just provisioned.
     if (
       $this->provisionsLdapEntriesFromDrupalUsers()
-      && SemaphoreStorage::get('sync', $this->account->getUsername()) == FALSE
+      && SemaphoreStorage::get('sync', $this->account->getAccountName()) == FALSE
       && $provision_result['status'] != 'success'
       && LdapConfiguration::provisionAvailableToLDAP(self::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_AUTHENTICATION)
     ) {
       $ldapProcessor = new LdapUserProcessor();
       $bool_result = $ldapProcessor->syncToLdapEntry($this->account);
       if ($bool_result) {
-        SemaphoreStorage::set('sync', $this->account->getUsername());
+        SemaphoreStorage::set('sync', $this->account->getAccountName());
       }
     }
     /** @var \Drupal\ldap_servers\ServerFactory $factory */
@@ -898,7 +898,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
     $this->account->enforceIsNew();
     $this->applyAttributesToAccount($ldap_user, self::PROVISION_TO_DRUPAL, [self::EVENT_CREATE_DRUPAL_USER]);
     $tokens = ['%drupal_username' => $this->account->get('name')];
-    if (empty($this->account->getUsername())) {
+    if (empty($this->account->getAccountName())) {
       drupal_set_message(t('User account creation failed because of invalid, empty derived Drupal username.'), 'error');
       \Drupal::logger('ldap_user')
         ->error('Failed to create Drupal account %drupal_username because drupal username could not be derived.', []);
@@ -924,7 +924,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
       drupal_set_message(t('User account creation failed because of system problems.'), 'error');
     }
     else {
-      ExternalAuthenticationHelper::setUserIdentifier($this->account, $this->account->getUsername());
+      ExternalAuthenticationHelper::setUserIdentifier($this->account, $this->account->getAccountName());
     }
     return $this->account;
   }

@@ -46,7 +46,7 @@ function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$param
  */
 function ldap_servers_user_logout($account) {
   // When the user logs out clear the LDAP cached data.
-  $cache_key = 'ldap_servers:user_data:' . $account->getUsername();
+  $cache_key = 'ldap_servers:user_data:' . $account->getAccountName();
   if ($cache = \Drupal::cache()->get($cache_key)) {
     \Drupal::cache()->delete($cache_key);
   }
