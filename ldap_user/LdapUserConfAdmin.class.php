@@ -754,7 +754,7 @@ EOT;
           ||
           (isset($mapping['configurable_to_ldap']) && $mapping['configurable_to_ldap']  && $direction == LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY)
           ) {
-          $user_attr_options[$target_id] = substr($mapping['name'], 0, 25);
+          $user_attr_options[$target_id] = substr($target_id, 1, -1);
         }
       }
     }
