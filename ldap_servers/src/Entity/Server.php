@@ -802,7 +802,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
         elseif ($this->hasError()) {
           \Drupal::logger('ldap_servers')->error('ldap_search() function error. LDAP Error: %message, ldap_search() parameters: %query', [
             '%message' => $this->formattedError($this->ldapErrorNumber()),
-            '%query' => $params['query_display'],
+            '%query' => isset($params['query_display']) ? $params['query_display'] : NULL,
           ]
           );
         }

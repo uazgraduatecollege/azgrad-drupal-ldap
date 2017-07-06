@@ -263,7 +263,8 @@ class ServerTestForm extends EntityForm {
     }
 
     if (!$has_errors && isset($values['grp_test_grp_dn'])) {
-      list($group_entry, $values) = $this->testGroupDN($values);
+      $user = isset($values['testing_drupal_username']) ? $values['testing_drupal_username'] : NULL;
+      $group_entry = $this->testGroupDN($values['grp_test_grp_dn'], $user);
     }
 
     list($has_errors, $ldap_user) = $this->testUserMapping($values['testing_drupal_username']);
@@ -288,103 +289,111 @@ class ServerTestForm extends EntityForm {
   }
 
   /**
-   * @param $values
-   * @return array
+   * Test the Group DN.
+   *
+   * @param $group_dn
+   * @param null $user
+   *
+   * @return array Response.
+   * Response.
+   * @internal param array $values Configuration values.*   Configuration values.
+   *
    */
-  private function testGroupDN($values) {
-    $group_dn = $values['grp_test_grp_dn'];
+  private function testGroupDN($group_dn, $user) {
     $group_entry = $this->ldapServer->search($group_dn, 'objectClass=*');
-    $user = isset($values['testing_drupal_username']) ? $values['testing_drupal_username'] : NULL;
 
-    foreach ([FALSE, TRUE] as $nested) {
-      // FALSE.
-      $nested_display = ($nested) ? 'Yes' : 'No';
-      if ($user) {
-        // This is the parent function that will call FromUserAttr or FromEntry.
-        $memberships = $this->ldapServer->groupMembershipsFromUser($user, $nested);
-        $settings = [
-          '#theme' => 'item_list',
-          '#items' => $memberships,
-          '#list_type' => 'ul',
-        ];
-        $result = drupal_render($settings);
-
-        $this->resultsTables['group2'][] = [
-          'Group memberships from user ("group_dns", nested=' . $nested_display . ') (' . count($memberships) . ' found)',
-          $result,
-        ];
-
-        $result = ($this->ldapServer->groupIsMember($group_dn, $user, $nested)) ? 'Yes' : 'No';
-        $group_results = [];
-        $group_results[] = [
-          'groupIsMember from group DN ' . $group_dn . 'for ' . $user . ' nested=' . $nested_display . ')',
-          $result,
-        ];
-
-        if ($this->ldapServer->groupUserMembershipsFromAttributeConfigured()) {
-          $groupUserMembershipsFromUserAttributes = $this->ldapServer->groupUserMembershipsFromUserAttr($user, $nested);
-          $count = count($groupUserMembershipsFromUserAttributes);
+    if ($group_entry) {
+      foreach ([FALSE, TRUE] as $nested) {
+        // FALSE.
+        $nested_display = ($nested) ? 'Yes' : 'No';
+        if ($user) {
+          // This is the parent function that will call FromUserAttr or
+          // FromEntry.
+          $memberships = $this->ldapServer->groupMembershipsFromUser($user, $nested);
           $settings = [
             '#theme' => 'item_list',
-            '#items' => $groupUserMembershipsFromUserAttributes,
+            '#items' => $memberships,
             '#list_type' => 'ul',
           ];
           $result = drupal_render($settings);
 
-        }
-        else {
-          $groupUserMembershipsFromUserAttributes = [];
-          $result = "'A user LDAP attribute such as memberOf exists that contains a list of their group' is not configured.";
-        }
-        $this->resultsTables['group2'][] = [
-          'Group memberships from user attribute for ' . $user . ' (nested=' . $nested_display . ') (' . count($groupUserMembershipsFromUserAttributes) . ' found)',
-          $result,
-        ];
-
-        if ($this->ldapServer->groupGroupEntryMembershipsConfigured()) {
-          $groupUserMembershipsFromEntry = $this->ldapServer->groupUserMembershipsFromEntry($user, $nested);
-          $settings = [
-            '#theme' => 'item_list',
-            '#items' => $groupUserMembershipsFromEntry,
-            '#list_type' => 'ul',
-          ];
-          $result = drupal_render($settings);
-
-        }
-        else {
-          $groupUserMembershipsFromEntry = [];
-          $result = "Groups by entry not configured.";
-        }
-        $this->resultsTables['group2'][] = [
-          'Group memberships from entry for ' . $user . ' (nested=' . $nested_display . ') (' . count($groupUserMembershipsFromEntry) . ' found)',
-          $result,
-        ];
-
-        if (count($groupUserMembershipsFromEntry) && count($groupUserMembershipsFromUserAttributes)) {
-          $diff1 = array_diff($groupUserMembershipsFromUserAttributes, $groupUserMembershipsFromEntry);
-          $diff2 = array_diff($groupUserMembershipsFromEntry, $groupUserMembershipsFromUserAttributes);
-          $settings = [
-            '#theme' => 'item_list',
-            '#items' => $diff1,
-            '#list_type' => 'ul',
-          ];
-          $result1 = drupal_render($settings);
-
-          $settings = [
-            '#theme' => 'item_list',
-            '#items' => $diff2,
-            '#list_type' => 'ul',
-          ];
-          $result2 = drupal_render($settings);
-
           $this->resultsTables['group2'][] = [
-            "groupUserMembershipsFromEntry and FromUserAttr Diff)",
-            $result1,
+            'Group memberships from user ("group_dns", nested=' . $nested_display . ') (' . count($memberships) . ' found)',
+            $result,
           ];
+
+          $result = ($this->ldapServer->groupIsMember($group_dn, $user, $nested)) ? 'Yes' : 'No';
+          $group_results = [];
+          $group_results[] = [
+            'groupIsMember from group DN ' . $group_dn . 'for ' . $user . ' nested=' . $nested_display . ')',
+            $result,
+          ];
+
+          if ($this->ldapServer->groupUserMembershipsFromAttributeConfigured()) {
+            $groupUserMembershipsFromUserAttributes = $this->ldapServer->groupUserMembershipsFromUserAttr($user, $nested);
+            $count = count($groupUserMembershipsFromUserAttributes);
+            $settings = [
+              '#theme' => 'item_list',
+              '#items' => $groupUserMembershipsFromUserAttributes,
+              '#list_type' => 'ul',
+            ];
+            $result = drupal_render($settings);
+
+          }
+          else {
+            $groupUserMembershipsFromUserAttributes = [];
+            $result = "'A user LDAP attribute such as memberOf exists that contains a list of their group' is not configured.";
+          }
           $this->resultsTables['group2'][] = [
-            "FromUserAttr and groupUserMembershipsFromEntry Diff)",
-            $result2,
+            'Group memberships from user attribute for ' . $user . ' (nested=' . $nested_display . ') (' . count($groupUserMembershipsFromUserAttributes) . ' found)',
+            $result,
           ];
+
+          if ($this->ldapServer->groupGroupEntryMembershipsConfigured()) {
+            $groupUserMembershipsFromEntry = $this->ldapServer->groupUserMembershipsFromEntry($user, $nested);
+            $settings = [
+              '#theme' => 'item_list',
+              '#items' => $groupUserMembershipsFromEntry,
+              '#list_type' => 'ul',
+            ];
+            $result = drupal_render($settings);
+
+          }
+          else {
+            $groupUserMembershipsFromEntry = [];
+            $result = "Groups by entry not configured.";
+          }
+          $this->resultsTables['group2'][] = [
+            'Group memberships from entry for ' . $user . ' (nested=' . $nested_display . ') (' . count($groupUserMembershipsFromEntry) . ' found)',
+            $result,
+          ];
+
+          if (count($groupUserMembershipsFromEntry) && count($groupUserMembershipsFromUserAttributes)) {
+            $diff1 = array_diff($groupUserMembershipsFromUserAttributes, $groupUserMembershipsFromEntry);
+            $diff2 = array_diff($groupUserMembershipsFromEntry, $groupUserMembershipsFromUserAttributes);
+            $settings = [
+              '#theme' => 'item_list',
+              '#items' => $diff1,
+              '#list_type' => 'ul',
+            ];
+            $result1 = drupal_render($settings);
+
+            $settings = [
+              '#theme' => 'item_list',
+              '#items' => $diff2,
+              '#list_type' => 'ul',
+            ];
+            $result2 = drupal_render($settings);
+
+            $this->resultsTables['group2'][] = [
+              "groupUserMembershipsFromEntry and FromUserAttr Diff)",
+              $result1,
+            ];
+            $this->resultsTables['group2'][] = [
+              "FromUserAttr and groupUserMembershipsFromEntry Diff)",
+              $result2,
+            ];
+          }
         }
       }
     }
@@ -398,7 +407,7 @@ class ServerTestForm extends EntityForm {
       $result = drupal_render($settings);
       $this->resultsTables['groupfromDN'][] = ["Groups from DN", $result];
     }
-    return [$group_entry, $values];
+    return $group_entry;
   }
 
   /**
@@ -608,11 +617,10 @@ class ServerTestForm extends EntityForm {
     if (!$ldap_user) {
       $this->resultsTables['basic'][] = [
         'class' => 'color-error',
-        'data' => [t('Failed to find test user %username by searching on %user_attr = %username. Error: %error',
+        'data' => [t('Failed to find test user %username by searching on %user_attr = %username.',
           [
             '%username' => $drupal_username,
             '%user_attr' => $this->ldapServer->get('user_attr'),
-            '%error' => $this->ldapServer->formattedError($this->ldapServer->ldapErrorNumber()),
           ]
           ),
         ],
