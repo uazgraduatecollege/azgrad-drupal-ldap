@@ -36,5 +36,76 @@ ldap_user.settings:
       label: 'Application of Drupal account settings to LDAP authenticated users'
       type: string
     ldapUserSyncMappings:
-      label: 'ldapUserSyncMappings'
-      type: mapping
+      type: config_object
+      label: 'Configured sync mappings'
+      mapping:
+        drupal:
+          label: 'To Drupal sync mappings'
+          type: sequence
+          sequence:
+            type: mapping
+            mapping:
+              ldap_attr:
+                type: string
+                label: 'Ldap attribute'
+              user_attr:
+                type: string
+                label: 'User attribute'
+              convert:
+                type: boolean
+                label: 'Convert from binary'
+              direction:
+                type: string
+                label: 'Provisioning direction'
+              user_tokens:
+                type: string
+                label: 'User entered tokens'
+              config_module:
+                type: string
+                label: 'Module configuring mapping'
+              prov_module:
+                type: string
+                label: 'Module provisioning mapping'
+              enabled:
+                type: boolean
+                label: 'Enabled'
+              prov_events:
+                type: sequence
+                label: 'Configured provisioning events'
+                sequence:
+                  type: string
+        ldap:
+          label: 'To LDAP sync mappings'
+          type: sequence
+          sequence:
+            type: mapping
+            mapping:
+              ldap_attr:
+                type: string
+                label: 'Ldap attribute'
+              user_attr:
+                type: string
+                label: 'User attribute'
+              convert:
+                type: boolean
+                label: 'Convert from binary'
+              direction:
+                type: string
+                label: 'Provisioning direction'
+              user_tokens:
+                type: string
+                label: 'User entered tokens'
+              config_module:
+                type: string
+                label: 'Module configuring mapping'
+              prov_module:
+                type: string
+                label: 'Module provisioning mapping'
+              enabled:
+                type: boolean
+                label: 'Enabled'
+              prov_events:
+                type: sequence
+                label: 'Configured provisioning events'
+                sequence:
+                  type: string
