@@ -35,6 +35,12 @@ ldap_user.settings:
     acctCreation:
       label: 'Application of Drupal account settings to LDAP authenticated users'
       type: string
+    userUpdateCronQuery:
+      label: 'The LDAP query to use for fetching and updating users periodically.'
+      type: string
+    userUpdateCronInterval:
+      label: 'The interval to use for fetching and updating users periodically.'
+      type: string
     ldapUserSyncMappings:
       type: config_object
       label: 'Configured sync mappings'

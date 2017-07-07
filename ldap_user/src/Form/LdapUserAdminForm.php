@@ -8,6 +8,7 @@ use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Config\ConfigFactoryInterface;
 
 use Drupal\Core\Url;
+use Drupal\ldap_query\Controller\QueryController;
 use Drupal\ldap_servers\Processor\TokenProcessor;
 use Drupal\ldap_user\Helper\LdapConfiguration;
 use Drupal\ldap_user\LdapUserAttributesInterface;
@@ -166,6 +167,45 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
     foreach (user_cancel_methods()['#options'] as $option_name => $option_title) {
       $account_options[$option_name] = $option_title;
     }
+
+    $form['basic_to_drupal']['userUpdateMechanism'] = [
+      '#type' => 'fieldset',
+      '#title' => 'Periodic user update mechanism',
+      '#description' => $this->t('Allows you to sync the result of an LDAP query with your users. Creates new users and updates existing ones.'),
+    ];
+
+    $updateMechanismOptions = ['none' => $this->t('Do not update')];
+    $queries = QueryController::getAllEnabledQueries();
+    foreach ($queries as $query) {
+      $updateMechanismOptions[$query->id()] = $query->label();
+    }
+    $form['basic_to_drupal']['userUpdateMechanism']['userUpdateCronQuery'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Action to perform on Drupal accounts that no longer have corresponding LDAP entries'),
+      '#required' => FALSE,
+      '#default_value' => $config->get('userUpdateCronQuery'),
+      '#options' => $updateMechanismOptions,
+    ];
+
+    $form['basic_to_drupal']['userUpdateMechanism']['userUpdateCronInterval'] = [
+      '#type' => 'select',
+      '#title' => $this->t('How often should each user be synced?'),
+      '#default_value' => $config->get('userUpdateCronInterval'),
+      '#options' => [
+        'always' => $this->t('On every cron run'),
+        'daily' => $this->t('Daily'),
+        'weekly' => $this->t('Weekly'),
+        'monthly' => $this->t('Monthly'),
+      ],
+    ];
+
+    $form['basic_to_drupal']['orphanedAccounts']['orphanedCheckQty'] = [
+      '#type' => 'textfield',
+      '#size' => 10,
+      '#title' => $this->t('Number of users to check each cron run.'),
+      '#default_value' => $config->get('orphanedCheckQty'),
+      '#required' => FALSE,
+    ];
 
     $form['basic_to_drupal']['orphanedAccounts'] = [
       '#type' => 'fieldset',
@@ -514,6 +554,8 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
       ->set('ldapEntryProvisionServer', $ldapEntryProvisionServer)
       ->set('drupalAcctProvisionTriggers', $form_state->getValue('drupalAcctProvisionTriggers'))
       ->set('ldapEntryProvisionTriggers', $form_state->getValue('ldapEntryProvisionTriggers'))
+      ->set('userUpdateCronQuery', $form_state->getValue('userUpdateCronQuery'))
+      ->set('userUpdateCronInterval', $form_state->getValue('userUpdateCronInterval'))
       ->set('orphanedDrupalAcctBehavior', $form_state->getValue('orphanedDrupalAcctBehavior'))
       ->set('orphanedCheckQty', $form_state->getValue('orphanedCheckQty'))
       ->set('orphanedAccountCheckInterval', $form_state->getValue('orphanedAccountCheckInterval'))

@@ -12,6 +12,7 @@ use Drupal\ldap_servers\Processor\TokenProcessor;
 use Drupal\ldap_user\LdapUserAttributesInterface;
 use Drupal\ldap_user\Helper\LdapConfiguration;
 use Drupal\ldap_user\Processor\DrupalUserProcessor;
+use Drupal\ldap_user\Processor\GroupUserUpdateProcessor;
 use Drupal\ldap_user\Processor\LdapUserProcessor;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
@@ -28,6 +29,14 @@ function ldap_user_cron() {
     $result = $processor->checkOrphans();
     if ($result !== TRUE) {
       \Drupal::logger('ldap_user')->error('Check for orphaned LDAP provisioned Drupal accounts failed.');
+    }
+  }
+
+  $ldapUpdateQuery = \Drupal::config('ldap_user.settings')->get('userUpdateCronQuery');
+  if ($ldapUpdateQuery != NULL && $ldapUpdateQuery != 'None') {
+    $processor = new GroupUserUpdateProcessor($ldapUpdateQuery);
+    if ($processor->updateDue()) {
+      $processor->runQuery();
     }
   }
 }
@@ -197,11 +206,14 @@ function ldap_user_form_password_policy_password_tab_alter(&$form, &$form_state)
 }
 
 /**
- * Store password from logon forms in ldap_user_ldap_provision_pwd static variable
- * for use in provisioning to LDAP.
+ * Alter password form through validation.
+ *
+ * Store password from logon forms in ldap_user_ldap_provision_pwd static
+ * variable for use in provisioning to LDAP.
  */
 function ldap_user_grab_password_validate($form, FormState &$form_state) {
-  // This is not a login form but profile form and user is inserting password to update email.
+  // This is not a login form but profile form and user is inserting password
+  // to update email.
   if (!empty($form_state->getValue('current_pass_required_values'))) {
     if (!empty($form_state->getValue('current_pass')) && empty($form_state->getValue('pass'))) {
       TokenProcessor::passwordStorage('set', $form_state->getValue('current_pass'));
@@ -214,7 +226,9 @@ function ldap_user_grab_password_validate($form, FormState &$form_state) {
 }
 
 /**
- * Implements hook_form_FORM_ID_alter(). for user_register_form.
+ * Implements hook_form_FORM_ID_alter().
+ *
+ * For user_register_form.
  */
 function ldap_user_form_user_register_form_alter(&$form, $form_state) {
 
@@ -283,10 +297,8 @@ function ldap_user_form_register_form_validate($form, FormStateInterface &$form_
 
   $factory = \Drupal::service('ldap.servers');
 
-  /**
-   * If corresponding LDAP account does not exist and provision not selected
-   * and make ldap associated is selected, throw error.
-   */
+   // If the corresponding LDAP account does not exist and provision not
+  // selected and make ldap associated is selected, throw error.
   if (!$form_state->getValue('ldap_user_create_ldap_acct') &&
     $form_state->getValue('ldap_user_association') == LdapUserAttributesInterface::MANUAL_ACCOUNT_CONFLICT_LDAP_ASSOCIATE) {
     if (empty($config->get('drupalAcctProvisionServer'))) {
@@ -332,8 +344,8 @@ function ldap_user_form_register_form_validate($form, FormStateInterface &$form_
 }
 
 /**
- * Called after user_register_form_submit .
- **/
+ * Called after user_register_form_submit.
+ */
 function ldap_user_form_register_form_submit2(&$form, FormState $form_state) {
   // It's only called when a user who can create a new user does so using the
   // register form.

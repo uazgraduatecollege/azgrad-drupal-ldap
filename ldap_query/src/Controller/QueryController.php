@@ -128,7 +128,7 @@ class QueryController {
    * @return \Drupal\Core\Entity\EntityInterface[]
    *   Entity Queries.
    */
-  public function getAllEnabledQueries() {
+  public static function getAllEnabledQueries() {
     $query = \Drupal::entityQuery('ldap_query_entity')
       ->condition('status', 1);
     $ids = $query->execute();
