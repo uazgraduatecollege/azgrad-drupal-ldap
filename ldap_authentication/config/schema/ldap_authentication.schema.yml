@@ -7,14 +7,19 @@ ldap_authentication.settings:
        type: string
     authenticationMode:
       type: integer
+      label: 'Authentication mode'
     loginUIUsernameTxt:
-      type: string
+      type: text
+      label: 'Username Description Text'
     loginUIPasswordTxt:
-      type: string
+      type: text
+      label: 'Password Description Text'
     ldapUserHelpLinkUrl:
-      type: string
+      type: text
+      label: 'LDAP Account User Help URL'
     ldapUserHelpLinkText:
-      type: string
+      type: text
+      label: 'LDAP Account User Help Link Text'
     emailOption:
       type: integer
     emailUpdate:

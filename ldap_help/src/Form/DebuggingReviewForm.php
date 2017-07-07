@@ -9,7 +9,7 @@ use Drupal\ldap_query\Controller\QueryController;
 use Drupal\ldap_servers\ServerFactory;
 
 /**
- *
+ *  Form to allow for debugging review.
  */
 class DebuggingReviewForm extends FormBase {
 
@@ -23,7 +23,13 @@ class DebuggingReviewForm extends FormBase {
   }
 
   /**
+   * Returns raw data of configuration.
    *
+   * @param string $configName
+   *   Configuration name.
+   *
+   * @return string
+   *   Raw configuration data.
    */
   private function printConfig($configName) {
     $config = \Drupal::configFactory()->get($configName);
@@ -47,7 +53,7 @@ class DebuggingReviewForm extends FormBase {
         '#markup' => '<h2>' . $this->t('PHP LDAP module') . '</h2>',
       ];
       $form['modules'] = [
-        '#markup' => '<pre>' . Yaml::encode($this->parsePHPModules()['ldap']) . '</pre>',
+        '#markup' => '<pre>' . Yaml::encode($this->parsePhpModules()['ldap']) . '</pre>',
       ];
     }
 
@@ -120,10 +126,8 @@ class DebuggingReviewForm extends FormBase {
         '#markup' => '<h2>' . $this->t('Configured LDAP queries') . '</h2>',
       ];
 
-      // TODO: Remove this controller, use entity API.
-      $controller = new QueryController();
-
-      foreach ($controller->getAllQueries() as $query) {
+      foreach (QueryController::getAllQueries() as $query) {
+        /** @var \Drupal\ldap_query\Entity\QueryEntity $query */
         $form['query_' . $query->id()] = [
           '#markup' =>
           '<h3>' . $this->t('Query @name:', ['@name' => $query->label()]) . '</h3>' .
@@ -139,8 +143,9 @@ class DebuggingReviewForm extends FormBase {
    * Generates an array of values from phpinfo().
    *
    * @return array
+   *   Module list.
    */
-  private function parsePHPModules() {
+  private function parsePhpModules() {
     ob_start();
     phpinfo();
     $s = ob_get_contents();

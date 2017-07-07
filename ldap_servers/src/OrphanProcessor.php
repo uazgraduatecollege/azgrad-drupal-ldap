@@ -5,7 +5,7 @@ namespace Drupal\ldap_servers;
 use Drupal\user\Entity\User;
 
 /**
- *
+ * Locates potential orphan user accounts.
  */
 class OrphanProcessor {
 
@@ -15,17 +15,17 @@ class OrphanProcessor {
   private $missingServerSemaphore = [];
 
   /**
-   *
+   * Constructor.
    */
   public function __construct() {
     $this->config = \Drupal::config('ldap_user.settings')->get();
   }
 
   /**
-   * Function to respond to ldap associated drupal accounts which no
-   * longer have a related LDAP entry.
+   * Check for Drupal accounts which no longer have a related LDAP entry.
    *
-   * @return boolean FALSE on error or incompletion or TRUE otherwise
+   * @return bool
+   *   FALSE on error or incompletion or TRUE otherwise.
    */
   public function checkOrphans() {
 
@@ -61,9 +61,11 @@ class OrphanProcessor {
   /**
    * Create a "binary safe" string for use in LDAP filters.
    *
-   * @param $value
+   * @param string $value
+   *   Unsfe string.
    *
    * @return string
+   *   Safe string.
    */
   private function binaryFilter($value) {
     $match = '';
@@ -85,7 +87,7 @@ class OrphanProcessor {
   }
 
   /**
-   * @param $emailList
+   * Send email.
    */
   public function sendOrphanedAccountsMail() {
     $mailManager = \Drupal::service('plugin.manager.mail');
@@ -99,11 +101,17 @@ class OrphanProcessor {
   }
 
   /**
-   * @param $batch
-   * @param $uids
+   * Batch query for users.
+   *
+   * @param int $batch
+   *   Batch number.
+   * @param array $uids
+   *   UIDs to process.
+   *
    * @return array
+   *   Queried batch of users.
    */
-  private function batchQueryUsers($batch, $uids) {
+  private function batchQueryUsers($batch, array $uids) {
 
     $factory = \Drupal::service('ldap.servers');
     /** @var \Drupal\ldap_servers\ServerFactory $factory */
@@ -176,7 +184,10 @@ class OrphanProcessor {
   }
 
   /**
+   * Fetch UIDs to check.
+   *
    * @return array
+   *   All relevant UID.
    */
   private function fetchUidsToCheck() {
     /**
@@ -229,11 +240,13 @@ class OrphanProcessor {
   }
 
   /**
-   * @param $processedUsers
-   * @return mixed
+   * Process one user.
+   *
+   * @param array $users
+   *   User to process.
    */
-  private function processUser($processedUsers) {
-    foreach ($processedUsers as $serverId => $persistentAttributes) {
+  private function processUser(array $users) {
+    foreach ($users as $serverId => $persistentAttributes) {
       foreach ($persistentAttributes as $attribute => $persistentUids) {
         foreach ($persistentUids as $persistentUid => $user_data) {
           if (isset($user_data['uid'])) {

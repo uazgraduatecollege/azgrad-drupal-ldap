@@ -2,6 +2,7 @@
 
 /**
  * @file
+ * Module file for ldap_query.
  */
 
 use Drupal\Core\Routing\RouteMatchInterface;

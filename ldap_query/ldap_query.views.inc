@@ -2,6 +2,7 @@
 
 /**
  * @file
+ * Views integration for ldap_query.
  */
 
 /**

@@ -11,14 +11,7 @@ use Drupal\Tests\UnitTestCase;
 class LoginTests extends UnitTestCase {
 
   /**
-   *
-   */
-  protected function setUp() {
-    parent::setUp();
-  }
-
-  /**
-   *
+   * Test mixed user mode.
    */
   public function testMixedUserMode() {
     $this->assertTrue(TRUE);
@@ -30,7 +23,7 @@ class LoginTests extends UnitTestCase {
   }
 
   /**
-   *
+   * Test exclusive user mode.
    */
   public function testExclusiveUserMode() {
     $this->assertTrue(TRUE);
@@ -42,9 +35,9 @@ class LoginTests extends UnitTestCase {
   }
 
   /**
-   *
+   * Test SSO validation.
    */
-  public function testSSOValidation() {
+  public function testSsoValidation() {
     $this->assertTrue(TRUE);
     // TODO: Write test
     // assert right credentials LDAP
@@ -52,10 +45,11 @@ class LoginTests extends UnitTestCase {
     // assert local Drupal user without mapping (associated, not associated)
     // test exclusive/mixed
     // see example data.
+    // consider moving to ldap_sso.
   }
 
   /**
-   *
+   * Test the whitelist.
    */
   public function testWhiteList() {
     $this->assertTrue(TRUE);
@@ -65,7 +59,7 @@ class LoginTests extends UnitTestCase {
   }
 
   /**
-   *
+   * Test the blacklist.
    */
   public function testBlacklist() {
     $this->assertTrue(TRUE);

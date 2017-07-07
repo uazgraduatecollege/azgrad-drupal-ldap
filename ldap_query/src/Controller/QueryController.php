@@ -5,7 +5,7 @@ namespace Drupal\ldap_query\Controller;
 use Drupal\ldap_query\Entity\QueryEntity;
 
 /**
- *
+ * Controller class for LDAP queries, in assistance to the entity itself.
  */
 class QueryController {
 
@@ -14,7 +14,7 @@ class QueryController {
   private $query;
 
   /**
-   *
+   * Constructor.
    */
   public function __construct($id) {
     $this->qid = $id;
@@ -22,13 +22,18 @@ class QueryController {
   }
 
   /**
+   * Returns the filter.
    *
+   * @return string
+   *   Set filter.
    */
   public function getFilter() {
     return $this->query->get('filter');
   }
 
   /**
+   * Execute query.
+   *
    * @param null|string $filter
    *   Optional parameter to override filters. Useful for Views and other
    *   queries requiring filtering.
@@ -72,14 +77,20 @@ class QueryController {
   }
 
   /**
+   * Return raw results.
    *
+   * @return array
+   *   Raw results.
    */
   public function getRawResults() {
     return $this->results;
   }
 
   /**
+   * Return available fields.
    *
+   * @return array
+   *   Available fields.
    */
   public function availableFields() {
     $attributes = [];
@@ -100,97 +111,28 @@ class QueryController {
   }
 
   /**
-   * TODO: Unported.
+   * Returns all available LDAP query entities.
    *
-   * @deprecated
+   * @return \Drupal\Core\Entity\EntityInterface[]
+   *   Entity Queries.
    */
-  public function ldap_query_cache_clear() {
-    $this->ldap_query_get_queries(NULL, 'all', FALSE, TRUE);
-  }
-
-  /**
-   * @deprecated
-   * Return ldap query objects.
-   *
-   * @param string $qid
-   * @param string $type
-   *   Either all or enabled.
-   * @param bool $flatten
-   *   signifies if array or single object returned.  Only works if sid is specified.
-   * @param bool $reset
-   *   do not use cached or static result.
-   *
-   * @return array|bool
-   *   Array of server conf object keyed on sid, single server conf object
-   *   (if flatten == TRUE).
-   */
-  public function ldap_query_get_queries($qid = NULL, $type, $flatten = FALSE, $reset = FALSE) {
-    static $queries;
-
-    if ($reset) {
-      $queries = [];
-    }
-    if (!isset($queries['all'])) {
-      $queries['all'] = $this->getLdapQueryObjects('all', 'all');
-    }
-    if (!isset($queries['enabled'])) {
-      $queries['enabled'] = [];
-      foreach ($queries['all'] as $_qid => $ldap_query) {
-        if ($ldap_query->status == 1) {
-          $queries['enabled'][$_qid] = $ldap_query;
-        }
-      }
-    }
-
-    if ($qid) {
-      if (!isset($queries[$type][$qid])) {
-        return FALSE;
-      }
-      return ($flatten) ? $queries[$type][$qid] : $queries[$type];
-    }
-
-    if (isset($queries[$type])) {
-      return $queries[$type];
-    }
-  }
-
-  /**
-   *
-   */
-  public function getAllQueries() {
+  public static function getAllQueries() {
     $query = \Drupal::entityQuery('ldap_query_entity');
     $ids = $query->execute();
     return QueryEntity::loadMultiple($ids);
   }
 
   /**
+   * Returns all enabled LDAP query entities.
    *
+   * @return \Drupal\Core\Entity\EntityInterface[]
+   *   Entity Queries.
    */
   public function getAllEnabledQueries() {
     $query = \Drupal::entityQuery('ldap_query_entity')
       ->condition('status', 1);
     $ids = $query->execute();
     return QueryEntity::loadMultiple($ids);
-  }
-
-  /**
-   * @deprecated
-   * @param string $sid
-   * @param string $type
-   * @param string $class
-   * @return array|\Drupal\Core\Entity\EntityInterface[]|static[]
-   */
-  public function getLdapQueryObjects($sid = 'all', $type = 'enabled', $class = 'LdapQuery') {
-    // Deprecated, see getAllEnabledQueries() / getAllQueries().
-    if ($sid != 'all' && !empty($sid)) {
-      return $this->query($sid);
-    }
-    elseif ($sid = 'all' && $type = 'enabled') {
-      return $this->getAllEnabledQueries();
-    }
-    else {
-      return $this->getAllQueries();
-    }
   }
 
 }

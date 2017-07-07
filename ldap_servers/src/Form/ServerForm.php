@@ -65,7 +65,7 @@ class ServerForm extends EntityForm {
         'opendir' => 'Apple Open Directory',
       ],
       '#default_value' => $server->get('type'),
-      '#description' => $this->t('This field is informative. It\'s purpose is to assist with default values and give validation warnings.'),
+      '#description' => $this->t("This field is informative. It's purpose is to assist with default values and give validation warnings."),
     ];
 
     $form['server']['address'] = [
@@ -164,7 +164,7 @@ class ServerForm extends EntityForm {
       '#type' => 'textfield',
       '#size' => 30,
       '#title' => $this->t('AuthName attribute'),
-      '#description' => $this->t('The attribute that holds the users\' login name. (eg. <code>cn</code> for eDir or <code>sAMAccountName</code> for Active Directory).'),
+      '#description' => $this->t("The attribute that holds the user's login name. (eg. <code>cn</code> for eDir or <code>sAMAccountName</code> for Active Directory)."),
     ];
 
     $form['users']['account_name_attr'] = [
@@ -180,7 +180,7 @@ class ServerForm extends EntityForm {
       '#type' => 'textfield',
       '#size' => 30,
       '#title' => $this->t('Email attribute'),
-      '#description' => $this->t('The attribute that holds the users\' email address. (eg. <code>mail</code>). Leave empty if no such attribute exists'),
+      '#description' => $this->t("The attribute that holds the user's email address. (eg. <code>mail</code>). Leave empty if no such attribute exists"),
     ];
 
     $form['users']['mail_template'] = [
@@ -188,7 +188,7 @@ class ServerForm extends EntityForm {
       '#type' => 'textfield',
       '#size' => 30,
       '#title' => $this->t('Email template'),
-      '#description' => $this->t('If no attribute contains the user\'s email address, but it can be derived from other attributes, enter an email "template" here.<br> Templates should have the user\'s attribute name in form such as [cn], [uin], etc. such as <code>[cn]@mycompany.com</code>.<br> See also the <a href="http://drupal.org/node/997082">drupal.org documentation on LDAP tokens</a>.'),
+      '#description' => $this->t("If no attribute contains the user's email address, but it can be derived from other attributes, enter an email \"template\" here.<br> Templates should have the user's attribute name in form such as [cn], [uin], etc. such as <code>[cn]@mycompany.com</code>.<br> See also the <a href=\"http://drupal.org/node/997082\">drupal.org documentation on LDAP tokens</a>."),
     ];
 
     $form['users']['picture_attr'] = [
@@ -196,7 +196,7 @@ class ServerForm extends EntityForm {
       '#type' => 'textfield',
       '#size' => 30,
       '#title' => $this->t('Thumbnail attribute'),
-      '#description' => $this->t('The attribute that holds the users\' thumnail image. (e.g. <code>thumbnailPhoto</code>). Leave empty if no such attribute exists'),
+      '#description' => $this->t("The attribute that holds the user's thumnail image. (e.g. <code>thumbnailPhoto</code>). Leave empty if no such attribute exists"),
     ];
 
     $form['users']['unique_persistent_attr'] = [
@@ -204,15 +204,14 @@ class ServerForm extends EntityForm {
       '#type' => 'textfield',
       '#size' => 30,
       '#title' => $this->t('Persistent and Unique User ID Attribute'),
-      '#description' => $this->t('In some LDAPs, a user\'s DN, CN, or mail value may change when a user\'s name changes or for other reasons.<br> In order to avoid creation of multiple accounts for that user or other ambiguities, enter a unique and persistent ldap attribute for users. <br> In cases where DN does not change, enter "dn" here. If no such attribute exists, leave this blank.'
-      ),
+      '#description' => $this->t("In some LDAP configurations, a user's DN, CN, or mail value may change when a user's name changes or for other reasons.<br> In order to avoid creation of multiple accounts for that user or other ambiguities, enter a unique and persistent ldap attribute for users. <br> In cases where DN does not change, enter \"dn\" here. If no such attribute exists, leave this blank."),
     ];
 
     $form['users']['unique_persistent_attr_binary'] = [
       '#default_value' => $server->get('unique_persistent_attr_binary'),
       '#type' => 'checkbox',
       '#title' => $this->t('Does the <em>Persistent and Unique User ID Attribute</em> hold a binary value?'),
-      '#description' => $this->t('You need to set this if you are using a binary attribute  such as objectSid in ActiveDirectory for the PUID.<br> If you don\'t want this consider switching to another attribute, such as samaccountname.'),
+      '#description' => $this->t("You need to set this if you are using a binary attribute  such as objectSid in ActiveDirectory for the PUID.<br> If you don't want this consider switching to another attribute, such as samaccountname."),
     ];
 
     $form['users']['user_dn_expression'] = [
@@ -228,7 +227,7 @@ class ServerForm extends EntityForm {
       '#type' => 'textfield',
       '#size' => 30,
       '#title' => $this->t('Testing Drupal Username'),
-      '#description' => $this->t('This is optional and used for testing this server\'s configuration against an actual username<br>The user need not exist in Drupal and testing will not affect the user\'s LDAP or Drupal Account.'),
+      '#description' => $this->t("This is optional and used for testing this server's configuration against an actual username<br>The user need not exist in Drupal and testing will not affect the user's LDAP or Drupal Account."),
     ];
 
     $form['users']['testing_drupal_user_dn'] = [
@@ -236,7 +235,7 @@ class ServerForm extends EntityForm {
       '#type' => 'textfield',
       '#size' => 120,
       '#title' => $this->t('DN of testing username'),
-      '#description' => $this->t('This is optional and used for testing this server\'s configuration against an actual username, e.g. cn=hpotter,ou=people,dc=hogwarts,dc=edu. <br> The user need not exist in Drupal and testing will not affect the user\'s LDAP or Drupal Account.'),
+      '#description' => $this->t("This is optional and used for testing this server's configuration against an actual username, e.g. cn=hpotter,ou=people,dc=hogwarts,dc=edu.<br> The user need not exist in Drupal and testing will not affect the user's LDAP or Drupal Account."),
     ];
 
     $form['groups'] = [
@@ -247,7 +246,7 @@ class ServerForm extends EntityForm {
     $form['groups']['grp_unused'] = [
       '#default_value' => $server->get('grp_unused'),
       '#type' => 'checkbox',
-      '#title' => $this->t('Groups are not relevant to this Drupal site.  This is generally true if LDAP Groups and LDAP Authorization are not in use.'),
+      '#title' => $this->t('Groups are not relevant to this Drupal site. This is generally true if LDAP Groups and LDAP Authorization are not in use.'),
       '#disabled' => FALSE,
     ];
 
@@ -268,7 +267,7 @@ class ServerForm extends EntityForm {
       '#default_value' => $server->get('grp_memb_attr'),
       '#type' => 'textfield',
       '#size' => 30,
-      '#title' => $this->t('LDAP Group Entry Attribute Holding User\'s DN, CN, etc.'),
+      '#title' => $this->t("LDAP Group Entry Attribute Holding User's DN, CN, etc."),
       '#description' => $this->t('e.g uniquemember, memberUid'),
       '#states' => [
         'visible' => [
@@ -378,7 +377,7 @@ class ServerForm extends EntityForm {
       '#default_value' => $server->get('grp_derive_from_dn_attr'),
       '#type' => 'textfield',
       '#size' => 30,
-      '#title' => $this->t('Attribute of the User\'s LDAP Entry DN which contains the group'),
+      '#title' => $this->t("Attribute of the user's LDAP entry DN which contains the group"),
       '#description' => $this->t('e.g. ou'),
       '#states' => [
         'enabled' => [
@@ -408,7 +407,7 @@ class ServerForm extends EntityForm {
       '#type' => 'textfield',
       '#size' => 120,
       '#title' => $this->t('Testing LDAP Group DN that is writable.'),
-      '#description' => $this->t(' <strong>WARNING:</strong> the test script for the server will create, delete, and add members to this group! <br> This is optional and can be useful for debugging and validating forms.'),
+      '#description' => $this->t("<strong>WARNING:</strong> the test script for the server will create, delete, and add members to this group! <br> This is optional and can be useful for debugging and validating forms."),
       '#placeholder' => $this->t('Careful!'),
       '#states' => [
         'visible' => [

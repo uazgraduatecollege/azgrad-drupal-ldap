@@ -9,28 +9,40 @@ namespace Drupal\ldap_servers;
  */
 class LdapServersRebindHandler {
 
-  private $bind_dn = 'Anonymous';
-  private $bind_passwd = '';
+  private $bindDn = 'Anonymous';
+  private $bindPassword = '';
 
   /**
+   * Cosntructor.
    *
+   * @param string $bind_user_dn
+   *   Bind user.
+   * @param string $bind_user_passwd
+   *   Bind password.
    */
   public function __construct($bind_user_dn, $bind_user_passwd) {
-    $this->bind_dn = $bind_user_dn;
-    $this->bind_passwd = $bind_user_passwd;
+    $this->bindDn = $bind_user_dn;
+    $this->bindPassword = $bind_user_passwd;
   }
 
   /**
+   * @param mixed  $ldap
+   *   Unknown.
+   * @param mixed $referral
+   *   Unknown.
    *
+   * @return int
+   *   Returns int instead of boolean? Weird.
    */
-  public function rebind_callback($ldap, $referral) {
+  public function rebindCallback($ldap, $referral) {
     // Ldap options.
     ldap_set_option($ldap, LDAP_OPT_PROTOCOL_VERSION, 3);
     ldap_set_option($ldap, LDAP_OPT_REFERRALS, 1);
     ldap_set_rebind_proc($ldap, [$this, 'rebind_callback']);
 
-    // Bind to new host, assumes initial bind dn has access to the referred servers.
-    if (!ldap_bind($ldap, $this->bind_dn, $this->bind_passwd)) {
+    // Bind to new host, assumes initial bind dn has access to the referred
+    // servers.
+    if (!ldap_bind($ldap, $this->bindDn, $this->bindPassword)) {
       echo "Could not bind to referral server: $referral";
       return 1;
     }

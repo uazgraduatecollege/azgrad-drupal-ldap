@@ -177,7 +177,6 @@ class LdapUserTestForm extends FormBase implements LdapUserAttributesInterface {
   }
 
   /**
-   *
    * TODO: Move to ldapusertestform and/or kill.
    * Given a $prov_event determine if ldap user configuration supports it.
    *   this is overall, not per field syncing configuration.

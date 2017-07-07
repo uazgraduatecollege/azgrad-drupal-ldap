@@ -7,7 +7,7 @@ use Drupal\Core\Access\AccessResultAllowed;
 use Drupal\ldap_authentication\Helper\LdapAuthenticationConfiguration;
 
 /**
- *
+ * Provides help messages for users when configured.
  */
 class DynamicUserHelpLink extends DeriverBase {
 
@@ -23,7 +23,10 @@ class DynamicUserHelpLink extends DeriverBase {
   }
 
   /**
+   * Access callback for help tab.
    *
+   * @return bool
+   *   Whether user is allowed to see tab or not.
    */
   private function accessLdapHelpTab() {
     $user = \Drupal::currentUser();
@@ -43,7 +46,10 @@ class DynamicUserHelpLink extends DeriverBase {
   }
 
   /**
+   * Drupal access callback.
    *
+   * @return \Drupal\Core\Access\AccessResultInterface
+   *   Access allowed or denied.
    */
   public function routeAccess() {
     if ($this->accessLdapHelpTab()) {
@@ -55,7 +61,10 @@ class DynamicUserHelpLink extends DeriverBase {
   }
 
   /**
+   * Provides the link itself.
    *
+   * @return array
+   *   The link.
    */
   private function addLink($base_plugin_definition) {
     if (\Drupal::config('ldap_authentication.settings')

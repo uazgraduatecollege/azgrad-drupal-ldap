@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains ldap_authorization.module..
+ * Contains ldap_authorization.module.
  */
 
 use Drupal\Core\Routing\RouteMatchInterface;

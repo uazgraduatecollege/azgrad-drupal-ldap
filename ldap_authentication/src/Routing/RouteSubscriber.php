@@ -25,7 +25,10 @@ class RouteSubscriber extends RouteSubscriberBase {
   }
 
   /**
+   * Checks whether password reset is allowed.
    *
+   * @return \Drupal\Core\Access\AccessResultInterface
+   *   Show password or not.
    */
   public static function validateResetPasswordAllowed() {
     $user = \Drupal::currentUser();
@@ -35,10 +38,8 @@ class RouteSubscriber extends RouteSubscriberBase {
         return AccessResult::allowed();
       }
 
-      /**
-       * Hide reset password for anonymous users if LDAP-only authentication and
-       * password updates are disabled, otherwise show.
-       */
+      // Hide reset password for anonymous users if LDAP-only authentication and
+      // password updates are disabled, otherwise show.
       if (\Drupal::config('ldap_authentication.settings')->get('passwordOption') == LdapAuthenticationConfiguration::$passwordFieldAllow) {
         return AccessResult::allowed();
       }

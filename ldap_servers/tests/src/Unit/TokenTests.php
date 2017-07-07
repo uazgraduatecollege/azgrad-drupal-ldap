@@ -118,7 +118,7 @@ class TokenTests extends UnitTestCase {
     $this->assertEquals($tokenHelper->convertMsguidToString($ldap_entry['guid'][0]), $msguid);
 
     $binary = $tokenHelper->tokenReplace($ldap_entry, '[guid;binary]');
-    $this->assertEquals($tokenHelper->binaryConversiontoString($ldap_entry['guid'][0]), $binary);
+    $this->assertEquals($tokenHelper->binaryConversionToString($ldap_entry['guid'][0]), $binary);
 
     $account = $this->prophesize('\Drupal\user\Entity\User');
     $value = new \stdClass();

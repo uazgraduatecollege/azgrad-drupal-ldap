@@ -264,7 +264,7 @@ class ServerTestForm extends EntityForm {
 
     if (!$has_errors && isset($values['grp_test_grp_dn'])) {
       $user = isset($values['testing_drupal_username']) ? $values['testing_drupal_username'] : NULL;
-      $group_entry = $this->testGroupDN($values['grp_test_grp_dn'], $user);
+      $group_entry = $this->testGroupDn($values['grp_test_grp_dn'], $user);
     }
 
     list($has_errors, $ldap_user) = $this->testUserMapping($values['testing_drupal_username']);
@@ -292,14 +292,15 @@ class ServerTestForm extends EntityForm {
    * Test the Group DN.
    *
    * @param $group_dn
+   *   Group DN.
    * @param null $user
+   *   User? Unknown.
    *
    * @return array Response.
-   * Response.
-   * @internal param array $values Configuration values.*   Configuration values.
+   *   Response.
    *
    */
-  private function testGroupDN($group_dn, $user) {
+  private function testGroupDn($group_dn, $user) {
     $group_entry = $this->ldapServer->search($group_dn, 'objectClass=*');
 
     if ($group_entry) {
@@ -411,7 +412,13 @@ class ServerTestForm extends EntityForm {
   }
 
   /**
+   * Check if binary and escape if necessary.
    *
+   * @param string $input
+   *   Input string.
+   *
+   * @return \Drupal\Core\StringTranslation\TranslatableMarkup|string
+   *   Escaped string.
    */
   public static function binaryCheck($input) {
     if (preg_match('~[^\x20-\x7E\t\r\n]~', $input) > 0) {
@@ -423,24 +430,21 @@ class ServerTestForm extends EntityForm {
   }
 
   /**
-   * Unported legacy code. */
-
-  /**
-   * @FIXME: NOT TESTED
-   * add a group entry.
-   *
-   * @Todo: Move out, only called by ServerTestForm.
+   * Add a group entry.
    *
    * @param string $group_dn
    *   as ldap dn.
    * @param array $attributes
-   *   in key value form
+   *   Attributes in key value form
    *    $attributes = array(
    *      "attribute1" = "value",
    *      "attribute2" = array("value1", "value2"),
    *      )
    *
-   * @return boolean success
+   * @return bool
+   *   Operation result.
+   *
+   * @FIXME: NOT TESTED, UNPORTED:
    */
   public function groupAddGroup($group_dn, $attributes = []) {
 
@@ -452,9 +456,7 @@ class ServerTestForm extends EntityForm {
     $objectclass = (empty($attributes['objectclass'])) ? $this->ldapServer->groupObjectClass() : $attributes['objectclass'];
     $attributes['objectclass'] = $objectclass;
 
-    /**
-     * 2. give other modules a chance to add or alter attributes
-     */
+    // 2. give other modules a chance to add or alter attributes
     $context = [
       'action' => 'add',
       'corresponding_drupal_data' => [$group_dn => $attributes],
@@ -464,18 +466,17 @@ class ServerTestForm extends EntityForm {
     \Drupal::moduleHandler()->alter('ldap_entry_pre_provision', $ldap_entries, $this, $context);
     $attributes = $ldap_entries[$group_dn];
 
-    /**
-     * 4. provision ldap entry
-     *   @todo how is error handling done here?
-     */
+    // 4. provision ldap entry
+    // @todo how is error handling done here?
     $ldap_entry_created = $this->ldapServer->createLdapEntry($attributes, $group_dn);
 
-    /**
-     * 5. allow other modules to react to provisioned ldap entry
-     *   @todo how is error handling done here?
-     */
+    // 5. allow other modules to react to provisioned ldap entry
+    //   @todo how is error handling done here?
     if ($ldap_entry_created) {
-      \Drupal::moduleHandler()->invokeAll('ldap_entry_post_provision', [$ldap_entries, $this, $context]);
+      \Drupal::moduleHandler()
+        ->invokeAll('ldap_entry_post_provision',
+          [$ldap_entries, $this, $context]
+        );
       return TRUE;
     }
     else {
@@ -485,16 +486,18 @@ class ServerTestForm extends EntityForm {
   }
 
   /**
-   * @TODO: NOT TESTED
-   * remove a group entry.
+   * Remove a group entry.
    *
    * @param string $group_dn
-   *   as ldap dn.
+   *   Group DN as LDAP dn.
    * @param bool $only_if_group_empty
    *   TRUE = group should not be removed if not empty
    *   FALSE = groups should be deleted regardless of members.
    *
-   * @return bool|void
+   * @return bool
+   *  Removal result.
+   *
+   * @TODO: NOT TESTED
    */
   public function groupRemoveGroup($group_dn, $only_if_group_empty = TRUE) {
 
@@ -505,20 +508,22 @@ class ServerTestForm extends EntityForm {
       }
     }
     // @FIXME: Incorrect parameters
-    return $this->delete($group_dn);
+    return $this->ldapServer->deleteLdapEntry($group_dn);
 
   }
 
   /**
-   * @TODO: NOT TESTED
-   * add a member to a group.
+   * Add a member to a group.
    *
    * @param string $ldap_user_dn
-   *   as ldap dn.
+   *   LDAP user DN.
    * @param mixed $user
    *   A Drupal user entity, an LDAP entry array of a user  or a username.
    *
    * @return bool
+   *   Operation successful.
+   *
+   * @TODO: NOT TESTED
    */
   public function groupAddMember($group_dn, $user) {
 
@@ -535,15 +540,17 @@ class ServerTestForm extends EntityForm {
   }
 
   /**
-   * @FIXME: NOT TESTED
    * Remove a member from a group.
    *
    * @param string $group_dn
-   *   as ldap dn.
+   *   Group DN as LDAP DN.
    * @param mixed $user
    *   A Drupal user entity, an LDAP entry array of a user  or a username.
    *
    * @return bool
+   *   Operation successful.
+   *
+   * @FIXME: NOT TESTED
    */
   public function groupRemoveMember($group_dn, $user) {
 
@@ -563,13 +570,14 @@ class ServerTestForm extends EntityForm {
    *
    * Currently only used by ServerTestForm and groupRemoveGroup.
    *
-   * @todo: NOT IMPLEMENTED: nested groups
-   *
    * @param string $group_dn
-   *   as ldap dn.
+   *   Group DN as LDAP DN.
    *
    * @return bool|array
-   *   FALSE on error otherwise array of group members (could be users or groups).
+   *   FALSE on error, otherwise array of group members (could be users or
+   *   groups).
+   *
+   * @todo: NOT IMPLEMENTED: nested groups
    */
   public function groupAllMembers($group_dn) {
 

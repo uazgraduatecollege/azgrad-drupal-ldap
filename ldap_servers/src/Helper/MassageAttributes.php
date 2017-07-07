@@ -12,9 +12,11 @@ class MassageAttributes {
   /**
    * Escape filter values and attribute values when querying ldap.
    *
-   * @param $value
+   * @param string|array $value
+   *   Value to escape.
    *
    * @return array
+   *   Escaped value.
    */
   public function queryLdapAttributeValue($value) {
     if (!empty($value)) {
@@ -30,8 +32,10 @@ class MassageAttributes {
    * in arrays (as keys or values), databases, or object properties.
    *
    * @param $value
+   *   Value to store.
    *
    * @return array
+   *   Escaped string.
    */
   public function storeLdapAttributeValue($value) {
     if (!empty($value)) {
@@ -46,9 +50,11 @@ class MassageAttributes {
    * Use unescaped, lower case attribute names when storing attribute names in
    * arrays (as keys or values), databases, or object properties.
    *
-   * @param $value
+   * @param string|array $value
+   *   Attribute to process.
    *
    * @return array|string
+   *   Cleaned up element(s).
    */
   public function processAttributeName($value) {
     $scalar = is_scalar($value);

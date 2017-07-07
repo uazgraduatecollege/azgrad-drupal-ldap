@@ -26,7 +26,10 @@ class EmailTemplateService implements EventSubscriberInterface {
   }
 
   /**
+   * Check for template if enabled.
+   *
    * @param \Symfony\Component\HttpKernel\Event\GetResponseEvent $event
+   *   Response event.
    */
   public function checkTemplate(GetResponseEvent $event) {
     if ($this->config->get('emailTemplateUsagePromptUser') === TRUE) {
@@ -51,8 +54,7 @@ class EmailTemplateService implements EventSubscriberInterface {
   }
 
   /**
-   * Helper function that determines whether or not the user's profile
-   * is valid or needs to be updated on login.
+   * Whether or not the user's profile is valid or needs to be updated on login.
    *
    * Currently this only checks if mail is valid or not according to the
    * authentication settings.

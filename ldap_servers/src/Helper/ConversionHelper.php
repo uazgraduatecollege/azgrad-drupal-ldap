@@ -3,25 +3,26 @@
 namespace Drupal\ldap_servers\Helper;
 
 /**
- *
+ * Conversion helper to escape values correctly for LDAP filters.
  */
 class ConversionHelper {
 
   /**
-   * From pear net_ldap2-2.0.11.
+   * Escapes the given values so that they can be safely used in LDAP filters.
    *
-   * Escapes the given VALUES according to RFC 2254 so that they can be safely used in LDAP filters.
+   * Follow RFC 2254 so that control characters with an ACII code < 32 as well
+   * as the characters with special meaning in LDAP filters "*", "(", ")", and
+   * "\" (the backslash) are converted into the representation of a backslash
+   * followed by two hex digits representing the hexadecimal value of the
+   * character.
    *
-   * Any control characters with an ACII code < 32 as well as the characters with special meaning in
-   * LDAP filters "*", "(", ")", and "\" (the backslash) are converted into the representation of a
-   * backslash followed by two hex digits representing the hexadecimal value of the character.
-   *
-   * @param array $values
+   * @param array|string $values
    *   Array of values to escape.
    *
    * @static
    *
-   * @return array Array $values, but escaped
+   * @return array
+   *   Array of values, but escaped.
    */
   public static function escapeFilterValue($values) {
     // Parameter validation.
@@ -71,7 +72,8 @@ class ConversionHelper {
   /**
    * Undoes the conversion done by {@link escape_filter_value()}.
    *
-   * Converts any sequences of a backslash followed by two hex digits into the corresponding character.
+   * Converts any sequences of a backslash followed by two hex digits into the
+   * corresponding character.
    *
    * @param array $values
    *   Array of values to escape.
@@ -103,17 +105,19 @@ class ConversionHelper {
   /**
    * Escapes a DN value according to RFC 2253.
    *
-   * Escapes the given VALUES according to RFC 2253 so that they can be safely used in LDAP DNs.
-   * The characters ",", "+", """, "\", "<", ">", ";", "#", "=" with a special meaning in RFC 2252
-   * are preceeded by ba backslash. Control characters with an ASCII code < 32 are represented as \hexpair.
-   * Finally all leading and trailing spaces are converted to sequences of \20.
+   * Escapes the given VALUES according to RFC 2253 so that they can be safely
+   * used in LDAP DNs. The characters ",", "+", """, "\", "<", ">", ";", "#",
+   * "=" with a special meaning in RFC 2252 are preceded by a backslash. Control
+   * characters with an ASCII code < 32 are represented as \hexpair. Finally all
+   * leading and trailing spaces are converted to sequences of \20.
    *
-   * @param array $values
+   * @param array|string $values
    *   An array containing the DN values that should be escaped.
    *
    * @static
    *
-   * @return array The array $values, but escaped
+   * @return array
+   *   The array $values, but escaped.
    */
   public static function escapeDnValue($values) {
     // Parameter validation.
@@ -166,15 +170,14 @@ class ConversionHelper {
   /**
    * Undoes the conversion done by escape_dn_value().
    *
-   * Any escape sequence starting with a baskslash - hexpair or special character -
-   * will be transformed back to the corresponding character.
+   * Any escape sequence starting with a baskslash - hexpair or special
+   * character - will be transformed back to the corresponding character.
    *
    * @param array $values
    *   Array of DN Values.
    *
-   * @return array Same as $values, but unescaped
-   *
-   * @static
+   * @return array
+   *   Same as $values, but unescaped
    */
   public static function unescapeDnValue($values) {
     $inputIsScalar = is_scalar($values);
@@ -211,16 +214,11 @@ class ConversionHelper {
   /**
    * Converts all Hex expressions ("\HEX") to their original ASCII characters.
    *
-   * Update taken from zendframework/zf1
-   *
    * @param string $string
    *   String to convert.
    *
-   * @static
-   *
-   * @author beni@php.net, heavily based on work from DavidSmith@byu.net
-   *
    * @return string
+   *   Converted string.
    */
   public static function hex2asc($string) {
     $string = preg_replace_callback(
@@ -239,9 +237,8 @@ class ConversionHelper {
    * @param string $string
    *   String to convert.
    *
-   * @static
-   *
    * @return string
+   *   Converted string.
    */
   public static function asc2hex32($string) {
     for ($i = 0; $i < strlen($string); $i++) {

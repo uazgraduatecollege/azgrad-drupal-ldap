@@ -8,7 +8,7 @@ use Drupal\Core\Url;
 use Drupal\ldap_authentication\Helper\LdapAuthenticationConfiguration;
 
 /**
- *
+ * Provides the form for ldap_authentication options.
  */
 class LdapAuthenticationAdminForm extends ConfigFormBase {
 
@@ -150,9 +150,7 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
       '#default_value' => LdapAuthenticationConfiguration::arrayToLines($config->get('allowOnlyIfTextInDn')),
       '#cols' => 50,
       '#rows' => 3,
-      '#description' => $this->t('A list of text such as ou=education
-      or cn=barclay that at least one of be found in user\'s dn string.  Enter one per line
-      such as <pre>ou=education<br>ou=engineering</pre> This test will be case insensitive.'),
+      '#description' => $this->t("A list of text such as ou=education or cn=barclay that at least one of be found in user's DN string. Enter one per line such as <pre>ou=education<br>ou=engineering</pre> This test will be case insensitive."),
     ];
 
     $form['restrictions']['excludeIfTextInDn'] = [
@@ -161,9 +159,7 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
       '#default_value' => LdapAuthenticationConfiguration::arrayToLines($config->get('excludeIfTextInDn')),
       '#cols' => 50,
       '#rows' => 3,
-      '#description' => $this->t('A list of text such as ou=evil
-      or cn=bad that if found in a user\'s dn, exclude them from ldap authentication.
-      Enter one per line such as <pre>ou=evil<br>cn=bad</pre> This test will be case insensitive.'),
+      '#description' => $this->t("A list of text such as ou=evil or cn=bad that if found in a user's DN, exclude them from ldap authentication. Enter one per line such as <pre>ou=evil<br>cn=bad</pre> This test will be case insensitive."),
     ];
 
     $form['restrictions']['excludeIfNoAuthorizations'] = [
@@ -172,9 +168,7 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
         authorization mappings such as Drupal roles.
         Requires LDAP Authorization to be enabled and configured!'),
       '#default_value' => $config->get('excludeIfNoAuthorizations'),
-      '#description' => $this->t('If the user is not granted any drupal roles,
-      organic groups, etc. by LDAP Authorization, login will be denied.  LDAP Authorization must be
-      enabled for this to work.'),
+      '#description' => $this->t('If the user is not granted any drupal roles, organic groups, etc. by LDAP Authorization, login will be denied.  LDAP Authorization must be enabled for this to work.'),
       '#disabled' => (boolean) (!\Drupal::moduleHandler()->moduleExists('ldap_authorization')),
     ];
 
@@ -189,7 +183,7 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
       '#required' => 1,
       '#default_value' => $config->get('emailOption'),
       '#options' => [
-        LdapAuthenticationConfiguration::$emailFieldRemove => $this->t('Don\'t show an email field on user forms. LDAP derived email will be used for user and cannot be changed by user.'),
+        LdapAuthenticationConfiguration::$emailFieldRemove => $this->t("Don't show an email field on user forms. LDAP derived email will be used for user and cannot be changed by user."),
         LdapAuthenticationConfiguration::$emailFieldDisable => $this->t('Show disabled email field on user forms with LDAP derived email. LDAP derived email will be used for user and cannot be changed by user.'),
         LdapAuthenticationConfiguration::$emailFieldAllow => $this->t('Leave email field on user forms enabled. Generally used when provisioning to LDAP or not using email derived from LDAP.'),
       ],
@@ -202,8 +196,8 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
       '#default_value' => $config->get('emailUpdate'),
       '#options' => [
         LdapAuthenticationConfiguration::$emailUpdateOnLdapChangeEnableNotify => $this->t('Update stored email if LDAP email differs at login and notify user.'),
-        LdapAuthenticationConfiguration::$emailUpdateOnLdapChangeEnable => $this->t('Update stored email if LDAP email differs at login but don\'t notify user.'),
-        LdapAuthenticationConfiguration::$emailUpdateOnLdapChangeDisable => $this->t('Don\'t update stored email if LDAP email differs at login.'),
+        LdapAuthenticationConfiguration::$emailUpdateOnLdapChangeEnable => $this->t("Update stored email if LDAP email differs at login but don't notify user."),
+        LdapAuthenticationConfiguration::$emailUpdateOnLdapChangeDisable => $this->t("Don't update stored email if LDAP email differs at login."),
       ],
     ];
 
@@ -279,7 +273,7 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
       '#default_value' => $config->get('passwordOption'),
       '#options' => [
         LdapAuthenticationConfiguration::$passwordFieldShowDisabled => $this->t('Display password field disabled (Prevents password updates).'),
-        LdapAuthenticationConfiguration::$passwordFieldHide => $this->t('Don\'t show password field on user forms except login form.'),
+        LdapAuthenticationConfiguration::$passwordFieldHide => $this->t("Don't show password field on user forms except login form."),
         LdapAuthenticationConfiguration::$passwordFieldAllow => $this->t('Display password field and allow updating it. In order to change password in LDAP, LDAP provisioning for this field must be enabled.'),
       ],
     ];

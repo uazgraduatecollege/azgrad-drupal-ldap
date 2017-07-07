@@ -5,6 +5,8 @@ namespace Drupal\ldap_query\Plugin\views\argument;
 use Drupal\views\Plugin\views\argument\Standard;
 
 /**
+ * Ldap Attribute Views Argument.
+ *
  * @ingroup views_argument_handlers
  *
  * @ViewsArgument("ldap_attribute")

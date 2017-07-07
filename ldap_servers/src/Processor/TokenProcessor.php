@@ -9,7 +9,7 @@ use Drupal\ldap_servers\Helper\MassageAttributes;
 use Drupal\user\UserInterface;
 
 /**
- *
+ *  Helper to manage LDAP tokens and process their content.
  */
 class TokenProcessor {
 
@@ -18,7 +18,7 @@ class TokenProcessor {
   const DELIMITER = ':';
   const MODIFIER_DELIMITER = ';';
 
-  private static $user_password = NULL;
+  private static $userPassword = NULL;
 
   /**
    * Function to:
@@ -34,22 +34,26 @@ class TokenProcessor {
    */
   public static function passwordStorage($action, $value = NULL) {
     if ($action == 'set') {
-      self::$user_password = $value;
+      self::$userPassword = $value;
     }
     else {
-      return self::$user_password;
+      return self::$userPassword;
     }
   }
 
   /**
-   * @param string $attr_name
-   *   such 'field_user_lname', 'name', 'mail', 'dn'.
-   * @param string $attr_type
-   *   such as 'field', 'property', etc.  NULL for ldap attributes.
-   * @param string $ordinal
-   *   0, 1, 2, etc.  not used in general.
+   * Create tokens.
    *
-   * @return string such as 'field.field_user_lname', 'samaccountname', etc.
+   * @param string $attr_name
+   *   Attribute name such as 'field_user_lname', 'name', 'mail', 'dn'.
+   * @param string $attr_type
+   *   Attribute type such as 'field', 'property', etc. Null for LDAP
+   *   attributes.
+   * @param string $ordinal
+   *   Ordinal number such as 0, 1, 2, etc.  Not used in general.
+   *
+   * @return string
+   *   Token such as 'field.field_user_lname', 'samaccountname', etc.
    */
   public function createTokens($attr_name, $attr_type = NULL, $ordinal = NULL) {
     $inner_token = $attr_name;
@@ -64,6 +68,8 @@ class TokenProcessor {
   }
 
   /**
+   * Parse user attribute names.
+   *
    * @param string $user_attr_key
    *   A string in the form of <attr_type>.<attr_name>[:<instance>] such as
    *   field.lname, property.mail, field.aliases:2.
@@ -90,10 +96,15 @@ class TokenProcessor {
   }
 
   /**
-   * @param array $ldap_entry
+   * Replace a token.
+   *
+   * @param array $resource
+   *   The resource to act upon.
    * @param string $text
-   *   such as "[dn]", "[cn]@my.org", "[displayName] [sn]", "Drupal Provisioned".
-   * @return string $text with tokens replaced or NULL if replacement not available
+   *   The text such as "[dn]", "[cn]@my.org", "[displayName] [sn]",
+   *   "Drupal Provisioned".
+   * @return string
+   *   The text with tokens replaced or NULL if replacement not available.
    */
   public function tokenReplace($resource, $text, $resource_type = 'ldap_entry') {
     // Desired tokens are of form "cn","mail", etc.
@@ -132,12 +143,13 @@ class TokenProcessor {
   }
 
   /**
-   * @param array $attribute_maps
-   *   array of attributes passed by reference.
-   * @param string $text
-   *   with tokens in it
+   * Extract token attributes.
    *
-   *   by reference return add ldap attribute triplet $attribute_maps[<attr_name>] = (<attr_name>, <ordinal>, <data_type>) to $attributes.
+   * @param array $attribute_maps
+   *   Array of attribute maps passed by reference. For example:
+   *   [[<attr_name>, <ordinal>, <data_type>]].
+   * @param string $text
+   *   Text with tokens in it.
    */
   public function extractTokenAttributes(&$attribute_maps, $text) {
     $tokens = $this->findTokensNeededForTemplate($text);
@@ -161,7 +173,13 @@ class TokenProcessor {
   }
 
   /**
+   * Get token attributes.
    *
+   * @param $text
+   *   Text to parse.
+   *
+   * @return array
+   *   Maps found.
    */
   public function getTokenAttributes($text) {
     $maps = [];
@@ -170,12 +188,14 @@ class TokenProcessor {
   }
 
   /**
+   * Extract parts of token.
+   *
    * @param string $token
-   *   or token expression with singular token in it, eg. [dn], [dn;binary], [titles:0;binary] [cn]@mycompany.com.
+   *   Token or token expression with singular token in it, eg. [dn],
+   *   [dn;binary], [titles:0;binary] [cn]@mycompany.com.
    *
-   *
-   *
-   * @return array(<attr_name>, <ordinal>, <conversion>)
+   * @return array
+   *   Array triplet containing [<attr_name>, <ordinal>, <conversion>].
    */
   public function extractTokenParts($token) {
     $attributes = [];
@@ -198,31 +218,30 @@ class TokenProcessor {
    * Turn an ldap entry into a token array suitable for the t() function.
    *
    * @param array $ldap_entry
+   *   The LDAP entry.
    * @param string $token_keys
-   *   Either an array of key names such as array('cn', 'dn') or string 'all' to return all tokens.
+   *   Either an array of key names such as array('cn', 'dn') or string 'all' to
+   *   return all tokens.
    * @param string $pre
    *   Prefix token prefix such as !,%,[.
    * @param string $post
    *   Suffix token suffix such as ].
    *
    * @return array
-   *   Token array suitable for t() functions of with lowercase keys as exemplified below
-   *
-   *   $ldap_entry should be in form of single entry returned from ldap_search() function:
-   *
-   *   'dn' => 'cn=jdoe,ou=campus accounts,ou=toledo campus,dc=ad,dc=myuniversity,dc=edu',
+   *   Token array suitable for t() functions of with lowercase keys as
+   *   exemplified below. The LDAP entry should be in form of single entry
+   *   returned from ldap_search() function. For example:
+   *   'dn' => 'cn=jdoe,ou=campus accounts,dc=ad,dc=myuniversity,dc=edu',
    *   'mail' => array( 0 => 'jdoe@myuniversity.edu', 'count' => 1),
    *   'sAMAccountName' => array( 0 => 'jdoe', 'count' => 1),
    *
    *   Should return tokens such as:
-   *
    *   From dn attribute:
    *     [cn] = jdoe
    *     [cn:0] = jdoe
    *     [cn:last] => jdoe
    *     [ou] = campus accounts
    *     [ou:0] = campus accounts
-   *     [ou:1] = toledo campus
    *     [ou:last] = toledo campus
    *     [dc] = ad
    *     [dc:0] = ad
@@ -240,7 +259,7 @@ class TokenProcessor {
    *     [guid:0;bin2hex] = apply bin2hex() function to value
    *     [guid:0;msguid] = apply convertMsguidToString() function to value
    */
-  public function tokenizeEntry($ldap_entry, $token_keys = 'all', $pre = self::PREFIX, $post = self::SUFFIX) {
+  public function tokenizeEntry(array $ldap_entry, $token_keys = 'all', $pre = self::PREFIX, $post = self::SUFFIX) {
 
     $detailed_watchdog_log = \Drupal::config('ldap_help.settings')->get('watchdog_detail');
     $tokens = [];
@@ -326,7 +345,8 @@ class TokenProcessor {
     }
     else {
       foreach ($token_keys as $full_token_key) {
-        // $token_key = 'dn', 'mail', 'mail:0', 'mail:last', 'dept:1', 'guid:0;tobase64etc.
+        // A token key is for example 'dn', 'mail:0', 'mail:last', or
+        // 'guid:0;tobase64'.
         $value = NULL;
 
         $conversion = FALSE;
@@ -379,7 +399,7 @@ class TokenProcessor {
               break;
 
             case 'binary':
-              $value = $this->binaryConversiontoString($value);
+              $value = $this->binaryConversionToString($value);
               break;
           }
         }
@@ -397,6 +417,7 @@ class TokenProcessor {
   }
 
   /**
+   * Tokenize a user account.
    *
    * @param \Drupal\user\UserInterface $account
    *   The Drupal user account.
@@ -493,7 +514,8 @@ class TokenProcessor {
    * @param string $template
    *   In the form of [cn]@myuniversity.edu.
    *
-   * @return array of all tokens in the template such as array('cn')
+   * @return array
+   *   Array of all tokens in the template such as array('cn').
    */
   public function findTokensNeededForTemplate($template) {
     preg_match_all('/
@@ -509,9 +531,11 @@ class TokenProcessor {
   /**
    * Function to convert microsoft style guids to strings.
    *
-   * @param $value
+   * @param string $value
+   *   Value to convert.
    *
    * @return string
+   *   Converted value.
    */
   public static function convertMsguidToString($value) {
     $hex_string = bin2hex($value);
@@ -527,11 +551,17 @@ class TokenProcessor {
   }
 
   /**
-   * General binary conversion function for guids
-   * tries to determine which approach based on length
-   * of string.
+   * General binary conversion function for GUID.
+   *
+   * Tries to determine which approach based on length of string.
+   *
+   * @param $value
+   *   GUID.
+   *
+   * @return string
+   *   Encoded string.
    */
-  public static function binaryConversiontoString($value) {
+  public static function binaryConversionToString($value) {
     if (strlen($value) == 16) {
       $value = self::convertMsguidToString($value);
     }
@@ -545,11 +575,12 @@ class TokenProcessor {
    * Converts an attribute by their format.
    *
    * @param string $value
-   *   as value to be converted.
+   *   Value to be converted.
    * @param string $conversion
-   *   such as base64_encode, bin2hex, msguid, md5.
+   *   Conversion type such as base64_encode, bin2hex, msguid, md5.
    *
    * @return string
+   *   Converted string.
    */
   public static function convertAttribute($value, $conversion = NULL) {
 
@@ -568,7 +599,7 @@ class TokenProcessor {
           break;
 
         case 'binary':
-          $value = self::binaryConversiontoString($value);
+          $value = self::binaryConversionToString($value);
           break;
 
         case 'md5':
@@ -580,6 +611,8 @@ class TokenProcessor {
   }
 
   /**
+   * Set an attribute map.
+   *
    * @param array $attribute
    *   For a given attribute in the form ['values' => [], 'data_type' => NULL]
    *   as outlined in ldap_user/README.developers.txt.
@@ -594,7 +627,7 @@ class TokenProcessor {
    *   Converted values. If nothing is passed in, create empty array in the
    *   proper structure ['values' => [0 => 'john', 1 => 'johnny']].
    */
-  public static function setAttributeMap($attribute = NULL, $conversion = NULL, $values = NULL) {
+  public static function setAttributeMap(array $attribute = NULL, $conversion = NULL, array $values = NULL) {
 
     $attribute = (is_array($attribute)) ? $attribute : [];
     $attribute['conversion'] = $conversion;
@@ -614,8 +647,13 @@ class TokenProcessor {
   }
 
   /**
+   * Discover user attributes from user.
+   *
    * @param \Drupal\user\UserInterface $account
+   *   User account.
+   *
    * @return array
+   *   User attributes.
    */
   private function discoverUserAttributes(UserInterface $account) {
     $token_keys = [];

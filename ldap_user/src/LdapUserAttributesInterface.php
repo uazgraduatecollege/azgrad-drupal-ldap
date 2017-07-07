@@ -36,4 +36,5 @@ interface LdapUserAttributesInterface {
   const MANUAL_ACCOUNT_CONFLICT_LDAP_ASSOCIATE = 'conflict_associate';
   const MANUAL_ACCOUNT_CONFLICT_SHOW_OPTION_ON_FORM = 'conflict_show_option';
   const MANUAL_ACCOUNT_CONFLICT_NO_LDAP_ASSOCIATE = 'conflict_no_ldap_associate';
+
 }

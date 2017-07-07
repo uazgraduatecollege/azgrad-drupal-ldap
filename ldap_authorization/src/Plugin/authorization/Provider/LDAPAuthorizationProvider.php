@@ -8,6 +8,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\authorization\Provider\ProviderPluginBase;
 use Drupal\ldap_servers\Helper\ConversionHelper;
 use Drupal\ldap_user\Helper\ExternalAuthenticationHelper;
+use Drupal\user\Entity\User;
 
 /**
  * @AuthorizationProvider(
@@ -27,7 +28,7 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
   public $regrantProviderProvisioned;
 
   /**
-   *
+   * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
     /** @var \Drupal\authorization\Entity\AuthorizationProfile $profile */
@@ -115,10 +116,17 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
   }
 
   /**
+   * Build the form for the individual row.
+   *
    * @param array $form
+   *   Form.
    * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   Form state.
    * @param int $index
+   *   Index.
+   *
    * @return array
+   *   Returns form row.
    */
   public function buildRowForm(array $form, FormStateInterface $form_state, $index = 0) {
     $row = [];
@@ -139,10 +147,18 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
   }
 
   /**
-   * @param $user
-   * @param $op
-   * @param $identifier
+   * Get valid proposals.
+   *
+   * @param \Drupal\user\Entity\User $user
+   *   Drupal user.
+   * @param mixed $op
+   *   Operation, unknown, unused.
+   * @param mixed $identifier
+   *   Module identifier, unknown, unused.
+   *
    * @return array|null
+   *   Returns proposals.
+   *
    * @throws \Drupal\authorization\AuthorizationSkipAuthorization
    */
   public function getProposals($user, $op, $identifier) {
@@ -222,7 +238,10 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
           }
         }
         catch (\Exception $e) {
-          \Drupal::loggger('ldap')->error('Error in matching regular expression @regex', ['@regex' => $pattern]);
+          \Drupal::logger('ldap')
+            ->error('Error in matching regular expression @regex',
+              ['@regex' => $pattern]
+            );
         }
       }
       elseif ($value == $provider_mapping['query']) {
@@ -233,8 +252,15 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
   }
 
   /**
-   * @param $proposals
-   * @param null $op
+   * Sanitizes given proposals.
+   *
+   * @param array $proposals
+   *   Proposals to sanitize.
+   * @param mixed $op
+   *   Operation, unknown, unused.
+   *
+   * @return array
+   *   Sanitized proposals.
    */
   public function sanitizeProposals($proposals, $op = NULL) {
     // Configure this provider.
@@ -248,6 +274,7 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
         if (count($attr_parts) > 0) {
           $first_part = explode('=', $attr_parts[0]);
           if (count($first_part) > 1) {
+            // @FIXME: Potential bug on trim.
             $authorization_id = ConversionHelper::unescapeDnValue(trim($first_part[1]));
           }
         }
@@ -265,7 +292,7 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
   }
 
   /**
-   *
+   * Validates the form row.
    */
   public function validateRowForm(array &$form, FormStateInterface $form_state) {
     parent::validateRowForm($form, $form_state);

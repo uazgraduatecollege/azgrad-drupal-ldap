@@ -29,10 +29,14 @@ function ldap_authentication_help($path, $arg) {
 }
 
 /**
+ * Are we LDAP authenticated.
  *
  * @param int|User $user
+ *   The user account.
+ *
  * @return bool true
- *   true if user is recorded as ldap authenticated and identified (ldap_authentified)
+ *   True if user is recorded as ldap authenticated and identified.
+ *
  * @deprecated
  */
 function ldap_authentication_ldap_authenticated($user) {
@@ -152,7 +156,9 @@ function ldap_authentication_form_user_form_alter(&$form, FormStateInterface $fo
 }
 
 /**
- * Implements hook_form_FORM_ID_alter(). for user_login_form.
+ * Implements hook_form_FORM_ID_alter().
+ *
+ * For user_login_form.
  */
 function ldap_authentication_form_user_login_form_alter(&$form, FormStateInterface $form_state, $form_id) {
   _ldap_authentication_login_form_alter($form, $form_state, 'user_login');
@@ -160,7 +166,9 @@ function ldap_authentication_form_user_login_form_alter(&$form, FormStateInterfa
 }
 
 /**
- * Implements hook_form_FORM_ID_alter(). for user_login_block.
+ * Implements hook_form_FORM_ID_alter().
+ *
+ * For user_login_block.
  */
 function ldap_authentication_form_user_login_block_alter(&$form, &$form_state) {
   _ldap_authentication_login_form_alter($form, $form_state, 'user_login_block');
@@ -181,9 +189,13 @@ function ldap_authentication_user_login_authenticate_validate($form, FormStateIn
 }
 
 /**
- * Helper function for ldap_authn_form_user_login_block_alter and ldap_authn_form_user_login_alter.
+ * Helper function for the user login block.
  *
- * @todo if form is being generated on non https and is set in preferences, set warning and end form development
+ * Relevant in ldap_authn_form_user_login_block_alter and
+ * ldap_authn_form_user_login_alter.
+ *
+ * @todo if form is being generated on non https and is set in preferences, set
+ * warning and end form development
  */
 function _ldap_authentication_login_form_alter(&$form, &$form_state, $form_id) {
   if (!LdapAuthenticationConfiguration::hasEnabledAuthenticationServers()) {
@@ -192,20 +204,19 @@ function _ldap_authentication_login_form_alter(&$form, &$form_state, $form_id) {
 
   $config = \Drupal::config('ldap_authentication.settings');
 
-  /**
-   * Add validate function to test for ldap authentication
-   * should be placed after user_login_authenticate_validate
-   * 1. user_login_name_validate
-   * 2. user_login_authenticate_validate
-   * 3. external authentication validate functions
-   * 4. user_login_final_validate
-   *
-   * as articulated above user_login_default_validators() in user.module
-   *
-   * without any other external authentication modules, this array will start out as:
-   *    array('user_login_name_validate', 'user_login_authenticate_validate', 'user_login_final_validate')
-   */
-
+  // Add validate function to test for ldap authentication
+  // should be placed after user_login_authenticate_validate
+  // 1. user_login_name_validate
+  // 2. user_login_authenticate_validate
+  // 3. external authentication validate functions
+  // 4. user_login_final_validate
+  //
+  // As articulated above user_login_default_validators() in user.module without
+  // any other external authentication modules, this array will start out as: [
+  // 'user_login_name_validate',
+  // 'user_login_authenticate_validate',
+  // 'user_login_final_validate'
+  // ]
   if (@in_array('::validateAuthentication', $form['#validate']) &&
     $config->get('authenticationMode')) {
     $key = array_search('::validateAuthentication', $form['#validate']);
@@ -215,10 +226,10 @@ function _ldap_authentication_login_form_alter(&$form, &$form_state, $form_id) {
 
   // Add help information for entering in username/password.
   if ($config->get('loginUIUsernameTxt')) {
-    $form['name']['#description'] = t($config->get('loginUIUsernameTxt'));
+    $form['name']['#description'] = $config->get('loginUIUsernameTxt');
   }
   if ($config->get('loginUIPasswordTxt')) {
-    $form['pass']['#description'] = t($config->get('loginUIPasswordTxt'));
+    $form['pass']['#description'] = $config->get('loginUIPasswordTxt');
   }
 
   if ($config->get('emailTemplateUsageRedirectOnLogin')) {

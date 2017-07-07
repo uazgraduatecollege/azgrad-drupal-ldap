@@ -246,7 +246,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
       }
 
       // If "convert from binary is selected" and no particular method is in
-      // token default to binaryConversiontoString() function.
+      // token default to binaryConversionToString() function.
       if ($field_detail['convert'] && strpos($field_detail['ldap_attr'], ';') === FALSE) {
         $field_detail['ldap_attr'] = str_replace(']', ';binary]', $field_detail['ldap_attr']);
       }
