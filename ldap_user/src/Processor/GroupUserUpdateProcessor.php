@@ -74,14 +74,16 @@ class GroupUserUpdateProcessor {
    *   Drupal user to update.
    */
   private function updateAuthorizations(User $user) {
-    // TODO: Duplicated from LoginValidator.
-    $profiles = authorization_get_profiles();
-    foreach ($profiles as $profile_id) {
-      $profile = AuthorizationProfile::load($profile_id);
-      if ($profile->getProviderId() == 'ldap_provider') {
-        // @TODO: https://www.drupal.org/node/2849865
-        module_load_include('inc', 'authorization', 'authorization');
-        _authorizations_user_authorizations($user, 'set', $profile_id);
+    if (\Drupal::moduleHandler()->moduleExists('ldap_authorization')) {
+      // TODO: Duplicated from LoginValidator.
+      $profiles = authorization_get_profiles();
+      foreach ($profiles as $profile_id) {
+        $profile = AuthorizationProfile::load($profile_id);
+        if ($profile->getProviderId() == 'ldap_provider') {
+          // @TODO: https://www.drupal.org/node/2849865
+          module_load_include('inc', 'authorization', 'authorization');
+          _authorizations_user_authorizations($user, 'set', $profile_id);
+        }
       }
     }
   }
