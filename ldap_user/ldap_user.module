@@ -33,7 +33,8 @@ function ldap_user_cron() {
   }
 
   $ldapUpdateQuery = \Drupal::config('ldap_user.settings')->get('userUpdateCronQuery');
-  if ($ldapUpdateQuery != NULL && $ldapUpdateQuery != 'None') {
+  if (\Drupal::moduleHandler()->moduleExists('ldap_query') &&
+    $ldapUpdateQuery != NULL && $ldapUpdateQuery != 'none') {
     $processor = new GroupUserUpdateProcessor($ldapUpdateQuery);
     if ($processor->updateDue()) {
       $processor->runQuery();

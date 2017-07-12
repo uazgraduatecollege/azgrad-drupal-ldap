@@ -174,30 +174,45 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
       '#description' => $this->t('Allows you to sync the result of an LDAP query with your users. Creates new users and updates existing ones.'),
     ];
 
-    $updateMechanismOptions = ['none' => $this->t('Do not update')];
-    $queries = QueryController::getAllEnabledQueries();
-    foreach ($queries as $query) {
-      $updateMechanismOptions[$query->id()] = $query->label();
-    }
-    $form['basic_to_drupal']['userUpdateMechanism']['userUpdateCronQuery'] = [
-      '#type' => 'select',
-      '#title' => $this->t('Action to perform on Drupal accounts that no longer have corresponding LDAP entries'),
-      '#required' => FALSE,
-      '#default_value' => $config->get('userUpdateCronQuery'),
-      '#options' => $updateMechanismOptions,
-    ];
+    if (\Drupal::moduleHandler()->moduleExists('ldap_query')) {
+      $updateMechanismOptions = ['none' => $this->t('Do not update')];
+      $queries = QueryController::getAllEnabledQueries();
+      foreach ($queries as $query) {
+        $updateMechanismOptions[$query->id()] = $query->label();
+      }
+      $form['basic_to_drupal']['userUpdateMechanism']['userUpdateCronQuery'] = [
+        '#type' => 'select',
+        '#title' => $this->t('Action to perform on Drupal accounts that no longer have corresponding LDAP entries'),
+        '#required' => FALSE,
+        '#default_value' => $config->get('userUpdateCronQuery'),
+        '#options' => $updateMechanismOptions,
+      ];
 
-    $form['basic_to_drupal']['userUpdateMechanism']['userUpdateCronInterval'] = [
-      '#type' => 'select',
-      '#title' => $this->t('How often should each user be synced?'),
-      '#default_value' => $config->get('userUpdateCronInterval'),
-      '#options' => [
-        'always' => $this->t('On every cron run'),
-        'daily' => $this->t('Daily'),
-        'weekly' => $this->t('Weekly'),
-        'monthly' => $this->t('Monthly'),
-      ],
-    ];
+      $form['basic_to_drupal']['userUpdateMechanism']['userUpdateCronInterval'] = [
+        '#type' => 'select',
+        '#title' => $this->t('How often should each user be synced?'),
+        '#default_value' => $config->get('userUpdateCronInterval'),
+        '#options' => [
+          'always' => $this->t('On every cron run'),
+          'daily' => $this->t('Daily'),
+          'weekly' => $this->t('Weekly'),
+          'monthly' => $this->t('Monthly'),
+        ],
+      ];
+    }
+    else {
+      $form['basic_to_drupal']['userUpdateMechanism']['userUpdateCronQuery'] = [
+        '#type' => 'value',
+        '#value' => 'none',
+      ];
+      $form['basic_to_drupal']['userUpdateMechanism']['userUpdateCronInterval'] = [
+        '#type' => 'value',
+        '#value' => 'monthly',
+      ];
+      $form['basic_to_drupal']['userUpdateMechanism']['notice'] = [
+        '#markup' => $this->t('Only available with LDAP Query enabled.'),
+      ];
+    }
 
     $form['basic_to_drupal']['orphanedAccounts']['orphanedCheckQty'] = [
       '#type' => 'textfield',
