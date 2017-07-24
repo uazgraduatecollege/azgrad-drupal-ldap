@@ -758,7 +758,10 @@ EOT;
         }
       }
     }
-    $user_attr_options['user_tokens'] = '-- user tokens --';
+
+    if ($direction == LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY) {
+      $user_attr_options['user_tokens'] = '-- user tokens --';
+    }
 
     $row = 0;
 
