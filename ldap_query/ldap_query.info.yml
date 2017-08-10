@@ -1,5 +1,5 @@
 name: 'LDAP Query'
-description: 'LDAP Query Builder and Storage for queries used by other ldap modules such as ldap feeds, ldap provision, etc'
+description: 'LDAP Query Builder and Storage for queries used by other LDAP modules such as LDAP feeds, LDAP provision, etc'
 type: module
 core: 8.x
 package: 'Lightweight Directory Access Protocol'

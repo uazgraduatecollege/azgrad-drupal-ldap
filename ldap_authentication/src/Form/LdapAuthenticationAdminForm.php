@@ -80,7 +80,7 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
         LdapAuthenticationConfiguration::MODE_MIXED => $this->t('Mixed mode: Drupal authentication is tried first. On failure, LDAP authentication is performed.'),
         LdapAuthenticationConfiguration::MODE_EXCLUSIVE => $this->t('Exclusive mode: Only LDAP Authentication is allowed, except for user 1.'),
       ],
-      '#description' => $this->t('If exclusive is selected: <br> (1) reset password links will be replaced with links to ldap end user documentation below.<br>
+      '#description' => $this->t('If exclusive is selected: <br> (1) reset password links will be replaced with links to LDAP end user documentation below.<br>
         (2) The reset password form will be left available at user/password for user 1; but no links to it will be provided to anonymous users.<br>
         (3) Password fields in user profile form will be removed except for user 1.'),
     ];
@@ -125,8 +125,8 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
       '#required' => 0,
       '#default_value' => $config->get('ldapUserHelpLinkUrl'),
       '#description' => $this->t('URL to LDAP user help/documentation for users resetting
-     passwords etc. Should be of form http://domain.com/. Could be the institutions ldap password support page
-     or a page within this drupal site that is available to anonymous users.'),
+     passwords etc. Should be of form http://domain.com/. Could be the institutions LDAP password support page
+     or a page within this Drupal site that is available to anonymous users.'),
     ];
 
     $form['login_UI']['ldapUserHelpLinkText'] = [
@@ -159,16 +159,16 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
       '#default_value' => LdapAuthenticationConfiguration::arrayToLines($config->get('excludeIfTextInDn')),
       '#cols' => 50,
       '#rows' => 3,
-      '#description' => $this->t("A list of text such as ou=evil or cn=bad that if found in a user's DN, exclude them from ldap authentication. Enter one per line such as <pre>ou=evil<br>cn=bad</pre> This test will be case insensitive."),
+      '#description' => $this->t("A list of text such as ou=evil or cn=bad that if found in a user's DN, exclude them from LDAP authentication. Enter one per line such as <pre>ou=evil<br>cn=bad</pre> This test will be case insensitive."),
     ];
 
     $form['restrictions']['excludeIfNoAuthorizations'] = [
       '#type' => 'checkbox',
-      '#title' => $this->t('Deny access to users without Ldap Authorization Module
+      '#title' => $this->t('Deny access to users without LDAP Authorization Module
         authorization mappings such as Drupal roles.
         Requires LDAP Authorization to be enabled and configured!'),
       '#default_value' => $config->get('excludeIfNoAuthorizations'),
-      '#description' => $this->t('If the user is not granted any drupal roles, organic groups, etc. by LDAP Authorization, login will be denied.  LDAP Authorization must be enabled for this to work.'),
+      '#description' => $this->t('If the user is not granted any Drupal roles, organic groups, etc. by LDAP Authorization, login will be denied.  LDAP Authorization must be enabled for this to work.'),
       '#disabled' => (boolean) (!\Drupal::moduleHandler()->moduleExists('ldap_authorization')),
     ];
 

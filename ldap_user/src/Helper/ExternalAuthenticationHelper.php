@@ -45,9 +45,9 @@ class ExternalAuthenticationHelper {
 
   /**
    * @param \Drupal\user\Entity\User $account
-   *   A drupal user object.
+   *   A Drupal user object.
    *
-   * @return boolean TRUE if user should be excluded from ldap provision/syncing
+   * @return boolean TRUE if user should be excluded from LDAP provision/syncing
    */
   public static function excludeUser($account = NULL) {
     // Always exclude user 1.

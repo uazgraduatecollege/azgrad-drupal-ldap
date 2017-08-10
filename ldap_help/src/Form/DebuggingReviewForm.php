@@ -9,7 +9,7 @@ use Drupal\ldap_query\Controller\QueryController;
 use Drupal\ldap_servers\ServerFactory;
 
 /**
- *  Form to allow for debugging review.
+ * Form to allow for debugging review.
  */
 class DebuggingReviewForm extends FormBase {
 

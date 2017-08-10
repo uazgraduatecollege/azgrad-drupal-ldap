@@ -35,7 +35,7 @@ function ldap_authentication_help($path, $arg) {
  *   The user account.
  *
  * @return bool true
- *   True if user is recorded as ldap authenticated and identified.
+ *   True if user is recorded as LDAP authenticated and identified.
  *
  * @deprecated
  */
@@ -109,7 +109,7 @@ function ldap_authentication_user_pass_validate(&$form, FormStateInterface $form
 /**
  * Implements hook_form_FORM_ID_alter(). for user_form.
  *
- * Alter user editing form (profile form) based on ldap authentication configuration.
+ * Alter user editing form (profile form) based on LDAP authentication configuration.
  *
  * @param array $form
  *   array from user profile.
@@ -204,7 +204,7 @@ function _ldap_authentication_login_form_alter(&$form, &$form_state, $form_id) {
 
   $config = \Drupal::config('ldap_authentication.settings');
 
-  // Add validate function to test for ldap authentication
+  // Add validate function to test for LDAP authentication
   // should be placed after user_login_authenticate_validate
   // 1. user_login_name_validate
   // 2. user_login_authenticate_validate

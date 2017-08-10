@@ -5,7 +5,7 @@ namespace Drupal\ldap_query\Plugin\views\filter;
 use Drupal\views\Plugin\views\filter\StringFilter;
 
 /**
- * Ldap Attribute Views Filter.
+ * LDAP Attribute Views Filter.
  *
  * @ingroup views_filter_handlers
  *

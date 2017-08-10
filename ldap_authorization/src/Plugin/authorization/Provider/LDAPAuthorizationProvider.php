@@ -8,7 +8,6 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\authorization\Provider\ProviderPluginBase;
 use Drupal\ldap_servers\Helper\ConversionHelper;
 use Drupal\ldap_user\Helper\ExternalAuthenticationHelper;
-use Drupal\user\Entity\User;
 
 /**
  * @AuthorizationProvider(

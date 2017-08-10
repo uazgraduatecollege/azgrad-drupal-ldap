@@ -16,6 +16,7 @@ class LdapHelpRedirect extends ControllerBase {
    * Redirect.
    *
    * @return \Drupal\Core\Routing\TrustedRedirectResponse
+   *   Redirect response.
    */
   public function redirectUrl() {
     $url = \Drupal::config('ldap_authentication.settings')

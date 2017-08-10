@@ -26,7 +26,7 @@ class LdapServersRebindHandler {
   }
 
   /**
-   * @param mixed  $ldap
+   * @param mixed $ldap
    *   Unknown.
    * @param mixed $referral
    *   Unknown.
@@ -35,7 +35,7 @@ class LdapServersRebindHandler {
    *   Returns int instead of boolean? Weird.
    */
   public function rebindCallback($ldap, $referral) {
-    // Ldap options.
+    // LDAP options.
     ldap_set_option($ldap, LDAP_OPT_PROTOCOL_VERSION, 3);
     ldap_set_option($ldap, LDAP_OPT_REFERRALS, 1);
     ldap_set_rebind_proc($ldap, [$this, 'rebind_callback']);

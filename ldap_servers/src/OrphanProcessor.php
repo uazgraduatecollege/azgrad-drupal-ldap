@@ -155,7 +155,7 @@ class OrphanProcessor {
       if (!isset($servers[$serverId])) {
         if (!isset($this->missingServerSemaphore[$serverId])) {
           \Drupal::logger('ldap_user')
-            ->error('Server %id not enabled, but needed to remove orphaned ldap users', ['%id' => $serverId]);
+            ->error('Server %id not enabled, but needed to remove orphaned LDAP users', ['%id' => $serverId]);
           $this->missingServerSemaphore[$serverId] = TRUE;
         }
         continue;
@@ -191,7 +191,7 @@ class OrphanProcessor {
    */
   private function fetchUidsToCheck() {
     /**
-     * We want to query drupal accounts, which are LDAP associated where a DN
+     * We want to query Drupal accounts, which are LDAP associated where a DN
      * is present. The lastUidChecked is used to process only a limited number
      * of batches in the cron run and each user is only checked if the time
      * configured for checking has lapsed.

@@ -6,6 +6,6 @@ package: 'Lightweight Directory Access Protocol'
 dependencies:
   - ldap:ldap_servers
   - ldap:ldap_user
-  - externalauth
+  - externalauth:externalauth
 
 configure: ldap_authentication.admin_form

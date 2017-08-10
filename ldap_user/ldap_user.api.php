@@ -8,13 +8,13 @@
 /**
  * Hook_ldap_user_attrs_alter().
  *
- * Alter list of available drupal user targets (fields, properties, etc.)
+ * Alter list of available Drupal user targets (fields, properties, etc.)
  *   for ldap_user provisioning mapping form (admin/config/people/ldap/user)
  *
  * return array with elements of the form:
  * [<field_type>.<field_name>] => array(
  *   'name' => string for user friendly name for the UI,
- *   'source' => ldap attribute (even if target of sync.  this should be
+ *   'source' => LDAP attribute (even if target of sync.  this should be
  *      refactored at some point to avoid confusion)
  *   'configurable' =>
  *   'configurable_to_drupal'  0 | 1, is this configurable?
@@ -50,7 +50,7 @@ function hook_ldap_user_attrs_list_alter(&$available_user_attrs, &$params) {
 }
 
 /**
- * Allow modules to alter the user object in the context of an ldap entry
+ * Allow modules to alter the user object in the context of an LDAP entry
  * during synchronization.
  *
  * @param User $account
@@ -58,7 +58,7 @@ function hook_ldap_user_attrs_list_alter(&$available_user_attrs, &$params) {
  *   required.
  * @param array $ldap_user,
  *   For structure @see LdapServer::matchUsernameToExistingLdapEntry()
- *   Array, the ldap user object relating to the drupal user.
+ *   Array, the LDAP user object relating to the Drupal user.
  * @param array $context
  *   Contains ldap_server and provisioning events.
  */

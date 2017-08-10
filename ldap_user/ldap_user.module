@@ -159,7 +159,7 @@ function ldap_user_entity_base_field_info(EntityTypeInterface $entity_type) {
 
     $fields['ldap_user_last_checked'] = BaseFieldDefinition::create('timestamp')
       ->setLabel(t('Last LDAP comparison'))
-      ->setDescription(t('Unix timestamp of when Drupal user was compared to ldap entry. This could be for purposes of syncing, deleteing drupal account, etc.'));
+      ->setDescription(t('Unix timestamp of when Drupal user was compared to LDAP entry. This could be for purposes of syncing, deleteing Drupal account, etc.'));
 
     $fields['ldap_user_ldap_exclude'] = BaseFieldDefinition::create('boolean')
       ->setLabel(t('Exclude from LDAP'))
@@ -299,7 +299,7 @@ function ldap_user_form_register_form_validate($form, FormStateInterface &$form_
   $factory = \Drupal::service('ldap.servers');
 
    // If the corresponding LDAP account does not exist and provision not
-  // selected and make ldap associated is selected, throw error.
+  // selected and make LDAP associated is selected, throw error.
   if (!$form_state->getValue('ldap_user_create_ldap_acct') &&
     $form_state->getValue('ldap_user_association') == LdapUserAttributesInterface::MANUAL_ACCOUNT_CONFLICT_LDAP_ASSOCIATE) {
     if (empty($config->get('drupalAcctProvisionServer'))) {
@@ -321,7 +321,7 @@ function ldap_user_form_register_form_validate($form, FormStateInterface &$form_
       if ($ldap_user) {
         $form_state->setErrorByName(
           'ldap_user_create_ldap_acct', t(
-            'User %name already has a corresponding LDAP Entry (%dn). Uncheck "Create corresponding LDAP entry" to allow this Drupal user to be created. Select "Make this an LDAP associated account" to associate this account with the ldap entry.',
+            'User %name already has a corresponding LDAP Entry (%dn). Uncheck "Create corresponding LDAP entry" to allow this Drupal user to be created. Select "Make this an LDAP associated account" to associate this account with the LDAP entry.',
             [
               '%dn' => $ldap_user['dn'],
               '%name' => $form_state->getValue('name'),

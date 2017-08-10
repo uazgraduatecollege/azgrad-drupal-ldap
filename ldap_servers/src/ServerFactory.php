@@ -259,7 +259,7 @@ class ServerFactory implements LdapUserAttributesInterface {
 
       if ($direction == self::PROVISION_TO_DRUPAL) {
 
-        // These 4 user fields identify where in ldap and which ldap server they
+        // These 4 user fields identify where in LDAP and which LDAP server they
         // are associated with. They are required for a Drupal account to be
         // "LDAP associated" regardless of if any other fields/properties are
         // provisioned or synced.

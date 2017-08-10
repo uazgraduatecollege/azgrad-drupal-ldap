@@ -103,11 +103,8 @@ class LoginValidator implements LdapUserAttributesInterface {
       return FALSE;
     }
 
-    /**
-     * We now have an LDAP account, matching username and password and the
-     * reference Drupal user.
-     */
-
+    // We now have an LDAP account, matching username and password and the
+    // reference Drupal user.
     if (!$this->drupalUser && $this->serverDrupalUser) {
       $this->updateAuthNameFromPuid();
     }
@@ -119,15 +116,10 @@ class LoginValidator implements LdapUserAttributesInterface {
       }
     }
 
-    /**
-     * Existing Drupal account with incorrect email. Fix email if appropriate
-     *
-     */
+    // Existing Drupal account with incorrect email. Fix email if appropriate.
     $this->fixOutdatedEmailAddress();
 
-    /**
-     * No existing Drupal account. Consider provisioning Drupal account.
-     */
+    // No existing Drupal account. Consider provisioning Drupal account.
     if (!$this->drupalUser) {
       if (!$this->provisionDrupalUser()) {
         return FALSE;
@@ -145,13 +137,14 @@ class LoginValidator implements LdapUserAttributesInterface {
   /**
    * Processes an SSO login.
    *
-   * Todo: Postprocessing could be wrapped in a function, identical in
-   * processLogin().
-   *
-   * @param $authName
+   * @param string $authName
+   *   The provided authentication name.
    *
    * @return bool
    *   Success or failure of authentication.
+   *
+   * @Todo: Postprocessing could be wrapped in a function, identical in
+   * processLogin().
    */
   public function processSsoLogin($authName) {
     $this->authName = $authName;
@@ -175,11 +168,8 @@ class LoginValidator implements LdapUserAttributesInterface {
       return FALSE;
     }
 
-    /**
-     * We now have an LDAP account, matching username and password and the
-     * reference Drupal user.
-     */
-
+    // We now have an LDAP account, matching username and password and the
+    // reference Drupal user.
     if (!$this->drupalUser && $this->serverDrupalUser) {
       $this->updateAuthNameFromPuid();
     }
@@ -191,15 +181,10 @@ class LoginValidator implements LdapUserAttributesInterface {
       }
     }
 
-    /**
-     * Existing Drupal account with incorrect email. Fix email if appropriate
-     *
-     */
+    // Existing Drupal account with incorrect email. Fix email if appropriate.
     $this->fixOutdatedEmailAddress();
 
-    /**
-     * No existing Drupal account. Consider provisioning Drupal account.
-     */
+    // No existing Drupal account. Consider provisioning Drupal account.
     if (!$this->drupalUser) {
       if (!$this->provisionDrupalUser()) {
         return FALSE;
@@ -249,7 +234,7 @@ class LoginValidator implements LdapUserAttributesInterface {
         }
       }
       if ($this->detailedLogging) {
-        \Drupal::logger('ldap_authentication')->debug('%username: Existing Drupal user account not found. Continuing on to attempt ldap authentication', ['%username' => $this->authName]);
+        \Drupal::logger('ldap_authentication')->debug('%username: Existing Drupal user account not found. Continuing on to attempt LDAP authentication', ['%username' => $this->authName]);
       }
     }
   }
@@ -338,8 +323,8 @@ class LoginValidator implements LdapUserAttributesInterface {
         // Success.
         break;
       }
-
-    }  // end loop through servers
+      // End of loop through servers.
+    }
 
     if ($this->detailedLogging) {
       \Drupal::logger('ldap_authentication')->debug('%username: Authentication result is "%err_text"',
@@ -358,7 +343,10 @@ class LoginValidator implements LdapUserAttributesInterface {
   }
 
   /**
+   * Tests the user's password.
    *
+   * @return bool
+   *   Valid login.
    */
   private function testUserPassword($password) {
     $loginValid = FALSE;
@@ -386,7 +374,10 @@ class LoginValidator implements LdapUserAttributesInterface {
   }
 
   /**
+   * Test the SSO credentials.
    *
+   * @return int
+   *   Returns the authentication result.
    */
   public function testSsoCredentials($authName) {
     // TODO: Verify if MODE_EXCLUSIVE check is a regression.
@@ -411,7 +402,7 @@ class LoginValidator implements LdapUserAttributesInterface {
         continue;
       }
 
-      $bindResult = $this->bindToServerSSO();
+      $bindResult = $this->bindToServerSso();
       if ($bindResult != 'success') {
         $authenticationResult = $bindResult;
         // If bind fails, onto next server.
@@ -471,7 +462,10 @@ class LoginValidator implements LdapUserAttributesInterface {
   }
 
   /**
+   * Provides formatting for authentication failures.
    *
+   * @return string
+   *   Response text.
    */
   private function additionalDebuggingResponse($authenticationResult) {
     $information = '';
@@ -492,7 +486,10 @@ class LoginValidator implements LdapUserAttributesInterface {
   }
 
   /**
-   * @param $authenticationResult
+   * Failure response.
+   *
+   * @param int $authenticationResult
+   *   The error code ommitted.
    */
   private function failureResponse($authenticationResult) {
     // Fail scenario 1. LDAP auth exclusive and failed  throw error so no other
@@ -532,11 +529,11 @@ class LoginValidator implements LdapUserAttributesInterface {
 
     switch ($error) {
       case self::AUTHENTICATION_FAILURE_CONNECTION:
-        $msg = t('Failed to connect to ldap server');
+        $msg = t('Failed to connect to LDAP server');
         break;
 
       case self::AUTHENTICATION_FAILURE_BIND:
-        $msg = t('Failed to bind to ldap server');
+        $msg = t('Failed to bind to LDAP server');
         break;
 
       case self::AUTHENTICATION_FAILURE_DISALLOWED:
@@ -566,15 +563,15 @@ class LoginValidator implements LdapUserAttributesInterface {
   }
 
   /**
+   * Check if exclusion criteria match.
    *
+   * @return bool
+   *   Exclusion result.
    */
   public function checkAllowedExcluded($authName, $ldap_user) {
 
-    /**
-     * Do one of the exclude attribute pairs match? If user does not already
-     * exists and deferring to user settings AND user settings only allow.
-     */
-
+    // Do one of the exclude attribute pairs match? If user does not already
+    // exists and deferring to user settings AND user settings only allow.
     foreach (\Drupal::config('ldap_authentication.settings')->get('excludeIfTextInDn') as $test) {
       if (stripos($ldap_user['dn'], $test) !== FALSE) {
         // If a match, return FALSE;.
@@ -582,9 +579,7 @@ class LoginValidator implements LdapUserAttributesInterface {
       }
     }
 
-    /**
-     * do one of the allow attribute pairs match
-     */
+    // Check if one of the allow attribute pairs match.
     if (count(\Drupal::config('ldap_authentication.settings')->get('allowOnlyIfTextInDn'))) {
       $fail = TRUE;
       foreach (\Drupal::config('ldap_authentication.settings')->get('allowOnlyIfTextInDn') as $test) {
@@ -597,10 +592,8 @@ class LoginValidator implements LdapUserAttributesInterface {
       }
 
     }
-    /**
-     * Handle excludeIfNoAuthorizations enabled and user has no groups.
-     */
 
+    // Handle excludeIfNoAuthorizations enabled and user has no groups.
     if (\Drupal::moduleHandler()->moduleExists('ldap_authorization') &&
       \Drupal::config('ldap_authentication.settings')->get('excludeIfNoAuthorizations')) {
 
@@ -642,14 +635,15 @@ class LoginValidator implements LdapUserAttributesInterface {
       return FALSE;
     }
 
-    /**
-     * default to allowed
-     */
+    // Default to allowed.
     return TRUE;
   }
 
   /**
+   * Update an outdated email address.
+   *
    * @return bool
+   *   Email updated.
    */
   private function fixOutdatedEmailAddress() {
 
@@ -715,7 +709,10 @@ class LoginValidator implements LdapUserAttributesInterface {
   }
 
   /**
+   * Validate already authenticated user.
+   *
    * @return bool
+   *   Pass or continue.
    */
   private function validateAlreadyAuthenticated() {
 
@@ -734,7 +731,10 @@ class LoginValidator implements LdapUserAttributesInterface {
   }
 
   /**
+   * Validate common login constraints for user.
+   *
    * @return bool
+   *   Continue authentication.
    */
   private function validateCommonLoginConstraints() {
 
@@ -747,9 +747,7 @@ class LoginValidator implements LdapUserAttributesInterface {
       return FALSE;
     }
 
-    /**
-     * Determine if corresponding drupal account exists for $this->authName.
-     */
+    // Determine if corresponding Drupal account exists for $this->authName.
     $this->initializeAuthNameCorrespondingDrupalUser();
 
     if ($this->drupalUser && $this->drupalUser->id() == 1) {
@@ -766,16 +764,14 @@ class LoginValidator implements LdapUserAttributesInterface {
    * @return bool
    */
   private function deriveDrupalUserName() {
-    /**
-     * If account_name_attr is set, Drupal username is different than authName.
-     */
+    // If account_name_attr is set, Drupal username is different than authName.
     if (!empty($this->serverDrupalUser->get('account_name_attr'))) {
       $massager = new MassageAttributes();
       $processedName = $massager->processAttributeName($this->serverDrupalUser->get('account_name_attr'));
       $userNameFromAttribute = $this->ldapUser['attr'][$processedName][0];
       if (!$userNameFromAttribute) {
         \Drupal::logger('ldap_authentication')
-          ->error('Derived drupal username from attribute %account_name_attr returned no username for authname %authname.', [
+          ->error('Derived Drupal username from attribute %account_name_attr returned no username for authname %authname.', [
             '%authname' => $this->authName,
             '%account_name_attr' => $this->serverDrupalUser->get('account_name_attr'),
           ]
@@ -795,7 +791,7 @@ class LoginValidator implements LdapUserAttributesInterface {
   }
 
   /**
-   *
+   * Prepare the email template token.
    */
   private function prepareEmailTemplateToken() {
     $this->emailTemplateTokens = [
@@ -817,7 +813,10 @@ class LoginValidator implements LdapUserAttributesInterface {
   }
 
   /**
+   * Match existing user with LDAP.
+   *
    * @return bool
+   *   User matched.
    */
   private function matchExistingUserWithLdap() {
     if (\Drupal::config('ldap_user.settings')
@@ -825,7 +824,7 @@ class LoginValidator implements LdapUserAttributesInterface {
       if ($account_with_same_email = user_load_by_mail($this->ldapUser['mail'])) {
         /** @var \Drupal\user\UserInterface $account_with_same_email */
         \Drupal::logger('ldap_authentication')
-          ->error('LDAP user with DN %dn has a naming conflict with a local drupal user %conflict_name',
+          ->error('LDAP user with DN %dn has a naming conflict with a local Drupal user %conflict_name',
             [
               '%dn' => $this->ldapUser['dn'],
               '%conflict_name' => $account_with_same_email->getAccountName(),
@@ -847,7 +846,7 @@ class LoginValidator implements LdapUserAttributesInterface {
   }
 
   /**
-   *
+   * Replace user email address with template.
    */
   private function replaceUserMailWithTemplate() {
     // Fallback template in case one was not specified.
@@ -859,7 +858,10 @@ class LoginValidator implements LdapUserAttributesInterface {
   }
 
   /**
+   * Provision the Drupal user.
+   *
    * @return bool
+   *   Provisioning successful.
    */
   private function provisionDrupalUser() {
 
@@ -883,14 +885,14 @@ class LoginValidator implements LdapUserAttributesInterface {
         }
       }
       if (!$emailAvailable) {
-        /**
+        /*
          * Username does not exist but email does. Since
          * user_external_login_register does not deal with mail attribute and
          * the email conflict error needs to be caught beforehand, need to throw
          * error here.
          */
         \Drupal::logger('ldap_authentication')->error(
-          'LDAP user with DN %dn has email address (%mail) conflict with a drupal user %duplicate_name', [
+          'LDAP user with DN %dn has email address (%mail) conflict with a Drupal user %duplicate_name', [
             '%dn' => $this->ldapUser['dn'],
             '%duplicate_name' => $accountDuplicateMail->getAccountName(),
           ]
@@ -911,7 +913,7 @@ class LoginValidator implements LdapUserAttributesInterface {
       return FALSE;
     }
 
-    /**
+    /*
      * New ldap_authentication provisioned account could let
      * user_external_login_register create the account and set authmaps, but
      * would need to add mail and any other user->data data in hook_user_presave
@@ -953,7 +955,10 @@ class LoginValidator implements LdapUserAttributesInterface {
   }
 
   /**
+   * Connect to server.
+   *
    * @return bool
+   *   Connection successful.
    */
   private function connectToServer() {
     $result = $this->serverDrupalUser->connect();
@@ -982,8 +987,13 @@ class LoginValidator implements LdapUserAttributesInterface {
   }
 
   /**
-   * @param $password
+   * Bind to server.
+   *
+   * @param string $password
+   *   User password.
+   *
    * @return mixed
+   *   Success or failure result.
    */
   private function bindToServer($password) {
     $bind_success = FALSE;
@@ -1033,9 +1043,12 @@ class LoginValidator implements LdapUserAttributesInterface {
   }
 
   /**
+   * Bind to SSO server.
+   *
    * @return bool
+   *   Binding successful.
    */
-  private function bindToServerSSO() {
+  private function bindToServerSso() {
     $bind_success = FALSE;
     $bindMethod = $this->serverDrupalUser->get('bind_method');
     if ($bindMethod == 'service_account') {

@@ -243,7 +243,7 @@ class SyncMappingHelper implements LdapUserAttributesInterface {
   }
 
   /**
-   * Converts the more general ldap_context string to its associated ldap user
+   * Converts the more general ldap_context string to its associated LDAP user
    * event.
    *
    * @param string|null $ldapContext

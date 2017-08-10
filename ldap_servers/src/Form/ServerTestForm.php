@@ -298,7 +298,6 @@ class ServerTestForm extends EntityForm {
    *
    * @return array Response.
    *   Response.
-   *
    */
   private function testGroupDn($group_dn, $user) {
     $group_entry = $this->ldapServer->search($group_dn, 'objectClass=*');
@@ -422,7 +421,8 @@ class ServerTestForm extends EntityForm {
    */
   public static function binaryCheck($input) {
     if (preg_match('~[^\x20-\x7E\t\r\n]~', $input) > 0) {
-      return t('Binary (excerpt): @excerpt', ['@excerpt' => Unicode::truncate($input, 120, FALSE, TRUE)]);
+      $truncatedString = Unicode::truncate($input, 120, FALSE, TRUE);
+      return t('Binary (excerpt): @excerpt', ['@excerpt' => $truncatedString]);
     }
     else {
       return $input;
@@ -433,7 +433,7 @@ class ServerTestForm extends EntityForm {
    * Add a group entry.
    *
    * @param string $group_dn
-   *   as ldap dn.
+   *   The group DN as an LDAP DN.
    * @param array $attributes
    *   Attributes in key value form
    *    $attributes = array(
@@ -453,10 +453,10 @@ class ServerTestForm extends EntityForm {
     }
 
     $attributes = array_change_key_case($attributes, CASE_LOWER);
-    $objectclass = (empty($attributes['objectclass'])) ? $this->ldapServer->groupObjectClass() : $attributes['objectclass'];
-    $attributes['objectclass'] = $objectclass;
+    $objectClass = (empty($attributes['objectclass'])) ? $this->ldapServer->groupObjectClass() : $attributes['objectclass'];
+    $attributes['objectclass'] = $objectClass;
 
-    // 2. give other modules a chance to add or alter attributes
+    // 2. give other modules a chance to add or alter attributes.
     $context = [
       'action' => 'add',
       'corresponding_drupal_data' => [$group_dn => $attributes],
@@ -466,12 +466,12 @@ class ServerTestForm extends EntityForm {
     \Drupal::moduleHandler()->alter('ldap_entry_pre_provision', $ldap_entries, $this, $context);
     $attributes = $ldap_entries[$group_dn];
 
-    // 4. provision ldap entry
+    // 4. provision LDAP entry.
     // @todo how is error handling done here?
     $ldap_entry_created = $this->ldapServer->createLdapEntry($attributes, $group_dn);
 
-    // 5. allow other modules to react to provisioned ldap entry
-    //   @todo how is error handling done here?
+    // 5. allow other modules to react to provisioned LDAP entry.
+    //    @todo how is error handling done here?
     if ($ldap_entry_created) {
       \Drupal::moduleHandler()
         ->invokeAll('ldap_entry_post_provision',
@@ -495,7 +495,7 @@ class ServerTestForm extends EntityForm {
    *   FALSE = groups should be deleted regardless of members.
    *
    * @return bool
-   *  Removal result.
+   *   Removal result.
    *
    * @TODO: NOT TESTED
    */
@@ -515,7 +515,7 @@ class ServerTestForm extends EntityForm {
   /**
    * Add a member to a group.
    *
-   * @param string $ldap_user_dn
+   * @param string $group_dn
    *   LDAP user DN.
    * @param mixed $user
    *   A Drupal user entity, an LDAP entry array of a user  or a username.
@@ -613,10 +613,13 @@ class ServerTestForm extends EntityForm {
   }
 
   /**
-   * @param $drupal_username
-   * @param int $direction
-   * @param null $ldap_context
+   * Test the user mappings.
+   *
+   * @param string $drupal_username
+   *   The Drupal username.
+   *
    * @return array
+   *   Errors and the user.
    */
   public function testUserMapping($drupal_username) {
     $ldap_user = $this->ldapServer->matchUsernameToExistingLdapEntry($drupal_username);
@@ -649,11 +652,14 @@ class ServerTestForm extends EntityForm {
   }
 
   /**
-   * @TODO: Unported.
+   * Test writable groups.
    *
-   * @param $values
+   * @param array $values
+   *   Group data.
+   *
+   * @TODO: Unported.
    */
-  private function testwritableGroup($values) {
+  private function testwritableGroup(array $values) {
     $user_test_dn = @$values['grp_test_grp_dn'];
     $group_create_test_dn = $values['grp_test_grp_dn_writeable'];
     $group_create_test_attr = [
@@ -743,10 +749,13 @@ class ServerTestForm extends EntityForm {
   }
 
   /**
+   * Test anonymous binding.
    *
+   * @return bool
+   *   Binding successful.
    */
   private function testAnonymousBind() {
-    $errors = FALSE;
+    $result = FALSE;
     $ldap_result = $this->ldapServer->connect();
 
     if ($ldap_result != Server::LDAP_SUCCESS) {
@@ -755,10 +764,10 @@ class ServerTestForm extends EntityForm {
         'class' => 'color-error',
         'data' => [t('Failed to connect to LDAP server: @error', $this->ldapServer->formattedError($ldap_result))],
       ];
-      $errors = TRUE;
+      $result = TRUE;
     }
 
-    if (!$errors) {
+    if (!$result) {
       $bind_result = $this->ldapServer->bind(NULL, NULL, TRUE);
       if ($bind_result == Server::LDAP_SUCCESS) {
         $this->resultsTables['basic'][] = [
@@ -771,13 +780,13 @@ class ServerTestForm extends EntityForm {
           'class' => 'color-error',
           'data' => [t('Failed to bind anonymously. LDAP error: @error', ['@error' => $this->ldapServer->formattedError($bind_result)])],
         ];
-        $errors = TRUE;
+        $result = TRUE;
       }
     }
     else {
       $this->resultsTables['basic'][] = [t('No service account set to bind with.')];
     }
-    return $errors;
+    return $result;
   }
 
   /**
@@ -821,11 +830,15 @@ class ServerTestForm extends EntityForm {
   }
 
   /**
-   * @param $test_data
+   * Compute user data.
+   *
+   * @param array $test_data
+   *   Data to test on.
    *
    * @return array
+   *   Computed data.
    */
-  private function computeUserData($test_data) {
+  private function computeUserData(array $test_data) {
     $rows = [];
     foreach ($test_data['ldap_user']['attr'] as $key => $value) {
       if (is_numeric($key) || $key == 'count') {

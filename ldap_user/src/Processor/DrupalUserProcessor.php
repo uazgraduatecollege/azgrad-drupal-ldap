@@ -45,13 +45,13 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
       $ldap_server = $factory->getServerByIdEnabled($this->config->get('drupalAcctProvisionServer'));
       $this->account = user_load_by_name($drupalUsername);
       if (!$this->account) {
-        \Drupal::logger('ldap_user')->error('Failed to LDAP associate drupal account %drupal_username because account not found', ['%drupal_username' => $drupalUsername]);
+        \Drupal::logger('ldap_user')->error('Failed to LDAP associate Drupal account %drupal_username because account not found', ['%drupal_username' => $drupalUsername]);
         return FALSE;
       }
 
       $ldap_user = $ldap_server->matchUsernameToExistingLdapEntry($drupalUsername);
       if (!$ldap_user) {
-        \Drupal::logger('ldap_user')->error('Failed to LDAP associate drupal account %drupal_username because corresponding LDAP entry not found', ['%drupal_username' => $drupalUsername]);
+        \Drupal::logger('ldap_user')->error('Failed to LDAP associate Drupal account %drupal_username because corresponding LDAP entry not found', ['%drupal_username' => $drupalUsername]);
         return FALSE;
       }
 
@@ -155,7 +155,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
    * One should not assume all attributes are present in the LDAP entry.
    *
    * @param array $ldap_user
-   *   Ldap entry.
+   *   LDAP entry.
    * @param int $direction
    *   The provisioning direction.
    * @param array $prov_events
@@ -214,7 +214,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
     }
 
     /**
-     * Basic $user ldap fields.
+     * Basic $user LDAP fields.
      */
     $processor = new SyncMappingHelper();
 
@@ -328,7 +328,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
   public function ldapExcludeDrupalAccount($drupal_username) {
     $account = user_load_by_name($drupal_username);
     if (!$account) {
-      \Drupal::logger('ldap_user')->error('Failed to exclude user from LDAP association because drupal account %drupal_username was not found', ['%drupal_username' => $drupal_username]);
+      \Drupal::logger('ldap_user')->error('Failed to exclude user from LDAP association because Drupal account %drupal_username was not found', ['%drupal_username' => $drupal_username]);
       return FALSE;
     }
 
@@ -361,7 +361,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
         // Force dn "attribute" to exist.
         $attributes['dn'] = TokenProcessor::setAttributeMap($attributes['dn']);
         // Add the attributes required by the user configuration when
-        // provisioning drupal users.
+        // provisioning Drupal users.
         switch ($params['ldap_context']) {
           case 'ldap_user_insert_drupal_user':
           case 'ldap_user_update_drupal_user':
@@ -706,7 +706,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
     }
 
     // Check for provisioning to LDAP; this will normally occur on
-    // hook_user_insert or other event when drupal user is created.
+    // hook_user_insert or other event when Drupal user is created.
     if ($this->provisionsLdapEntriesFromDrupalUsers() &&
       LdapConfiguration::provisionAvailableToLDAP(self::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_UPDATE_CREATE)) {
 
@@ -758,7 +758,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
     // @TODO: Inject.
     $factory = \Drupal::service('ldap.servers');
 
-    // Check for provisioning to drupal and override synced user fields/props.
+    // Check for provisioning to Drupal and override synced user fields/props.
     if (LdapConfiguration::provisionsDrupalAccountsFromLdap() && in_array(self::EVENT_SYNC_TO_DRUPAL_USER, array_keys(LdapConfiguration::provisionsDrupalEvents()))) {
       if ($this->isUserLdapAssociated($this->account, self::PROVISION_TO_DRUPAL)) {
         $ldap_user = $factory->getUserDataFromServerByAccount($this->account, $this->config->get('drupalAcctProvisionServer'), 'ldap_user_prov_to_drupal');
@@ -901,7 +901,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
     if (empty($this->account->getAccountName())) {
       drupal_set_message(t('User account creation failed because of invalid, empty derived Drupal username.'), 'error');
       \Drupal::logger('ldap_user')
-        ->error('Failed to create Drupal account %drupal_username because drupal username could not be derived.', []);
+        ->error('Failed to create Drupal account %drupal_username because Drupal username could not be derived.', []);
       return FALSE;
     }
     if (!$mail = $this->account->getEmail()) {
@@ -913,7 +913,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
 
     if ($account_with_same_email = user_load_by_mail($mail)) {
       \Drupal::logger('ldap_user')
-        ->error('LDAP user %drupal_username has email address (%email) conflict with a drupal user %duplicate_name', [
+        ->error('LDAP user %drupal_username has email address (%email) conflict with a Drupal user %duplicate_name', [
           '%email' => $mail,
           '%duplicate_name' => $account_with_same_email->name,
         ]
@@ -966,7 +966,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
    */
   private function userPictureFromLdapEntry(array $ldap_entry) {
     if ($ldap_entry && $this->server->get('picture_attr')) {
-      // Check if ldap entry has been provisioned.
+      // Check if LDAP entry has been provisioned.
       if (isset($ldap_entry[$this->server->get('picture_attr')][0])) {
         $ldapUserPicture = $ldap_entry[$this->server->get('picture_attr')][0];
       }
@@ -1054,7 +1054,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
   }
 
   /**
-   * Converts the more general ldap_context string to its associated ldap user
+   * Converts the more general ldap_context string to its associated LDAP user
    * prov direction.
    *
    * @param string|null $ldapContext

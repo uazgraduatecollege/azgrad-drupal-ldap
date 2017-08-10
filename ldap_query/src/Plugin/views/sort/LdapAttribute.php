@@ -5,7 +5,7 @@ namespace Drupal\ldap_query\Plugin\views\sort;
 use Drupal\views\Plugin\views\sort\Standard;
 
 /**
- * Ldap Attribute Views Sorting.
+ * LDAP Attribute Views Sorting.
  *
  * @ingroup views_sort_handlers
  *

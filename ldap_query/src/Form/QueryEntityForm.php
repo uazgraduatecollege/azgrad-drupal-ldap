@@ -91,7 +91,7 @@ class QueryEntityForm extends EntityForm {
       '#title' => $this->t('Size limit of returned data'),
       '#default_value' => $limit,
       '#min' => 0,
-      '#description' => $this->t('This limit may already be set by the ldap server. 0 signifies no limit.'),
+      '#description' => $this->t('This limit may already be set by the LDAP server. 0 signifies no limit.'),
       '#required' => TRUE,
     ];
 
@@ -105,7 +105,7 @@ class QueryEntityForm extends EntityForm {
       '#title' => $this->t('Time limit in seconds'),
       '#default_value' => $limit,
       '#min' => 0,
-      '#description' => $this->t('This limit may already be set by the ldap server. 0 signifies no limit.'),
+      '#description' => $this->t('This limit may already be set by the LDAP server. 0 signifies no limit.'),
       '#required' => TRUE,
     ];
 

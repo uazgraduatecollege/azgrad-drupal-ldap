@@ -20,7 +20,7 @@ class GroupUserUpdateProcessor {
    * Constructor for update process.
    *
    * @param string $id
-   *   Ldap QueryEntity ID.
+   *   LDAP QueryEntity ID.
    */
   public function __construct($id) {
     $this->detailedWatchdog = \Drupal::config('ldap_help.settings')->get('watchdog_detail');

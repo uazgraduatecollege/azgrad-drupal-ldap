@@ -104,7 +104,7 @@ class ServerAPITests {
     }
 
     /**
-     * Search CASE 1: for some mock ldap servers, a set of fixed ldap filters
+     * Search CASE 1: for some mock LDAP servers, a set of fixed LDAP filters
      * are prepolulated in test data
      */
     if (isset($this->searchResults[$filter][$base_dn])) {
@@ -121,8 +121,8 @@ class ServerAPITests {
     }
 
     /**
-     * Search CASE 2: attempt to programmatically evaluate ldap filter
-     * by looping through fake ldap entries
+     * Search CASE 2: attempt to programmatically evaluate LDAP filter
+     * by looping through fake LDAP entries
      */
     $base_dn = Unicode::strtolower($base_dn);
     $filter = trim($filter, "()");
@@ -168,7 +168,7 @@ class ServerAPITests {
       return FALSE;
     }
 
-    // Need to perform faux ldap search here with data in.
+    // Need to perform faux LDAP search here with data in.
     $results = [];
 
     if ($operand == '|') {

@@ -9,7 +9,7 @@ use Drupal\ldap_servers\Helper\MassageAttributes;
 use Drupal\user\UserInterface;
 
 /**
- *  Helper to manage LDAP tokens and process their content.
+ * Helper to manage LDAP tokens and process their content.
  */
 class TokenProcessor {
 
@@ -103,6 +103,7 @@ class TokenProcessor {
    * @param string $text
    *   The text such as "[dn]", "[cn]@my.org", "[displayName] [sn]",
    *   "Drupal Provisioned".
+   *
    * @return string
    *   The text with tokens replaced or NULL if replacement not available.
    */
@@ -215,7 +216,7 @@ class TokenProcessor {
   }
 
   /**
-   * Turn an ldap entry into a token array suitable for the t() function.
+   * Turn an LDAP entry into a token array suitable for the t() function.
    *
    * @param array $ldap_entry
    *   The LDAP entry.
@@ -277,7 +278,7 @@ class TokenProcessor {
       return $tokens;
     }
 
-    // Add lowercase keyed entries to ldap array.
+    // Add lowercase keyed entries to LDAP array.
     foreach ($ldap_entry as $key => $values) {
       $ldap_entry[Unicode::strtolower($key)] = $values;
     }
@@ -657,7 +658,7 @@ class TokenProcessor {
    */
   private function discoverUserAttributes(UserInterface $account) {
     $token_keys = [];
-    // Add lowercase keyed entries to ldap array.
+    // Add lowercase keyed entries to LDAP array.
     $userData = $account->toArray();
     foreach ($userData as $propertyName => $propertyData) {
       if (isset($propertyData[0], $propertyData[0]['value']) && is_scalar($propertyData[0]['value'])) {

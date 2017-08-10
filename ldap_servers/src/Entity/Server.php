@@ -232,7 +232,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
    *   In same form as ldap_read $attributes parameter.
    *
    * @return bool|array
-   *   Return FALSE or ldap entry array.
+   *   Return FALSE or LDAP entry array.
    *
    * @TODO: Handle case (in)sensitivity cleanly.
    */
@@ -271,7 +271,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
    * Count LDAP entries.
    *
    * @param resource $ldap_result
-   *   The ldap link identifier.
+   *   The LDAP link identifier.
    *
    * @return int|bool
    *   Return false on error or number of entries, if 0 entries will return 0.
@@ -281,7 +281,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
   }
 
   /**
-   * Create ldap entry.
+   * Create LDAP entry.
    *
    * @param array $attributes
    *   Should follow the structure of ldap_add functions.
@@ -377,16 +377,16 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
   /**
    * Remove unchanged attributes from entry.
    *
-   * Given 2 ldap entries, old and new, removed unchanged values to avoid
+   * Given 2 LDAP entries, old and new, removed unchanged values to avoid
    * security errors and incorrect date modified.
    *
    * @param array $new_entry
-   *   Ldap entry in form <attribute> => <value>.
+   *   LDAP entry in form <attribute> => <value>.
    * @param array $old_entry
-   *   Ldap entry in form <attribute> => ['count' => N, [<value>,...<value>]].
+   *   LDAP entry in form <attribute> => ['count' => N, [<value>,...<value>]].
    *
    * @return array
-   *   Ldap entry with no values that have NOT changed.
+   *   LDAP entry with no values that have NOT changed.
    */
   public static function removeUnchangedAttributes(array $new_entry, array $old_entry) {
 
@@ -421,7 +421,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
   }
 
   /**
-   * Modify attributes of ldap entry.
+   * Modify attributes of LDAP entry.
    *
    * @param string $dn
    *   DN of entry.
@@ -674,7 +674,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
   }
 
   /**
-   * Execute a paged ldap query and return entries as one aggregated array.
+   * Execute a paged LDAP query and return entries as one aggregated array.
    *
    * $this->searchPageStart and $this->searchPageEnd should be set before
    * calling if a particular set of pages is desired.
@@ -693,7 +693,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
    *   (this array of parameters is primarily passed on to ldapQuery() method)
    *
    * @return array|bool
-   *   Array of ldap entries or FALSE on error.
+   *   Array of LDAP entries or FALSE on error.
    */
   public function pagedLdapQuery($queryParameters) {
     if (!$this->get('search_pagination')) {
@@ -764,7 +764,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
       elseif ($this->searchPageEnd !== NULL && $page >= $this->searchPageEnd) {
         break;
       }
-      // Ldap reference pagination has run out.
+      // LDAP reference pagination has run out.
       elseif ($page_token === NULL || $page_token == '') {
         break;
       }
@@ -776,7 +776,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
   }
 
   /**
-   * Execute ldap query and return ldap records.
+   * Execute LDAP query and return LDAP records.
    *
    * @param int $scope
    *   Scope of search (base, subtree or one level).
@@ -875,7 +875,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
    * Fetches the user account based on the persistent UID.
    *
    * @param string $puid
-   *   As returned from ldap_read or other ldap function (can be binary).
+   *   As returned from ldap_read or other LDAP function (can be binary).
    *
    * @return bool|User
    *   The updated user or error.
@@ -1030,9 +1030,9 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
    *   All by default in parent function.
    *
    * @return array|bool
-   *   An associative array representing ldap data of a user. For example:
-   *   'sid' => ldap server id
-   *   'mail' => derived from ldap mail (not always populated).
+   *   An associative array representing LDAP data of a user. For example:
+   *   'sid' => LDAP server id
+   *   'mail' => derived from LDAP mail (not always populated).
    *   'dn'   => dn of user
    *   'attr' => single LDAP entry array in form returned from ldap_search()
    *   'dn' => dn of entry
@@ -1143,7 +1143,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
    * Recurse through all child groups and add members.
    *
    * @param array $current_member_entries
-   *   Entries of ldap group entries that are starting point. Should include at
+   *   Entries of LDAP group entries that are starting point. Should include at
    *   least 1 entry.
    * @param array $all_member_dns
    *   All member DN as an array of all groups the user is a member of. Mixed
@@ -1298,7 +1298,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
     $groupAttribute = $this->groupUserMembershipsAttr();
 
     $not_user_ldap_entry = empty($user['attr'][$groupAttribute]);
-    // If drupal user passed in, try to get user_ldap_entry.
+    // If Drupal user passed in, try to get user_ldap_entry.
     if ($not_user_ldap_entry) {
       $user = $this->userUserToExistingLdapEntry($user);
       $not_user_ldap_entry = empty($user['attr'][$groupAttribute]);

@@ -204,7 +204,7 @@ class ServerForm extends EntityForm {
       '#type' => 'textfield',
       '#size' => 30,
       '#title' => $this->t('Persistent and Unique User ID Attribute'),
-      '#description' => $this->t("In some LDAP configurations, a user's DN, CN, or mail value may change when a user's name changes or for other reasons.<br> In order to avoid creation of multiple accounts for that user or other ambiguities, enter a unique and persistent ldap attribute for users. <br> In cases where DN does not change, enter \"dn\" here. If no such attribute exists, leave this blank."),
+      '#description' => $this->t("In some LDAP configurations, a user's DN, CN, or mail value may change when a user's name changes or for other reasons.<br> In order to avoid creation of multiple accounts for that user or other ambiguities, enter a unique and persistent LDAP attribute for users. <br> In cases where DN does not change, enter \"dn\" here. If no such attribute exists, leave this blank."),
     ];
 
     $form['users']['unique_persistent_attr_binary'] = [

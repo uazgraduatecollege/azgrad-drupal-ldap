@@ -29,26 +29,26 @@ class LdapUserTestForm extends FormBase implements LdapUserAttributesInterface {
    */
   public function __construct() {
     $this::$sync_trigger_options = [
-      self::PROVISION_DRUPAL_USER_ON_USER_UPDATE_CREATE => t('On sync to Drupal user create or update. Requires a server with binding method of "Service Account Bind" or "Anonymous Bind".'),
-      self::PROVISION_DRUPAL_USER_ON_USER_AUTHENTICATION => t('On create or sync to Drupal user when successfully authenticated with LDAP credentials. (Requires LDAP Authentication module).'),
-      self::PROVISION_DRUPAL_USER_ON_USER_ON_MANUAL_CREATION => t('On manual creation of Drupal user from admin/people/create and "Create corresponding LDAP entry" is checked'),
-      self::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_UPDATE_CREATE => t('On creation or sync of an LDAP entry when a Drupal account is created or updated. Only applied to accounts with a status of approved.'),
-      self::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_AUTHENTICATION => t('On creation or sync of an LDAP entry when a user authenticates.'),
-      self::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_DELETE => t('On deletion of an LDAP entry when the corresponding Drupal Account is deleted.  This only applies when the LDAP entry was provisioned by Drupal by the LDAP User module.'),
+      self::PROVISION_DRUPAL_USER_ON_USER_UPDATE_CREATE => $this->t('On sync to Drupal user create or update. Requires a server with binding method of "Service Account Bind" or "Anonymous Bind".'),
+      self::PROVISION_DRUPAL_USER_ON_USER_AUTHENTICATION => $this->t('On create or sync to Drupal user when successfully authenticated with LDAP credentials. (Requires LDAP Authentication module).'),
+      self::PROVISION_DRUPAL_USER_ON_USER_ON_MANUAL_CREATION => $this->t('On manual creation of Drupal user from admin/people/create and "Create corresponding LDAP entry" is checked'),
+      self::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_UPDATE_CREATE => $this->t('On creation or sync of an LDAP entry when a Drupal account is created or updated. Only applied to accounts with a status of approved.'),
+      self::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_AUTHENTICATION => $this->t('On creation or sync of an LDAP entry when a user authenticates.'),
+      self::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_DELETE => $this->t('On deletion of an LDAP entry when the corresponding Drupal Account is deleted.  This only applies when the LDAP entry was provisioned by Drupal by the LDAP User module.'),
     ];
   }
 
   /**
-   *
+   * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state, $op = NULL) {
 
     $username = @$_SESSION['ldap_user_test_form']['testing_drupal_username'];
 
-    $form['#prefix'] = t('<h1>Debug LDAP synchronization events</h1>');
+    $form['#prefix'] = $this->t('<h1>Debug LDAP synchronization events</h1>');
 
     $form['usage'] = [
-      '#markup' => t('This form is for debugging issues with specific provisioning events. If you want to test your setup in general, try the server\'s test page first.'),
+      '#markup' => $this->t("This form is for debugging issues with specific provisioning events. If you want to test your setup in general, try the server's test page first."),
     ];
     $form['warning'] = [
       '#markup' => '<h3>' . $this->t('If you trigger the event this will modify your data.') . '</h3>' . $this->t('When in doubt, always work on a staging environment.'),
@@ -56,7 +56,7 @@ class LdapUserTestForm extends FormBase implements LdapUserAttributesInterface {
 
     $form['testing_drupal_username'] = [
       '#type' => 'textfield',
-      '#title' => t('Testing Drupal Username'),
+      '#title' => $this->t('Testing Drupal Username'),
       '#default_value' => $username,
       '#required' => 1,
       '#size' => 30,
@@ -67,7 +67,7 @@ class LdapUserTestForm extends FormBase implements LdapUserAttributesInterface {
     $selected_actions = isset($_SESSION['ldap_user_test_form']['action']) ? $_SESSION['ldap_user_test_form']['action'] : [];
     $form['action'] = [
       '#type' => 'radios',
-      '#title' => t('Actions/Event Handler to Test'),
+      '#title' => $this->t('Actions/Event Handler to Test'),
       '#required' => 0,
       '#default_value' => $selected_actions,
       '#options' => self::$sync_trigger_options,
@@ -75,7 +75,7 @@ class LdapUserTestForm extends FormBase implements LdapUserAttributesInterface {
 
     $form['submit'] = [
       '#type' => 'submit',
-      '#value' => t('Test'),
+      '#value' => $this->t('Test'),
       '#weight' => 100,
     ];
 
@@ -83,16 +83,12 @@ class LdapUserTestForm extends FormBase implements LdapUserAttributesInterface {
   }
 
   /**
-   *
+   * {@inheritdoc}
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
     if (count(array_filter($form_state->getValue(['action']))) > 1) {
-      $form_state->setErrorByName(
-        'action',
-        t('Only one action may be selected for "Execute Action" testing mode.')
-      );
+      $form_state->setErrorByName('action',$this->t('Only one action may be selected for "Execute Action" testing mode.'));
     }
-
   }
 
   /**
@@ -125,7 +121,7 @@ class LdapUserTestForm extends FormBase implements LdapUserAttributesInterface {
       }
       $results = [];
       $results['username'] = $username;
-      $results['related ldap entry (before provisioning or syncing)'] = $user_ldap_entry;
+      $results['related LDAP entry (before provisioning or syncing)'] = $user_ldap_entry;
 
       /** @var \Drupal\user\Entity\User $account */
       $existingAccount = user_load_by_name($username);
@@ -177,22 +173,21 @@ class LdapUserTestForm extends FormBase implements LdapUserAttributesInterface {
   }
 
   /**
-   * TODO: Move to ldapusertestform and/or kill.
-   * Given a $prov_event determine if ldap user configuration supports it.
-   *   this is overall, not per field syncing configuration.
+   * Given a $prov_event determine if LDAP user configuration supports it.
+   *
+   * This is overall, not a per field syncing configuration.
    *
    * @param int $direction
    *   self::PROVISION_TO_DRUPAL or self::PROVISION_TO_LDAP.
-   *
    * @param int $provision_trigger
-   *   see events above.
-   *   or
-   *   'sync', 'provision', 'delete_ldap_entry', 'delete_drupal_entry',
-   *   'cancel_drupal_entry'.
+   *   Provision trigger, see events above, such as 'sync', 'provision',
+   *   'delete_ldap_entry', 'delete_drupal_entry', 'cancel_drupal_entry'.
    *
    * @deprecated
    *
    * @return bool
+   *   Provisioning enabled.
+   * TODO: Move to ldapusertestform and/or kill.
    */
   private function provisionEnabled($direction, $provision_trigger) {
     $result = FALSE;

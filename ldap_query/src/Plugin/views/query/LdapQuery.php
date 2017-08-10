@@ -192,7 +192,7 @@ class LdapQuery extends QueryPluginBase {
       '#options' => $qids,
       '#title' => $this->t('Ldap Query'),
       '#default_value' => $this->options['query_id'],
-      '#description' => $this->t('The Ldap query you want Views to use.'),
+      '#description' => $this->t('The LDAP query you want Views to use.'),
       '#required' => TRUE,
     ];
   }

@@ -527,7 +527,7 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
         // TODO: Move this check out of processed mappings to be able to set the
         // error by field.
         $form_state->setErrorByName($ldapMapKey,
-          $this->t('When provisioning to ldap, ldap attribute column must be singular token such as [cn]. %ldap_attr is not. Do not use compound tokens such as "[displayName] [sn]" or literals such as "physics".',
+          $this->t('When provisioning to ldap, LDAP attribute column must be singular token such as [cn]. %ldap_attr is not. Do not use compound tokens such as "[displayName] [sn]" or literals such as "physics".',
             ['%ldap_attr' => $mapping['ldap_attr']]
           )
         );
@@ -736,7 +736,7 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
 
     // 2. existing configurable mappings rows.
     if (!empty($config->get('ldapUserSyncMappings')[$direction])) {
-      // Key could be ldap attribute name or user attribute name.
+      // Key could be LDAP attribute name or user attribute name.
       foreach ($config->get('ldapUserSyncMappings')[$direction] as $target_attr_token => $mapping) {
         if ($direction == self::PROVISION_TO_DRUPAL) {
           $mapping_key = $mapping['user_attr'];
@@ -763,7 +763,7 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
   }
 
   /**
-   * Get mapping form row to ldap user provisioning mapping admin form table.
+   * Get mapping form row to LDAP user provisioning mapping admin form table.
    *
    * @param string $action
    *   Action is either add, update, or nonconfigurable.
@@ -773,7 +773,7 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
    * @param array $mapping
    *   Is current setting for updates or nonconfigurable items.
    * @param array $userAttributeOptions
-   *   Attributes of drupal user target options.
+   *   Attributes of Drupal user target options.
    * @param int $rowId
    *   Is current row in table.
    *
