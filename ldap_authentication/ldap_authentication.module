@@ -78,7 +78,20 @@ function ldap_authentication_core_override_user_login_authenticate_validate($for
 }
 
 /**
+ * Change how password is validated.
  *
+ * Primarily a check on the password field with configurable responses as
+ * seen on the 'Authentication' tab.
+ *
+ *
+ * @param $form
+ *   The form.
+ * @param \Drupal\Core\Form\FormStateInterface $form_state
+ *   The form state.
+ *
+ * @TODO: This function hides corner cases and does not consistently embed the
+ * help text.
+ * @TODO: Convert configuration to translatable to avoid passing to t().
  */
 function ldap_authentication_user_pass_validate(&$form, FormStateInterface $form_state) {
   $name_or_mail = trim($form_state->getValue('name'));
@@ -100,21 +113,21 @@ function ldap_authentication_user_pass_validate(&$form, FormStateInterface $form
         );
       }
       else {
-        $form_state->setErrorByName('name', t('You may not reset your password here. You must reset your password via one of your organization\'s password management sites.'));
+        $form_state->setErrorByName('name', t("You may not reset your password here. You must reset your password via one of your organization's password management sites."));
       }
     }
   }
 }
 
 /**
- * Implements hook_form_FORM_ID_alter(). for user_form.
+ * Implements hook_form_FORM_ID_alter().
  *
- * Alter user editing form (profile form) based on LDAP authentication configuration.
+ * Alter user editing form (profile form) based on LDAP authentication
+ * configuration.
  *
- * @param array $form
- *   array from user profile.
- * @param \Drupal\Core\Form\FormStateInterface $form_state
- *   from user profile.
+ * @TODO: This function hides corner cases and does not consistently embed the
+ * help text.
+ * @TODO: Convert configuration to translatable to avoid passing to t().
  */
 function ldap_authentication_form_user_form_alter(&$form, FormStateInterface $form_state) {
 
@@ -128,13 +141,11 @@ function ldap_authentication_form_user_form_alter(&$form, FormStateInterface $fo
       $form['account']['mail']['#disabled'] = TRUE;
       $form['account']['mail']['#description'] = t('This email address is automatically set and may not be changed.');
     }
-    elseif ($config->get('emailOption') == LdapAuthenticationConfiguration::$emailFieldAllow) {
-      // Email field is functional.
-    }
 
     if (!LdapAuthenticationConfiguration::showPasswordField($user)) {
       if ($config->get('passwordOption') == LdapAuthenticationConfiguration::$passwordFieldHide) {
-        // TODO: Allow for the case where email changes are allowed to show current pass.
+        // TODO: Allow for the case where email changes are allowed to show
+        // current pass.
         $form['account']['current_pass']['#access'] = FALSE;
         $form['account']['pass']['#access'] = FALSE;
       }
@@ -193,9 +204,6 @@ function ldap_authentication_user_login_authenticate_validate($form, FormStateIn
  *
  * Relevant in ldap_authn_form_user_login_block_alter and
  * ldap_authn_form_user_login_alter.
- *
- * @todo if form is being generated on non https and is set in preferences, set
- * warning and end form development
  */
 function _ldap_authentication_login_form_alter(&$form, &$form_state, $form_id) {
   if (!LdapAuthenticationConfiguration::hasEnabledAuthenticationServers()) {

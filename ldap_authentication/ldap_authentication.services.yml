@@ -8,3 +8,8 @@ services:
     class: Drupal\ldap_authentication\Routing\EmailTemplateService
     tags:
       - { name: event_subscriber }
+  ldap_authentication.user_help_tab_access:
+    class: Drupal\ldap_authentication\Access\UserHelpTabAccess
+    arguments: ['@config.factory', '@current_user']
+    tags:
+      - { name: access_check, applies_to: _user_help_tab_access_check }
