@@ -538,12 +538,45 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
     $this->checkEmptyEvents($processedLdapSyncMappings);
     $this->checkEmptyEvents($processedDrupalSyncMappings);
 
+    if (!$this->checkPuidForOrphans($values['orphanedDrupalAcctBehavior'], $values['drupalAcctProvisionServer'])) {
+      $form_state->setErrorByName('orphanedDrupalAcctBehavior', $this->t('You do not have a persistent user ID set in your server.'));
+    }
+
   }
 
   /**
+   * Check PUID for orphan configuration.
    *
+   * Avoids the easy mistake of forgetting PUID and not being able to clean
+   * up users which are no longer available due to missing data.
+   *
+   * @param string $orphanCheck
+   *   Whether orphans are checked.
+   * @param string $serverId
+   *   Which server is used for provisioning.
+   *
+   * @return bool
+   *   If there is an incosistent state.
    */
-  private function checkEmptyEvents($mappings) {
+  private function checkPuidForOrphans($orphanCheck, $serverId) {
+    if ($orphanCheck != 'ldap_user_orphan_do_not_check') {
+      $factory = \Drupal::service('ldap.servers');
+      /** @var \Drupal\ldap_servers\Entity\Server $server */
+      $server = $factory->getServerById($serverId);
+      if (empty($server->get('unique_persistent_attr'))) {
+        return FALSE;
+      }
+    }
+    return TRUE;
+  }
+
+  /**
+   * Warn about fields without associated events.
+   *
+   * @param array $mappings
+   *   Field mappings.
+   */
+  private function checkEmptyEvents(array $mappings) {
     foreach ($mappings as $mapping) {
       if (empty($mapping['prov_events'])) {
         drupal_set_message($this->t('No synchronization events checked in %item. This field will not be synchronized until some are checked.',
