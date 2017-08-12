@@ -9,7 +9,7 @@ use Drupal\ldap_servers\Form\ServerTestForm;
 use Drupal\ldap_servers\Helper\MassageAttributes;
 
 /**
- *
+ * Test form for queries.
  */
 class QueryTestForm extends FormBase {
 

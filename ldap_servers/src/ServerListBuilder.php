@@ -43,7 +43,13 @@ class ServerListBuilder extends ConfigEntityListBuilder {
   }
 
   /**
+   * Format a server status response.
    *
+   * @param $server_id
+   *   Server ID.
+   *
+   * @return \Drupal\Core\StringTranslation\TranslatableMarkup
+   *   The status string.
    */
   private function checkStatus($server_id) {
     $server = Server::load($server_id);

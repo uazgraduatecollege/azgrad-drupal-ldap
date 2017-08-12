@@ -6,6 +6,8 @@ use Drupal\KernelTests\KernelTestBase;
 use Drupal\ldap_user\Processor\DrupalUserProcessor;
 
 /**
+ * Integration tests for ldap_user.
+ *
  * @group ldap
  */
 class IntegrationTests extends KernelTestBase {

@@ -32,9 +32,19 @@ class LoginValidator implements LdapUserAttributesInterface {
 
   protected $drupalUserAuthMapped = FALSE;
   public $drupalUserName = FALSE;
-  /** @var \Drupal\ldap_servers\Entity\Server */
-  public $serverDrupalUser = FALSE;
-  /** @var \Drupal\user\Entity\User */
+
+  /**
+   * The Server for the Drupal user.
+   *
+   * @var \Drupal\ldap_servers\Entity\Server
+   */
+  public $serverDrupalUser;
+
+  /**
+   * The Drupal user.
+   *
+   * @var \Drupal\user\Entity\User
+   */
   public $drupalUser = FALSE;
   public $ldapUser = FALSE;
 
@@ -43,11 +53,15 @@ class LoginValidator implements LdapUserAttributesInterface {
   private $emailTemplateUsed = FALSE;
   private $emailTemplateTokens = [];
 
-  /** @var \Drupal\Core\Form\FormStateInterface */
+  /**
+   * The form state.
+   *
+   * @var \Drupal\Core\Form\FormStateInterface
+   */
   protected $formState;
 
   /**
-   *
+   * Constructor.
    */
   public function __construct() {
     $this->detailedLogging = \Drupal::config('ldap_help.settings')->get('watchdog_detail');
@@ -58,8 +72,10 @@ class LoginValidator implements LdapUserAttributesInterface {
    * Starts login process.
    *
    * @param \Drupal\Core\Form\FormStateInterface $formState
+   *   The form state.
    *
    * @return \Drupal\Core\Form\FormStateInterface
+   *   The form state.
    */
   public function validateLogin(FormStateInterface $formState) {
     $this->authName = trim($formState->getValue('name'));
@@ -198,8 +214,6 @@ class LoginValidator implements LdapUserAttributesInterface {
    * Determine if the corresponding Drupal account exists and is mapped.
    *
    * The authName property is checked against external authentication mapping.
-   *
-   * @return array
    */
   private function initializeAuthNameCorrespondingDrupalUser() {
     if (!($this->drupalUser = user_load_by_name($this->authName))) {
@@ -247,11 +261,10 @@ class LoginValidator implements LdapUserAttributesInterface {
    */
   private function testCredentials($password) {
     $authenticationResult = self::AUTHENTICATION_FAILURE_GENERIC;
-    $factory = \Drupal::service('ldap.servers');
 
     foreach (LdapAuthenticationConfiguration::getEnabledAuthenticationServers() as $server) {
       $authenticationResult = self::AUTHENTICATION_FAILURE_GENERIC;
-      $this->serverDrupalUser = $factory->getServerById($server);
+      $this->serverDrupalUser = Server::load($server);
       if ($this->detailedLogging) {
         \Drupal::logger('ldap_authentication')->debug('%username: Trying server %id with %bind_method', [
           '%username' => $this->authName,
@@ -300,9 +313,7 @@ class LoginValidator implements LdapUserAttributesInterface {
         break;
       }
 
-      /**
-       * #5 TEST PASSWORD
-       */
+      // Test the password.
       $credentials_pass = $this->testUserPassword($password);
 
       if (!$credentials_pass) {
@@ -383,11 +394,10 @@ class LoginValidator implements LdapUserAttributesInterface {
     // TODO: Verify if MODE_EXCLUSIVE check is a regression.
     $authenticationResult = self::AUTHENTICATION_FAILURE_GENERIC;
     $ldap_server = NULL;
-    $factory = \Drupal::service('ldap.servers');
 
     foreach (LdapAuthenticationConfiguration::getEnabledAuthenticationServers() as $server) {
       $authenticationResult = self::AUTHENTICATION_FAILURE_GENERIC;
-      $this->serverDrupalUser = $factory->getServerById($server);
+      $this->serverDrupalUser = Server::load($server);
       if ($this->detailedLogging) {
         \Drupal::logger('ldap_authentication')->debug(
           '%username: Trying server %id where bind_method = %bind_method',
@@ -762,6 +772,7 @@ class LoginValidator implements LdapUserAttributesInterface {
    * Derives the Drupal user name from server configuration.
    *
    * @return bool
+   *   Success of deriving Drupal user name.
    */
   private function deriveDrupalUserName() {
     // If account_name_attr is set, Drupal username is different than authName.

@@ -7,6 +7,8 @@ use Drupal\ldap_user\LdapUserAttributesInterface;
 use Drupal\Tests\UnitTestCase;
 
 /**
+ * Tests for the DrupalUserProcessor.
+ *
  * @coversDefaultClass \Drupal\ldap_user\Processor\DrupalUserProcessor
  * @group ldap
  */

@@ -3,6 +3,7 @@
 namespace Drupal\ldap_user\Processor;
 
 use Drupal\Component\Utility\Unicode;
+use Drupal\ldap_servers\Entity\Server;
 use Drupal\ldap_servers\Processor\TokenProcessor;
 use Drupal\ldap_user\Exception\LdapBadParamsException;
 use Drupal\ldap_user\Helper\LdapConfiguration;
@@ -50,9 +51,7 @@ class LdapUserProcessor implements LdapUserAttributesInterface {
 
     if ($this->config['ldapEntryProvisionServer']) {
 
-      $factory = \Drupal::service('ldap.servers');
-      /** @var \Drupal\ldap_servers\Entity\Server $ldap_server */
-      $ldap_server = $factory->getServerById($this->config['ldapEntryProvisionServer']);
+      $ldap_server = Server::load($this->config['ldapEntryProvisionServer']);
 
       $params = [
         'direction' => self::PROVISION_TO_LDAP,
@@ -113,7 +112,11 @@ class LdapUserProcessor implements LdapUserAttributesInterface {
 
           if ($result) {
             \Drupal::moduleHandler()
-              ->invokeAll('ldap_entry_post_provision', [$ldap_entries, $ldap_server, $context]);
+              ->invokeAll('ldap_entry_post_provision', [
+                $ldap_entries,
+                $ldap_server,
+                $context,
+              ]);
           }
 
         }

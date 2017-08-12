@@ -8,14 +8,6 @@
 use Drupal\Core\Url;
 
 /**
- * Implements hook_uninstall().
- */
-function ldap_servers_uninstall() {
-  // TODO: Currently no easy way to uninstall relevant content entities first.
-  // entity_delete_multiple('ldap_server', \Drupal::entityQuery('ldap_server')->execute());
-}
-
-/**
  * Implements hook_requirements().
  */
 function ldap_servers_requirements($phase) {

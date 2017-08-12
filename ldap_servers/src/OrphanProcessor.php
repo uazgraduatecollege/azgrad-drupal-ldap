@@ -190,12 +190,10 @@ class OrphanProcessor {
    *   All relevant UID.
    */
   private function fetchUidsToCheck() {
-    /**
-     * We want to query Drupal accounts, which are LDAP associated where a DN
-     * is present. The lastUidChecked is used to process only a limited number
-     * of batches in the cron run and each user is only checked if the time
-     * configured for checking has lapsed.
-     */
+    // We want to query Drupal accounts, which are LDAP associated where a DN
+    // is present. The lastUidChecked is used to process only a limited number
+    // of batches in the cron run and each user is only checked if the time
+    // configured for checking has lapsed.
     $lastUidChecked = \Drupal::state()
       ->get('ldap_user_cron_last_uid_checked', 1);
 

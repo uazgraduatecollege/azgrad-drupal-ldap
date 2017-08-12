@@ -3,6 +3,7 @@
 namespace Drupal\ldap_query\Controller;
 
 use Drupal\ldap_query\Entity\QueryEntity;
+use Drupal\ldap_servers\Entity\Server;
 
 /**
  * Controller class for LDAP queries, in assistance to the entity itself.
@@ -42,9 +43,7 @@ class QueryController {
     $count = 0;
 
     if ($this->query) {
-      $factory = \Drupal::service('ldap.servers');
-      /** @var \Drupal\ldap_servers\Entity\Server $ldap_server */
-      $ldap_server = $factory->getServerById($this->query->get('server_id'));
+      $ldap_server = Server::load($this->query->get('server_id'));
       $ldap_server->connect();
       $ldap_server->bind();
 
@@ -94,10 +93,8 @@ class QueryController {
    */
   public function availableFields() {
     $attributes = [];
-    /**
-     * We loop through all results since some users might not have fields set
-     * for them and those are missing and not null.
-     */
+    // We loop through all results since some users might not have fields set
+    // for them and those are missing and not null.
     foreach ($this->results as $result) {
       if (is_array($result)) {
         foreach ($result as $k => $v) {

@@ -19,6 +19,8 @@ class LdapAuthenticationConfiguration {
   public static $emailUpdateOnLdapChangeDisable = 3;
   /**
    * Remove default later if possible, see also $emailUpdate.
+   *
+   * @var int
    */
   public static $emailUpdateOnLdapChangeDefault = 1;
 
@@ -27,6 +29,8 @@ class LdapAuthenticationConfiguration {
   public static $passwordFieldAllow = 4;
   /**
    * Remove default later if possible, see also $passwordOption.
+   *
+   * @var int
    */
   public static $passwordFieldDefault = 2;
 
@@ -36,6 +40,8 @@ class LdapAuthenticationConfiguration {
 
   /**
    * Remove default later if possible, see also $emailOption.
+   *
+   * @var int
    */
   public static $emailFieldDefault = 3;
 

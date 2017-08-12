@@ -2,6 +2,7 @@
 
 namespace Drupal\ldap_user\Helper;
 
+use Drupal\ldap_servers\Entity\Server;
 use Drupal\ldap_servers\Processor\TokenProcessor;
 use Drupal\ldap_user\LdapUserAttributesInterface;
 
@@ -185,8 +186,7 @@ class SyncMappingHelper implements LdapUserAttributesInterface {
       $ldap_server = FALSE;
       if ($sid) {
         try {
-          $factory = \Drupal::service('ldap.servers');
-          $ldap_server = $factory->getServerById($sid);
+          $ldap_server = Server::load($sid);
         }
         catch (\Exception $e) {
           \Drupal::logger('ldap_user')->error('Missing server');

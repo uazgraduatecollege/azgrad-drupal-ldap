@@ -11,7 +11,12 @@ use Drupal\ldap_user\Helper\LdapConfiguration;
 use Drupal\user\UserInterface;
 
 /**
+ * Helper class to working with the Server classes.
  *
+ * Normally called if you need specific sets of serves, such as all enabled
+ * ones.
+ *
+ * @Todo: Split class to remove out-of-scope functions.
  */
 class ServerFactory implements LdapUserAttributesInterface {
 

@@ -3,7 +3,7 @@
 namespace Drupal\ldap_servers;
 
 /**
- * Class for enabling rebind functionality for following referrrals.
+ * Class for enabling rebind functionality for following referrals.
  *
  * @FIXME: Unused class.
  */
@@ -13,7 +13,7 @@ class LdapServersRebindHandler {
   private $bindPassword = '';
 
   /**
-   * Cosntructor.
+   * Constructor.
    *
    * @param string $bind_user_dn
    *   Bind user.
@@ -26,6 +26,8 @@ class LdapServersRebindHandler {
   }
 
   /**
+   * The rebinding callback.
+   *
    * @param mixed $ldap
    *   Unknown.
    * @param mixed $referral

@@ -53,7 +53,13 @@ class LdapQuery extends QueryPluginBase {
   }
 
   /**
+   * Execute the query.
    *
+   * @param \Drupal\views\ViewExecutable $view
+   *   The view.
+   *
+   * @return bool|void
+   *   Nothing if query can be executed.
    */
   public function execute(ViewExecutable $view) {
     if (!isset($this->options['query_id']) || empty($this->options['query_id'])) {
@@ -110,9 +116,15 @@ class LdapQuery extends QueryPluginBase {
   }
 
   /**
+   * Sort the results.
    *
+   * @param array $results
+   *   Results to operate on.
+   *
+   * @return array
+   *   Result data.
    */
-  private function sortResults($results) {
+  private function sortResults(array $results) {
     $parameters = [];
     $orders = $this->orderby;
     $set = [];
@@ -143,21 +155,21 @@ class LdapQuery extends QueryPluginBase {
   }
 
   /**
-   *
+   * {@inheritdoc}
    */
   public function ensureTable($table, $relationship = NULL) {
     return '';
   }
 
   /**
-   *
+   * {@inheritdoc}
    */
   public function addField($table, $field, $alias = '', $params = []) {
     return $field;
   }
 
   /**
-   *
+   * {@inheritdoc}
    */
   public function addOrderBy($table, $field, $order, $alias = '', $params = []) {
     $this->orderby[] = [

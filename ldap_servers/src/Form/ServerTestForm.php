@@ -13,7 +13,11 @@ use Drupal\ldap_servers\Processor\TokenProcessor;
  */
 class ServerTestForm extends EntityForm {
 
-  /** @var \Drupal\ldap_servers\Entity\Server */
+  /**
+   * The main server to work with.
+   *
+   * @var \Drupal\ldap_servers\Entity\Server
+   */
   protected $ldapServer;
 
   protected $resultsTables = [];

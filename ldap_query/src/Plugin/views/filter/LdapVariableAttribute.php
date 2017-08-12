@@ -16,7 +16,7 @@ class LdapVariableAttribute extends LdapAttribute {
   use VariableAttributeCustomization;
 
   /**
-   *
+   * Adjust the query.
    */
   public function query() {
     $this->ensureMyTable();

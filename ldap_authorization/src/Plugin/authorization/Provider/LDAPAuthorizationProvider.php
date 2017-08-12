@@ -10,6 +10,8 @@ use Drupal\ldap_servers\Helper\ConversionHelper;
 use Drupal\ldap_user\Helper\ExternalAuthenticationHelper;
 
 /**
+ * The LDAP authorization provider for authorization module.
+ *
  * @AuthorizationProvider(
  *   id = "ldap_provider",
  *   label = @Translation("LDAP Authorization"),
@@ -129,8 +131,9 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
    */
   public function buildRowForm(array $form, FormStateInterface $form_state, $index = 0) {
     $row = [];
-    /** @var \Drupal\authorization\Entity\AuthorizationProfile $this->configuration['profile'] */
-    $mappings = $this->configuration['profile']->getProviderMappings();
+    /** @var \Drupal\authorization\Entity\AuthorizationProfile $profile */
+    $profile = $this->configuration['profile'];
+    $mappings = $profile->getProviderMappings();
     $row['query'] = [
       '#type' => 'textfield',
       '#title' => t('LDAP query'),
@@ -148,7 +151,7 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
   /**
    * Get valid proposals.
    *
-   * @param \Drupal\user\Entity\User $user
+   * @param \Drupal\user\Entity\User|mixed $user
    *   Drupal user.
    * @param mixed $op
    *   Operation, unknown, unused.
@@ -214,12 +217,19 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
   }
 
   /**
-   * @param $proposed_ldap_authorizations
-   * @param null $op
-   * @param $provider_mapping
+   * Filter the proposals.
+   *
+   * @param array|mixed $proposed_ldap_authorizations
+   *   Authorizations to check.
+   * @param null|string $op
+   *   Operation to apply it on.
+   * @param array|mixed $provider_mapping
+   *   The provider mapping.
+   *
    * @return array
+   *   Filtered proposals.
    */
-  public function filterProposals($proposed_ldap_authorizations, $op = NULL, $provider_mapping) {
+  public function filterProposals($proposed_ldap_authorizations, $op, $provider_mapping) {
     $filtered_proposals = [];
     foreach ($proposed_ldap_authorizations as $key => $value) {
       if ($provider_mapping['is_regex']) {
@@ -253,7 +263,7 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
   /**
    * Sanitizes given proposals.
    *
-   * @param array $proposals
+   * @param array|mixed $proposals
    *   Proposals to sanitize.
    * @param mixed $op
    *   Operation, unknown, unused.

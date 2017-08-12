@@ -34,7 +34,7 @@ function ldap_authentication_help($path, $arg) {
  * @param int|User $user
  *   The user account.
  *
- * @return bool true
+ * @return bool
  *   True if user is recorded as LDAP authenticated and identified.
  *
  * @deprecated
@@ -65,9 +65,11 @@ function ldap_authentication_form_user_pass_alter(&$form, $form_state) {
  * the UID from $form_state is set to the matching user ID.
  *
  * @param array $form
+ *   The form.
  * @param \Drupal\Core\Form\FormStateInterface $form_state
+ *   The form state.
  */
-function ldap_authentication_core_override_user_login_authenticate_validate($form, FormStateInterface &$form_state) {
+function ldap_authentication_core_override_user_login_authenticate_validate(array $form, FormStateInterface &$form_state) {
   // No additional validation of user credentials is needed when the uid is set.
   if (!empty($form_state->get('uid'))) {
     return;
@@ -83,8 +85,7 @@ function ldap_authentication_core_override_user_login_authenticate_validate($for
  * Primarily a check on the password field with configurable responses as
  * seen on the 'Authentication' tab.
  *
- *
- * @param $form
+ * @param array $form
  *   The form.
  * @param \Drupal\Core\Form\FormStateInterface $form_state
  *   The form state.
@@ -93,7 +94,7 @@ function ldap_authentication_core_override_user_login_authenticate_validate($for
  * help text.
  * @TODO: Convert configuration to translatable to avoid passing to t().
  */
-function ldap_authentication_user_pass_validate(&$form, FormStateInterface $form_state) {
+function ldap_authentication_user_pass_validate(array &$form, FormStateInterface $form_state) {
   $name_or_mail = trim($form_state->getValue('name'));
   $account = user_load_by_mail($name_or_mail);
 
@@ -189,10 +190,12 @@ function ldap_authentication_form_user_login_block_alter(&$form, &$form_state) {
 /**
  * Validate function for user logon forms.
  *
- * @param $form
+ * @param array $form
+ *   The form.
  * @param \Drupal\Core\Form\FormStateInterface $form_state
+ *   The form state.
  */
-function ldap_authentication_user_login_authenticate_validate($form, FormStateInterface &$form_state) {
+function ldap_authentication_user_login_authenticate_validate(array $form, FormStateInterface &$form_state) {
   if ($form_state->getValue('pass') && $form_state->getValue('name')) {
     $validator = new LoginValidator();
     $form_state = $validator->validateLogin($form_state);
@@ -204,8 +207,15 @@ function ldap_authentication_user_login_authenticate_validate($form, FormStateIn
  *
  * Relevant in ldap_authn_form_user_login_block_alter and
  * ldap_authn_form_user_login_alter.
+ *
+ * @param array $form
+ *   The form.
+ * @param \Drupal\Core\Form\FormStateInterface $form_state
+ *   The form state.
+ * @param string $form_id
+ *   The form ID.
  */
-function _ldap_authentication_login_form_alter(&$form, &$form_state, $form_id) {
+function _ldap_authentication_login_form_alter(array &$form, FormStateInterface &$form_state, $form_id) {
   if (!LdapAuthenticationConfiguration::hasEnabledAuthenticationServers()) {
     return;
   }
@@ -224,7 +234,7 @@ function _ldap_authentication_login_form_alter(&$form, &$form_state, $form_id) {
   // 'user_login_name_validate',
   // 'user_login_authenticate_validate',
   // 'user_login_final_validate'
-  // ]
+  // ].
   if (@in_array('::validateAuthentication', $form['#validate']) &&
     $config->get('authenticationMode')) {
     $key = array_search('::validateAuthentication', $form['#validate']);

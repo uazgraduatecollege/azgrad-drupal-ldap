@@ -18,7 +18,7 @@ class TokenTests extends UnitTestCase {
   public $container;
 
   /**
-   *
+   * Test setup.
    */
   protected function setUp() {
     parent::setUp();
@@ -59,11 +59,12 @@ class TokenTests extends UnitTestCase {
   }
 
   /**
+   * Test the replacement of tokens.
    *
+   * See http://drupal.org/node/1245736 for test tokens.
    */
   public function testTokenReplacement() {
 
-    // Test tokens, see http://drupal.org/node/1245736
     $ldap_entry = [
       'dn' => 'cn=hpotter,ou=people,dc=hogwarts,dc=edu',
       'mail' => [0 => 'hpotter@hogwarts.edu', 'count' => 1],
@@ -130,19 +131,19 @@ class TokenTests extends UnitTestCase {
   }
 
   /**
-   *
+   * Test the temporary storage of passwords.
    */
   public function testPasswordStorage() {
     $password = 'my-pass';
 
     // Verify storage.
-    $TokenHelperA = new TokenProcessor();
-    $TokenHelperA::passwordStorage('set', $password);
-    $this->assertEquals($password, $TokenHelperA::passwordStorage('get'));
+    $tokenHelperA = new TokenProcessor();
+    $tokenHelperA::passwordStorage('set', $password);
+    $this->assertEquals($password, $tokenHelperA::passwordStorage('get'));
 
     // Verify storage across instance.
-    $TokenHelperB = new TokenProcessor();
-    $this->assertEquals($password, $TokenHelperB::passwordStorage('get'));
+    $tokenHelperB = new TokenProcessor();
+    $this->assertEquals($password, $tokenHelperB::passwordStorage('get'));
 
     // Verify storage without instance.
     $this->assertEquals($password, TokenProcessor::passwordStorage('get'));

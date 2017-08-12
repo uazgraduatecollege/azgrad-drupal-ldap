@@ -64,14 +64,20 @@ class QueryEntity extends ConfigEntityBase implements QueryEntityInterface {
   protected $scope;
 
   /**
+   * Returns all base DN.
    *
+   * @return array
+   *   Processed base DN
    */
   public function getProcessedBaseDns() {
     return explode("\r\n", $this->base_dn);
   }
 
   /**
+   * Returns all processed attributes.
    *
+   * @return array
+   *   Processed attributes.
    */
   public function getProcessedAttributes() {
     if (!empty($this->attributes)) {

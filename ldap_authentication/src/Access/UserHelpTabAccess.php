@@ -56,4 +56,5 @@ class UserHelpTabAccess implements AccessInterface {
       return AccessResultAllowed::forbidden();
     }
   }
+
 }

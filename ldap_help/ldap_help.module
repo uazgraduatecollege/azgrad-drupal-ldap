@@ -2,7 +2,7 @@
 
 /**
  * @file
- * The ldaphelp module is a module to help admins debug ldap_integration modules.
+ * Drupal help information for ldap_help.
  */
 
 use Drupal\Core\Routing\RouteMatchInterface;
@@ -12,12 +12,10 @@ use Drupal\Core\Routing\RouteMatchInterface;
  */
 function ldap_help_help($route_name, RouteMatchInterface $route_match) {
 
-  $help = '<h3>' . t('LDAP Help Module') . '</h3><p>' .
-  t('This module assists Drupal admins in configuring, debugging, sharing, and submitting
-  support and bug request related to LDAP modules.') . '<strong><em> ' .
-  t('LDAP Help Module should be disabled unless you are debugging or configuring
-    LDAP problems.') . ' </em></strong>' .
-  t('It adds no functionality to the LDAP modules.') . '</p>';
+  $help = '<h3>' . t('LDAP Help Module') . '</h3>';
+  $help .= '<p>' . t('This module assists Drupal admins in configuring, debugging, sharing, and submitting support and bug request related to LDAP modules.');
+  $help .= '<strong><em> ' . t('LDAP Help Module should be disabled unless you are debugging or configuring LDAP problems.') . ' </em></strong>';
+  $help .= t('It adds no functionality to the LDAP modules.') . '</p>';
 
   switch ($route_name) {
     case 'admin/config/people/ldap/help':

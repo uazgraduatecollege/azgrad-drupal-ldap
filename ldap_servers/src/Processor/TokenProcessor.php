@@ -21,16 +21,18 @@ class TokenProcessor {
   private static $userPassword = NULL;
 
   /**
-   * Function to:
-   *   -- store user entered password during pageload
-   *   and protect unencrypted user password from other modules.
+   * Store passwords temporarily.
    *
-   * @param enum string $action
-   *   'get' | 'set'.
+   * Store user entered password during page load and protect unencrypted user
+   * password from other modules.
+   *
+   * @param string $action
+   *   Get/set action.
    * @param string $value
    *   A user entered password.
    *
-   * @return null|string
+   * @return string|null
+   *   Returns the password on get, otherwise nothing.
    */
   public static function passwordStorage($action, $value = NULL) {
     if ($action == 'set') {

@@ -87,7 +87,7 @@ class LdapUserTestForm extends FormBase implements LdapUserAttributesInterface {
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
     if (count(array_filter($form_state->getValue(['action']))) > 1) {
-      $form_state->setErrorByName('action',$this->t('Only one action may be selected for "Execute Action" testing mode.'));
+      $form_state->setErrorByName('action', $this->t('Only one action may be selected for "Execute Action" testing mode.'));
     }
   }
 
@@ -187,7 +187,7 @@ class LdapUserTestForm extends FormBase implements LdapUserAttributesInterface {
    *
    * @return bool
    *   Provisioning enabled.
-   * TODO: Move to ldapusertestform and/or kill.
+   *   TODO: Move to ldapusertestform and/or kill.
    */
   private function provisionEnabled($direction, $provision_trigger) {
     $result = FALSE;

@@ -31,7 +31,7 @@ class MassageAttributes {
    * Use unescaped, mixed case attribute values when storing attribute values
    * in arrays (as keys or values), databases, or object properties.
    *
-   * @param $value
+   * @param string|array $value
    *   Value to store.
    *
    * @return array

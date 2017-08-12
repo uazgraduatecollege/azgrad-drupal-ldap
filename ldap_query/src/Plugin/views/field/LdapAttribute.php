@@ -16,7 +16,13 @@ use Drupal\views\ResultRow;
 class LdapAttribute extends FieldPluginBase {
 
   /**
+   * Renders the content.
    *
+   * @param \Drupal\views\ResultRow $values
+   *   The result row.
+   *
+   * @return array
+   *   The processed result in a render array.
    */
   public function render(ResultRow $values) {
     if ($value = $this->getValue($values)) {

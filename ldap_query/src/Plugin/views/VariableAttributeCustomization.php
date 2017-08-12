@@ -6,7 +6,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\ldap_query\Controller\QueryController;
 
 /**
- *
+ * Collates the variable attribute customization to apply it to more than one.
  */
 trait VariableAttributeCustomization {
 

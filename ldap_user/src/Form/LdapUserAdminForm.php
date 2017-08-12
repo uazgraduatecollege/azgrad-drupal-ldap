@@ -231,7 +231,6 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
     $form['basic_to_drupal']['orphanedAccounts']['orphanedDrupalAcctBehavior'] = [
       '#type' => 'radios',
       '#title' => $this->t('Action to perform on Drupal accounts that no longer have corresponding LDAP entries'),
-      '#required' => 0,
       '#default_value' => $config->get('orphanedDrupalAcctBehavior'),
       '#options' => $account_options,
       '#description' => $this->t('It is highly recommended to fetch an email report first before attempting to disable or even delete users.'),
@@ -527,7 +526,7 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
         // TODO: Move this check out of processed mappings to be able to set the
         // error by field.
         $form_state->setErrorByName($ldapMapKey,
-          $this->t('When provisioning to ldap, LDAP attribute column must be singular token such as [cn]. %ldap_attr is not. Do not use compound tokens such as "[displayName] [sn]" or literals such as "physics".',
+          $this->t('When provisioning to LDAP, LDAP attribute column must be singular token such as [cn]. %ldap_attr is not. Do not use compound tokens such as "[displayName] [sn]" or literals such as "physics".',
             ['%ldap_attr' => $mapping['ldap_attr']]
           )
         );
@@ -715,7 +714,10 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
   }
 
   /**
-   * @param $direction
+   * Return the server mappings for the fields.
+   *
+   * @param string $direction
+   *   The provisioning direction.
    *
    * @return array|bool
    *   Returns the mappings.
@@ -939,7 +941,7 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
   /**
    * Is a mapping configurable by a given module?
    *
-   * @param array $mapping
+   * @param array|null $mapping
    *   As mapping configuration for field, attribute, property, etc.
    * @param string $module
    *   Machine name such as ldap_user.
@@ -947,7 +949,7 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
    * @return bool
    *   Whether mapping is configurable.
    */
-  private function isMappingConfigurable($mapping = NULL, $module = 'ldap_user') {
+  private function isMappingConfigurable($mapping = [], $module = 'ldap_user') {
     $configurable = (
       (
         (!isset($mapping['configurable_to_drupal']) && !isset($mapping['configurable_to_ldap'])) ||
@@ -1064,7 +1066,10 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
   }
 
   /**
+   * Returns the two provisioning events.
    *
+   * @return array
+   *   Create and Sync event in display form.
    */
   private function provisionsLdapEvents() {
     return [

@@ -19,7 +19,7 @@ class InitSubscriber implements EventSubscriberInterface {
   }
 
   /**
-   *
+   * {@inheritdoc}
    */
   public function onEvent() {
     // Reset for simpletest page load behavior.

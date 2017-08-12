@@ -5,12 +5,14 @@ namespace Drupal\ldap_servers\tests;
 use Drupal\Component\Utility\Unicode;
 
 /**
+ * Legacy tests.
+ *
  * @FIXME: Placeholder for remaining unported functions from legacy tests.
  */
 class ServerAPITests {
 
   /**
-   *
+   * Legacy test placeholder.
    */
   public function testInstall() {
 
@@ -19,7 +21,9 @@ class ServerAPITests {
   }
 
   /**
-   * TOOD: Review for unit tests on bind()
+   * Bind.
+   *
+   * @TODO: Review for unit tests on bind()
    */
   public function bind($userdn = NULL, $pass = NULL, $anon_bind = FALSE) {
     $userdn = ($userdn != NULL) ? $userdn : $this->binddn;
@@ -63,18 +67,23 @@ class ServerAPITests {
    * TODO: Review for unit tests of search()
    *
    * @param null $base_dn
+   *   Unknown.
    * @param string $filter
    *   The search filter. such as sAMAccountName=jbarclay.
    * @param array $attributes
    *   List of desired attributes. If omitted, we only return "dn".
-   *
    * @param int $attrsonly
+   *   Unknown.
    * @param int $sizelimit
+   *   Unknown.
    * @param int $timelimit
+   *   Unknown.
    * @param int|null $deref
+   *   Unknown.
    * @param null $scope
+   *   Unknown.
    *
-   * @return array|bool An array of matching entries->attributes, or FALSE if the search is
+   * @return array|bool
    *   An array of matching entries->attributes, or FALSE if the search is
    *   empty.
    *
@@ -103,10 +112,8 @@ class ServerAPITests {
       }
     }
 
-    /**
-     * Search CASE 1: for some mock LDAP servers, a set of fixed LDAP filters
-     * are prepolulated in test data
-     */
+    // Search CASE 1: for some mock LDAP servers, a set of fixed LDAP filters
+    // are prepolulated in test data.
     if (isset($this->searchResults[$filter][$base_dn])) {
       $results = $this->searchResults[$filter][$base_dn];
       foreach ($results as $i => $entry) {

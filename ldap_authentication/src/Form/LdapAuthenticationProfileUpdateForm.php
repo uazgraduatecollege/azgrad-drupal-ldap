@@ -8,6 +8,8 @@ use Drupal\ldap_authentication\Routing\EmailTemplateService;
 use Drupal\user\Entity\User;
 
 /**
+ * Profile update form.
+ *
  * This form is meant to presented to the user if the LDAP account does not
  * have an e-mail address associated with it and we need it for Drupal
  * to function correctly, thus we ask the user.
