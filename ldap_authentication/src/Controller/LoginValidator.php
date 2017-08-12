@@ -499,7 +499,7 @@ class LoginValidator implements LdapUserAttributesInterface {
    * Failure response.
    *
    * @param int $authenticationResult
-   *   The error code ommitted.
+   *   The error code.
    */
   private function failureResponse($authenticationResult) {
     // Fail scenario 1. LDAP auth exclusive and failed  throw error so no other

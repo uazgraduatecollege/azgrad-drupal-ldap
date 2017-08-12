@@ -17,9 +17,14 @@ class LdapVariableImageAttribute extends LdapVariableAttribute {
 
   /**
    * Encodes a binary image for display directly in Views.
+   *
+   * @param \Drupal\views\ResultRow $values
+   *   Result row.
+   *
+   * @return array|null
+   *   Markup with image if available.
    */
   public function render(ResultRow $values) {
-    $output = parent::render($values);
     if ($this->getValue($values)) {
       $data = $this->getValue($values)[0];
       $formatter = new FormattableMarkup(

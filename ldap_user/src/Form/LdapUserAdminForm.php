@@ -658,7 +658,7 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
         ],
       ];
 
-      foreach (LdapConfiguration::provisionsDrupalEvents() as $col_id => $col_name) {
+      foreach (LdapConfiguration::provisionsDrupalEvents() as $col_name) {
         $second_header[] = [
           'data' => $col_name,
           'header' => TRUE,
@@ -1074,8 +1074,8 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
    */
   private function provisionsLdapEvents() {
     return [
-      self::EVENT_CREATE_LDAP_ENTRY => t('On LDAP Entry Creation'),
-      self::EVENT_SYNC_TO_LDAP_ENTRY => t('On Sync to LDAP Entry'),
+      self::EVENT_CREATE_LDAP_ENTRY => $this->t('On LDAP Entry Creation'),
+      self::EVENT_SYNC_TO_LDAP_ENTRY => $this->t('On Sync to LDAP Entry'),
     ];
   }
 

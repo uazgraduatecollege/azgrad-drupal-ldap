@@ -31,16 +31,16 @@ class LdapAuthenticationProfileUpdateForm extends FormBase {
       $form['mail'] = [
         '#type' => 'textfield',
         '#required' => TRUE,
-        '#title' => t('Email address'),
+        '#title' => $this->t('Email address'),
       ];
       $form['submit'] = [
         '#type' => 'submit',
-        '#value' => t('Update account'),
+        '#value' => $this->t('Update account'),
       ];
     }
     else {
       $form['submit'] = [
-        '#markup' => '<h2>' . t('This form is only available to profiles which need an update.') . '</h2>',
+        '#markup' => '<h2>' . $this->t('This form is only available to profiles which need an update.') . '</h2>',
       ];
     }
     return $form;
@@ -51,16 +51,16 @@ class LdapAuthenticationProfileUpdateForm extends FormBase {
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
     if (!filter_var($form_state->getValue(['mail']), FILTER_VALIDATE_EMAIL)) {
-      $form_state->setErrorByName('mail', t('You must specify a valid email address.'));
+      $form_state->setErrorByName('mail', $this->t('You must specify a valid email address.'));
     }
     $existing = user_load_by_mail($form_state->getValue(['mail']));
     if ($existing) {
-      $form_state->setErrorByName('mail', t('This email address is already in use.'));
+      $form_state->setErrorByName('mail', $this->t('This email address is already in use.'));
     }
     $pattern = \Drupal::config('ldap_authentication.settings')->get('emailTemplateUsagePromptRegex');
     $regex = '`' . $pattern . '`i';
     if (preg_match($regex, $form_state->getValue(['mail']))) {
-      $form_state->setErrorByName('mail', t('This email address still matches the invalid email template.'));
+      $form_state->setErrorByName('mail', $this->t('This email address still matches the invalid email template.'));
     }
   }
 
@@ -72,7 +72,7 @@ class LdapAuthenticationProfileUpdateForm extends FormBase {
     $user = User::load($proxy->id());
     $user->set('mail', $form_state->getValue('mail'));
     $user->save();
-    drupal_set_message(t('Your profile has been updated.'));
+    drupal_set_message($this->t('Your profile has been updated.'));
     $form_state->setRedirect('<front>');
   }
 

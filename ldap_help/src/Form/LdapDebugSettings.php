@@ -32,8 +32,8 @@ class LdapDebugSettings extends ConfigFormBase {
     $form['#title'] = "Configure LDAP Preferences";
     $form['watchdog_detail'] = [
       '#type' => 'checkbox',
-      '#title' => t('Enabled Detailed LDAP Watchdog logging.'),
-      '#description' => t('This is generally useful for debugging and reporting issues with the LDAP modules and should not be left enabled in a production environment.'),
+      '#title' => $this->t('Enabled Detailed LDAP Watchdog logging.'),
+      '#description' => $this->t('This is generally useful for debugging and reporting issues with the LDAP modules and should not be left enabled in a production environment.'),
       '#default_value' => \Drupal::config('ldap_help.settings')->get('watchdog_detail'),
     ];
     $form = parent::buildForm($form, $form_state);

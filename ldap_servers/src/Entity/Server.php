@@ -1175,7 +1175,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
       unset($current_member_entries['count']);
     }
 
-    foreach ($current_member_entries as $i => $member_entry) {
+    foreach ($current_member_entries as $member_entry) {
       // 1.  Add entry itself if of the correct type to $all_member_dns.
       $objectClassMatch = (!$object_classes || (count(array_intersect(array_values($member_entry['objectclass']), $object_classes)) > 0));
       $objectIsGroup = in_array($this->groupObjectClass(), array_values($member_entry['objectclass']));

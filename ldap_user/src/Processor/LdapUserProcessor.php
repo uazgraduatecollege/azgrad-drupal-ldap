@@ -356,7 +356,7 @@ class LdapUserProcessor implements LdapUserAttributesInterface {
         }
         $ldapUserProvisioningEntryExists = FALSE;
         if ($account->get('ldap_user_prov_entries')->value) {
-          foreach ($account->get('ldap_user_prov_entries')->value as $i => $fieldValueInstance) {
+          foreach ($account->get('ldap_user_prov_entries')->value as $fieldValueInstance) {
             if ($fieldValueInstance == $ldap_user_prov_entry) {
               $ldapUserProvisioningEntryExists = TRUE;
             }
@@ -431,7 +431,7 @@ class LdapUserProcessor implements LdapUserAttributesInterface {
     // Determine server that is associated with user.
     $result = FALSE;
     $entries = $account->get('ldap_user_prov_entries')->getValue();
-    foreach ($entries as $i => $entry) {
+    foreach ($entries as $entry) {
       $parts = explode('|', $entry['value']);
       if (count($parts) == 2) {
         list($sid, $dn) = $parts;

@@ -42,7 +42,7 @@ class DebuggingReviewForm extends FormBase {
   public function buildForm(array $form, FormStateInterface $form_state) {
 
     $form['title'] = [
-      '#markup' => '<h1>' . t('LDAP Debugging Review') . '</h1>',
+      '#markup' => '<h1>' . $this->t('LDAP Debugging Review') . '</h1>',
     ];
 
     if (!extension_loaded('ldap')) {

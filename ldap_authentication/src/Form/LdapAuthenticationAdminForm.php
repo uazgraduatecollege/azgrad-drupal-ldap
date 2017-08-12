@@ -45,7 +45,7 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
     if (count($authenticationServers) == 0) {
 
       $url = Url::fromRoute('entity.ldap_server.collection');
-      $edit_server_link = \Drupal::l(t('@path', ['@path' => 'LDAP Servers']), $url);
+      $edit_server_link = \Drupal::l($this->t('@path', ['@path' => 'LDAP Servers']), $url);
 
       $message = $this->t('At least one LDAP server must configured and <em>enabled</em>
  before configuring LDAP authentication. Please go to @link to configure an LDAP server.',

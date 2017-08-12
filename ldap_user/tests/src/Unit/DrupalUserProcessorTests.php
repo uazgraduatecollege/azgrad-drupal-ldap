@@ -78,7 +78,6 @@ class DrupalUserProcessorTests extends UnitTestCase implements LdapUserAttribute
   // @TODO: Write test to show basic functionality of creating users via
   // provisionDrupalAccount() works.
   // @TODO: Write test to show that syncing to existing Drupal users works.
-
   // @TODO: Write a test showing that a constant value gets passend on
   // correctly, i.e. ldap_attr is "Faculty" instead of [type].
   // @TODO: Write a test validating compound tokens, i.e. ldap_attr is
@@ -87,13 +86,9 @@ class DrupalUserProcessorTests extends UnitTestCase implements LdapUserAttribute
   // returns the following and we get both:
   // [['mail' => 'hpotter@hogwarts.edu'], ['mail' => 'hpotter@owlmail.com']].
   // @TODO: Write a test validating non-integer values on the account status.
-
   // @TODO: Write a test for applyAttributes for binary fields.
-
   // @TODO: Write a test for applyAttributes for case sensitivity in tokens.
-
   // @TODO: Write a test for applyAttributes for user_attr in mappings.
-
   // @TODO: Write a test to prove puid update works, with and without binary mode
   // and including a conflicting account.
 }

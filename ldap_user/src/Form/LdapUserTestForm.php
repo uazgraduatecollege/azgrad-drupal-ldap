@@ -160,7 +160,7 @@ class LdapUserTestForm extends FormBase implements LdapUserAttributesInterface {
         dpm($results);
       }
       else {
-        drupal_set_message(t('This form will not display results unless the devel module is enabled.'), 'warning');
+        drupal_set_message($this->t('This form will not display results unless the devel module is enabled.'), 'warning');
       }
     }
 

@@ -37,7 +37,7 @@ class QueryTestForm extends FormBase {
       $data = $controller->getRawResults();
 
       $form['result_count'] = [
-        '#markup' => '<h2>' . t('@count results', ['@count' => $data['count']]) . '</h2>',
+        '#markup' => '<h2>' . $this->t('@count results', ['@count' => $data['count']]) . '</h2>',
       ];
       unset($data['count']);
 
@@ -51,9 +51,9 @@ class QueryTestForm extends FormBase {
 
       $rows = [];
 
-      foreach ($data as $i => $entry) {
+      foreach ($data as $entry) {
         $row = [$entry['dn']];
-        foreach ($attributes as $j => $attribute_data) {
+        foreach ($attributes as $attribute_data) {
           $massager = new MassageAttributes();
           $processedAttributeName = $massager->processAttributeName($attribute_data);
           if (!isset($entry[$processedAttributeName])) {

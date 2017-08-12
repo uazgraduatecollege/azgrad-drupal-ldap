@@ -492,7 +492,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
 
     // 1. Drupal user properties
     // 1.a make sure empty array are present so array + function works.
-    foreach (['property.status', 'property.timezone', 'property.signature'] as $i => $property_id) {
+    foreach (['property.status', 'property.timezone', 'property.signature'] as $property_id) {
       $property_token = '[' . $property_id . ']';
       if (!isset($availableUserAttributes[$property_token]) || !is_array($availableUserAttributes[$property_token])) {
         $availableUserAttributes[$property_token] = [];

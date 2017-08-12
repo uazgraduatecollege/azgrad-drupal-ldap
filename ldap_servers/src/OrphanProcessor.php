@@ -174,7 +174,7 @@ class OrphanProcessor {
         }
 
         unset($ldapEntries['count']);
-        foreach ($ldapEntries as $i => $ldap_entry) {
+        foreach ($ldapEntries as $ldap_entry) {
           $persistentUid = $servers[$serverId]->userPuidFromLdapEntry($ldap_entry);
           $users[$serverId][$persistentUidProperty][$persistentUid]['exists'] = TRUE;
         }
