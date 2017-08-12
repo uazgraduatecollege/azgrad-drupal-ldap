@@ -3,7 +3,7 @@
 namespace Drupal\ldap_user;
 
 /**
- *
+ * Collection of hardcoded constants in use in ldap_user.
  */
 interface LdapUserAttributesInterface {
 

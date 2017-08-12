@@ -100,11 +100,13 @@ class TokenProcessor {
   /**
    * Replace a token.
    *
-   * @param array $resource
+   * @param array|UserInterface $resource
    *   The resource to act upon.
    * @param string $text
    *   The text such as "[dn]", "[cn]@my.org", "[displayName] [sn]",
    *   "Drupal Provisioned".
+   * @param string $resource_type
+   *   What kind of type to replace.
    *
    * @return string
    *   The text with tokens replaced or NULL if replacement not available.
@@ -118,6 +120,7 @@ class TokenProcessor {
       return $text;
     }
 
+    $tokens = [];
     switch ($resource_type) {
       case 'ldap_entry':
         $tokens = $this->tokenizeEntry($resource, $desired_tokens, self::PREFIX, self::SUFFIX);
@@ -154,7 +157,7 @@ class TokenProcessor {
    * @param string $text
    *   Text with tokens in it.
    */
-  public function extractTokenAttributes(&$attribute_maps, $text) {
+  public function extractTokenAttributes(array &$attribute_maps, $text) {
     $tokens = $this->findTokensNeededForTemplate($text);
     foreach ($tokens as $token) {
       $token = str_replace([self::PREFIX, self::SUFFIX], ['', ''], $token);
@@ -178,7 +181,7 @@ class TokenProcessor {
   /**
    * Get token attributes.
    *
-   * @param $text
+   * @param string $text
    *   Text to parse.
    *
    * @return array
@@ -558,7 +561,7 @@ class TokenProcessor {
    *
    * Tries to determine which approach based on length of string.
    *
-   * @param $value
+   * @param string $value
    *   GUID.
    *
    * @return string

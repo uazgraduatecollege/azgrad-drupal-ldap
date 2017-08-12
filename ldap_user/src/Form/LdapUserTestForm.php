@@ -11,11 +11,11 @@ use Drupal\ldap_user\Processor\DrupalUserProcessor;
 use Drupal\ldap_user\Processor\LdapUserProcessor;
 
 /**
- *
+ * A form to allow the administrator to query LDAP.
  */
 class LdapUserTestForm extends FormBase implements LdapUserAttributesInterface {
 
-  private static $sync_trigger_options;
+  private static $syncTriggerOptions;
 
   /**
    * {@inheritdoc}
@@ -28,7 +28,7 @@ class LdapUserTestForm extends FormBase implements LdapUserAttributesInterface {
    * {@inheritdoc}
    */
   public function __construct() {
-    $this::$sync_trigger_options = [
+    $this::$syncTriggerOptions = [
       self::PROVISION_DRUPAL_USER_ON_USER_UPDATE_CREATE => $this->t('On sync to Drupal user create or update. Requires a server with binding method of "Service Account Bind" or "Anonymous Bind".'),
       self::PROVISION_DRUPAL_USER_ON_USER_AUTHENTICATION => $this->t('On create or sync to Drupal user when successfully authenticated with LDAP credentials. (Requires LDAP Authentication module).'),
       self::PROVISION_DRUPAL_USER_ON_USER_ON_MANUAL_CREATION => $this->t('On manual creation of Drupal user from admin/people/create and "Create corresponding LDAP entry" is checked'),
@@ -70,7 +70,7 @@ class LdapUserTestForm extends FormBase implements LdapUserAttributesInterface {
       '#title' => $this->t('Actions/Event Handler to Test'),
       '#required' => 0,
       '#default_value' => $selected_actions,
-      '#options' => self::$sync_trigger_options,
+      '#options' => self::$syncTriggerOptions,
     ];
 
     $form['submit'] = [
@@ -134,7 +134,7 @@ class LdapUserTestForm extends FormBase implements LdapUserAttributesInterface {
       }
 
       $account = ['name' => $username];
-      $sync_trigger_description = self::$sync_trigger_options[$selected_action];
+      $sync_trigger_description = self::$syncTriggerOptions[$selected_action];
       foreach ([self::PROVISION_TO_DRUPAL, self::PROVISION_TO_LDAP] as $direction) {
         if ($this->provisionEnabled($direction, $selected_action)) {
           if ($direction == self::PROVISION_TO_DRUPAL) {
@@ -193,7 +193,7 @@ class LdapUserTestForm extends FormBase implements LdapUserAttributesInterface {
     $result = FALSE;
 
     if ($direction == self::PROVISION_TO_LDAP) {
-      $result = LdapConfiguration::provisionAvailableToLDAP($provision_trigger);
+      $result = LdapConfiguration::provisionAvailableToLdap($provision_trigger);
 
     }
     elseif ($direction == self::PROVISION_TO_DRUPAL) {

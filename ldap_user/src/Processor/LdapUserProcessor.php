@@ -32,15 +32,15 @@ class LdapUserProcessor implements LdapUserAttributesInterface {
    *
    * @param \Drupal\user\Entity\User $account
    *   Drupal user object.
-   * @param array $ldap_user
+   * @param array $ldapUser
    *   Current LDAP data of user. See README.developers.txt for structure.
-   * @param bool $test_query
+   * @param bool $testQuery
    *   Test query or live query.
    *
-   * @return
+   * @return array|bool
    *   Successful sync.
    */
-  public function syncToLdapEntry($account, $ldap_user = [], $test_query = FALSE) {
+  public function syncToLdapEntry(User $account, array $ldapUser = [], $testQuery = FALSE) {
 
     if (is_object($account) && $account->id() == 1) {
       // Do not provision or sync user 1.
@@ -51,7 +51,7 @@ class LdapUserProcessor implements LdapUserAttributesInterface {
 
     if ($this->config['ldapEntryProvisionServer']) {
 
-      $ldap_server = Server::load($this->config['ldapEntryProvisionServer']);
+      $server = Server::load($this->config['ldapEntryProvisionServer']);
 
       $params = [
         'direction' => self::PROVISION_TO_LDAP,
@@ -63,58 +63,58 @@ class LdapUserProcessor implements LdapUserAttributesInterface {
 
       try {
         $processor = new LdapUserProcessor();
-        $proposed_ldap_entry = $processor->drupalUserToLdapEntry($account, $ldap_server, $params, $ldap_user);
+        $proposedLdapEntry = $processor->drupalUserToLdapEntry($account, $server, $params, $ldapUser);
       }
       catch (\Exception $e) {
         \Drupal::logger('ldap_user')->error('User or server is missing, drupalUserToLdapEntry() failed.');
         return FALSE;
       }
 
-      if (is_array($proposed_ldap_entry) && isset($proposed_ldap_entry['dn'])) {
-        $existing_ldap_entry = $ldap_server->dnExists($proposed_ldap_entry['dn'], 'ldap_entry');
+      if (is_array($proposedLdapEntry) && isset($proposedLdapEntry['dn'])) {
+        $existing_ldap_entry = $server->dnExists($proposedLdapEntry['dn'], 'ldap_entry');
         // This array represents attributes to be modified; not comprehensive
         // list of attributes.
         $attributes = [];
-        foreach ($proposed_ldap_entry as $attr_name => $attr_values) {
-          if ($attr_name != 'dn') {
-            if (isset($attr_values['count'])) {
-              unset($attr_values['count']);
+        foreach ($proposedLdapEntry as $attributeName => $attributeValues) {
+          if ($attributeName != 'dn') {
+            if (isset($attributeValues['count'])) {
+              unset($attributeValues['count']);
             }
-            if (count($attr_values) == 1) {
-              $attributes[$attr_name] = $attr_values[0];
+            if (count($attributeValues) == 1) {
+              $attributes[$attributeName] = $attributeValues[0];
             }
             else {
-              $attributes[$attr_name] = $attr_values;
+              $attributes[$attributeName] = $attributeValues;
             }
           }
         }
 
-        if ($test_query) {
-          $proposed_ldap_entry = $attributes;
+        if ($testQuery) {
+          $proposedLdapEntry = $attributes;
           $result = [
-            'proposed' => $proposed_ldap_entry,
-            'server' => $ldap_server,
+            'proposed' => $proposedLdapEntry,
+            'server' => $server,
           ];
         }
         else {
-          // Stick $proposed_ldap_entry in $ldap_entries array for drupal_alter.
-          $proposed_dn_lcase = Unicode::strtolower($proposed_ldap_entry['dn']);
-          $ldap_entries = [$proposed_dn_lcase => $attributes];
+          // Stick $proposedLdapEntry in $ldap_entries array for drupal_alter.
+          $proposedDnLowerCase = Unicode::strtolower($proposedLdapEntry['dn']);
+          $ldap_entries = [$proposedDnLowerCase => $attributes];
           $context = [
             'action' => 'update',
-            'corresponding_drupal_data' => [$proposed_dn_lcase => $attributes],
+            'corresponding_drupal_data' => [$proposedDnLowerCase => $attributes],
             'corresponding_drupal_data_type' => 'user',
           ];
-          \Drupal::moduleHandler()->alter('ldap_entry_pre_provision', $ldap_entries, $ldap_server, $context);
-          // Remove altered $proposed_ldap_entry from $ldap_entries array.
-          $attributes = $ldap_entries[$proposed_dn_lcase];
-          $result = $ldap_server->modifyLdapEntry($proposed_ldap_entry['dn'], $attributes);
+          \Drupal::moduleHandler()->alter('ldap_entry_pre_provision', $ldap_entries, $server, $context);
+          // Remove altered $proposedLdapEntry from $ldap_entries array.
+          $attributes = $ldap_entries[$proposedDnLowerCase];
+          $result = $server->modifyLdapEntry($proposedLdapEntry['dn'], $attributes);
 
           if ($result) {
             \Drupal::moduleHandler()
               ->invokeAll('ldap_entry_post_provision', [
                 $ldap_entries,
-                $ldap_server,
+                $server,
                 $context,
               ]);
           }
@@ -129,7 +129,7 @@ class LdapUserProcessor implements LdapUserAttributesInterface {
     }
 
     $tokens = [
-      '%dn' => isset($proposed_ldap_entry['dn']) ? $proposed_ldap_entry['dn'] : 'null',
+      '%dn' => isset($proposedLdapEntry['dn']) ? $proposedLdapEntry['dn'] : 'null',
       '%sid' => $this->config['ldapEntryProvisionServer'],
       '%username' => $account->getAccountName(),
       '%uid' => (!method_exists($account, 'id') || empty($account->id())) ? '' : $account->id(),
@@ -148,7 +148,7 @@ class LdapUserProcessor implements LdapUserAttributesInterface {
    *
    * @param \Drupal\user\Entity\User $account
    *   Drupal account.
-   * @param object $ldap_server
+   * @param \Drupal\ldap_servers\Entity\Server $ldap_server
    *   LDAP server.
    * @param array $params
    *   Parameters with the following key values:
@@ -157,7 +157,7 @@ class LdapUserProcessor implements LdapUserAttributesInterface {
    *   'function' => function calling function, e.g. 'provisionLdapEntry'
    *   'include_count' => should 'count' array key be included
    *   'direction' => self::PROVISION_TO_LDAP || self::PROVISION_TO_DRUPAL.
-   * @param array|null $ldap_user_entry
+   * @param array|null $ldapUserEntry
    *   The LDAP user entry.
    *
    * @return array
@@ -166,10 +166,10 @@ class LdapUserProcessor implements LdapUserAttributesInterface {
    *
    * @throws \Drupal\ldap_user\Exception\LdapBadParamsException
    */
-  public function drupalUserToLdapEntry(User $account, $ldap_server, $params, $ldap_user_entry = NULL) {
+  public function drupalUserToLdapEntry(User $account, Server $ldap_server, array $params, $ldapUserEntry = NULL) {
     $provision = (isset($params['function']) && $params['function'] == 'provisionLdapEntry');
-    if (!$ldap_user_entry) {
-      $ldap_user_entry = [];
+    if (!$ldapUserEntry) {
+      $ldapUserEntry = [];
     }
 
     if (!is_object($account) || !is_object($ldap_server)) {
@@ -186,9 +186,9 @@ class LdapUserProcessor implements LdapUserAttributesInterface {
     $mappings = $syncMapper->getSyncMappings($direction, $prov_events);
     // Loop over the mappings.
     foreach ($mappings as $field_key => $field_detail) {
-      list($ldap_attr_name, $ordinal, $conversion) = $tokenHelper->extractTokenParts($field_key);
+      list($ldapAttributeName, $ordinal, $conversion) = $tokenHelper->extractTokenParts($field_key);
       $ordinal = (!$ordinal) ? 0 : $ordinal;
-      if ($ldap_user_entry && isset($ldap_user_entry[$ldap_attr_name]) && is_array($ldap_user_entry[$ldap_attr_name]) && isset($ldap_user_entry[$ldap_attr_name][$ordinal])) {
+      if ($ldapUserEntry && isset($ldapUserEntry[$ldapAttributeName]) && is_array($ldapUserEntry[$ldapAttributeName]) && isset($ldapUserEntry[$ldapAttributeName][$ordinal])) {
         // Don't override values passed in.
         continue;
       }
@@ -206,25 +206,25 @@ class LdapUserProcessor implements LdapUserAttributesInterface {
           }
         }
 
-        if ($ldap_attr_name == 'dn' && $value) {
-          $ldap_user_entry['dn'] = $value;
+        if ($ldapAttributeName == 'dn' && $value) {
+          $ldapUserEntry['dn'] = $value;
         }
         elseif ($value) {
-          if (!isset($ldap_user_entry[$ldap_attr_name]) || !is_array($ldap_user_entry[$ldap_attr_name])) {
-            $ldap_user_entry[$ldap_attr_name] = [];
+          if (!isset($ldapUserEntry[$ldapAttributeName]) || !is_array($ldapUserEntry[$ldapAttributeName])) {
+            $ldapUserEntry[$ldapAttributeName] = [];
           }
-          $ldap_user_entry[$ldap_attr_name][$ordinal] = $value;
+          $ldapUserEntry[$ldapAttributeName][$ordinal] = $value;
           if ($include_count) {
-            $ldap_user_entry[$ldap_attr_name]['count'] = count($ldap_user_entry[$ldap_attr_name]);
+            $ldapUserEntry[$ldapAttributeName]['count'] = count($ldapUserEntry[$ldapAttributeName]);
           }
         }
       }
     }
 
     // Allow other modules to alter $ldap_user.
-    \Drupal::moduleHandler()->alter('ldap_entry', $ldap_user_entry, $params);
+    \Drupal::moduleHandler()->alter('ldap_entry', $ldapUserEntry, $params);
 
-    return $ldap_user_entry;
+    return $ldapUserEntry;
 
   }
 
@@ -233,7 +233,7 @@ class LdapUserProcessor implements LdapUserAttributesInterface {
    *
    * If one exists do nothing, takes Drupal user as argument.
    *
-   * @param \Drupal\user\Entity\User $account
+   * @param \Drupal\user\Entity\User|string $account
    *   Drupal account object with minimum of name property.
    * @param array $ldap_user
    *   LDAP user as pre-populated LDAP entry. Usually not provided.
@@ -246,7 +246,7 @@ class LdapUserProcessor implements LdapUserAttributesInterface {
    *     array('existing' => existing LDAP entry),
    *     array('description' = > blah blah)
    */
-  public function provisionLdapEntry($account, $ldap_user = NULL) {
+  public function provisionLdapEntry($account, array $ldap_user = NULL) {
 
     $result = [
       'status' => NULL,
@@ -303,15 +303,15 @@ class LdapUserProcessor implements LdapUserAttributesInterface {
     }
 
     if ((is_array($proposedLdapEntry) && isset($proposedLdapEntry['dn']) && $proposedLdapEntry['dn'])) {
-      $proposed_dn = $proposedLdapEntry['dn'];
+      $proposedDn = $proposedLdapEntry['dn'];
     }
     else {
-      $proposed_dn = NULL;
+      $proposedDn = NULL;
     }
-    $proposedDnLowercase = Unicode::strtolower($proposed_dn);
-    $existingLdapEntry = ($proposed_dn) ? $ldapServer->dnExists($proposed_dn, 'ldap_entry') : NULL;
+    $proposedDnLowercase = Unicode::strtolower($proposedDn);
+    $existingLdapEntry = ($proposedDn) ? $ldapServer->dnExists($proposedDn, 'ldap_entry') : NULL;
 
-    if (!$proposed_dn) {
+    if (!$proposedDn) {
       return [
         'status' => 'fail',
         'description' => t('failed to derive dn and or mappings'),
@@ -336,16 +336,16 @@ class LdapUserProcessor implements LdapUserAttributesInterface {
       // Remove altered $proposedLdapEntry from $ldapEntries array.
       $proposedLdapEntry = $ldapEntries[$proposedDnLowercase];
 
-      $ldap_entry_created = $ldapServer->createLdapEntry($proposedLdapEntry, $proposed_dn);
+      $ldapEntryCreated = $ldapServer->createLdapEntry($proposedLdapEntry, $proposedDn);
       $callbackParams = [$ldapEntries, $ldapServer, $context];
-      if ($ldap_entry_created) {
+      if ($ldapEntryCreated) {
         \Drupal::moduleHandler()
           ->invokeAll('ldap_entry_post_provision', $callbackParams);
         $result = [
           'status' => 'success',
           'description' => 'ldap account created',
           'proposed' => $proposedLdapEntry,
-          'created' => $ldap_entry_created,
+          'created' => $ldapEntryCreated,
           'ldap_server' => $ldapServer,
         ];
         // Need to store <sid>|<dn> in ldap_user_prov_entries field, which may
@@ -354,15 +354,15 @@ class LdapUserProcessor implements LdapUserAttributesInterface {
         if (NULL !== $account->get('ldap_user_prov_entries')) {
           $account->set('ldap_user_prov_entries', []);
         }
-        $ldap_user_prov_entry_exists = FALSE;
+        $ldapUserProvisioningEntryExists = FALSE;
         if ($account->get('ldap_user_prov_entries')->value) {
-          foreach ($account->get('ldap_user_prov_entries')->value as $i => $field_value_instance) {
-            if ($field_value_instance == $ldap_user_prov_entry) {
-              $ldap_user_prov_entry_exists = TRUE;
+          foreach ($account->get('ldap_user_prov_entries')->value as $i => $fieldValueInstance) {
+            if ($fieldValueInstance == $ldap_user_prov_entry) {
+              $ldapUserProvisioningEntryExists = TRUE;
             }
           }
         }
-        if (!$ldap_user_prov_entry_exists) {
+        if (!$ldapUserProvisioningEntryExists) {
           // @TODO Serialise?
           $prov_entries = $account->get('ldap_user_prov_entries')->value;
           $prov_entries[] = [
@@ -379,7 +379,7 @@ class LdapUserProcessor implements LdapUserAttributesInterface {
         $result = [
           'status' => 'fail',
           'proposed' => $proposedLdapEntry,
-          'created' => $ldap_entry_created,
+          'created' => $ldapEntryCreated,
           'ldap_server' => $ldapServer,
           'existing' => NULL,
         ];
@@ -427,7 +427,7 @@ class LdapUserProcessor implements LdapUserAttributesInterface {
    * @return bool
    *   FALSE indicates failed or action not enabled in LDAP user configuration.
    */
-  public function deleteProvisionedLdapEntries($account) {
+  public function deleteProvisionedLdapEntries(User $account) {
     // Determine server that is associated with user.
     $result = FALSE;
     $entries = $account->get('ldap_user_prov_entries')->getValue();
@@ -474,7 +474,7 @@ class LdapUserProcessor implements LdapUserAttributesInterface {
    * @return bool|array
    *   False or LDAP entry
    */
-  public function getProvisionRelatedLdapEntry($account, $prov_events = NULL) {
+  public function getProvisionRelatedLdapEntry(User $account, $prov_events = NULL) {
     if (!$prov_events) {
       $prov_events = LdapConfiguration::getAllEvents();
     }

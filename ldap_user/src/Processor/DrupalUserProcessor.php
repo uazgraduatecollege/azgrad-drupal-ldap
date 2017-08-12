@@ -692,7 +692,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
     }
 
     if ($this->provisionsLdapEntriesFromDrupalUsers()) {
-      $prov_enabled = LdapConfiguration::provisionAvailableToLDAP(self::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_UPDATE_CREATE);
+      $prov_enabled = LdapConfiguration::provisionAvailableToLdap(self::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_UPDATE_CREATE);
       if ($prov_enabled) {
         $ldap_provision_entry = $processor->getProvisionRelatedLdapEntry($account);
         if (!$ldap_provision_entry) {
@@ -728,7 +728,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
     // Check for provisioning to LDAP; this will normally occur on
     // hook_user_insert or other event when Drupal user is created.
     if ($this->provisionsLdapEntriesFromDrupalUsers() &&
-      LdapConfiguration::provisionAvailableToLDAP(self::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_UPDATE_CREATE)) {
+      LdapConfiguration::provisionAvailableToLdap(self::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_UPDATE_CREATE)) {
 
       $already_provisioned_to_ldap = SemaphoreStorage::get('provision', $account->getAccountName());
       $already_synced_to_ldap = SemaphoreStorage::get('sync', $account->getAccountName());
@@ -750,7 +750,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
       // Sync if not just provisioned and enabled.
       if ($provision_result['status'] != 'success') {
         // Check if provisioning to LDAP has already occurred this page load.
-        $provision_enabled = LdapConfiguration::provisionAvailableToLDAP(self::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_UPDATE_CREATE);
+        $provision_enabled = LdapConfiguration::provisionAvailableToLdap(self::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_UPDATE_CREATE);
         $ldap_entry = $processor->getProvisionRelatedLdapEntry($account);
         if ($provision_enabled && $ldap_entry) {
           $ldapProcessor = new LdapUserProcessor();
@@ -815,7 +815,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
       && SemaphoreStorage::get('provision', $this->account->getAccountName()) == FALSE
       && !$processor->getProvisionRelatedLdapEntry($this->account)
       && \Drupal::config('ldap_user.settings')->get('ldapEntryProvisionServer')
-      && LdapConfiguration::provisionAvailableToLDAP(self::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_AUTHENTICATION)
+      && LdapConfiguration::provisionAvailableToLdap(self::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_AUTHENTICATION)
     ) {
       $provision_result = $processor->provisionLdapEntry($this->account);
       if ($provision_result['status'] == 'success') {
@@ -827,7 +827,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
       $this->provisionsLdapEntriesFromDrupalUsers()
       && SemaphoreStorage::get('sync', $this->account->getAccountName()) == FALSE
       && $provision_result['status'] != 'success'
-      && LdapConfiguration::provisionAvailableToLDAP(self::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_AUTHENTICATION)
+      && LdapConfiguration::provisionAvailableToLdap(self::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_AUTHENTICATION)
     ) {
       $ldapProcessor = new LdapUserProcessor();
       $bool_result = $ldapProcessor->syncToLdapEntry($this->account);
@@ -858,7 +858,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
   public function drupalUserDeleted(UserInterface $account) {
     // Drupal user account is about to be deleted.
     if ($this->provisionsLdapEntriesFromDrupalUsers()
-      && LdapConfiguration::provisionAvailableToLDAP(self::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_DELETE)
+      && LdapConfiguration::provisionAvailableToLdap(self::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_DELETE)
     ) {
       $ldapProcessor = new LdapUserProcessor();
       $ldapProcessor->deleteProvisionedLdapEntries($account);
@@ -927,7 +927,6 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
    *   User account if successful.
    */
   private function createDrupalUser(array $ldap_user) {
-    /** @var \Drupal\user\Entity\User $this->account */
     $this->account->enforceIsNew();
     $this->applyAttributesToAccount($ldap_user, self::PROVISION_TO_DRUPAL, [self::EVENT_CREATE_DRUPAL_USER]);
     $tokens = ['%drupal_username' => $this->account->get('name')];

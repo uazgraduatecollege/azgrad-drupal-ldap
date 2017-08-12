@@ -5,7 +5,7 @@ namespace Drupal\ldap_user\Helper;
 use Drupal\ldap_user\LdapUserAttributesInterface;
 
 /**
- *
+ * Helper class to collect trivial lists of elements for events and users.
  */
 class LdapConfiguration implements LdapUserAttributesInterface {
 
@@ -26,7 +26,10 @@ class LdapConfiguration implements LdapUserAttributesInterface {
   }
 
   /**
+   * Provisioning events from Drupal.
    *
+   * @return array
+   *   Available events.
    */
   public static function provisionsDrupalEvents() {
     return [
@@ -36,7 +39,10 @@ class LdapConfiguration implements LdapUserAttributesInterface {
   }
 
   /**
+   * Provisioning Drupal accounts is enabled.
    *
+   * @return bool
+   *   If provisioning is available.
    */
   public static function provisionsDrupalAccountsFromLdap() {
     if (\Drupal::config('ldap_user.settings')->get('drupalAcctProvisionServer') &&
@@ -49,11 +55,15 @@ class LdapConfiguration implements LdapUserAttributesInterface {
   }
 
   /**
-   * @param $trigger
+   * Provisioning available to LDAP.
+   *
+   * @param string $trigger
+   *   Trigger to check.
    *
    * @return bool
+   *   If provisioning is available.
    */
-  public static function provisionAvailableToLDAP($trigger) {
+  public static function provisionAvailableToLdap($trigger) {
     if (\Drupal::config('ldap_user.settings')->get('ldapEntryProvisionTriggers')) {
       return in_array($trigger, \Drupal::config('ldap_user.settings')->get('ldapEntryProvisionTriggers'));
     }
@@ -63,9 +73,13 @@ class LdapConfiguration implements LdapUserAttributesInterface {
   }
 
   /**
-   * @param $trigger
+   * Provisioning available to Drupal.
+   *
+   * @param string $trigger
+   *   Trigger to check.
    *
    * @return bool
+   *   If provisioning is available.
    */
   public static function provisionAvailableToDrupal($trigger) {
     if (\Drupal::config('ldap_user.settings')->get('drupalAcctProvisionTriggers')) {

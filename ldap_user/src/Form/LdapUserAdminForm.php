@@ -439,6 +439,7 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
    * Check if the user starts with an an invalid configuration.
    *
    * @param \Drupal\Core\Config\Config $config
+   *   Config object.
    */
   private function notifyMissingSyncServerCombination(Config $config) {
 

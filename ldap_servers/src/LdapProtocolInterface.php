@@ -3,9 +3,9 @@
 namespace Drupal\ldap_servers;
 
 /**
- *
+ * The actual LDAP codes used by the Server.
  */
-interface LdapProtocol {
+interface LdapProtocolInterface {
 
   const LDAP_FAIL = -1;
   const LDAP_SUCCESS = 0x00;

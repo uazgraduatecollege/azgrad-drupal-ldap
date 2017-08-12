@@ -21,20 +21,20 @@ class ServerTests extends UnitTestCase {
       ->setMethods(['search', 'getBasedn'])
       ->getMock();
 
-    $baseDn[] = 'ou=people,dc=example,dc=org';
+    $baseDn = 'ou=people,dc=example,dc=org';
 
     $validResult = [
       'count' => 1,
       0 => ['dn' => ['cn=hpotter,ou=people,dc=example,dc=org']],
     ];
     $valueMap = [
-      [$baseDn[0], '(|(cn=hpotter))', ['dn'], 0, 0, 0, NULL, Server::SCOPE_SUBTREE],
-      [$baseDn[0], '(cn=hpotter)', ['dn'], 0, 0, 0, NULL, Server::SCOPE_SUBTREE],
-      [$baseDn[0], 'cn=hpotter', ['dn'], 0, 0, 0, NULL, Server::SCOPE_SUBTREE],
+      [$baseDn, '(|(cn=hpotter))', ['dn'], 0, 0, 0, NULL, Server::SCOPE_SUBTREE],
+      [$baseDn, '(cn=hpotter)', ['dn'], 0, 0, 0, NULL, Server::SCOPE_SUBTREE],
+      [$baseDn, 'cn=hpotter', ['dn'], 0, 0, 0, NULL, Server::SCOPE_SUBTREE],
     ];
 
     $stub->method('getBasedn')
-      ->willReturn($baseDn);
+      ->willReturn([$baseDn]);
     $stub->method('search')
       ->will($this->returnCallback(function () use ($valueMap, $validResult) {
         $arguments = func_get_args();

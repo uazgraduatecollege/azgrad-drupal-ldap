@@ -14,6 +14,13 @@ use Drupal\ldap_servers\Entity\Server;
 class ServerForm extends EntityForm {
 
   /**
+   * The server entity.
+   *
+   * @var \Drupal\ldap_servers\Entity\Server
+   */
+  protected $entity;
+
+  /**
    * {@inheritdoc}
    */
   public function form(array $form, FormStateInterface $form_state) {
@@ -204,7 +211,7 @@ class ServerForm extends EntityForm {
       '#type' => 'textfield',
       '#size' => 30,
       '#title' => $this->t('Persistent and Unique User ID Attribute'),
-      '#description' => $this->t("Login attributes are not always persistent (e.g. change in last name or email).<br> Most setups should set this attribute to avoid creation of duplicate accounts or other issues.<br> In cases where DN does not change, enter \"dn\" here. If no such attribute exists, leave this blank."),
+      '#description' => $this->t("Login attributes are not always persistent (e.g. change in last name or email).<br> Most setups should set this attribute to avoid creation of duplicate accounts or other issues.<br> In cases where DN does not change, enter 'dn' here. If no such attribute exists, leave this blank."),
     ];
 
     $form['users']['unique_persistent_attr_binary'] = [
@@ -363,7 +370,7 @@ class ServerForm extends EntityForm {
     $form['groups']['deriveDN']['grp_derive_from_dn'] = [
       '#default_value' => $server->get('grp_derive_from_dn'),
       '#type' => 'checkbox',
-      '#title' => $this->t('Groups are derived from user\'s LDAP entry DN.'),
+      '#title' => $this->t("Groups are derived from user's LDAP entry DN."),
       '#description' => $this->t('This group definition has very limited functionality and most modules will not take this into account.  LDAP Authorization will.'),
       '#disabled' => FALSE,
       '#states' => [
@@ -447,7 +454,6 @@ class ServerForm extends EntityForm {
    * {@inheritdoc}
    */
   public function save(array $form, FormStateInterface $form_state) {
-    /** @var \Drupal\ldap_servers\Entity\Server $this->entity */
     if ($form_state->getValue('bind_method') != 'service_account') {
       $this->entity->set('binddn', NULL);
       $this->entity->set('bindpw', NULL);

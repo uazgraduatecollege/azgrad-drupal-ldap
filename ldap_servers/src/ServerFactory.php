@@ -84,8 +84,6 @@ class ServerFactory implements LdapUserAttributesInterface {
    *   User identifier.
    * @param string $id
    *   Server id.
-   * @param array $ldap_context
-   *   Provisioning context.
    *
    * @return array|bool
    *   Result data or false.
@@ -153,7 +151,7 @@ class ServerFactory implements LdapUserAttributesInterface {
    * @return array|bool
    *   Returns data or FALSE.
    */
-  public function getUserDataByAccount(UserInterface $account, $ldap_context = NULL) {
+  public function getUserDataByAccount(UserInterface $account, array $ldap_context = NULL) {
     $provisioningServer = \Drupal::config('ldap_user.settings')->get('drupalAcctProvisionServer');
     $id = NULL;
     if (!$account) {
@@ -194,17 +192,24 @@ class ServerFactory implements LdapUserAttributesInterface {
    *   Attributes to explode.
    *
    * @return array
+   *   Exploded DN.
    */
   public function ldapExplodeDn($dn, $attribute) {
     return ldap_explode_dn($dn, $attribute);
   }
 
   /**
-   * @param $attributes
-   * @param $params
-   * @return mixed
+   * Alter the LDAP attributes.
+   *
+   * @param array $attributes
+   *   Attributes.
+   * @param array $params
+   *   Parameters.
+   *
+   * @return array
+   *   Altered attributes.
    */
-  public function alterLdapAttributes(&$attributes, $params) {
+  public function alterLdapAttributes(array &$attributes, array $params) {
     $token_helper = new TokenProcessor();
     // Force this data type.
     $attributes['dn'] = TokenProcessor::setAttributeMap(@$attributes['dn'], 'ldap_dn');
@@ -243,11 +248,17 @@ class ServerFactory implements LdapUserAttributesInterface {
   }
 
   /**
-   * @param $available_user_attrs
-   * @param $params
+   * Alter ldap_user attributes lists.
+   *
+   * @param array $available_user_attrs
+   *   Available user attributes.
+   * @param array $params
+   *   Parameters.
+   *
    * @return array
+   *   Attribute list.
    */
-  public function alterLdapUserAttributesList(&$available_user_attrs, &$params) {
+  public function alterLdapUserAttributesList(array &$available_user_attrs, array &$params) {
     if (isset($params['ldap_server']) && $params['ldap_server']) {
       /** @var \Drupal\ldap_servers\Entity\Server $ldap_server */
       $ldap_server = $params['ldap_server'];

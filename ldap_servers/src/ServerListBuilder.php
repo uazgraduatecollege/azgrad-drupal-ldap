@@ -45,7 +45,7 @@ class ServerListBuilder extends ConfigEntityListBuilder {
   /**
    * Format a server status response.
    *
-   * @param $server_id
+   * @param string $server_id
    *   Server ID.
    *
    * @return \Drupal\Core\StringTranslation\TranslatableMarkup
@@ -76,7 +76,13 @@ class ServerListBuilder extends ConfigEntityListBuilder {
   }
 
   /**
+   * Get Operations.
    *
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   Entity interface.
+   *
+   * @return array
+   *   Available operations in dropdown.
    */
   public function getOperations(EntityInterface $entity) {
     $operations = parent::getDefaultOperations($entity);

@@ -2,9 +2,11 @@
 
 /**
  * @file
+ * The ldap_servers module file.
  */
 
 use Drupal\Core\Routing\RouteMatchInterface;
+
 /**
  * Implements hook_help().
  */
@@ -19,7 +21,6 @@ function ldap_servers_help($route_name, RouteMatchInterface $route_match) {
     case 'entity.ldap_server.collection':
       $output = '<p>' . t('More than one LDAP server configuration can exist for a physical LDAP server. Multiple configurations for the same physical LDAP server are useful in cases such as either different base DN for authentication and authorization or service accounts with different privileges for different purposes.') . '</p>';
       return $output;
-    default:
   }
 }
 
@@ -41,11 +42,10 @@ function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$param
 
 /**
  * Implements hook_user_logout().
- *
- * @param \Drupal\Core\Session\AccountInterface $account
  */
 function ldap_servers_user_logout($account) {
   // When the user logs out clear the LDAP cached data.
+  /** @var \Drupal\Core\Session\AccountInterface $account */
   $cache_key = 'ldap_servers:user_data:' . $account->getAccountName();
   if ($cache = \Drupal::cache()->get($cache_key)) {
     \Drupal::cache()->delete($cache_key);

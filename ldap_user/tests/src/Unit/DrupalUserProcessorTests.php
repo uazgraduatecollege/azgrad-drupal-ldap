@@ -23,7 +23,7 @@ class DrupalUserProcessorTests extends UnitTestCase implements LdapUserAttribute
   public $provisioningEvents;
 
   /**
-   *
+   * Test setup.
    */
   protected function setUp() {
     parent::setUp();
@@ -69,7 +69,7 @@ class DrupalUserProcessorTests extends UnitTestCase implements LdapUserAttribute
   }
 
   /**
-   *
+   * Placeholder test.
    */
   public function testBase() {
     $this->assertTrue(TRUE);

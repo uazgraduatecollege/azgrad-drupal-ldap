@@ -169,7 +169,8 @@ function ldap_user_entity_base_field_info(EntityTypeInterface $entity_type) {
   }
 }
 
-// Below are form hooks which cannot be easily moved.
+/* Below are form hooks which cannot be easily moved. */
+
 /**
  * Implements hook_form_FORM_ID_alter().
  *
@@ -255,7 +256,7 @@ function ldap_user_form_user_register_form_alter(&$form, $form_state) {
     '#title' => t('LDAP Entry Association.'),
   ];
 
-  if (LdapConfiguration::provisionAvailableToLDAP(LdapUserAttributesInterface::PROVISION_DRUPAL_USER_ON_USER_UPDATE_CREATE)) {
+  if (LdapConfiguration::provisionAvailableToLdap(LdapUserAttributesInterface::PROVISION_DRUPAL_USER_ON_USER_UPDATE_CREATE)) {
     $form['ldap_user_fields']['ldap_user_association']['#access'] = FALSE;
   }
   elseif (\Drupal::config('ldap_user.settings')->get('manualAccountConflict') != LdapUserAttributesInterface::MANUAL_ACCOUNT_CONFLICT_SHOW_OPTION_ON_FORM) {
@@ -269,7 +270,7 @@ function ldap_user_form_user_register_form_alter(&$form, $form_state) {
     '#type' => 'checkbox',
     '#title' => t('Create corresponding LDAP entry.'),
   ];
-  if (!LdapConfiguration::provisionAvailableToLDAP(LdapUserAttributesInterface::PROVISION_DRUPAL_USER_ON_USER_ON_MANUAL_CREATION)) {
+  if (!LdapConfiguration::provisionAvailableToLdap(LdapUserAttributesInterface::PROVISION_DRUPAL_USER_ON_USER_ON_MANUAL_CREATION)) {
     $form['ldap_user_fields']['ldap_user_create_ldap_acct']['#access'] = FALSE;
   }
 
@@ -298,7 +299,7 @@ function ldap_user_form_register_form_validate($form, FormStateInterface &$form_
 
   $factory = \Drupal::service('ldap.servers');
 
-   // If the corresponding LDAP account does not exist and provision not
+  // If the corresponding LDAP account does not exist and provision not
   // selected and make LDAP associated is selected, throw error.
   if (!$form_state->getValue('ldap_user_create_ldap_acct') &&
     $form_state->getValue('ldap_user_association') == LdapUserAttributesInterface::MANUAL_ACCOUNT_CONFLICT_LDAP_ASSOCIATE) {

@@ -13,6 +13,8 @@ class SyncMappingHelper implements LdapUserAttributesInterface {
 
 
   /**
+   * Sync mappings.
+   *
    * @var array
    *  Array of field sync mappings provided by all modules.
    *
@@ -142,10 +144,10 @@ class SyncMappingHelper implements LdapUserAttributesInterface {
   /**
    * Setter function to ease testing.
    *
-   * @param $mappings
+   * @param array $mappings
    *   Set all mappings.
    */
-  private function setAllSyncMappings($mappings) {
+  private function setAllSyncMappings(array $mappings) {
     $this->syncMapping = $mappings;
   }
 
@@ -243,12 +245,16 @@ class SyncMappingHelper implements LdapUserAttributesInterface {
   }
 
   /**
+   * Convert context for ldap_user event.
+   *
    * Converts the more general ldap_context string to its associated LDAP user
    * event.
    *
    * @param string|null $ldapContext
+   *   Context.
    *
    * @return array
+   *   List of events.
    */
   public static function ldapContextToProvEvents($ldapContext = NULL) {
 

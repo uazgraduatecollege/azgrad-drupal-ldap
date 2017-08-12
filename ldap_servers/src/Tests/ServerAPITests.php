@@ -20,6 +20,7 @@ class ServerAPITests {
     // Maybe: WebTestcase to verify that all modules can be cleanly installed.
   }
 
+  // @codingStandardsIgnoreStart
   /**
    * Bind.
    *
@@ -276,5 +277,5 @@ class ServerAPITests {
     $results['count'] = count($results);
     return $results;
   }
-
+  // @codingStandardsIgnoreEnd
 }

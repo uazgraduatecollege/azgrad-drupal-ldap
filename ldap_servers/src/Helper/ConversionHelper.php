@@ -75,12 +75,13 @@ class ConversionHelper {
    * Converts any sequences of a backslash followed by two hex digits into the
    * corresponding character.
    *
-   * @param array $values
+   * @param mixed $values
    *   Array of values to escape.
    *
    * @static
    *
-   * @return array Array $values, but unescaped
+   * @return array
+   *   Unescaped values.
    */
   public static function unescapeFilterValue($values) {
     // Parameter validation.
@@ -173,7 +174,7 @@ class ConversionHelper {
    * Any escape sequence starting with a baskslash - hexpair or special
    * character - will be transformed back to the corresponding character.
    *
-   * @param array $values
+   * @param mixed $values
    *   Array of DN Values.
    *
    * @return array

@@ -295,12 +295,12 @@ class ServerTestForm extends EntityForm {
   /**
    * Test the Group DN.
    *
-   * @param $group_dn
+   * @param string $group_dn
    *   Group DN.
-   * @param null $user
+   * @param mixed|null $user
    *   User? Unknown.
    *
-   * @return array Response.
+   * @return array
    *   Response.
    */
   private function testGroupDn($group_dn, $user) {
@@ -450,7 +450,7 @@ class ServerTestForm extends EntityForm {
    *
    * @FIXME: NOT TESTED, UNPORTED:
    */
-  public function groupAddGroup($group_dn, $attributes = []) {
+  public function groupAddGroup($group_dn, array $attributes = []) {
 
     if ($this->ldapServer->dnExists($group_dn, 'boolean')) {
       return FALSE;

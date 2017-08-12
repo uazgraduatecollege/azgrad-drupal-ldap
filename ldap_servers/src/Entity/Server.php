@@ -5,7 +5,7 @@ namespace Drupal\ldap_servers\Entity;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\ldap_servers\Helper\ConversionHelper;
-use Drupal\ldap_servers\LdapProtocol;
+use Drupal\ldap_servers\LdapProtocolInterface;
 use Drupal\ldap_servers\Helper\MassageAttributes;
 use Drupal\ldap_servers\ServerInterface;
 use Drupal\ldap_servers\Processor\TokenProcessor;
@@ -42,7 +42,7 @@ use Drupal\user\Entity\User;
  *   }
  * )
  */
-class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
+class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolInterface {
 
   protected $id;
   protected $label;
@@ -61,13 +61,16 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
 
   /**
    * Error methods and properties.
+   *
+   * @var bool
    */
   public $detailedWatchdogLog = FALSE;
 
   /**
    * Returns the formatted label of the bind method.
    *
-   * Return string.
+   * @return string
+   *   The formatted text for the current bind.
    */
   public function getFormattedBind() {
     switch ($this->get('bind_method')) {
@@ -364,8 +367,9 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
    *   String to escape.
    *
    * @return mixed|string
+   *   Escaped string.
    */
-  public static function ldap_escape($string) {
+  public static function ldapEscape($string) {
     if (function_exists('ldap_escape')) {
       return ldap_escape($string);
     }
@@ -568,6 +572,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
     return $all_entries;
   }
 
+  // @codingStandardsIgnoreStart
   /**
    * Perform an LDAP search.
    *
@@ -590,18 +595,18 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
    *   Scope.
    *
    * @return array|bool
-   *
    *   An array of matching entries->attributes (will have 0
    *   elements if search returns no results),
    *   or FALSE on error.
    *
    * @remaining params mimick ldap_search() function params
+   * @TODO: Remove coding standard violation.
    */
   public function search($base_dn = NULL, $filter, array $attributes = [], $attrsonly = 0, $sizelimit = 0, $timelimit = 0, $deref = NULL, $scope = NULL) {
+    // @codingStandardsIgnoreEnd
     if ($scope == NULL) {
       $scope = Server::SCOPE_SUBTREE;
     }
-
     if ($base_dn == NULL) {
       if (count($this->getBaseDn()) == 1) {
         $base_dn = $this->getBaseDn()[0];
@@ -680,17 +685,17 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
    * calling if a particular set of pages is desired.
    *
    * @param resource $queryParameters
-   *   of form:
-   *   'base_dn' => base_dn,
-   *   'filter' =>  filter,
-   *   'attributes' => attributes,
-   *   'attrsonly' => attrsonly,
-   *   'sizelimit' => sizelimit,
-   *   'timelimit' => timelimit,
-   *   'deref' => deref,
-   *   'scope' => scope,
-   *
-   *   (this array of parameters is primarily passed on to ldapQuery() method)
+   *   Parameters of form: [
+   *     'base_dn' => base_dn,
+   *     'filter' =>  filter,
+   *     'attributes' => attributes,
+   *     'attrsonly' => attrsonly,
+   *     'sizelimit' => sizelimit,
+   *     'timelimit' => timelimit,
+   *     'deref' => deref,
+   *     'scope' => scope,
+   *   ]
+   *   This array of parameters is primarily passed on to ldapQuery() method.
    *
    * @return array|bool
    *   Array of LDAP entries or FALSE on error.
@@ -1026,8 +1031,6 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
    *
    * @param string $drupaUsername
    *   Drupal user name.
-   * @param string $ldap_context
-   *   All by default in parent function.
    *
    * @return array|bool
    *   An associative array representing LDAP data of a user. For example:
@@ -1199,7 +1202,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
           $ors = [];
           foreach ($member_ids as $key => $member_id) {
             // @todo this would be replaced by query template
-            $ors[] = $this->groupMembershipsAttr() . '=' . self::ldap_escape($member_id);
+            $ors[] = $this->groupMembershipsAttr() . '=' . self::ldapEscape($member_id);
           }
 
           if (count($ors)) {
@@ -1328,7 +1331,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
         else {
           $member_value = $this->getFirstRdnValueFromDn($member_group_dn, $this->groupMembershipsAttrMatchingUserAttr());
         }
-        $ors[] = $this->groupMembershipsAttr() . '=' . self::ldap_escape($member_value);
+        $ors[] = $this->groupMembershipsAttr() . '=' . self::ldapEscape($member_value);
       }
     }
 
@@ -1428,7 +1431,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
    *   False for error or misconfiguration, otherwise TRUE. Results are passed
    *   by reference.
    */
-  public function groupMembershipsFromEntryResursive($current_group_entries, &$all_group_dns, &$tested_group_ids, $level, $max_levels) {
+  public function groupMembershipsFromEntryResursive(array $current_group_entries, array &$all_group_dns, array &$tested_group_ids, $level, $max_levels) {
 
     if (!$this->groupGroupEntryMembershipsConfigured() || !is_array($current_group_entries) || count($current_group_entries) == 0) {
       return FALSE;
@@ -1451,7 +1454,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocol {
         $tested_group_ids[] = $member_id;
         $all_group_dns[] = $group_entry['dn'];
         // Add $group_id (dn, cn, uid) to query.
-        $ors[] = $this->groupMembershipsAttr() . '=' . self::ldap_escape($member_id);
+        $ors[] = $this->groupMembershipsAttr() . '=' . self::ldapEscape($member_id);
       }
     }
 

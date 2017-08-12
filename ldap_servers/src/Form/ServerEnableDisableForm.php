@@ -7,9 +7,16 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 
 /**
- *
+ * Form for disabling a server.
  */
 class ServerEnableDisableForm extends EntityConfirmFormBase {
+
+  /**
+   * The server entity.
+   *
+   * @var \Drupal\ldap_servers\Entity\Server
+   */
+  protected $entity;
 
   /**
    * {@inheritdoc}
@@ -28,7 +35,7 @@ class ServerEnableDisableForm extends EntityConfirmFormBase {
   /**
    * {@inheritdoc}
    *
-   * If the delete command is canceled, return to the lti_tool_provider_consumer list.
+   * If the delete command is canceled, return to the overview page.
    */
   public function getCancelUrl() {
     return new Url('entity.ldap_server.collection');
