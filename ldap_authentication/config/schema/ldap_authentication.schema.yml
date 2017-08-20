@@ -50,19 +50,3 @@ ldap_authentication.settings:
         type: string
     excludeIfNoAuthorizations:
       type: integer
-    ssoRemoteUserStripDomainName:
-      type: integer
-    ssoExcludedPaths:
-      type: sequence
-      sequence:
-        type: string
-    ssoExcludedHosts:
-      type: sequence
-      sequence:
-        type: string
-    seamlessLogin:
-      type: string
-    ldapImplementation:
-      type: string
-    cookieExpire:
-      type: string

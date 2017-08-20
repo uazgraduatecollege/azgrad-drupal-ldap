@@ -17,10 +17,4 @@ passwordOption: 3
 allowOnlyIfTextInDn: {  }
 excludeIfTextInDn: {  }
 excludeIfNoAuthorizations: null
-ssoRemoteUserStripDomainName: null
-ssoExcludedPaths: {  }
-ssoExcludedHosts: {  }
-seamlessLogin: null
-ldapImplementation: null
-cookieExpire: null
 langcode: en

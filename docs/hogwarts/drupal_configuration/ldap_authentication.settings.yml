@@ -11,13 +11,6 @@ passwordOption: 2
 allowOnlyIfTextInDn: {  }
 excludeIfTextInDn: {  }
 excludeIfNoAuthorizations: 0
-ssoRemoteUserStripDomainName: 1
-ssoExcludedPaths:
-  - '<front>'
-ssoExcludedHosts:
-seamlessLogin: '0'
-ldapImplementation: mod_auth_sspi
-cookieExpire: '-1'
 emailTemplateHandling: if_empty
 emailTemplate: '@username@example.com'
 emailTemplateUsageResolveConflict: true
