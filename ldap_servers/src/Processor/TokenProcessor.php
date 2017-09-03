@@ -246,14 +246,20 @@ class TokenProcessor {
    *     [cn] = jdoe
    *     [cn:0] = jdoe
    *     [cn:last] => jdoe
+   *     [cn:reverse:0] = jdoe
    *     [ou] = campus accounts
    *     [ou:0] = campus accounts
    *     [ou:last] = toledo campus
+   *     [ou:reverse:0] = toledo campus
+   *     [ou:reverse:1] = campus accounts
    *     [dc] = ad
    *     [dc:0] = ad
    *     [dc:1] = myuniversity
    *     [dc:2] = edu
    *     [dc:last] = edu
+   *     [dc:reverse:0] = edu
+   *     [dc:reverse:1] = myuniversity
+   *     [dc:reverse:2] = ad
    *   From other attributes:
    *     [mail] = jdoe@myuniversity.edu
    *     [mail:0] = jdoe@myuniversity.edu
@@ -319,6 +325,15 @@ class TokenProcessor {
 
       $parts_last_value[$attr_name] = $attr_value;
       $parts_count[$attr_name]++;
+    }
+
+    // Add DN parts in reverse order to reflect the hierarchy for CN, OU, DC.
+    foreach ($parts_count as $attr_name => $count) {
+      $part = $massager->processAttributeName($attr_name);
+      for ($i = 0; $i < $count; $i++) {
+        $reversePosition = $count - $i - 1;
+        $tokens[$pre . $part . self::DELIMITER . 'reverse' . self::DELIMITER . $reversePosition . $post] = $tokens[$pre . $part . self::DELIMITER . $i . $post];
+      }
     }
 
     foreach ($parts_count as $attr_name => $count) {
