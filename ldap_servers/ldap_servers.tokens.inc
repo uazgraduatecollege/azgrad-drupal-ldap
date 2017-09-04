@@ -164,15 +164,21 @@ should return tokens such as:
     [cn] = jdoe
     [cn:0] = jdoe
     [cn:last] => jdoe
+    [cn:reverse:0] = jdoe
     [ou] = campus accounts
     [ou:0] = campus accounts
     [ou:1] = toledo campus
     [ou:last] = toledo campus
+    [ou:reverse:0] = toledo campus
+    [ou:reverse:1] = campus accounts
     [dc] = ad
     [dc:0] = ad
     [dc:1] = myuniversity
     [dc:2] = edu
     [dc:last] = edu
+    [dc:reverse:0] = edu
+    [dc:reverse:1] = myuniversity
+    [dc:reverse:2] = ad
 
     -- from other attributes
     [mail] = jdoe@myuniversity.edu
@@ -235,6 +241,15 @@ function ldap_servers_token_tokenize_entry($ldap_entry, $token_keys = 'all', $pr
 
     $parts_last_value[$attr_name] = $attr_value;
     $parts_count[$attr_name]++;
+  }
+
+  // Add the parts in reverse order to reflect the hierarchy.
+  foreach ($parts_count as $part => $count) {
+    $part = strtolower($part);
+    for ($i=0; $i<$count; $i++) {
+      $reverse_position = $count - $i - 1;
+      $tokens[$pre . $part . LDAP_SERVERS_TOKEN_DEL . 'reverse' . LDAP_SERVERS_TOKEN_DEL . $reverse_position . $post] = $tokens[$pre . $part . LDAP_SERVERS_TOKEN_DEL . $i . $post];
+    }
   }
 
   foreach ($parts_count as $attr_name => $count) {
