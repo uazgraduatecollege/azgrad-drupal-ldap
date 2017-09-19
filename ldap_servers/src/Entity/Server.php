@@ -28,7 +28,7 @@ use Drupal\user\Entity\User;
  *     }
  *   },
  *   config_prefix = "server",
- *   admin_permission = "administer site configuration",
+ *   admin_permission = "administer ldap",
  *   entity_keys = {
  *     "id" = "id",
  *     "label" = "label",

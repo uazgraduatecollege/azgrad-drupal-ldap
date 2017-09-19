@@ -5,7 +5,7 @@ entity.ldap_server.collection:
     _entity_list: 'ldap_server'
     _title: 'Servers'
   requirements:
-    _permission: 'administer site configuration'
+    _permission: 'administer ldap'
   options:
     _admin_route: TRUE
 
@@ -15,7 +15,7 @@ entity.ldap_server.add_form:
     _entity_form: 'ldap_server.add'
     _title: 'Add Server'
   requirements:
-    _permission: 'administer site configuration'
+    _permission: 'administer ldap'
   options:
     _admin_route: TRUE
 
@@ -25,7 +25,7 @@ entity.ldap_server.edit_form:
     _entity_form: 'ldap_server.edit'
     _title: 'Edit Server'
   requirements:
-    _permission: 'administer site configuration'
+    _permission: 'administer ldap'
   options:
     _admin_route: TRUE
 
@@ -35,7 +35,7 @@ entity.ldap_server.delete_form:
     _entity_form: 'ldap_server.delete'
     _title: 'Delete Server'
   requirements:
-    _permission: 'administer site configuration'
+    _permission: 'administer ldap'
   options:
     _admin_route: TRUE
 
@@ -45,7 +45,7 @@ entity.ldap_server.test_form:
     _entity_form: 'ldap_server.test'
     _title: 'Test Server'
   requirements:
-    _permission: 'administer site configuration'
+    _permission: 'administer ldap'
   options:
     _admin_route: TRUE
 
@@ -55,6 +55,6 @@ entity.ldap_server.enable_disable_form:
     _entity_form: 'ldap_server.enable_disable'
     _title: 'Enable/Disable LDAP Server'
   requirements:
-    _permission: 'administer site configuration'
+    _permission: 'administer ldap'
   options:
     _admin_route: TRUE

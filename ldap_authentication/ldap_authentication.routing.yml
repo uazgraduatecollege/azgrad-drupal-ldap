@@ -11,7 +11,7 @@ ldap_authentication.admin_form:
     _title: Authentication
     _form: \Drupal\ldap_authentication\Form\LdapAuthenticationAdminForm
   requirements:
-    _permission: 'administer site configuration'
+    _permission: 'administer ldap'
 ldap_authentication.ldap_help_redirect:
   path: '/ldap_help_redirect'
   defaults:

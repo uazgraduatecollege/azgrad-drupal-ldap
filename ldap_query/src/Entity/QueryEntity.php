@@ -23,7 +23,7 @@ use Drupal\ldap_query\QueryEntityInterface;
  *     },
  *   },
  *   config_prefix = "ldap_query_entity",
- *   admin_permission = "administer site configuration",
+ *   admin_permission = "administer ldap",
  *   entity_keys = {
  *     "id" = "id",
  *     "label" = "label",
