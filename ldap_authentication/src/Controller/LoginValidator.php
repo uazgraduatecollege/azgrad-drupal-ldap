@@ -215,40 +215,62 @@ class LoginValidator implements LdapUserAttributesInterface {
    *
    * The authName property is checked against external authentication mapping.
    */
-  private function initializeAuthNameCorrespondingDrupalUser() {
-    if (!($this->drupalUser = user_load_by_name($this->authName))) {
+  private function initializeDrupalUserFromAuthName() {
+    $this->drupalUser = user_load_by_name($this->authName);
+    if (!$this->drupalUser) {
       $uid = ExternalAuthenticationHelper::getUidFromIdentifierMap($this->authName);
-      $this->drupalUser = $uid ? user_load($uid) : FALSE;
-    }
-
-    if (is_object($this->drupalUser)) {
-      $this->drupalUserAuthMapped = ExternalAuthenticationHelper::getUserIdentifierFromMap($this->drupalUser->id());
-      if ($this->drupalUser->id() == 1 && $this->detailedLogging) {
-        \Drupal::logger('ldap_authentication')->debug('%username: Drupal user name maps to user 1, so do not authenticate with LDAP.', ['%username' => $this->authName]);
-      }
-      elseif ($this->detailedLogging) {
-        \Drupal::logger('ldap_authentication')->debug('%username: Drupal user account found. Continuing on to attempt LDAP authentication.', ['%username' => $this->authName]);
-      }
-    }
-    // Account does not exist.
-    else {
-      $this->drupalUserAuthMapped = FALSE;
-
-      if ($this->config->get('acctCreation') == self::ACCOUNT_CREATION_LDAP_BEHAVIOUR ||
-        \Drupal::config('user.settings')->get('register_no_approval_required') == USER_REGISTER_VISITORS) {
-        $createUserAllowed = TRUE;
+      if ($uid) {
+        $this->drupalUser = user_load($uid);
       }
       else {
-        $createUserAllowed = FALSE;
+        $this->drupalUser = FALSE;
       }
+    }
+    if ($this->drupalUser) {
+      $this->drupalUserAuthMapped = ExternalAuthenticationHelper::getUserIdentifierFromMap($this->drupalUser->id());
+    }
+    else {
+      $this->drupalUserAuthMapped = FALSE;
+    }
+  }
 
-      if (!$createUserAllowed) {
+  /**
+   * Verifies whether the user is available or can be created and is not user 1.
+   *
+   * @return bool
+   *   Whether to allow user login and creation.
+   */
+  private function verifyAccountCreation() {
+    if (is_object($this->drupalUser)) {
+      if ($this->drupalUser->id() == 1) {
+        if ($this->detailedLogging) {
+          \Drupal::logger('ldap_authentication')
+            ->debug('%username: Drupal user name maps to user 1, so do not authenticate with LDAP.', ['%username' => $this->authName]);
+        }
+        return FALSE;
+      }
+      else {
+        if ($this->detailedLogging) {
+          \Drupal::logger('ldap_authentication')
+            ->debug('%username: Drupal user account found. Continuing on to attempt LDAP authentication.', ['%username' => $this->authName]);
+          return TRUE;
+        }
+      }
+    }
+    // Account does not exist, verify it can be created.
+    else {
+      if (\Drupal::config('ldap_user.settings')->get('acctCreation') == self::ACCOUNT_CREATION_LDAP_BEHAVIOUR ||
+        \Drupal::config('user.settings')->get('register') == USER_REGISTER_VISITORS) {
+        if ($this->detailedLogging) {
+          \Drupal::logger('ldap_authentication')->debug('%username: Existing Drupal user account not found. Continuing on to attempt LDAP authentication', ['%username' => $this->authName]);
+        }
+        return TRUE;
+      }
+      else {
         if ($this->detailedLogging) {
           \Drupal::logger('ldap_authentication')->debug('%username: Drupal user account not found and configuration is set to not create new accounts.', ['%username' => $this->authName]);
         }
-      }
-      if ($this->detailedLogging) {
-        \Drupal::logger('ldap_authentication')->debug('%username: Existing Drupal user account not found. Continuing on to attempt LDAP authentication', ['%username' => $this->authName]);
+        return FALSE;
       }
     }
   }
@@ -757,15 +779,8 @@ class LoginValidator implements LdapUserAttributesInterface {
       return FALSE;
     }
 
-    // Determine if corresponding Drupal account exists for $this->authName.
-    $this->initializeAuthNameCorrespondingDrupalUser();
-
-    if ($this->drupalUser && $this->drupalUser->id() == 1) {
-      // User 1 is never allowed to authenticate via LDAP.
-      return FALSE;
-    }
-
-    return TRUE;
+    $this->initializeDrupalUserFromAuthName();
+    return $this->verifyAccountCreation();
   }
 
   /**
