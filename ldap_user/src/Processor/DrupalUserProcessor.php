@@ -11,7 +11,7 @@ use Drupal\ldap_user\LdapUserAttributesInterface;
 use Drupal\ldap_user\Helper\LdapConfiguration;
 use Drupal\ldap_user\Helper\SemaphoreStorage;
 use Drupal\ldap_user\Helper\SyncMappingHelper;
-use Drupal\user\entity\User;
+use Drupal\user\Entity\User;
 use Drupal\user\UserInterface;
 
 /**
@@ -24,7 +24,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
   /**
    * The Drupal user account.
    *
-   * @var \Drupal\user\entity\User
+   * @var \Drupal\user\Entity\User
    */
   private $account;
 
@@ -104,7 +104,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
    * @param array $userData
    *   A keyed array normally containing 'name' and optionally more.
    *
-   * @return bool|\Drupal\user\entity\User
+   * @return bool|\Drupal\user\Entity\User
    *   Return the user on success or FALSE on any problem.
    */
   public function provisionDrupalAccount(array $userData) {
@@ -971,7 +971,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
    * @param \Drupal\user\UserInterface $accountFromPuid
    *   The account from the PUID.
    *
-   * @return bool|\Drupal\user\entity\User|\Drupal\user\UserInterface
+   * @return bool|\Drupal\user\Entity\User|\Drupal\user\UserInterface
    *   Returns a user if successful.
    *
    * @todo: Remove return here, we don't want to pass the user around.
