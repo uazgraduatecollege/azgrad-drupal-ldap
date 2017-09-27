@@ -253,8 +253,8 @@ class LoginValidator implements LdapUserAttributesInterface {
         if ($this->detailedLogging) {
           \Drupal::logger('ldap_authentication')
             ->debug('%username: Drupal user account found. Continuing on to attempt LDAP authentication.', ['%username' => $this->authName]);
-          return TRUE;
         }
+        return TRUE;
       }
     }
     // Account does not exist, verify it can be created.
