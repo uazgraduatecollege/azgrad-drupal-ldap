@@ -22,6 +22,9 @@ ldap_servers.server.*:
     port:
       type: integer
       label: 'LDAP Server port'
+    timeout:
+      type: integer
+      label: 'Network timeout'
     tls:
       type: boolean
       label: 'Use Start-TLS'

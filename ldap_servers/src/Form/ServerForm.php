@@ -85,11 +85,22 @@ class ServerForm extends EntityForm {
     ];
 
     $form['server']['port'] = [
-      '#type' => 'textfield',
+      '#type' => 'number',
       '#title' => $this->t('Server port'),
-      '#maxlength' => 11,
+      '#min' => 1,
+      '#max' => 65535,
       '#default_value' => $server->get('port') ? $server->get('port') : 389,
       '#description' => $this->t("The TCP/IP port on the above server which accepts LDAP connections. Must be an integer."),
+      '#required' => TRUE,
+    ];
+
+    $form['server']['timeout'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Network timeout'),
+      '#min' => -1,
+      '#max' => 999,
+      '#default_value' => $server->get('timeout') ? $server->get('timeout') : 10,
+      '#description' => $this->t("How long to wait for a response from the LDAP server in seconds."),
       '#required' => TRUE,
     ];
 

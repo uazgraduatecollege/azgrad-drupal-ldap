@@ -76,5 +76,18 @@ function ldap_servers_update_8302() {
   $config->delete();
 
   return t('HTTPS validation was removed, if you need mixed mode consider another module such as securelogin for this. Mixed mode is strongly discouraged.');
+}
 
+/**
+ * Adds default timeout to all servers.
+ */
+function ldap_servers_update_8303() {
+  $factory = \Drupal::service('ldap.servers');
+  /** @var \Drupal\ldap_servers\ServerFactory $factory */
+  $servers = $factory->getAllServers();
+  foreach ($servers as $server) {
+    $server->set('timeout', 10);
+    $server->save();
+  }
+  return t('Server network timeouts are now configurable. Your servers have been set to 10 seconds.');
 }

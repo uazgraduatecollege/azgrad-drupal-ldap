@@ -101,30 +101,28 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
    *   LDAP_SUCCESS or the relevant error.
    */
   public function connect() {
-    $port = (self::get('port'));
-    $address = (self::get('address'));
+    $connection = ldap_connect(self::get('address'), self::get('port'));
 
-    $con = ldap_connect($address, $port);
-
-    if (!$con) {
+    if (!$connection) {
       \Drupal::logger('user')->notice(
         'LDAP Connect failure to @address on port @port.',
-        ['@address' => $address, '@port' => $port]
+        ['@address' => self::get('address'), '@port' => self::get('port')]
       );
       return self::LDAP_CONNECT_ERROR;
     }
 
-    ldap_set_option($con, LDAP_OPT_PROTOCOL_VERSION, 3);
-    ldap_set_option($con, LDAP_OPT_REFERRALS, 0);
+    ldap_set_option($connection, LDAP_OPT_PROTOCOL_VERSION, 3);
+    ldap_set_option($connection, LDAP_OPT_REFERRALS, 0);
+    ldap_set_option($connection, LDAP_OPT_NETWORK_TIMEOUT, self::get('timeout'));
 
     // Use TLS if we are configured and able to.
     if (self::get('tls')) {
-      ldap_get_option($con, LDAP_OPT_PROTOCOL_VERSION, $vers);
-      if ($vers == -1) {
+      ldap_get_option($connection, LDAP_OPT_PROTOCOL_VERSION, $protocolVersion);
+      if ($protocolVersion == -1) {
         \Drupal::logger('user')->notice('Could not get LDAP protocol version.');
         return self::LDAP_PROTOCOL_ERROR;
       }
-      if ($vers != 3) {
+      if ($protocolVersion != 3) {
         \Drupal::logger('user')->notice('Could not start TLS, only supported by LDAP v3.');
         return self::LDAP_CONNECT_ERROR;
       }
@@ -132,14 +130,14 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
         \Drupal::logger('user')->notice('Could not start TLS. It does not seem to be supported by this PHP setup.');
         return self::LDAP_CONNECT_ERROR;
       }
-      elseif (!ldap_start_tls($con)) {
-        \Drupal::logger('user')->notice('Could not start TLS. (Error @errno: @error).', ['@errno' => ldap_errno($con), '@error' => ldap_error($con)]);
+      elseif (!ldap_start_tls($connection)) {
+        \Drupal::logger('user')->notice('Could not start TLS. (Error @errno: @error).', ['@errno' => ldap_errno($connection), '@error' => ldap_error($connection)]);
         return self::LDAP_CONNECT_ERROR;
       }
     }
 
     // Store the resulting resource.
-    $this->connection = $con;
+    $this->connection = $connection;
     return self::LDAP_SUCCESS;
   }
 
