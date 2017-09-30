@@ -980,7 +980,7 @@ class LdapUserConf {
     /**
      * 4. call drupal_alter() to allow other modules to alter $ldap_user
      */
-
+    $params['account'] = $account;
     drupal_alter('ldap_entry', $ldap_user_entry, $params);
 
     return array($ldap_user_entry, $result);
