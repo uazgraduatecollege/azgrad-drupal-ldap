@@ -6,6 +6,7 @@ use Drupal\authorization\Entity\AuthorizationProfile;
 use Drupal\Component\Utility\SafeMarkup;
 use Drupal\ldap_authentication\Helper\LdapAuthenticationConfiguration;
 use Drupal\ldap_servers\Entity\Server;
+use Drupal\ldap_servers\Helper\CredentialsStorage;
 use Drupal\ldap_servers\Helper\MassageAttributes;
 use Drupal\ldap_user\Helper\ExternalAuthenticationHelper;
 use Drupal\ldap_user\Helper\LdapConfiguration;
@@ -301,6 +302,7 @@ class LoginValidator implements LdapUserAttributesInterface {
       }
 
       $bindStatus = $this->bindToServer($password);
+      // @FIXME: We can do this better.
       if ($bindStatus != 'success') {
         $authenticationResult = $bindStatus;
         // If bind fails, onto next server.
@@ -387,8 +389,11 @@ class LoginValidator implements LdapUserAttributesInterface {
       $loginValid = TRUE;
     }
     else {
-      $bindResult = $this->serverDrupalUser->bind($this->ldapUser['dn'], $password, FALSE);
-      if ($bindResult == Server::LDAP_SUCCESS) {
+      CredentialsStorage::storeUserDn($this->ldapUser['dn']);
+      CredentialsStorage::testCredentials(true);
+      $bindResult = $this->serverDrupalUser->bind();
+      CredentialsStorage::testCredentials(false);
+      if ($bindResult  == Server::LDAP_SUCCESS) {
         $loginValid = TRUE;
       }
       else {
@@ -402,7 +407,6 @@ class LoginValidator implements LdapUserAttributesInterface {
         }
       }
     }
-
     return $loginValid;
   }
 
@@ -1022,37 +1026,31 @@ class LoginValidator implements LdapUserAttributesInterface {
    *   Success or failure result.
    */
   private function bindToServer($password) {
-    $bind_success = FALSE;
+    $bindResult = FALSE;
     $bindMethod = $this->serverDrupalUser->get('bind_method');
-    if ($bindMethod == 'service_account') {
-      $bind_success = ($this->serverDrupalUser->bind(NULL, NULL, FALSE) == Server::LDAP_SUCCESS);
-    }
-    elseif ($bindMethod == 'anon' || $bindMethod == 'anon_user') {
-      $bind_success = ($this->serverDrupalUser->bind(NULL, NULL, TRUE) == Server::LDAP_SUCCESS);
-    }
-    elseif ($bindMethod == 'user') {
-      // With SSO enabled this method of binding isn't valid.
+    if ($bindMethod == 'user') {
       foreach ($this->serverDrupalUser->getBaseDn() as $basedn) {
         $search = ['%basedn', '%username'];
         $replace = [$basedn, $this->authName];
-        $userdn = str_replace($search, $replace, $this->serverDrupalUser->get('user_dn_expression'));
-        $bind_success = ($this->serverDrupalUser->bind($userdn, $password, FALSE) == Server::LDAP_SUCCESS);
-        if ($bind_success) {
+        CredentialsStorage::storeUserDn(str_replace($search, $replace, $this->serverDrupalUser->get('user_dn_expression')));
+        CredentialsStorage::testCredentials(TRUE);
+        $bindResult = $this->serverDrupalUser->bind();
+        if ($bindResult == Server::LDAP_SUCCESS) {
           break;
         }
       }
     }
     else {
-      \Drupal::logger('ldap_authentication')
-        ->debug('No bind method set in server->bind_method in ldap_authentication_user_login_authenticate_validate.');
+      $bindResult = $this->serverDrupalUser->bind();
     }
 
-    if (!$bind_success) {
+    if ($bindResult != Server::LDAP_SUCCESS) {
       if ($this->detailedLogging) {
         \Drupal::logger('ldap_authentication')
-          ->debug('%username: Trying server %id where bind_method = %bind_method.  Error: %err_text', [
+          ->debug('%username: Trying server %id (bind method: %bind_method). Error: %err_text', [
             '%username' => $this->authName,
-            '%err_text' => $this->serverDrupalUser->formattedError($bind_success),
+            '%id' => $this->serverDrupalUser->id(),
+            '%err_text' => $this->serverDrupalUser->formattedError($bindResult),
             '%bind_method' => $this->serverDrupalUser->get('bind_method'),
           ]);
       }
@@ -1075,38 +1073,30 @@ class LoginValidator implements LdapUserAttributesInterface {
    *   Binding successful.
    */
   private function bindToServerSso() {
-    $bind_success = FALSE;
-    $bindMethod = $this->serverDrupalUser->get('bind_method');
-    if ($bindMethod == 'service_account') {
-      $bind_success = ($this->serverDrupalUser->bind(NULL, NULL, FALSE) == Server::LDAP_SUCCESS);
-    }
-    elseif ($bindMethod == 'anon' || $bindMethod == 'anon_user') {
-      $bind_success = ($this->serverDrupalUser->bind(NULL, NULL, TRUE) == Server::LDAP_SUCCESS);
-    }
-    else {
+    $bindResult = FALSE;
+
+    if ($this->serverDrupalUser->get('bind_method') == 'user') {
       \Drupal::logger('ldap_authentication')
         ->error('Trying to use SSO with user bind method.');
       \Drupal::logger('ldap_authentication')
         ->debug('No bind method set in ldap_server->bind_method in ldap_authentication_user_login_authenticate_validate.');
+      return self::AUTHENTICATION_FAILURE_CREDENTIALS;
+    } else {
+      $bindResult = $this->serverDrupalUser->bind();
     }
 
-    if (!$bind_success) {
+    if ($bindResult != Server::LDAP_SUCCESS) {
       if ($this->detailedLogging) {
         \Drupal::logger('ldap_authentication')
           ->debug('%username: Trying server %id where bind_method = %bind_method.  Error: %err_text',
             [
               '%username' => $this->authName,
               '%bind_method' => $this->serverDrupalUser->get('bind_method'),
-              '%err_text' => $this->serverDrupalUser->formattedError($bind_success),
+              '%err_text' => $this->serverDrupalUser->formattedError($bindResult),
             ]
           );
       }
-      if ($this->serverDrupalUser->get('bind_method') == 'user') {
-        return self::AUTHENTICATION_FAILURE_CREDENTIALS;
-      }
-      else {
-        return self::AUTHENTICATION_FAILURE_BIND;
-      }
+      return self::AUTHENTICATION_FAILURE_BIND;
     }
     return 'success';
   }

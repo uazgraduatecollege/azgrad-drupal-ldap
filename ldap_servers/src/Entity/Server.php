@@ -5,6 +5,7 @@ namespace Drupal\ldap_servers\Entity;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\ldap_servers\Helper\ConversionHelper;
+use Drupal\ldap_servers\Helper\CredentialsStorage;
 use Drupal\ldap_servers\LdapProtocolInterface;
 use Drupal\ldap_servers\Helper\MassageAttributes;
 use Drupal\ldap_servers\ServerInterface;
@@ -144,59 +145,90 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
   /**
    * Bind (authenticate) against an active LDAP database.
    *
-   * @param string $userdn
-   *   The DN to bind against. If NULL, we use $this->binddn.
-   * @param string $pass
-   *   The password search base. If NULL, we use $this->bindpw.
-   * @param bool $anon_bind
-   *   Whether to bind anonymously.
-   *
    * @return int
    *   Result of bind in form of LDAP_SUCCESS or relevant error.
    */
-  public function bind($userdn = NULL, $pass = NULL, $anon_bind = NULL) {
+  public function bind() {
+
     // Ensure that we have an active server connection.
     if (!$this->connection) {
-      \Drupal::logger('ldap_servers')->notice("LDAP bind failure for user %user. Not connected to LDAP server.", ['%user' => $userdn]);
+      \Drupal::logger('ldap_servers')->notice("LDAP bind failure. Not connected to LDAP server.");
       return self::LDAP_CONNECT_ERROR;
     }
 
-    if ($anon_bind === FALSE && $userdn === NULL && $pass === NULL && $this->get('bind_method') == 'anon') {
+    if ($this->get('bind_method') == 'anon') {
       $anon_bind = TRUE;
-    }
-    if ($anon_bind === TRUE) {
-      if (@!ldap_bind($this->connection)) {
-        if ($this->detailedWatchdogLog) {
-          \Drupal::logger('ldap_servers')->notice("LDAP anonymous bind error. Error %error", ['%error' => $this->formattedError($this->ldapErrorNumber())]);
-        }
-        return ldap_errno($this->connection);
+    } else if ($this->get('bind_method') == 'anon_user') {
+      if (CredentialsStorage::validateCredentials()) {
+        $anon_bind = FALSE;
+      } else {
+        $anon_bind = TRUE;
       }
+    } else {
+      $anon_bind = FALSE;
+    }
+
+    if ($anon_bind) {
+      $response = $this->anonymousBind();
     }
     else {
-      $userdn = ($userdn != NULL) ? $userdn : $this->get('binddn');
-      $pass = ($pass != NULL) ? $pass : $this->get('bindpw');
-
-      if (Unicode::strlen($pass) == 0 || Unicode::strlen($userdn) == 0) {
-        \Drupal::logger('ldap_servers')
-          ->notice("LDAP bind failure for user userdn=%userdn, pass=%pass.", [
-            '%userdn' => $userdn,
-            '%pass' => $pass,
-          ]);
-        return self::LDAP_LOCAL_ERROR;
-      }
-      if (@!ldap_bind($this->connection, $userdn, $pass)) {
-        if ($this->detailedWatchdogLog) {
-          \Drupal::logger('ldap_servers')
-            ->notice("LDAP bind failure for user %user. Error %errno: %error", [
-              '%user' => $userdn,
-              '%errno' => ldap_errno($this->connection),
-              '%error' => ldap_error($this->connection),
-            ]);
-        }
-        return ldap_errno($this->connection);
-      }
+      $response = $this->nonAnonymousBind();
     }
-    return self::LDAP_SUCCESS;
+    return $response;
+  }
+
+  /**
+   * @return int
+   */
+  private function anonymousBind() {
+    if (@!ldap_bind($this->connection)) {
+      if ($this->detailedWatchdogLog) {
+        \Drupal::logger('ldap_servers')
+          ->notice("LDAP anonymous bind error. Error %error", ['%error' => $this->formattedError($this->ldapErrorNumber())]);
+      }
+      $response = ldap_errno($this->connection);
+    } else {
+      $response = self::LDAP_SUCCESS;
+    }
+    return $response;
+  }
+
+  /**
+   * @return int
+   */
+  private function nonAnonymousBind() {
+    // Default credentials form service account.
+    $userDn = $this->get('binddn');
+    $password = $this->get('bindpw');
+
+    // Runtime credentials for user binding and password checking.
+    if (CredentialsStorage::validateCredentials()) {
+      $userDn = CredentialsStorage::getUserDn();
+      $password = CredentialsStorage::getPassword();
+    }
+
+    if (Unicode::strlen($password) == 0 || Unicode::strlen($userDn) == 0) {
+      \Drupal::logger('ldap_servers')
+        ->notice("LDAP bind failure due to missing credentials for user userdn=%userdn, pass=%pass.", [
+          '%userdn' => $userDn,
+          '%pass' => $password,
+        ]);
+      $response = self::LDAP_LOCAL_ERROR;
+    }
+    if (@!ldap_bind($this->connection, $userDn, $password)) {
+      if ($this->detailedWatchdogLog) {
+        \Drupal::logger('ldap_servers')
+          ->notice("LDAP bind failure for user %user. Error %errno: %error", [
+            '%user' => $userDn,
+            '%errno' => ldap_errno($this->connection),
+            '%error' => ldap_error($this->connection),
+          ]);
+      }
+      $response = ldap_errno($this->connection);
+    }  else {
+      $response = self::LDAP_SUCCESS;
+    }
+    return $response;
   }
 
   /**
@@ -298,10 +330,8 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
    */
   public function createLdapEntry(array $attributes, $dn = NULL) {
 
-    if (!$this->connection) {
-      $this->connect();
-      $this->bind();
-    }
+    $this->connectAndBindIfNotAlready();
+
     if (isset($attributes['dn'])) {
       $dn = $attributes['dn'];
       unset($attributes['dn']);
@@ -339,10 +369,8 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
    *   Result of ldap_delete() call.
    */
   public function deleteLdapEntry($dn) {
-    if (!$this->connection) {
-      $this->connect();
-      $this->bind();
-    }
+    $this->connectAndBindIfNotAlready();
+
     $result = @ldap_delete($this->connection, $dn);
 
     if (!$result) {
@@ -631,10 +659,8 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
 
     // When checking multiple servers, there's a chance we might not be
     // connected yet.
-    if (!$this->connection) {
-      $this->connect();
-      $this->bind();
-    }
+    $this->connectAndBindIfNotAlready();
+
 
     $ldap_query_params = [
       'connection' => $this->connection,

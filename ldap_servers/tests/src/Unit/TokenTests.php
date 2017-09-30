@@ -153,27 +153,4 @@ class TokenTests extends UnitTestCase {
 
   }
 
-  /**
-   * Test the temporary storage of passwords.
-   */
-  public function testPasswordStorage() {
-    $password = 'my-pass';
-
-    // Verify storage.
-    $tokenHelperA = new TokenProcessor();
-    $tokenHelperA::passwordStorage('set', $password);
-    $this->assertEquals($password, $tokenHelperA::passwordStorage('get'));
-
-    // Verify storage across instance.
-    $tokenHelperB = new TokenProcessor();
-    $this->assertEquals($password, $tokenHelperB::passwordStorage('get'));
-
-    // Verify storage without instance.
-    $this->assertEquals($password, TokenProcessor::passwordStorage('get'));
-
-    // Unset storage.
-    TokenProcessor::passwordStorage('set', NULL);
-    $this->assertEquals(NULL, TokenProcessor::passwordStorage('get'));
-  }
-
 }

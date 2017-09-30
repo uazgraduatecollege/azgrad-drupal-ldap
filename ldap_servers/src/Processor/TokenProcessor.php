@@ -5,6 +5,7 @@ namespace Drupal\ldap_servers\Processor;
 use Drupal\Component\Utility\SafeMarkup;
 use Drupal\Component\Utility\Unicode;
 use Drupal\ldap_servers\Helper\ConversionHelper;
+use Drupal\ldap_servers\Helper\CredentialsStorage;
 use Drupal\ldap_servers\Helper\MassageAttributes;
 use Drupal\user\UserInterface;
 
@@ -17,31 +18,6 @@ class TokenProcessor {
   const SUFFIX = ']';
   const DELIMITER = ':';
   const MODIFIER_DELIMITER = ';';
-
-  private static $userPassword = NULL;
-
-  /**
-   * Store passwords temporarily.
-   *
-   * Store user entered password during page load and protect unencrypted user
-   * password from other modules.
-   *
-   * @param string $action
-   *   Get/set action.
-   * @param string $value
-   *   A user entered password.
-   *
-   * @return string|null
-   *   Returns the password on get, otherwise nothing.
-   */
-  public static function passwordStorage($action, $value = NULL) {
-    if ($action == 'set') {
-      self::$userPassword = $value;
-    }
-    else {
-      return self::$userPassword;
-    }
-  }
 
   /**
    * Create tokens.
@@ -484,12 +460,11 @@ class TokenProcessor {
 
             case 'user':
             case 'user-only':
-              $pwd = self::passwordStorage('get');
-              $value = ($pwd) ? $pwd : NULL;
+              $pwd = CredentialsStorage::getPassword();
               break;
 
             case 'user-random':
-              $pwd = self::passwordStorage('get');
+              $pwd = CredentialsStorage::getPassword();
               $value = ($pwd) ? $pwd : user_password();
               break;
 

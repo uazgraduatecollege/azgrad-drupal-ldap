@@ -7,6 +7,7 @@
 
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\ldap_servers\Helper\CredentialsStorage;
 use Drupal\ldap_servers\OrphanProcessor;
 use Drupal\ldap_servers\Processor\TokenProcessor;
 use Drupal\ldap_user\LdapUserAttributesInterface;
@@ -218,12 +219,12 @@ function ldap_user_grab_password_validate($form, FormState &$form_state) {
   // to update email.
   if (!empty($form_state->getValue('current_pass_required_values'))) {
     if (!empty($form_state->getValue('current_pass')) && empty($form_state->getValue('pass'))) {
-      TokenProcessor::passwordStorage('set', $form_state->getValue('current_pass'));
+      CredentialsStorage::storeUserPassword($form_state->getValue('current_pass'));
     }
   }
   // Otherwise a logon form.
   elseif (!empty($form_state->getValue('pass'))) {
-    TokenProcessor::passwordStorage('set', $form_state->getValue('pass'));
+    CredentialsStorage::storeUserPassword($form_state->getValue('pass'));
   }
 }
 

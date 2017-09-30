@@ -44,8 +44,7 @@ class QueryController {
 
     if ($this->query) {
       $ldap_server = Server::load($this->query->get('server_id'));
-      $ldap_server->connect();
-      $ldap_server->bind();
+      $ldap_server->connectAndBindIfNotAlready();
 
       if ($filter == NULL) {
         $filter = $this->query->get('filter');
