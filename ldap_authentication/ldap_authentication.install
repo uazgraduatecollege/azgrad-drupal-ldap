@@ -29,13 +29,6 @@ function ldap_authentication_requirements($phase) {
 }
 
 /**
- * Implements hook_install().
- */
-function ldap_authentication_install() {
-  \Drupal::service('router.builder')->rebuild();
-}
-
-/**
  * Adds missing email template fields.
  */
 function ldap_authentication_update_8001() {
