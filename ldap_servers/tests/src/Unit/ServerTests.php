@@ -247,8 +247,8 @@ class ServerTests extends UnitTestCase {
 
     foreach ([0, 1] as $nested) {
 
-      // TODO: Before porting this test, consider splitting nested and not-nested
-      // functions up, since this is a mess.
+      // TODO: Before porting this test, consider splitting nested and
+      // not-nested functions up, since this is a mess.
       $nested_display = ($nested) ? 'nested' : 'not nested';
       $desired_count = ($nested) ? 4 : 3;
       $ldap_module_user_entry = ['attr' => $user_ldap_entry, 'dn' => $user_dn];
@@ -257,7 +257,8 @@ class ServerTests extends UnitTestCase {
       /** @var \Drupal\ldap_servers\Entity\Server $ldap_server */
       // Test parent function groupMembershipsFromUser.
       // TODO: Comment out / remove placeholder.
-      // $groups = $ldap_server->groupMembershipsFromUser($ldap_module_user_entry, $nested);.
+      // $groups = $ldap_server->
+      // groupMembershipsFromUser($ldap_module_user_entry, $nested);.
       $groups = $groups_desired;
       $count = count($groups);
       $diff1 = array_diff($groups_desired, $groups);
@@ -268,13 +269,15 @@ class ServerTests extends UnitTestCase {
       // Test parent groupUserMembershipsFromUserAttr, for openldap should be
       // false, for ad should work.
       // TODO: Comment out.
-      // $groups = $ldap_server->groupUserMembershipsFromUserAttr($ldap_module_user_entry, $nested);.
+      // $groups = $ldap_server->
+      // groupUserMembershipsFromUserAttr($ldap_module_user_entry, $nested);.
       $count = is_array($groups) ? count($groups) : $count;
       $pass = (count($diff1) == 0 && count($diff2) == 0 && $count == $desired_count);
       $this->assertTrue($pass);
 
       // TODO: Comment out.
-      // $groups = $ldap_server->groupUserMembershipsFromEntry($ldap_module_user_entry, $nested);.
+      // $groups = $ldap_server->
+      // groupUserMembershipsFromEntry($ldap_module_user_entry, $nested);.
       $count = count($groups);
       $diff1 = array_diff($groups_desired, $groups);
       $diff2 = array_diff($groups, $groups_desired);

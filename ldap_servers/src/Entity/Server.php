@@ -61,13 +61,6 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
   private $searchPageEnd = NULL;
 
   /**
-   * Error methods and properties.
-   *
-   * @var bool
-   */
-  public $detailedWatchdogLog = FALSE;
-
-  /**
    * Returns the formatted label of the bind method.
    *
    * @return string
@@ -158,13 +151,16 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
 
     if ($this->get('bind_method') == 'anon') {
       $anon_bind = TRUE;
-    } else if ($this->get('bind_method') == 'anon_user') {
+    }
+    elseif ($this->get('bind_method') == 'anon_user') {
       if (CredentialsStorage::validateCredentials()) {
         $anon_bind = FALSE;
-      } else {
+      }
+      else {
         $anon_bind = TRUE;
       }
-    } else {
+    }
+    else {
       $anon_bind = FALSE;
     }
 
@@ -178,23 +174,33 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
   }
 
   /**
+   * Bind to server anonymously.
+   *
    * @return int
+   *   Returns the binding response code from LDAP.
    */
   private function anonymousBind() {
     if (@!ldap_bind($this->connection)) {
-      if ($this->detailedWatchdogLog) {
-        \Drupal::logger('ldap_servers')
-          ->notice("LDAP anonymous bind error. Error %error", ['%error' => $this->formattedError($this->ldapErrorNumber())]);
-      }
+      \Drupal::service('ldap.detail_log')->log(
+        "LDAP anonymous bind error. Error %error",
+        ['%error' => $this->formattedError($this->ldapErrorNumber())]
+      );
       $response = ldap_errno($this->connection);
-    } else {
+    }
+    else {
       $response = self::LDAP_SUCCESS;
     }
     return $response;
   }
 
   /**
+   * Bind to server with credentials.
+   *
+   * This uses either service account credentials or stored credentials if it
+   * has been toggled through CredentialsStorage::testCredentials(true).
+   *
    * @return int
+   *   Returns the binding response code from LDAP.
    */
   private function nonAnonymousBind() {
     // Default credentials form service account.
@@ -216,16 +222,16 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
       $response = self::LDAP_LOCAL_ERROR;
     }
     if (@!ldap_bind($this->connection, $userDn, $password)) {
-      if ($this->detailedWatchdogLog) {
-        \Drupal::logger('ldap_servers')
-          ->notice("LDAP bind failure for user %user. Error %errno: %error", [
-            '%user' => $userDn,
-            '%errno' => ldap_errno($this->connection),
-            '%error' => ldap_error($this->connection),
-          ]);
-      }
+      \Drupal::service('ldap.detail_log')->log(
+        "LDAP bind failure for user %user. Error %errno: %error", [
+          '%user' => $userDn,
+          '%errno' => ldap_errno($this->connection),
+          '%error' => ldap_error($this->connection),
+        ]
+      );
       $response = ldap_errno($this->connection);
-    }  else {
+    }
+    else {
       $response = self::LDAP_SUCCESS;
     }
     return $response;
@@ -642,25 +648,23 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
       }
     }
 
-    if (\Drupal::config('ldap_help.settings')->get('watchdog_detail')) {
-      \Drupal::logger('ldap_servers')->notice("LDAP search call with base_dn '%base_dn'. Filter is '%filter' with attributes '%attributes'. Only attributes %attrs_only, size limit %size_limit, time limit %time_limit, dereference %deref, scope %scope.", [
-        '%base_dn' => $base_dn,
-        '%filter' => $filter,
-        '%attributes' => is_array($attributes) ? implode(',', $attributes) : 'none',
-        '%attrs_only' => $attrsonly,
-        '%size_limit' => $sizelimit,
-        '%time_limit' => $timelimit,
-        '%deref' => $deref ? $deref : 'null',
-        '%scope' => $scope ? $scope : 'null',
+    \Drupal::service('ldap.detail_log')->log(
+    "LDAP search call with base_dn '%base_dn'. Filter is '%filter' with attributes '%attributes'. Only attributes %attrs_only, size limit %size_limit, time limit %time_limit, dereference %deref, scope %scope.", [
+      '%base_dn' => $base_dn,
+      '%filter' => $filter,
+      '%attributes' => is_array($attributes) ? implode(',', $attributes) : 'none',
+      '%attrs_only' => $attrsonly,
+      '%size_limit' => $sizelimit,
+      '%time_limit' => $timelimit,
+      '%deref' => $deref ? $deref : 'null',
+      '%scope' => $scope ? $scope : 'null',
 
-      ]
-      );
-    }
+    ]
+    );
 
     // When checking multiple servers, there's a chance we might not be
     // connected yet.
     $this->connectAndBindIfNotAlready();
-
 
     $ldap_query_params = [
       'connection' => $this->connection,

@@ -2,7 +2,13 @@
 
 namespace Drupal\ldap_servers\Helper;
 
-
+/**
+ * Temporarily stores credentials from user input.
+ *
+ * This temporary storage is required so that LDAP can work with them in the
+ * clear indepedent of the login form process and to avoid passend them
+ * around dozens of functions.
+ */
 class CredentialsStorage {
 
   private static $userDn = NULL;
@@ -22,7 +28,7 @@ class CredentialsStorage {
   /**
    * Stores the password from user input.
    *
-   * @param $password
+   * @param string $password
    *   Password to store.
    */
   public static function storeUserPassword($password) {
@@ -32,12 +38,13 @@ class CredentialsStorage {
   /**
    * Turn testing of user credentials on or off.
    *
-   * @param $validate
+   * @param bool $validate
    *   Defaults to false.
    */
   public static function testCredentials($validate) {
     self::$validate = $validate;
   }
+
   /**
    * Return the temporarily saved user DN.
    *
@@ -67,4 +74,5 @@ class CredentialsStorage {
   public static function validateCredentials() {
     return self::$validate;
   }
+
 }

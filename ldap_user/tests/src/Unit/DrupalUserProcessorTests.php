@@ -40,7 +40,6 @@ class DrupalUserProcessorTests extends UnitTestCase implements LdapUserAttribute
       ],
     ];
 
-    /* Mocks the configuration due to detailed watchdog logging. */
     $this->config = $this->getMockBuilder('\Drupal\Core\Config\ImmutableConfig')
       ->disableOriginalConstructor()
       ->getMock();
@@ -62,9 +61,14 @@ class DrupalUserProcessorTests extends UnitTestCase implements LdapUserAttribute
       ->method('get')
       ->willReturn(FALSE);
 
+    $this->detailLog = $this->getMockBuilder('\Drupal\ldap_servers\Logger\LdapDetailLog')
+      ->disableOriginalConstructor()
+      ->getMock();
+
     $this->container = new ContainerBuilder();
     $this->container->set('config.factory', $this->configFactory);
     $this->container->set('cache.default', $this->cacheFactory);
+    $this->container->set('ldap.detail_log', $this->detailLog);
     \Drupal::setContainer($this->container);
   }
 

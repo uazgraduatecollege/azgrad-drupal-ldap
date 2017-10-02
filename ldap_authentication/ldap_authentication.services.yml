@@ -3,7 +3,6 @@ services:
     class: Drupal\ldap_authentication\Routing\RouteSubscriber
     tags:
       - { name: event_subscriber }
-
   ldap_authentication.email_template:
     class: Drupal\ldap_authentication\Routing\EmailTemplateService
     tags:
@@ -13,3 +12,9 @@ services:
     arguments: ['@config.factory', '@current_user']
     tags:
       - { name: access_check, applies_to: _user_help_tab_access_check }
+  logger.channel.ldap_authentication:
+      parent: logger.channel_base
+      arguments: ['ldap_authentication']
+  ldap_authentication.login_validator:
+    class: \Drupal\ldap_authentication\Controller\LoginValidator
+    arguments: ['@config.factory', '@ldap.detail_log', '@logger.channel.ldap_authentication']

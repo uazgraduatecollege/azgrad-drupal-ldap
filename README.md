@@ -24,8 +24,9 @@ For more information review the following resources:
 | ldap_sso | Provides Kerberos/NTLM single-sign-on. Note that this module is now a [separate project on drupal.org](https://www.drupal.org/project/ldap_sso). |
 | ldap_user | A base module with low-level user functionality as well as mechanisms to sync user data. |
 
-A common scenario for logging in users via LDAP, assigning groups to them and syncing user fields thus consists of
-ldap_authentication, ldap_authorization, ldap_servers, ldap_user.
+A common scenario for logging in users via LDAP, assigning groups to them and
+syncing user fields thus consists of ldap_authentication, ldap_authorization,
+ldap_servers, ldap_user.
 
 ## Additional information
 
@@ -38,16 +39,19 @@ debugging.
 
 ### General LDAP resources
 
-* [Moodle LDAP module documentation](http://docs.moodle.org/20/en/LDAP_authentication) is well done and provides insight into LDAP in a PHP environment.
-* [PHP LDAP](http://us.php.net/manual/en/book.ldap.php)
-* [Apache Directory Studio](http://directory.apache.org/studio/) LDAP Browser and Directory Client.
+* Documentation from the PHP project on its
+[LDAP implemtation](https://secure.php.net/manual/en/book.ldap.php)
+* Microsoft's Active Directory
+[documentation overview](http://msdn.microsoft.com/en-us/library/aa705886(VS.85).aspx)
+* Moodle's
+[LDAP module documentation](http://docs.moodle.org/20/en/LDAP_authentication) is
+detailed and provides insight into LDAP in a PHP environment.
+* [Apache Directory Studio](http://directory.apache.org/studio/)
+LDAP Browser and Directory Client.
 * [Novell Edirectory](http://www.novell.com/documentation/edir873/index.html?page=/documentation/edir873/edir873/data/h0000007.html)
-* [Apple Open Directory](http://images.apple.com/server/macosx/docs/Open_Directory_Admin_v10.5_3rd_Ed.pdf)
-* [Microsoft Active Directory LDAP](http://msdn.microsoft.com/en-us/library/aa705886(VS.85).aspx)
 
 ### Example documentations from public universities
 
 * [Northwestern University](http://www.it.northwestern.edu/bin/docs/CentralAuthenticationServicesThroughLDAP.pdf)
-* [University of Washington](http://www.netid.washington.edu/documentation/ldapConfig.aspx)
-* [University of Chicago](https://wiki.uchicago.edu/display/idm/LDAP)
-* [UIOWA](https://www.icts.uiowa.edu/confluence/display/ICTSit/Drupal+LDAP+Integration+Against+Active+Directory)
+* [University of Washington](https://itconnect.uw.edu/wares/msinf/authn/ldap/)
+* [UIOWA](https://wiki.uiowa.edu/display/ICTSit/Drupal+LDAP+Integration+Against+Active+Directory)

@@ -12,11 +12,11 @@ use Drupal\Tests\UnitTestCase;
  */
 class TokenTests extends UnitTestCase {
 
-  public $configFactory;
   public $serverFactory;
   public $config;
   public $container;
   private $ldapEntry;
+  protected $detailLog;
 
   /**
    * Test setup.
@@ -24,19 +24,9 @@ class TokenTests extends UnitTestCase {
   protected function setUp() {
     parent::setUp();
 
-    /* Mocks the configuration due to detailed watchdog logging. */
-    $this->config = $this->getMockBuilder('\Drupal\Core\Config\ImmutableConfig')
+    $this->detailLog = $this->getMockBuilder('\Drupal\ldap_servers\Logger\LdapDetailLog')
       ->disableOriginalConstructor()
       ->getMock();
-
-    $this->configFactory = $this->getMockBuilder('\Drupal\Core\Config\ConfigFactory')
-      ->disableOriginalConstructor()
-      ->getMock();
-
-    $this->configFactory->expects($this->any())
-      ->method('get')
-      ->with('ldap_help.settings')
-      ->willReturn($this->config);
 
     /* Mocks the Server due to wrapper for ldap_explode_dn(). */
     $this->serverFactory = $this->getMockBuilder('\Drupal\ldap_servers\Entity\Server')
@@ -56,8 +46,8 @@ class TokenTests extends UnitTestCase {
       ]);
 
     $this->container = new ContainerBuilder();
-    $this->container->set('config.factory', $this->configFactory);
     $this->container->set('ldap.servers', $this->serverFactory);
+    $this->container->set('ldap.detail_log', $this->detailLog);
     \Drupal::setContainer($this->container);
 
     $this->ldapEntry = [

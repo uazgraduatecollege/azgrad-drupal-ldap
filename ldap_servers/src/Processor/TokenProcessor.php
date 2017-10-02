@@ -249,7 +249,7 @@ class TokenProcessor {
    */
   public function tokenizeEntry(array $ldap_entry, $token_keys = 'all', $pre = self::PREFIX, $post = self::SUFFIX) {
 
-    $detailed_watchdog_log = \Drupal::config('ldap_help.settings')->get('watchdog_detail');
+    $detailLog = \Drupal::service('ldap.detail_log');
     $tokens = [];
     $log_variables = [];
     $massager = new MassageAttributes();
@@ -258,9 +258,10 @@ class TokenProcessor {
       $log_variables['%calling_function'] = $backtrace[1]['function'];
     }
     if (!is_array($ldap_entry)) {
-      if ($detailed_watchdog_log) {
-        \Drupal::logger('ldap_servers')->debug('Skipped tokenization of LDAP entry because no LDAP entry provided when called from %calling_function.', $log_variables);
-      }
+      $detailLog->log(
+        'Skipped tokenization of LDAP entry because no LDAP entry provided when called from %calling_function.',
+        $log_variables
+      );
       // Empty array.
       return $tokens;
     }
@@ -284,10 +285,10 @@ class TokenProcessor {
         $attr_value = SafeMarkup::checkPlain($attr_value);
       }
       catch (\Exception $e) {
-        if ($detailed_watchdog_log) {
-          $log_variables['%attr_name'] = $attr_name;
-          \Drupal::logger('ldap_servers')->debug('Skipped tokenization of attribute %attr_name because the value would not pass check_plain function.', $log_variables);
-        }
+        $detailLog->log(
+          'Skipped tokenization of attribute %attr_name because the value would not pass check_plain function.',
+          $log_variables
+        );
         // don't tokenize data that can't pass check_plain.
         continue;
       }

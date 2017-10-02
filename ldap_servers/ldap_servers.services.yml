@@ -4,3 +4,6 @@ services:
     arguments: ['ldap_servers']
   ldap.servers:
     class: Drupal\ldap_servers\ServerFactory
+  ldap.detail_log:
+    class: Drupal\ldap_servers\Logger\LdapDetailLog
+    arguments: ['@logger.factory', '@config.factory']

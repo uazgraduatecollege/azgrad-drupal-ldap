@@ -24,6 +24,10 @@ and groups. A matching server template for LDAP is provided as well.
 Note that in group configuration you could use businessCategory to derive user 
 groups from attributes but this is disabled so that group DNs are queried.
 
+Working with LDAP and the various elements of OpenLDAP, such as slapd, are
+not easy to work with. See also some examples on the
+[track hacks](http://trac-hacks.org/wiki/LdapPluginTests) page.
+
 ### User binding
 
 If you want to bind with user credentials, you only need to modify the 
@@ -71,11 +75,3 @@ The structure of $ldap_user and $ldap_entry are different!
 ####  $user_attr_key
 key of form <attr_type>.<attr_name>[:<instance>] such as field.lname, 
 property.mail, field.aliases:2
-
-## Additional links
-
-* http://www-01.ibm.com/support/docview.wss?uid=swg21240892
-* https://cwiki.apache.org/GMOxDOC21/ldap-sample-app-ldap-sample-application.html
-* http://trac-hacks.org/wiki/LdapPluginTests
-* http://en.wikipedia.org/wiki/Hogwarts
-* http://harrypotter.wikia.com/wiki/Hogwarts_School_of_Witchcraft_and_Wizardry

@@ -2,6 +2,7 @@
 
 namespace Drupal\ldap_authentication\Controller;
 
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Routing\TrustedRedirectResponse;
 
@@ -21,7 +22,8 @@ class LdapHelpRedirect extends ControllerBase {
   public function redirectUrl() {
     $url = \Drupal::config('ldap_authentication.settings')
       ->get('ldapUserHelpLinkUrl');
-    return new TrustedRedirectResponse($url);
+    return (new TrustedRedirectResponse($url))
+      ->addCacheableDependency((new CacheableMetadata())->setCacheMaxAge(0));
   }
 
 }

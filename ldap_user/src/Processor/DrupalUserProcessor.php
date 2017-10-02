@@ -121,12 +121,12 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
     }
     // Still no LDAP user.
     if (!$ldapUser) {
-      if (\Drupal::config('ldap_help.settings')->get('watchdog_detail')) {
-        \Drupal::logger('ldap_user')
-          ->debug('@username: Failed to find associated LDAP entry for username in provision.',
-            ['@username' => $userData['name']]
-          );
-      }
+      \Drupal::service('ldap.detail_log')->log(
+        '@username: Failed to find associated LDAP entry for username in provision.',
+        ['@username' => $userData['name']],
+        'ldap-user'
+      );
+
       return FALSE;
     }
 

@@ -9,7 +9,6 @@ use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\ldap_servers\Helper\CredentialsStorage;
 use Drupal\ldap_servers\OrphanProcessor;
-use Drupal\ldap_servers\Processor\TokenProcessor;
 use Drupal\ldap_user\LdapUserAttributesInterface;
 use Drupal\ldap_user\Helper\LdapConfiguration;
 use Drupal\ldap_user\Processor\DrupalUserProcessor;

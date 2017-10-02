@@ -16,15 +16,26 @@ use Drupal\user\Entity\User;
  */
 class LdapUserProcessor implements LdapUserAttributesInterface {
 
+  /**
+   * Configuration settings from ldap_user.
+   *
+   * @var \Drupal\Core\Config\Config
+   */
   private $config;
-  private $detailedWatchdog = FALSE;
+
+  /**
+   * LDAP Details logger.
+   *
+   * @var \Drupal\ldap_servers\Logger\LdapDetailLog
+   */
+  private $detailLog;
 
   /**
    * Constructor.
    */
   public function __construct() {
     $this->config = \Drupal::config('ldap_user.settings')->get();
-    $this->detailedWatchdog = \Drupal::config('ldap_help.settings')->get('watchdog_detail');
+    $this->detailLog = \Drupal::service('ldap.detail_log');
   }
 
   /**
@@ -395,16 +406,16 @@ class LdapUserProcessor implements LdapUserAttributesInterface {
     ];
     if (isset($result['status'])) {
       if ($result['status'] == 'success') {
-        if ($this->detailedWatchdog) {
-          \Drupal::logger('ldap_user')
-            ->info('LDAP entry on server %sid created dn=%dn.  %description. username=%username, uid=%uid', $tokens);
-        }
+        $this->detailLog->log(
+          'LDAP entry on server %sid created dn=%dn.  %description. username=%username, uid=%uid',
+          $tokens, 'ldap_user'
+        );
       }
       elseif ($result['status'] == 'conflict') {
-        if ($this->detailedWatchdog) {
-          \Drupal::logger('ldap_user')
-            ->warning('LDAP entry on server %sid not created because of existing LDAP entry. %description. username=%username, uid=%uid', $tokens);
-        }
+        $this->detailLog->log(
+          'LDAP entry on server %sid not created because of existing LDAP entry. %description. username=%username, uid=%uid',
+          $tokens, 'ldap_user'
+        );
       }
       elseif ($result['status'] == 'fail') {
         \Drupal::logger('ldap_user')
