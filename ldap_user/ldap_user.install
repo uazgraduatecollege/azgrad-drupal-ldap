@@ -11,13 +11,6 @@ use Drupal\Core\Utility\UpdateException;
 use Drupal\ldap_user\LdapUserAttributesInterface;
 
 /**
- * Implements hook_install().
- */
-function ldap_user_install() {
-  \Drupal::service('router.builder')->rebuild();
-}
-
-/**
  * Convert ldap_user_identities table to authmap.
  */
 function ldap_user_update_8301(&$sandbox) {
