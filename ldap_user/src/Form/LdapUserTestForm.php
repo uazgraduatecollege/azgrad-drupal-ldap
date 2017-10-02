@@ -85,15 +85,6 @@ class LdapUserTestForm extends FormBase implements LdapUserAttributesInterface {
   /**
    * {@inheritdoc}
    */
-  public function validateForm(array &$form, FormStateInterface $form_state) {
-    if (count(array_filter($form_state->getValue(['action']))) > 1) {
-      $form_state->setErrorByName('action', $this->t('Only one action may be selected for "Execute Action" testing mode.'));
-    }
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function submitForm(array &$form, FormStateInterface $form_state) {
 
     $username = $form_state->getValue(['testing_drupal_username']);
