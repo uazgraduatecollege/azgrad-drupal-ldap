@@ -2,8 +2,8 @@
 
 namespace Drupal\ldap_servers\Logger;
 
-use Drupal\Core\Config\ConfigFactory;
-use Drupal\Core\Logger\LoggerChannelFactory;
+use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 
 /**
  * The detailed logger for the LDAP modules.
@@ -16,12 +16,12 @@ class LdapDetailLog {
   /**
    * LdapDetailLog constructor.
    *
-   * @param \Drupal\Core\Logger\LoggerChannelFactory $factory
+   * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $factory
    *   Logger factory.
-   * @param \Drupal\Core\Config\ConfigFactory $config
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config
    *   Config factory.
    */
-  public function __construct(LoggerChannelFactory $factory, ConfigFactory $config) {
+  public function __construct(LoggerChannelFactoryInterface $factory, ConfigFactoryInterface $config) {
     $this->loggerFactory = $factory;
     $this->config = $config->get('ldap_help.settings');
   }
