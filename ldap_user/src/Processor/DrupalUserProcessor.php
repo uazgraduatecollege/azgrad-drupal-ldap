@@ -300,7 +300,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
       $prov_event = self::EVENT_SYNC_TO_DRUPAL_USER;
     }
 
-    if ((!$ldap_user && !method_exists($this->account, 'getUsername')) || (!$this->account)) {
+    if ((!$ldap_user && !method_exists($this->account, 'getAccountName')) || (!$this->account)) {
       \Drupal::logger('ldap_user')
         ->notice('Invalid selection passed to syncToDrupalAccount.');
       return FALSE;
@@ -929,25 +929,26 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
   private function createDrupalUser(array $ldap_user) {
     $this->account->enforceIsNew();
     $this->applyAttributesToAccount($ldap_user, self::PROVISION_TO_DRUPAL, [self::EVENT_CREATE_DRUPAL_USER]);
-    $tokens = ['%drupal_username' => $this->account->get('name')];
+    $tokens = ['%drupal_username' => $this->account->getAccountName()];
     if (empty($this->account->getAccountName())) {
       drupal_set_message(t('User account creation failed because of invalid, empty derived Drupal username.'), 'error');
       \Drupal::logger('ldap_user')
-        ->error('Failed to create Drupal account %drupal_username because Drupal username could not be derived.', []);
+        ->error('Failed to create Drupal account %drupal_username because Drupal username could not be derived.', $tokens);
       return FALSE;
     }
     if (!$mail = $this->account->getEmail()) {
       drupal_set_message(t('User account creation failed because of invalid, empty derived email address.'), 'error');
       \Drupal::logger('ldap_user')
-        ->error('Failed to create Drupal account %drupal_username because email address could not be derived by LDAP User module', []);
+        ->error('Failed to create Drupal account %drupal_username because email address could not be derived by LDAP User module', $tokens);
       return FALSE;
     }
 
     if ($account_with_same_email = user_load_by_mail($mail)) {
       \Drupal::logger('ldap_user')
         ->error('LDAP user %drupal_username has email address (%email) conflict with a Drupal user %duplicate_name', [
+          '%drupal_username' => $this->account->getAccountName(),
           '%email' => $mail,
-          '%duplicate_name' => $account_with_same_email->name,
+          '%duplicate_name' => $account_with_same_email->getAccountName(),
         ]
       );
       drupal_set_message(t('Another user already exists in the system with the same email address. You should contact the system administrator in order to solve this conflict.'), 'error');
