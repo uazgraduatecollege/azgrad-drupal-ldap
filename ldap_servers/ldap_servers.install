@@ -6,6 +6,7 @@
  */
 
 use Drupal\Core\Url;
+use Drupal\Component\Utility\Unicode;
 
 /**
  * Implements hook_requirements().
@@ -90,4 +91,35 @@ function ldap_servers_update_8303() {
     $server->save();
   }
   return t('Server network timeouts are now configurable. Your servers have been set to 10 seconds.');
+}
+
+/**
+ * Force server attributes to be lowercase.
+ */
+function ldap_servers_update_8304() {
+  $factory = \Drupal::service('ldap.servers');
+  /** @var \Drupal\ldap_servers\ServerFactory $factory */
+  $servers = $factory->getAllServers();
+  foreach ($servers as $server) {
+    $fields = [
+      'user_attr',
+      'account_name_attr',
+      'mail_attr',
+      'mail_template',
+      'picture_attr',
+      'unique_persistent_attr',
+      'user_dn_expression',
+      'grp_memb_attr',
+      'grp_object_cat',
+      'grp_memb_attr_match_user_attr',
+      'grp_user_memb_attr',
+      'grp_derive_from_dn_attr',
+    ];
+
+    foreach ($fields as $field) {
+      $server->set($field, Unicode::strtolower($server->get($field)));
+    }
+    $server->save();
+  }
+  return t('All server configuration attributes are forced to lowercase.');
 }
