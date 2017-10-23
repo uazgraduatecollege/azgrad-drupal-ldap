@@ -125,17 +125,17 @@ class GroupUserUpdateProcessor {
             );
           }
           else {
-            $drupalAccount = $this->ldapDrupalUserProcessor->provisionDrupalAccount([
-              'name' => $username,
-              'status' => TRUE,
-            ]);
-            $this->ldapDrupalUserProcessor->drupalUserLogsIn($drupalAccount);
-            $this->updateAuthorizations($drupalAccount);
-            $this->detailLog->log(
-              'Periodic update: @name created',
-              ['@name' => $username],
-              'ldap_user'
-            );
+            $drupalAccount = $this->ldapDrupalUserProcessor
+              ->provisionDrupalAccount(['name' => $username, 'status' => TRUE]);
+            if ($drupalAccount) {
+              $this->ldapDrupalUserProcessor->drupalUserLogsIn($drupalAccount);
+              $this->updateAuthorizations($drupalAccount);
+              $this->detailLog->log(
+                'Periodic update: @name created',
+                ['@name' => $username],
+                'ldap_user'
+              );
+            }
           }
         }
       }
