@@ -2,6 +2,7 @@
 
 namespace Drupal\ldap_servers\Form;
 
+use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\ldap_servers\Entity\Server;
@@ -480,6 +481,25 @@ class ServerForm extends EntityForm {
           $this->entity->set('bindpw', $oldConfiguration->get('bindpw'));
         }
       }
+    }
+
+    $fields = [
+      'user_attr',
+      'account_name_attr',
+      'mail_attr',
+      'mail_template',
+      'picture_attr',
+      'unique_persistent_attr',
+      'user_dn_expression',
+      'grp_memb_attr',
+      'grp_object_cat',
+      'grp_memb_attr_match_user_attr',
+      'grp_user_memb_attr',
+      'grp_derive_from_dn_attr',
+    ];
+
+    foreach ($fields as $field) {
+      $this->entity->set($field, Unicode::strtolower($this->entity->get($field)));
     }
 
     $status = $this->entity->save();
