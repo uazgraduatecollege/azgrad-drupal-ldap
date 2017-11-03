@@ -783,8 +783,18 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
     if (LdapConfiguration::provisionsDrupalAccountsFromLdap() && in_array(self::EVENT_SYNC_TO_DRUPAL_USER, array_keys(LdapConfiguration::provisionsDrupalEvents()))) {
       if ($this->isUserLdapAssociated($this->account, self::PROVISION_TO_DRUPAL)) {
         $ldap_user = $factory->getUserDataFromServerByAccount($this->account, $this->config->get('drupalAcctProvisionServer'), 'ldap_user_prov_to_drupal');
-        $this->server = $factory->getServerById($this->config->get('drupalAcctProvisionServer'));
-        $this->applyAttributesToAccount($ldap_user, self::PROVISION_TO_DRUPAL, [self::EVENT_SYNC_TO_DRUPAL_USER]);
+        if ($ldap_user) {
+          $this->server = $factory->getServerById($this->config->get('drupalAcctProvisionServer'));
+          $this->applyAttributesToAccount($ldap_user, self::PROVISION_TO_DRUPAL, [self::EVENT_SYNC_TO_DRUPAL_USER]);
+        }
+        else {
+          $detailLog = \Drupal::service('ldap.detail_log');
+          $this->detailLog->log(
+            'Could not retrieve LDAP data for @name due to missing LDAP entry or performing an action with user bind, without credentials.',
+            ['@name' => $this->account->getAccountName()],
+            'ldap_user'
+          );
+        }
       }
     }
   }
