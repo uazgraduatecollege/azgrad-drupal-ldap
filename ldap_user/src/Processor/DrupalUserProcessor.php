@@ -43,11 +43,19 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
   private $factory;
 
   /**
+   * LDAP Details logger.
+   *
+   * @var \Drupal\ldap_servers\Logger\LdapDetailLog
+   */
+  private $detailLog;
+
+  /**
    * Constructor.
    */
   public function __construct() {
     $this->config = \Drupal::config('ldap_user.settings');
     $this->factory = \Drupal::service('ldap.servers');
+    $this->detailLog = \Drupal::service('ldap.detail_log');
   }
 
   /**
