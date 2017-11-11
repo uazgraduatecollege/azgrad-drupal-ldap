@@ -1060,83 +1060,96 @@ class LdapServer {
   }
 
 	/**
-	 * @param ldap entry array $ldap_entry
+	 * @param array $ldap_entry
 	 *
-	 * @return drupal file object image user's thumbnail or FALSE if none present or ERROR happens.
+	 * @return object|bool
+   *   Drupal file object image user's thumbnail or FALSE if none present or
+   *   ERROR happens.
 	 */
 	public function userPictureFromLdapEntry($ldap_entry, $drupal_username = FALSE) {
 		if ($ldap_entry && $this->picture_attr) {
 			//Check if ldap entry has been provisioned.
 
-			$thumb = isset($ldap_entry[$this->picture_attr][0]) ? $ldap_entry[$this->picture_attr][0] : FALSE;
-			if(!$thumb){
+			$image_data = isset($ldap_entry[$this->picture_attr][0]) ? $ldap_entry[$this->picture_attr][0] : FALSE;
+			if (!$image_data) {
 				return FALSE;
 			}
 
-			//Create md5 check.
-			$md5thumb = md5($thumb);
+			$md5thumb = md5($image_data);
 
 			/**
-			 * If existing account already has picture check if it has changed if so remove old file and create the new one
-		   * If picture is not set but account has md5 something is wrong exit.
+			 * If the existing account already has picture check if it has changed. If
+       * so remove the old file and create the new one. If a picture is not set
+       * but the account has an md5 hash, something is wrong and we exit.
 			 */
 			if ($drupal_username && $account = user_load_by_name($drupal_username)) {
-        if ($account->uid == 0 || $account->uid == 1){
+        if ($account->uid == 0 || $account->uid == 1) {
           return FALSE;
         }
-        if (isset($account->picture)){
-          // Check if image has changed
-          if (isset($account->data['ldap_user']['init']['thumb5md']) && $md5thumb === $account->data['ldap_user']['init']['thumb5md']){
-            //No change return same image
+        if (isset($account->picture)) {
+          // Check if image has changed.
+          if (isset($account->data['ldap_user']['init']['thumb5md']) && $md5thumb === $account->data['ldap_user']['init']['thumb5md']) {
+            // No change, return same image.
+            $account->picture->md5Sum = $md5thumb;
             return $account->picture;
           }
           else {
-            //Image is different check wether is obj/str and remove fileobject
-            if (is_object($account->picture)){
+            // Image is different, remove file object.
+            if (is_object($account->picture)) {
               file_delete($account->picture, TRUE);
             }
-            elseif (is_string($account->picture)){
+            elseif (is_string($account->picture)) {
               $file = file_load(intval($account->picture));
               file_delete($file, TRUE);
             }
           }
         }
         elseif (isset($account->data['ldap_user']['init']['thumb5md'])) {
-          watchdog('ldap_server', "Some error happened during thumbnailPhoto sync");
+          watchdog('ldap_server', "Some error happened during thumbnailPhoto sync.");
           return FALSE;
         }
       }
-			//Create tmp file to get image format.
-			$filename = uniqid();
-			$fileuri = file_directory_temp() .'/'. $filename;
-			$size = file_put_contents($fileuri, $thumb);
-			$info = image_get_info($fileuri);
-			unlink($fileuri);
-			// create file object
-			$file = file_save_data($thumb, 'public://' . variable_get('user_picture_path') .'/'. $filename .'.'. $info['extension']);
-			$file->md5Sum = $md5thumb;
-			// standard Drupal validators for user pictures
-			$validators = array(
-					'file_validate_is_image' => array(),
-					'file_validate_image_resolution' => array(variable_get('user_picture_dimensions', '85x85')),
-					'file_validate_size' => array(variable_get('user_picture_file_size', '30') * 1024),
-			);
-			$errors = file_validate($file ,$validators);
-			if (empty($errors)) {
-				return $file;
-			}
-      else {
-				foreach ($errors as $err => $err_val){
-					watchdog('ldap_server', "Error storing picture: %$err", array("%$err" => $err_val), WATCHDOG_ERROR);
-				}
-				return FALSE;
-			}
-		}
+      return $this->savePictureData($image_data, $md5thumb);
+    }
+    return FALSE;
 	}
 
 
   /**
-   * @param ldap entry array $ldap_entry
+   * @param $image_data
+   * @param $md5thumb
+   */
+  private function savePictureData($image_data, $md5thumb) {
+    //Create tmp file to get image format.
+    $filename = uniqid();
+    $fileuri = file_directory_temp() . '/' . $filename;
+    $size = file_put_contents($fileuri, $image_data);
+    $info = image_get_info($fileuri);
+    unlink($fileuri);
+    // create file object
+    $file = file_save_data($image_data, 'public://' . variable_get('user_picture_path') . '/' . $filename . '.' . $info['extension']);
+    $file->md5Sum = $md5thumb;
+    // standard Drupal validators for user pictures
+    $validators = [
+      'file_validate_is_image' => [],
+      'file_validate_image_resolution' => [variable_get('user_picture_dimensions', '85x85')],
+      'file_validate_size' => [variable_get('user_picture_file_size', '30') * 1024],
+    ];
+    $errors = file_validate($file, $validators);
+    if (empty($errors)) {
+      return $file;
+    }
+    else {
+      foreach ($errors as $err => $err_val) {
+        watchdog('ldap_server', "Error storing picture: %$err", ["%$err" => $err_val], WATCHDOG_ERROR);
+      }
+      return FALSE;
+    }
+  }
+
+
+  /**
+   * @param array $ldap_entry
    *
    * @return string user's PUID or permanent user id (within ldap), converted from binary, if applicable
    */

@@ -777,7 +777,7 @@ class LdapUserConf {
    *
    */
   public function synchToDrupalAccount($drupal_user, &$user_edit, $prov_event = LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER, $ldap_user = NULL,  $save = FALSE) {
-    
+
     $debug = array(
       'account' => $drupal_user,
       'user_edit' => $user_edit,
@@ -1198,17 +1198,6 @@ class LdapUserConf {
     }
 
     $drupal_username = $ldap_server->userUsernameFromLdapEntry($ldap_user['attr']);
-		if ($this->isSynched('[property.picture]', $prov_events, $direction)){
-
-			$picture = $ldap_server->userPictureFromLdapEntry($ldap_user['attr'], $drupal_username);
-
-			if ($picture){
-				$edit['picture'] = $picture;
-				if(isset($picture->md5Sum)){
-					$edit['data']['ldap_user']['init']['thumb5md'] = $picture->md5Sum;
-				}
-			}
-		}
 
     if ($this->isSynched('[property.name]', $prov_events, $direction) && !isset($edit['name']) && $drupal_username) {
       $edit['name'] = $drupal_username;
@@ -1241,6 +1230,14 @@ class LdapUserConf {
         'dn'   => $ldap_user['dn'],
         'mail' => isset($edit['mail']) && !empty($edit['mail']) ? $edit['mail'] : $ldap_user['mail'],
       );
+    }
+
+    if ($this->isSynched('[property.picture]', $prov_events, $direction)) {
+      $picture = $ldap_server->userPictureFromLdapEntry($ldap_user['attr'], $drupal_username);
+      if ($picture) {
+        $edit['picture'] = $picture->fid;
+        $edit['data']['ldap_user']['init']['thumb5md'] = $picture->md5Sum;
+      }
     }
 
     /**
