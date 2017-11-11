@@ -1235,7 +1235,11 @@ class LdapUserConf {
     if ($this->isSynched('[property.picture]', $prov_events, $direction)) {
       $picture = $ldap_server->userPictureFromLdapEntry($ldap_user['attr'], $drupal_username);
       if ($picture) {
-        $edit['picture'] = $picture->fid;
+        if (in_array(LDAP_USER_EVENT_CREATE_DRUPAL_USER, $prov_events)) {
+          $edit['picture'] = $picture->fid;
+        } else {
+          $edit['picture'] = $picture;
+        }
         $edit['data']['ldap_user']['init']['thumb5md'] = $picture->md5Sum;
       }
     }
