@@ -5,6 +5,7 @@
  * ldap_authentication simpletests
  *
  */
+
 module_load_include('php', 'ldap_test', 'LdapTestCase.class');
 
 class LdapAuthorizationBasicTests extends LdapTestCase {
@@ -214,7 +215,7 @@ function testFlags() {
    */
 
   $user = $this->drupalCreateUser(array());
-  $hpotter = $this->testFunctions->drupalLdapUpdateUser(array('name' => 'hpotter', 'mail' =>  'hpotter@hogwarts.edu'), TRUE, $user);
+  $hpotter = $this->testFunctions->drupalLdapUpdateUser(array('name' => 'hpotter', 'mail' => 'hpotter@hogwarts.edu'), TRUE, $user);
   list($new_authorizations, $notifications) = ldap_authorizations_user_authorizations($hpotter, 'query');  // just see if the correct ones are derived.
   $roles1 = $new_authorizations['drupal_role'];
 
@@ -248,7 +249,7 @@ function testFlags() {
   $this->consumerAdminConf['drupal_role']->save();
 
   $user = $this->drupalCreateUser(array());
-  $hgrainger = $this->testFunctions->drupalLdapUpdateUser(array('name' => 'hgrainger', 'mail' =>  'hgrainger@hogwarts.edu'), TRUE, $user);
+  $hgrainger = $this->testFunctions->drupalLdapUpdateUser(array('name' => 'hgrainger', 'mail' => 'hgrainger@hogwarts.edu'), TRUE, $user);
 
   // remove authmap in case it exists so test will work
   db_delete('authmap')
@@ -341,7 +342,7 @@ function testFlags() {
   $hpotter = user_load_by_name('hpotter');
   user_delete($hpotter->uid);
   $user = $this->drupalCreateUser(array());
-  $hpotter = $this->testFunctions->drupalLdapUpdateUser(array('name' => 'hpotter', 'mail' =>  'hpotter@hogwarts.edu'), TRUE, $user);
+  $hpotter = $this->testFunctions->drupalLdapUpdateUser(array('name' => 'hpotter', 'mail' => 'hpotter@hogwarts.edu'), TRUE, $user);
   $edit = array(
     'name' => 'hpotter',
     'pass' => 'goodpwd',
@@ -362,7 +363,7 @@ function testFlags() {
   $roles[$superadmin->rid] = $superadmin->name;
 
   $data = array(
-    'roles' =>  $roles,
+    'roles' => $roles,
     'data' => array('ldap_authorizations' =>
       array(
         'drupal_role' =>
@@ -493,7 +494,7 @@ function testFlags() {
       'only_ldap_authenticated'    => array(FALSE, TRUE),
       'use_first_attr_as_groupid'       => array(FALSE, TRUE),
       'mappings' => array("a|b", "a|b"),
-      'use_filter' =>  array(FALSE, TRUE),
+      'use_filter' => array(FALSE, TRUE),
       'synchronization_modes[user_logon]' => array(TRUE, FALSE),
       'synchronization_actions[revoke_ldap_provisioned]' => array(TRUE, FALSE),
       'synchronization_actions[regrant_ldap_provisioned]' => array(FALSE, TRUE),
@@ -538,7 +539,7 @@ function testFlags() {
           $this->drupalPost('admin/config/people/ldap/authorization/add/' . $consumer_type, $edit, t('Add'));
           $field_to_prop_map = LdapAuthorizationConsumerConf::field_to_properties_map();
           $ldap_consumer = ldap_authorization_get_consumer_object($consumer_type);
-          $this->assertTrue(is_object($ldap_consumer), 'ldap consumer conf loaded after add-save',  $this->ldapTestId . ' Add consumer configuration');
+          $this->assertTrue(is_object($ldap_consumer), 'ldap consumer conf loaded after add-save', $this->ldapTestId . ' Add consumer configuration');
           // assert one ldap server exists in db table
 
           // assert load of server has correct properties for each input
@@ -548,7 +549,7 @@ function testFlags() {
             debug($mismatches);
             debug($consumer_form_data);
           }
-          $this->assertTrue(count($mismatches) == 0, 'Add form for ldap consumer properties match values submitted.',  $this->ldapTestId . ' Add consumer conf');
+          $this->assertTrue(count($mismatches) == 0, 'Add form for ldap consumer properties match values submitted.', $this->ldapTestId . ' Add consumer conf');
 
 
           /** update server conf test **/
@@ -565,7 +566,7 @@ function testFlags() {
           unset($edit['sid']);
           $this->drupalPost('admin/config/people/ldap/authorization/edit/' . $consumer_type, $edit, t('Save'));
           $ldap_consumer = ldap_authorization_get_consumer_object($consumer_type);
-          $this->assertTrue(is_object($ldap_consumer), 'ldap consumer conf loaded after edit-save',  $this->ldapTestId . ' update consumer configuration');
+          $this->assertTrue(is_object($ldap_consumer), 'ldap consumer conf loaded after edit-save', $this->ldapTestId . ' update consumer configuration');
 
           $mismatches = $this->compareFormToProperties($ldap_consumer, $consumer_form_data, $i, $field_to_prop_map, $lcase_transformed);
           if (count($mismatches)) {
@@ -573,7 +574,7 @@ function testFlags() {
             debug($mismatches);
             debug($consumer_form_data);
           }
-          $this->assertTrue(count($mismatches) == 0, 'Update form for ldap server properties match values submitted.',  $this->ldapTestId . '.Update consumer conf');
+          $this->assertTrue(count($mismatches) == 0, 'Update form for ldap server properties match values submitted.', $this->ldapTestId . '.Update consumer conf');
 
           /** delete server conf test **/
           $this->drupalGet('admin/config/people/ldap/authorization/delete/' . $consumer_type);
@@ -582,7 +583,7 @@ function testFlags() {
           ctools_export_load_object_reset('ldap_authorization');
           $consumer_conf = ldap_authorization_get_consumer_conf($consumer_type);//
           $pass = (is_object($consumer_conf) && $consumer_conf->inDatabase === FALSE);
-          $this->assertTrue($pass, 'Delete form for consumer conf deleted conf.',  $this->ldapTestId . '.Delete  consumer conf');
+          $this->assertTrue($pass, 'Delete form for consumer conf deleted conf.', $this->ldapTestId . '.Delete  consumer conf');
           if (!$pass) {
             debug('ldap consumer after delete. is_object=' . is_object($consumer_conf));
             debug('inDatabase?' . is_object($ldap_consumer) ? $consumer_conf->inDatabase : '?');

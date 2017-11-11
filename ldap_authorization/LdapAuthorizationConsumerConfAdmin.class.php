@@ -126,13 +126,13 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
     $form['status']['status'] = array(
       '#type' => 'checkbox',
       '#title' => t('Enable this configuration', $consumer_tokens),
-      '#default_value' =>  $this->status,
+      '#default_value' => $this->status,
     );
 
     $form['status']['only_ldap_authenticated'] = array(
       '#type' => 'checkbox',
       '#title' => t('Only apply the following LDAP to !consumer_name configuration to users authenticated via LDAP.  One uncommon reason for disabling this is when you are using Drupal authentication, but want to leverage LDAP for authorization; for this to work the Drupal username still has to map to an LDAP entry.', $consumer_tokens),
-      '#default_value' =>  $this->onlyApplyToLdapAuthenticated,
+      '#default_value' => $this->onlyApplyToLdapAuthenticated,
     );
 
 
@@ -222,7 +222,7 @@ Representations of groups derived from LDAP might initially look like:
       $synchronization_actions[] = 'regrant_ldap_provisioned';
     }
 
-    $options =  array(
+    $options = array(
       'revoke_ldap_provisioned' => t('Revoke !consumer_namePlural previously granted by LDAP Authorization but no longer valid.', $consumer_tokens),
       'regrant_ldap_provisioned' => t('Re grant !consumer_namePlural previously granted by LDAP Authorization but removed manually.', $consumer_tokens),
     );
@@ -273,7 +273,7 @@ Representations of groups derived from LDAP might initially look like:
 
   public function getLdapAuthorizationConsumerActions() {
     $actions = array();
-    $actions[] =  l(t('edit'), LDAP_SERVERS_MENU_BASE_PATH . '/authorization/edit/' . $this->consumerType);
+    $actions[] = l(t('edit'), LDAP_SERVERS_MENU_BASE_PATH . '/authorization/edit/' . $this->consumerType);
     if (property_exists($this, 'type')) {
       if ($this->type == 'Overridden') {
           $actions[] = l(t('revert'), LDAP_SERVERS_MENU_BASE_PATH . '/authorization/delete/' . $this->consumerType);
@@ -462,11 +462,11 @@ Representations of groups derived from LDAP might initially look like:
       ),
 
       'synchronization_modes' => array(
-        'form_default' =>  array('user_logon'),
+        'form_default' => array('user_logon'),
       ),
 
       'synchronization_actions' => array(
-        'form_default' =>  array('revoke_ldap_provisioned', 'create_consumers'),
+        'form_default' => array('revoke_ldap_provisioned', 'create_consumers'),
       ),
 
       'synch_to_ldap'  => array(

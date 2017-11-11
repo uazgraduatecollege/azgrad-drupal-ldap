@@ -83,7 +83,7 @@ class LdapAuthorizationConsumerConf {
     else {
       $select = db_select('ldap_authorization', 'ldap_authorization');
       $select->fields('ldap_authorization');
-      $select->condition('ldap_authorization.consumer_type',  $this->consumerType);
+      $select->condition('ldap_authorization.consumer_type', $this->consumerType);
       $server_record = $select->execute()->fetchObject();
     }
 
@@ -102,7 +102,7 @@ class LdapAuthorizationConsumerConf {
         }
       }
     }
-    $this->numericConsumerConfId = isset($server_record->numeric_consumer_conf_id)? $server_record->numeric_consumer_conf_id : NULL;
+    $this->numericConsumerConfId = isset($server_record->numeric_consumer_conf_id) ? $server_record->numeric_consumer_conf_id : NULL;
     $this->server = ldap_servers_get_servers($this->sid, NULL, TRUE);
     return TRUE;
 

@@ -7,7 +7,7 @@
 
 function ldap_authorization_help_watchdog() {  // remove after testing
 
-  $path =  drupal_get_path("module", "ldap_help");
+  $path = drupal_get_path("module", "ldap_help");
   $_content = "";
   if (module_exists('dblog')) {
     include_once(drupal_get_path('module', 'dblog') . '/dblog.admin.inc');
@@ -501,7 +501,7 @@ function _ldap_authorization_ldap_authorization_maps_alter(&$user, &$user_ldap_e
     $watchdog_tokens['%ldap_server'] = $ldap_server->sid;
     $watchdog_tokens['%deriveFromDn'] = join(', ', $derive_from_dn_authorizations);
     $watchdog_tokens['%deriveFromGroups'] = join(', ', $group_dns);
-    $watchdog_tokens['%authz_ids'] =  join(', ', array_keys($authz_ids));
+    $watchdog_tokens['%authz_ids'] = join(', ', array_keys($authz_ids));
 
     watchdog('ldap_authorization', '%username :_ldap_authorization_ldap_authorization_maps_alter:
       <hr/>deriveFromDn authorization ids: %deriveFromDn

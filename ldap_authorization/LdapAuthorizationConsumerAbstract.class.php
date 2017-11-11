@@ -79,9 +79,9 @@ class LdapAuthorizationConsumerAbstract {
   function __construct($consumer_type, $params) {
     $this->consumerType = $consumer_type;
     $this->name = $params['consumer_name'];
-    $this->namePlural= $params['consumer_name_plural'];
+    $this->namePlural = $params['consumer_name_plural'];
     $this->shortName = $params['consumer_short_name'];
-    $this->shortNamePlural= $params['consumer_short_name_plural'];
+    $this->shortNamePlural = $params['consumer_short_name_plural'];
     $this->consumerModule = $params['consumer_module'];
     $this->mappingDirections = $params['consumer_mapping_directions'];
     $this->testLink = l(t('test') . ' ' . $this->name, LDAP_SERVERS_MENU_BASE_PATH . '/authorization/test/' . $this->consumerType);

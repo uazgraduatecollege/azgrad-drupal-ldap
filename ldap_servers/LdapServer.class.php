@@ -13,17 +13,17 @@
  * TODO describe preconditions for ldap_entry
  */
 function pretty_print_ldap_entry($ldap_entry) {
-  $m=array();
-  for ($i=0; $i < $ldap_entry['count']; $i++) {
-    $k=$ldap_entry[$i];
-    $v=$ldap_entry[$k];
+  $m = array();
+  for ($i = 0; $i < $ldap_entry['count']; $i++) {
+    $k = $ldap_entry[$i];
+    $v = $ldap_entry[$k];
     if(is_array($v)) {
-      $m2=array();
-      $max=$v['count']>3 ? 3 : $v['count'];
-      for ($j=0; $j < $max; $j++) {
+      $m2 = array();
+      $max = $v['count'] > 3 ? 3 : $v['count'];
+      for ($j = 0; $j < $max; $j++) {
 	$m2[] = $v[$j];
       }
-      $v="(".join(", ", $m2).")";
+      $v = "(".join(", ", $m2).")";
     }
     $m[] = $k . ": " . $v;
   }
@@ -144,7 +144,7 @@ class LdapServer {
     'grp_memb_attr_match_user_attr' => 'groupMembershipsAttrMatchingUserAttr',
     'grp_derive_from_dn' => 'groupDeriveFromDn',
     'grp_derive_from_dn_attr' => 'groupDeriveFromDnAttr',
-    'grp_test_grp_dn' =>  'groupTestGroupDn',
+    'grp_test_grp_dn' => 'groupTestGroupDn',
     'grp_test_grp_dn_writeable' => 'groupTestGroupDnWriteable',
 
     'search_pagination' => 'searchPagination',
@@ -176,7 +176,7 @@ class LdapServer {
     else {
       $select = db_select('ldap_servers')
         ->fields('ldap_servers')
-        ->condition('ldap_servers.sid',  $sid)
+        ->condition('ldap_servers.sid', $sid)
         ->execute();
       foreach ($select as $record) {
         if ($record->sid == $sid) {
@@ -295,7 +295,7 @@ class LdapServer {
         return LDAP_CONNECT_ERROR;
       }
       elseif (!ldap_start_tls($con)) {
-        $msg =  t("Could not start TLS. (Error %errno: %error).", array('%errno' => ldap_errno($con), '%error' => ldap_error($con)));
+        $msg = t("Could not start TLS. (Error %errno: %error).", array('%errno' => ldap_errno($con), '%error' => ldap_error($con)));
         watchdog('user', $msg);
         return LDAP_CONNECT_ERROR;
       }
@@ -548,7 +548,7 @@ class LdapServer {
 
       $entries = ldap_get_entries($this->connection, $result);
       if (is_array($entries) && $entries['count'] == 1) {
-        $old_attributes =  $entries[0];
+        $old_attributes = $entries[0];
       }
     }
 
@@ -718,7 +718,7 @@ class LdapServer {
       }
     }
 
-    $attr_display =  is_array($attributes) ? join(',', $attributes) : 'none';
+    $attr_display = is_array($attributes) ? join(',', $attributes) : 'none';
     $query = 'ldap_search() call: ' . join(",\n", array(
       'base_dn: ' . $base_dn,
       'filter = ' . $filter,
@@ -765,7 +765,7 @@ class LdapServer {
         return (is_array($entries)) ? $entries : FALSE;
       }
       elseif ($this->ldapErrorNumber()) {
-        $watchdog_tokens =  array('%basedn' => $ldap_query_params['base_dn'], '%filter' => $ldap_query_params['filter'],
+        $watchdog_tokens = array('%basedn' => $ldap_query_params['base_dn'], '%filter' => $ldap_query_params['filter'],
           '%attributes' => print_r($ldap_query_params['attributes'], TRUE), '%errmsg' => $this->errorMsg('ldap'),
           '%errno' => $this->ldapErrorNumber());
         watchdog('ldap', "LDAP ldap_search error. basedn: %basedn| filter: %filter| attributes:
@@ -831,7 +831,7 @@ class LdapServer {
           $aggregated_entries_count = count($aggregated_entries);
         }
         elseif ($this->ldapErrorNumber()) {
-          $watchdog_tokens =  array('%basedn' => $ldap_query_params['base_dn'], '%filter' => $ldap_query_params['filter'],
+          $watchdog_tokens = array('%basedn' => $ldap_query_params['base_dn'], '%filter' => $ldap_query_params['filter'],
             '%attributes' => print_r($ldap_query_params['attributes'], TRUE), '%errmsg' => $this->errorMsg('ldap'),
             '%errno' => $this->ldapErrorNumber());
           watchdog('ldap', "LDAP ldap_search error. basedn: %basedn| filter: %filter| attributes:
@@ -959,7 +959,7 @@ class LdapServer {
       }
       else {
         $uids = join(',', $uids);
-        $tokens = array('%uids' => $uids, '%puid' => $puid, '%sid' =>  $this->sid, '%ldap_user_puid_property' =>  $this->unique_persistent_attr);
+        $tokens = array('%uids' => $uids, '%puid' => $puid, '%sid' => $this->sid, '%ldap_user_puid_property' => $this->unique_persistent_attr);
         watchdog('ldap_server', 'multiple users (uids: %uids) with same puid (puid=%puid, sid=%sid, ldap_user_puid_property=%ldap_user_puid_property)', $tokens, WATCHDOG_ERROR);
         return FALSE;
       }
@@ -1265,7 +1265,7 @@ class LdapServer {
       else {
         if ($this->bind_method == LDAP_SERVERS_BIND_METHOD_ANON_USER) {
           $result = array(
-            'dn' =>  $match['dn'],
+            'dn' => $match['dn'],
             'mail' => $this->userEmailFromLdapEntry($match),
             'attr' => $match,
             'sid' => $this->sid,
@@ -1288,7 +1288,7 @@ class LdapServer {
       foreach ($match[$name_attr] as $value) {
         if (drupal_strtolower(trim($value)) == drupal_strtolower($ldap_username)) {
           $result = array(
-            'dn' =>  $match['dn'],
+            'dn' => $match['dn'],
             'mail' => $this->userEmailFromLdapEntry($match),
             'attr' => $match,
             'sid' => $this->sid,
@@ -1536,7 +1536,7 @@ class LdapServer {
           };
           $ors = array();
           foreach ($member_ids as $i => $member_id) {
-            $ors[] =  $this->groupMembershipsAttr . '=' . ldap_pear_escape_filter_value($member_id); // @todo this would be replaced by query template
+            $ors[] = $this->groupMembershipsAttr . '=' . ldap_pear_escape_filter_value($member_id); // @todo this would be replaced by query template
           }
 
           if (count($ors)) {
@@ -1669,13 +1669,13 @@ class LdapServer {
         else {
           $member_value = ldap_servers_get_first_rdn_value_from_dn($member_group_dn, $this->groupMembershipsAttrMatchingUserAttr);
         }
-        $ors[] =  $this->groupMembershipsAttr . '=' . ldap_pear_escape_filter_value($member_value);
+        $ors[] = $this->groupMembershipsAttr . '=' . ldap_pear_escape_filter_value($member_value);
       }
     }
 
     if ($nested && count($ors)) {
       $count = count($ors);
-      for ($i=0; $i < $count; $i=$i+LDAP_SERVER_LDAP_QUERY_CHUNK) { // only 50 or so per query
+      for ($i = 0; $i < $count; $i = $i + LDAP_SERVER_LDAP_QUERY_CHUNK) { // only 50 or so per query
         $current_ors = array_slice($ors, $i, LDAP_SERVER_LDAP_QUERY_CHUNK);
         $or = '(|(' . join(")(", $current_ors) . '))';  // e.g. (|(cn=group1)(cn=group2)) or   (|(dn=cn=group1,ou=blah...)(dn=cn=group2,ou=blah...))
         $query_for_parent_groups = '(&(objectClass=' . $this->groupObjectClass . ')' . $or . ')';
@@ -1790,21 +1790,21 @@ class LdapServer {
         $member_id = ldap_servers_get_first_rdn_value_from_dn($group_entry['dn'], $this->groupMembershipsAttrMatchingUserAttr);
 	if(!$member_id) {
 	  if ($this->detailed_watchdog_log) {
-	     watchdog('ldap_server', 'group_entry: %ge', array('%ge'=>pretty_print_ldap_entry($group_entry)));
+	     watchdog('ldap_server', 'group_entry: %ge', array('%ge' => pretty_print_ldap_entry($group_entry)));
 	  }
 	  // group not identified by simple checks yet!
 
 	  // examine the entry and see if it matches the configured groupObjectClass
-	  $goc=$group_entry['objectclass']; // TODO do we need to ensure such entry is there?
+	  $goc = $group_entry['objectclass']; // TODO do we need to ensure such entry is there?
 	  if(is_array($goc)) {              // TODO is it always an array?
 	    foreach($goc as $g) {
-	      $g=drupal_strtolower($g);
+	      $g = drupal_strtolower($g);
 	      if($g == $this->groupObjectClass) {
 		// found a group, current user must be member in it - so:
 		if ($this->detailed_watchdog_log) {
-		  watchdog('ldap_server', 'adding %mi', array('%mi'=>$member_id));
+		  watchdog('ldap_server', 'adding %mi', array('%mi' => $member_id));
 		}
-		$member_id=$group_entry['dn'];
+		$member_id = $group_entry['dn'];
 		break;
 	      }
 	    }
@@ -1816,13 +1816,13 @@ class LdapServer {
         $tested_group_ids[] = $member_id;
         $all_group_dns[] = $group_entry['dn'];
         // add $group_id (dn, cn, uid) to query
-        $ors[] =  $this->groupMembershipsAttr . '=' .  ldap_pear_escape_filter_value($member_id);
+        $ors[] = $this->groupMembershipsAttr . '=' .  ldap_pear_escape_filter_value($member_id);
       }
     }
 
     if ($level < $max_levels && count($ors)) {
       $count = count($ors);
-      for ($i=0; $i < $count; $i=$i+LDAP_SERVER_LDAP_QUERY_CHUNK) { // only 50 or so per query
+      for ($i = 0; $i < $count; $i = $i + LDAP_SERVER_LDAP_QUERY_CHUNK) { // only 50 or so per query
         $current_ors = array_slice($ors, $i, LDAP_SERVER_LDAP_QUERY_CHUNK);
         $or = '(|(' . join(")(", $current_ors) . '))';  // e.g. (|(cn=group1)(cn=group2)) or   (|(dn=cn=group1,ou=blah...)(dn=cn=group2,ou=blah...))
         $query_for_parent_groups = '(&(objectClass=' . $this->groupObjectClass . ')' . $or . ')';

@@ -41,7 +41,7 @@ function ldap_authorization_test_form($form, &$form_state, $consumer_type) {
         $i++;
         $form['pre-filtered']['map' . $i] = array(
          '#type' => 'item',
-         '#markup' => is_scalar($data) ?  "<h2>$map (without filter)</h2>" . $data : theme('item_list', array('items' => $data, 'type' => 'ul', 'title' => "$map (without filter)")),
+         '#markup' => is_scalar($data) ? "<h2>$map (without filter)</h2>" . $data : theme('item_list', array('items' => $data, 'type' => 'ul', 'title' => "$map (without filter)")),
         );
       }
     }
@@ -84,7 +84,7 @@ function ldap_authorization_test_form($form, &$form_state, $consumer_type) {
       '#type' => 'item',
       '#markup' => 'Use Mappings as Filter = ' . (int)$consumer->consumerConf->useMappingsAsFilter .
           theme('item_list', array(
-          'items' =>  $maps,
+          'items' => $maps,
           'type' => 'ul',
           'title' => 'Configured Mappings',
         )
@@ -94,7 +94,7 @@ function ldap_authorization_test_form($form, &$form_state, $consumer_type) {
       $form['post mappings']['conf']['#markup'] =
       'Use Mappings as Filter = ' . (int)$consumer->consumerConf->useMappingsAsFilter .
           theme('item_list', array(
-          'items' =>  $maps,
+          'items' => $maps,
           'type' => 'ul',
           'title' => 'Configured Mappings',
         )
@@ -216,7 +216,7 @@ function ldap_authorization_test_form_submit($form, &$form_state) {
     $select->fields('u');
 
     try {
-      $random_users = $select->execute()->fetchAllAssoc('name',  PDO::FETCH_ASSOC);
+      $random_users = $select->execute()->fetchAllAssoc('name', PDO::FETCH_ASSOC);
     }
     catch (Exception $e) {
       drupal_set_message(t('db users query failed. Message = %message, query= %query',
@@ -259,7 +259,7 @@ function ldap_authorization_test_form_submit($form, &$form_state) {
     }
   }
 
-  $table =  theme('ldap_authorization_test_results', array('results' => $results, 'consumer' => $consumer, 'notifications' => $notifications));
+  $table = theme('ldap_authorization_test_results', array('results' => $results, 'consumer' => $consumer, 'notifications' => $notifications));
   $_SESSION['ldap_authorization_test_query']['result'] = $table;
   $form_state['redirect'] = LDAP_SERVERS_MENU_BASE_PATH . '/authorization/test/' . $consumer->consumerType;
 

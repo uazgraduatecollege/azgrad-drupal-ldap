@@ -34,7 +34,7 @@ function theme_ldap_servers_list($variables) {
   }
   if (count($ldap_servers)) {
     foreach ($ldap_servers as $sid => $ldap_server ) {
-      $row =  array(
+      $row = array(
         $ldap_server->name,
         $ldap_server->ldap_type,
         ($ldap_server->status == 1) ? "Yes" : "No",

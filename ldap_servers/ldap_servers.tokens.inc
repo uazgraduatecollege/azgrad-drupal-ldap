@@ -96,7 +96,7 @@ function ldap_servers_token_replace($resource, $text, $resource_type = 'ldap_ent
  *
  * by reference return add ldap attribute triplet $attribute_maps[<attr_name>] = (<attr_name>, <ordinal>, <data_type>) to $attributes
  */
-function ldap_servers_token_extract_attributes(&$attribute_maps,  $text) {
+function ldap_servers_token_extract_attributes(&$attribute_maps, $text) {
   $tokens = ldap_servers_token_tokens_needed_for_template($text);
   foreach ($tokens as $token) {
     $token = str_replace(array(LDAP_SERVERS_TOKEN_PRE, LDAP_SERVERS_TOKEN_POST), array('', ''), $token);
@@ -246,7 +246,7 @@ function ldap_servers_token_tokenize_entry($ldap_entry, $token_keys = 'all', $pr
   // Add the parts in reverse order to reflect the hierarchy.
   foreach ($parts_count as $part => $count) {
     $part = strtolower($part);
-    for ($i=0; $i<$count; $i++) {
+    for ($i = 0; $i < $count; $i++) {
       $reverse_position = $count - $i - 1;
       $tokens[$pre . $part . LDAP_SERVERS_TOKEN_DEL . 'reverse' . LDAP_SERVERS_TOKEN_DEL . $reverse_position . $post] = $tokens[$pre . $part . LDAP_SERVERS_TOKEN_DEL . $i . $post];
     }
@@ -268,8 +268,8 @@ function ldap_servers_token_tokenize_entry($ldap_entry, $token_keys = 'all', $pr
         $tokens[$pre . ldap_server_massage_text($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . LDAP_SERVERS_TOKEN_DEL . 'last' . $post] = check_plain($attr_value[0]);
       }
       elseif (is_array($attr_value) && $attr_value['count'] > 1) {
-        $tokens[$pre . ldap_server_massage_text($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . LDAP_SERVERS_TOKEN_DEL . 'last' . $post] = check_plain($attr_value[$attr_value['count']-1]);
-        for ($i=0; $i<$attr_value['count']; $i++) {
+        $tokens[$pre . ldap_server_massage_text($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . LDAP_SERVERS_TOKEN_DEL . 'last' . $post] = check_plain($attr_value[$attr_value['count'] - 1]);
+        for ($i = 0; $i < $attr_value['count']; $i++) {
           $tokens[$pre . ldap_server_massage_text($attr_name, 'attr_name', LDAP_SERVER_MASSAGE_TOKEN_REPLACE) . LDAP_SERVERS_TOKEN_DEL . $i . $post] = check_plain($attr_value[$i]);
         }
       }

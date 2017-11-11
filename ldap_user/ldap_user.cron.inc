@@ -73,7 +73,7 @@ function _ldap_user_orphans($ldap_user_conf) {
 
   $batches = floor($user_count / LDAP_SERVERS_MAXFILTER_ORS) + 1;
   // e.g. 175 users and  50 max ldap query ors will yield 4 batches
-  for ($batch=1; $batch <= $batches; $batch++) { // e.g. 1,2,3,4
+  for ($batch = 1; $batch <= $batches; $batch++) { // e.g. 1,2,3,4
     $filters = array();
     $drupal_users = array();
     /**
@@ -83,8 +83,8 @@ function _ldap_user_orphans($ldap_user_conf) {
      *       2nd batch   $i=50; $i<100; $i++
      *       4th batch   $i=150; $i<175; $i++
      */
-    $start = ($batch - 1)* LDAP_SERVERS_MAXFILTER_ORS; // e.g 0, 50, 100
-    $end_plus_1 = min(($batch)* LDAP_SERVERS_MAXFILTER_ORS, $user_count); // e.g. 50, 100, 150
+    $start = ($batch - 1) * LDAP_SERVERS_MAXFILTER_ORS; // e.g 0, 50, 100
+    $end_plus_1 = min(($batch) * LDAP_SERVERS_MAXFILTER_ORS, $user_count); // e.g. 50, 100, 150
     $batch_uids = array_slice($uids, $start, ($end_plus_1 - $start)); // e.g. 50, 50; 100, 50
     $accounts = entity_load('user', $batch_uids);
 
@@ -180,7 +180,7 @@ function _ldap_user_orphans($ldap_user_conf) {
   }
 
   if (count($email_list) > 0) {
-    $site_email =  variable_get('site_mail', FALSE);
+    $site_email = variable_get('site_mail', FALSE);
     $params = array('accounts' => $email_list);
     if ($site_email) {
       drupal_mail(

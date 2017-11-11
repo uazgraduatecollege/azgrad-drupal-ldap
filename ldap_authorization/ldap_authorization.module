@@ -108,7 +108,7 @@ function ldap_authorization_user_login(&$edit, $user) {
 function ldap_authorization_maps_alter_invoke(&$user, &$user_ldap_entry, &$ldap_server, &$consumer_conf, &$proposed_ldap_authorizations, $op) {
   foreach (module_implements('ldap_authorization_maps_alter') as $module) {
     $function = $module . '_ldap_authorization_maps_alter';
-    $function($user, $user_ldap_entry, $ldap_server, $consumer_conf, $proposed_ldap_authorizations,  $op);
+    $function($user, $user_ldap_entry, $ldap_server, $consumer_conf, $proposed_ldap_authorizations, $op);
   }
 }
 
@@ -173,7 +173,7 @@ function ldap_authorization_ldap_attributes_needed_alter(&$attribute_maps, $para
 function ldap_authorization_ldap_authorization_maps_alter(&$user, &$user_ldap_entry, &$ldap_server, &$consumer_conf, &$authz_ids, $op) {
 
   ldap_servers_module_load_include('inc', 'ldap_authorization', 'ldap_authorization');
-  _ldap_authorization_ldap_authorization_maps_alter($user, $user_ldap_entry, $ldap_server, $consumer_conf, $authz_ids,  $op);
+  _ldap_authorization_ldap_authorization_maps_alter($user, $user_ldap_entry, $ldap_server, $consumer_conf, $authz_ids, $op);
 }
 
 

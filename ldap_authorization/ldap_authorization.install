@@ -247,10 +247,10 @@ function ldap_authorization_update_7106() {
       'not null' => TRUE,
       'default' => 0,
     ));
-    $msg .=  t('"derive_from_entry_nested" field added to ldap_authorization table');
+    $msg .= t('"derive_from_entry_nested" field added to ldap_authorization table');
   }
 
-  return ($msg) ? $msg :  t('No database changes made.');
+  return ($msg) ? $msg : t('No database changes made.');
 }
 
 /**
@@ -272,7 +272,7 @@ function ldap_authorization_update_7107() {
 
   if (db_field_exists('ldap_authorization', 'description')) {
     db_drop_field('ldap_authorization', 'description');
-    $changes .=  t('"description" field dropped from to ldap_authorization table');
+    $changes .= t('"description" field dropped from to ldap_authorization table');
   }
 
   return ($changes) ? $changes : t('No database changes made.');

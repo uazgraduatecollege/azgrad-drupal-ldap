@@ -5,7 +5,6 @@
  * Administrative page callbacks for the ldap_authorization module.  Consumer configuration form and index.
  */
 
-
 /**
  * index of ldap authorization configurations
  *

@@ -1,6 +1,10 @@
 <?php
 
 /**
+ * @file
+ */
+
+/**
  * Implements hook_ctools_plugin_api().
  */
 function ldap_feeds_ctools_plugin_api($owner, $api) {

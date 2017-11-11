@@ -350,7 +350,7 @@ class LdapUserConf {
         if (count(array_intersect($prov_events, $detail['prov_events']))) {
           // Add the attribute to our array.
           if ($detail['ldap_attr']) {
-            ldap_servers_token_extract_attributes($required_attributes,  $detail['ldap_attr']);
+            ldap_servers_token_extract_attributes($required_attributes, $detail['ldap_attr']);
           }
         }
       }
@@ -451,7 +451,7 @@ class LdapUserConf {
     }
     $this->synchMapping = $available_user_attrs;
 
-    cache_set('ldap_user_synch_mapping',  $this->synchMapping);
+    cache_set('ldap_user_synch_mapping', $this->synchMapping);
   }
 
   /**
@@ -619,7 +619,7 @@ class LdapUserConf {
         }
         if (!$ldap_user_prov_entry_exists) {
           $user_entity->ldap_user_prov_entries[LANGUAGE_NONE][] = array(
-            'value' =>  $ldap_user_prov_entry,
+            'value' => $ldap_user_prov_entry,
           );
 
           // Save the field without calling user_save()
@@ -776,7 +776,7 @@ class LdapUserConf {
    *   $user_edit data returned by reference
    *
    */
-  public function synchToDrupalAccount($drupal_user, &$user_edit, $prov_event = LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER, $ldap_user = NULL,  $save = FALSE) {
+  public function synchToDrupalAccount($drupal_user, &$user_edit, $prov_event = LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER, $ldap_user = NULL, $save = FALSE) {
 
     $debug = array(
       'account' => $drupal_user,
@@ -1074,7 +1074,7 @@ class LdapUserConf {
       else { // create drupal account
         $this->entryToUserEdit($ldap_user, $user_edit, $ldap_server, LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, array(LDAP_USER_EVENT_CREATE_DRUPAL_USER));
         if ($save) {
-          $watchdog_tokens = array('%drupal_username' =>  $user_edit['name']);
+          $watchdog_tokens = array('%drupal_username' => $user_edit['name']);
           if (empty($user_edit['name'])) {
             drupal_set_message(t('User account creation failed because of invalid, empty derived Drupal username.'), 'error');
             watchdog('ldap_user',

@@ -23,7 +23,7 @@ function ldap_servers_edit_index() {
  */
 function ldap_servers_servers_list($sid = NULL, $actions = FALSE) {
 
-  $variables =  array(
+  $variables = array(
     'ldap_servers' => $ldap_server = ldap_servers_get_servers($sid, 'all'),
     'action' => TRUE,
     'type' => 'table',
@@ -217,7 +217,7 @@ function ldap_servers_admin_enable_disable($form, &$form_state, $action = NULL, 
     );
     return confirm_form(
       $form,
-      t('Are you sure you want to') . t($action) . ' ' . t('the LDAP server named <em><strong>%name</strong></em>?', array('%name' =>  $ldap_server->name)),
+      t('Are you sure you want to') . t($action) . ' ' . t('the LDAP server named <em><strong>%name</strong></em>?', array('%name' => $ldap_server->name)),
       LDAP_SERVERS_MENU_BASE_PATH . '/servers/list',
       t('<p></p>'),
       t($action),

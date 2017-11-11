@@ -110,7 +110,7 @@ class FeedsDrupalUserLdapEntryFetcher extends FeedsFetcher {
     $form['filterLdapAuthenticated'] = array(
       '#type' => 'checkbox',
       '#title' => t('Only return ldap authenticated users.'),
-      '#default_value' =>  $this->config['filterLdapAuthenticated'],
+      '#default_value' => $this->config['filterLdapAuthenticated'],
       '#description' => t('If checked, only users who are associated with ldap accounts will be returned.'),
     );
 

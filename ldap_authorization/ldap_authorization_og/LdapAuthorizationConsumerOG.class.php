@@ -112,7 +112,7 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
           $to_simplified_parts = explode(':', trim($to_simplified));
           $entity_type = (count($to_simplified_parts) == 1) ? 'node' : $to_simplified_parts[0];
           $role = (count($to_simplified_parts) < 3) ? OG_AUTHENTICATED_ROLE : $to_simplified_parts[2];
-          $group_name = (count($to_simplified_parts) == 1) ? $to_simplified_parts[0] :  $to_simplified_parts[1];
+          $group_name = (count($to_simplified_parts) == 1) ? $to_simplified_parts[0] : $to_simplified_parts[1];
           list($group_entity, $group_entity_id) = ldap_authorization_og2_get_group_from_name($entity_type, $group_name);
           $to_simplified = join(':', array($entity_type, $group_name));
         }
@@ -127,7 +127,7 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
           $to_parts = explode(':', trim($to));
           $entity_type = (count($to_parts) == 1) ? 'node' : $to_parts[0];
           $role = (count($to_parts) < 3) ? OG_AUTHENTICATED_ROLE : $to_parts[2];
-          $group_name_or_entity_id = (count($to_parts) == 1) ? $to_parts[0] :  $to_parts[1];
+          $group_name_or_entity_id = (count($to_parts) == 1) ? $to_parts[0] : $to_parts[1];
           list($group_entity, $group_entity_id) = ldap_authorization_og2_get_group_from_name($entity_type, $group_name_or_entity_id);
           if ($group_entity) { // if load by name works, $group_name_or_entity_id is group title
             $to_simplified = join(':', array($entity_type, $group_name_or_entity_id));
@@ -148,7 +148,7 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
         }
         else {
           $role_id = is_numeric($role) ? $role : ldap_authorization_og2_rid_from_role_name($entity_type, $group_entity->type, $group_entity_id, $role);
-          $roles = og_roles($entity_type,  isset($group_entity->type) ? $group_entity->type : NULL, 0, FALSE, TRUE);
+          $roles = og_roles($entity_type, isset($group_entity->type) ? $group_entity->type : NULL, 0, FALSE, TRUE);
           $role_name = is_numeric($role) ? $roles[$role] : $role;
           $to_normalized = join(':', array($entity_type, $group_entity_id, $role_id));
           $to_simplified = ($to_simplified) ? $to_simplified . ':' . $role_name : $to_normalized;
@@ -194,7 +194,7 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
           continue;
         }
 
-        $group_target_and_value =  explode('=', $targets[0]);
+        $group_target_and_value = explode('=', $targets[0]);
         if (count($group_target_and_value) != 2) {
           $new_mapping['valid'] = FALSE;
           $new_mapping['error_message'] = $incorrect_syntax;
@@ -320,7 +320,7 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
           if (empty($consumer['name']) && property_exists($og_group_entities[$gid], 'title')) {
             $consumer['name'] = $og_group_entities[$gid]->title;
           }
-          $consumer['name'] =  $consumer_id;
+          $consumer['name'] = $consumer_id;
         }
         else {
           $consumer['value'] = NULL;
@@ -537,7 +537,7 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
             $og_actions['revokes'][$entity_type][$gid][] = $rid;
           }
           $log .= "revoke case 1: user has authorization, revoke it.  revokeSingleAuthorization will remove $consumer_id";
-          $log .=" ".$entity_type . ":" . $gid .":" . $rid ;          
+          $log .= " ".$entity_type . ":" . $gid .":" . $rid ;          
         }
         elseif ($user_has_authorization_recorded)  {
           // revoke case 2: user does not have authorization, but has record of it. remove record of it.
@@ -771,7 +771,7 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
         foreach ($entity_memberships as $og_membership_id => $gid) {
           $roles = og_get_user_roles($entity_type, $gid, $user->uid);
           foreach ($roles as $rid => $discard) {
-            $authorizations[] =  ldap_authorization_og_authorization_id($gid, $rid, $entity_type);
+            $authorizations[] = ldap_authorization_og_authorization_id($gid, $rid, $entity_type);
           }
         }
       }
@@ -835,7 +835,7 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
       $rows = array();
       foreach ($ogEntities as $group) {
         foreach ($OGroles as $rid => $role) {
-          $example =   "<code>ou=IT,dc=myorg,dc=mytld,dc=edu|gid=" . $group->gid . ',rid=' . $rid . '</code><br/>' .
+          $example = "<code>ou=IT,dc=myorg,dc=mytld,dc=edu|gid=" . $group->gid . ',rid=' . $rid . '</code><br/>' .
             '<code>ou=IT,dc=myorg,dc=mytld,dc=edu|group-name=' . $group->label . ',role-name=' . $role . '</code>';
           $rows[] = array(
             $group->label,
@@ -888,7 +888,7 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
             $result = $query->execute();
             if (!empty($result)) {
               $entities = entity_load($entity_type, array_keys($result[$entity_type]));
-              $i=0;
+              $i = 0;
               foreach ($entities as $entity_id => $entity) {
                 $i++;
                 $rid = ldap_authorization_og2_rid_from_role_name($entity_type, $bundle, $entity_id, OG_AUTHENTICATED_ROLE);

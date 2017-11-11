@@ -9,7 +9,7 @@ function theme_ldap_authorization_admin_index(&$variables) {
   $consumers = $variables['consumers'];
 
   $table = array(
-    'header' =>  array(t('LDAP Server ID'), t('Description'), t('Module'), t('Consumer Type'), t('Enabled'), t('Operations')),
+    'header' => array(t('LDAP Server ID'), t('Description'), t('Module'), t('Consumer Type'), t('Enabled'), t('Operations')),
     'attributes' => array('id' => 'ldap_consumer_confs', 'class' => 'data'),
     'colgroups' => array(),
     'sticky' => FALSE,
@@ -22,10 +22,10 @@ function theme_ldap_authorization_admin_index(&$variables) {
 
     if ($consumer->consumerConf->inDatabase) {
       $admin = new LdapAuthorizationConsumerConfAdmin($consumer);
-      $actions =  join(' | ', $admin->getLdapAuthorizationConsumerActions());
+      $actions = join(' | ', $admin->getLdapAuthorizationConsumerActions());
     }
     else {
-      $actions =  l(t('add'), LDAP_SERVERS_MENU_BASE_PATH . '/authorization/add/' . $consumer->consumerType);
+      $actions = l(t('add'), LDAP_SERVERS_MENU_BASE_PATH . '/authorization/add/' . $consumer->consumerType);
     }
 
     $table['rows'][] = array(
@@ -69,7 +69,7 @@ function theme_ldap_authorization_test_results($variables) {
       foreach ($user_results as $consumer_type => $authorizations) {
         if (is_array($authorizations) && count($authorizations) > 0) {
           $authorizations = $consumer->convertToFriendlyAuthorizationIds($authorizations);
-          $authorizations_text =  theme('item_list', array('items' => array_values($authorizations), 'title' => NULL, 'type' => 'ul', 'attributes' => array()));
+          $authorizations_text = theme('item_list', array('items' => array_values($authorizations), 'title' => NULL, 'type' => 'ul', 'attributes' => array()));
         }
         else {
           $authorizations_text = "";
@@ -85,7 +85,7 @@ function theme_ldap_authorization_test_results($variables) {
         }
         elseif (is_array($user_notifications) && count($user_notifications) > 0) {
           foreach ($user_notifications as $i => $notification) {
-            $authorizations_text .=  ldap_authorization_map_errors($notification, $consumer_conf_link);
+            $authorizations_text .= ldap_authorization_map_errors($notification, $consumer_conf_link);
           }
         }
         $row = array($username_link, $consumer->name, $authorizations_text, $consumer_conf_link, $server_link);

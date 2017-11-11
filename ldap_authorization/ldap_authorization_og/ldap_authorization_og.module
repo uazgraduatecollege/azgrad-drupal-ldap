@@ -1,6 +1,7 @@
 <?php
 
-/** @file
+/**
+ * @file 
  *
  *  controls organic group membership based on LDAP values
  *
@@ -11,7 +12,7 @@
  */
 
 function ldap_authorization_og_ldap_authorization_consumer() {
-  $types['og_group'] =  array(
+  $types['og_group'] = array(
     'consumer_name' => t('OG group'),
     'consumer_name_plural' => t('OG groups'),
     'consumer_short_name' => t('group'),
@@ -23,7 +24,7 @@ function ldap_authorization_og_ldap_authorization_consumer() {
   );
 
   if (ldap_authorization_og_og_version() == 1) {
-    $types['og_group']['consumer_mapping_directions'] =  'Mappings should be of form:<br/>
+    $types['og_group']['consumer_mapping_directions'] = 'Mappings should be of form:<br/>
       <code>[raw authorization id]|[og group match field]=[og group match id],[og role match field]=[og role match id]</code>
       <br/>such as:<br/>
       <code>
@@ -32,7 +33,7 @@ function ldap_authorization_og_ldap_authorization_consumer() {
       </code>';
   }
   else {
-    $types['og_group']['consumer_mapping_directions'] =  'Mappings should be of form:<br/>
+    $types['og_group']['consumer_mapping_directions'] = 'Mappings should be of form:<br/>
       <code>[raw authorization id]|[og entity type]:[og entity id or title]:[og role id]</code>
       <br/>[og entity type] is generally "node"
       <br/>[og entity id or title] can be the groups title or entity id. <strong>Titles with ":"s in them may not be used</strong>.
@@ -57,7 +58,7 @@ function ldap_authorization_og_ldap_authorization_consumer() {
  * @return string "normalized" authorization id such as 3-3
  */
 function ldap_authorization_og_authorization_id($gid, $rid, $entity_type = 'node') {
-  return (ldap_authorization_og_og_version() == 1) ? $gid . '-' . $rid :  join(':', array($entity_type, $gid, $rid));
+  return (ldap_authorization_og_og_version() == 1) ? $gid . '-' . $rid : join(':', array($entity_type, $gid, $rid));
 }
 
 

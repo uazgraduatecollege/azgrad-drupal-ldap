@@ -28,7 +28,7 @@ function ldap_query_index() {
 function ldap_query_list($qid = NULL, $actions = FALSE) {
 
   $ldap_queries = ldap_query_get_queries($qid, 'all');
-  $variables =  array(
+  $variables = array(
     'ldap_queries' => $ldap_queries,
     'action' => TRUE,
     'type' => 'table',
@@ -214,7 +214,7 @@ function ldap_query_admin_enable_disable($form, &$form_state, $action = NULL, $q
     );
     return confirm_form(
       $form,
-      t('Are you sure you want to') . t($action) . ' ' . t('the LDAP query named <em><strong>%name</strong></em>?', array('%name' =>  $ldap_query->name)),
+      t('Are you sure you want to') . t($action) . ' ' . t('the LDAP query named <em><strong>%name</strong></em>?', array('%name' => $ldap_query->name)),
       LDAP_QUERY_MENU_BASE_PATH . '/query/list',
       t('<p></p>'),
       t($action),

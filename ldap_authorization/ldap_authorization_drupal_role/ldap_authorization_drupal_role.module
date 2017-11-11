@@ -1,6 +1,7 @@
 <?php
 
-/** @file
+/**
+ * @file 
  *
  *  maps ldap data to drupal roles
  *
@@ -11,7 +12,7 @@
  */
 function ldap_authorization_drupal_role_ldap_authorization_consumer() {
 
-  $types['drupal_role'] =  array(
+  $types['drupal_role'] = array(
     'consumer_name' => t('drupal role'),
     'consumer_name_plural' => t('drupal roles'),
     'consumer_short_name' => t('role'),

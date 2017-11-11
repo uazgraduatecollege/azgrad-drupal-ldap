@@ -379,7 +379,7 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
       '#title' => t('Deny access to users without Ldap Authorization Module
         authorization mappings such as Drupal roles.
         Requires LDAP Authorization to be enabled and configured!'),
-      '#default_value' =>  $this->excludeIfNoAuthorizations,
+      '#default_value' => $this->excludeIfNoAuthorizations,
       '#description' => t($this->excludeIfNoAuthorizationsDescription, $tokens),
       '#disabled' => (boolean)(!module_exists('ldap_authorization')),
     );
