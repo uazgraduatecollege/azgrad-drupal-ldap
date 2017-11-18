@@ -16,7 +16,6 @@ class LoginTests extends UnitTestCase {
   public function testMixedUserMode() {
     $this->assertTrue(TRUE);
     // TODO: Write test
-    // assert user 1
     // assert right credentials LDAP
     // assert
     // see example data.
@@ -28,7 +27,6 @@ class LoginTests extends UnitTestCase {
   public function testExclusiveUserMode() {
     $this->assertTrue(TRUE);
     // TODO: Write test
-    // assert user 1
     // assert right credentials LDAP
     // assert local Drupal user without mapping (associated, not associated)
     // see example data.

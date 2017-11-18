@@ -177,7 +177,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
    *   TRUE on success, FALSE on error or failure because of invalid user.
    */
   public function ldapExcludeDrupalAccount($drupalUsername) {
-    $account = user_load_by_name($drupalUsername);
+    $account = User::load($drupalUsername);
     if (!$account) {
       \Drupal::logger('ldap_user')->error('Failed to exclude user from LDAP association because Drupal account %username was not found', ['%username' => $drupalUsername]);
       return FALSE;
@@ -748,6 +748,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
         return FALSE;
       }
 
+      // @TODO 2914053.
       if (!$this->account || $this->account->isAnonymous() || $this->account->id() == 1) {
         return FALSE;
       }

@@ -920,8 +920,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
       ->condition('ldap_user_puid_sid', $this->id(), '=')
       ->condition('ldap_user_puid', $puid, '=')
       ->condition('ldap_user_puid_property', $this->get('unique_persistent_attr'), '=')
-    // Run the query as user 1.
-      ->addMetaData('account', \Drupal::entityManager()->getStorage('user')->load(1));
+      ->accessCheck(FALSE);
 
     $result = $query->execute();
 

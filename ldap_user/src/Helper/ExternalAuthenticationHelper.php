@@ -72,6 +72,7 @@ class ExternalAuthenticationHelper {
    *   TRUE if user should be excluded from LDAP provision/syncing
    */
   public static function excludeUser($account = NULL) {
+    // @TODO 2914053.
     // Always exclude user 1.
     if (is_object($account) && $account->id() == 1) {
       return TRUE;

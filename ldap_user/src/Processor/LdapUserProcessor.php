@@ -7,7 +7,7 @@ use Drupal\ldap_servers\Entity\Server;
 use Drupal\ldap_servers\Processor\TokenProcessor;
 use Drupal\ldap_user\Exception\LdapBadParamsException;
 use Drupal\ldap_user\Helper\LdapConfiguration;
-use Drupal\ldap_user\LdapUserAttributesInterface;
+use Drupal\ldap_servers\LdapUserAttributesInterface;
 use Drupal\ldap_user\Helper\SyncMappingHelper;
 use Drupal\user\Entity\User;
 
@@ -53,6 +53,7 @@ class LdapUserProcessor implements LdapUserAttributesInterface {
    */
   public function syncToLdapEntry(User $account, array $ldapUser = [], $testQuery = FALSE) {
 
+    // @TODO 2914053.
     if (is_object($account) && $account->id() == 1) {
       // Do not provision or sync user 1.
       return FALSE;
@@ -271,6 +272,7 @@ class LdapUserProcessor implements LdapUserAttributesInterface {
       $account = user_load_by_name($account);
     }
 
+    // @TODO 2914053.
     if (is_object($account) && $account->id() == 1) {
       $result['status'] = 'fail';
       $result['error_description'] = 'can not provision Drupal user 1';

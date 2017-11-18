@@ -133,6 +133,7 @@ class LdapAuthenticationConfiguration {
       $user = \Drupal::currentUser();
     }
 
+    // @TODO 2914053.
     if ($user->id() == 1) {
       return TRUE;
     }

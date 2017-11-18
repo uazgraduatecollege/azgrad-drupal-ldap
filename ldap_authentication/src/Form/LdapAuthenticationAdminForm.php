@@ -71,6 +71,7 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
       '#collapsed' => FALSE,
     ];
 
+    // @TODO 2914053.
     $form['logon']['authenticationMode'] = [
       '#type' => 'radios',
       '#title' => $this->t('Allowable Authentications'),

@@ -250,13 +250,14 @@ final class LoginValidator implements LdapUserAttributesInterface {
   }
 
   /**
-   * Verifies whether the user is available or can be created and is not user 1.
+   * Verifies whether the user is available or can be created.
    *
    * @return bool
    *   Whether to allow user login and creation.
    */
   private function verifyAccountCreation() {
     if (is_object($this->drupalUser)) {
+      // @TODO 2914053.
       if ($this->drupalUser->id() == 1) {
         $this->detailLog->log(
           '%username: Drupal user name maps to user 1, so do not authenticate with LDAP.',
