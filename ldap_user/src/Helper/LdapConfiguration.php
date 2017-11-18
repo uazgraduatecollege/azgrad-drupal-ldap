@@ -2,7 +2,7 @@
 
 namespace Drupal\ldap_user\Helper;
 
-use Drupal\ldap_user\LdapUserAttributesInterface;
+use Drupal\ldap_servers\LdapUserAttributesInterface;
 
 /**
  * Helper class to collect trivial lists of elements for events and users.

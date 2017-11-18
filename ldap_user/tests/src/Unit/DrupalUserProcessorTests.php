@@ -3,7 +3,8 @@
 namespace Drupal\Tests\ldap_user\Unit;
 
 use Drupal\Core\DependencyInjection\ContainerBuilder;
-use Drupal\ldap_user\LdapUserAttributesInterface;
+use Drupal\ldap_servers\LdapUserAttributesInterface;
+use Drupal\ldap_user\Processor\DrupalUserProcessor;
 use Drupal\Tests\UnitTestCase;
 
 /**

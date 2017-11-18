@@ -8,7 +8,7 @@
 use Drupal\Core\Url;
 use Drupal\Component\Utility\SafeMarkup;
 use Drupal\Core\Utility\UpdateException;
-use Drupal\ldap_user\LdapUserAttributesInterface;
+use Drupal\ldap_servers\LdapUserAttributesInterface;
 
 /**
  * Convert ldap_user_identities table to authmap.

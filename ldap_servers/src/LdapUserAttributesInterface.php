@@ -1,9 +1,12 @@
 <?php
 
-namespace Drupal\ldap_user;
+namespace Drupal\ldap_servers;
 
 /**
  * Collection of hardcoded constants in use in ldap_user.
+ *
+ * This is in ldap_servers instead of ldap_user to avoid dependency issues
+ * reported in #2912463.
  */
 interface LdapUserAttributesInterface {
 

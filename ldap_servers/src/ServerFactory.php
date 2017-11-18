@@ -6,7 +6,7 @@ use Drupal\Core\Url;
 use Drupal\ldap_servers\Entity\Server;
 use Drupal\ldap_servers\Processor\TokenProcessor;
 use Drupal\ldap_user\Helper\ExternalAuthenticationHelper;
-use Drupal\ldap_user\LdapUserAttributesInterface;
+use Drupal\ldap_servers\LdapUserAttributesInterface;
 use Drupal\ldap_user\Helper\LdapConfiguration;
 use Drupal\user\UserInterface;
 

@@ -6,7 +6,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\ldap_user\Helper\ExternalAuthenticationHelper;
 use Drupal\ldap_user\Helper\LdapConfiguration;
-use Drupal\ldap_user\LdapUserAttributesInterface;
+use Drupal\ldap_servers\LdapUserAttributesInterface;
 use Drupal\ldap_user\Processor\DrupalUserProcessor;
 use Drupal\ldap_user\Processor\LdapUserProcessor;
 

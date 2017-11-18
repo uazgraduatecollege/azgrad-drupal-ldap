@@ -13,7 +13,7 @@ use Drupal\ldap_servers\Helper\MassageAttributes;
 use Drupal\ldap_servers\Logger\LdapDetailLog;
 use Drupal\ldap_user\Helper\ExternalAuthenticationHelper;
 use Drupal\ldap_user\Helper\LdapConfiguration;
-use Drupal\ldap_user\LdapUserAttributesInterface;
+use Drupal\ldap_servers\LdapUserAttributesInterface;
 use Drupal\ldap_user\Processor\DrupalUserProcessor;
 use Drupal\user\Entity\User;
 use Drupal\Core\Form\FormStateInterface;

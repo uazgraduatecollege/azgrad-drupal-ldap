@@ -4,7 +4,7 @@ namespace Drupal\ldap_user\Helper;
 
 use Drupal\ldap_servers\Entity\Server;
 use Drupal\ldap_servers\Processor\TokenProcessor;
-use Drupal\ldap_user\LdapUserAttributesInterface;
+use Drupal\ldap_servers\LdapUserAttributesInterface;
 
 /**
  * Helper class to process user field synchronisation mappings.

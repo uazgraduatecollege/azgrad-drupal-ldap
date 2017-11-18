@@ -12,7 +12,7 @@ use Drupal\ldap_query\Controller\QueryController;
 use Drupal\ldap_servers\Processor\TokenProcessor;
 use Drupal\ldap_servers\ServerFactory;
 use Drupal\ldap_user\Helper\LdapConfiguration;
-use Drupal\ldap_user\LdapUserAttributesInterface;
+use Drupal\ldap_servers\LdapUserAttributesInterface;
 use Drupal\ldap_user\Helper\SemaphoreStorage;
 use Drupal\ldap_user\Helper\SyncMappingHelper;
 use Symfony\Component\DependencyInjection\ContainerInterface;
