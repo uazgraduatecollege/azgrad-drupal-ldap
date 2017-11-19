@@ -244,6 +244,16 @@ class LdapServer {
       $this->bindpw = ($bindpw == '') ? '' : ldap_servers_decrypt($bindpw);
     }
 
+    $bind_overrides = variable_get('ldap_servers_overrides', []);
+    if (isset($bind_overrides[$this->sid])) {
+      if (isset($bind_overrides[$this->sid]['binddn'])) {
+        $this->binddn = $bind_overrides[$this->sid]['binddn'];
+      }
+      if (isset($bind_overrides[$this->sid]['bindpw'])) {
+        $this->bindpw = $bind_overrides[$this->sid]['bindpw'];
+      }
+    }
+
     $this->paginationEnabled = (boolean)(ldap_servers_php_supports_pagination() && $this->searchPagination);
 
     $this->queriableWithoutUserCredentials = (boolean)(
