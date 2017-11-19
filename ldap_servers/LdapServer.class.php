@@ -231,7 +231,7 @@ class LdapServer {
         $this->basedn = array();
         $token = is_scalar($basedn_unserialized) ? $basedn_unserialized : print_r($basedn_unserialized, TRUE);
         debug("basednb desearialization error". $token);
-        watchdog('ldap_server', 'Failed to deserialize LdapServer::basedn of !basedn', array('!basedn' => $token), WATCHDOG_ERROR);
+        watchdog('ldap_servers', 'Failed to deserialize LdapServer::basedn of !basedn', array('!basedn' => $token), WATCHDOG_ERROR);
       }
 
     }
@@ -286,9 +286,13 @@ class LdapServer {
    * Connect Method
    */
   public function connect() {
+    if (!function_exists('ldap_connect')) {
+      watchdog('ldap_servers', 'PHP LDAP extension not found, aborting.');
+      return LDAP_NOT_SUPPORTED;
+    }
 
     if (!$con = ldap_connect($this->address, $this->port)) {
-      watchdog('user', 'LDAP Connect failure to ' . $this->address . ':' . $this->port);
+      watchdog('ldap_servers', 'LDAP Connect failure to ' . $this->address . ':' . $this->port);
       return LDAP_CONNECT_ERROR;
     }
 
@@ -299,20 +303,20 @@ class LdapServer {
     if ($this->tls) {
       ldap_get_option($con, LDAP_OPT_PROTOCOL_VERSION, $vers);
       if ($vers == -1) {
-        watchdog('user', 'Could not get LDAP protocol version.');
+        watchdog('ldap_servers', 'Could not get LDAP protocol version.');
         return LDAP_PROTOCOL_ERROR;
       }
       if ($vers != 3) {
-        watchdog('user', 'Could not start TLS, only supported by LDAP v3.');
+        watchdog('ldap_servers', 'Could not start TLS, only supported by LDAP v3.');
         return LDAP_CONNECT_ERROR;
       }
       elseif (!function_exists('ldap_start_tls')) {
-        watchdog('user', 'Could not start TLS. It does not seem to be supported by this PHP setup.');
+        watchdog('ldap_servers', 'Could not start TLS. It does not seem to be supported by this PHP setup.');
         return LDAP_CONNECT_ERROR;
       }
       elseif (!ldap_start_tls($con)) {
         $msg = t("Could not start TLS. (Error %errno: %error).", array('%errno' => ldap_errno($con), '%error' => ldap_error($con)));
-        watchdog('user', $msg);
+        watchdog('ldap_servers', $msg);
         return LDAP_CONNECT_ERROR;
       }
     }
@@ -338,7 +342,7 @@ class LdapServer {
 
     // Ensure that we have an active server connection.
     if (!$this->connection) {
-      watchdog('ldap', "LDAP bind failure for user %user. Not connected to LDAP server.", array('%user' => $userdn));
+      watchdog('ldap_servers', "LDAP bind failure for user %user. Not connected to LDAP server.", array('%user' => $userdn));
       return LDAP_CONNECT_ERROR;
     }
 
@@ -348,7 +352,7 @@ class LdapServer {
     if ($anon_bind === TRUE) {
       if (@!ldap_bind($this->connection)) {
         if ($this->detailedWatchdogLog) {
-          watchdog('ldap', "LDAP anonymous bind error. Error %errno: %error", array('%errno' => ldap_errno($this->connection), '%error' => ldap_error($this->connection)));
+          watchdog('ldap_servers', "LDAP anonymous bind error. Error %errno: %error", array('%errno' => ldap_errno($this->connection), '%error' => ldap_error($this->connection)));
         }
         return ldap_errno($this->connection);
       }
@@ -363,12 +367,12 @@ class LdapServer {
       }
 
       if (drupal_strlen($pass) == 0 || drupal_strlen($userdn) == 0) {
-        watchdog('ldap', "LDAP bind failure for user userdn=%userdn, pass=%pass.", array('%userdn' => $userdn, '%pass' => $pass));
+        watchdog('ldap_servers', "LDAP bind failure for user userdn=%userdn, pass=%pass.", array('%userdn' => $userdn, '%pass' => $pass));
         return LDAP_LOCAL_ERROR;
       }
       if (@!ldap_bind($this->connection, $userdn, $pass)) {
         if ($this->detailedWatchdogLog) {
-          watchdog('ldap', "LDAP bind failure for user %user. Error %errno: %error", array('%user' => $userdn, '%errno' => ldap_errno($this->connection), '%error' => ldap_error($this->connection)));
+          watchdog('ldap_servers', "LDAP bind failure for user %user. Error %errno: %error", array('%user' => $userdn, '%errno' => ldap_errno($this->connection), '%error' => ldap_error($this->connection)));
         }
         return ldap_errno($this->connection);
       }
@@ -383,7 +387,7 @@ class LdapServer {
   public function disconnect() {
     if (!$this->connection) {
       // never bound or not currently bound, so no need to disconnect
-      //watchdog('ldap', 'LDAP disconnect failure from '. $this->server_addr . ':' . $this->port);
+      //watchdog('ldap_servers', 'LDAP disconnect failure from '. $this->server_addr . ':' . $this->port);
     }
     else {
       ldap_unbind($this->connection);
@@ -484,7 +488,7 @@ class LdapServer {
     if (!$result) {
       $error = "LDAP Server ldap_add(%dn) Error Server ID = %sid, LDAP Err No: %ldap_errno LDAP Err Message: %ldap_err2str ";
       $tokens = array('%dn' => $dn, '%sid' => $this->sid, '%ldap_errno' => ldap_errno($this->connection), '%ldap_err2str' => ldap_err2str(ldap_errno($this->connection)));
-      watchdog('ldap_server', $error, $tokens, WATCHDOG_ERROR);
+      watchdog('ldap_servers', $error, $tokens, WATCHDOG_ERROR);
     }
 
     return $result;
@@ -559,7 +563,7 @@ class LdapServer {
       if (!$result) {
         $error = "LDAP Server ldap_read(%dn) in LdapServer::modifyLdapEntry() Error Server ID = %sid, LDAP Err No: %ldap_errno LDAP Err Message: %ldap_err2str ";
         $tokens = array('%dn' => $dn, '%sid' => $this->sid, '%ldap_errno' => ldap_errno($this->connection), '%ldap_err2str' => ldap_err2str(ldap_errno($this->connection)));
-        watchdog('ldap_server', $error, $tokens, WATCHDOG_ERROR);
+        watchdog('ldap_servers', $error, $tokens, WATCHDOG_ERROR);
         return FALSE;
       }
 
@@ -594,7 +598,7 @@ class LdapServer {
         if (!$result) {
           $error = "LDAP Server ldap_mod_del(%dn) in LdapServer::modifyLdapEntry() Error Server ID = %sid, LDAP Err No: %ldap_errno LDAP Err Message: %ldap_err2str ";
           $tokens = array('%dn' => $dn, '%sid' => $this->sid, '%ldap_errno' => ldap_errno($this->connection), '%ldap_err2str' => ldap_err2str(ldap_errno($this->connection)));
-          watchdog('ldap_server', $error, $tokens, WATCHDOG_ERROR);
+          watchdog('ldap_servers', $error, $tokens, WATCHDOG_ERROR);
           return FALSE;
         }
       }
@@ -615,7 +619,7 @@ class LdapServer {
       if (!$result) {
         $error = "LDAP Server ldap_modify(%dn) in LdapServer::modifyLdapEntry() Error Server ID = %sid, LDAP Err No: %ldap_errno LDAP Err Message: %ldap_err2str ";
         $tokens = array('%dn' => $dn, '%sid' => $this->sid, '%ldap_errno' => ldap_errno($this->connection), '%ldap_err2str' => ldap_err2str(ldap_errno($this->connection)));
-        watchdog('ldap_server', $error, $tokens, WATCHDOG_ERROR);
+        watchdog('ldap_servers', $error, $tokens, WATCHDOG_ERROR);
         return FALSE;
       }
     }
@@ -640,7 +644,7 @@ class LdapServer {
     if (!$result) {
       $error = "LDAP Server delete(%dn) in LdapServer::delete() Error Server ID = %sid, LDAP Err No: %ldap_errno LDAP Err Message: %ldap_err2str ";
       $tokens = array('%dn' => $dn, '%sid' => $this->sid, '%ldap_errno' => ldap_errno($this->connection), '%ldap_err2str' => ldap_err2str(ldap_errno($this->connection)));
-      watchdog('ldap_server', $error, $tokens, WATCHDOG_ERROR);
+      watchdog('ldap_servers', $error, $tokens, WATCHDOG_ERROR);
     }
     return $result;
   }
@@ -743,7 +747,7 @@ class LdapServer {
       )
     );
     if ($this->detailed_watchdog_log) {
-      watchdog('ldap_server', $query, array());
+      watchdog('ldap_servers', $query, array());
     }
 
     // When checking multiple servers, there's a chance we might not be connected yet.
@@ -780,7 +784,7 @@ class LdapServer {
         $watchdog_tokens = array('%basedn' => $ldap_query_params['base_dn'], '%filter' => $ldap_query_params['filter'],
           '%attributes' => print_r($ldap_query_params['attributes'], TRUE), '%errmsg' => $this->errorMsg('ldap'),
           '%errno' => $this->ldapErrorNumber());
-        watchdog('ldap', "LDAP ldap_search error. basedn: %basedn| filter: %filter| attributes:
+        watchdog('ldap_servers', "LDAP ldap_search error. basedn: %basedn| filter: %filter| attributes:
           %attributes| errmsg: %errmsg| ldap err no: %errno|", $watchdog_tokens);
         return FALSE;
       }
@@ -814,7 +818,7 @@ class LdapServer {
   public function pagedLdapQuery($ldap_query_params) {
 
     if (!($this->searchPagination && $this->paginationEnabled)) {
-      watchdog('ldap', "LDAP server pagedLdapQuery() called when functionality not available in php install or
+      watchdog('ldap_servers', "LDAP server pagedLdapQuery() called when functionality not available in php install or
         not enabled in ldap server configuration.  error. basedn: %basedn| filter: %filter| attributes:
          %attributes| errmsg: %errmsg| ldap err no: %errno|", $watchdog_tokens);
       RETURN FALSE;
@@ -845,7 +849,7 @@ class LdapServer {
           $watchdog_tokens = array('%basedn' => $ldap_query_params['base_dn'], '%filter' => $ldap_query_params['filter'],
             '%attributes' => print_r($ldap_query_params['attributes'], TRUE), '%errmsg' => $this->errorMsg('ldap'),
             '%errno' => $this->ldapErrorNumber());
-          watchdog('ldap', "LDAP ldap_search error. basedn: %basedn| filter: %filter| attributes:
+          watchdog('ldap_servers', "LDAP ldap_search error. basedn: %basedn| filter: %filter| attributes:
             %attributes| errmsg: %errmsg| ldap err no: %errno|", $watchdog_tokens);
           RETURN FALSE;
         }
@@ -861,7 +865,7 @@ class LdapServer {
         // false positive error thrown.  do not set result limit error when $sizelimit specified
       }
       elseif ($this->hasError()) {
-        watchdog('ldap_server', 'ldap_control_paged_result_response() function error. LDAP Error: %message, ldap_list() parameters: %query',
+        watchdog('ldap_servers', 'ldap_control_paged_result_response() function error. LDAP Error: %message, ldap_list() parameters: %query',
           array('%message' => $this->errorMsg('ldap'), '%query' => $ldap_query_params['query_display']),
           WATCHDOG_ERROR);
       }
@@ -903,7 +907,7 @@ class LdapServer {
           // false positive error thrown.  do not return result limit error when $sizelimit specified
         }
         elseif ($this->hasError()) {
-          watchdog('ldap_server', 'ldap_search() function error. LDAP Error: %message, ldap_search() parameters: %query',
+          watchdog('ldap_servers', 'ldap_search() function error. LDAP Error: %message, ldap_search() parameters: %query',
             array('%message' => $this->errorMsg('ldap'), '%query' => $params['query_display']),
             WATCHDOG_ERROR);
         }
@@ -916,7 +920,7 @@ class LdapServer {
           // false positive error thrown.  do not result limit error when $sizelimit specified
         }
         elseif ($this->hasError()) {
-          watchdog('ldap_server', 'ldap_read() function error.  LDAP Error: %message, ldap_read() parameters: %query',
+          watchdog('ldap_servers', 'ldap_read() function error.  LDAP Error: %message, ldap_read() parameters: %query',
             array('%message' => $this->errorMsg('ldap'), '%query' => @$params['query_display']),
             WATCHDOG_ERROR);
         }
@@ -929,7 +933,7 @@ class LdapServer {
           // false positive error thrown.  do not result limit error when $sizelimit specified
         }
         elseif ($this->hasError()) {
-          watchdog('ldap_server', 'ldap_list() function error. LDAP Error: %message, ldap_list() parameters: %query',
+          watchdog('ldap_servers', 'ldap_list() function error. LDAP Error: %message, ldap_list() parameters: %query',
             array('%message' => $this->errorMsg('ldap'), '%query' => $params['query_display']),
             WATCHDOG_ERROR);
         }
@@ -974,7 +978,7 @@ class LdapServer {
       else {
         $uids = join(',', $uids);
         $tokens = array('%uids' => $uids, '%puid' => $puid, '%sid' => $this->sid, '%ldap_user_puid_property' => $this->unique_persistent_attr);
-        watchdog('ldap_server', 'multiple users (uids: %uids) with same puid (puid=%puid, sid=%sid, ldap_user_puid_property=%ldap_user_puid_property)', $tokens, WATCHDOG_ERROR);
+        watchdog('ldap_servers', 'multiple users (uids: %uids) with same puid (puid=%puid, sid=%sid, ldap_user_puid_property=%ldap_user_puid_property)', $tokens, WATCHDOG_ERROR);
         return FALSE;
       }
     }
@@ -1003,7 +1007,7 @@ class LdapServer {
       $watchdog_tokens['%ldap_username'] = $ldap_username;
       $name = $old_name_value;  // important because of global scope of $name
       if ($this->detailedWatchdogLog) {
-        watchdog('ldap_server', '%drupal_user_name tansformed to %ldap_username by applying code <code>%code</code>', $watchdog_tokens, WATCHDOG_DEBUG);
+        watchdog('ldap_servers', '%drupal_user_name tansformed to %ldap_username by applying code <code>%code</code>', $watchdog_tokens, WATCHDOG_DEBUG);
       }
     }
     else {
@@ -1131,7 +1135,7 @@ class LdapServer {
           }
         }
         elseif (isset($account->data['ldap_user']['init']['thumb5md'])) {
-          watchdog('ldap_server', "Some error happened during thumbnailPhoto sync.");
+          watchdog('ldap_servers', "Some error happened during thumbnailPhoto sync.");
           return FALSE;
         }
       }
@@ -1167,7 +1171,7 @@ class LdapServer {
     }
     else {
       foreach ($errors as $err => $err_val) {
-        watchdog('ldap_server', "Error storing picture: %error", ["%error" => $err_val], WATCHDOG_ERROR);
+        watchdog('ldap_servers', "Error storing picture: %error", ["%error" => $err_val], WATCHDOG_ERROR);
       }
       return FALSE;
     }
@@ -1809,7 +1813,7 @@ class LdapServer {
         $member_id = ldap_servers_get_first_rdn_value_from_dn($group_entry['dn'], $this->groupMembershipsAttrMatchingUserAttr);
 	if(!$member_id) {
 	  if ($this->detailed_watchdog_log) {
-	     watchdog('ldap_server', 'group_entry: %ge', array('%ge' => pretty_print_ldap_entry($group_entry)));
+	     watchdog('ldap_servers', 'group_entry: %ge', array('%ge' => pretty_print_ldap_entry($group_entry)));
 	  }
 	  // group not identified by simple checks yet!
 
@@ -1821,7 +1825,7 @@ class LdapServer {
 	      if($g == $this->groupObjectClass) {
 		// found a group, current user must be member in it - so:
 		if ($this->detailed_watchdog_log) {
-		  watchdog('ldap_server', 'adding %mi', array('%mi' => $member_id));
+		  watchdog('ldap_servers', 'adding %mi', array('%mi' => $member_id));
 		}
 		$member_id = $group_entry['dn'];
 		break;

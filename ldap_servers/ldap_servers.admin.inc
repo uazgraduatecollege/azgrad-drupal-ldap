@@ -168,7 +168,7 @@ function ldap_servers_admin_delete_submit($form, &$form_state) {
     if ($result = $ldap_server->delete($sid)) {
       $tokens = array('%name' => $ldap_server->name, '!sid' => $sid);
       drupal_set_message(t('LDAP Server %name (server id = !sid) has been deleted.', $tokens), 'status');
-      watchdog('ldap', 'LDAP Server deleted: %name (sid = !sid) ', $tokens);
+      watchdog('ldap_servers', 'LDAP Server deleted: %name (sid = !sid) ', $tokens);
     }
     else {
       drupal_set_message(t('LDAP Server delete failed.'), 'warning');
@@ -244,7 +244,7 @@ function ldap_servers_admin_enable_disable_submit($form, &$form_state) {
     $tokens = array('%name' => $values['name'], '!sid' => $sid, '!action' => t($values['action']) . 'd');
     drupal_set_message(t('LDAP Server Configuration %name (server id = !sid) has been !action.', $tokens));
     $message = t('LDAP Server !action: %name (sid = !sid) ', $tokens);
-    watchdog('ldap', $message);
+    watchdog('ldap_servers', $message);
 
   }
 
