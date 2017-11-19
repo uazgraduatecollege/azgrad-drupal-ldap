@@ -95,6 +95,12 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
    *   LDAP_SUCCESS or the relevant error.
    */
   public function connect() {
+    if (!function_exists('ldap_connect')) {
+      \Drupal::logger('ldap_servers')
+        ->error('PHP LDAP extension not found, aborting.');
+      return self::LDAP_NOT_SUPPORTED;
+    }
+
     $connection = ldap_connect(self::get('address'), self::get('port'));
 
     if (!$connection) {
@@ -113,19 +119,28 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
     if (self::get('tls')) {
       ldap_get_option($connection, LDAP_OPT_PROTOCOL_VERSION, $protocolVersion);
       if ($protocolVersion == -1) {
-        \Drupal::logger('user')->notice('Could not get LDAP protocol version.');
+        \Drupal::logger('ldap_servers')
+          ->notice('Could not get LDAP protocol version.');
         return self::LDAP_PROTOCOL_ERROR;
       }
       if ($protocolVersion != 3) {
-        \Drupal::logger('user')->notice('Could not start TLS, only supported by LDAP v3.');
+        \Drupal::logger('ldap_servers')
+          ->notice('Could not start TLS, only supported by LDAP v3.');
         return self::LDAP_CONNECT_ERROR;
       }
       elseif (!function_exists('ldap_start_tls')) {
-        \Drupal::logger('user')->notice('Could not start TLS. It does not seem to be supported by this PHP setup.');
+        \Drupal::logger('ldap_servers')
+          ->notice('Could not start TLS. It does not seem to be supported by this PHP setup.');
         return self::LDAP_CONNECT_ERROR;
       }
       elseif (!ldap_start_tls($connection)) {
-        \Drupal::logger('user')->notice('Could not start TLS. (Error @errno: @error).', ['@errno' => ldap_errno($connection), '@error' => ldap_error($connection)]);
+        \Drupal::logger('ldap_servers')
+          ->notice('Could not start TLS. (Error @errno: @error).',
+            [
+              '@errno' => ldap_errno($connection),
+              '@error' => ldap_error($connection),
+            ]
+          );
         return self::LDAP_CONNECT_ERROR;
       }
     }
