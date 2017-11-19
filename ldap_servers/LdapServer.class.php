@@ -1127,7 +1127,7 @@ class LdapServer {
     $info = image_get_info($fileuri);
     unlink($fileuri);
     // create file object
-    $file = file_save_data($image_data, 'public://' . variable_get('user_picture_path') . '/' . $filename . '.' . $info['extension']);
+    $file = file_save_data($image_data, file_default_scheme() . '://' . variable_get('user_picture_path') . '/' . $filename . '.' . $info['extension']);
     $file->md5Sum = $md5thumb;
     // standard Drupal validators for user pictures
     $validators = [
@@ -1141,7 +1141,7 @@ class LdapServer {
     }
     else {
       foreach ($errors as $err => $err_val) {
-        watchdog('ldap_server', "Error storing picture: %$err", ["%$err" => $err_val], WATCHDOG_ERROR);
+        watchdog('ldap_server', "Error storing picture: %error", ["%error" => $err_val], WATCHDOG_ERROR);
       }
       return FALSE;
     }
