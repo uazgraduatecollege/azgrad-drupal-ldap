@@ -416,7 +416,17 @@ EOT;
   return $form;
 }
 
-
+  /**
+   * @param $sid
+   * @param $orphan_handling
+   */
+  private function checkPuidOrphans($sid, $orphan_handling) {
+    $ldap_server = ldap_servers_get_servers($sid, NULL, TRUE);
+    if ($ldap_server && empty($ldap_server->unique_persistent_attr)
+      && $orphan_handling != 'ldap_user_orphan_do_not_check') {
+      drupal_set_message(t('You\'ve configured the orphan check but are missing the required persistent user ID property.'), 'error');
+    }
+  }
 
 /**
  * validate submitted form
@@ -429,6 +439,8 @@ EOT;
   public function drupalFormValidate($values, $storage)  {
     $this->populateFromDrupalForm($values, $storage);
     list($errors, $warnings) = $this->validate($values);
+
+    $this->checkPuidOrphans($values['drupalAcctProvisionServer'], $values['orphanedDrupalAcctBehavior']);
 
     // since failed mapping rows in form, don't populate ->ldapUserSynchMappings, need to validate these from values
     foreach ($values as $field => $value) {
