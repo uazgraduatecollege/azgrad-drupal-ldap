@@ -782,22 +782,23 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
    */
   private function saveUserPicture(FieldItemListInterface $field, $ldapUserPicture) {
     // Create tmp file to get image format and derive extension.
-    $file_name = uniqid();
-    $unmanaged_file = file_directory_temp() . '/' . $file_name;
-    file_put_contents($unmanaged_file, $ldapUserPicture);
-    $image_type = exif_imagetype($unmanaged_file);
+    $fileName = uniqid();
+    $unmanagedFile = file_directory_temp() . '/' . $fileName;
+    file_put_contents($unmanagedFile, $ldapUserPicture);
+    $image_type = exif_imagetype($unmanagedFile);
     $extension = image_type_to_extension($image_type, FALSE);
-    unlink($unmanaged_file);
+    unlink($unmanagedFile);
+
     $fieldSettings = $field->getFieldDefinition()->getItemDefinition()->getSettings();
-    $token_service = \Drupal::token();
+    $tokenService = \Drupal::token();
+    $directory = $tokenService->replace($fieldSettings['file_directory']);
+    $fullDirectoryPath = $fieldSettings['uri_scheme'] . '://' . $directory;
 
-    $directory = $token_service->replace($fieldSettings['file_directory']);
-
-    if (!is_dir(\Drupal::service('file_system')->realpath('public://' . $directory))) {
-      \Drupal::service('file_system')->mkdir('public://' . $directory, NULL, TRUE);
+    if (!is_dir(\Drupal::service('file_system')->realpath($fullDirectoryPath))) {
+      \Drupal::service('file_system')->mkdir($fullDirectoryPath, NULL, TRUE);
     }
 
-    $managed_file = file_save_data($ldapUserPicture, 'public://' . $directory . '/' . $file_name . '.' . $extension);
+    $managed_file = file_save_data($ldapUserPicture, $fullDirectoryPath . '/' . $fileName . '.' . $extension);
 
     $validators = [
       'file_validate_is_image' => [],
