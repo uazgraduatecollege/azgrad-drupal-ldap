@@ -160,7 +160,14 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
 
     // Ensure that we have an active server connection.
     if (!$this->connection) {
-      \Drupal::logger('ldap_servers')->notice("LDAP bind failure. Not connected to LDAP server.");
+      \Drupal::logger('ldap_servers')->error("LDAP bind failure. Not connected to LDAP server.");
+      return self::LDAP_CONNECT_ERROR;
+    }
+
+    // Explicitly check for valid binding due to some upgrade issues.
+    $validMethods = ['service_account', 'user', 'anon', 'anon_user'];
+    if (!in_array($this->get('bind_method'), $validMethods)) {
+      \Drupal::logger('ldap_servers')->error("Bind method missing.");
       return self::LDAP_CONNECT_ERROR;
     }
 
