@@ -150,7 +150,9 @@ require_once('ldap_servers.tokens.inc');
  * Implements hook_init().
  */
 function ldap_servers_init() {
-  drupal_add_css(drupal_get_path('module', 'ldap_servers') . '/ldap_servers.admin.css', 'module');
+  if (strpos(current_path(), 'admin/config/people/ldap') === 0) {
+    drupal_add_css(drupal_get_path('module', 'ldap_servers') . '/ldap_servers.admin.css', 'module');
+  }
 }
 
 /**
