@@ -46,6 +46,11 @@ class LdapAuthorizationOg2Tests extends LdapTestCase {
     parent::setUp(array('ldap_authentication', 'ldap_authorization', 'ldap_authorization_og'));
     variable_set('ldap_simpletest', 2);
 
+    if (ldap_authorization_og_og_version() != 2) {
+      debug('LdapAuthorizationOg2Tests must be run with OG 7.x-2.x');
+      return;
+    }
+
     $this->user1 = $this->drupalCreateUser();
     $this->groups = array();
     $this->prepTestData(LDAP_TEST_LDAP_NAME, array('activedirectory1'));
@@ -124,6 +129,11 @@ class LdapAuthorizationOg2Tests extends LdapTestCase {
   function testBasicFunctionsAndApi() {
     // TODO: Fix failing tests, excluding to make branch pass.
     return;
+
+    if (ldap_authorization_og_og_version() != 2) {
+      debug('LdapAuthorizationOg2Tests must be run with OG 7.x-2.x');
+      return;
+    }
 
     $this->createCustomRoles();
     $all_roles = og_roles($this->groupEntityType, $this->groupBundle, 0, FALSE, TRUE);

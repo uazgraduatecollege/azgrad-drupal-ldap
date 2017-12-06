@@ -170,10 +170,7 @@ class LdapAuthorizationConsumerDrupalRole extends LdapAuthorizationConsumerAbstr
 
   }
 
-  /**
-   * {@inheritdoc}
-   */
-  public function usersAuthorizations($user) {
+  public function usersAuthorizations(&$user) {
     $authorizations = array();
     foreach ($user->roles as $rid => $role_name_mixed_case) {
       $authorizations[] = drupal_strtolower($role_name_mixed_case);

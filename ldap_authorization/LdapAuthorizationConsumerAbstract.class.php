@@ -4,7 +4,7 @@
  * @file
  *
  * abstract class to represent an ldap_authorization consumer behavior
- * such as drupal_role, og_group, etc.  each authorization consumer
+ * such as drupal_role, og_group, etc.  each authorization comsumer
  * will extend this class with its own class named
  * LdapAuthorizationConsumer<consumer type> such as LdapAuthorizationConsumerDrupalRole
  *
@@ -255,6 +255,16 @@ class LdapAuthorizationConsumerAbstract {
    */
   public function sortConsumerIds($op, &$consumers) { }
 
+
+  /**
+   * attempt to flush related caches.  This will be something like og_invalidate_cache($gids)
+   *
+   * @param $consumers associative array in form of LdapAuthorizationConsumerAbstract::populateConsumersFromConsumerIds
+   *
+   *
+   */
+  public function flushRelatedCaches($consumers = NULL) { }
+
   /**
    * @param string $op 'grant' or 'revoke' signifying what to do with the $consumer_ids
    * @param drupal user object $object
@@ -360,7 +370,7 @@ class LdapAuthorizationConsumerAbstract {
       $user = user_save($user, $user_edit);
       $user_auth_data = $user->data['ldap_authorizations'][$this->consumerType];  // reload this.
     }
-    og_invalidate_cache($consumers);
+    $this->flushRelatedCaches($consumers);
 
     if ($detailed_watchdog_log) {
       watchdog('ldap_authorization', '%username:
@@ -412,7 +422,7 @@ class LdapAuthorizationConsumerAbstract {
 	 * @return array of consumer ids such as array('3-2','7-2'), array('admin','user_admin')
 	 */
 
-  public function usersAuthorizations($user) {
+  public function usersAuthorizations(&$user) {
     // method must be overridden
   }
 
@@ -454,7 +464,7 @@ class LdapAuthorizationConsumerAbstract {
    *
    * @return param boolean is user has authorization id, regardless of what module granted it.
    */
-  public function hasAuthorization($user, $consumer_id) {
+  public function hasAuthorization(&$user, $consumer_id) {
     return @in_array($consumer_id, $this->usersAuthorizations($user));
   }
 
