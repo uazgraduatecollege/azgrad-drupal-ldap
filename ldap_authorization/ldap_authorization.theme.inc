@@ -2,9 +2,12 @@
 
 /**
  * @file
- * theming functions for the LDAP authorization module.
+ * Theming functions for the LDAP authorization module.
  */
 
+/**
+ *
+ */
 function theme_ldap_authorization_admin_index(&$variables) {
   $consumers = $variables['consumers'];
 
@@ -34,14 +37,16 @@ function theme_ldap_authorization_admin_index(&$variables) {
       $consumer->consumerModule,
       $consumer_type,
       ($consumer->consumerConf->status) ? t('Yes') : t('No'),
-      $actions
+      $actions,
     );
   }
   return theme('table', $table);
 
 }
 
-
+/**
+ *
+ */
 function theme_ldap_authorization_test_results($variables) {
 
   $results = $variables['results'];
@@ -98,8 +103,11 @@ function theme_ldap_authorization_test_results($variables) {
 
   return $output;
 
-  }
+}
 
+/**
+ *
+ */
 function ldap_authorization_map_errors($err_id, $consumer_conf_link) {
 
   $tokens = array('%consumer_conf_link' => $consumer_conf_link);
@@ -107,24 +115,24 @@ function ldap_authorization_map_errors($err_id, $consumer_conf_link) {
 
     case  LDAP_AUTHORIZATION_USER_LDAP_NOT_FOUND:
       $authorizations_text = t('LDAP entry for drupal user not found.', $tokens);
-    break;
+      break;
 
     case LDAP_AUTHORIZATION_USER_NOT_LDAP_AUTHENTICATED:
       $authorizations_text = t('LDAP Authorizations not applied because user is not
       authenticated via LDAP and configuration requires is (%consumer_conf_link).', $tokens);
-    break;
+      break;
 
     case LDAP_AUTHORIZATION_MAP_NOT_CONF_FOR_LOGON:
       $authorizations_text = t('LDAP Authorizations not configured to be executed on logon in  (%consumer_conf_link).', $tokens);
-    break;
+      break;
 
     case LDAP_AUTHORIZATION_NOT_APPLY_USER_1:
       $authorizations_text = t('LDAP Authorizations not applicable to user 1.', $tokens);
-    break;
+      break;
 
     case LDAP_AUTHORIZATION_SERVER_CONFIG_NOT_FOUND:
       $authorizations_text = t('Enabled LDAP server configuration not found for given ldap consumer type in (%consumer_conf_link).', $tokens);
-    break;
+      break;
 
     default:
       $authorizations_text = "Failed.";

@@ -2,15 +2,12 @@
 
 /**
  * @file
- *
- *  controls organic group membership based on LDAP values
- *
+ * Controls organic group membership based on LDAP values.
  */
 
 /**
  * Implements hook_ldap_authorization_consumer().
  */
-
 function ldap_authorization_og_ldap_authorization_consumer() {
   $types['og_group'] = array(
     'consumer_name' => t('OG group'),
@@ -39,11 +36,14 @@ function ldap_authorization_og_ldap_authorization_consumer() {
 }
 
 /**
- * Format authorization id
+ * Format authorization id.
  *
- * @param int $gid as organic group gid
- * @param int $rid as organic group rig
- * @param array $group_entity as entity associated with organic group
+ * @param int $gid
+ *   as organic group gid.
+ * @param int $rid
+ *   as organic group rig.
+ * @param array $group_entity
+ *   as entity associated with organic group.
  *
  * @return string "normalized" authorization id such as 3-3
  */
@@ -51,22 +51,26 @@ function ldap_authorization_og_authorization_id($gid, $rid, $entity_type = 'node
   return join(':', [$entity_type, $gid, $rid]);
 }
 
-
+/**
+ *
+ */
 function ldap_authorization_og_og_version() {
   return (function_exists('og_action_info')) ? 2 : 1;
 }
 
 /**
- * Generic function to convert between query values and organic groups structures and attributes
+ * Generic function to convert between query values and organic groups structures and attributes.
  *
- * @param mixed $entity_type signifies query value e.g. 'bakers', 7 etc.
- * @param mixed $group_name signifies query type e.g. 'group_name', 'gid', etc.
+ * @param mixed $entity_type
+ *   signifies query value e.g. 'bakers', 7 etc.
+ * @param mixed $group_name
+ *   signifies query type e.g. 'group_name', 'gid', etc.
  *
  * @return mixed organic group object, gid, label, etc.
  */
 function ldap_authorization_og2_get_group_from_name($entity_type, $group_name) {
 
-  require_once(drupal_get_path('module', 'ldap_authorization_og') . '/LdapAuthorizationConsumerOG.class.php');
+  require_once drupal_get_path('module', 'ldap_authorization_og') . '/LdapAuthorizationConsumerOG.class.php';
   $group_entity = FALSE;
   $group_entity_id = FALSE;
   $query = new EntityFieldQuery();
@@ -85,6 +89,9 @@ function ldap_authorization_og2_get_group_from_name($entity_type, $group_name) {
 
 }
 
+/**
+ *
+ */
 function ldap_authorization_og2_has_consumer_id($consumer_id, $uid) {
   $parts = explode(':', $consumer_id);
   $result = FALSE;
@@ -94,7 +101,7 @@ function ldap_authorization_og2_has_consumer_id($consumer_id, $uid) {
   );
   if (count($parts) == 3) {
     list($group_type, $gid, $rid) = $parts;
-    // need to make sure entity exists before calling og_get_user_roles which will throw fatal error
+    // Need to make sure entity exists before calling og_get_user_roles which will throw fatal error.
     if ($group = entity_load_single($group_type, $gid)) {
       if (og_is_group($group_type, $group)) {
         $roles = og_get_user_roles($group_type, $gid, $uid, TRUE);
@@ -111,33 +118,41 @@ function ldap_authorization_og2_has_consumer_id($consumer_id, $uid) {
   return $result;
 }
 
-// ldap_authorization_og2_has_role($og_students_node->nid, $web_user->uid, OG_AUTHENTICATED_ROLE)
+/**
+ * Ldap_authorization_og2_has_role($og_students_node->nid, $web_user->uid, OG_AUTHENTICATED_ROLE)
+ */
 function ldap_authorization_og2_has_role($group_type, $gid, $uid, $role_name) {
-  $roles = og_get_user_roles($group_type, $gid, $uid, TRUE); // array with rid as key and role name as value
+  // Array with rid as key and role name as value.
+  $roles = og_get_user_roles($group_type, $gid, $uid, TRUE);
   return (is_array($roles) && in_array($role_name, array_values($roles)));
 }
 
-
-
 /**
- * Derive og role id from role name
+ * Derive og role id from role name.
  *
- * @param string $role_name as og role name
+ * @param string $role_name
+ *   as og role name.
+ *
  * @return int og role id
  */
-
 function ldap_authorization_og_rid_from_role_name($role_name) {
   $roles = og_roles(0);
   $rids = array_flip($roles);
   return isset($rids[$role_name]) ? $rids[$role_name] : FALSE;
 }
 
+/**
+ *
+ */
 function ldap_authorization_og2_rid_from_role_name($entity_type, $bundle, $gid, $role_name) {
   $roles = og_roles($entity_type, $bundle, 0, FALSE, TRUE);
   $roles_flipped = array_flip($roles);
   return (empty($roles_flipped[$role_name])) ? NULL : $roles_flipped[$role_name];
 }
 
+/**
+ *
+ */
 function ldap_authorization_og_get_all_group_entities() {
   $entities = array();
   $group_entity_types = og_get_all_group_bundle();
@@ -147,6 +162,7 @@ function ldap_authorization_og_get_all_group_entities() {
   }
   return $entities;
 }
+
 /**
  * Implements hook_form_alter().
  */

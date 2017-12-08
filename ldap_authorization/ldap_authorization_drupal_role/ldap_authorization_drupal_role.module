@@ -1,10 +1,8 @@
 <?php
 
 /**
- * @file 
- *
- *  maps ldap data to drupal roles
- *
+ * @file
+ * Maps ldap data to drupal roles.
  */
 
 /**
@@ -39,9 +37,7 @@ faculty|administrator
 
 /**
  * Implements hook_ldap_user_attrs_list_alter().
- *
  */
-
 function ldap_authorization_drupal_role_ldap_user_attrs_list_alter(&$available_user_attrs, &$params) {
 
   $available_user_attrs['[property.role]'] = array(
