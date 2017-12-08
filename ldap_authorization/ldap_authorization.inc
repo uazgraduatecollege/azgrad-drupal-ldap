@@ -299,7 +299,13 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
         $display_authorizations[] = $_consumer['map_to_string'];
       }
       $_SESSION['ldap_authorization_test_query']['post mappings'] = $display_authorizations;
-      $data = property_exists($user, 'data') ? $user->data['ldap_authorizations'][$consumer->consumerType] : array();
+      if (property_exists($user, 'data') &&
+        isset($user->data['ldap_authorizations'][$consumer->consumerType])) {
+        $data = $user->data['ldap_authorizations'][$consumer->consumerType];
+      }
+      else {
+        $data = [];
+      }
       $_SESSION['ldap_authorization_test_query']['user data'] = $data;
     }
 

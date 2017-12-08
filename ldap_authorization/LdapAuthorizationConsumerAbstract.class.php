@@ -60,7 +60,7 @@ class LdapAuthorizationConsumerAbstract {
    * Link to test this consumer.
    */
   public $testLink;
-  
+
   /**
    * Link to configure this consumer.
    */
