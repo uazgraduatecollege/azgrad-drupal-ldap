@@ -19,7 +19,6 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
 
   public $consumerType = 'og_group';
   public $allowConsumerObjectCreation = FALSE;
-  public $ogVersion = NULL; // 1, 2, etc.
   public $defaultMembershipRid;
   public $anonymousRid;
   public $defaultConsumerConfProperties = array(
@@ -33,28 +32,13 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
 
   function __construct($consumer_type) {
 
-    $this->ogVersion = ldap_authorization_og_og_version();
-    if ($this->ogVersion == 1) {
-      $this->defaultMembershipRid = ldap_authorization_og1_role_name_to_role_id(OG_AUTHENTICATED_ROLE);
-      $this->anonymousRid = ldap_authorization_og1_role_name_to_role_id(OG_ANONYMOUS_ROLE);
-    }
-    else {
-      //@todo these properties are not used in ldap og 2, but when they are their derivation needs to be examined and tested
-      // as they may be per entity rids, not global.
-      $this->defaultMembershipRid = NULL; // ldap_authorization_og_rid_from_role_name(OG_AUTHENTICATED_ROLE);
-      $this->anonymousRid = NULL; //ldap_authorization_og_rid_from_role_name(OG_ANONYMOUS_ROLE);
-    }
+    //@todo these properties are not used in ldap og 2, but when they are their derivation needs to be examined and tested
+    // as they may be per entity rids, not global.
+    $this->defaultMembershipRid = NULL; // ldap_authorization_og_rid_from_role_name(OG_AUTHENTICATED_ROLE);
+    $this->anonymousRid = NULL; //ldap_authorization_og_rid_from_role_name(OG_ANONYMOUS_ROLE);
 
     $params = ldap_authorization_og_ldap_authorization_consumer();
     parent::__construct('og_group', $params['og_group']);
-  }
-
-  public function og1ConsumerIdParts($consumer_id) {
-    if (!is_scalar($consumer_id)) {
-      return array(NULL, NULL);
-    }
-    $parts = explode('-', $consumer_id);
-    return (count($parts) != 2) ? array(NULL, NULL) : $parts;
   }
 
   public function og2ConsumerIdParts($consumer_id) {
@@ -82,187 +66,92 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
    * @see LdapAuthorizationConsumerAbstract::normalizeMappings
    */
   public function normalizeMappings($mappings) {
-
     $new_mappings = array();
-    if ($this->ogVersion == 2) {
-      $group_entity_types = og_get_all_group_bundle();
-      foreach ($mappings as $i => $mapping) {
-        $from = $mapping[0];
-        $to = $mapping[1];
-        $to_parts = explode('(raw: ', $to);
-        $user_entered = $to_parts[0];
-        $new_mapping = array(
-          'from' => $from,
-          'user_entered' => $user_entered,
-          'valid' => TRUE,
-          'error_message' => '',
-        );
+    $group_entity_types = og_get_all_group_bundle();
+    foreach ($mappings as $i => $mapping) {
+      $from = $mapping[0];
+      $to = $mapping[1];
+      $to_parts = explode('(raw: ', $to);
+      $user_entered = $to_parts[0];
+      $new_mapping = array(
+        'from' => $from,
+        'user_entered' => $user_entered,
+        'valid' => TRUE,
+        'error_message' => '',
+      );
 
-        if (count($to_parts) == 2) { // has simplified and normalized part in (). update normalized part as validation
-          $to_normalized = trim($to_parts[1], ')');
-          /**
-           * users (node:35:1)
-           * node:students (node:21:1)
-           * faculty (node:33:2)
-           * node:35:1 (node:35:1)
-           * node:35 (node:35:1)
-           */
+      if (count($to_parts) == 2) { // has simplified and normalized part in (). update normalized part as validation
+        $to_normalized = trim($to_parts[1], ')');
+        /**
+         * users (node:35:1)
+         * node:students (node:21:1)
+         * faculty (node:33:2)
+         * node:35:1 (node:35:1)
+         * node:35 (node:35:1)
+         */
 
-          $to_simplified = $to_parts[0];
-          $to_simplified_parts = explode(':', trim($to_simplified));
-          $entity_type = (count($to_simplified_parts) == 1) ? 'node' : $to_simplified_parts[0];
-          $role = (count($to_simplified_parts) < 3) ? OG_AUTHENTICATED_ROLE : $to_simplified_parts[2];
-          $group_name = (count($to_simplified_parts) == 1) ? $to_simplified_parts[0] : $to_simplified_parts[1];
-          list($group_entity, $group_entity_id) = ldap_authorization_og2_get_group_from_name($entity_type, $group_name);
-          $to_simplified = join(':', array($entity_type, $group_name));
-        }
-        else { // may be simplified or normalized, but not both
-          /**
-           * users
-           * node:students
-           * faculty
-           * node:35:1
-           * node:35
-           */
-          $to_parts = explode(':', trim($to));
-          $entity_type = (count($to_parts) == 1) ? 'node' : $to_parts[0];
-          $role = (count($to_parts) < 3) ? OG_AUTHENTICATED_ROLE : $to_parts[2];
-          $group_name_or_entity_id = (count($to_parts) == 1) ? $to_parts[0] : $to_parts[1];
-          list($group_entity, $group_entity_id) = ldap_authorization_og2_get_group_from_name($entity_type, $group_name_or_entity_id);
-          if ($group_entity) { // if load by name works, $group_name_or_entity_id is group title
-            $to_simplified = join(':', array($entity_type, $group_name_or_entity_id));
-          }
-          else {
-            $to_simplified = FALSE;
-          }
-          $simplified = (boolean)($group_entity);
-          if (!$group_entity && ($group_entity = @entity_load_single($entity_type, $group_name_or_entity_id))) {
-            $group_entity_id = $group_name_or_entity_id;
-          }
-        }
-        if (!$group_entity) {
-          $new_mapping['normalized'] = FALSE;
-          $new_mapping['simplified'] = FALSE;
-          $new_mapping['valid'] = FALSE;
-          $new_mapping['error_message'] = t("cannot find matching group: !to", array('!to' => $to));
+        $to_simplified = $to_parts[0];
+        $to_simplified_parts = explode(':', trim($to_simplified));
+        $entity_type = (count($to_simplified_parts) == 1) ? 'node' : $to_simplified_parts[0];
+        $role = (count($to_simplified_parts) < 3) ? OG_AUTHENTICATED_ROLE : $to_simplified_parts[2];
+        $group_name = (count($to_simplified_parts) == 1) ? $to_simplified_parts[0] : $to_simplified_parts[1];
+        list($group_entity, $group_entity_id) = ldap_authorization_og2_get_group_from_name($entity_type, $group_name);
+        $to_simplified = join(':', array($entity_type, $group_name));
+      }
+      else { // may be simplified or normalized, but not both
+        /**
+         * users
+         * node:students
+         * faculty
+         * node:35:1
+         * node:35
+         */
+        $to_parts = explode(':', trim($to));
+        $entity_type = (count($to_parts) == 1) ? 'node' : $to_parts[0];
+        $role = (count($to_parts) < 3) ? OG_AUTHENTICATED_ROLE : $to_parts[2];
+        $group_name_or_entity_id = (count($to_parts) == 1) ? $to_parts[0] : $to_parts[1];
+        list($group_entity, $group_entity_id) = ldap_authorization_og2_get_group_from_name($entity_type, $group_name_or_entity_id);
+        if ($group_entity) { // if load by name works, $group_name_or_entity_id is group title
+          $to_simplified = join(':', array($entity_type, $group_name_or_entity_id));
         }
         else {
-          $role_id = is_numeric($role) ? $role : ldap_authorization_og2_rid_from_role_name($entity_type, $group_entity->type, $group_entity_id, $role);
-          $roles = og_roles($entity_type, isset($group_entity->type) ? $group_entity->type : NULL, 0, FALSE, TRUE);
-          $role_name = is_numeric($role) ? $roles[$role] : $role;
-          $to_normalized = join(':', array($entity_type, $group_entity_id, $role_id));
-          $to_simplified = ($to_simplified) ? $to_simplified . ':' . $role_name : $to_normalized;
-          $new_mapping['normalized'] = $to_normalized;
-          $new_mapping['simplified'] = $to_simplified;
-          if ($to == $to_normalized) {
-            /**  if not using simplified notation, do not convert to simplified.
-              this would create a situation where an og group
-              can change its title and the authorizations change when the
-              admin specified the group by entity id
-            */
-            $new_mapping['user_entered'] = $to;
-          }
-          else {
-            $new_mapping['user_entered'] = $to_simplified . ' (raw: ' . $to_normalized . ')';
-          }
-
-
+          $to_simplified = FALSE;
         }
-
-        $new_mappings[] = $new_mapping;
+        $simplified = (boolean)($group_entity);
+        if (!$group_entity && ($group_entity = @entity_load_single($entity_type, $group_name_or_entity_id))) {
+          $group_entity_id = $group_name_or_entity_id;
+        }
       }
-    }
-    else { // og 1
-      foreach ($mappings as $i => $mapping) {
-        $new_mapping = array(
-          'from' => $mapping[0],
-          'user_entered' => $mapping[1],
-          'normalized' => NULL,
-          'simplified' => NULL,
-          'valid' => TRUE,
-          'error_message' => '',
-        );
-
-        $gid = NULL;
-        $rid = NULL;
-        $correct_syntax = "gid=43,rid=2 or group-name=students,role-name=member or node.title=students,role-name=member";
-        $incorrect_syntax = t('Incorrect mapping syntax.  Correct examples are:') . $correct_syntax;
-        $targets = explode(',', $mapping[1]);
-        if (count($targets) != 2) {
-          $new_mapping['valid'] = FALSE;
-          $new_mapping['error_message'] = $incorrect_syntax;
-          continue;
-        }
-
-        $group_target_and_value = explode('=', $targets[0]);
-        if (count($group_target_and_value) != 2) {
-          $new_mapping['valid'] = FALSE;
-          $new_mapping['error_message'] = $incorrect_syntax;
-          continue;
-        }
-
-        list($group_target, $group_target_value) = $group_target_and_value;
-
-        $role_target_and_value = explode('=', $targets[1]);
-        if (count($role_target_and_value) != 2) {
-          $new_mapping['valid'] = FALSE;
-          $new_mapping['error_message'] = $incorrect_syntax;
-          continue;
-        }
-        list($role_target, $role_target_value) = $role_target_and_value;
-
-
-        $og_group = FALSE;
-        if ($group_target == 'gid') {
-          $gid = $group_target_value;
-        }
-        elseif ($group_target == 'group-name') {
-          list($og_group, $og_node) = ldap_authorization_og1_get_group($group_target_value, 'group_name', 'object');
-          if (is_object($og_group) && property_exists($og_group, 'gid') && $og_group->gid) {
-            $gid = $og_group->gid;
-          }
+      if (!$group_entity) {
+        $new_mapping['normalized'] = FALSE;
+        $new_mapping['simplified'] = FALSE;
+        $new_mapping['valid'] = FALSE;
+        $new_mapping['error_message'] = t("cannot find matching group: !to", array('!to' => $to));
+      }
+      else {
+        $role_id = is_numeric($role) ? $role : ldap_authorization_og2_rid_from_role_name($entity_type, $group_entity->type, $group_entity_id, $role);
+        $roles = og_roles($entity_type, isset($group_entity->type) ? $group_entity->type : NULL, 0, FALSE, TRUE);
+        $role_name = is_numeric($role) ? $roles[$role] : $role;
+        $to_normalized = join(':', array($entity_type, $group_entity_id, $role_id));
+        $to_simplified = ($to_simplified) ? $to_simplified . ':' . $role_name : $to_normalized;
+        $new_mapping['normalized'] = $to_normalized;
+        $new_mapping['simplified'] = $to_simplified;
+        if ($to == $to_normalized) {
+          /**  if not using simplified notation, do not convert to simplified.
+          this would create a situation where an og group
+          can change its title and the authorizations change when the
+          admin specified the group by entity id
+           */
+          $new_mapping['user_entered'] = $to;
         }
         else {
-          $entity_type_and_field = explode('.', $group_target);
-          if (count($entity_type_and_field) != 2) {
-            $new_mapping['valid'] = FALSE;
-            $new_mapping['error_message'] = $incorrect_syntax;
-            continue;
-          }
-          list($entity_type, $field) = $entity_type_and_field;
-
-          $query = new EntityFieldQuery();
-          $query->entityCondition('entity_type', $entity_type)
-            ->fieldCondition($field, 'value', $group_target_value, '=')
-            ->addMetaData('account', user_load(1)); // run the query as user 1
-
-          $result = $query->execute();
-          if (is_array($result) && isset($result[$entity_type]) && count($result[$entity_type]) == 1) {
-            $entities = array_keys($result[$entity_type]);
-            $gid = ldap_authorization_og1_entity_id_to_gid($entities[0]);
-          }
-
-        }
-        if (!$og_group && $gid) {
-          $og_group = og_load($gid);
+          $new_mapping['user_entered'] = $to_simplified . ' (raw: ' . $to_normalized . ')';
         }
 
 
-        if ($role_target == 'rid') {
-          $role_name = ldap_authorization_og1_role_name_from_rid($role_target_value);
-          $rid = $role_target_value;
-        }
-        elseif ($role_target == 'role-name') {
-          $rid = ldap_authorization_og_rid_from_role_name($role_target_value);
-          $role_name = $role_target_value;
-        }
-
-        $new_mapping['simplified'] = $og_group->label . ', '. $role_name;
-        $new_mapping['normalized'] = ($gid && $rid) ? ldap_authorization_og_authorization_id($gid, $rid) : FALSE;
-
-        $new_mappings[] = $new_mapping;
       }
 
+      $new_mappings[] = $new_mapping;
     }
     return $new_mappings;
   }
@@ -292,55 +181,26 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
     // generate a query for all og groups of interest
     $gids = array();
     foreach ($consumers as $consumer_id => $consumer) {
-      if (ldap_authorization_og_og_version() == 1) {
-        list($gid, $rid) = $this->og1ConsumerIdParts($consumer_id);
-        $gids[] = $gid;
-      }
-      else  {
-        list($entity_type, $gid, $rid) = explode(':', $consumer_id);
-        $gids[$entity_type][] = $gid;
-      }
+    list($entity_type, $gid, $rid) = explode(':', $consumer_id);
+    $gids[$entity_type][] = $gid;
 
     }
-    if (ldap_authorization_og_og_version() == 1) {
-      $og_group_entities = og_load_multiple($gids);
-    }
-    else {
-      foreach ($gids as $entity_type => $gid_x_entity) {
-        $og_group_entities[$entity_type] = @entity_load($entity_type, $gid_x_entity);
-      }
+
+    foreach ($gids as $entity_type => $gid_x_entity) {
+      $og_group_entities[$entity_type] = @entity_load($entity_type, $gid_x_entity);
     }
 
     foreach ($consumers as $consumer_id => $consumer) {
-      if (ldap_authorization_og_og_version() == 1) {
-        list($gid, $rid) = $this->og1ConsumerIdParts($consumer_id);
-        $consumer['exists'] = isset($og_group_entities[$gid]);
-        if ($consumer['exists']) {
-          $consumer['value'] = $og_group_entities[$gid];
-          if (empty($consumer['name']) && property_exists($og_group_entities[$gid], 'title')) {
-            $consumer['name'] = $og_group_entities[$gid]->title;
-          }
-          $consumer['name'] = $consumer_id;
-        }
-        else {
-          $consumer['value'] = NULL;
-          $consumer['name'] = NULL;
-        }
-
-        $consumer['map_to_string'] = $consumer_id;
-      }
-      else  {
-        list($entity_type, $gid, $rid) = explode(':', $consumer_id);
-        $consumer['exists'] = isset($og_group_entities[$entity_type][$gid]);
-        $consumer['value'] = ($consumer['exists']) ? $og_group_entities[$entity_type][$gid] : NULL;
-        $consumer['map_to_string'] = $consumer_id;
-        if (
-          empty($consumer['name']) &&
-          !empty($og_group_entities[$entity_type][$gid]) &&
-          property_exists($og_group_entities[$entity_type][$gid], 'title')
-        ) {
-          $consumer['name'] = $og_group_entities[$entity_type][$gid]->title;
-        }
+      list($entity_type, $gid, $rid) = explode(':', $consumer_id);
+      $consumer['exists'] = isset($og_group_entities[$entity_type][$gid]);
+      $consumer['value'] = ($consumer['exists']) ? $og_group_entities[$entity_type][$gid] : NULL;
+      $consumer['map_to_string'] = $consumer_id;
+      if (
+        empty($consumer['name']) &&
+        !empty($og_group_entities[$entity_type][$gid]) &&
+        property_exists($og_group_entities[$entity_type][$gid], 'title')
+      ) {
+        $consumer['name'] = $og_group_entities[$entity_type][$gid]->title;
       }
 
       if (!$consumer['exists'] && $create_missing_consumers) {
@@ -355,39 +215,21 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
 
 
   public function hasAuthorization(&$user, $consumer_id) {
-
-    if ($this->ogVersion == 1) {
-      $result = FALSE;
-      list($gid, $rid) = $this->og1ConsumerIdParts($consumer_id);
-      return ldap_authorization_og1_has_membership($gid, $user->uid) && ldap_authorization_og1_has_role($gid, $user->uid, $rid);
-    }
-    else {
-      return ldap_authorization_og2_has_consumer_id($consumer_id, $user->uid);
-    }
+    return ldap_authorization_og2_has_consumer_id($consumer_id, $user->uid);
   }
 
-  
+
   public function flushRelatedCaches($consumers = NULL, $user = NULL) {
     if ($user) {
       $this->usersAuthorizations($user, TRUE, FALSE); // clear user authorizations cache
     }
-    
-    if ($this->ogVersion == 1) {
-      og_group_membership_invalidate_cache();
-    }
-    else {
-      og_membership_invalidate_cache();
-    }
-    
+
+    og_membership_invalidate_cache();
+
     if ($consumers) {
       $gids_to_clear_cache = array();
       foreach ($consumers as $i => $consumer_id) {
-        if ($this->ogVersion == 1) { // og 7.x-1.x
-          list($gid, $rid) = $this->og1ConsumerIdParts($consumer_id);
-        }
-        else {
-          list($entity_type, $gid, $rid) = $this->og2ConsumerIdParts($consumer_id);
-        }
+        list($entity_type, $gid, $rid) = $this->og2ConsumerIdParts($consumer_id);
         $gids_to_clear_cache[$gid] = $gid;
       }
       og_invalidate_cache(array_keys($gids_to_clear_cache));
@@ -406,30 +248,7 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
    * @param boolean $user_save indicates is user data array should be saved or not.  this is always overridden for og
    */
   public function authorizationDiff($existing, $desired) {
-    if ($this->ogVersion != 1) {
-      return parent::authorizationDiff($existing, $desired);
-    }
-
-    /**
-     * for og 1.5, goal is not to recognize X-2 consumer ids if X-N exist
-     * since X-2 consumer ids are granted as a prerequisite of X-N
-     */
-
-    $diff = array_diff($existing, $desired);
-    $desired_group_ids = array();
-    foreach ($desired as $i => $consumer_id) {
-      list($gid, $rid) = $this->og1ConsumerIdParts($consumer_id);
-      $desired_group_ids[$gid] = TRUE;
-    }
-    foreach ($diff as $i => $consumer_id) {
-      list($gid, $rid) = $this->og1ConsumerIdParts($consumer_id);
-      // if there are still roles in this group that are desired, do
-      // not remove default mambership role id
-      if ($rid == $this->defaultMembershipRid && !empty($desired_group_ids[$gid])) {
-        unset($diff[$i]);
-      }
-    }
-    return $diff;
+    return parent::authorizationDiff($existing, $desired);
   }
 
   protected function grantsAndRevokes($op, &$user, &$user_auth_data, $consumers, &$ldap_entry = NULL, $user_save = TRUE) {
@@ -474,17 +293,10 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
 
       $user_has_authorization = in_array($consumer_id, $users_authorization_consumer_ids); // does user already have authorization ?
       $user_has_authorization_recorded = isset($user_auth_data[$consumer_id]);  // is authorization attribute to ldap_authorization_og in $user->data ?
-      
-      if ($this->ogVersion == 1) {
-        list($gid, $rid) = $this->og1ConsumerIdParts($consumer_id);
-        if ($rid == $this->anonymousRid) {
-          continue;
-        }
-      }
-      else {
-        list($entity_type, $gid, $rid) = $this->og2ConsumerIdParts($consumer_id);
-      }
-      
+
+      list($entity_type, $gid, $rid) = $this->og2ConsumerIdParts($consumer_id);
+
+
       /** grants **/
       if ($op == 'grant') {
         if ($user_has_authorization && !$user_has_authorization_recorded) {
@@ -499,12 +311,7 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
         }
         elseif (!$user_has_authorization && $consumer['exists']) {
         // grant case 2: consumer exists, but user is not member. grant authorization
-          if ($this->ogVersion == 1) {
-            $og_actions['grants'][$gid][] = $rid;
-          }
-          else {
-            $og_actions['grants'][$entity_type][$gid][] = $rid;
-          }
+          $og_actions['grants'][$entity_type][$gid][] = $rid;
           $log .= "grant case 2: consumer exists, but user is not member. grant authorization";
           $log .= " ".$entity_type . ":" . $gid .":" . $rid;
         }
@@ -530,14 +337,9 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
       elseif ($op == 'revoke') {
         if ($user_has_authorization) {
           // revoke case 1: user has authorization, revoke it.  revokeSingleAuthorization will remove $user_auth_data[$consumer_id]
-          if ($this->ogVersion == 1) {
-            $og_actions['revokes'][$gid][] = $rid;
-          }
-          else {
-            $og_actions['revokes'][$entity_type][$gid][] = $rid;
-          }
+          $og_actions['revokes'][$entity_type][$gid][] = $rid;
           $log .= "revoke case 1: user has authorization, revoke it.  revokeSingleAuthorization will remove $consumer_id";
-          $log .= " ".$entity_type . ":" . $gid .":" . $rid ;          
+          $log .= " ".$entity_type . ":" . $gid .":" . $rid ;
         }
         elseif ($user_has_authorization_recorded)  {
           // revoke case 2: user does not have authorization, but has record of it. remove record of it.
@@ -558,26 +360,20 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
       }
       $consumer_ids_log .= $log;
     }
-    
+
     $watchdog_tokens['%consumer_ids_log'] = $consumer_ids_log;
-    
+
     /**
      * Step #2: from array of form:
-     *   og1.5: $og_actions['grants'|'revokes'][$gid][$rid]\
-     *   og2:   $og_actions['grants'|'revokes'][$entity_type][$gid][$rid]
+     *   $og_actions['grants'|'revokes'][$entity_type][$gid][$rid]
      * - generate $user->data['ldap_authorizations'][<consumer_id>]
      * - remove and grant og memberships
      * - remove and grant og roles
      * - flush appropriate caches
      */
-    if ($this->ogVersion == 1) {
-      $this->og1Grants($og_actions, $user, $user_auth_data);
-      $this->og1Revokes($og_actions, $user, $user_auth_data);
-    }
-    else {
-      $this->og2Grants($og_actions, $user, $user_auth_data);
-      $this->og2Revokes($og_actions, $user, $user_auth_data); 
-    }
+    $this->og2Grants($og_actions, $user, $user_auth_data);
+    $this->og2Revokes($og_actions, $user, $user_auth_data);
+
 
     $user_edit = array('data' => $user->data);
     $user_edit['data']['ldap_authorizations'][$this->consumerType] = $user_auth_data;
@@ -597,31 +393,6 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
         <hr/>LdapAuthorizationConsumerAbstract grantsAndRevokes() method log.  action=%action:<br/> %consumer_ids_log
         ',
         $watchdog_tokens, WATCHDOG_DEBUG);
-    }
-  }
-
-  public function og1Grants($og_actions, &$user, &$user_auth_data) {
-    foreach ($og_actions['grants'] as $gid => $rids) {
-      $existing_roles = og_get_user_roles($gid, $user->uid);
-      if (!in_array($this->defaultMembershipRid, array_values($existing_roles))) {
-        $user->{OG_AUDIENCE_FIELD}[LANGUAGE_NONE][] = array('gid' => $gid);
-        og_entity_presave($user, 'user');
-        $consumer_id = ldap_authorization_og_authorization_id($gid, $this->defaultMembershipRid);
-        $user_auth_data[$consumer_id] = array(
-          'date_granted' => time(),
-          'consumer_id_mixed_case' => $consumer_id,
-        );
-      }
-      foreach ($rids as $rid) {
-        if ($rid != $this->defaultMembershipRid && $rid != $this->anonymousRid) {
-          og_role_grant($gid, $user->uid, $rid);
-          $consumer_id = ldap_authorization_og_authorization_id($gid, $rid);
-          $user_auth_data[$consumer_id] = array(
-            'date_granted' => time(),
-            'consumer_id_mixed_case' => $consumer_id,
-            );
-        }
-      }
     }
   }
 
@@ -651,7 +422,7 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
             'consumer_id_mixed_case' => $consumer_id,
           );
           $new_rids = array_diff($new_rids, array($authenticated_rid)); // granted on membership creation
-         
+
         }
         foreach ($new_rids as $i => $rid) {
           og_role_grant($group_entity_type, $gid, $user->uid, $rid);
@@ -667,39 +438,7 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
       }
     }
   }
-  
-  
-  public function og1Revokes($og_actions, &$user, &$user_auth_data) {
-    $group_audience_gids = empty($user->{OG_AUDIENCE_FIELD}[LANGUAGE_NONE]['gid']) ? array() : $user->{OG_AUDIENCE_FIELD}[LANGUAGE_NONE]['gid'];
-    foreach ($og_actions['revokes'] as $gid => $rids) {
-      $existing_roles = og_get_user_roles($gid, $user->uid);
-      if (in_array($this->defaultMembershipRid, array_values($existing_roles))) {
-        // ungroup and set audience
-        foreach ($group_audience_gids as $i => $_audience_gid) {
-           if ($_audience_gid == $gid) {
-             unset($user->{OG_AUDIENCE_FIELD}[LANGUAGE_NONE][$i]);
-           }
-        }
-        og_entity_presave($user, 'user');
-        $user = og_ungroup($gid, 'user', $user, TRUE);
-        foreach (array_values($existing_roles) as $rid) {
-          $consumer_id = ldap_authorization_og_authorization_id($gid, $rid);
-          if (isset($user_auth_data[$consumer_id])) {
-            unset($user_auth_data[$consumer_id]);
-          }
-        }
-      }
-      else {
-        foreach ($existing_roles as $rid) {
-          if ($rid != $this->defaultMembershipRid && $this->defaultMembershipRid != 1) {
-            og_role_revoke($gid, $user->uid, $rid);
-            unset($user_auth_data[ldap_authorization_og_authorization_id($gid, $rid)]);
-          }
-        }
-      }
-    }
-  }
-  
+
   public function og2Revokes($og_actions, &$user, &$user_auth_data) {
     foreach ($og_actions['revokes'] as $group_entity_type => $gids) {
       foreach ($gids as $gid => $revoking_rids) { // $revoking_rids are all rids to be removed.  may include authen rids
@@ -748,36 +487,18 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
 
     $authorizations = array();
 
-    if ($this->ogVersion == 1) {
-      $gids = og_get_groups_by_user($user);
-      foreach ($gids as $i => $gid) {
-        $roles = og_get_user_roles($gid, $user->uid);
-        if (!empty($roles[$this->defaultMembershipRid])) { // if you aren't a member, doesn't matter what roles you have in og 1.5
-          if (isset($roles[$this->anonymousRid])) {
-            unset($roles[$this->anonymousRid]);
-          } // ignore anonymous role
-          $rids = array_values($roles);
-          asort($rids, SORT_NUMERIC); // go low to high to get default memberships first
-          foreach ($rids as $rid) {
-            $authorizations[] = ldap_authorization_og_authorization_id($gid, $rid);
-          }
-        }
-      }
-    }
-    else { // og 7.x-2.x
-      $user_entities = entity_load('user', array($user->uid));
-      $memberships = og_get_entity_groups('user', $user_entities[$user->uid]);
-      foreach ($memberships as $entity_type => $entity_memberships) {
-        foreach ($entity_memberships as $og_membership_id => $gid) {
-          $roles = og_get_user_roles($entity_type, $gid, $user->uid);
-          foreach ($roles as $rid => $discard) {
-            $authorizations[] = ldap_authorization_og_authorization_id($gid, $rid, $entity_type);
-          }
+    $user_entities = entity_load('user', array($user->uid));
+    $memberships = og_get_entity_groups('user', $user_entities[$user->uid]);
+    foreach ($memberships as $entity_type => $entity_memberships) {
+      foreach ($entity_memberships as $og_membership_id => $gid) {
+        $roles = og_get_user_roles($entity_type, $gid, $user->uid);
+        foreach ($roles as $rid => $discard) {
+          $authorizations[] = ldap_authorization_og_authorization_id($gid, $rid, $entity_type);
         }
       }
     }
     $users[$user->uid] = $authorizations;
-    
+
     return $authorizations;
   }
 
@@ -827,88 +548,60 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
 
   public function mappingExamples($tokens) {
 
-    if ($this->ogVersion == 1) {
-      $groups = og_get_all_group();
-      $ogEntities = og_load_multiple($groups);
-      $OGroles = og_roles(0);
+    /**
+     * OG 7.x-2.x mappings:
+     * $entity_type = $group_type,
+     * $bundle = $group_bundle
+     * $etid = $gid where edid is nid, uid, etc.
+     *
+     * og group is: entity_type (eg node) x entity_id ($gid) eg. node:17
+     * group identifier = group_type:gid; aka entity_type:etid e.g. node:17
+     *
+     * membership identifier is:  group_type:gid:entity_type:etid
+     * in our case: group_type:gid:user:uid aka entity_type:etid:user:uid e.g. node:17:user:2
+     *
+     * roles are simply rids ((1,2,3) and names (non-member, member, and administrator member) in og_role table
+     * og_users_roles is simply uid x rid x gid
+     *
+     * .. so authorization mappings should look like:
+     *    <ldap group>|group_type:gid:rid such as staff|node:17:2
+     */
 
-      $rows = array();
-      foreach ($ogEntities as $group) {
-        foreach ($OGroles as $rid => $role) {
-          $example = "<code>ou=IT,dc=myorg,dc=mytld,dc=edu|gid=" . $group->gid . ',rid=' . $rid . '</code><br/>' .
-            '<code>ou=IT,dc=myorg,dc=mytld,dc=edu|group-name=' . $group->label . ',role-name=' . $role . '</code>';
-          $rows[] = array(
-            $group->label,
-            $group->gid,
-            $role,
-            $example,
-          );
-        }
-      }
+    $og_fields = field_info_field(OG_GROUP_FIELD);
+    $rows = array();
+    $role_name = OG_AUTHENTICATED_ROLE;
 
-      $variables = array(
-      'header' => array('Group Name', 'OG Group ID', 'OG Membership Type', 'example'),
-      'rows' => $rows,
-      'attributes' => array(),
-      );
-    }
-    else {
-
-      /**
-       * OG 7.x-2.x mappings:
-       * $entity_type = $group_type,
-       * $bundle = $group_bundle
-       * $etid = $gid where edid is nid, uid, etc.
-       *
-       * og group is: entity_type (eg node) x entity_id ($gid) eg. node:17
-       * group identifier = group_type:gid; aka entity_type:etid e.g. node:17
-       *
-       * membership identifier is:  group_type:gid:entity_type:etid
-       * in our case: group_type:gid:user:uid aka entity_type:etid:user:uid e.g. node:17:user:2
-       *
-       * roles are simply rids ((1,2,3) and names (non-member, member, and administrator member) in og_role table
-       * og_users_roles is simply uid x rid x gid
-       *
-       * .. so authorization mappings should look like:
-       *    <ldap group>|group_type:gid:rid such as staff|node:17:2
-       */
-
-      $og_fields = field_info_field(OG_GROUP_FIELD);
-      $rows = array();
-      $role_name = OG_AUTHENTICATED_ROLE;
-
-      if (!empty($og_fields['bundles'])) {
-        foreach ($og_fields['bundles'] as $entity_type => $bundles) {
-          foreach ($bundles as $i => $bundle) {
-            $query = new EntityFieldQuery();
-            $query->entityCondition('entity_type', $entity_type)
-              ->entityCondition('bundle', $bundle)
-              ->range(0, 5)
-              ->addMetaData('account', user_load(1)); // run the query as user 1
-            $result = $query->execute();
-            if (!empty($result)) {
-              $entities = entity_load($entity_type, array_keys($result[$entity_type]));
-              $i = 0;
-              foreach ($entities as $entity_id => $entity) {
-                $i++;
-                $rid = ldap_authorization_og2_rid_from_role_name($entity_type, $bundle, $entity_id, OG_AUTHENTICATED_ROLE);
-                $title = (is_object($entity) && property_exists($entity, 'title')) ? $entity->title : '';
-                $middle = ($title && $i < 3) ? $title : $entity_id;
-                $group_role_identifier = ldap_authorization_og_authorization_id($middle, $rid, $entity_type);
-                $example = "<code>ou=IT,dc=myorg,dc=mytld,dc=edu|$group_role_identifier</code>";
-                $rows[] = array("$entity_type $title - $role_name", $example);
-              }
+    if (!empty($og_fields['bundles'])) {
+      foreach ($og_fields['bundles'] as $entity_type => $bundles) {
+        foreach ($bundles as $i => $bundle) {
+          $query = new EntityFieldQuery();
+          $query->entityCondition('entity_type', $entity_type)
+            ->entityCondition('bundle', $bundle)
+            ->range(0, 5)
+            ->addMetaData('account', user_load(1)); // run the query as user 1
+          $result = $query->execute();
+          if (!empty($result)) {
+            $entities = entity_load($entity_type, array_keys($result[$entity_type]));
+            $i = 0;
+            foreach ($entities as $entity_id => $entity) {
+              $i++;
+              $rid = ldap_authorization_og2_rid_from_role_name($entity_type, $bundle, $entity_id, OG_AUTHENTICATED_ROLE);
+              $title = (is_object($entity) && property_exists($entity, 'title')) ? $entity->title : '';
+              $middle = ($title && $i < 3) ? $title : $entity_id;
+              $group_role_identifier = ldap_authorization_og_authorization_id($middle, $rid, $entity_type);
+              $example = "<code>ou=IT,dc=myorg,dc=mytld,dc=edu|$group_role_identifier</code>";
+              $rows[] = array("$entity_type $title - $role_name", $example);
             }
           }
         }
       }
-
-      $variables = array(
-        'header' => array('Group Entity - Group Title - OG Membership Type', 'example'),
-        'rows' => $rows,
-        'attributes' => array(),
-      );
     }
+
+    $variables = array(
+      'header' => array('Group Entity - Group Title - OG Membership Type', 'example'),
+      'rows' => $rows,
+      'attributes' => array(),
+    );
 
     $table = theme('table', $variables);
     $link = l(t('admin/config/people/ldap/authorization/test/og_group'), 'admin/config/people/ldap/authorization/test/og_group');
