@@ -51,7 +51,9 @@ function ldap_authentication_update_8304() {
   $config_factory = \Drupal::configFactory();
   $config = $config_factory->getEditable('ldap_authentication.settings');
   $data = $config->get('ldap_authentication_conf');
-  $config->clear('ldap_authentication_conf');
-  $config->setData($data);
-  $config->save(TRUE);
+  if ($data) {
+    $config->clear('ldap_authentication_conf');
+    $config->setData($data);
+    $config->save(TRUE);
+  }
 }

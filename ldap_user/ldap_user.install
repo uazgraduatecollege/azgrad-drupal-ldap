@@ -97,9 +97,11 @@ function ldap_user_update_8304() {
   $config_factory = \Drupal::configFactory();
   $config = $config_factory->getEditable('ldap_user.settings');
   $data = $config->get('ldap_user_conf');
-  $config->clear('ldap_user_conf');
-  $config->setData($data);
-  $config->save(TRUE);
+  if ($data) {
+    $config->clear('ldap_user_conf');
+    $config->setData($data);
+    $config->save(TRUE);
+  }
 }
 
 /**
