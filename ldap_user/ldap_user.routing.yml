@@ -1,7 +1,7 @@
 ldap_user.admin_form:
   path: /admin/config/people/ldap/user
   defaults:
-    _title: '3. User'
+    _title: 'User Mappings'
     _form: \Drupal\ldap_user\Form\LdapUserAdminForm
   requirements:
     _permission: 'administer ldap'
