@@ -22,9 +22,11 @@ class ServerListBuilder extends ConfigEntityListBuilder {
    */
   public function buildHeader() {
     $header['label'] = $this->t('Name');
-    $header['type'] = $this->t('Type');
+    $header['method'] = $this->t('Method');
+    $header['binddn'] = $this->t('Account');
     $header['status'] = $this->t('Enabled');
     $header['address'] = $this->t('Server address');
+    $header['port'] = $this->t('Server port');
     $header['current_status'] = $this->t('Server reachable');
     return $header + parent::buildHeader();
   }
@@ -33,26 +35,49 @@ class ServerListBuilder extends ConfigEntityListBuilder {
    * {@inheritdoc}
    */
   public function buildRow(EntityInterface $entity) {
+    $server = Server::load($entity->id());
+
     $row = [];
     $row['label'] = $this->getLabel($entity);
-    $row['type'] = $entity->get('type');
-    $row['status'] = $entity->get('status') ? 'Yes' : 'No';
+    $row['method'] = ucfirst($server->getFormattedBind());
+    if ($server->get('bind_method') == 'service_account') {
+      $row['binddn'] = $server->get('binddn');
+    }
+    else {
+      $row['binddn'] = $this->t('N/A');
+    }
+    $row['status'] = $server->get('status') ? 'Yes' : 'No';
     $row['address'] = $entity->get('address');
-    $row['current_status'] = $this->checkStatus($entity->id());
+    $row['port'] = $entity->get('port');
+    $row['current_status'] = $this->checkStatus($server);
+
+    $fields = [
+      'method',
+      'binddn',
+      'status',
+      'address',
+      'port',
+    ];
+
+    foreach ($fields as $field) {
+      if ($entity->get($field) != $server->get($field)) {
+        $row[$field] .= ' ' . $this->t('(overridden)');
+      }
+    }
+
     return $row + parent::buildRow($entity);
   }
 
   /**
    * Format a server status response.
    *
-   * @param string $server_id
-   *   Server ID.
+   * @param string $server
+   *   Server.
    *
    * @return \Drupal\Core\StringTranslation\TranslatableMarkup
    *   The status string.
    */
-  private function checkStatus($server_id) {
-    $server = Server::load($server_id);
+  private function checkStatus($server) {
     $connection_result = $server->connect();
     if ($server->get('status')) {
       if ($connection_result == Server::LDAP_SUCCESS) {
