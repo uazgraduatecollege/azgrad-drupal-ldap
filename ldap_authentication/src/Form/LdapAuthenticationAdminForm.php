@@ -222,6 +222,7 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
     $form['email']['template']['emailTemplate'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Email Template'),
+      '#description' => $this->t("This is a pattern in the form of <em>@username@yourdomain.com</em>. <br>Note that the <em>@username</em> placeholder including the '@' will be replaced with the actual username."),
       '#required' => 0,
       '#default_value' => $config->get('emailTemplate'),
     ];
