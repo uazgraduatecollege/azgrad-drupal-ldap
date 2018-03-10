@@ -3,6 +3,7 @@
 namespace Drupal\ldap_servers;
 
 use Drupal\user\Entity\User;
+use Symfony\Component\Ldap\Exception\LdapException;
 
 /**
  * Locates potential orphan user accounts.
@@ -263,6 +264,8 @@ class OrphanProcessor {
           ->error('LDAP server %id had error while querying to deal with orphaned LDAP user entries. Please check that the LDAP server is configured correctly',
             ['%id' => $serverId]
           );
+        // We want to make sure that we are not accidentally deleting users.
+        throw new LdapException('Invalid query');
       }
       else {
         unset($ldapEntries['count']);
