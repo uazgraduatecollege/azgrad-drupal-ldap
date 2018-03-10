@@ -461,7 +461,7 @@ class TokenProcessor {
 
             case 'user':
             case 'user-only':
-              $pwd = CredentialsStorage::getPassword();
+              $value = CredentialsStorage::getPassword();
               break;
 
             case 'user-random':
