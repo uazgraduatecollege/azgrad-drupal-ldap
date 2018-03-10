@@ -75,7 +75,6 @@ function _ldap_user_orphans($ldap_user_conf) {
   // e.g. 175 users and  50 max ldap query ors will yield 4 batches
   for ($batch = 1; $batch <= $batches; $batch++) { // e.g. 1,2,3,4
     $filters = array();
-    $drupal_users = array();
     /**
      * 1. populate $drupal_users[$sid][$puid_attr][$puid]['exists']  = TRUE
      *
