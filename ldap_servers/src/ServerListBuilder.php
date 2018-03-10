@@ -61,12 +61,14 @@ class ServerListBuilder extends ConfigEntityListBuilder {
           return t('Server available');
         }
         else {
-          return t('Connection successful, bind failed.');
+          return t('Configuration valid, bind failed.');
         }
       }
       else {
-        return t('Cannot connect');
+        return t('Configuration invalid, cannot connect.');
       }
+    } else {
+      return t('Deactivated');
     }
   }
 
