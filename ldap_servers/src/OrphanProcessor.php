@@ -13,12 +13,17 @@ class OrphanProcessor {
   private $emailList;
   private $ldapQueryOrLimit = 30;
   private $missingServerSemaphore = [];
+  private $enabledServers;
 
   /**
    * Constructor.
    */
   public function __construct() {
     $this->config = \Drupal::config('ldap_user.settings')->get();
+
+    $factory = \Drupal::service('ldap.servers');
+    /** @var \Drupal\ldap_servers\ServerFactory $factory */
+    $this->enabledServers = $factory->getEnabledServers();
   }
 
   /**
@@ -33,24 +38,23 @@ class OrphanProcessor {
       $this->config['orphanedDrupalAcctBehavior'] == 'ldap_user_orphan_do_not_check') {
       return TRUE;
     }
+
     $uids = $this->fetchUidsToCheck();
 
     if (!empty($uids)) {
-      $processedUsers = [];
-
       // To avoid query limits, queries are batched by the limit, for example
       // with 175 users and a limit of 30, 6 batches are run.
       $batches = floor(count($uids) / $this->ldapQueryOrLimit) + 1;
+      $queriedUsers = [];
       for ($batch = 1; $batch <= $batches; $batch++) {
-        $processedUsers += $this->batchQueryUsers($batch, $uids);
+        $queriedUsers += $this->batchQueryUsers($batch, $uids);
       }
 
-      $this->processUser($processedUsers);
+      $this->processOrphanedAccounts($queriedUsers);
 
       if (count($this->emailList) > 0) {
         $this->sendOrphanedAccountsMail();
       }
-
       return TRUE;
     }
     else {
@@ -113,73 +117,24 @@ class OrphanProcessor {
    */
   private function batchQueryUsers($batch, array $uids) {
 
-    $factory = \Drupal::service('ldap.servers');
-    /** @var \Drupal\ldap_servers\ServerFactory $factory */
-    $servers = $factory->getEnabledServers();
-
-    $users = [];
-
     // Creates a list of users in the required format.
     $start = ($batch - 1) * $this->ldapQueryOrLimit;
     $end_plus_1 = min(($batch) * $this->ldapQueryOrLimit, count($uids));
     $batch_uids = array_slice($uids, $start, ($end_plus_1 - $start));
 
     $accounts = User::loadMultiple($batch_uids);
-    $filters = [];
 
+    $users = [];
     foreach ($accounts as $uid => $user) {
       /** @var \Drupal\user\Entity\User $user */
-      $serverId = $user->get('ldap_user_puid_sid')->value;
-      $persistentUid = $user->get('ldap_user_puid')->value;
-      $persistentUidProperty = $user->get('ldap_user_puid_property')->value;
-      if ($serverId && $persistentUid && $persistentUidProperty) {
-        if ($servers[$serverId]->get('unique_persistent_attr_binary')) {
-          $filters[$serverId][$persistentUidProperty][] = "($persistentUidProperty=" . $this->binaryFilter($persistentUid) . ")";
-        }
-        else {
-          $filters[$serverId][$persistentUidProperty][] = "($persistentUidProperty=$persistentUid)";
-        }
-        $users[$serverId][$persistentUidProperty][$persistentUid]['uid'] = $uid;
-        $users[$serverId][$persistentUidProperty][$persistentUid]['exists'] = FALSE;
-      }
-      else {
-        \Drupal::logger('ldap_user')->notice(
-          'User %uid has missing LDAP data fields.',
-          ['%uid' => $uid]
-        );
-      }
+      $users[] = $this->ldapQueryEligibleUser(
+        $uid,
+        $user->get('ldap_user_puid_sid')->value,
+        $user->get('ldap_user_puid_property')->value,
+        $user->get('ldap_user_puid')->value
+      );
     }
 
-    // Query LDAP and update the prepared users with the actual state.
-    foreach ($filters as $serverId => $persistentUidAttributes) {
-      if (!isset($servers[$serverId])) {
-        if (!isset($this->missingServerSemaphore[$serverId])) {
-          \Drupal::logger('ldap_user')
-            ->error('Server %id not enabled, but needed to remove orphaned LDAP users', ['%id' => $serverId]);
-          $this->missingServerSemaphore[$serverId] = TRUE;
-        }
-        continue;
-      }
-      foreach ($persistentUidAttributes as $persistentUidProperty => $orElement) {
-        // Query should look like (|(guid=3243243)(guid=3243243)(guid=3243243))
-        $ldapFilter = '(|' . implode("", $orElement) . ')';
-        $ldapEntries = $servers[$serverId]->searchAllBaseDns($ldapFilter, [$persistentUidProperty]);
-        if ($ldapEntries === FALSE) {
-          // If the query returns an error, ignore the entire server.
-          unset($users[$serverId]);
-          \Drupal::logger('ldap_user')->error('LDAP server %id had error while querying to deal with orphaned LDAP user entries. Please check that the LDAP server is configured correctly',
-            ['%id' => $serverId]
-          );
-          continue;
-        }
-
-        unset($ldapEntries['count']);
-        foreach ($ldapEntries as $ldap_entry) {
-          $persistentUid = $servers[$serverId]->userPuidFromLdapEntry($ldap_entry);
-          $users[$serverId][$persistentUidProperty][$persistentUid]['exists'] = TRUE;
-        }
-      }
-    }
     return $users;
   }
 
@@ -199,6 +154,9 @@ class OrphanProcessor {
 
     $query = \Drupal::entityQuery('user')
       ->exists('ldap_user_current_dn')
+      ->exists('ldap_user_puid_property')
+      ->exists('ldap_user_puid_sid')
+      ->exists('ldap_user_puid')
       ->condition('uid', $lastUidChecked, '>')
       ->sort('uid', 'ASC')
       ->range(0, $this->config['orphanedCheckQty']);
@@ -243,33 +201,77 @@ class OrphanProcessor {
    * @param array $users
    *   User to process.
    */
-  private function processUser(array $users) {
-    foreach ($users as $serverId => $persistentAttributes) {
-      foreach ($persistentAttributes as $attribute => $persistentUids) {
-        foreach ($persistentUids as $persistentUid => $user_data) {
-          if (isset($user_data['uid'])) {
-            $account = User::load($user_data['uid']);
-            $account->set('ldap_user_last_checked', time());
-            $account->save();
-            global $base_url;
-            if (!$user_data['exists']) {
-              switch ($this->config['orphanedDrupalAcctBehavior']) {
-                case 'ldap_user_orphan_email';
-                  $this->emailList[] = $account->getAccountName() . "," . $account->getEmail() . "," . $base_url . "/user/" . $user_data['uid'] . "/edit";
-                  break;
+  private function processOrphanedAccounts(array $users) {
+    foreach ($users as $user) {
+      if (isset($user['uid'])) {
+        $account = User::load($user['uid']);
+        $account->set('ldap_user_last_checked', time());
+        $account->save();
+        global $base_url;
+        if (!$user['exists']) {
+          switch ($this->config['orphanedDrupalAcctBehavior']) {
+            case 'ldap_user_orphan_email';
+              $this->emailList[] = $account->getAccountName() . "," . $account->getEmail() . "," . $base_url . "/user/" . $user['uid'] . "/edit";
+              break;
 
-                case 'user_cancel_block':
-                case 'user_cancel_block_unpublish':
-                case 'user_cancel_reassign':
-                case 'user_cancel_delete':
-                  _user_cancel([], $account, $this->config['orphanedDrupalAcctBehavior']);
-                  break;
-              }
-            }
+            case 'user_cancel_block':
+            case 'user_cancel_block_unpublish':
+            case 'user_cancel_reassign':
+            case 'user_cancel_delete':
+              _user_cancel([], $account, $this->config['orphanedDrupalAcctBehavior']);
+              break;
           }
         }
       }
     }
+  }
+
+  /**
+   * Check eligible user against directory.
+   *
+   * @param int $uid
+   * @param string $serverId
+   * @param string $persistentUidProperty
+   * @param string $persistentUid
+   * @param string $filterArgument
+   *
+   * @return array
+   */
+  private function ldapQueryEligibleUser($uid, $serverId , $persistentUidProperty, $persistentUid) {
+
+    $user['uid'] = $uid;
+    $user['exists'] = FALSE;
+    // Query LDAP and update the prepared users with the actual state.
+    if (!isset($this->enabledServers[$serverId])) {
+      if (!isset($this->missingServerSemaphore[$serverId])) {
+        \Drupal::logger('ldap_user')
+          ->error('Server %id not enabled, but needed to remove orphaned LDAP users', ['%id' => $serverId]);
+        $this->missingServerSemaphore[$serverId] = TRUE;
+      }
+    }
+    else {
+      if ($this->enabledServers[$serverId]->get('unique_persistent_attr_binary')) {
+        $filter = "($persistentUidProperty=" . $this->binaryFilter($persistentUid) . ")";
+      }
+      else {
+        $filter = "($persistentUidProperty=$persistentUid)";
+      }
+
+      $ldapEntries = $this->enabledServers[$serverId]->searchAllBaseDns($filter, [$persistentUidProperty]);
+      if ($ldapEntries === FALSE) {
+        \Drupal::logger('ldap_user')
+          ->error('LDAP server %id had error while querying to deal with orphaned LDAP user entries. Please check that the LDAP server is configured correctly',
+            ['%id' => $serverId]
+          );
+      }
+      else {
+        unset($ldapEntries['count']);
+        foreach ($ldapEntries as $ldap_entry) {
+          $user['exists'] = TRUE;
+        }
+      }
+    }
+    return $user;
   }
 
 }
