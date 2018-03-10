@@ -22,7 +22,7 @@ class ServerListBuilder extends ConfigEntityListBuilder {
    */
   public function buildHeader() {
     $header['label'] = $this->t('Name');
-    $header['method'] = $this->t('Method');
+    $header['bind_method'] = $this->t('Method');
     $header['binddn'] = $this->t('Account');
     $header['status'] = $this->t('Enabled');
     $header['address'] = $this->t('Server address');
@@ -39,7 +39,7 @@ class ServerListBuilder extends ConfigEntityListBuilder {
 
     $row = [];
     $row['label'] = $this->getLabel($entity);
-    $row['method'] = ucfirst($server->getFormattedBind());
+    $row['bind_method'] = ucfirst($server->getFormattedBind());
     if ($server->get('bind_method') == 'service_account') {
       $row['binddn'] = $server->get('binddn');
     }
@@ -47,12 +47,12 @@ class ServerListBuilder extends ConfigEntityListBuilder {
       $row['binddn'] = $this->t('N/A');
     }
     $row['status'] = $server->get('status') ? 'Yes' : 'No';
-    $row['address'] = $entity->get('address');
-    $row['port'] = $entity->get('port');
+    $row['address'] = $server->get('address');
+    $row['port'] = $server->get('port');
     $row['current_status'] = $this->checkStatus($server);
 
     $fields = [
-      'method',
+      'bind_method',
       'binddn',
       'status',
       'address',
