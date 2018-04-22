@@ -30,7 +30,6 @@ use Drupal\ldap_query\QueryEntityInterface;
  *     "uuid" = "uuid"
  *   },
  *   links = {
- *     "canonical" = "/admin/config/people/ldap/query/{ldap_query_entity}",
  *     "add-form" = "/admin/config/people/ldap/query/add",
  *     "edit-form" = "/admin/config/people/ldap/query/{ldap_query_entity}/edit",
  *     "delete-form" = "/admin/config/people/ldap/query/{ldap_query_entity}/delete",

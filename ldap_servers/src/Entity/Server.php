@@ -36,7 +36,6 @@ use Drupal\user\Entity\User;
  *     "uuid" = "uuid"
  *   },
  *   links = {
- *     "canonical" = "/admin/config/people/ldap/server/{server}",
  *     "edit-form" = "/admin/config/people/ldap/server/{server}/edit",
  *     "delete-form" = "/admin/config/people/ldap/server/{server}/delete",
  *     "collection" = "/admin/config/people/ldap/server"
