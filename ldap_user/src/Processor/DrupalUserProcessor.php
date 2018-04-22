@@ -806,7 +806,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
       'file_validate_size' => [$fieldSettings['max_filesize']],
     ];
 
-    if ($managed_file && file_validate($managed_file, $validators)) {
+    if ($managed_file && empty(file_validate($managed_file, $validators))) {
       return ['target_id' => $managed_file->id()];
     }
     else {
