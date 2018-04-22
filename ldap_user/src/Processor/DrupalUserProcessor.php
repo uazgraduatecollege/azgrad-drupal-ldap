@@ -806,11 +806,19 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
       'file_validate_size' => [$fieldSettings['max_filesize']],
     ];
 
-    if ($managed_file && file_validate($managed_file, $validators)) {
+    $errors = file_validate($managed_file, $validators);
+    if ($managed_file && empty($errors)) {
       return ['target_id' => $managed_file->id()];
     }
     else {
-      // Uploaded and unfit files will be automatically garbage collected.
+      // Todo: Verify file garbage collection.
+      foreach ($errors as $error) {
+        $this->detailLog
+          ->log('File upload error for user image with validation error @error',
+            ['@error' => $error]
+          );
+      }
+
       return FALSE;
     }
   }
