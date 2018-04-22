@@ -807,7 +807,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
     ];
 
     $errors = file_validate($managed_file, $validators);
-    if ($managed_file && empty($errors)) {
+    if ($managed_file && empty(file_validate($managed_file, $validators))) {
       return ['target_id' => $managed_file->id()];
     }
     else {
