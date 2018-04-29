@@ -456,44 +456,26 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
    *
    * @param \Drupal\user\UserInterface $account
    *   The Drupal user.
-   * @param int $direction
-   *   Indicating which directions to test for association, NULL signifies check
-   *   for either direction.
    *
    * @return bool
    *   Whether the user is LDAP associated.
    */
-  public function isUserLdapAssociated(UserInterface $account, $direction = NULL) {
+  public function isUserLdapAssociated(UserInterface $account) {
 
-    $toDrupalUser = FALSE;
-    $toLdapEntry = FALSE;
+    $associated = FALSE;
 
-    if ($direction === NULL || $direction == self::PROVISION_TO_DRUPAL) {
-      if (property_exists($account, 'ldap_user_current_dn') && !empty($account->get('ldap_user_current_dn')->value)) {
-        $toDrupalUser = TRUE;
-      }
-      elseif ($account->id()) {
-        $authmaps = ExternalAuthenticationHelper::getUserIdentifierFromMap($account->id());
-        $toDrupalUser = (boolean) (count($authmaps));
-      }
+    if (property_exists($account, 'ldap_user_current_dn') &&
+      !empty($account->get('ldap_user_current_dn')->value)) {
+      $associated = TRUE;
     }
-
-    if ($direction === NULL || $direction == self::PROVISION_TO_LDAP) {
-      if (property_exists($account, 'ldap_user_prov_entries') && !empty($account->get('ldap_user_prov_entries')->value)) {
-        $toLdapEntry = TRUE;
+    elseif ($account->id()) {
+      $authmap = ExternalAuthenticationHelper::getUserIdentifierFromMap($account->id());
+      if (!empty($authmap)) {
+        $associated = TRUE;
       }
     }
 
-    if ($direction == self::PROVISION_TO_DRUPAL) {
-      return $toDrupalUser;
-    }
-    elseif ($direction == self::PROVISION_TO_LDAP) {
-      return $toLdapEntry;
-    }
-    else {
-      return ($toLdapEntry || $toDrupalUser);
-    }
-
+    return $associated;
   }
 
   /**
@@ -937,7 +919,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
    * Handle the sync-to-Drupal event.
    */
   private function syncToDrupalUserEvent() {
-    if ($this->isUserLdapAssociated($this->account, self::PROVISION_TO_DRUPAL)) {
+    if ($this->isUserLdapAssociated($this->account)) {
       $ldapUser = $this->factory->getUserDataFromServerByAccount($this->account, $this->config->get('drupalAcctProvisionServer'), 'ldap_user_prov_to_drupal');
       if ($ldapUser) {
         $this->server = $this->factory->getServerById($this->config->get('drupalAcctProvisionServer'));
