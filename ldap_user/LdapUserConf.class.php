@@ -311,7 +311,7 @@ class LdapUserConf {
     if (!$sid || !$this->drupalAcctProvisionServer) {
       return FALSE;
     }
-    elseif ($this->ldapEntryProvisionServer == $sid) {
+    elseif ($this->drupalAcctProvisionServer == $sid) {
       return TRUE;
     }
     else {
