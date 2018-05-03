@@ -119,7 +119,6 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
     $this->account = User::create($userData);
     $ldapUser = FALSE;
 
-
     // Get an LDAP user from the LDAP server.
     if ($this->config->get('drupalAcctProvisionServer')) {
       $ldapUser = $this->factory->getUserDataFromServerByIdentifier($userData['name'], $this->config->get('drupalAcctProvisionServer'));
@@ -558,7 +557,6 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
    *
    * @param \Drupal\user\UserInterface $account
    *   The Drupal user.
-   *
    */
   public function drupalUserLogsIn(UserInterface $account) {
     $this->account = $account;
@@ -926,7 +924,6 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
         $this->applyAttributesToAccount($ldapUser, self::PROVISION_TO_DRUPAL, [self::EVENT_SYNC_TO_DRUPAL_USER]);
       }
       else {
-        $detailLog = \Drupal::service('ldap.detail_log');
         $this->detailLog->log(
           'Could not retrieve LDAP data for @name due to missing LDAP entry or performing an action with user bind, without credentials.',
           ['@name' => $this->account->getAccountName()],
@@ -1168,6 +1165,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
    *
    * @param \Drupal\user\UserInterface $account
    *   Drupal user account.
+   *
    * @return bool
    *   It is a registration process.
    */
