@@ -30,14 +30,12 @@ class OrphanProcessor {
   /**
    * Check for Drupal accounts which no longer have a related LDAP entry.
    *
-   * @return bool
-   *   FALSE on error or incompletion or TRUE otherwise.
    */
   public function checkOrphans() {
 
     if (!$this->config['orphanedDrupalAcctBehavior'] ||
       $this->config['orphanedDrupalAcctBehavior'] == 'ldap_user_orphan_do_not_check') {
-      return TRUE;
+      return;
     }
 
     $uids = $this->fetchUidsToCheck();
@@ -56,10 +54,13 @@ class OrphanProcessor {
       if (count($this->emailList) > 0) {
         $this->sendOrphanedAccountsMail();
       }
-      return TRUE;
     }
     else {
-      return FALSE;
+      // This can happen if you update all users periodically and saving them
+      // has caused all 'ldap_user_last_checked' values to be newer than your
+      // interval.
+      \Drupal::logger('ldap_user')
+             ->notice('No eligible accounts founds for orphan account verification.');
     }
   }
 
