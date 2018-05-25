@@ -26,10 +26,7 @@ function ldap_user_cron() {
   $check_orphans = \Drupal::config('ldap_user.settings')->get('orphanedDrupalAcctBehavior');
   if ($check_orphans != 'ldap_user_orphan_do_not_check') {
     $processor = new OrphanProcessor();
-    $result = $processor->checkOrphans();
-    if ($result !== TRUE) {
-      \Drupal::logger('ldap_user')->error('Check for orphaned LDAP provisioned Drupal accounts failed.');
-    }
+    $processor->checkOrphans();
   }
 
   $ldapUpdateQuery = \Drupal::config('ldap_user.settings')->get('userUpdateCronQuery');
