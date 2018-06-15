@@ -444,6 +444,7 @@ final class LoginValidator implements LdapUserAttributesInterface {
       $this->detailLog->log(
         '%username: Trying server %id where bind_method = %bind_method',
         [
+          '%username' => $authName,
           '%id' => $this->serverDrupalUser->id(),
           '%bind_method' => $this->serverDrupalUser->get('bind_method'),
         ], 'ldap_authentication'
@@ -464,7 +465,7 @@ final class LoginValidator implements LdapUserAttributesInterface {
 
       if (!$this->ldapUser) {
         $this->detailLog->log(
-          '%username: Trying server %id where bind_method = %bind_method.  Error: %err_text', [
+          '%username: Trying server %id where bind_method = %bind_method. Error: %err_text', [
             '%username' => $authName,
             '%bind_method' => $this->serverDrupalUser->get('bind_method'),
             '%err_text' => $this->serverDrupalUser->formattedError($this->serverDrupalUser->ldapErrorNumber()),
