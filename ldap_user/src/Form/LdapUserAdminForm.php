@@ -175,12 +175,11 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
       ],
     ];
 
-    $account_options = [];
-    $account_options['ldap_user_orphan_do_not_check'] = $this->t('Do not check for orphaned Drupal accounts.');
-    $account_options['ldap_user_orphan_email'] = $this->t('Perform no action, but email list of orphaned accounts. (All the other options will send email summaries also.)');
-    foreach (user_cancel_methods()['#options'] as $option_name => $option_title) {
-      $account_options[$option_name] = $option_title;
-    }
+    $form['basic_to_drupal']['disableAdminPasswordField'] = [
+      '#type' => 'checkbox',
+      '#title' => t('Disable the password fields at /admin/create/people and generate a random password.'),
+      '#default_value' => $config->get('disableAdminPasswordField'),
+    ];
 
     $form['basic_to_drupal']['userUpdateMechanism'] = [
       '#type' => 'fieldset',
@@ -241,6 +240,13 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
       '#title' => 'Orphaned account cron job',
       '#description' => $this->t('<strong>Warning: Use this feature at your own risk!</strong>'),
     ];
+
+    $account_options = [];
+    $account_options['ldap_user_orphan_do_not_check'] = $this->t('Do not check for orphaned Drupal accounts.');
+    $account_options['ldap_user_orphan_email'] = $this->t('Perform no action, but email list of orphaned accounts. (All the other options will send email summaries also.)');
+    foreach (user_cancel_methods()['#options'] as $option_name => $option_title) {
+      $account_options[$option_name] = $option_title;
+    }
 
     $form['basic_to_drupal']['orphanedAccounts']['orphanedDrupalAcctBehavior'] = [
       '#type' => 'radios',
@@ -623,6 +629,7 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
       ->set('userConflictResolve', $form_state->getValue('userConflictResolve'))
       ->set('manualAccountConflict', $form_state->getValue('manualAccountConflict'))
       ->set('acctCreation', $form_state->getValue('acctCreation'))
+      ->set('disableAdminPasswordField', $form_state->getValue('disableAdminPasswordField'))
       ->set('ldapUserSyncMappings', $processedSyncMappings)
       ->save();
     $form_state->getValues();

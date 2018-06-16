@@ -237,6 +237,14 @@ function ldap_user_form_user_register_form_alter(&$form, $form_state) {
     return;
   }
 
+  if (\Drupal::config('ldap_user.settings')->get('disableAdminPasswordField') == TRUE) {
+    $form['account']['pass']['#type'] = 'value';
+    $form['account']['pass']['#value'] = user_password(40);
+    $form['account']['pass_disabled']['#type'] = 'fieldset';
+    $form['account']['pass_disabled']['#title'] = t('Password');
+    $form['account']['pass_disabled'][]['#markup'] = t('LDAP has disabled the password field and generated a random password.');
+  }
+
   $form['ldap_user_fields']['#type'] = 'fieldset';
   $form['ldap_user_fields']['#title'] = t('LDAP Options');
   $form['ldap_user_fields']['#description'] = t('By enabling options in the LDAP user configuration, you can allow the creation of LDAP accounts and define the conflict resolution for associated accounts.');
