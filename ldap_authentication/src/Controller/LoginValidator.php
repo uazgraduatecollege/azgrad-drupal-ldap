@@ -745,13 +745,14 @@ final class LoginValidator implements LdapUserAttributesInterface {
       $this->drupalUser = $this->serverDrupalUser->userAccountFromPuid($puid);
       /** @var \Drupal\user\Entity\User $userMatchingPuid */
       if ($this->drupalUser) {
+        $oldName = $this->drupalUser->accountName();
         $this->drupalUser->setUsername($this->drupalUserName);
         $this->drupalUser->save();
         ExternalAuthenticationHelper::setUserIdentifier($this->drupalUser, $this->authName);
         $this->drupalUserAuthMapped = TRUE;
         drupal_set_message(
-            t('Your old account username %username has been updated to %new_username.',
-              ['%username' => $this->authName, '%new_username' => $this->drupalUserName]),
+            t('Your existing account %username has been updated to %new_username.',
+              ['%username' => $oldName, '%new_username' => $this->drupalUserName]),
             'status');
       }
     }
@@ -772,7 +773,6 @@ final class LoginValidator implements LdapUserAttributesInterface {
             ['%username' => $this->authName],
             'ldap_authentication'
           );
-
         return FALSE;
       }
     }
@@ -837,9 +837,7 @@ final class LoginValidator implements LdapUserAttributesInterface {
    * Prepare the email template token.
    */
   private function prepareEmailTemplateToken() {
-    $this->emailTemplateTokens = [
-      '@username' => $this->drupalUserName,
-    ];
+    $this->emailTemplateTokens = ['@username' => $this->drupalUserName];
 
     if (!empty($this->config->get('emailTemplate'))) {
       $handling = $this->config->get('emailTemplateHandling');
