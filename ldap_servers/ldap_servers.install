@@ -121,5 +121,5 @@ function ldap_servers_update_8304() {
     }
     $server->save();
   }
-  return t('All server configuration attributes are forced to lowercase.');
+  return t('All server configuration attributes are forced to lowercase. Note that exporting this state can contain configuration overrides. Please review.');
 }
