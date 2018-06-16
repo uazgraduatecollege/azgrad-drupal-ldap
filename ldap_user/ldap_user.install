@@ -11,6 +11,23 @@ use Drupal\Core\Utility\UpdateException;
 use Drupal\ldap_servers\LdapUserAttributesInterface;
 
 /**
+ * Implements hook_requirements().
+ */
+function ldap_user_requirements($phase) {
+  $requirements = [];
+  if ($phase == 'install') {
+    if (PHP_SAPI !== 'cli' && \Drupal::languageManager()->getCurrentLanguage()->getId() != 'en') {
+      $requirements['drush'] = array(
+        'title' => t('Installation via Drush'),
+        'description' => t('Installation of ldap_user through the UI in languages other than English is currently not supported. Please use drush or switch to default English. For more information see <a href="https://www.drupal.org/project/ldap/issues/2837074">issue #2837074<a/>.'),
+        'severity' => REQUIREMENT_ERROR,
+      );
+    }
+  }
+  return $requirements;
+}
+
+/**
  * Convert ldap_user_identities table to authmap.
  */
 function ldap_user_update_8301(&$sandbox) {
