@@ -14,32 +14,31 @@ use Drupal\Component\Utility\Unicode;
 function ldap_servers_requirements($phase) {
   $requirements = [];
 
-  if ($phase == 'install') {
-    $requirements['php'] = [
-      'title' => t('PHP'),
-      'value' => ($phase == 'runtime') ? \Drupal::l(phpversion(), new Url('system.php')) : phpversion(),
+  if (version_compare(phpversion(), '5.6.0') < 0) {
+    $requirements['php_ldap_version'] = [
+      'title' => t('PHP Version for LDAP'),
+      'description' => t('Your PHP installation is too old for the LDAP module. Please upgrade to at least 5.6, 7.1 is recommended.'),
+      'severity' => REQUIREMENT_ERROR,
+      'value' => phpversion(),
     ];
-    if (version_compare(phpversion(), '5.6.0') < 0) {
-      $requirements['php']['description'] = t('Your PHP installation is too old. Please upgrade to at least %version.', ['%version' => '5.6.0']);
-      $requirements['php']['severity'] = REQUIREMENT_ERROR;
-    }
-
-    $requirements['ldap_extension_loaded']['title'] = t('LDAP Extension Loaded');
-    if (extension_loaded('ldap')) {
-      $requirements['ldap_extension_loaded']['severity'] = REQUIREMENT_OK;
-    }
-    else {
-      $requirements['ldap_extension_loaded']['severity'] = REQUIREMENT_ERROR;
-      $requirements['ldap_extension_loaded']['description'] = t('No LDAP PHP Extension is loaded for PHP, so LDAP will not work properly.');
-    }
   }
 
-  if ($phase == 'runtime' && !extension_loaded('ldap')) {
-    $requirements['ldap_extension_loaded']['title'] = t('LDAP Extension Loaded');
-    $requirements['ldap_extension_loaded']['severity'] = REQUIREMENT_ERROR;
-    $requirements['ldap_extension_loaded']['description'] = t('No LDAP PHP Extension is loaded for PHP, so LDAP will not work properly.');
+  if (extension_loaded('ldap')) {
+    $requirements['ldap_extension_loaded'] = [
+      'title' => t('PHP LDAP extension'),
+      'severity' => REQUIREMENT_OK,
+      'value' => t('Available'),
+    ];
   }
-  // Check that ldapauth not installed.
+  else {
+    $requirements['ldap_extension_loaded'] = [
+      'title' => t('PHP LDAP extension'),
+      'severity' => REQUIREMENT_ERROR,
+      'value' => t('Missing'),
+      'description' => t('The LDAP extension of PHP is not available. Please consult your distribution to discover how to install it.'),
+    ];
+  }
+
   return $requirements;
 }
 
