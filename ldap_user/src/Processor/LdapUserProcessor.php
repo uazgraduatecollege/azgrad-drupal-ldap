@@ -2,7 +2,6 @@
 
 namespace Drupal\ldap_user\Processor;
 
-use Drupal\Component\Utility\Unicode;
 use Drupal\ldap_servers\Entity\Server;
 use Drupal\ldap_servers\Processor\TokenProcessor;
 use Drupal\ldap_user\Exception\LdapBadParamsException;
@@ -110,7 +109,7 @@ class LdapUserProcessor implements LdapUserAttributesInterface {
         }
         else {
           // Stick $proposedLdapEntry in $ldap_entries array for drupal_alter.
-          $proposedDnLowerCase = Unicode::strtolower($proposedLdapEntry['dn']);
+          $proposedDnLowerCase = mb_strtolower($proposedLdapEntry['dn']);
           $ldap_entries = [$proposedDnLowerCase => $attributes];
           $context = [
             'action' => 'update',
@@ -321,7 +320,7 @@ class LdapUserProcessor implements LdapUserAttributesInterface {
     else {
       $proposedDn = NULL;
     }
-    $proposedDnLowercase = Unicode::strtolower($proposedDn);
+    $proposedDnLowercase = mb_strtolower($proposedDn);
     $existingLdapEntry = ($proposedDn) ? $ldapServer->dnExists($proposedDn, 'ldap_entry') : NULL;
 
     if (!$proposedDn) {

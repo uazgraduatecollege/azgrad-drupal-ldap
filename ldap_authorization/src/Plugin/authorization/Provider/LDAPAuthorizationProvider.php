@@ -3,7 +3,6 @@
 namespace Drupal\ldap_authorization\Plugin\authorization\Provider;
 
 use Drupal\authorization\AuthorizationSkipAuthorization;
-use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\authorization\Provider\ProviderPluginBase;
 use Drupal\ldap_servers\Helper\ConversionHelper;
@@ -286,10 +285,10 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
             $authorization_id = ConversionHelper::unescapeDnValue(trim($first_part[1]));
           }
         }
-        $new_key = Unicode::strtolower($authorization_id);
+        $new_key = mb_strtolower($authorization_id);
       }
       else {
-        $new_key = Unicode::strtolower($key);
+        $new_key = mb_strtolower($key);
       }
       $proposals[$new_key] = $authorization_id;
       if ($key != $new_key) {

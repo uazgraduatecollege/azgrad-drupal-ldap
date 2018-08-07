@@ -2,7 +2,6 @@
 
 namespace Drupal\ldap_servers\Entity;
 
-use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\ldap_servers\Helper\ConversionHelper;
 use Drupal\ldap_servers\Helper\CredentialsStorage;
@@ -234,7 +233,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
       $password = CredentialsStorage::getPassword();
     }
 
-    if (Unicode::strlen($password) == 0 || Unicode::strlen($userDn) == 0) {
+    if (mb_strlen($password) == 0 || mb_strlen($userDn) == 0) {
       \Drupal::logger('ldap_servers')
         ->notice("LDAP bind failure due to missing credentials for user userdn=%userdn, pass=%pass.", [
           '%userdn' => $userDn,
@@ -450,7 +449,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
     foreach ($new_entry as $key => $new_val) {
       $old_value = FALSE;
       $old_value_is_scalar = NULL;
-      $key_lcase = Unicode::strtolower($key);
+      $key_lcase = mb_strtolower($key);
       // TODO: Make this if loop include the actions when tests are available.
       if (isset($old_entry[$key_lcase])) {
         if ($old_entry[$key_lcase]['count'] == 1) {
@@ -468,7 +467,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
       if (is_array($new_val) && is_array($old_value) && count(array_diff($new_val, $old_value)) == 0) {
         unset($new_entry[$key]);
       }
-      elseif ($old_value_is_scalar && !is_array($new_val) && Unicode::strtolower($old_value) == Unicode::strtolower($new_val)) {
+      elseif ($old_value_is_scalar && !is_array($new_val) && mb_strtolower($old_value) == mb_strtolower($new_val)) {
         // Don't change values that aren't changing to avoid false permission
         // constraints.
         unset($new_entry[$key]);
@@ -524,7 +523,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
 
     foreach ($attributes as $key => $cur_val) {
       $old_value = FALSE;
-      $key_lcase = Unicode::strtolower($key);
+      $key_lcase = mb_strtolower($key);
       if (isset($old_attributes[$key_lcase])) {
         if ($old_attributes[$key_lcase]['count'] == 1) {
           $old_value = $old_attributes[$key_lcase][0];
@@ -1029,8 +1028,8 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
    *   binary, if applicable.
    */
   public function userPuidFromLdapEntry(array $ldap_entry) {
-    if ($this->get('unique_persistent_attr') && isset($ldap_entry[Unicode::strtolower($this->get('unique_persistent_attr'))])) {
-      $puid = $ldap_entry[Unicode::strtolower($this->get('unique_persistent_attr'))];
+    if ($this->get('unique_persistent_attr') && isset($ldap_entry[mb_strtolower($this->get('unique_persistent_attr'))])) {
+      $puid = $ldap_entry[mb_strtolower($this->get('unique_persistent_attr'))];
       // If its still an array...
       if (is_array($puid)) {
         $puid = $puid[0];
@@ -1126,8 +1125,8 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
       if (isset($match[$name_attr][0])) {
         // Leave name.
       }
-      elseif (isset($match[Unicode::strtolower($name_attr)][0])) {
-        $name_attr = Unicode::strtolower($name_attr);
+      elseif (isset($match[mb_strtolower($name_attr)][0])) {
+        $name_attr = mb_strtolower($name_attr);
       }
       else {
         if ($this->get('bind_method') == 'anon_user') {
@@ -1153,7 +1152,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
       // Clarence "sparr" Risher on http://drupal.org/node/102008, so we
       // loop through all possible options.
       foreach ($match[$name_attr] as $value) {
-        if (Unicode::strtolower(trim($value)) == Unicode::strtolower($drupaUsername)) {
+        if (mb_strtolower(trim($value)) == mb_strtolower($drupaUsername)) {
           $result = [
             'dn' => $match['dn'],
             'mail' => $this->userEmailFromLdapEntry($match),
@@ -1187,7 +1186,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
     // While list of group dns is going to be in correct mixed case, $group_dn
     // may not since it may be derived from user entered values so make sure
     // in_array() is case insensitive.
-    return (is_array($group_dns) && in_array(Unicode::strtolower($group_dn), $this->dnArrayToLowerCase($group_dns)));
+    return (is_array($group_dns) && in_array(mb_strtolower($group_dn), $this->dnArrayToLowerCase($group_dns)));
   }
 
   /**
@@ -1689,11 +1688,11 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
     // Escapes attribute values, need to be unescaped later.
     $pairs = $this->ldapExplodeDn($dn, 0);
     array_shift($pairs);
-    $rdn = Unicode::strtolower($rdn);
+    $rdn = mb_strtolower($rdn);
     $rdn_value = FALSE;
     foreach ($pairs as $p) {
       $pair = explode('=', $p);
-      if (Unicode::strtolower(trim($pair[0])) == $rdn) {
+      if (mb_strtolower(trim($pair[0])) == $rdn) {
         $rdn_value = ConversionHelper::unescapeDnValue(trim($pair[1]));
         break;
       }
@@ -1719,11 +1718,11 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
     // Escapes attribute values, need to be unescaped later.
     $pairs = $this->ldapExplodeDn($dn, 0);
     array_shift($pairs);
-    $rdn = Unicode::strtolower($rdn);
+    $rdn = mb_strtolower($rdn);
     $rdn_values = [];
     foreach ($pairs as $p) {
       $pair = explode('=', $p);
-      if (Unicode::strtolower(trim($pair[0])) == $rdn) {
+      if (mb_strtolower(trim($pair[0])) == $rdn) {
         $rdn_values[] = ConversionHelper::unescapeDnValue(trim($pair[1]));
         break;
       }

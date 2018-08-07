@@ -2,7 +2,6 @@
 
 namespace Drupal\ldap_servers\Form;
 
-use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\ldap_servers\Entity\Server;
@@ -499,7 +498,7 @@ class ServerForm extends EntityForm {
     ];
 
     foreach ($fields as $field) {
-      $this->entity->set($field, Unicode::strtolower($this->entity->get($field)));
+      $this->entity->set($field, mb_strtolower($this->entity->get($field)));
     }
 
     $status = $this->entity->save();

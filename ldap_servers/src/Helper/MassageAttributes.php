@@ -59,11 +59,11 @@ class MassageAttributes {
   public function processAttributeName($value) {
     $scalar = is_scalar($value);
     if ($scalar) {
-      $value = Unicode::strtolower($value);
+      $value = mb_strtolower($value);
     }
     elseif (is_array($value)) {
       foreach ($value as $i => $val) {
-        $value[$i] = Unicode::strtolower($val);
+        $value[$i] = mb_strtolower($val);
       }
     }
     else {

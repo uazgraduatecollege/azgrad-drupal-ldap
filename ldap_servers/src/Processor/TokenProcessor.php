@@ -3,7 +3,6 @@
 namespace Drupal\ldap_servers\Processor;
 
 use Drupal\Component\Utility\SafeMarkup;
-use Drupal\Component\Utility\Unicode;
 use Drupal\ldap_servers\Helper\ConversionHelper;
 use Drupal\ldap_servers\Helper\CredentialsStorage;
 use Drupal\ldap_servers\Helper\MassageAttributes;
@@ -109,7 +108,7 @@ class TokenProcessor {
 
     // Add lowercase tokens to avoid case sensitivity.
     foreach ($tokens as $attribute => $value) {
-      $tokens[Unicode::strtolower($attribute)] = $value;
+      $tokens[mb_strtolower($attribute)] = $value;
     }
 
     // Array of attributes (sn, givenname, etc)
@@ -268,7 +267,7 @@ class TokenProcessor {
 
     // Add lowercase keyed entries to LDAP array.
     foreach ($ldap_entry as $key => $values) {
-      $ldap_entry[Unicode::strtolower($key)] = $values;
+      $ldap_entry[mb_strtolower($key)] = $values;
     }
 
     // 1. tokenize dn
@@ -358,7 +357,7 @@ class TokenProcessor {
         }
 
         $parts = explode(self::DELIMITER, $token_key);
-        $attr_name = Unicode::strtolower($parts[0]);
+        $attr_name = mb_strtolower($parts[0]);
         $ordinal_key = isset($parts[1]) ? $parts[1] : 0;
         $i = NULL;
 
@@ -403,8 +402,8 @@ class TokenProcessor {
         }
 
         $tokens[$pre . $full_token_key . $post] = SafeMarkup::checkPlain($value);
-        if ($full_token_key != Unicode::strtolower($full_token_key)) {
-          $tokens[$pre . Unicode::strtolower($full_token_key) . $post] = SafeMarkup::checkPlain($value);
+        if ($full_token_key != mb_strtolower($full_token_key)) {
+          $tokens[$pre . mb_strtolower($full_token_key) . $post] = SafeMarkup::checkPlain($value);
         }
       }
     }
@@ -492,13 +491,13 @@ class TokenProcessor {
             break;
 
           case 'to-lowercase':
-            $value = Unicode::strtolower($value);
+            $value = mb_strtolower($value);
             break;
         }
 
         $tokens[$pre . $token_key . $post] = SafeMarkup::checkPlain($value)->__toString();
-        if ($token_key != Unicode::strtolower($token_key)) {
-          $tokens[$pre . Unicode::strtolower($token_key) . $post] = SafeMarkup::checkPlain($value)->__toString();
+        if ($token_key != mb_strtolower($token_key)) {
+          $tokens[$pre . mb_strtolower($token_key) . $post] = SafeMarkup::checkPlain($value)->__toString();
         }
       }
     }
@@ -659,10 +658,10 @@ class TokenProcessor {
     foreach ($userData as $propertyName => $propertyData) {
       if (isset($propertyData[0], $propertyData[0]['value']) && is_scalar($propertyData[0]['value'])) {
         if (substr($propertyName, 0, strlen('field')) === 'field') {
-          $token_keys[] = 'field.' . Unicode::strtolower($propertyName);
+          $token_keys[] = 'field.' . mb_strtolower($propertyName);
         }
         else {
-          $token_keys[] = 'property.' . Unicode::strtolower($propertyName);
+          $token_keys[] = 'property.' . mb_strtolower($propertyName);
         }
       }
     }

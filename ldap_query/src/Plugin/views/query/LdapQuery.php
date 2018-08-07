@@ -3,7 +3,6 @@
 namespace Drupal\ldap_query\Plugin\views\query;
 
 use Drupal\Component\Utility\SafeMarkup;
-use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\ldap_query\Controller\QueryController;
 use Drupal\views\Plugin\views\query\QueryPluginBase;
@@ -245,7 +244,7 @@ class LdapQuery extends QueryPluginBase {
         $subGroup = '';
         foreach ($info['conditions'] as $key => $clause) {
           $item = '(' . $clause['field'] . '=' . SafeMarkup::checkPlain($clause['value']) . ')';
-          if (Unicode::substr($clause['operator'], 0, 1) == '!') {
+          if (mb_substr($clause['operator'], 0, 1) == '!') {
             $subGroup .= "(!$item)";
           }
           else {
