@@ -4,6 +4,7 @@ namespace Drupal\ldap_user\Form;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\FormBase;
+use Drupal\Core\Url;
 use Drupal\ldap_user\Helper\ExternalAuthenticationHelper;
 use Drupal\ldap_user\Helper\LdapConfiguration;
 use Drupal\ldap_servers\LdapUserAttributesInterface;
@@ -43,8 +44,6 @@ class LdapUserTestForm extends FormBase implements LdapUserAttributesInterface {
    */
   public function buildForm(array $form, FormStateInterface $form_state, $op = NULL) {
 
-    $username = @$_SESSION['ldap_user_test_form']['testing_drupal_username'];
-
     $form['#prefix'] = $this->t('<h1>Debug LDAP synchronization events</h1>');
 
     $form['usage'] = [
@@ -57,20 +56,20 @@ class LdapUserTestForm extends FormBase implements LdapUserAttributesInterface {
     $form['testing_drupal_username'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Testing Drupal Username'),
-      '#default_value' => $username,
+      '#default_value' => \Drupal::request()->query->get('username'),
       '#required' => 1,
       '#size' => 30,
       '#maxlength' => 255,
       '#description' => $this->t("The user need not exist in Drupal and testing will not affect the user's LDAP or Drupal Account."),
     ];
 
-    $selected_actions = isset($_SESSION['ldap_user_test_form']['action']) ? $_SESSION['ldap_user_test_form']['action'] : [];
     $form['action'] = [
       '#type' => 'radios',
       '#title' => $this->t('Actions/Event Handler to Test'),
       '#required' => 0,
-      '#default_value' => $selected_actions,
+      '#default_value' => \Drupal::request()->query->get('action'),
       '#options' => self::$syncTriggerOptions,
+      '#required' => TRUE
     ];
 
     $form['submit'] = [
@@ -90,77 +89,73 @@ class LdapUserTestForm extends FormBase implements LdapUserAttributesInterface {
     $username = $form_state->getValue(['testing_drupal_username']);
     $selected_action = $form_state->getValue(['action']);
 
-    if ($username && count($selected_action) > 0) {
+    $config = \Drupal::config('ldap_user.settings')->get();
+    $processor = new DrupalUserProcessor();
+    $ldapProcessor = new LdapUserProcessor();
 
-      $config = \Drupal::config('ldap_user.settings')->get();
-      $processor = new DrupalUserProcessor();
-      $ldapProcessor = new LdapUserProcessor();
+    $test_servers = [];
+    $user_ldap_entry = FALSE;
+    $factory = \Drupal::service('ldap.servers');
 
-      $test_servers = [];
-      $user_ldap_entry = FALSE;
-      $factory = \Drupal::service('ldap.servers');
-
-      if ($config['drupalAcctProvisionServer']) {
-        $test_servers[self::PROVISION_TO_DRUPAL] = $config['drupalAcctProvisionServer'];
-        $user_ldap_entry = $factory->getUserDataFromServerByIdentifier($username, $config['drupalAcctProvisionServer']);
+    if ($config['drupalAcctProvisionServer']) {
+      $test_servers[self::PROVISION_TO_DRUPAL] = $config['drupalAcctProvisionServer'];
+      $user_ldap_entry = $factory->getUserDataFromServerByIdentifier($username, $config['drupalAcctProvisionServer']);
+    }
+    if ($config['ldapEntryProvisionServer']) {
+      $test_servers[self::PROVISION_TO_LDAP] = $config['ldapEntryProvisionServer'];
+      if (!$user_ldap_entry) {
+        $user_ldap_entry = $factory->getUserDataFromServerByIdentifier($username, $config['ldapEntryProvisionServer']);
       }
-      if ($config['ldapEntryProvisionServer']) {
-        $test_servers[self::PROVISION_TO_LDAP] = $config['ldapEntryProvisionServer'];
-        if (!$user_ldap_entry) {
-          $user_ldap_entry = $factory->getUserDataFromServerByIdentifier($username, $config['ldapEntryProvisionServer']);
-        }
-      }
-      $results = [];
-      $results['username'] = $username;
-      $results['related LDAP entry (before provisioning or syncing)'] = $user_ldap_entry;
+    }
+    $results = [];
+    $results['username'] = $username;
+    $results['related LDAP entry (before provisioning or syncing)'] = $user_ldap_entry;
 
-      /** @var \Drupal\user\Entity\User $account */
-      $existingAccount = user_load_by_name($username);
-      if ($existingAccount) {
-        $results['user entity (before provisioning or syncing)'] = $existingAccount->toArray();
-        $results['User Authmap'] = ExternalAuthenticationHelper::getUserIdentifierFromMap($existingAccount->id());
-      }
-      else {
-        $results['User Authmap'] = 'No authmaps available.  Authmaps only shown if user account exists beforehand';
-      }
+    /** @var \Drupal\user\Entity\User $account */
+    $existingAccount = user_load_by_name($username);
+    if ($existingAccount) {
+      $results['user entity (before provisioning or syncing)'] = $existingAccount->toArray();
+      $results['User Authmap'] = ExternalAuthenticationHelper::getUserIdentifierFromMap($existingAccount->id());
+    }
+    else {
+      $results['User Authmap'] = 'No authmaps available.  Authmaps only shown if user account exists beforehand';
+    }
 
-      $account = ['name' => $username];
-      $sync_trigger_description = self::$syncTriggerOptions[$selected_action];
-      foreach ([self::PROVISION_TO_DRUPAL, self::PROVISION_TO_LDAP] as $direction) {
-        if ($this->provisionEnabled($direction, $selected_action)) {
-          if ($direction == self::PROVISION_TO_DRUPAL) {
-            $processor->provisionDrupalAccount($account);
-            $results['provisionDrupalAccount method results']["context = $sync_trigger_description"]['proposed'] = $account;
-          }
-          else {
-            $provision_result = $ldapProcessor->provisionLdapEntry($username, NULL);
-            $results['provisionLdapEntry method results']["context = $sync_trigger_description"] = $provision_result;
-          }
+    $account = ['name' => $username];
+    $sync_trigger_description = self::$syncTriggerOptions[$selected_action];
+    foreach ([self::PROVISION_TO_DRUPAL, self::PROVISION_TO_LDAP] as $direction) {
+      if ($this->provisionEnabled($direction, $selected_action)) {
+        if ($direction == self::PROVISION_TO_DRUPAL) {
+          $processor->provisionDrupalAccount($account);
+          $results['provisionDrupalAccount method results']["context = $sync_trigger_description"]['proposed'] = $account;
         }
         else {
-          if ($direction == self::PROVISION_TO_DRUPAL) {
-            $results['provisionDrupalAccount method results']["context = $sync_trigger_description"] = 'Not enabled.';
-          }
-          else {
-            $results['provisionLdapEntry method results']["context = $sync_trigger_description"] = 'Not enabled.';
-          }
+          $provision_result = $ldapProcessor->provisionLdapEntry($username, NULL);
+          $results['provisionLdapEntry method results']["context = $sync_trigger_description"] = $provision_result;
         }
       }
-
-      if (function_exists('dpm')) {
-        dpm($results);
-      }
       else {
-        drupal_set_message($this->t('This form will not display results unless the devel module is enabled.'), 'warning');
+        if ($direction == self::PROVISION_TO_DRUPAL) {
+          $results['provisionDrupalAccount method results']["context = $sync_trigger_description"] = 'Not enabled.';
+        }
+        else {
+          $results['provisionLdapEntry method results']["context = $sync_trigger_description"] = 'Not enabled.';
+        }
       }
     }
 
-    $_SESSION['ldap_user_test_form']['action'] = $form_state->getValue(['action']);
-    $_SESSION['ldap_user_test_form']['test_mode'] = $form_state->getValue(['test_mode']);
-    $_SESSION['ldap_user_test_form']['testing_drupal_username'] = $username;
+    if (function_exists('dpm')) {
+      dpm($results);
+    }
+    else {
+      drupal_set_message($this->t('This form will not display results unless the devel module is enabled.'), 'warning');
+    }
 
-    $form_state->set(['redirect'], 'admin/config/people/ldap/user/test');
-
+    $params = [
+      'action' => $selected_action,
+      'username' => $username,
+     ];
+    $form_state->setRedirectUrl(Url::fromRoute('ldap_user.test_form', $params));
   }
 
   /**
