@@ -99,15 +99,18 @@ class LdapQuery extends QueryPluginBase {
     }
 
     // Pager.
-    // Paging in the query is not possible since filters and sorting affect it.
     $totalItems = count($view->result);
-    $offset = ($view->pager->getCurrentPage() * $view->pager->getItemsPerPage());
-    $currentLimit = ($view->pager->getCurrentPage() + 1) * $view->pager->getItemsPerPage();
+    $offset = ($view->pager->getCurrentPage()) * $view->pager->getItemsPerPage() + $view->pager->getOffset();
+    $length = NULL;
+    if ($view->pager->getItemsPerPage() > 0) {
+      $length = $view->pager->getItemsPerPage();
+    }
 
-    $view->result = array_splice($view->result, $offset, $currentLimit);
+    if ($offset > 0 || $length > 0) {
+      $view->result = array_splice($view->result, $offset, $length);
+    }
     $view->pager->postExecute($view->result);
     $view->pager->total_items = $totalItems;
-    $view->pager->setOffset($offset);
     $view->pager->updatePageInfo();
     $view->total_rows = $view->pager->getTotalItems();
     // Timing information.
