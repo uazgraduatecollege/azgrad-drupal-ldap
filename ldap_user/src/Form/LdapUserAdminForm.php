@@ -195,7 +195,7 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
       }
       $form['basic_to_drupal']['userUpdateMechanism']['userUpdateCronQuery'] = [
         '#type' => 'select',
-        '#title' => $this->t('Action to perform on Drupal accounts that no longer have corresponding LDAP entries'),
+        '#title' => $this->t('LDAP query containing the list of entries to update'),
         '#required' => FALSE,
         '#default_value' => $config->get('userUpdateCronQuery'),
         '#options' => $updateMechanismOptions,
@@ -227,18 +227,18 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
       ];
     }
 
+    $form['basic_to_drupal']['orphanedAccounts'] = [
+      '#type' => 'fieldset',
+      '#title' => 'Periodic orphaned accounts update mechanism',
+      '#description' => $this->t('<strong>Warning: Use this feature at your own risk!</strong>'),
+    ];
+
     $form['basic_to_drupal']['orphanedAccounts']['orphanedCheckQty'] = [
       '#type' => 'textfield',
       '#size' => 10,
       '#title' => $this->t('Number of users to check each cron run.'),
       '#default_value' => $config->get('orphanedCheckQty'),
       '#required' => FALSE,
-    ];
-
-    $form['basic_to_drupal']['orphanedAccounts'] = [
-      '#type' => 'fieldset',
-      '#title' => 'Orphaned account cron job',
-      '#description' => $this->t('<strong>Warning: Use this feature at your own risk!</strong>'),
     ];
 
     $account_options = [];
