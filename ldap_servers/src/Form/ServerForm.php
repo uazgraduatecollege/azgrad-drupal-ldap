@@ -498,7 +498,7 @@ class ServerForm extends EntityForm {
     ];
 
     foreach ($fields as $field) {
-      $this->entity->set($field, mb_strtolower($this->entity->get($field)));
+      $this->entity->set($field, mb_strtolower(trim($this->entity->get($field))));
     }
 
     $status = $this->entity->save();

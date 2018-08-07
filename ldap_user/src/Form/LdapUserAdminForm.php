@@ -1064,8 +1064,8 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
         // The others are optional.
         if ($columns['configurable_to_drupal'] && $columns['ldap_attr'] && $columns['user_attr']) {
           $mappings[$key] = [
-            'ldap_attr' => $columns['ldap_attr'],
-            'user_attr' => $columns['user_attr'],
+            'ldap_attr' => trim($columns['ldap_attr']),
+            'user_attr' => trim($columns['user_attr']),
             'convert' => $columns['convert'],
             'direction' => $direction,
             'user_tokens' => isset($columns['user_tokens']) ? $columns['user_tokens'] : '',
