@@ -1038,8 +1038,10 @@ function ldap_user_user_presave(&$user_edit, $account, $category) {
       if ($ldap_user_conf->provisionEnabled(LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, LDAP_USER_DRUPAL_USER_PROV_ON_USER_UPDATE_CREATE)) {
         if (ldap_user_is_ldap_associated($account, LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER)) {
           $ldap_user = ldap_servers_get_user_ldap_data($drupal_username, $ldap_user_conf->drupalAcctProvisionServer, 'ldap_user_prov_to_drupal');
-          $ldap_server = ldap_servers_get_servers($ldap_user_conf->drupalAcctProvisionServer, NULL, TRUE);
-          $ldap_user_conf->entryToUserEdit($ldap_user, $user_edit, $ldap_server, LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, array(LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER));
+          if ($ldap_user) {
+            $ldap_server = ldap_servers_get_servers($ldap_user_conf->drupalAcctProvisionServer, NULL, TRUE);
+            $ldap_user_conf->entryToUserEdit($ldap_user, $user_edit, $ldap_server, LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, array(LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER));
+          }
         }
       }
     }
