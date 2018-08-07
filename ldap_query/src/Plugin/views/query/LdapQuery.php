@@ -36,6 +36,13 @@ class LdapQuery extends QueryPluginBase {
   public $orderby = [];
 
   /**
+   * Maps SQL operators to LDAP operators.
+   *
+   * @var array
+   */
+  private const LDAP_FILTER_OPERATORS = ['AND' => '&', 'OR' => '|'];
+
+  /**
    * {@inheritdoc}
    */
   public function build(ViewExecutable $view) {
@@ -240,36 +247,28 @@ class LdapQuery extends QueryPluginBase {
    *   Condition string.
    */
   public function buildConditions() {
-    $operator = ['AND' => '&', 'OR' => '|'];
-    $mainGroup = '';
-    foreach ($this->where as $group => $info) {
-      if (!empty($info['conditions'])) {
-        $subGroup = '';
-        foreach ($info['conditions'] as $key => $clause) {
-          $item = '(' . $clause['field'] . '=' . SafeMarkup::checkPlain($clause['value']) . ')';
-          if (mb_substr($clause['operator'], 0, 1) == '!') {
-            $subGroup .= "(!$item)";
-          }
-          else {
-            $subGroup .= $item;
-          }
+
+    $groups = [];
+    foreach ($this->where as $key => $group) {
+      if (!empty($group['conditions'])) {
+        $conditions = '';
+        foreach ($group['conditions'] as $key => $clause) {
+          $conditions .= $this->translateCondition($clause['field'], $clause['value'], $clause['operator']);
         }
-        if (count($info['conditions']) <= 1) {
-          $mainGroup .= $subGroup;
+        if (count($group['conditions']) > 1) {
+          $groups[] = '(' . self::LDAP_FILTER_OPERATORS[$group['type']] . $conditions . ')';
         }
         else {
-          $mainGroup .= '(' . $operator[$info['type']] . $subGroup . ')';
+          $groups[] = $conditions;
         }
       }
     }
 
-    if (count($this->where) <= 1) {
-      $output = $mainGroup;
+    if (count($groups) > 1) {
+      $output = '(' . self::LDAP_FILTER_OPERATORS[$this->groupOperator] . implode($groups) . ')';
     }
     else {
-      // TODO: Bug hidden here regarding multiple groups, which are not working
-      // properly.
-      $output = '(' . $operator[$this->group_operator] . $mainGroup . ')';
+      $output = array_pop($groups);
     }
 
     return $output;
@@ -293,6 +292,30 @@ class LdapQuery extends QueryPluginBase {
       $finalFilter = $standardFilter;
     }
     return $finalFilter;
+  }
+
+  /**
+   * Produces a filter condition and adds optional negation.
+   *
+   * @param $field
+   *   LDAP attribute name.
+   * @param $value
+   *   Field value.
+   * @param $operator
+   *   Negation operator
+   *
+   * @return string
+   *   LDAP filter such as (cn=Example).
+   */
+  private function translateCondition($field, $value, $operator) {
+    $item = '(' . $field . '=' . SafeMarkup::checkPlain($value) . ')';
+    if (mb_substr($operator, 0, 1) == '!') {
+      $condition = "(!$item)";
+    }
+    else {
+      $condition = $item;
+    }
+    return $condition;
   }
 
 }
