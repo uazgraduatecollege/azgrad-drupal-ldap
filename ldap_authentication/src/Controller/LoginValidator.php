@@ -981,9 +981,9 @@ final class LoginValidator implements LdapUserAttributesInterface {
     }
 
     $processor = new DrupalUserProcessor();
-    $this->drupalUser = $processor->provisionDrupalAccount($user_values);
+    $result = $processor->provisionDrupalAccount($user_values);
 
-    if ($this->drupalUser === FALSE) {
+    if (!$result) {
       $this->logger->error(
         'Failed to find or create %drupal_accountname on logon.',
         ['%drupal_accountname' => $this->drupalUserName]
@@ -994,7 +994,10 @@ final class LoginValidator implements LdapUserAttributesInterface {
       );
       return FALSE;
     }
-    return TRUE;
+    else {
+      $this->drupalUser = $processor->getUserAccount();
+      return TRUE;
+    }
   }
 
   /**

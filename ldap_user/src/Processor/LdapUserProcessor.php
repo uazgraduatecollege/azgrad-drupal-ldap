@@ -73,11 +73,10 @@ class LdapUserProcessor implements LdapUserAttributesInterface {
       ];
 
       try {
-        $processor = new LdapUserProcessor();
-        $proposedLdapEntry = $processor->drupalUserToLdapEntry($account, $server, $params, $ldapUser);
+        $proposedLdapEntry = $this->drupalUserToLdapEntry($account, $server, $params, $ldapUser);
       }
       catch (\Exception $e) {
-        \Drupal::logger('ldap_user')->error('User or server is missing, drupalUserToLdapEntry() failed.');
+        \Drupal::logger('ldap_user')->error('Unable to prepare LDAP entry: %message', ['%message', $e->getMessage()]);
         return FALSE;
       }
 
@@ -236,7 +235,6 @@ class LdapUserProcessor implements LdapUserAttributesInterface {
     \Drupal::moduleHandler()->alter('ldap_entry', $ldapUserEntry, $params);
 
     return $ldapUserEntry;
-
   }
 
   /**
@@ -305,7 +303,7 @@ class LdapUserProcessor implements LdapUserAttributesInterface {
       $proposedLdapEntry = $this->drupalUserToLdapEntry($account, $ldapServer, $params, $ldap_user);
     }
     catch (\Exception $e) {
-      \Drupal::logger('ldap_user')->error('User or server is missing during LDAP provisioning.');
+      \Drupal::logger('ldap_user')->error('User or server is missing during LDAP provisioning: %message', ['%message', $e->getMessage()]);
       return [
         'status' => 'fail',
         'ldap_server' => $ldapServer,
@@ -510,7 +508,7 @@ class LdapUserProcessor implements LdapUserAttributesInterface {
       $proposed_ldap_entry = $this->drupalUserToLdapEntry($account, $ldap_server, $params);
     }
     catch (\Exception $e) {
-      \Drupal::logger('ldap_user')->error('User or server is missing locally for fetching ProvisionRelatedLdapEntry.');
+      \Drupal::logger('ldap_user')->error('Unable to prepare LDAP entry: %message', ['%message', $e->getMessage()]);
       return FALSE;
     }
 

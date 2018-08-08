@@ -58,6 +58,10 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
     $this->detailLog = \Drupal::service('ldap.detail_log');
   }
 
+  public function getUserAccount() {
+    return $this->account;
+  }
+
   /**
    * Set LDAP associations of a Drupal account by altering user fields.
    *
@@ -130,7 +134,6 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
         ['@username' => $userData['name']],
         'ldap-user'
       );
-
       return FALSE;
     }
 
@@ -158,12 +161,12 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
     $persistentUid = $this->server->userPuidFromLdapEntry($ldapUser['attr']);
     $accountFromPuid = ($persistentUid) ? $this->server->userAccountFromPuid($persistentUid) : FALSE;
     if ($accountFromPuid) {
-      $result = $this->updateExistingAccountByPersistentUid($ldapUser, $accountFromPuid);
+      $this->updateExistingAccountByPersistentUid($ldapUser, $accountFromPuid);
     }
     else {
-      $result = $this->createDrupalUser($ldapUser);
+      $this->createDrupalUser($ldapUser);
     }
-    return $result;
+    return TRUE;
   }
 
   /**
@@ -505,7 +508,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
     // The account is already created, so do not provisionDrupalAccount(), just
     // syncToDrupalAccount(), even if action is 'provision'.
     if ($account->isActive() && LdapConfiguration::provisionAvailableToDrupal(self::PROVISION_DRUPAL_USER_ON_USER_UPDATE_CREATE)) {
-      $this->syncToDrupalAccount(self::EVENT_CREATE_DRUPAL_USER, NULL);
+      $this->syncToDrupalAccount(self::EVENT_CREATE_DRUPAL_USER);
     }
 
     $this->provisionLdapEntryOnUserCreation($account);
@@ -518,37 +521,26 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
    *   The Drupal user.
    */
   public function drupalUserUpdated(UserInterface $account) {
-
-    if (ExternalAuthenticationHelper::excludeUser($account)) {
+    // For some reason cloning was only necessary on the update hook.
+    $this->account = clone $account;
+    if (ExternalAuthenticationHelper::excludeUser($this->account)) {
       return;
     }
 
     // Check for provisioning to LDAP; this will normally occur on
     // hook_user_insert or other event when Drupal user is created.
-    if ($this->provisionsLdapEntriesFromDrupalUsers() &&
-      LdapConfiguration::provisionAvailableToLdap(self::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_UPDATE_CREATE)) {
-      $this->provisionLdapEntryOnUserUpdateCreateEvent($account);
+    if ($this->provisionsLdapEntriesFromDrupalUsers() && LdapConfiguration::provisionAvailableToLdap(self::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_UPDATE_CREATE)) {
+      $this->provisionLdapEntryOnUserUpdateCreateEvent();
     }
-  }
 
-  /**
-   * Presave callback.
-   *
-   * This callback is called fairly often and we try to avoid saving here
-   * intentionally.
-   *
-   * @param \Drupal\user\UserInterface $account
-   *   The user account.
-   */
-  public function drupalUserPreSave(UserInterface $account) {
-    $this->account = $account;
-    if (ExternalAuthenticationHelper::excludeUser($this->account) || !$this->account->getAccountName()) {
+    if (SemaphoreStorage::get('sync_drupal', $this->account->getAccountName())) {
       return;
     }
-
-    // Check for provisioning to Drupal and override synced user fields/props.
-    if (LdapConfiguration::provisionsDrupalAccountsFromLdap() && in_array(self::EVENT_SYNC_TO_DRUPAL_USER, array_keys(LdapConfiguration::provisionsDrupalEvents()))) {
-      $this->syncToDrupalUserEvent();
+    else {
+      SemaphoreStorage::set('sync_drupal', $this->account->getAccountName());
+      if (LdapConfiguration::provisionsDrupalAccountsFromLdap() && in_array(self::EVENT_SYNC_TO_DRUPAL_USER, array_keys(LdapConfiguration::provisionsDrupalEvents()))) {
+        $this->syncToDrupalAccount(self::EVENT_SYNC_TO_DRUPAL_USER);
+      }
     }
   }
 
@@ -564,8 +556,8 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
       return;
     }
 
-    $this->loginLdapEntryProvisioning();
     $this->loginDrupalAccountProvisioning();
+    $this->loginLdapEntryProvisioning();
   }
 
   /**
@@ -637,8 +629,6 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
    * @param array $ldap_user
    *   The LDAP user.
    *
-   * @return bool|User
-   *   User account if successful.
    */
   private function createDrupalUser(array $ldap_user) {
     $this->account->enforceIsNew();
@@ -675,7 +665,6 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
     else {
       ExternalAuthenticationHelper::setUserIdentifier($this->account, $this->account->getAccountName());
     }
-    return $this->account;
   }
 
   /**
@@ -685,26 +674,11 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
    *   The LDAP user.
    * @param \Drupal\user\UserInterface $accountFromPuid
    *   The account from the PUID.
-   *
-   * @return bool|\Drupal\user\Entity\User|\Drupal\user\UserInterface
-   *   Returns a user if successful.
-   *
-   * @todo: Remove return here, we don't want to pass the user around.
    */
   private function updateExistingAccountByPersistentUid(array $ldap_user, UserInterface $accountFromPuid) {
     $this->account = $accountFromPuid;
-    // 1. correct username and authmap.
-    $this->applyAttributesToAccount($ldap_user, self::PROVISION_TO_DRUPAL, [self::EVENT_SYNC_TO_DRUPAL_USER]);
-    $this->account = $accountFromPuid;
-    $this->saveAccount();
-    // Update the identifier table.
     ExternalAuthenticationHelper::setUserIdentifier($this->account, $this->account->getAccountName());
-
-    // 2. attempt sync if appropriate for current context.
-    if ($this->account) {
-      $this->syncToDrupalAccount(self::EVENT_SYNC_TO_DRUPAL_USER, $ldap_user);
-    }
-    return $this->account;
+    $this->syncToDrupalAccount(self::EVENT_SYNC_TO_DRUPAL_USER, $ldap_user);
   }
 
   /**
@@ -914,54 +888,32 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
   }
 
   /**
-   * Handle the sync-to-Drupal event.
-   */
-  private function syncToDrupalUserEvent() {
-    if ($this->isUserLdapAssociated($this->account)) {
-      $ldapUser = $this->factory->getUserDataFromServerByAccount($this->account, $this->config->get('drupalAcctProvisionServer'), 'ldap_user_prov_to_drupal');
-      if ($ldapUser) {
-        $this->server = $this->factory->getServerById($this->config->get('drupalAcctProvisionServer'));
-        $this->applyAttributesToAccount($ldapUser, self::PROVISION_TO_DRUPAL, [self::EVENT_SYNC_TO_DRUPAL_USER]);
-      }
-      else {
-        $this->detailLog->log(
-          'Could not retrieve LDAP data for @name due to missing LDAP entry or performing an action with user bind, without credentials.',
-          ['@name' => $this->account->getAccountName()],
-          'ldap_user'
-        );
-      }
-    }
-  }
-
-  /**
    * Handle the user update/create event with LDAP entry provisioning.
    *
-   * @param \Drupal\user\UserInterface $account
-   *   Drupal account.
    */
-  private function provisionLdapEntryOnUserUpdateCreateEvent(UserInterface $account) {
-    if (SemaphoreStorage::get('provision', $account->getAccountName())
-     || SemaphoreStorage::get('sync', $account->getAccountName())) {
+  private function provisionLdapEntryOnUserUpdateCreateEvent() {
+    if (SemaphoreStorage::get('provision', $this->account->getAccountName())
+     || SemaphoreStorage::get('sync', $this->account->getAccountName())) {
       return;
     }
-    $processor = new LdapUserProcessor();
 
+    $processor = new LdapUserProcessor();
     // Check if provisioning to LDAP has already occurred this page load.
-    if (!$processor->getProvisionRelatedLdapEntry($account)) {
-      $provisionResult = $processor->provisionLdapEntry($account);
+    if (!$processor->getProvisionRelatedLdapEntry($this->account)) {
+      $provisionResult = $processor->provisionLdapEntry($this->account);
       if ($provisionResult['status'] == 'success') {
-        SemaphoreStorage::set('provision', $account->getAccountName());
+        SemaphoreStorage::set('provision', $this->account->getAccountName());
       }
     }
 
     // Sync if not just provisioned and enabled.
-    if (SemaphoreStorage::get('provision', $account->getAccountName()) == FALSE) {
+    if (SemaphoreStorage::get('provision', $this->account->getAccountName()) == FALSE) {
       // Check if provisioning to LDAP has already occurred this page load.
       if (LdapConfiguration::provisionAvailableToLdap(self::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_UPDATE_CREATE)
-        && $processor->getProvisionRelatedLdapEntry($account)) {
+        && $processor->getProvisionRelatedLdapEntry($this->account)) {
         $ldapProcessor = new LdapUserProcessor();
-        if ($ldapProcessor->syncToLdapEntry($account)) {
-          SemaphoreStorage::set('sync', $account->getAccountName());
+        if ($ldapProcessor->syncToLdapEntry($this->account)) {
+          SemaphoreStorage::set('sync', $this->account->getAccountName());
         }
       }
     }
@@ -985,111 +937,27 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
    *   The provisioning direction.
    * @param array $prov_events
    *   The provisioning events.
+   *
    */
   private function applyAttributesToAccount(array $ldapUser, $direction = NULL, array $prov_events = NULL) {
     if ($direction == NULL) {
       $direction = self::PROVISION_TO_DRUPAL;
     }
-    // Need array of user fields and which direction and when they should be
-    // synced.
     if (!$prov_events) {
       $prov_events = LdapConfiguration::getAllEvents();
     }
 
-    $processor = new SyncMappingHelper();
-    $mail_synced = $processor->isSynced('[property.mail]', $prov_events, $direction);
-    if (!$this->account->getEmail() && $mail_synced) {
-      $derived_mail = $this->server->userEmailFromLdapEntry($ldapUser['attr']);
-      if ($derived_mail) {
-        $this->account->set('mail', $derived_mail);
-      }
-    }
+    $this->setLdapBaseFields($ldapUser, $direction, $prov_events);
 
-    $drupal_username = $this->server->userUsernameFromLdapEntry($ldapUser['attr']);
-    if ($processor->isSynced('[property.picture]', $prov_events, $direction)) {
-
-      $picture = $this->userPictureFromLdapEntry($ldapUser['attr']);
-
-      if ($picture) {
-        $this->account->set('user_picture', $picture);
-      }
-    }
-
-    if ($processor->isSynced('[property.name]', $prov_events, $direction) && !$this->account->getAccountName() && $drupal_username) {
-      $this->account->set('name', $drupal_username);
-    }
-
-    // Only fired on self::EVENT_CREATE_DRUPAL_USER. Shouldn't it
-    // respect the checkbox on the sync form?
     if ($direction == self::PROVISION_TO_DRUPAL && in_array(self::EVENT_CREATE_DRUPAL_USER, $prov_events)) {
-      $derived_mail = $this->server->userEmailFromLdapEntry($ldapUser['attr']);
-      if (!$this->account->getEmail()) {
-        $this->account->set('mail', $derived_mail);
-      }
-      if (!$this->account->getPassword()) {
-        $this->account->set('pass', user_password(20));
-      }
-      if (!$this->account->getInitialEmail()) {
-        $this->account->set('init', $derived_mail);
-      }
-      if (!$this->account->isBlocked()) {
-        $this->account->set('status', 1);
-      }
+      // If empty, set initial mail, status active, generate a random password.
+      $this->setFieldsOnDrupalUserCreation($ldapUser);
     }
 
-    // Basic $user LDAP fields.
-    $processor = new SyncMappingHelper();
-
-    if ($processor->isSynced('[field.ldap_user_puid]', $prov_events, $direction)) {
-      $ldap_user_puid = $this->server->userPuidFromLdapEntry($ldapUser['attr']);
-      if ($ldap_user_puid) {
-        $this->account->set('ldap_user_puid', $ldap_user_puid);
-      }
-    }
-    if ($processor->isSynced('[field.ldap_user_puid_property]', $prov_events, $direction)) {
-      $this->account->set('ldap_user_puid_property', $this->server->get('unique_persistent_attr'));
-    }
-    if ($processor->isSynced('[field.ldap_user_puid_sid]', $prov_events, $direction)) {
-      $this->account->set('ldap_user_puid_sid', $this->server->id());
-    }
-    if ($processor->isSynced('[field.ldap_user_current_dn]', $prov_events, $direction)) {
-      $this->account->set('ldap_user_current_dn', $ldapUser['dn']);
-    }
-
-    // Get any additional mappings.
-    $mappings = $processor->getSyncMappings($direction, $prov_events);
-
-    // Loop over the mappings.
-    foreach ($mappings as $user_attr_key => $field_detail) {
-
-      // Make sure this mapping is relevant to the sync context.
-      if (!$processor->isSynced($user_attr_key, $prov_events, $direction)) {
-        continue;
-      }
-
-      // If "convert from binary is selected" and no particular method is in
-      // token default to binaryConversionToString() function.
-      if ($field_detail['convert'] && strpos($field_detail['ldap_attr'], ';') === FALSE) {
-        $field_detail['ldap_attr'] = str_replace(']', ';binary]', $field_detail['ldap_attr']);
-      }
-      $tokenHelper = new TokenProcessor();
-      $value = $tokenHelper->tokenReplace($ldapUser['attr'], $field_detail['ldap_attr'], 'ldap_entry');
-      list($value_type, $value_name, $value_instance) = $tokenHelper->parseUserAttributeNames($user_attr_key);
-
-      // $value_instance not used, may have future use case.
-      // Are we dealing with a field?
-      if ($value_type == 'field' || $value_type == 'property') {
-        $this->account->set($value_name, $value);
-      }
-    }
+    $this->setUserDefinedMappings($ldapUser, $direction, $prov_events);
 
     $context = ['ldap_server' => $this->server, 'prov_events' => $prov_events];
     \Drupal::moduleHandler()->alter('ldap_user_edit_user', $this->account, $ldapUser, $context);
-
-    // Don't let empty 'name' value pass for user.
-    if (empty($this->account->getAccountName())) {
-      $this->account->set('name', $ldapUser[$this->server->get('user_attr')]);
-    }
 
     // Set ldap_user_last_checked.
     $this->account->set('ldap_user_last_checked', time());
@@ -1175,6 +1043,115 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
     }
     else {
       return FALSE;
+    }
+  }
+
+  /**
+   * Sets the fields for initial users.
+   *
+   * @param array $ldapUser
+   *   Ldap user data.
+   */
+  private function setFieldsOnDrupalUserCreation(array $ldapUser) {
+    $derived_mail = $this->server->userEmailFromLdapEntry($ldapUser['attr']);
+    if (!$this->account->getEmail()) {
+      $this->account->set('mail', $derived_mail);
+    }
+    if (!$this->account->getPassword()) {
+      $this->account->set('pass', user_password(20));
+    }
+    if (!$this->account->getInitialEmail()) {
+      $this->account->set('init', $derived_mail);
+    }
+    if (!$this->account->isBlocked()) {
+      $this->account->set('status', 1);
+    }
+  }
+
+  /**
+   * Sets the fields required by LDAP
+   *
+   * @param array $ldapUser
+   *   Ldap user data.
+   * @param $direction
+   *   Provision direction.
+   * @param array $prov_events
+   *   Provisioning event.
+   */
+  private function setLdapBaseFields(array $ldapUser, $direction, array $prov_events) {
+    // Basic $user LDAP fields.
+    $mappingHelper = new SyncMappingHelper();
+
+    if ($mappingHelper->isSynced('[property.name]', $prov_events, $direction)) {
+      $this->account->set('name', $this->server->userUsernameFromLdapEntry($ldapUser['attr']));
+    }
+
+    if ($mappingHelper->isSynced('[property.mail]', $prov_events, $direction)) {
+      $derived_mail = $this->server->userEmailFromLdapEntry($ldapUser['attr']);
+      if ($derived_mail) {
+        $this->account->set('mail', $derived_mail);
+      }
+    }
+
+    if ($mappingHelper->isSynced('[property.picture]', $prov_events, $direction)) {
+      $picture = $this->userPictureFromLdapEntry($ldapUser['attr']);
+      if ($picture) {
+        $this->account->set('user_picture', $picture);
+      }
+    }
+
+    if ($mappingHelper->isSynced('[field.ldap_user_puid]', $prov_events, $direction)) {
+      $ldap_user_puid = $this->server->userPuidFromLdapEntry($ldapUser['attr']);
+      if ($ldap_user_puid) {
+        $this->account->set('ldap_user_puid', $ldap_user_puid);
+      }
+    }
+    if ($mappingHelper->isSynced('[field.ldap_user_puid_property]', $prov_events, $direction)) {
+      $this->account->set('ldap_user_puid_property', $this->server->get('unique_persistent_attr'));
+    }
+    if ($mappingHelper->isSynced('[field.ldap_user_puid_sid]', $prov_events, $direction)) {
+      $this->account->set('ldap_user_puid_sid', $this->server->id());
+    }
+    if ($mappingHelper->isSynced('[field.ldap_user_current_dn]', $prov_events, $direction)) {
+      $this->account->set('ldap_user_current_dn', $ldapUser['dn']);
+    }
+  }
+
+  /**
+   * Sets the additional, user-defined fields.
+   *
+   * The greyed out user mappings are not passed to this function.
+   *
+   * @param array $ldapUser
+   *   Ldap user data.
+   * @param $direction
+   *   Provision direction.
+   * @param array $prov_events
+   *   Provisioning event.
+   */
+  private function setUserDefinedMappings(array $ldapUser, $direction, array $prov_events) {
+    $mappingHelper = new SyncMappingHelper();
+    // Get any additional mappings.
+    $mappings = $mappingHelper->getSyncMappings($direction, $prov_events);
+
+    // Loop over the mappings.
+    foreach ($mappings as $key => $fieldDetails) {
+      // Make sure this mapping is relevant to the sync context.
+      if ($mappingHelper->isSynced($key, $prov_events, $direction)) {
+        // If "convert from binary is selected" and no particular method is in
+        // token default to binaryConversionToString() function.
+        if ($fieldDetails['convert'] && strpos($fieldDetails['ldap_attr'], ';') === FALSE) {
+          $fieldDetails['ldap_attr'] = str_replace(']', ';binary]', $fieldDetails['ldap_attr']);
+        }
+        $tokenHelper = new TokenProcessor();
+        $value = $tokenHelper->tokenReplace($ldapUser['attr'], $fieldDetails['ldap_attr'], 'ldap_entry');
+        // The ordinal $value_instance is not used and could probably be removed.
+        list($value_type, $value_name, $value_instance) = $tokenHelper->parseUserAttributeNames($key);
+
+        if ($value_type == 'field' || $value_type == 'property') {
+          $this->account->set($value_name, $value);
+        }
+      }
     }
   }
 

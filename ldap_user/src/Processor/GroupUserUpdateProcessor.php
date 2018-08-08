@@ -117,6 +117,8 @@ class GroupUserUpdateProcessor {
           if (ExternalAuthenticationHelper::getUidFromIdentifierMap($username)) {
             $drupalAccount = User::load(ExternalAuthenticationHelper::getUidFromIdentifierMap($username));
             $this->ldapDrupalUserProcessor->drupalUserLogsIn($drupalAccount);
+            // Reload since data has changed.
+            $drupalAccount = User::load($drupalAccount->id());
             $this->updateAuthorizations($drupalAccount);
             $this->detailLog->log(
               'Periodic update: @name updated',
@@ -125,10 +127,13 @@ class GroupUserUpdateProcessor {
             );
           }
           else {
-            $drupalAccount = $this->ldapDrupalUserProcessor
+            $result = $this->ldapDrupalUserProcessor
               ->provisionDrupalAccount(['name' => $username, 'status' => TRUE]);
-            if ($drupalAccount) {
+            if ($result) {
+              $drupalAccount = $this->ldapDrupalUserProcessor->getUserAccount();
               $this->ldapDrupalUserProcessor->drupalUserLogsIn($drupalAccount);
+              // Reload since data has changed.
+              $drupalAccount = User::load($drupalAccount->id());
               $this->updateAuthorizations($drupalAccount);
               $this->detailLog->log(
                 'Periodic update: @name created',

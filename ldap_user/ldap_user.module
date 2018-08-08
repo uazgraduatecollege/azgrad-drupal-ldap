@@ -88,6 +88,18 @@ function ldap_user_help($route_name, RouteMatchInterface $route_match) {
 }
 
 /**
+ * Implements hook_module_implements_alter().
+ */
+function ldap_user_module_implements_alter(&$implementations, $hook) {
+  // We are moving authorization to the end because its user saving causes issues.
+  if ($hook == 'user_login') {
+    $group = $implementations['authorization'];
+    unset($implementations['authorization']);
+    $implementations['authorization'] = $group;
+  }
+}
+
+/**
  * Implements hook_user_login().
  */
 function ldap_user_user_login($account) {
@@ -109,14 +121,6 @@ function ldap_user_user_insert($account) {
 function ldap_user_user_update($account) {
   $processor = new DrupalUserProcessor();
   $processor->drupalUserUpdated($account);
-}
-
-/**
- * Implements hook_ENTITY_TYPE_presave().
- */
-function ldap_user_user_presave($account) {
-  $processor = new DrupalUserProcessor();
-  $processor->drupalUserPreSave($account);
 }
 
 /**

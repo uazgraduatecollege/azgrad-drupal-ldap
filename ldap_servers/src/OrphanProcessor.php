@@ -2,6 +2,8 @@
 
 namespace Drupal\ldap_servers;
 
+use Drupal\Core\Url;
+use Drupal\ldap_user\Processor\DrupalUserProcessor;
 use Drupal\user\Entity\User;
 use Symfony\Component\Ldap\Exception\LdapException;
 
@@ -11,7 +13,7 @@ use Symfony\Component\Ldap\Exception\LdapException;
 class OrphanProcessor {
 
   private $config;
-  private $emailList;
+  private $emailList = [];
   private $ldapQueryOrLimit = 30;
   private $missingServerSemaphore = [];
   private $enabledServers;
@@ -204,16 +206,16 @@ class OrphanProcessor {
    *   User to process.
    */
   private function processOrphanedAccounts(array $users) {
+    $drupalUserProcessor = new DrupalUserProcessor();
     foreach ($users as $user) {
       if (isset($user['uid'])) {
         $account = User::load($user['uid']);
-        $account->set('ldap_user_last_checked', time());
-        $account->save();
-        global $base_url;
-        if (!$user['exists']) {
+        $drupalUserProcessor->drupalUserLogsIn($account);
+        if ($user['exists'] == FALSE) {
           switch ($this->config['orphanedDrupalAcctBehavior']) {
             case 'ldap_user_orphan_email';
-              $this->emailList[] = $account->getAccountName() . "," . $account->getEmail() . "," . $base_url . "/user/" . $user['uid'] . "/edit";
+              $link = Url::fromRoute('entity.user.edit_form', ['user' => $user['uid']])->setAbsolute();
+              $this->emailList[] = $account->getAccountName() . "," . $account->getEmail() . "," . $link->toString();
               break;
 
             case 'user_cancel_block':
