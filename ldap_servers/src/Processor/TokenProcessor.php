@@ -451,9 +451,17 @@ class TokenProcessor {
       switch ($attr_type) {
         case 'field':
         case 'property':
-          $value = @is_scalar($account->get($attr_name)->value) ? $account->get($attr_name)->value : '';
+          $value = '';
+          if (is_scalar($account->get($attr_name)->value)) {
+            $value = $account->get($attr_name)->value;
+          }
+          elseif (isset($account->get($attr_name)->getValue()[0]['target_id'])) {
+            $file = file_load($account->get($attr_name)->getValue()[0]['target_id']);
+            if ($file) {
+              $value = file_get_contents(\Drupal::service('file_system')->realpath($file->getFileUri()));
+            }
+          }
           break;
-
         case 'password':
 
           switch ($attr_name) {
