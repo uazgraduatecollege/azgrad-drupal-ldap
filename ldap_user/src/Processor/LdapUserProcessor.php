@@ -114,6 +114,7 @@ class LdapUserProcessor implements LdapUserAttributesInterface {
             'action' => 'update',
             'corresponding_drupal_data' => [$proposedDnLowerCase => $attributes],
             'corresponding_drupal_data_type' => 'user',
+            'account' => $account,
           ];
           \Drupal::moduleHandler()->alter('ldap_entry_pre_provision', $ldap_entries, $server, $context);
           // Remove altered $proposedLdapEntry from $ldap_entries array.
@@ -341,6 +342,7 @@ class LdapUserProcessor implements LdapUserAttributesInterface {
         'action' => 'add',
         'corresponding_drupal_data' => [$proposedDnLowercase => $account],
         'corresponding_drupal_data_type' => 'user',
+        'account' => $account,
       ];
       \Drupal::moduleHandler()->alter('ldap_entry_pre_provision', $ldapEntries, $ldapServer, $context);
       // Remove altered $proposedLdapEntry from $ldapEntries array.

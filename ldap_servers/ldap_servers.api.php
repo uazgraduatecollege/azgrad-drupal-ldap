@@ -62,7 +62,8 @@ function hook_ldap_servers_user_cron_needed() {
  *      'cn=jkool,ou=guest accounts,dc=ad,dc=myuniversity,dc=edu' => $userA,
  *      'cn=jfun,ou=guest accounts,dc=ad,dc=myuniversity,dc=edu' => $userB,
  *     ]
- *    'corresponding_drupal_data_type' => 'user', 'role', etc.
+ *    'corresponding_drupal_data_type' => 'user', 'role', etc. If it is 'user',
+ *     then $context has the account in the 'account' key.
  */
 function hook_ldap_entry_pre_provision_alter(array &$ldap_entries, Server $ldap_server, array $context) {
 
