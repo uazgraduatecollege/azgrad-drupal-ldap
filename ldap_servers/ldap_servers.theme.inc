@@ -140,7 +140,7 @@ function theme_ldap_server_ldap_entry_table($variables) {
         else {
           $token = "";
         }
-        $rows[] = array('data' => array($key, $i, $value2, $token));
+        $rows[] = array('data' => array($key, $i, ldap_servers_string_binary_check($value2), $token));
       }
     }
   }

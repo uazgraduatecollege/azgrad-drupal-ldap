@@ -140,12 +140,24 @@ function ldap_servers_test_form($form, &$form_state, $op = NULL, $sid = NULL) {
           dpm("Drupal user entity for: $user_name");
           dpm($user_entity);
         }
-       dpm("Test Group LDAP Entry");
-       dpm($test_data['group_entry'][0]);
+        if (isset($test_data['group_entry'][0])) {
+          dpm("Test Group LDAP Entry");
+          dpm($test_data['group_entry'][0]);
+        }
       }
     }
   }
   return $form;
+}
+
+function ldap_servers_string_binary_check($input) {
+  if (preg_match('~[^\x20-\x7E\t\r\n]~', $input) > 0) {
+    $truncatedString = truncate_utf8($input, 200);
+    return t('Binary (excerpt): @excerpt', ['@excerpt' => $truncatedString]);
+  }
+  else {
+    return $input;
+  }
 }
 
 /**
@@ -342,7 +354,7 @@ function ldap_servers_test_form_submit($form, &$form_state) {
 
   $tokens = ($ldap_user && isset($ldap_user['attr'])) ? ldap_servers_token_tokenize_entry($ldap_user['attr'], 'all') : array();
   foreach ($tokens as $key => $value) {
-    $results_tables['tokens'][] = array($key, $value);
+    $results_tables['tokens'][] = array($key, ldap_servers_string_binary_check($value));
   }
   $form_state['ldap_server_test_data'] = array(
     'username' => $values['testing_drupal_username'],
@@ -356,7 +368,7 @@ function ldap_servers_test_form_submit($form, &$form_state) {
   if (isset($group_entry) ) {
     $form_state['ldap_server_test_data']['group_entry'] = $group_entry;
   }
-  
+
 }
 
 /**

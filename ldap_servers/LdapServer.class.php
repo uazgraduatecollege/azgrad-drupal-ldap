@@ -824,7 +824,6 @@ class LdapServer {
       RETURN FALSE;
     }
 
-    $paged_entries = array();
     $page_token = '';
     $page = 0;
     $estimated_entries = 0;
