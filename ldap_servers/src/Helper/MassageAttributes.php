@@ -2,8 +2,6 @@
 
 namespace Drupal\ldap_servers\Helper;
 
-use Drupal\Component\Utility\Unicode;
-
 /**
  * This class helps you in preparing attributes and values for usage in Drupal.
  */

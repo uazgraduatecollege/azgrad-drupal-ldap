@@ -1,29 +1,21 @@
-authorization.provider.plugin.ldap_authorization:
+authorization.provider.plugin.ldap_provider:
   type: mapping
   label: 'LDAP Authorization settings'
   mapping:
-    server:
-      type: string
-      label: 'LDAP Server used in the authorization profile configuration'
-    only_ldap_authenticated:
-      type: boolean
-      label: 'Only apply the following LDAP to the authorization profile configuration to users authenticated via LDAP.'
-    use_first_attr_as_groupid:
-      type: boolean
-      label: 'Convert full dn to value of first attribute before mapping.'
-    # The below should be in Drupal roles not LDAP
-    synchronization_modes:
-      type: boolean
-      label: 'When should roles be granted/revoked from user?'
-    synchronization_actions:
-      type: sequence
-      label: 'What actions would you like performed when roles are granted/revoked from user?'
-      sequence:
-        type: string
-        label: 'Action'
-    revoke_ldap_provisioned:
-      type: boolean
-      label: 'When should @profile_namePlural be granted/revoked from user?'
-    regrant_ldap_provisioned:
-      type: boolean
-      label: 'When should @profile_namePlural be granted/revoked from user?'
+    status:
+      type: mapping
+      label: 'LDAP values group'
+      mapping:
+        server:
+          type: string
+          label: 'Machine name for the server to use'
+        only_ldap_authenticated:
+          label: 'Only apply the role configuration to users authenticated via LDAP'
+          type: boolean
+    filter_and_mappings:
+      type: mapping
+      label: 'LDAP filters group'
+      mapping:
+        use_first_attr_as_groupid:
+          type: boolean
+          label: 'Convert full DN to value of first attribute before mapping'

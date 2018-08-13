@@ -462,6 +462,7 @@ class TokenProcessor {
             }
           }
           break;
+
         case 'password':
 
           switch ($attr_name) {

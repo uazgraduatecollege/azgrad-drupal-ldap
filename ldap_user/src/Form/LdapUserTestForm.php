@@ -69,7 +69,7 @@ class LdapUserTestForm extends FormBase implements LdapUserAttributesInterface {
       '#required' => 0,
       '#default_value' => \Drupal::request()->query->get('action'),
       '#options' => self::$syncTriggerOptions,
-      '#required' => TRUE
+      '#required' => TRUE,
     ];
 
     $form['submit'] = [
@@ -154,7 +154,7 @@ class LdapUserTestForm extends FormBase implements LdapUserAttributesInterface {
     $params = [
       'action' => $selected_action,
       'username' => $username,
-     ];
+    ];
     $form_state->setRedirectUrl(Url::fromRoute('ldap_user.test_form', $params));
   }
 

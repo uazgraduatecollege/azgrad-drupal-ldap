@@ -59,16 +59,16 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
   protected $id;
 
   /**
-   * Human readable name
+   * Human readable name.
    *
    * @var string
    */
   protected $label;
 
   /**
-   * LDAP Server connection
+   * LDAP Server connection.
    *
-   * @var resource|FALSE
+   * @var resource|false
    */
   protected $connection = FALSE;
 
@@ -103,6 +103,9 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
    */
   protected $searchPageEnd = NULL;
 
+  /**
+   *
+   */
   public function __construct(array $values, $entity_type) {
     parent::__construct($values, $entity_type);
     $this->logger = \Drupal::logger('ldap_servers');
@@ -1531,7 +1534,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
           // No attributes, just dns needed.
           $group_entries = $this->search($baseDn, $queryForParentGroups);
           if ($group_entries !== FALSE && $level < $maxLevels) {
-            //@TODO: Verify recursion with true return.
+            // @TODO: Verify recursion with true return.
             $this->groupMembershipsFromEntryResursive($group_entries, $allGroupDns, $testedGroupIds, $level + 1, $maxLevels);
           }
         }

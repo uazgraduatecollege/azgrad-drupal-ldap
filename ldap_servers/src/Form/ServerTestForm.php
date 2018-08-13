@@ -606,10 +606,14 @@ class ServerTestForm extends EntityForm {
     return $ldap_user;
   }
 
+  /**
+   *
+   */
   private function booleanResult($input) {
     if ($input) {
       return $this->t('PASS');
-    } else {
+    }
+    else {
       return $this->t('FAIL');
     }
   }
@@ -630,7 +634,7 @@ class ServerTestForm extends EntityForm {
         'top',
       ],
     ];
-    $validEntry = ['cn', 'member' ];
+    $validEntry = ['cn', 'member'];
 
     // Delete test group if it exists.
     if ($this->ldapServer->dnExists($values['grp_test_grp_dn_writeable'], 'ldap_entry', $validEntry)
@@ -704,9 +708,9 @@ class ServerTestForm extends EntityForm {
    * Helper function to bind as required for testing.
    */
   public function testBinding() {
-    if ($this->config(''))
-
-    $bindResult = $this->ldapServer->bind();
+    if ($this->config('')) {
+      $bindResult = $this->ldapServer->bind();
+    }
     if ($bindResult == Server::LDAP_SUCCESS) {
       $this->resultsTables['basic'][] = [
         'class' => 'color-success',

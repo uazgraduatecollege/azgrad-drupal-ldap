@@ -58,6 +58,9 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
     $this->detailLog = \Drupal::service('ldap.detail_log');
   }
 
+  /**
+   *
+   */
   public function getUserAccount() {
     return $this->account;
   }
@@ -628,7 +631,6 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
    *
    * @param array $ldap_user
    *   The LDAP user.
-   *
    */
   private function createDrupalUser(array $ldap_user) {
     $this->account->enforceIsNew();
@@ -889,7 +891,6 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
 
   /**
    * Handle the user update/create event with LDAP entry provisioning.
-   *
    */
   private function provisionLdapEntryOnUserUpdateCreateEvent() {
     if (SemaphoreStorage::get('provision', $this->account->getAccountName())
@@ -937,7 +938,6 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
    *   The provisioning direction.
    * @param array $prov_events
    *   The provisioning events.
-   *
    */
   private function applyAttributesToAccount(array $ldapUser, $direction = NULL, array $prov_events = NULL) {
     if ($direction == NULL) {
@@ -1069,7 +1069,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
   }
 
   /**
-   * Sets the fields required by LDAP
+   * Sets the fields required by LDAP.
    *
    * @param array $ldapUser
    *   Ldap user data.

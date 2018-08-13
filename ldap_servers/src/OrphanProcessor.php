@@ -31,7 +31,6 @@ class OrphanProcessor {
 
   /**
    * Check for Drupal accounts which no longer have a related LDAP entry.
-   *
    */
   public function checkOrphans() {
 
@@ -62,7 +61,7 @@ class OrphanProcessor {
       // has caused all 'ldap_user_last_checked' values to be newer than your
       // interval.
       \Drupal::logger('ldap_user')
-             ->notice('No eligible accounts founds for orphan account verification.');
+        ->notice('No eligible accounts founds for orphan account verification.');
     }
   }
 
@@ -241,7 +240,7 @@ class OrphanProcessor {
    *
    * @return array
    */
-  private function ldapQueryEligibleUser($uid, $serverId , $persistentUidProperty, $persistentUid) {
+  private function ldapQueryEligibleUser($uid, $serverId, $persistentUidProperty, $persistentUid) {
 
     $user['uid'] = $uid;
     $user['exists'] = FALSE;

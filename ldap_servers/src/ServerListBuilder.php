@@ -92,7 +92,8 @@ class ServerListBuilder extends ConfigEntityListBuilder {
       else {
         return t('Configuration invalid, cannot connect.');
       }
-    } else {
+    }
+    else {
       return t('Deactivated');
     }
   }
