@@ -2,7 +2,6 @@
 
 namespace Drupal\ldap_user\Processor;
 
-use Drupal\authorization\Entity\AuthorizationProfile;
 use Drupal\ldap_query\Controller\QueryController;
 use Drupal\ldap_servers\ServerFactory;
 use Drupal\ldap_user\Helper\ExternalAuthenticationHelper;
@@ -83,16 +82,10 @@ class GroupUserUpdateProcessor {
    */
   private function updateAuthorizations(User $user) {
     if (\Drupal::moduleHandler()->moduleExists('ldap_authorization')) {
-      // TODO: Duplicated from LoginValidator.
-      $profiles = authorization_get_profiles();
-      foreach ($profiles as $profile_id) {
-        $profile = AuthorizationProfile::load($profile_id);
-        if ($profile->getProviderId() == 'ldap_provider') {
-          // @TODO: https://www.drupal.org/node/2849865
-          module_load_include('inc', 'authorization', 'authorization');
-          _authorizations_user_authorizations($user, 'set', $profile_id);
-        }
-      }
+      /** @var \Drupal\authorization\AuthorizationController $controller */
+      $controller = \Drupal::service('authorization.manager');
+      $controller->setUser($user);
+      $controller->setAllProfiles();
     }
   }
 

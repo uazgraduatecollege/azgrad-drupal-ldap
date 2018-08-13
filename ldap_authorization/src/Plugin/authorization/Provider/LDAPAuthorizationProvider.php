@@ -116,17 +116,7 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
   }
 
   /**
-   * Build the form for the individual row.
-   *
-   * @param array $form
-   *   Form.
-   * @param \Drupal\Core\Form\FormStateInterface $form_state
-   *   Form state.
-   * @param int $index
-   *   Index.
-   *
-   * @return array
-   *   Returns form row.
+   * {@inheritdoc}
    */
   public function buildRowForm(array $form, FormStateInterface $form_state, $index = 0) {
     $row = [];
@@ -148,30 +138,10 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
   }
 
   /**
-   * Get valid proposals.
-   *
-   * @param \Drupal\user\Entity\User|mixed $user
-   *   Drupal user.
-   * @param mixed $op
-   *   Operation, unknown, unused.
-   * @param mixed $identifier
-   *   Module identifier, unknown, unused.
-   *
-   * @return array|null
-   *   Returns proposals.
-   *
-   * @throws \Drupal\authorization\AuthorizationSkipAuthorization
+   * {@inheritdoc}
    */
-  public function getProposals($user, $op, $identifier) {
-    // In 7.x-2.x we get groups from Server via three methods
-    // and then filter out the ones we don't want
-    // https://www.drupal.org/node/1498558
-    // Server->groupUserMembershipsFromDn($user)
-    // https://www.drupal.org/node/1487018
-    // https://www.drupal.org/node/1499172
-    // Server->groupMembershipsFromUser($user, 'group_dns')
-    // So what does the 'query' do then? Is it the filter?
-    // Configure this provider.
+  public function getProposals($user) {
+
     // Do not continue if user should be excluded from LDAP authentication.
     if (ExternalAuthenticationHelper::excludeUser($user)) {
       throw new AuthorizationSkipAuthorization();
@@ -215,23 +185,13 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
   }
 
   /**
-   * Filter the proposals.
-   *
-   * @param array|mixed $proposed_ldap_authorizations
-   *   Authorizations to check.
-   * @param null|string $op
-   *   Operation to apply it on.
-   * @param array|mixed $provider_mapping
-   *   The provider mapping.
-   *
-   * @return array
-   *   Filtered proposals.
+   * {@inheritdoc}
    */
-  public function filterProposals($proposed_ldap_authorizations, $op, $provider_mapping) {
+  public function filterProposals(array $proposedLdapAuthorizations, array $providerMapping) {
     $filtered_proposals = [];
-    foreach ($proposed_ldap_authorizations as $key => $value) {
-      if ($provider_mapping['is_regex']) {
-        $pattern = $provider_mapping['query'];
+    foreach ($proposedLdapAuthorizations as $key => $value) {
+      if ($providerMapping['is_regex']) {
+        $pattern = $providerMapping['query'];
         try {
           if (preg_match($pattern, $value, $matches)) {
             // If there is a sub-pattern then return the first one.
@@ -251,7 +211,7 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
             );
         }
       }
-      elseif ($value == $provider_mapping['query']) {
+      elseif ($value == $providerMapping['query']) {
         $filtered_proposals[$key] = $value;
       }
     }
@@ -259,17 +219,9 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
   }
 
   /**
-   * Sanitizes given proposals.
-   *
-   * @param array|mixed $proposals
-   *   Proposals to sanitize.
-   * @param mixed $op
-   *   Operation, unknown, unused.
-   *
-   * @return array
-   *   Sanitized proposals.
+   * {@inheritdoc}
    */
-  public function sanitizeProposals($proposals, $op = NULL) {
+  public function sanitizeProposals($proposals) {
     // Configure this provider.
     /** @var \Drupal\authorization\Entity\AuthorizationProfile $profile */
     $profile = $this->configuration['profile'];
@@ -299,7 +251,7 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
   }
 
   /**
-   * Validates the form row.
+   * {@inheritdoc}
    */
   public function validateRowForm(array &$form, FormStateInterface $form_state) {
     parent::validateRowForm($form, $form_state);

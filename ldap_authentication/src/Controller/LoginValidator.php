@@ -2,7 +2,6 @@
 
 namespace Drupal\ldap_authentication\Controller;
 
-use Drupal\authorization\Entity\AuthorizationProfile;
 use Drupal\Component\Utility\SafeMarkup;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Logger\LoggerChannelInterface;
@@ -652,24 +651,15 @@ final class LoginValidator implements LdapUserAttributesInterface {
         $user = User::create(['name' => $authName]);
       }
 
-      $profiles = authorization_get_profiles();
-      $authorizations = [];
-      foreach ($profiles as $profile_id) {
-        $profile = AuthorizationProfile::load($profile_id);
-        if ($profile->getProviderId() == 'ldap_provider') {
-          // @TODO: https://www.drupal.org/node/2849865
-          module_load_include('inc', 'authorization', 'authorization');
-          list($new_authorizations_i, $notifications_i) = _authorizations_user_authorizations($user, 'query', $profile_id, NULL);
-          $authorizations = $authorizations + $new_authorizations_i;
-        }
-      }
+      /** @var \Drupal\authorization\AuthorizationController $controller */
+      $controller = \Drupal::service('authorization.manager');
+      $controller->setUser($user);
+      $controller->queryIndividualProfile($profile_id);
+      $authorizations = $controller->getProcessedAuthorizations();
 
       if (count($authorizations) == 0) {
         drupal_set_message(t('The site logon is currently not working due to a configuration error.  Please see logs for additional details.'), 'warning');
         $this->logger->notice('LDAP Authentication is configured to deny users without LDAP Authorization mappings, but 0 LDAP Authorization consumers are configured.');
-        return FALSE;
-      }
-      elseif (!$profiles) {
         return FALSE;
       }
 

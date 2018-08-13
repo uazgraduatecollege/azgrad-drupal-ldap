@@ -111,8 +111,8 @@ class DebuggingReviewForm extends FormBase {
       $form['heading_profiles'] = [
         '#markup' => '<h2>' . $this->t('Configured authorization profiles') . '</h2>',
       ];
-
-      foreach (authorization_get_profiles() as $profile) {
+      $profiles = \Drupal::entityQuery('authorization_profile')->execute();
+      foreach ($profiles as $profile) {
         $form['authorization_profile_' . $profile] = [
           '#markup' =>
           '<h3>' . $this->t('Profile @name:', ['@name' => $profile]) . '</h3>' .
