@@ -137,25 +137,6 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
     return $row;
   }
 
-  public function submitRowForm(array &$form, FormStateInterface $form_state) {
-    $values = $form_state->getValues();
-    // Create an array of just the provider values
-    $provider_mappings = [];
-    foreach ($values as $key => $value) {
-      if (empty($value['provider_mappings']['query'])) {
-        $provider_mappings[] = [];
-      }
-      else {
-        $provider_mappings[] = $value['provider_mappings'];
-      }
-    }
-
-    // Nuke our form_state leaving just the mapping
-    $form_state->setValue('provider_mappings', $provider_mappings);
-
-    parent::submitRowForm($form, $form_state);
-  }
-
   /**
    * {@inheritdoc}
    */
