@@ -182,9 +182,9 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
       }
       elseif (!ldap_start_tls($this->connection)) {
         $this->logger->notice('Could not start TLS. (Error @errno: @error).', [
-              '@errno' => ldap_errno($this->connection),
-              '@error' => ldap_error($this->connection),
-            ]
+          '@errno' => ldap_errno($this->connection),
+          '@error' => ldap_error($this->connection),
+        ]
           );
         return self::LDAP_CONNECT_ERROR;
       }
@@ -279,17 +279,17 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
 
     if (mb_strlen($password) == 0 || mb_strlen($userDn) == 0) {
       $this->logger->notice("LDAP bind failure due to missing credentials for user userdn=%userdn, pass=%pass.", [
-          '%userdn' => $userDn,
-          '%pass' => $password,
-        ]);
+        '%userdn' => $userDn,
+        '%pass' => $password,
+      ]);
       $response = self::LDAP_LOCAL_ERROR;
     }
     if (@!ldap_bind($this->connection, $userDn, $password)) {
       $this->detailLog->log("LDAP bind failure for user %user. Error %errno: %error", [
-          '%user' => $userDn,
-          '%errno' => ldap_errno($this->connection),
-          '%error' => ldap_error($this->connection),
-        ]
+        '%user' => $userDn,
+        '%errno' => ldap_errno($this->connection),
+        '%error' => ldap_error($this->connection),
+      ]
       );
       $response = ldap_errno($this->connection);
     }
@@ -416,11 +416,11 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
       ldap_get_option($this->connection, self::LDAP_OPT_DIAGNOSTIC_MESSAGE_BYTE, $ldap_additional_info);
 
       $this->logger->error("LDAP Server ldap_add(%dn) Error Server ID = %id, LDAP Error %ldap_error. LDAP Additional info: %ldap_additional_info", [
-          '%dn' => $dn,
-          '%id' => $this->id(),
-          '%ldap_error' => $this->formattedError($this->ldapErrorNumber()),
-          '%ldap_additional_info' => $ldap_additional_info,
-        ]
+        '%dn' => $dn,
+        '%id' => $this->id(),
+        '%ldap_error' => $this->formattedError($this->ldapErrorNumber()),
+        '%ldap_additional_info' => $ldap_additional_info,
+      ]
       );
     }
 
@@ -443,10 +443,10 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
 
     if (!$result) {
       $this->logger->error("LDAP Server delete(%dn) in LdapServer::delete() Error Server ID = %id, LDAP Error %ldap_error.", [
-          '%dn' => $dn,
-          '%id' => $this->id(),
-          '%ldap_error' => $this->formattedError($this->ldapErrorNumber()),
-        ]
+        '%dn' => $dn,
+        '%id' => $this->id(),
+        '%ldap_error' => $this->formattedError($this->ldapErrorNumber()),
+      ]
       );
     }
     return $result;
@@ -543,11 +543,11 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
       $result = @ldap_read($this->connection, $dn, 'objectClass=*');
       if (!$result) {
         $this->logger->error("LDAP Server ldap_read(%dn) in LdapServer::modifyLdapEntry() Error Server ID = %id, LDAP Err No: %ldap_errno LDAP Err Message: %ldap_err2str ", [
-            '%dn' => $dn,
-            '%id' => $this->id(),
-            '%ldap_errno' => ldap_errno($this->connection),
-            '%ldap_err2str' => ldap_err2str(ldap_errno($this->connection)),
-          ]
+          '%dn' => $dn,
+          '%id' => $this->id(),
+          '%ldap_errno' => ldap_errno($this->connection),
+          '%ldap_err2str' => ldap_err2str(ldap_errno($this->connection)),
+        ]
         );
         return FALSE;
       }
@@ -582,11 +582,11 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
         $result = @ldap_mod_del($this->connection, $dn, [$keyLowercased => $oldValue]);
         if (!$result) {
           $this->logger->error("LDAP Server ldap_mod_del(%dn) in LdapServer::modifyLdapEntry() Error Server ID = %id, LDAP Err No: %ldap_errno LDAP Err Message: %ldap_err2str ", [
-              '%dn' => $dn,
-              '%id' => $this->id(),
-              '%ldap_errno' => ldap_errno($this->connection),
-              '%ldap_err2str' => ldap_err2str(ldap_errno($this->connection)),
-            ]
+            '%dn' => $dn,
+            '%id' => $this->id(),
+            '%ldap_errno' => ldap_errno($this->connection),
+            '%ldap_err2str' => ldap_err2str(ldap_errno($this->connection)),
+          ]
           );
           return FALSE;
         }
@@ -608,11 +608,11 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
       $result = @ldap_modify($this->connection, $dn, $attributes);
       if (!$result) {
         $this->logger->error("LDAP Server ldap_modify(%dn) in LdapServer::modifyLdapEntry() Error Server ID = %id, LDAP Err No: %ldap_errno LDAP Err Message: %ldap_err2str ", [
-            '%dn' => $dn,
-            '%id' => $this->id(),
-            '%ldap_errno' => ldap_errno($this->connection),
-            '%ldap_err2str' => ldap_err2str(ldap_errno($this->connection)),
-          ]
+          '%dn' => $dn,
+          '%id' => $this->id(),
+          '%ldap_errno' => ldap_errno($this->connection),
+          '%ldap_err2str' => ldap_err2str(ldap_errno($this->connection)),
+        ]
         );
         return FALSE;
       }
@@ -718,7 +718,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
       '%time_limit' => $timelimit,
       '%deref' => $deref ? $deref : 'null',
       '%scope' => $scope ? $scope : 'null',
-      ]
+    ]
     );
 
     // When checking multiple servers, there's a chance we might not be
@@ -750,11 +750,11 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
       }
       elseif ($this->hasError()) {
         $this->logger->notice("LDAP search error: %error. Context is base DN: %base_dn | filter: %filter| attributes: %attributes", [
-            '%base_dn' => $ldapQueryParams['base_dn'],
-            '%filter' => $ldapQueryParams['filter'],
-            '%attributes' => json_encode($ldapQueryParams['attributes']),
-            '%error' => $this->formattedError($this->ldapErrorNumber()),
-          ]
+          '%base_dn' => $ldapQueryParams['base_dn'],
+          '%filter' => $ldapQueryParams['filter'],
+          '%attributes' => json_encode($ldapQueryParams['attributes']),
+          '%error' => $this->formattedError($this->ldapErrorNumber()),
+        ]
         );
         return FALSE;
       }
@@ -814,11 +814,11 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
         }
         elseif ($this->hasError()) {
           $this->logger->notice('LDAP search error: %error. Base DN: %base_dn | filter: %filter | attributes: %attributes.', [
-              '%base_dn' => $queryParameters['base_dn'],
-              '%filter' => $queryParameters['filter'],
-              '%attributes' => json_encode($queryParameters['attributes']),
-              '%error' => $this->formattedError($this->ldapErrorNumber()),
-            ]
+            '%base_dn' => $queryParameters['base_dn'],
+            '%filter' => $queryParameters['filter'],
+            '%attributes' => json_encode($queryParameters['attributes']),
+            '%error' => $this->formattedError($this->ldapErrorNumber()),
+          ]
           );
           return FALSE;
         }
@@ -987,11 +987,11 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
       else {
         $uids = implode(',', $result);
         $this->logger->error('Multiple users (uids: %uids) with same puid (puid=%puid, sid=%sid, ldap_user_puid_property=%ldap_user_puid_property)', [
-            '%uids' => $uids,
-            '%puid' => $puid,
-            '%id' => $this->id(),
-            '%ldap_user_puid_property' => $this->get('unique_persistent_attr'),
-          ]
+          '%uids' => $uids,
+          '%puid' => $puid,
+          '%id' => $this->id(),
+          '%ldap_user_puid_property' => $this->get('unique_persistent_attr'),
+        ]
         );
         return FALSE;
       }

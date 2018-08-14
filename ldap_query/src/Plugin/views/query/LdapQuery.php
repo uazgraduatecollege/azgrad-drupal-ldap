@@ -249,10 +249,10 @@ class LdapQuery extends QueryPluginBase {
   public function buildConditions() {
 
     $groups = [];
-    foreach ($this->where as $key => $group) {
+    foreach ($this->where as $group) {
       if (!empty($group['conditions'])) {
         $conditions = '';
-        foreach ($group['conditions'] as $key => $clause) {
+        foreach ($group['conditions'] as $clause) {
           $conditions .= $this->translateCondition($clause['field'], $clause['value'], $clause['operator']);
         }
         if (count($group['conditions']) > 1) {
@@ -297,12 +297,12 @@ class LdapQuery extends QueryPluginBase {
   /**
    * Produces a filter condition and adds optional negation.
    *
-   * @param $field
+   * @param string $field
    *   LDAP attribute name.
-   * @param $value
+   * @param string $value
    *   Field value.
-   * @param $operator
-   *   Negation operator
+   * @param string $operator
+   *   Negation operator.
    *
    * @return string
    *   LDAP filter such as (cn=Example).

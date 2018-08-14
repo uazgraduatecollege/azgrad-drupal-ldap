@@ -19,13 +19,20 @@ use Drupal\ldap_user\Helper\ExternalAuthenticationHelper;
  */
 class LDAPAuthorizationProvider extends ProviderPluginBase {
 
-  public $providerType = 'ldap';
-  public $handlers = ['ldap', 'ldap_authentication'];
+  /**
+   * {@inheritdoc}
+   */
+  protected $handlers = ['ldap', 'ldap_authentication'];
 
-  public $syncOnLogon = TRUE;
+  /**
+   * {@inheritdoc}
+   */
+  protected $syncOnLogonSupported = TRUE;
 
-  public $revokeProviderProvisioned;
-  public $regrantProviderProvisioned;
+  /**
+   * {@inheritdoc}
+   */
+  protected $revocationSupported = TRUE;
 
   /**
    * {@inheritdoc}
