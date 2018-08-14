@@ -126,15 +126,34 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
     $row['query'] = [
       '#type' => 'textfield',
       '#title' => t('LDAP query'),
-      '#default_value' => isset($mappings[$index]) ? $mappings[$index]['query'] : NULL,
+      '#default_value' => isset($mappings[$index]['query']) ? $mappings[$index]['query'] : NULL,
     ];
     $row['is_regex'] = [
       '#type' => 'checkbox',
       '#title' => t('Is this query a regular expression?'),
-      '#default_value' => isset($mappings[$index]) ? $mappings[$index]['is_regex'] : NULL,
+      '#default_value' => isset($mappings[$index]['is_regex']) ? $mappings[$index]['is_regex'] : NULL,
     ];
 
     return $row;
+  }
+
+  public function submitRowForm(array &$form, FormStateInterface $form_state) {
+    $values = $form_state->getValues();
+    // Create an array of just the provider values
+    $provider_mappings = [];
+    foreach ($values as $key => $value) {
+      if (empty($value['provider_mappings']['query'])) {
+        $provider_mappings[] = [];
+      }
+      else {
+        $provider_mappings[] = $value['provider_mappings'];
+      }
+    }
+
+    // Nuke our form_state leaving just the mapping
+    $form_state->setValue('provider_mappings', $provider_mappings);
+
+    parent::submitRowForm($form, $form_state);
   }
 
   /**
