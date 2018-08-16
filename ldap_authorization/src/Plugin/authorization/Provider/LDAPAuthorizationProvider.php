@@ -7,6 +7,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\authorization\Provider\ProviderPluginBase;
 use Drupal\ldap_servers\Helper\ConversionHelper;
 use Drupal\ldap_user\Helper\ExternalAuthenticationHelper;
+use Drupal\user\UserInterface;
 
 /**
  * The LDAP authorization provider for authorization module.
@@ -147,7 +148,7 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function getProposals($user) {
+  public function getProposals(UserInterface $user) {
 
     // Do not continue if user should be excluded from LDAP authentication.
     if (ExternalAuthenticationHelper::excludeUser($user)) {
@@ -228,7 +229,7 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function sanitizeProposals($proposals) {
+  public function sanitizeProposals(array $proposals) {
     // Configure this provider.
     /** @var \Drupal\authorization\Entity\AuthorizationProfile $profile */
     $profile = $this->configuration['profile'];
