@@ -14,8 +14,7 @@ use Drupal\user\UserInterface;
  *
  * @AuthorizationProvider(
  *   id = "ldap_provider",
- *   label = @Translation("LDAP Authorization"),
- *   description = @Translation("Provider for LDAP group authorization.")
+ *   label = @Translation("LDAP Authorization")
  * )
  */
 class LDAPAuthorizationProvider extends ProviderPluginBase {
@@ -109,7 +108,7 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
         <li><code>cn=gryffindor,ou=groups,dc=hogwarts,dc=edu</code></li>
         <li><code>cn=faculty,ou=groups,dc=hogwarts,dc=edu</code></li>
         </ul>
-        <strong>Warning: If you enable "Create <em>@consumer_namePlural</em> if they do not exist" under conditions, all LDAP groups will be synced!</strong>', $tokens),
+        <strong>Warning: If you enable "Create <em>@consumer_name</em> targets if they do not exist" under conditions, all LDAP groups will be synced!</strong>', $tokens),
       '#collapsible' => TRUE,
     ];
 
