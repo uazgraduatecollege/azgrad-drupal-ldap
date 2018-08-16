@@ -1757,7 +1757,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
    * @return array
    *   Exploded DN.
    */
-  public function ldapExplodeDn($dn, $attribute) {
+  public static function ldapExplodeDn($dn, $attribute) {
     return ldap_explode_dn($dn, $attribute);
   }
 

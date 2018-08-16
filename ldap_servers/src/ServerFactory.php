@@ -183,21 +183,6 @@ class ServerFactory implements LdapUserAttributesInterface {
   }
 
   /**
-   * Duplicate function in Server due to test complications.
-   *
-   * @param string $dn
-   *   DN to process.
-   * @param int $attribute
-   *   Attributes to explode.
-   *
-   * @return array
-   *   Exploded DN.
-   */
-  public function ldapExplodeDn($dn, $attribute) {
-    return ldap_explode_dn($dn, $attribute);
-  }
-
-  /**
    * Alter the LDAP attributes.
    *
    * @param array $attributes

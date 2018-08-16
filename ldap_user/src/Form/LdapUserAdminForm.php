@@ -936,6 +936,7 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
     }
 
     foreach ($syncEvents as $prov_event => $prov_event_name) {
+      // @FIXME: Leftover code.
       // See above.
       // $col++;
       // $id = $id_prefix . implode('__', array('sm', $prov_event, $row));.

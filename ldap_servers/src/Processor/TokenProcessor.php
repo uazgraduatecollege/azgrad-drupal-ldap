@@ -3,6 +3,7 @@
 namespace Drupal\ldap_servers\Processor;
 
 use Drupal\Component\Utility\SafeMarkup;
+use Drupal\ldap_servers\Entity\Server;
 use Drupal\ldap_servers\Helper\ConversionHelper;
 use Drupal\ldap_servers\Helper\CredentialsStorage;
 use Drupal\ldap_servers\Helper\MassageAttributes;
@@ -272,8 +273,7 @@ class TokenProcessor {
 
     // 1. tokenize dn
     // escapes attribute values, need to be unescaped later.
-    $factory = \Drupal::service('ldap.servers');
-    $dn_parts = $factory->ldapExplodeDn($ldap_entry['dn'], 0);
+    $dn_parts = Server::ldapExplodeDn($ldap_entry['dn'], 0);
     unset($dn_parts['count']);
     $parts_count = [];
     $parts_last_value = [];

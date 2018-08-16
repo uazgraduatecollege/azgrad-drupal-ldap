@@ -5,6 +5,7 @@ namespace Drupal\ldap_authorization\Plugin\authorization\Provider;
 use Drupal\authorization\AuthorizationSkipAuthorization;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\authorization\Provider\ProviderPluginBase;
+use Drupal\ldap_servers\Entity\Server;
 use Drupal\ldap_servers\Helper\ConversionHelper;
 use Drupal\ldap_user\Helper\ExternalAuthenticationHelper;
 use Drupal\user\UserInterface;
@@ -233,10 +234,9 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
     /** @var \Drupal\authorization\Entity\AuthorizationProfile $profile */
     $profile = $this->configuration['profile'];
     $config = $profile->getProviderConfig();
-    $factory = \Drupal::service('ldap.servers');
     foreach ($proposals as $key => $authorization_id) {
       if ($config['filter_and_mappings']['use_first_attr_as_groupid']) {
-        $attr_parts = $factory->ldapExplodeDn($authorization_id, 0);
+        $attr_parts = Server::ldapExplodeDn($authorization_id, 0);
         if (count($attr_parts) > 0) {
           $first_part = explode('=', $attr_parts[0]);
           if (count($first_part) > 1) {

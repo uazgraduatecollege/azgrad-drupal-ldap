@@ -740,7 +740,7 @@ class ServerTestForm extends EntityForm {
     foreach ($test_data['ldap_user']['attr'] as $key => $value) {
       if (is_numeric($key) || $key == 'count') {
       }
-      elseif (count($value) > 1) {
+      elseif (is_array($value) && count($value) > 1) {
         $count = (int) $value['count'];
         foreach ($value as $i => $value2) {
 

@@ -7,8 +7,28 @@ use Drupal\ldap_servers\Processor\TokenProcessor;
 use Drupal\Tests\UnitTestCase;
 
 /**
- * @coversDefaultClass \Drupal\ldap_servers\PRocessor\TokenProcessor
+ * Helper class to make it possible to simulate ldap_explode_dn().
+ *
+ */
+class LdapExplodeDnMock {
+  public static function ldapExplodeDn($input) {
+    return [
+      'count' => 4,
+      0 => 'cn=hpotter',
+      1 => 'ou=Gryffindor',
+      2 => 'ou=student',
+      3 => 'ou=people',
+      4 => 'dc=hogwarts',
+      5 => 'dc=edu',
+    ];
+  }
+}
+
+/**
+ * @coversDefaultClass \Drupal\ldap_servers\Processor\TokenProcessor
  * @group ldap
+ * @runTestsInSeparateProcesses
+ * @preserveGlobalState disabled
  */
 class TokenTests extends UnitTestCase {
 
@@ -24,6 +44,12 @@ class TokenTests extends UnitTestCase {
   protected function setUp() {
     parent::setUp();
 
+    class_alias(
+      '\Drupal\Tests\ldap_servers\Unit\LdapExplodeDnMock',
+      '\Drupal\ldap_servers\Entity\Server',
+      true
+    );
+
     $this->detailLog = $this->getMockBuilder('\Drupal\ldap_servers\Logger\LdapDetailLog')
       ->disableOriginalConstructor()
       ->getMock();
@@ -32,18 +58,6 @@ class TokenTests extends UnitTestCase {
     $this->serverFactory = $this->getMockBuilder('\Drupal\ldap_servers\Entity\Server')
       ->disableOriginalConstructor()
       ->getMock();
-
-    $this->serverFactory->expects($this->any())
-      ->method('ldapExplodeDn')
-      ->willReturn([
-        'count' => 4,
-        0 => 'cn=hpotter',
-        1 => 'ou=Gryffindor',
-        2 => 'ou=student',
-        3 => 'ou=people',
-        4 => 'dc=hogwarts',
-        5 => 'dc=edu',
-      ]);
 
     $this->container = new ContainerBuilder();
     $this->container->set('ldap.servers', $this->serverFactory);
