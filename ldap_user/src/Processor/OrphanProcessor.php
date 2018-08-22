@@ -171,6 +171,7 @@ class OrphanProcessor {
       ->exists('ldap_user_puid_sid')
       ->exists('ldap_user_puid')
       ->condition('uid', $lastUidChecked, '>')
+      ->condition('status', 1)
       ->sort('uid', 'ASC')
       ->range(0, $this->configLdapUser->get('orphanedCheckQty'));
 
