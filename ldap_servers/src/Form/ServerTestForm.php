@@ -3,11 +3,14 @@
 namespace Drupal\ldap_servers\Form;
 
 use Drupal\Component\Utility\Unicode;
+use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Extension\ModuleHandler;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Entity\EntityForm;
 use Drupal\ldap_servers\Entity\Server;
 use Drupal\ldap_servers\Helper\CredentialsStorage;
 use Drupal\ldap_servers\Processor\TokenProcessor;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Use Drupal\Core\Form\FormBase;.
@@ -21,15 +24,46 @@ class ServerTestForm extends EntityForm {
    */
   protected $ldapServer;
 
+  /**
+   * Results table.
+   *
+   * @var array
+   */
   protected $resultsTables = [];
 
+  /**
+   * Flag for any exception in form.
+   *
+   * @var bool
+   */
   protected $exception = FALSE;
+
+  protected $config;
+  protected $moduleHandler;
 
   /**
    * {@inheritdoc}
    */
   public function getFormId() {
     return 'ldap_servers_test_form';
+  }
+
+  /**
+   * Class constructor.
+   */
+  public function __construct(ConfigFactoryInterface $config_factory, ModuleHandler $module_handler) {
+    $this->config = $config_factory;
+    $this->moduleHandler = $module_handler;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('config.factory'),
+      $container->get('module_handler')
+    );
   }
 
   /**
@@ -44,7 +78,7 @@ class ServerTestForm extends EntityForm {
 
     $form['#prefix'] = $this->t('<h3>Send test queries</h3><p>Enter identifiers here to query LDAP directly based on your server configuration. The only data this function will modify is the test LDAP group, which will be deleted and added</p>');
 
-    if (!\Drupal::moduleHandler()->moduleExists('ldap_user')) {
+    if (!$this->moduleHandler->moduleExists('ldap_user')) {
       $form['error'] = [
         '#markup' => '<h3>' . $this->t('This form requires ldap_user to function correctly, please enable it.') . '</h3>',
       ];
@@ -419,7 +453,7 @@ class ServerTestForm extends EntityForm {
       'corresponding_drupal_data_type' => 'group',
     ];
     $ldap_entries = [$group_dn => $attributes];
-    \Drupal::moduleHandler()->alter('ldap_entry_pre_provision', $ldap_entries, $this, $context);
+    $this->moduleHandler->alter('ldap_entry_pre_provision', $ldap_entries, $this, $context);
     $attributes = $ldap_entries[$group_dn];
 
     // 4. provision LDAP entry.
@@ -429,7 +463,7 @@ class ServerTestForm extends EntityForm {
     // 5. allow other modules to react to provisioned LDAP entry.
     //    @todo how is error handling done here?
     if ($ldap_entry_created) {
-      \Drupal::moduleHandler()
+      $this->moduleHandler
         ->invokeAll('ldap_entry_post_provision',
           [$ldap_entries, $this, $context]
         );
@@ -607,7 +641,13 @@ class ServerTestForm extends EntityForm {
   }
 
   /**
+   * Boolean result message.
    *
+   * @param bool $input
+   *   State.
+   *
+   * @return \Drupal\Core\StringTranslation\TranslatableMarkup
+   *   Output message.
    */
   private function booleanResult($input) {
     if ($input) {
@@ -770,9 +810,12 @@ class ServerTestForm extends EntityForm {
   }
 
   /**
-   * @param $values
+   * Test the connection.
+   *
+   * @param array $values
+   *   Input data.
    */
-  protected function testConnection($values) {
+  protected function testConnection(array $values) {
 
     if ($this->ldapServer->connect() != Server::LDAP_SUCCESS) {
       $this->resultsTables['basic'][] = [

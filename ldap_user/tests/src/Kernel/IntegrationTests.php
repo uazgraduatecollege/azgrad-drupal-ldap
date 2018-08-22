@@ -41,7 +41,7 @@ class IntegrationTests extends KernelTestBase {
    */
   public function brokenTestProcessor() {
     $processor = new DrupalUserProcessor();
-    $result = $processor->provisionDrupalAccount(['name' => 'hpotter']);
+    // $result = $processor->provisionDrupalAccount(['name' => 'hpotter']);
     $user = $processor->getUserAccount();
     // @TODO: Inject a server configuration for the provisioning server,
     // override the server factory to provide a dummy server.

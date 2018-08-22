@@ -8,9 +8,15 @@ use Drupal\Tests\UnitTestCase;
 
 /**
  * Helper class to make it possible to simulate ldap_explode_dn().
- *
  */
 class LdapExplodeDnMock {
+
+  /**
+   * Simulate explode_dn.
+   *
+   * @return array
+   *   DN exploded, input ignored.
+   */
   public static function ldapExplodeDn($input) {
     return [
       'count' => 4,
@@ -22,6 +28,7 @@ class LdapExplodeDnMock {
       5 => 'dc=edu',
     ];
   }
+
 }
 
 /**
@@ -47,7 +54,7 @@ class TokenTests extends UnitTestCase {
     class_alias(
       '\Drupal\Tests\ldap_servers\Unit\LdapExplodeDnMock',
       '\Drupal\ldap_servers\Entity\Server',
-      true
+      TRUE
     );
 
     $this->detailLog = $this->getMockBuilder('\Drupal\ldap_servers\Logger\LdapDetailLog')

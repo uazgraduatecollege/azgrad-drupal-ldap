@@ -49,6 +49,9 @@ class LdapUserProcessor implements LdapUserAttributesInterface {
    *
    * @return array|bool
    *   Successful sync.
+   *
+   * @TODO: $ldapUser and $testQuery are not in use.
+   * Verify that we need actually need those for a missing test case or remove.
    */
   public function syncToLdapEntry(User $account, array $ldapUser = [], $testQuery = FALSE) {
 
@@ -81,6 +84,7 @@ class LdapUserProcessor implements LdapUserAttributesInterface {
       }
 
       if (is_array($proposedLdapEntry) && isset($proposedLdapEntry['dn'])) {
+        // TODO: Unused variable.
         $existing_ldap_entry = $server->dnExists($proposedLdapEntry['dn'], 'ldap_entry');
         // This array represents attributes to be modified; not comprehensive
         // list of attributes.

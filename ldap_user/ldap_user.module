@@ -8,11 +8,9 @@
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\ldap_servers\Helper\CredentialsStorage;
-use Drupal\ldap_servers\OrphanProcessor;
 use Drupal\ldap_servers\LdapUserAttributesInterface;
 use Drupal\ldap_user\Helper\LdapConfiguration;
 use Drupal\ldap_user\Processor\DrupalUserProcessor;
-use Drupal\ldap_user\Processor\GroupUserUpdateProcessor;
 use Drupal\ldap_user\Processor\LdapUserProcessor;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
@@ -25,16 +23,15 @@ use Drupal\Core\Field\FieldStorageDefinitionInterface;
 function ldap_user_cron() {
   $check_orphans = \Drupal::config('ldap_user.settings')->get('orphanedDrupalAcctBehavior');
   if ($check_orphans != 'ldap_user_orphan_do_not_check') {
-    $processor = new OrphanProcessor();
+    $processor = \Drupal::service('ldap_user.orphan_processor');
     $processor->checkOrphans();
   }
 
   $ldapUpdateQuery = \Drupal::config('ldap_user.settings')->get('userUpdateCronQuery');
-  if (\Drupal::moduleHandler()->moduleExists('ldap_query') &&
-    $ldapUpdateQuery != NULL && $ldapUpdateQuery != 'none') {
-    $processor = new GroupUserUpdateProcessor($ldapUpdateQuery);
+  if (\Drupal::moduleHandler()->moduleExists('ldap_query') && $ldapUpdateQuery != NULL && $ldapUpdateQuery != 'none') {
+    $processor = \Drupal::service('ldap_user.group_user_update_processor');
     if ($processor->updateDue()) {
-      $processor->runQuery();
+      $processor->runQuery($ldapUpdateQuery);
     }
   }
 }
@@ -91,7 +88,8 @@ function ldap_user_help($route_name, RouteMatchInterface $route_match) {
  * Implements hook_module_implements_alter().
  */
 function ldap_user_module_implements_alter(&$implementations, $hook) {
-  // We are moving authorization to the end because its user saving causes issues.
+  // We are moving authorization to the end because its user saving causes
+  // issues.
   if ($hook == 'user_login') {
     $group = $implementations['authorization'];
     unset($implementations['authorization']);

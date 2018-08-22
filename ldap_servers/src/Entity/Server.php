@@ -104,7 +104,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
   protected $searchPageEnd = NULL;
 
   /**
-   *
+   * Constructor.
    */
   public function __construct(array $values, $entity_type) {
     parent::__construct($values, $entity_type);
@@ -1280,7 +1280,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
             unset($member_ids['count']);
           }
           $ors = [];
-          foreach ($member_ids as $key => $member_id) {
+          foreach ($member_ids as $member_id) {
             // @todo this would be replaced by query template
             $ors[] = $this->groupMembershipsAttr() . '=' . self::ldapEscape($member_id);
           }
@@ -1400,7 +1400,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
       unset($membersGroupDns['count']);
     }
     $orFilters = [];
-    foreach ($membersGroupDns as $key => $memberGroupDn) {
+    foreach ($membersGroupDns as $memberGroupDn) {
       $allGroupDns[] = $memberGroupDn;
       if ($nested) {
         if ($this->groupMembershipsAttrMatchingUserAttr() == 'dn') {
@@ -1798,6 +1798,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
    *   Last relevant nesting leven.
    *
    * @return array
+   *   Nested group filters.
    */
   private function getNestedGroupDnFilters(array $allGroupDns, array $orFilters, $level) {
     // Only 50 or so per query.

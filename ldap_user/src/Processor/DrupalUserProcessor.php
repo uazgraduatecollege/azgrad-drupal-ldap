@@ -59,7 +59,10 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
   }
 
   /**
+   * Get the user account.
    *
+   * @return \Drupal\user\Entity\User
+   *   User account.
    */
   public function getUserAccount() {
     return $this->account;
@@ -934,7 +937,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
    *
    * @param array $ldapUser
    *   LDAP entry.
-   * @param int $direction
+   * @param string $direction
    *   The provisioning direction.
    * @param array $prov_events
    *   The provisioning events.
@@ -1073,7 +1076,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
    *
    * @param array $ldapUser
    *   Ldap user data.
-   * @param $direction
+   * @param string $direction
    *   Provision direction.
    * @param array $prov_events
    *   Provisioning event.
@@ -1124,7 +1127,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
    *
    * @param array $ldapUser
    *   Ldap user data.
-   * @param $direction
+   * @param string $direction
    *   Provision direction.
    * @param array $prov_events
    *   Provisioning event.
@@ -1145,7 +1148,8 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
         }
         $tokenHelper = new TokenProcessor();
         $value = $tokenHelper->tokenReplace($ldapUser['attr'], $fieldDetails['ldap_attr'], 'ldap_entry');
-        // The ordinal $value_instance is not used and could probably be removed.
+        // The ordinal $value_instance is not used and could probably be
+        // removed.
         list($value_type, $value_name, $value_instance) = $tokenHelper->parseUserAttributeNames($key);
 
         if ($value_type == 'field' || $value_type == 'property') {

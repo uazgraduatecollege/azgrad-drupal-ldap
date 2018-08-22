@@ -29,7 +29,7 @@ class LdapUserTestForm extends FormBase implements LdapUserAttributesInterface {
    * {@inheritdoc}
    */
   public function __construct() {
-    $this::$syncTriggerOptions = [
+    self::$syncTriggerOptions = [
       self::PROVISION_DRUPAL_USER_ON_USER_UPDATE_CREATE => $this->t('On sync to Drupal user create or update. Requires a server with binding method of "Service Account Bind" or "Anonymous Bind".'),
       self::PROVISION_DRUPAL_USER_ON_USER_AUTHENTICATION => $this->t('On create or sync to Drupal user when successfully authenticated with LDAP credentials. (Requires LDAP Authentication module).'),
       self::PROVISION_DRUPAL_USER_ON_USER_ON_MANUAL_CREATION => $this->t('On manual creation of Drupal user from admin/people/create and "Create corresponding LDAP entry" is checked'),

@@ -2,24 +2,50 @@
 
 namespace Drupal\ldap_help\Form;
 
+use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Entity\EntityTypeManager;
+use Drupal\Core\Extension\ModuleHandler;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Serialization\Yaml;
 use Drupal\ldap_query\Controller\QueryController;
 use Drupal\ldap_servers\ServerFactory;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Form to allow for debugging review.
  */
 class DebuggingReviewForm extends FormBase {
 
-  protected $ldapEntryProvisionServerOptions;
+  protected $config;
+  protected $moduleHandler;
+  protected $entityTypeManager;
 
   /**
    * {@inheritdoc}
    */
   public function getFormId() {
     return 'ldap_help_debugging_review';
+  }
+
+  /**
+   * Class constructor.
+   */
+  public function __construct(ConfigFactoryInterface $config_factory, ModuleHandler $module_handler, EntityTypeManager $entity_type_manager) {
+    $this->config = $config_factory;
+    $this->moduleHandler = $module_handler;
+    $this->entityTypeManager = $entity_type_manager;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('config.factory'),
+      $container->get('module_handler'),
+      $container->get('entity_type.manager')
+    );
   }
 
   /**
@@ -32,8 +58,7 @@ class DebuggingReviewForm extends FormBase {
    *   Raw configuration data.
    */
   private function printConfig($configName) {
-    $config = \Drupal::configFactory()->get($configName);
-    return '<pre>' . Yaml::encode($config->getRawData()) . '</pre>';
+    return '<pre>' . Yaml::encode($this->config($configName)->getRawData()) . '</pre>';
   }
 
   /**
@@ -61,7 +86,7 @@ class DebuggingReviewForm extends FormBase {
       '#markup' => '<h2>' . $this->t('Drupal LDAP modules') . '</h2>',
     ];
 
-    if (\Drupal::moduleHandler()->moduleExists('ldap_user')) {
+    if ($this->moduleHandler->moduleExists('ldap_user')) {
       $form['config_users'] = [
         '#markup' =>
         '<h3>' . $this->t('The LDAP user configuration') . '</h3>' .
@@ -69,12 +94,12 @@ class DebuggingReviewForm extends FormBase {
       ];
     }
 
-    $user_register = \Drupal::config('user.settings')->get('register');
+    $user_register = $this->config('user.settings')->get('register');
     $form['config_users_registration'] = [
       '#markup' => $this->t('Currently active Drupal user registration setting: @setting', ['@setting' => $user_register]),
     ];
 
-    if (\Drupal::moduleHandler()->moduleExists('ldap_authentication')) {
+    if ($this->moduleHandler->moduleExists('ldap_authentication')) {
       $form['config_authentication'] = [
         '#markup' =>
         '<h3>' . $this->t('The LDAP authentication configuration') . '</h3>' .
@@ -82,7 +107,7 @@ class DebuggingReviewForm extends FormBase {
       ];
     }
 
-    if (\Drupal::moduleHandler()->moduleExists('ldap_help')) {
+    if ($this->moduleHandler->moduleExists('ldap_help')) {
       $form['config_help'] = [
         '#markup' =>
         '<h3>' . $this->t('The LDAP help configuration') . '</h3>' .
@@ -90,7 +115,7 @@ class DebuggingReviewForm extends FormBase {
       ];
     }
 
-    if (\Drupal::moduleHandler()->moduleExists('ldap_servers')) {
+    if ($this->moduleHandler->moduleExists('ldap_servers')) {
       $form['heading_servers'] = [
         '#markup' => '<h2>' . $this->t('Drupal LDAP servers') . '</h2>',
       ];
@@ -106,12 +131,12 @@ class DebuggingReviewForm extends FormBase {
       }
     }
 
-    if (\Drupal::moduleHandler()->moduleExists('authorization') &&
-      \Drupal::moduleHandler()->moduleExists('ldap_authorization')) {
+    if ($this->moduleHandler->moduleExists('authorization') &&
+      $this->moduleHandler->moduleExists('ldap_authorization')) {
       $form['heading_profiles'] = [
         '#markup' => '<h2>' . $this->t('Configured authorization profiles') . '</h2>',
       ];
-      $profiles = \Drupal::entityQuery('authorization_profile')->execute();
+      $profiles = $this->entityTypeManager->getStorage('authorization_profile')->getQuery()->execute();
       foreach ($profiles as $profile) {
         $form['authorization_profile_' . $profile] = [
           '#markup' =>
@@ -121,7 +146,7 @@ class DebuggingReviewForm extends FormBase {
       }
     }
 
-    if (\Drupal::moduleHandler()->moduleExists('ldap_query')) {
+    if ($this->moduleHandler->moduleExists('ldap_query')) {
       $form['heading_queries'] = [
         '#markup' => '<h2>' . $this->t('Configured LDAP queries') . '</h2>',
       ];

@@ -177,7 +177,7 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
 
     $form['basic_to_drupal']['disableAdminPasswordField'] = [
       '#type' => 'checkbox',
-      '#title' => t('Disable the password fields at /admin/create/people and generate a random password.'),
+      '#title' => $this->t('Disable the password fields at /admin/create/people and generate a random password.'),
       '#default_value' => $config->get('disableAdminPasswordField'),
     ];
 
@@ -723,7 +723,7 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
           'header' => TRUE,
         ],
       ];
-      foreach ($this->provisionsLdapEvents() as $col_id => $col_name) {
+      foreach ($this->provisionsLdapEvents() as $col_name) {
         $second_header[] = [
           'data' => $col_name,
           'header' => TRUE,
@@ -793,7 +793,7 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
     // 2. existing configurable mappings rows.
     if (!empty($config->get('ldapUserSyncMappings')[$direction])) {
       // Key could be LDAP attribute name or user attribute name.
-      foreach ($config->get('ldapUserSyncMappings')[$direction] as $target_attr_token => $mapping) {
+      foreach ($config->get('ldapUserSyncMappings')[$direction] as $mapping) {
         if ($direction == self::PROVISION_TO_DRUPAL) {
           $mapping_key = $mapping['user_attr'];
         }
