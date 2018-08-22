@@ -4,6 +4,7 @@ namespace Drupal\ldap_authentication\Controller;
 
 use Drupal\Component\Utility\SafeMarkup;
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Entity\EntityTypeManager;
 use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\ldap_authentication\Helper\LdapAuthenticationConfiguration;
 use Drupal\ldap_servers\Entity\Server;
@@ -71,13 +72,22 @@ final class LoginValidator implements LdapUserAttributesInterface {
    */
   protected $logger;
 
+
+  /**
+   * Entity Query.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManager
+   */
+  protected $entityQuery;
+
   /**
    * Constructor.
    */
-  public function __construct(ConfigFactoryInterface $configFactory, LdapDetailLog $detailLog, LoggerChannelInterface $logger) {
+  public function __construct(ConfigFactoryInterface $configFactory, LdapDetailLog $detailLog, LoggerChannelInterface $logger, EntityTypeManager $entity_query) {
     $this->config = $configFactory->get('ldap_authentication.settings');
     $this->detailLog = $detailLog;
     $this->logger = $logger;
+    $this->entityQuery = $entity_query;
   }
 
   /**
@@ -121,7 +131,7 @@ final class LoginValidator implements LdapUserAttributesInterface {
     $credentialsAuthenticationResult = $this->testCredentials($this->formState->getValue('pass'));
 
     if ($credentialsAuthenticationResult == self::AUTHENTICATION_FAILURE_FIND &&
-      \Drupal::config('ldap_authentication.settings')->get('authenticationMode') == LdapAuthenticationConfiguration::MODE_EXCLUSIVE) {
+      $this->config->get('authenticationMode') == LdapAuthenticationConfiguration::MODE_EXCLUSIVE) {
       $this->formState->setErrorByName('non_ldap_login_not_allowed', t('User disallowed'));
     }
 
@@ -186,7 +196,7 @@ final class LoginValidator implements LdapUserAttributesInterface {
     $credentialsAuthenticationResult = $this->testSsoCredentials($this->authName);
 
     if ($credentialsAuthenticationResult == self::AUTHENTICATION_FAILURE_FIND &&
-      \Drupal::config('ldap_authentication.settings')->get('authenticationMode') == LdapAuthenticationConfiguration::MODE_EXCLUSIVE) {
+      $this->config->get('authenticationMode') == LdapAuthenticationConfiguration::MODE_EXCLUSIVE) {
       $this->formState->setErrorByName('non_ldap_login_not_allowed', t('User disallowed'));
     }
 
@@ -544,7 +554,7 @@ final class LoginValidator implements LdapUserAttributesInterface {
   private function failureResponse($authenticationResult) {
     // Fail scenario 1. LDAP auth exclusive and failed  throw error so no other
     // authentication methods are allowed.
-    if (\Drupal::config('ldap_authentication.settings')->get('authenticationMode') == LdapAuthenticationConfiguration::MODE_EXCLUSIVE) {
+    if ($this->config->get('authenticationMode') == LdapAuthenticationConfiguration::MODE_EXCLUSIVE) {
       $this->detailLog->log(
         '%username: Error raised because failure at LDAP and exclusive authentication is set to true.',
         ['%username' => $this->authName], 'ldap_authentication'
@@ -620,17 +630,16 @@ final class LoginValidator implements LdapUserAttributesInterface {
 
     // Do one of the exclude attribute pairs match? If user does not already
     // exists and deferring to user settings AND user settings only allow.
-    foreach (\Drupal::config('ldap_authentication.settings')->get('excludeIfTextInDn') as $test) {
+    foreach ($this->config->get('excludeIfTextInDn') as $test) {
       if (stripos($ldap_user['dn'], $test) !== FALSE) {
-        // If a match, return FALSE;.
         return FALSE;
       }
     }
 
     // Check if one of the allow attribute pairs match.
-    if (count(\Drupal::config('ldap_authentication.settings')->get('allowOnlyIfTextInDn'))) {
+    if (count($this->config->get('allowOnlyIfTextInDn'))) {
       $fail = TRUE;
-      foreach (\Drupal::config('ldap_authentication.settings')->get('allowOnlyIfTextInDn') as $test) {
+      foreach ($this->config->get('allowOnlyIfTextInDn') as $test) {
         if (stripos($ldap_user['dn'], $test) !== FALSE) {
           $fail = FALSE;
         }
@@ -643,9 +652,10 @@ final class LoginValidator implements LdapUserAttributesInterface {
 
     // Handle excludeIfNoAuthorizations enabled and user has no groups.
     if (\Drupal::moduleHandler()->moduleExists('ldap_authorization') &&
-      \Drupal::config('ldap_authentication.settings')->get('excludeIfNoAuthorizations')) {
+      $this->config->get('excludeIfNoAuthorizations')) {
 
-      $user = User::load($authName);
+      $id = ExternalAuthenticationHelper::getUidFromIdentifierMap($authName);
+      $user = User::load($id);
 
       if (!$user) {
         $user = User::create(['name' => $authName]);
@@ -654,11 +664,27 @@ final class LoginValidator implements LdapUserAttributesInterface {
       /** @var \Drupal\authorization\AuthorizationController $controller */
       $controller = \Drupal::service('authorization.manager');
       $controller->setUser($user);
-      $controller->queryIndividualProfile($profile_id);
-      $authorizations = $controller->getProcessedAuthorizations();
 
-      if (count($authorizations) == 0) {
-        drupal_set_message(t('The site logon is currently not working due to a configuration error.  Please see logs for additional details.'), 'warning');
+      $profiles = $this->entityQuery
+        ->getStorage('authorization_profile')
+        ->getQuery()
+        ->condition('provider', 'ldap_provider')
+        ->execute();
+      foreach ($profiles as $profile) {
+        $controller->queryIndividualProfile($profile);
+      }
+      $authorizations = $controller->getProcessedAuthorizations();
+      $controller->clearAuthorizations();
+
+      $valid_profile = FALSE;
+      foreach ($authorizations as $authorization) {
+        if (!empty($authorization->getAuthorizationsApplied())) {
+          $valid_profile = TRUE;
+        }
+      }
+
+      if (!$valid_profile) {
+        drupal_set_message(t('The site logon is currently not working due to a configuration error. Please see logs for additional details.'), 'warning');
         $this->logger->notice('LDAP Authentication is configured to deny users without LDAP Authorization mappings, but 0 LDAP Authorization consumers are configured.');
         return FALSE;
       }

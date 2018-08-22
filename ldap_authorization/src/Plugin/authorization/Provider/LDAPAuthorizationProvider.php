@@ -160,10 +160,16 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
 
     // Load the correct server.
     $server_id = $config['status']['server'];
+    /** @var \Drupal\ldap_servers\ServerFactory $factory */
     $factory = \Drupal::service('ldap.servers');
     /** @var \Drupal\ldap_servers\Entity\Server $server */
     $server = $factory->getServerByIdEnabled($server_id);
     $ldapUserData = $factory->getUserDataFromServerByAccount($user, $server_id);
+
+    if (!$ldapUserData && $user->isNew()) {
+      // If we don't have a real user yet, fall back to the account name.
+      $ldapUserData = $factory->getUserDataFromServerByIdentifier($user->getAccountName(), $server_id);
+    }
 
     if (!$ldapUserData && $this->configuration['status']['only_ldap_authenticated'] == TRUE) {
       throw new AuthorizationSkipAuthorization();
