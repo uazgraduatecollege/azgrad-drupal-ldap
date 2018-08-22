@@ -455,10 +455,13 @@ class TokenProcessor {
           if (is_scalar($account->get($attr_name)->value)) {
             $value = $account->get($attr_name)->value;
           }
-          elseif (isset($account->get($attr_name)->getValue()[0]['target_id'])) {
-            $file = file_load($account->get($attr_name)->getValue()[0]['target_id']);
-            if ($file) {
-              $value = file_get_contents(\Drupal::service('file_system')->realpath($file->getFileUri()));
+          elseif (!empty($account->get($attr_name)->getValue())) {
+            $file_reference = $account->get($attr_name)->getValue();
+            if (isset($file_reference[0]['target_id'])) {
+              $file = file_load($file_reference[0]['target_id']);
+              if ($file) {
+                $value = file_get_contents(\Drupal::service('file_system')->realpath($file->getFileUri()));
+              }
             }
           }
           break;
