@@ -40,6 +40,7 @@ function _ldap_user_orphans($ldap_user_conf) {
     ->fieldCondition('ldap_user_puid', 'value', 'NULL', '!=')
     ->fieldCondition('ldap_user_current_dn', 'value', 'NULL', '!=')
     ->propertyCondition('uid', $last_uid_checked, '>')
+    ->propertyCondition('status', 1)
     ->propertyOrderBy('uid', 'ASC')
     ->range(0, $ldap_user_conf->orphanedCheckQty)
     ->addMetaData('account', user_load(1)); // run the query as user 1
