@@ -136,7 +136,7 @@ class OrphanProcessor {
     $end_plus_1 = min(($batch) * $this->ldapQueryOrLimit, count($uids));
     $batch_uids = array_slice($uids, $start, ($end_plus_1 - $start));
 
-    $accounts = User::loadMultiple($batch_uids);
+    $accounts = $this->entityTypeManager->getStorage('user')->loadMultiple($batch_uids);
 
     $users = [];
     foreach ($accounts as $uid => $user) {
@@ -219,7 +219,7 @@ class OrphanProcessor {
     $drupalUserProcessor = new DrupalUserProcessor();
     foreach ($users as $user) {
       if (isset($user['uid'])) {
-        $account = User::load($user['uid']);
+        $account = $this->entityTypeManager->getStorage('user')->load($user['uid']);
         $drupalUserProcessor->drupalUserLogsIn($account);
         if ($user['exists'] == FALSE) {
           switch ($this->configLdapUser->get('orphanedDrupalAcctBehavior')) {
@@ -283,7 +283,7 @@ class OrphanProcessor {
       }
       else {
         unset($ldapEntries['count']);
-        foreach ($ldapEntries as $ldap_entry) {
+        if (!empty($ldapEntries)) {
           $user['exists'] = TRUE;
         }
       }

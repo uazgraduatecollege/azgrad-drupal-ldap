@@ -2,11 +2,14 @@
 
 namespace Drupal\ldap_user\Form;
 
+use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Config\Config;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
+use Drupal\Core\Extension\ModuleHandler;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Link;
 use Drupal\Core\Url;
 use Drupal\ldap_query\Controller\QueryController;
 use Drupal\ldap_servers\Helper\ConversionHelper;
@@ -23,6 +26,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInterface, ContainerInjectionInterface {
 
   protected $serverFactory;
+  protected $cache;
+  protected $moduleHandler;
 
   protected $drupalAcctProvisionServerOptions;
 
@@ -31,10 +36,13 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
   /**
    * {@inheritdoc}
    */
-  public function __construct(ConfigFactoryInterface $config_factory, ServerFactory $server_factory) {
+  public function __construct(ConfigFactoryInterface $config_factory, ServerFactory $server_factory, CacheBackendInterface $cache, ModuleHandler $module_handler) {
     parent::__construct($config_factory);
 
     $this->serverFactory = $server_factory;
+    $this->cache = $cache;
+    $this->moduleHandler = $module_handler;
+
     $ldap_servers = $this->serverFactory->getEnabledServers();
     if ($ldap_servers) {
       foreach ($ldap_servers as $sid => $ldap_server) {
@@ -49,12 +57,14 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
   }
 
   /**
-   * Factory for dependency injection.
+   * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
     return new static (
       $container->get('config.factory'),
-      $container->get('ldap.servers')
+      $container->get('ldap.servers'),
+      $container->get('cache.default'),
+      $container->get('module_handler')
     );
   }
 
@@ -80,7 +90,7 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
 
     if (count($this->drupalAcctProvisionServerOptions) == 0) {
       $url = Url::fromRoute('entity.ldap_server.collection');
-      $edit_server_link = \Drupal::l($this->t('@path', ['@path' => 'LDAP Servers']), $url);
+      $edit_server_link = Link::fromTextAndUrl($this->t('@path', ['@path' => 'LDAP Servers']), $url)->toString();
       $message = $this->t('At least one LDAP server must configured and <em>enabled</em> before configuring LDAP user. Please go to @link to configure an LDAP server.',
         ['@link' => $edit_server_link]
       );
@@ -187,7 +197,7 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
       '#description' => $this->t('Allows you to sync the result of an LDAP query with your users. Creates new users and updates existing ones.'),
     ];
 
-    if (\Drupal::moduleHandler()->moduleExists('ldap_query')) {
+    if ($this->moduleHandler->moduleExists('ldap_query')) {
       $updateMechanismOptions = ['none' => $this->t('Do not update')];
       $queries = QueryController::getAllEnabledQueries();
       foreach ($queries as $query) {
@@ -635,7 +645,7 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
     $form_state->getValues();
 
     SemaphoreStorage::flushAllValues();
-    \Drupal::cache()->invalidate('ldap_user_sync_mapping');
+    $this->cache->invalidate('ldap_user_sync_mapping');
     drupal_set_message($this->t('User synchronization configuration updated.'));
   }
 

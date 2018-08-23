@@ -54,7 +54,6 @@ class QueryTestForm extends FormBase {
       foreach ($data as $entry) {
         $row = [$entry['dn']];
         foreach ($attributes as $attribute_data) {
-          $massager = new MassageAttributes();
           $processedAttributeName = mb_strtolower($attribute_data);
           if (!isset($entry[$processedAttributeName])) {
             $row[] = 'No data';

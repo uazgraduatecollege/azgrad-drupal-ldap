@@ -279,7 +279,6 @@ class ConversionHelper {
       $parts = explode(TokenProcessor::DELIMITER, $token);
       $ordinal = (isset($parts[1]) && $parts[1]) ? $parts[1] : 0;
       $attr_name = $parts[0];
-      $source_data_type = NULL;
 
       $parts2 = explode(TokenProcessor::MODIFIER_DELIMITER, $attr_name);
       if (count($parts2) > 1) {

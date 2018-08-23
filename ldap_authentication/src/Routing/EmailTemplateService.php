@@ -2,6 +2,7 @@
 
 namespace Drupal\ldap_authentication\Routing;
 
+use Drupal\Core\Config\ConfigFactory;
 use Drupal\Core\Url;
 use Drupal\user\Entity\User;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
@@ -21,8 +22,8 @@ class EmailTemplateService implements EventSubscriberInterface {
   /**
    * Constructor.
    */
-  public function __construct() {
-    $this->config = \Drupal::config('ldap_authentication.settings');
+  public function __construct(ConfigFactory $config_factory) {
+    $this->config = $config_factory->get('ldap_authentication.settings');
   }
 
   /**
@@ -44,6 +45,7 @@ class EmailTemplateService implements EventSubscriberInterface {
   public static function checkForEmailTemplate() {
     if (self::profileNeedsUpdate()) {
       $url = Url::fromRoute('ldap_authentication.profile_update_form');
+      // Not injected since we need to have this callback be static.
       $currentRoute = \Drupal::service('path.current')->getPath();
       if ($currentRoute != '/user/ldap-profile-update' && $currentRoute != '/user/logout') {
         $response = new RedirectResponse($url->toString());

@@ -7,6 +7,7 @@ services:
     class: Drupal\ldap_authentication\Routing\EmailTemplateService
     tags:
       - { name: event_subscriber }
+    arguments: ['@config.factory']
   ldap_authentication.user_help_tab_access:
     class: Drupal\ldap_authentication\Access\UserHelpTabAccess
     arguments: ['@config.factory', '@current_user']
@@ -17,4 +18,4 @@ services:
       arguments: ['ldap_authentication']
   ldap_authentication.login_validator:
     class: \Drupal\ldap_authentication\Controller\LoginValidator
-    arguments: ['@config.factory', '@ldap.detail_log', '@logger.channel.ldap_authentication', '@entity_type.manager']
+    arguments: ['@config.factory', '@ldap.detail_log', '@logger.channel.ldap_authentication', '@entity_type.manager', '@module_handler']

@@ -12,4 +12,4 @@ services:
     arguments: ['@logger.channel.ldap_user', '@config.factory', '@ldap.servers', '@plugin.manager.mail', '@language_manager', '@state', '@entity_type.manager']
   ldap_user.group_user_update_processor:
     class: Drupal\ldap_user\Processor\GroupUserUpdateProcessor
-    arguments: ['@logger.channel.ldap_user', '@ldap.detail_log', '@config.factory', '@ldap.servers', '@state', '@module_handler', '@authorization.manager']
+    arguments: ['@logger.channel.ldap_user', '@ldap.detail_log', '@config.factory', '@ldap.servers', '@state', '@module_handler', '@entity_type.manager']

@@ -106,7 +106,7 @@ class SyncMappingHelper implements LdapUserAttributesInterface {
     // general implementation and could be its own class.
     foreach ($directions as $direction) {
       if (!empty($this->config->get('ldapUserSyncMappings')[$direction])) {
-        foreach ($this->config->get('ldapUserSyncMappings')[$direction] as $attribute => $mapping) {
+        foreach ($this->config->get('ldapUserSyncMappings')[$direction] as $mapping) {
           if (!empty($mapping['prov_events'])) {
             $result = count(array_intersect($prov_events, $mapping['prov_events']));
             if ($result) {

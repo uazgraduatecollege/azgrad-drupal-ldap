@@ -7,6 +7,7 @@ use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Extension\ModuleHandler;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Entity\EntityForm;
+use Drupal\Core\Render\Renderer;
 use Drupal\ldap_servers\Entity\Server;
 use Drupal\ldap_servers\Helper\CredentialsStorage;
 use Drupal\ldap_servers\Processor\TokenProcessor;
@@ -41,6 +42,7 @@ class ServerTestForm extends EntityForm {
   protected $config;
   protected $moduleHandler;
   protected $tokenProcessor;
+  protected $renderer;
 
   /**
    * {@inheritdoc}
@@ -52,10 +54,11 @@ class ServerTestForm extends EntityForm {
   /**
    * Class constructor.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, ModuleHandler $module_handler, TokenProcessor $token_processor) {
+  public function __construct(ConfigFactoryInterface $config_factory, ModuleHandler $module_handler, TokenProcessor $token_processor, Renderer $renderer) {
     $this->config = $config_factory;
     $this->moduleHandler = $module_handler;
     $this->tokenProcessor = $token_processor;
+    $this->renderer = $renderer;
   }
 
   /**
@@ -65,7 +68,8 @@ class ServerTestForm extends EntityForm {
     return new static(
       $container->get('config.factory'),
       $container->get('module_handler'),
-      $container->get('ldap.token_processor')
+      $container->get('ldap.token_processor'),
+      $container->get('renderer')
     );
   }
 
@@ -96,7 +100,7 @@ class ServerTestForm extends EntityForm {
       '#list_type' => 'ul',
     ];
     $form['server_variables'] = [
-      '#markup' => drupal_render($settings),
+      '#markup' => $this->renderer->render($settings),
     ];
 
     $form['id'] = [
@@ -186,7 +190,7 @@ class ServerTestForm extends EntityForm {
           '#header' => $table_name == 'basic' ? ['Test'] : ['Test', 'Result'],
           '#rows' => $table_data,
         ];
-        $form['#suffix'] .= '<h2>' . $titles[$table_name] . '</h2>' . drupal_render($settings);
+        $form['#suffix'] .= '<h2>' . $titles[$table_name] . '</h2>' . $this->renderer->render($settings);
       }
 
       if (isset($test_data['username']) && isset($test_data['ldap_user'])) {
@@ -200,7 +204,7 @@ class ServerTestForm extends EntityForm {
 
         $form['#suffix'] .= '<div class="content">
         <h2>' . $this->t('LDAP Entry for %username (dn: %dn)', ['%dn' => $test_data['ldap_user']['dn'], '%username' => $test_data['username']]) . '</h2>'
-                            . drupal_render($settings) . '</div>';
+                            . $this->renderer->render($settings) . '</div>';
       }
 
       if (!empty($test_data['username'])) {
@@ -312,30 +316,26 @@ class ServerTestForm extends EntityForm {
             '#items' => $memberships,
             '#list_type' => 'ul',
           ];
-          $result = drupal_render($settings);
-
+          $result = $this->renderer->render($settings);
           $this->resultsTables['group2'][] = [
             'Group memberships from user ("group_dns", nested=' . $nested_display . ') (' . count($memberships) . ' found)',
             $result,
           ];
 
           $result = ($this->ldapServer->groupIsMember($group_dn, $user, $nested)) ? 'Yes' : 'No';
-          $group_results = [];
-          $group_results[] = [
+          $this->resultsTables['group2'][] = [
             'groupIsMember from group DN ' . $group_dn . 'for ' . $user . ' nested=' . $nested_display . ')',
             $result,
           ];
 
           if ($this->ldapServer->groupUserMembershipsFromAttributeConfigured()) {
             $groupUserMembershipsFromUserAttributes = $this->ldapServer->groupUserMembershipsFromUserAttr($user, $nested);
-            $count = count($groupUserMembershipsFromUserAttributes);
             $settings = [
               '#theme' => 'item_list',
               '#items' => $groupUserMembershipsFromUserAttributes,
               '#list_type' => 'ul',
             ];
-            $result = drupal_render($settings);
-
+            $result = $this->renderer->render($settings);
           }
           else {
             $groupUserMembershipsFromUserAttributes = [];
@@ -353,8 +353,7 @@ class ServerTestForm extends EntityForm {
               '#items' => $groupUserMembershipsFromEntry,
               '#list_type' => 'ul',
             ];
-            $result = drupal_render($settings);
-
+            $result = $this->renderer->render($settings);
           }
           else {
             $groupUserMembershipsFromEntry = [];
@@ -373,14 +372,14 @@ class ServerTestForm extends EntityForm {
               '#items' => $diff1,
               '#list_type' => 'ul',
             ];
-            $result1 = drupal_render($settings);
+            $result1 = $this->renderer->render($settings);
 
             $settings = [
               '#theme' => 'item_list',
               '#items' => $diff2,
               '#list_type' => 'ul',
             ];
-            $result2 = drupal_render($settings);
+            $result2 = $this->renderer->render($settings);
 
             $this->resultsTables['group2'][] = [
               "groupUserMembershipsFromEntry and FromUserAttr Diff)",
@@ -401,7 +400,7 @@ class ServerTestForm extends EntityForm {
         '#items' => $groups_from_dn,
         '#list_type' => 'ul',
       ];
-      $result = drupal_render($settings);
+      $result = $this->renderer->render($settings);
       $this->resultsTables['groupfromDN'][] = ["Groups from DN", $result];
     }
     return $group_entry;

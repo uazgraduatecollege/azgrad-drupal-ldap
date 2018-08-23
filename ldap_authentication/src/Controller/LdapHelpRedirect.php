@@ -20,10 +20,13 @@ class LdapHelpRedirect extends ControllerBase {
    *   Redirect response.
    */
   public function redirectUrl() {
-    $url = \Drupal::config('ldap_authentication.settings')
+    $url = $this->configFactory
+      ->get('ldap_authentication.settings')
       ->get('ldapUserHelpLinkUrl');
-    return (new TrustedRedirectResponse($url))
-      ->addCacheableDependency((new CacheableMetadata())->setCacheMaxAge(0));
+    $response = new TrustedRedirectResponse($url);
+    $response->addCacheableDependency(new CacheableMetadata())
+      ->setCacheMaxAge(0);
+    return $response;
   }
 
 }

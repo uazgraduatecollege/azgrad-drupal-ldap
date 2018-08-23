@@ -2,15 +2,23 @@
 
 namespace Drupal\ldap_authentication\Form;
 
+use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Extension\ModuleHandler;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\ConfigFormBase;
+use Drupal\Core\Link;
 use Drupal\Core\Url;
 use Drupal\ldap_authentication\Helper\LdapAuthenticationConfiguration;
+use Drupal\ldap_servers\ServerFactory;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Provides the form for ldap_authentication options.
  */
 class LdapAuthenticationAdminForm extends ConfigFormBase {
+
+  protected $serverFactory;
+  protected $moduleHandler;
 
   /**
    * {@inheritdoc}
@@ -29,11 +37,30 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
   /**
    * {@inheritdoc}
    */
+  public function __construct(ConfigFactoryInterface $config_factory, ServerFactory $ldap_servers, ModuleHandler $module_handler) {
+    parent::__construct($config_factory);
+    $this->serverFactory = $ldap_servers;
+    $this->moduleHandler = $module_handler;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('config.factory'),
+      $container->get('ldap.servers'),
+      $container->get('module_handler')
+    );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function buildForm(array $form, FormStateInterface $form_state) {
     $config = $this->config('ldap_authentication.settings');
 
-    $factory = \Drupal::service('ldap.servers');
-    $servers = $factory->getEnabledServers();
+    $servers = $this->serverFactory->getEnabledServers();
     $authenticationServers = [];
     if ($servers) {
       foreach ($servers as $sid => $ldap_server) {
@@ -45,17 +72,12 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
     if (count($authenticationServers) == 0) {
 
       $url = Url::fromRoute('entity.ldap_server.collection');
-      $edit_server_link = \Drupal::l($this->t('@path', ['@path' => 'LDAP Servers']), $url);
+      $edit_server_link = Link::fromTextAndUrl($this->t('@path', ['@path' => 'LDAP Servers']), $url)->toString();
 
-      $message = $this->t('At least one LDAP server must configured and <em>enabled</em>
- before configuring LDAP authentication. Please go to @link to configure an LDAP server.',
+      drupal_set_message($this->t('At least one LDAP server must configured and <em>enabled</em> before configuring LDAP authentication. Please go to @link to configure an LDAP server.',
         ['@link' => $edit_server_link]
-      );
+      ), 'warning');
 
-      $form['intro'] = [
-        '#type' => 'item',
-        '#markup' => $this->t('<h1>LDAP Authentication Settings</h1>') . $message,
-      ];
       return $form;
     }
 
@@ -170,7 +192,7 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
         Requires LDAP Authorization to be enabled and configured!'),
       '#default_value' => $config->get('excludeIfNoAuthorizations'),
       '#description' => $this->t('If the user is not granted any Drupal roles, organic groups, etc. by LDAP Authorization, login will be denied.  LDAP Authorization must be enabled for this to work.'),
-      '#disabled' => (boolean) (!\Drupal::moduleHandler()->moduleExists('ldap_authorization')),
+      '#disabled' => (boolean) (!$this->moduleHandler->moduleExists('ldap_authorization')),
     ];
 
     $form['email'] = [

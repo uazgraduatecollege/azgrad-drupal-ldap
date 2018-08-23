@@ -209,7 +209,7 @@ class LdapUserProcessor implements LdapUserAttributesInterface {
     $mappings = $syncMapper->getSyncMappings($direction, $prov_events);
     // Loop over the mappings.
     foreach ($mappings as $field_key => $field_detail) {
-      list($ldapAttributeName, $ordinal, $conversion) = $this->extractTokenParts($field_key);
+      list($ldapAttributeName, $ordinal) = $this->extractTokenParts($field_key);
       $ordinal = (!$ordinal) ? 0 : $ordinal;
       if ($ldapUserEntry && isset($ldapUserEntry[$ldapAttributeName]) && is_array($ldapUserEntry[$ldapAttributeName]) && isset($ldapUserEntry[$ldapAttributeName][$ordinal])) {
         // Don't override values passed in.
@@ -269,10 +269,10 @@ class LdapUserProcessor implements LdapUserAttributesInterface {
       $attr_data = $attributes[$attr_name];
       $ordinals = array_keys($attr_data['values']);
       $ordinal = $ordinals[0];
-      return [$attr_name, $ordinal, $attr_data['conversion']];
+      return [$attr_name, $ordinal];
     }
     else {
-      return [NULL, NULL, NULL];
+      return [NULL, NULL];
     }
 
   }
