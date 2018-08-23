@@ -90,7 +90,7 @@ function ldap_user_help($route_name, RouteMatchInterface $route_match) {
 function ldap_user_module_implements_alter(&$implementations, $hook) {
   // We are moving authorization to the end because its user saving causes
   // issues.
-  if ($hook == 'user_login') {
+  if ($hook == 'user_login' && isset($implementations['authorization'])) {
     $group = $implementations['authorization'];
     unset($implementations['authorization']);
     $implementations['authorization'] = $group;
