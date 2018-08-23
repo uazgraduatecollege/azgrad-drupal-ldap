@@ -2,11 +2,12 @@
 
 namespace Drupal\ldap_servers\Processor;
 
+use Drupal\Core\File\FileSystem;
 use Drupal\Component\Utility\SafeMarkup;
 use Drupal\ldap_servers\Entity\Server;
 use Drupal\ldap_servers\Helper\ConversionHelper;
 use Drupal\ldap_servers\Helper\CredentialsStorage;
-use Drupal\ldap_servers\Helper\MassageAttributes;
+use Drupal\ldap_servers\Logger\LdapDetailLog;
 use Drupal\user\UserInterface;
 
 /**
@@ -19,58 +20,15 @@ class TokenProcessor {
   const DELIMITER = ':';
   const MODIFIER_DELIMITER = ';';
 
-  /**
-   * Create tokens.
-   *
-   * @param string $attr_name
-   *   Attribute name such as 'field_user_lname', 'name', 'mail', 'dn'.
-   * @param string $attr_type
-   *   Attribute type such as 'field', 'property', etc. Null for LDAP
-   *   attributes.
-   * @param string $ordinal
-   *   Ordinal number such as 0, 1, 2, etc.  Not used in general.
-   *
-   * @return string
-   *   Token such as 'field.field_user_lname', 'samaccountname', etc.
-   */
-  public function createTokens($attr_name, $attr_type = NULL, $ordinal = NULL) {
-    $inner_token = $attr_name;
-    if ($attr_type) {
-      $inner_token .= '.' . $attr_type;
-    }
-    if ($ordinal) {
-      $inner_token .= ':' . $ordinal;
-    }
-    $token = self::PREFIX . $inner_token . self::SUFFIX;
-    return $token;
-  }
+  protected $detailLog;
+  protected $fileSystem;
 
   /**
-   * Parse user attribute names.
-   *
-   * @param string $user_attr_key
-   *   A string in the form of <attr_type>.<attr_name>[:<instance>] such as
-   *   field.lname, property.mail, field.aliases:2.
-   *
-   * @return array
-   *   An array such as array('field','field_user_lname', NULL).
+   * {@inheritdoc}
    */
-  public function parseUserAttributeNames($user_attr_key) {
-    // Make sure no [] are on attribute.
-    $user_attr_key = trim($user_attr_key, self::PREFIX . self::SUFFIX);
-    $parts = explode('.', $user_attr_key);
-    $attr_type = $parts[0];
-    $attr_name = (isset($parts[1])) ? $parts[1] : FALSE;
-    $attr_ordinal = FALSE;
-
-    if ($attr_name) {
-      $attr_name_parts = explode(':', $attr_name);
-      if (isset($attr_name_parts[1])) {
-        $attr_name = $attr_name_parts[0];
-        $attr_ordinal = $attr_name_parts[1];
-      }
-    }
-    return [$attr_type, $attr_name, $attr_ordinal];
+  public function __construct(LdapDetailLog $ldap_detail_log, FileSystem $file_system) {
+    $this->detailLog = $ldap_detail_log;
+    $this->fileSystem = $file_system;
   }
 
   /**
@@ -89,7 +47,7 @@ class TokenProcessor {
    */
   public function tokenReplace($resource, $text, $resource_type = 'ldap_entry') {
     // Desired tokens are of form "cn","mail", etc.
-    $desired_tokens = $this->findTokensNeededForTemplate($text);
+    $desired_tokens = ConversionHelper::findTokensNeededForTemplate($text);
 
     if (empty($desired_tokens)) {
       // If no tokens exist in text, return text itself.  It is literal value.
@@ -99,7 +57,7 @@ class TokenProcessor {
     $tokens = [];
     switch ($resource_type) {
       case 'ldap_entry':
-        $tokens = $this->tokenizeEntry($resource, $desired_tokens, self::PREFIX, self::SUFFIX);
+        $tokens = $this->tokenizeLdapEntry($resource, $desired_tokens, self::PREFIX, self::SUFFIX);
         break;
 
       case 'user_account':
@@ -116,84 +74,22 @@ class TokenProcessor {
     $attributes = array_keys($tokens);
     // Array of attribute values (Lincoln, Abe, etc)
     $values = array_values($tokens);
+    // TODO: This comparison is likely not ideal:
+    // The sub-functions redundantly lowercase replacements in addition to the
+    // source formatting. Otherwise comparison would fail here in
+    // case-insensitive requests. Ideally, a reimplementation would resolve this
+    // redundant and inconsistent approach with a clearer API.
     $result = str_replace($attributes, $values, $text);
 
     // Strip out any unreplace tokens.
     $result = preg_replace('/^\[.*\]$/', '', $result);
     // Return NULL if $result is empty, else $result.
-    return ($result == '') ? NULL : $result;
-  }
-
-  /**
-   * Extract token attributes.
-   *
-   * @param array $attribute_maps
-   *   Array of attribute maps passed by reference. For example:
-   *   [[<attr_name>, <ordinal>, <data_type>]].
-   * @param string $text
-   *   Text with tokens in it.
-   */
-  public function extractTokenAttributes(array &$attribute_maps, $text) {
-    $tokens = $this->findTokensNeededForTemplate($text);
-    foreach ($tokens as $token) {
-      $token = str_replace([self::PREFIX, self::SUFFIX], ['', ''], $token);
-      $parts = explode(self::DELIMITER, $token);
-      $ordinal = (isset($parts[1]) && $parts[1]) ? $parts[1] : 0;
-      $attr_name = $parts[0];
-      $source_data_type = NULL;
-
-      $parts2 = explode(self::MODIFIER_DELIMITER, $attr_name);
-      if (count($parts2) > 1) {
-        $attr_name = $parts2[0];
-        $conversion = $parts2[1];
-      }
-      else {
-        $conversion = NULL;
-      }
-      $attribute_maps[$attr_name] = self::setAttributeMap(@$attribute_maps[$attr_name], $conversion, [$ordinal => NULL]);
-    }
-  }
-
-  /**
-   * Get token attributes.
-   *
-   * @param string $text
-   *   Text to parse.
-   *
-   * @return array
-   *   Maps found.
-   */
-  public function getTokenAttributes($text) {
-    $maps = [];
-    $this->extractTokenAttributes($maps, $text);
-    return $maps;
-  }
-
-  /**
-   * Extract parts of token.
-   *
-   * @param string $token
-   *   Token or token expression with singular token in it, eg. [dn],
-   *   [dn;binary], [titles:0;binary] [cn]@mycompany.com.
-   *
-   * @return array
-   *   Array triplet containing [<attr_name>, <ordinal>, <conversion>].
-   */
-  public function extractTokenParts($token) {
-    $attributes = [];
-    $this->extractTokenAttributes($attributes, $token);
-    if (is_array($attributes)) {
-      $keys = array_keys($attributes);
-      $attr_name = $keys[0];
-      $attr_data = $attributes[$attr_name];
-      $ordinals = array_keys($attr_data['values']);
-      $ordinal = $ordinals[0];
-      return [$attr_name, $ordinal, $attr_data['conversion']];
+    if ($result == '') {
+      return NULL;
     }
     else {
-      return [NULL, NULL, NULL];
+      return $result;
     }
-
   }
 
   /**
@@ -201,9 +97,9 @@ class TokenProcessor {
    *
    * @param array $ldap_entry
    *   The LDAP entry.
-   * @param string $token_keys
-   *   Either an array of key names such as array('cn', 'dn') or string 'all' to
-   *   return all tokens.
+   * @param array $token_keys
+   *   Either an array of key names such as ['cn', 'dn'] or an empty
+   *   array for all items.
    * @param string $pre
    *   Prefix token prefix such as !,%,[.
    * @param string $post
@@ -247,166 +143,17 @@ class TokenProcessor {
    *     [guid:0;bin2hex] = apply bin2hex() function to value
    *     [guid:0;msguid] = apply convertMsguidToString() function to value
    */
-  public function tokenizeEntry(array $ldap_entry, $token_keys = 'all', $pre = self::PREFIX, $post = self::SUFFIX) {
-
-    $detailLog = \Drupal::service('ldap.detail_log');
-    $tokens = [];
-    $log_variables = [];
-    $massager = new MassageAttributes();
-
-    if (function_exists('debug_backtrace') && $backtrace = debug_backtrace()) {
-      $log_variables['%calling_function'] = $backtrace[1]['function'];
-    }
+  public function tokenizeLdapEntry(array $ldap_entry, array $token_keys, $pre = self::PREFIX, $post = self::SUFFIX) {
     if (!is_array($ldap_entry)) {
-      $detailLog->log(
-        'Skipped tokenization of LDAP entry because no LDAP entry provided when called from %calling_function.',
-        $log_variables
+      $this->detailLog->log(
+        'Skipped tokenization of LDAP entry because no LDAP entry provided when called from %calling_function.', [
+          '%calling_function' => function_exists('debug_backtrace') ? debug_backtrace()[1]['function'] : 'undefined',
+        ]
       );
       // Empty array.
-      return $tokens;
+      return [];
     }
-
-    // Add lowercase keyed entries to LDAP array.
-    foreach ($ldap_entry as $key => $values) {
-      $ldap_entry[mb_strtolower($key)] = $values;
-    }
-
-    // 1. tokenize dn
-    // escapes attribute values, need to be unescaped later.
-    $dn_parts = Server::ldapExplodeDn($ldap_entry['dn'], 0);
-    unset($dn_parts['count']);
-    $parts_count = [];
-    $parts_last_value = [];
-    foreach ($dn_parts as $pair) {
-      list($attr_name, $attr_value) = explode('=', $pair);
-      $attr_value = ConversionHelper::unescapeDnValue($attr_value);
-      try {
-        $attr_value = SafeMarkup::checkPlain($attr_value);
-      }
-      catch (\Exception $e) {
-        $detailLog->log(
-          'Skipped tokenization of attribute %attr_name because the value would not pass check_plain function.',
-          $log_variables
-        );
-        // don't tokenize data that can't pass check_plain.
-        continue;
-      }
-
-      if (!isset($parts_count[$attr_name])) {
-        $tokens[$pre . $massager->processAttributeName($attr_name) . $post] = $attr_value;
-        $tokens[$pre . $massager->processAttributeName($attr_name) . $post] = $attr_value;
-        $parts_count[$attr_name] = 0;
-      }
-      $tokens[$pre . $massager->processAttributeName($attr_name) . self::DELIMITER . (int) $parts_count[$attr_name] . $post] = $attr_value;
-
-      $parts_last_value[$attr_name] = $attr_value;
-      $parts_count[$attr_name]++;
-    }
-
-    // Add DN parts in reverse order to reflect the hierarchy for CN, OU, DC.
-    foreach ($parts_count as $attr_name => $count) {
-      $part = $massager->processAttributeName($attr_name);
-      for ($i = 0; $i < $count; $i++) {
-        $reversePosition = $count - $i - 1;
-        $tokens[$pre . $part . self::DELIMITER . 'reverse' . self::DELIMITER . $reversePosition . $post] = $tokens[$pre . $part . self::DELIMITER . $i . $post];
-      }
-    }
-
-    foreach ($parts_count as $attr_name => $count) {
-      $tokens[$pre . $massager->processAttributeName($attr_name) . self::DELIMITER . 'last' . $post] = $parts_last_value[$attr_name];
-    }
-
-    // Tokenize other attributes.
-    if ($token_keys == 'all') {
-      $token_keys = array_keys($ldap_entry);
-      $token_keys = array_filter($token_keys, "is_string");
-      foreach ($token_keys as $attr_name) {
-        $attr_value = $ldap_entry[$attr_name];
-        if (is_array($attr_value) && is_scalar($attr_value[0]) && $attr_value['count'] == 1) {
-          $tokens[$pre . $massager->processAttributeName($attr_name) . $post] = SafeMarkup::checkPlain($attr_value[0]);
-          $tokens[$pre . $massager->processAttributeName($attr_name) . self::DELIMITER . '0' . $post] = SafeMarkup::checkPlain($attr_value[0]);
-          $tokens[$pre . $massager->processAttributeName($attr_name) . self::DELIMITER . 'last' . $post] = SafeMarkup::checkPlain($attr_value[0]);
-        }
-        elseif (is_array($attr_value) && $attr_value['count'] > 1) {
-          $tokens[$pre . $massager->processAttributeName($attr_name) . self::DELIMITER . 'last' . $post] = SafeMarkup::checkPlain($attr_value[$attr_value['count'] - 1]);
-          for ($i = 0; $i < $attr_value['count']; $i++) {
-            $tokens[$pre . $massager->processAttributeName($attr_name) . self::DELIMITER . $i . $post] = SafeMarkup::checkPlain($attr_value[$i]);
-          }
-        }
-        elseif (is_scalar($attr_value)) {
-          $tokens[$pre . $massager->processAttributeName($attr_name) . $post] = SafeMarkup::checkPlain($attr_value);
-          $tokens[$pre . $massager->processAttributeName($attr_name) . self::DELIMITER . '0' . $post] = SafeMarkup::checkPlain($attr_value);
-          $tokens[$pre . $massager->processAttributeName($attr_name) . self::DELIMITER . 'last' . $post] = SafeMarkup::checkPlain($attr_value);
-        }
-      }
-    }
-    else {
-      foreach ($token_keys as $full_token_key) {
-        // A token key is for example 'dn', 'mail:0', 'mail:last', or
-        // 'guid:0;tobase64'.
-        $value = NULL;
-
-        $conversion = FALSE;
-        $parts = explode(';', $full_token_key);
-        if (count($parts) == 2) {
-          $conversion = $parts[1];
-          $token_key = $parts[0];
-        }
-        else {
-          $token_key = $full_token_key;
-        }
-
-        $parts = explode(self::DELIMITER, $token_key);
-        $attr_name = mb_strtolower($parts[0]);
-        $ordinal_key = isset($parts[1]) ? $parts[1] : 0;
-        $i = NULL;
-
-        // don't use empty() since a 0, "", etc value may be a desired value.
-        if ($attr_name == 'dn' || !isset($ldap_entry[$attr_name])) {
-          continue;
-        }
-        else {
-          $count = $ldap_entry[$attr_name]['count'];
-          if ($ordinal_key === 'last') {
-            $i = ($count > 0) ? $count - 1 : 0;
-            $value = $ldap_entry[$attr_name][$i];
-          }
-          elseif (is_numeric($ordinal_key) || $ordinal_key == '0') {
-            $value = $ldap_entry[$attr_name][$ordinal_key];
-          }
-          else {
-            // don't add token if case not covered.
-            continue;
-          }
-        }
-
-        if ($conversion) {
-          switch ($conversion) {
-
-            case 'base64_encode':
-              $value = base64_encode($value);
-              break;
-
-            case 'bin2hex':
-              $value = bin2hex($value);
-              break;
-
-            case 'msguid':
-              $value = $this->convertMsguidToString($value);
-              break;
-
-            case 'binary':
-              $value = $this->binaryConversionToString($value);
-              break;
-          }
-        }
-
-        $tokens[$pre . $full_token_key . $post] = SafeMarkup::checkPlain($value);
-        if ($full_token_key != mb_strtolower($full_token_key)) {
-          $tokens[$pre . mb_strtolower($full_token_key) . $post] = SafeMarkup::checkPlain($value);
-        }
-      }
-    }
+    list($ldap_entry, $tokens) = $this->compileLdapTokenEntries($ldap_entry, $token_keys, $pre, $post);
 
     // Include the dn.  it will not be handled correctly by previous loops.
     $tokens[$pre . 'dn' . $post] = SafeMarkup::checkPlain($ldap_entry['dn']);
@@ -433,225 +180,15 @@ class TokenProcessor {
    *   'uid' => 17.
    */
   public function tokenizeUserAccount(UserInterface $account, array $token_keys = [], $pre = self::PREFIX, $post = self::SUFFIX) {
-
     if (empty($token_keys)) {
       $token_keys = $this->discoverUserAttributes($account);
     }
 
     $tokens = [];
-
     foreach ($token_keys as $token_key) {
-      $parts = explode('.', $token_key);
-      $attr_type = $parts[0];
-      $attr_name = $parts[1];
-      $attr_conversion = (isset($parts[2])) ? $parts[1] : 'none';
-      $value = FALSE;
-      $skip = FALSE;
-
-      switch ($attr_type) {
-        case 'field':
-        case 'property':
-          $value = '';
-          if (is_scalar($account->get($attr_name)->value)) {
-            $value = $account->get($attr_name)->value;
-          }
-          elseif (!empty($account->get($attr_name)->getValue())) {
-            $file_reference = $account->get($attr_name)->getValue();
-            if (isset($file_reference[0]['target_id'])) {
-              $file = file_load($file_reference[0]['target_id']);
-              if ($file) {
-                $value = file_get_contents(\Drupal::service('file_system')->realpath($file->getFileUri()));
-              }
-            }
-          }
-          break;
-
-        case 'password':
-
-          switch ($attr_name) {
-
-            case 'user':
-            case 'user-only':
-              $value = CredentialsStorage::getPassword();
-              break;
-
-            case 'user-random':
-              $pwd = CredentialsStorage::getPassword();
-              $value = ($pwd) ? $pwd : user_password();
-              break;
-
-            case 'random':
-              $value = user_password();
-              break;
-
-          }
-          if (empty($value)) {
-            $skip = TRUE;
-          }
-          break;
-      }
-
-      if (!$skip) {
-
-        switch ($attr_conversion) {
-
-          case 'none':
-            break;
-
-          case 'to-md5':
-            $value = md5($value);
-            break;
-
-          case 'to-lowercase':
-            $value = mb_strtolower($value);
-            break;
-        }
-
-        $tokens[$pre . $token_key . $post] = SafeMarkup::checkPlain($value)->__toString();
-        if ($token_key != mb_strtolower($token_key)) {
-          $tokens[$pre . mb_strtolower($token_key) . $post] = SafeMarkup::checkPlain($value)->__toString();
-        }
-      }
+      $tokens = array_merge($tokens, $this->fetchSingleToken($account, $pre, $post, $token_key));
     }
     return $tokens;
-  }
-
-  /**
-   * Find the tokens needed for the template.
-   *
-   * @param string $template
-   *   In the form of [cn]@myuniversity.edu.
-   *
-   * @return array
-   *   Array of all tokens in the template such as array('cn').
-   */
-  public function findTokensNeededForTemplate($template) {
-    preg_match_all('/
-    \[             # [ - pattern start
-    ([^\[\]]*)  # match $type not containing whitespace : [ or ]
-    \]             # ] - pattern end
-    /x', $template, $matches);
-
-    return @$matches[1];
-
-  }
-
-  /**
-   * Function to convert microsoft style guids to strings.
-   *
-   * @param string $value
-   *   Value to convert.
-   *
-   * @return string
-   *   Converted value.
-   */
-  public static function convertMsguidToString($value) {
-    $hex_string = bin2hex($value);
-    // (MS?) GUID are displayed with first three GUID parts as "big endian"
-    // Doing this so String value matches what other LDAP tool displays for AD.
-    $value = strtoupper(substr($hex_string, 6, 2) . substr($hex_string, 4, 2) .
-      substr($hex_string, 2, 2) . substr($hex_string, 0, 2) . '-' .
-      substr($hex_string, 10, 2) . substr($hex_string, 8, 2) . '-' .
-      substr($hex_string, 14, 2) . substr($hex_string, 12, 2) . '-' .
-      substr($hex_string, 16, 4) . '-' . substr($hex_string, 20, 12));
-
-    return $value;
-  }
-
-  /**
-   * General binary conversion function for GUID.
-   *
-   * Tries to determine which approach based on length of string.
-   *
-   * @param string $value
-   *   GUID.
-   *
-   * @return string
-   *   Encoded string.
-   */
-  public static function binaryConversionToString($value) {
-    if (strlen($value) == 16) {
-      $value = self::convertMsguidToString($value);
-    }
-    else {
-      $value = bin2hex($value);
-    }
-    return $value;
-  }
-
-  /**
-   * Converts an attribute by their format.
-   *
-   * @param string $value
-   *   Value to be converted.
-   * @param string $conversion
-   *   Conversion type such as base64_encode, bin2hex, msguid, md5.
-   *
-   * @return string
-   *   Converted string.
-   */
-  public static function convertAttribute($value, $conversion = NULL) {
-
-    if ($conversion) {
-      switch ($conversion) {
-        case 'base64_encode':
-          $value = base64_encode($value);
-          break;
-
-        case 'bin2hex':
-          $value = bin2hex($value);
-          break;
-
-        case 'msguid':
-          $value = self::convertMsguidToString($value);
-          break;
-
-        case 'binary':
-          $value = self::binaryConversionToString($value);
-          break;
-
-        case 'md5':
-          $value = '{md5}' . base64_encode(pack('H*', md5($value)));
-          break;
-      }
-    }
-    return $value;
-  }
-
-  /**
-   * Set an attribute map.
-   *
-   * @param array $attribute
-   *   For a given attribute in the form ['values' => [], 'data_type' => NULL]
-   *   as outlined in ldap_user/README.developers.txt.
-   * @param string $conversion
-   *   As type of conversion to do @see ldap_servers_convert_attribute(),
-   *   e.g. base64_encode, bin2hex, msguid, md5.
-   * @param array $values
-   *   In form [<ordinal> => <value> | NULL], where NULL indicates value is
-   *   needed for provisioning or other operations.
-   *
-   * @return array
-   *   Converted values. If nothing is passed in, create empty array in the
-   *   proper structure ['values' => [0 => 'john', 1 => 'johnny']].
-   */
-  public static function setAttributeMap(array $attribute = NULL, $conversion = NULL, array $values = NULL) {
-
-    $attribute = (is_array($attribute)) ? $attribute : [];
-    $attribute['conversion'] = $conversion;
-    if (!$values && (!isset($attribute['values']) || !is_array($attribute['values']))) {
-      $attribute['values'] = [0 => NULL];
-    }
-    // Merge into array overwriting ordinals.
-    elseif (is_array($values)) {
-      foreach ($values as $ordinal => $value) {
-        if ($conversion) {
-          $value = self::convertAttribute($value, $conversion);
-        }
-        $attribute['values'][(int) $ordinal] = $value;
-      }
-    }
-    return $attribute;
   }
 
   /**
@@ -681,6 +218,318 @@ class TokenProcessor {
     $token_keys[] = 'password.user-random';
     $token_keys[] = 'password.user-only';
     return $token_keys;
+  }
+
+  /**
+   * Fetch a single token.
+   *
+   * @param \Drupal\user\UserInterface $account
+   *   LDAP entry.
+   * @param string $pre
+   *   Preamble.
+   * @param string $post
+   *   Postamble.
+   * @param string $token
+   *   Token key.
+   *
+   * @return array
+   *   Tokens.
+   */
+  private function fetchSingleToken(UserInterface $account, $pre, $post, $token) {
+    // Trailing period to allow for empty value.
+    list($attribute_type, $attribute_name, $attribute_conversion) = explode('.', $token . '.');
+    $value = FALSE;
+    $tokens = [];
+
+    switch ($attribute_type) {
+      case 'field':
+      case 'property':
+        $value = $this->fetchRegularFieldToken($account, $attribute_name);
+        break;
+
+      case 'password':
+        $value = $this->fetchPasswordToken($attribute_name);
+        if (empty($value)) {
+          // Do not evaluate empty passwords, to avoid overwriting them.
+          return [NULL, NULL];
+        }
+        break;
+    }
+
+    if ($attribute_conversion == 'to-md5') {
+      $value = md5($value);
+    }
+    elseif ($attribute_conversion == 'to-lowercase') {
+      $value = mb_strtolower($value);
+    }
+
+    $tokens[$pre . $token . $post] = SafeMarkup::checkPlain($value)->__toString();
+    // We are redundantly setting the lowercase value here for consistency with
+    // parent function.
+    if ($token != mb_strtolower($token)) {
+      $tokens[$pre . mb_strtolower($token) . $post] = SafeMarkup::checkPlain($value);
+    }
+
+    return $tokens;
+  }
+
+  /**
+   * Fetch the password token.
+   *
+   * @param string $attribute_name
+   *   Field variant.
+   *
+   * @return string
+   *   Password.
+   */
+  private function fetchPasswordToken($attribute_name) {
+    $value = '';
+    switch ($attribute_name) {
+
+      case 'user':
+      case 'user-only':
+        $value = CredentialsStorage::getPassword();
+        break;
+
+      case 'user-random':
+        $pwd = CredentialsStorage::getPassword();
+        $value = ($pwd) ? $pwd : user_password();
+        break;
+
+      case 'random':
+        $value = user_password();
+        break;
+
+    }
+    return $value;
+  }
+
+  /**
+   * Fetch regular field token.
+   *
+   * @param \Drupal\user\UserInterface $account
+   *   User.
+   * @param string $attribute_name
+   *   Field name.
+   *
+   * @return string
+   *   Field data.
+   */
+  private function fetchRegularFieldToken(UserInterface $account, $attribute_name) {
+    $value = '';
+    if (is_scalar($account->get($attribute_name)->value)) {
+      $value = $account->get($attribute_name)->value;
+    }
+    elseif (!empty($account->get($attribute_name)->getValue())) {
+      $file_reference = $account->get($attribute_name)->getValue();
+      if (isset($file_reference[0]['target_id'])) {
+        $file = file_load($file_reference[0]['target_id']);
+        if ($file) {
+          $value = file_get_contents($this->fileSystem->realpath($file->getFileUri()));
+        }
+      }
+    }
+    return $value;
+  }
+
+  /**
+   * Compile LDAP token entries.
+   *
+   * @param array $ldap_entry
+   *   LDAP entry.
+   * @param array $token_keys
+   *   Token keys.
+   * @param string $pre
+   *   Preamble.
+   * @param string $post
+   *   Postamble.
+   *
+   * @return array
+   *   Tokens.
+   */
+  private function compileLdapTokenEntries(array $ldap_entry, array $token_keys, $pre, $post) {
+    $tokens = [];
+    // Add lowercase keyed entries to LDAP array.
+    foreach ($ldap_entry as $key => $values) {
+      $ldap_entry[mb_strtolower($key)] = $values;
+    }
+
+    $tokens = array_merge($tokens, $this->ldapTokenizationProcessDnParts($ldap_entry, $pre, $post));
+
+    if (empty($token_keys)) {
+      // Get all attributes.
+      $token_keys = array_keys($ldap_entry);
+      $token_keys = array_filter($token_keys, "is_string");
+      foreach ($token_keys as $attribute_name) {
+        $tokens = array_merge($tokens, $this->processSingleLdapEntryToken($ldap_entry, $pre, $post, $attribute_name));
+      }
+    }
+    else {
+      foreach ($token_keys as $full_token_key) {
+        $tokens = array_merge($tokens, $this->processSingleLdapTokenKey($ldap_entry, $pre, $post, $full_token_key));
+      }
+    }
+    return [$ldap_entry, $tokens];
+  }
+
+  /**
+   * Tokenization of DN parts.
+   *
+   * @param array $ldap_entry
+   *   LDAP entry.
+   * @param string $pre
+   *   Preamble.
+   * @param string $post
+   *   Postamble.
+   *
+   * @return array
+   *   Tokens.
+   */
+  private function ldapTokenizationProcessDnParts(array $ldap_entry, $pre, $post) {
+    $tokens = [];
+    // 1. tokenize dn
+    // escapes attribute values, need to be unescaped later.
+    $dn_parts = Server::ldapExplodeDn($ldap_entry['dn'], 0);
+    unset($dn_parts['count']);
+    $parts_count = [];
+    $parts_last_value = [];
+    foreach ($dn_parts as $pair) {
+      list($attribute_name, $attribute_value) = explode('=', $pair);
+      $attribute_value = ConversionHelper::unescapeDnValue($attribute_value);
+      try {
+        $attribute_value = SafeMarkup::checkPlain($attribute_value);
+      }
+      catch (\Exception $e) {
+        $this->detailLog->log('Skipped tokenization of attribute %attr_name because the value would not pass check_plain function.', [
+          '%attr_name' => $attribute_name,
+        ]);
+        // Don't tokenize data that can't pass check_plain.
+        continue;
+      }
+
+      if (!isset($parts_count[$attribute_name])) {
+        // First and general entry.
+        $tokens[$pre . mb_strtolower($attribute_name) . $post] = $attribute_value;
+        $parts_count[$attribute_name] = 0;
+      }
+      $tokens[$pre . mb_strtolower($attribute_name) . self::DELIMITER . (int) $parts_count[$attribute_name] . $post] = $attribute_value;
+
+      $parts_last_value[$attribute_name] = $attribute_value;
+      $parts_count[$attribute_name]++;
+    }
+
+    // Add DN parts in reverse order to reflect the hierarchy for CN, OU, DC.
+    foreach ($parts_count as $attribute_name => $count) {
+      $part = mb_strtolower($attribute_name);
+      for ($i = 0; $i < $count; $i++) {
+        $reversePosition = $count - $i - 1;
+        $tokens[$pre . $part . self::DELIMITER . 'reverse' . self::DELIMITER . $reversePosition . $post] = $tokens[$pre . $part . self::DELIMITER . $i . $post];
+      }
+    }
+
+    foreach ($parts_count as $attribute_name => $count) {
+      $tokens[$pre . mb_strtolower($attribute_name) . self::DELIMITER . 'last' . $post] = $parts_last_value[$attribute_name];
+    }
+    return $tokens;
+  }
+
+  /**
+   * Process a single ldap_entry token.
+   *
+   * @param array $ldap_entry
+   *   LDAP entry.
+   * @param string $pre
+   *   Preamble.
+   * @param string $post
+   *   Postamble.
+   * @param string $attribute_name
+   *   Actual data.
+   *
+   * @return array
+   *   Tokens.
+   */
+  private function processSingleLdapEntryToken(array $ldap_entry, $pre, $post, $attribute_name) {
+    $tokens = [];
+
+    $attribute_value = $ldap_entry[$attribute_name];
+    if (is_array($attribute_value) && is_scalar($attribute_value[0]) && $attribute_value['count'] == 1) {
+      // Only one entry, example output: ['cn', 'cn:0', 'cn:last'].
+      $tokens[$pre . mb_strtolower($attribute_name) . $post] = SafeMarkup::checkPlain($attribute_value[0]);
+      $tokens[$pre . mb_strtolower($attribute_name) . self::DELIMITER . '0' . $post] = SafeMarkup::checkPlain($attribute_value[0]);
+      $tokens[$pre . mb_strtolower($attribute_name) . self::DELIMITER . 'last' . $post] = SafeMarkup::checkPlain($attribute_value[0]);
+    }
+    elseif (is_array($attribute_value) && $attribute_value['count'] > 1) {
+      // Multiple entries, example: ['cn:last', 'cn:0', 'cn:1'].
+      $tokens[$pre . mb_strtolower($attribute_name) . self::DELIMITER . 'last' . $post] = SafeMarkup::checkPlain($attribute_value[$attribute_value['count'] - 1]);
+      for ($i = 0; $i < $attribute_value['count']; $i++) {
+        $tokens[$pre . mb_strtolower($attribute_name) . self::DELIMITER . $i . $post] = SafeMarkup::checkPlain($attribute_value[$i]);
+      }
+    }
+    elseif (is_scalar($attribute_value)) {
+      // Only one entry (as string), example output: ['cn', 'cn:0', 'cn:last'].
+      $tokens[$pre . mb_strtolower($attribute_name) . $post] = SafeMarkup::checkPlain($attribute_value);
+      $tokens[$pre . mb_strtolower($attribute_name) . self::DELIMITER . '0' . $post] = SafeMarkup::checkPlain($attribute_value);
+      $tokens[$pre . mb_strtolower($attribute_name) . self::DELIMITER . 'last' . $post] = SafeMarkup::checkPlain($attribute_value);
+    }
+    return $tokens;
+  }
+
+  /**
+   * Process a single LDAP Token key.
+   *
+   * @param array $ldap_entry
+   *   LDAP entry.
+   * @param string $pre
+   *   Preamble.
+   * @param string $post
+   *   Postamble.
+   * @param string $full_token_key
+   *   Actual data.
+   *
+   * @return array
+   *   Tokens.
+   */
+  private function processSingleLdapTokenKey(array $ldap_entry, $pre, $post, $full_token_key) {
+    $tokens = [];
+    // A token key is for example 'dn', 'mail:0', 'mail:last', or
+    // 'guid:0;tobase64'.
+    $value = NULL;
+
+    // Trailing period to allow for empty value.
+    list($token_key, $conversion) = explode(';', $full_token_key . ';');
+
+    $parts = explode(self::DELIMITER, $token_key);
+    $attribute_name = mb_strtolower($parts[0]);
+    $ordinal_key = isset($parts[1]) ? $parts[1] : 0;
+    $i = NULL;
+
+    // Don't use empty() since a 0, "", etc value may be a desired value.
+    if ($attribute_name == 'dn' || !isset($ldap_entry[$attribute_name])) {
+      return [];
+    }
+    else {
+      $count = $ldap_entry[$attribute_name]['count'];
+      if ($ordinal_key === 'last') {
+        $i = ($count > 0) ? $count - 1 : 0;
+        $value = $ldap_entry[$attribute_name][$i];
+      }
+      elseif (is_numeric($ordinal_key) || $ordinal_key == '0') {
+        $value = $ldap_entry[$attribute_name][$ordinal_key];
+      }
+      else {
+        // don't add token if case not covered.
+        return [];
+      }
+    }
+    $value = ConversionHelper::convertAttribute($value, $conversion);
+
+    $tokens[$pre . $full_token_key . $post] = SafeMarkup::checkPlain($value);
+    // We are redundantly setting the lowercase value here for consistency with
+    // parent function.
+    if ($full_token_key != mb_strtolower($full_token_key)) {
+      $tokens[$pre . mb_strtolower($full_token_key) . $post] = SafeMarkup::checkPlain($value);
+    }
+    return $tokens;
   }
 
 }

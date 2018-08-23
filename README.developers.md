@@ -56,7 +56,7 @@ A filter might be built as follows:
 ```php
 $massage = new MassageAttributes;
 $username = $massage->queryLdapAttributeValue($username);
-$objectclass = $massage->processAttributeName($item);
+$objectclass = mb_strtolower($item);
 $filter = "(&(cn=$username)(objectClass=$objectclass))";
 ```
 

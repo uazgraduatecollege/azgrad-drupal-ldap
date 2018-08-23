@@ -9,7 +9,7 @@ use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Url;
 use Drupal\ldap_query\Controller\QueryController;
-use Drupal\ldap_servers\Processor\TokenProcessor;
+use Drupal\ldap_servers\Helper\ConversionHelper;
 use Drupal\ldap_servers\ServerFactory;
 use Drupal\ldap_user\Helper\LdapConfiguration;
 use Drupal\ldap_servers\LdapUserAttributesInterface;
@@ -540,9 +540,9 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
     }
 
     // Make sure only one attribute column is present.
-    $tokenHelper = new TokenProcessor();
     foreach ($processedLdapSyncMappings as $key => $mapping) {
-      $maps = $tokenHelper->getTokenAttributes($mapping['ldap_attr']);
+      $maps = [];
+      ConversionHelper::extractTokenAttributes($maps, $mapping['ldap_attr']);
       if (count(array_keys($maps)) > 1) {
         // TODO: Move this check out of processed mappings to be able to set the
         // error by field.

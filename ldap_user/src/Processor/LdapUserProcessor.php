@@ -3,6 +3,7 @@
 namespace Drupal\ldap_user\Processor;
 
 use Drupal\ldap_servers\Entity\Server;
+use Drupal\ldap_servers\Helper\ConversionHelper;
 use Drupal\ldap_servers\Processor\TokenProcessor;
 use Drupal\ldap_user\Exception\LdapBadParamsException;
 use Drupal\ldap_user\Helper\LdapConfiguration;
@@ -30,11 +31,19 @@ class LdapUserProcessor implements LdapUserAttributesInterface {
   private $detailLog;
 
   /**
+   * Token processor.
+   *
+   * @var \Drupal\ldap_servers\Processor\TokenProcessor
+   */
+  protected $tokenProcessor;
+
+  /**
    * Constructor.
    */
   public function __construct() {
     $this->config = \Drupal::config('ldap_user.settings')->get();
     $this->detailLog = \Drupal::service('ldap.detail_log');
+    $this->tokenProcessor = \Drupal::service('ldap.token_processor');
   }
 
   /**
@@ -196,12 +205,11 @@ class LdapUserProcessor implements LdapUserAttributesInterface {
     $direction = isset($params['direction']) ? $params['direction'] : self::PROVISION_TO_ALL;
     $prov_events = empty($params['prov_events']) ? LdapConfiguration::getAllEvents() : $params['prov_events'];
 
-    $tokenHelper = new TokenProcessor();
     $syncMapper = new SyncMappingHelper();
     $mappings = $syncMapper->getSyncMappings($direction, $prov_events);
     // Loop over the mappings.
     foreach ($mappings as $field_key => $field_detail) {
-      list($ldapAttributeName, $ordinal, $conversion) = $tokenHelper->extractTokenParts($field_key);
+      list($ldapAttributeName, $ordinal, $conversion) = $this->extractTokenParts($field_key);
       $ordinal = (!$ordinal) ? 0 : $ordinal;
       if ($ldapUserEntry && isset($ldapUserEntry[$ldapAttributeName]) && is_array($ldapUserEntry[$ldapAttributeName]) && isset($ldapUserEntry[$ldapAttributeName][$ordinal])) {
         // Don't override values passed in.
@@ -211,7 +219,7 @@ class LdapUserProcessor implements LdapUserAttributesInterface {
       $synced = $syncMapper->isSynced($field_key, $params['prov_events'], self::PROVISION_TO_LDAP);
       if ($synced) {
         $token = ($field_detail['user_attr'] == 'user_tokens') ? $field_detail['user_tokens'] : $field_detail['user_attr'];
-        $value = $tokenHelper->tokenReplace($account, $token, 'user_account');
+        $value = $this->tokenProcessor->tokenReplace($account, $token, 'user_account');
 
         // Deal with empty/unresolved password.
         if (substr($token, 0, 10) == '[password.' && (!$value || $value == $token)) {
@@ -240,6 +248,33 @@ class LdapUserProcessor implements LdapUserAttributesInterface {
     \Drupal::moduleHandler()->alter('ldap_entry', $ldapUserEntry, $params);
 
     return $ldapUserEntry;
+  }
+
+  /**
+   * Extract parts of token.
+   *
+   * @param string $token
+   *   Token or token expression with singular token in it, eg. [dn],
+   *   [dn;binary], [titles:0;binary] [cn]@mycompany.com.
+   *
+   * @return array
+   *   Array triplet containing [<attr_name>, <ordinal>, <conversion>].
+   */
+  private function extractTokenParts($token) {
+    $attributes = [];
+    ConversionHelper::extractTokenAttributes($attributes, $token);
+    if (is_array($attributes)) {
+      $keys = array_keys($attributes);
+      $attr_name = $keys[0];
+      $attr_data = $attributes[$attr_name];
+      $ordinals = array_keys($attr_data['values']);
+      $ordinal = $ordinals[0];
+      return [$attr_name, $ordinal, $attr_data['conversion']];
+    }
+    else {
+      return [NULL, NULL, NULL];
+    }
+
   }
 
   /**

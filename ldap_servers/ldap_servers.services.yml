@@ -8,3 +8,6 @@ services:
   ldap.detail_log:
     class: Drupal\ldap_servers\Logger\LdapDetailLog
     arguments: ['@logger.factory', '@config.factory']
+  ldap.token_processor:
+    class: Drupal\ldap_servers\Processor\TokenProcessor
+    arguments: [ '@ldap.detail_log', '@file_system']

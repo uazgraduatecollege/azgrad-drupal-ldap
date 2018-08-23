@@ -10,7 +10,6 @@ use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\ldap_authentication\Helper\LdapAuthenticationConfiguration;
 use Drupal\ldap_servers\Entity\Server;
 use Drupal\ldap_servers\Helper\CredentialsStorage;
-use Drupal\ldap_servers\Helper\MassageAttributes;
 use Drupal\ldap_servers\Logger\LdapDetailLog;
 use Drupal\ldap_user\Helper\ExternalAuthenticationHelper;
 use Drupal\ldap_user\Helper\LdapConfiguration;
@@ -831,8 +830,7 @@ final class LoginValidator implements LdapUserAttributesInterface {
   private function deriveDrupalUserName() {
     // If account_name_attr is set, Drupal username is different than authName.
     if (!empty($this->serverDrupalUser->get('account_name_attr'))) {
-      $massager = new MassageAttributes();
-      $processedName = $massager->processAttributeName($this->serverDrupalUser->get('account_name_attr'));
+      $processedName = mb_strtolower($this->serverDrupalUser->get('account_name_attr'));
       $userNameFromAttribute = $this->ldapUser['attr'][$processedName][0];
       if (!$userNameFromAttribute) {
         $this->logger

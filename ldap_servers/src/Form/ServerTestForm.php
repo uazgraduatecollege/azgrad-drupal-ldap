@@ -40,6 +40,7 @@ class ServerTestForm extends EntityForm {
 
   protected $config;
   protected $moduleHandler;
+  protected $tokenProcessor;
 
   /**
    * {@inheritdoc}
@@ -51,9 +52,10 @@ class ServerTestForm extends EntityForm {
   /**
    * Class constructor.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, ModuleHandler $module_handler) {
+  public function __construct(ConfigFactoryInterface $config_factory, ModuleHandler $module_handler, TokenProcessor $token_processor) {
     $this->config = $config_factory;
     $this->moduleHandler = $module_handler;
+    $this->tokenProcessor = $token_processor;
   }
 
   /**
@@ -62,7 +64,8 @@ class ServerTestForm extends EntityForm {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('config.factory'),
-      $container->get('module_handler')
+      $container->get('module_handler'),
+      $container->get('ldap.token_processor')
     );
   }
 
@@ -257,8 +260,12 @@ class ServerTestForm extends EntityForm {
     }
 
     $ldap_user = $this->testUserMapping($values['testing_drupal_username']);
-    $tokenHelper = new TokenProcessor();
-    $tokens = ($ldap_user && isset($ldap_user['attr'])) ? $tokenHelper->tokenizeEntry($ldap_user['attr'], 'all', TokenProcessor::PREFIX, TokenProcessor::SUFFIX) : [];
+    if ($ldap_user && isset($ldap_user['attr'])) {
+      $tokens = $this->tokenProcessor->tokenizeLdapEntry($ldap_user['attr'], [], TokenProcessor::PREFIX, TokenProcessor::SUFFIX);
+    }
+    else {
+      $tokens = [];
+    }
     foreach ($tokens as $key => $value) {
       $this->resultsTables['tokens'][] = [$key, $this->binaryCheck($value)];
     }

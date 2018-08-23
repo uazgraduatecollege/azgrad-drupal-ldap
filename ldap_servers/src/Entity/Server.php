@@ -78,12 +78,20 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
    * @var \Psr\Log\LoggerInterface
    */
   protected $logger;
+
   /**
    * LDAP Details logger.
    *
-   * @var Drupal\ldap_servers\Logger\LdapDetailLog
+   * @var \Drupal\ldap_servers\Logger\LdapDetailLog
    */
-  private $detailLog;
+  protected $detailLog;
+
+  /**
+   * Token processor.
+   *
+   * @var \Drupal\ldap_servers\Processor\TokenProcessor
+   */
+  protected $tokenProcessor;
 
   /**
    * Where the paged search starts.
@@ -110,6 +118,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
     parent::__construct($values, $entity_type);
     $this->logger = \Drupal::logger('ldap_servers');
     $this->detailLog = \Drupal::service('ldap.detail_log');
+    $this->tokenProcessor = \Drupal::service('ldap.token_processor');
   }
 
   /**
@@ -1044,8 +1053,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
     }
     // Template is of form [cn]@illinois.edu.
     elseif ($ldapEntry && $this->get('mail_template')) {
-      $tokenHelper = new TokenProcessor();
-      return $tokenHelper->tokenReplace($ldapEntry, $this->get('mail_template'), 'ldap_entry');
+      return $this->tokenProcessor->tokenReplace($ldapEntry, $this->get('mail_template'), 'ldap_entry');
     }
     else {
       return FALSE;
@@ -1069,7 +1077,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
       if (is_array($puid)) {
         $puid = $puid[0];
       }
-      return ($this->get('unique_persistent_attr_binary')) ? TokenProcessor::binaryConversionToString($puid) : $puid;
+      return ($this->get('unique_persistent_attr_binary')) ? ConversionHelper::binaryConversionToString($puid) : $puid;
     }
     else {
       return FALSE;

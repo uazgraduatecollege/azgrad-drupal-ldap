@@ -5,6 +5,7 @@ namespace Drupal\ldap_user\Processor;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\file\Entity\File;
 use Drupal\ldap_servers\Entity\Server;
+use Drupal\ldap_servers\Helper\ConversionHelper;
 use Drupal\ldap_servers\Processor\TokenProcessor;
 use Drupal\ldap_user\Helper\ExternalAuthenticationHelper;
 use Drupal\ldap_servers\LdapUserAttributesInterface;
@@ -50,12 +51,20 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
   private $detailLog;
 
   /**
+   * Token processor.
+   *
+   * @var \Drupal\ldap_servers\Processor\TokenProcessor
+   */
+  protected $tokenProcessor;
+
+  /**
    * Constructor.
    */
   public function __construct() {
     $this->config = \Drupal::config('ldap_user.settings');
     $this->factory = \Drupal::service('ldap.servers');
     $this->detailLog = \Drupal::service('ldap.detail_log');
+    $this->tokenProcessor = \Drupal::service('ldap.token_processor');
   }
 
   /**
@@ -222,7 +231,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
           $attributes['dn'] = [];
         }
         // Force dn "attribute" to exist.
-        $attributes['dn'] = TokenProcessor::setAttributeMap($attributes['dn']);
+        $attributes['dn'] = ConversionHelper::setAttributeMap($attributes['dn']);
         // Add the attributes required by the user configuration when
         // provisioning Drupal users.
         switch ($params['ldap_context']) {
@@ -230,20 +239,19 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
           case 'ldap_user_update_drupal_user':
           case 'ldap_user_ldap_associate':
             if ($ldapServer->get('user_attr')) {
-              $attributes[$ldapServer->get('user_attr')] = TokenProcessor::setAttributeMap(@$attributes[$ldapServer->get('user_attr')]);
+              $attributes[$ldapServer->get('user_attr')] = ConversionHelper::setAttributeMap(@$attributes[$ldapServer->get('user_attr')]);
             }
             if ($ldapServer->get('mail_attr')) {
-              $attributes[$ldapServer->get('mail_attr')] = TokenProcessor::setAttributeMap(@$attributes[$ldapServer->get('mail_attr')]);
+              $attributes[$ldapServer->get('mail_attr')] = ConversionHelper::setAttributeMap(@$attributes[$ldapServer->get('mail_attr')]);
             }
             if ($ldapServer->get('picture_attr')) {
-              $attributes[$ldapServer->get('picture_attr')] = TokenProcessor::setAttributeMap(@$attributes[$ldapServer->get('picture_attr')]);
+              $attributes[$ldapServer->get('picture_attr')] = ConversionHelper::setAttributeMap(@$attributes[$ldapServer->get('picture_attr')]);
             }
             if ($ldapServer->get('unique_persistent_attr')) {
-              $attributes[$ldapServer->get('unique_persistent_attr')] = TokenProcessor::setAttributeMap(@$attributes[$ldapServer->get('unique_persistent_attr')]);
+              $attributes[$ldapServer->get('unique_persistent_attr')] = ConversionHelper::setAttributeMap(@$attributes[$ldapServer->get('unique_persistent_attr')]);
             }
             if ($ldapServer->get('mail_template')) {
-              $tokens = new TokenProcessor();
-              $tokens->extractTokenAttributes($attributes, $ldapServer->get('mail_template'));
+              ConversionHelper::extractTokenAttributes($attributes, $ldapServer->get('mail_template'));
             }
             break;
         }
@@ -1146,17 +1154,44 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
         if ($fieldDetails['convert'] && strpos($fieldDetails['ldap_attr'], ';') === FALSE) {
           $fieldDetails['ldap_attr'] = str_replace(']', ';binary]', $fieldDetails['ldap_attr']);
         }
-        $tokenHelper = new TokenProcessor();
-        $value = $tokenHelper->tokenReplace($ldapUser['attr'], $fieldDetails['ldap_attr'], 'ldap_entry');
+        $value = $this->tokenProcessor->tokenReplace($ldapUser['attr'], $fieldDetails['ldap_attr'], 'ldap_entry');
         // The ordinal $value_instance is not used and could probably be
         // removed.
-        list($value_type, $value_name, $value_instance) = $tokenHelper->parseUserAttributeNames($key);
+        list($value_type, $value_name, $value_instance) = $this->parseUserAttributeNames($key);
 
         if ($value_type == 'field' || $value_type == 'property') {
           $this->account->set($value_name, $value);
         }
       }
     }
+  }
+
+  /**
+   * Parse user attribute names.
+   *
+   * @param string $user_attr_key
+   *   A string in the form of <attr_type>.<attr_name>[:<instance>] such as
+   *   field.lname, property.mail, field.aliases:2.
+   *
+   * @return array
+   *   An array such as array('field','field_user_lname', NULL).
+   */
+  private function parseUserAttributeNames($user_attr_key) {
+    // Make sure no [] are on attribute.
+    $user_attr_key = trim($user_attr_key, TokenProcessor::PREFIX . TokenProcessor::SUFFIX);
+    $parts = explode('.', $user_attr_key);
+    $attr_type = $parts[0];
+    $attr_name = (isset($parts[1])) ? $parts[1] : FALSE;
+    $attr_ordinal = FALSE;
+
+    if ($attr_name) {
+      $attr_name_parts = explode(':', $attr_name);
+      if (isset($attr_name_parts[1])) {
+        $attr_name = $attr_name_parts[0];
+        $attr_ordinal = $attr_name_parts[1];
+      }
+    }
+    return [$attr_type, $attr_name, $attr_ordinal];
   }
 
 }

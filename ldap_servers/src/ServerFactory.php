@@ -9,7 +9,7 @@ use Drupal\Core\Link;
 use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
-use Drupal\ldap_servers\Processor\TokenProcessor;
+use Drupal\ldap_servers\Helper\ConversionHelper;
 use Drupal\ldap_user\Helper\ExternalAuthenticationHelper;
 use Drupal\ldap_user\Helper\LdapConfiguration;
 use Drupal\user\UserInterface;
@@ -217,9 +217,8 @@ class ServerFactory implements LdapUserAttributesInterface {
    *   Altered attributes.
    */
   public function alterLdapAttributes(array &$attributes, array $params) {
-    $token_helper = new TokenProcessor();
     // Force this data type.
-    $attributes['dn'] = TokenProcessor::setAttributeMap(@$attributes['dn'], 'ldap_dn');
+    $attributes['dn'] = ConversionHelper::setAttributeMap(@$attributes['dn'], 'ldap_dn');
 
     // Puid attributes are server specific.
     if (isset($params['sid']) && $params['sid']) {
@@ -231,22 +230,22 @@ class ServerFactory implements LdapUserAttributesInterface {
           // mail_template, and user_dn_expression are needed for all
           // functionality.
           if (!isset($attributes[$ldap_server->get('mail_attr')])) {
-            $attributes[$ldap_server->get('mail_attr')] = TokenProcessor::setAttributeMap();
+            $attributes[$ldap_server->get('mail_attr')] = ConversionHelper::setAttributeMap();
           }
           if ($ldap_server->get('picture_attr') && !isset($attributes[$ldap_server->get('picture_attr')])) {
-            $attributes[$ldap_server->get('picture_attr')] = TokenProcessor::setAttributeMap();
+            $attributes[$ldap_server->get('picture_attr')] = ConversionHelper::setAttributeMap();
           }
           if ($ldap_server->get('unique_persistent_attr') && !isset($attributes[$ldap_server->get('unique_persistent_attr')])) {
-            $attributes[$ldap_server->get('unique_persistent_attr')] = TokenProcessor::setAttributeMap();
+            $attributes[$ldap_server->get('unique_persistent_attr')] = ConversionHelper::setAttributeMap();
           }
           if ($ldap_server->get('user_dn_expression')) {
-            $token_helper->extractTokenAttributes($attributes, $ldap_server->get('user_dn_expression'));
+            ConversionHelper::extractTokenAttributes($attributes, $ldap_server->get('user_dn_expression'));
           }
           if ($ldap_server->get('mail_template')) {
-            $token_helper->extractTokenAttributes($attributes, $ldap_server->get('mail_template'));
+            ConversionHelper::extractTokenAttributes($attributes, $ldap_server->get('mail_template'));
           }
           if (!isset($attributes[$ldap_server->get('user_attr')])) {
-            $attributes[$ldap_server->get('user_attr')] = TokenProcessor::setAttributeMap();
+            $attributes[$ldap_server->get('user_attr')] = ConversionHelper::setAttributeMap();
           }
         }
       }

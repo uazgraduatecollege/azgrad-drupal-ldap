@@ -15,7 +15,12 @@ class IntegrationTests extends KernelTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = ['authorization', 'ldap_servers', 'ldap_user', 'user'];
+  public static $modules = [
+    'authorization',
+    'ldap_servers',
+    'ldap_user',
+    'user',
+  ];
 
   private $configFactory;
 

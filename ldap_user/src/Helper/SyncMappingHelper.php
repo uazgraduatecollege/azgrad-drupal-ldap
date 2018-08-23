@@ -3,7 +3,7 @@
 namespace Drupal\ldap_user\Helper;
 
 use Drupal\ldap_servers\Entity\Server;
-use Drupal\ldap_servers\Processor\TokenProcessor;
+use Drupal\ldap_servers\Helper\ConversionHelper;
 use Drupal\ldap_servers\LdapUserAttributesInterface;
 
 /**
@@ -235,8 +235,7 @@ class SyncMappingHelper implements LdapUserAttributesInterface {
         if (count(array_intersect($prov_events, $detail['prov_events']))) {
           // Add the attribute to our array.
           if ($detail['ldap_attr']) {
-            $tokenProcessor = new TokenProcessor();
-            $tokenProcessor->extractTokenAttributes($required_attributes, $detail['ldap_attr']);
+            ConversionHelper::extractTokenAttributes($required_attributes, $detail['ldap_attr']);
           }
         }
       }

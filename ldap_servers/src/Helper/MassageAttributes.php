@@ -42,33 +42,4 @@ class MassageAttributes {
     return $value;
   }
 
-  /**
-   * Prepare attribute names for usage in Drupal.
-   *
-   * Use unescaped, lower case attribute names when storing attribute names in
-   * arrays (as keys or values), databases, or object properties.
-   *
-   * @param string|array $value
-   *   Attribute to process.
-   *
-   * @return array|string
-   *   Cleaned up element(s).
-   */
-  public function processAttributeName($value) {
-    $scalar = is_scalar($value);
-    if ($scalar) {
-      $value = mb_strtolower($value);
-    }
-    elseif (is_array($value)) {
-      foreach ($value as $i => $val) {
-        $value[$i] = mb_strtolower($val);
-      }
-    }
-    else {
-      // Neither scalar nor array $value.
-    }
-
-    return $value;
-  }
-
 }
