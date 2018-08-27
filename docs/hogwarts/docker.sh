@@ -8,11 +8,11 @@ DOCKER_PORT=9389
 DOCKER_NAME=hogwarts_ldap
 DOCKER_IP=127.0.0.1
 
-read -p "Bind METHOD ([service_account], anon_user): " METHOD
+read -p "Bind method ([service_account], user, anon_user): " METHOD
 METHOD=${METHOD:-service_account}
 
 echo "Stopping all LDAP docker instances"
-array=( service_account anon_user )
+array=( service_account user anon_user )
 for i in "${array[@]}"
 do
     CID_SERVICE=`docker ps --filter "name=${DOCKER_NAME}.${i}" --format "{{.ID}}"`
@@ -42,14 +42,26 @@ docker cp $LDIF_FILE $LDAP_CID:/$LDIF_FILE
 docker cp grants.${METHOD}.ldif $LDAP_CID:/grants.ldif
 
 sleep 3
-echo "Importing LDIF"
+echo "Importing user and group structure"
+# The admin user is provided by the docker container.
 ldapadd -h $DOCKER_IP -p $DOCKER_PORT -x -D "cn=admin,$LDAP_DN" -w admin -f $LDIF_FILE
 
-echo IP $DOCKER_IP
-echo PORT $DOCKER_PORT
-echo ID $LDAP_CID
-
+echo "Adding permissions for chosen binding method"
 docker exec -it $LDAP_CID ldapmodify -Y EXTERNAL -H ldapi:/// -f /grants.ldif
 
-echo "Searching LDAP (user credentials)"
-ldapsearch -x -h $DOCKER_IP -p $DOCKER_PORT -b $LDAP_DN -D "cn=hpotter,ou=people,$LDAP_DN" -w pass dn
+echo "==================="
+echo "Querying directory:"
+echo "==================="
+if [ "$METHOD" == "service_account" ]
+    then
+    echo "Searching LDAP (service account credentials)"
+    ldapsearch -x -h $DOCKER_IP -p $DOCKER_PORT -b $LDAP_DN -D "cn=admin,$LDAP_DN" -w admin "(cn=hgranger)" dn
+elif [ "$METHOD" == "user" ]
+    then
+    echo "Searching LDAP (user credentials)"
+    ldapsearch -x -h $DOCKER_IP -p $DOCKER_PORT -b $LDAP_DN -D "cn=hpotter,ou=people,$LDAP_DN" -w pass "(cn=hgranger)" dn
+elif [ "$METHOD" == "anon_user" ]
+    then
+    echo "Searching LDAP (user credentials)"
+    ldapsearch -x -h $DOCKER_IP -p $DOCKER_PORT -b $LDAP_DN "(cn=hgranger)" dn
+fi
