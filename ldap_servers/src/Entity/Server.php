@@ -94,6 +94,13 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
   protected $tokenProcessor;
 
   /**
+   * Module handler.
+   *
+   * @var \Drupal\Core\Extension\ModuleHandler
+   */
+  protected $moduleHandler;
+
+  /**
    * Where the paged search starts.
    *
    * @var int
@@ -119,6 +126,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
     $this->logger = \Drupal::logger('ldap_servers');
     $this->detailLog = \Drupal::service('ldap.detail_log');
     $this->tokenProcessor = \Drupal::service('ldap.token_processor');
+    $this->moduleHandler = \Drupal::service('module_handler');
   }
 
   /**
@@ -332,22 +340,17 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
   }
 
   /**
-   * Does dn exist for this server?
+   * Does dn exist for this server and what is its data?
    *
    * @param string $dn
    *   DN to search for.
-   * @param string $return
-   *   Parameter with value 'boolean' or 'ldap_entry'.
    * @param array $attributes
    *   In same form as ldap_read $attributes parameter.
    *
    * @return bool|array
-   *   Return FALSE or LDAP entry array.
-   *
-   * @TODO: Handle case (in)sensitivity cleanly.
+   *   Return ldap entry or false.
    */
-  public function dnExists($dn, $return = 'boolean', array $attributes = NULL) {
-
+  public function checkDnExistsIncludeData($dn, array $attributes) {
     $params = [
       'base_dn' => $dn,
       'attributes' => $attributes,
@@ -358,23 +361,44 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
       'deref' => NULL,
     ];
 
-    if ($return == 'boolean' || !is_array($attributes)) {
-      $params['attributes'] = ['objectclass'];
+    $result = $this->ldapQuery(Server::SCOPE_BASE, $params);
+    if ($result !== FALSE) {
+      $entries = @ldap_get_entries($this->connection, $result);
+      if ($entries !== FALSE && $entries['count'] > 0) {
+        return $entries[0];
+      }
     }
-    else {
-      $params['attributes'] = $attributes;
-    }
+    return FALSE;
+  }
+
+  /**
+   * Does dn exist for this server?
+   *
+   * @param string $dn
+   *   DN to search for.
+   *
+   * @return bool
+   *   DN exists.
+   */
+  public function checkDnExists($dn) {
+    $params = [
+      'base_dn' => $dn,
+      'attributes' => ['objectclass'],
+      'attrsonly' => FALSE,
+      'filter' => '(objectclass=*)',
+      'sizelimit' => 0,
+      'timelimit' => 0,
+      'deref' => NULL,
+    ];
 
     $result = $this->ldapQuery(Server::SCOPE_BASE, $params);
     if ($result !== FALSE) {
       $entries = @ldap_get_entries($this->connection, $result);
       if ($entries !== FALSE && $entries['count'] > 0) {
-        return ($return == 'boolean') ? TRUE : $entries[0];
+        return TRUE;
       }
     }
-
     return FALSE;
-
   }
 
   /**
@@ -1094,6 +1118,8 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
    *
    * @return array|bool
    *   User's LDAP entry.
+   *
+   * @deprecated
    */
   public function userUserToExistingLdapEntry($user) {
     $userLdapEntry = FALSE;
@@ -1110,7 +1136,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
         $userLdapEntry = $this->matchUsernameToExistingLdapEntry($user);
       }
       else {
-        $userLdapEntry = $this->dnExists($user, 'ldap_entry');
+        $userLdapEntry = $this->checkDnExistsIncludeData($user, ['objectclass']);
       }
     }
     return $userLdapEntry;
@@ -1119,7 +1145,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
   /**
    * Queries LDAP server for the user.
    *
-   * @param string $drupaUsername
+   * @param string $drupalUsername
    *   Drupal user name.
    *
    * @return array|bool
@@ -1130,7 +1156,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
    *   'attr' => single LDAP entry array in form returned from ldap_search()
    *   'dn' => dn of entry
    */
-  public function matchUsernameToExistingLdapEntry($drupaUsername) {
+  public function matchUsernameToExistingLdapEntry($drupalUsername) {
 
     foreach ($this->getBaseDn() as $baseDn) {
 
@@ -1139,7 +1165,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
       }
 
       $massager = new MassageAttributes();
-      $filter = '(' . $this->get('user_attr') . '=' . $massager->queryLdapAttributeValue($drupaUsername) . ')';
+      $filter = '(' . $this->get('user_attr') . '=' . $massager->queryLdapAttributeValue($drupalUsername) . ')';
 
       $result = $this->search($baseDn, $filter);
       if (!$result || !isset($result['count']) || !$result['count']) {
@@ -1187,7 +1213,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
       // considered OK by LDAP but are no good for us. Some setups have multiple
       // $nameAttribute per entry, so we loop through all possible options.
       foreach ($match[$nameAttribute] as $value) {
-        if (mb_strtolower(trim($value)) == mb_strtolower($drupaUsername)) {
+        if (mb_strtolower(trim($value)) == mb_strtolower($drupalUsername)) {
           $result = [
             'dn' => $match['dn'],
             'mail' => $this->userEmailFromLdapEntry($match),
@@ -1207,18 +1233,12 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
    *   Group DN in mixed case.
    * @param mixed $user
    *   A Drupal user entity, an LDAP entry array of a user  or a username.
-   * @param bool $nested
-   *   TRUE, or FALSE indicating to test for nested groups, by default set
-   *   to NULL.
    *
    * @return bool
    *   Whether the user belongs to the group.
    */
-  public function groupIsMember($groupDn, $user, $nested = NULL) {
-    if (is_null($nested)) {
-      $nested = $this->groupNested();
-    }
-    $groupDns = $this->groupMembershipsFromUser($user, $nested);
+  public function groupIsMember($groupDn, $user) {
+    $groupDns = $this->groupMembershipsFromUser($user);
     // While list of group dns is going to be in correct mixed case, $group_dn
     // may not since it may be derived from user entered values so make sure
     // in_array() is case insensitive.
@@ -1233,47 +1253,48 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
   /**
    * Recurse through all child groups and add members.
    *
-   * @param array $currentMemberEntries
+   * @param array $group_dn_entries
    *   Entries of LDAP group entries that are starting point. Should include at
-   *   least 1 entry.
-   * @param array $allMemberDns
+   *   least 1 entry and must include 'objectclass'.
+   * @param array $all_member_dns
    *   All member DN as an array of all groups the user is a member of. Mixed
    *   case values.
-   * @param array $testedGroupIds
+   * @param array $tested_group_dns
    *   Tested group IDs as an array array of tested group dn, cn, uid, etc.
    *   Mixed case values. Whether these value are dn, cn, uid, etc depends on
    *   what attribute members, uniquemember, memberUid contains whatever
    *   attribute is in $this->$tested_group_ids to avoid redundant recursion.
    * @param int $level
    *   Current level of recursion.
-   * @param int $maxLevels
+   * @param int $max_levels
    *   Maximum number of recursion levels allowed.
-   * @param bool|array $objectClasses
-   *   Undocumented.
+   * @param bool|array $object_classes
+   *   You can set the object class evaluated for recursion here, otherwise
+   *   derived from group configuration.
    *
    * @return bool
    *   If operation was successful.
    */
-  public function groupMembersRecursive(array $currentMemberEntries, array &$allMemberDns, array &$testedGroupIds, $level, $maxLevels, $objectClasses = FALSE) {
+  public function groupMembersRecursive(array $group_dn_entries, array &$all_member_dns, array $tested_group_dns, $level, $max_levels, $object_classes = FALSE) {
 
-    if (!$this->groupGroupEntryMembershipsConfigured() || !is_array($currentMemberEntries) || count($currentMemberEntries) == 0) {
+    if (!$this->groupGroupEntryMembershipsConfigured() || !is_array($group_dn_entries)) {
       return FALSE;
     }
-    if (isset($currentMemberEntries['count'])) {
-      unset($currentMemberEntries['count']);
+    if (isset($group_dn_entries['count'])) {
+      unset($group_dn_entries['count']);
     }
 
-    foreach ($currentMemberEntries as $member_entry) {
+    foreach ($group_dn_entries as $member_entry) {
       // 1.  Add entry itself if of the correct type to $all_member_dns.
-      $objectClassMatch = (!$objectClasses || (count(array_intersect(array_values($member_entry['objectclass']), $objectClasses)) > 0));
-      $objectIsGroup = in_array($this->groupObjectClass(), array_values($member_entry['objectclass']));
+      $object_class_match = (!$object_classes || (count(array_intersect(array_values($member_entry['objectclass']), $object_classes)) > 0));
+      $object_is_group = in_array($this->groupObjectClass(), array_map('strtolower', array_values($member_entry['objectclass'])));
       // Add member.
-      if ($objectClassMatch && !in_array($member_entry['dn'], $allMemberDns)) {
-        $allMemberDns[] = $member_entry['dn'];
+      if ($object_class_match && !in_array($member_entry['dn'], $all_member_dns)) {
+        $all_member_dns[] = $member_entry['dn'];
       }
 
       // 2. If its a group, keep recurse the group for descendants.
-      if ($objectIsGroup && $level < $maxLevels) {
+      if ($object_is_group && $level < $max_levels) {
         if ($this->groupMembershipsAttrMatchingUserAttr() == 'dn') {
           $group_id = $member_entry['dn'];
         }
@@ -1281,44 +1302,34 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
           $group_id = $member_entry[$this->groupMembershipsAttrMatchingUserAttr()][0];
         }
         // 3. skip any groups that have already been tested.
-        if (!in_array($group_id, $testedGroupIds)) {
-          $testedGroupIds[] = $group_id;
+        if (!in_array($group_id, $tested_group_dns)) {
+          $tested_group_dns[] = $group_id;
           $member_ids = $member_entry[$this->groupMembershipsAttr()];
           if (isset($member_ids['count'])) {
             unset($member_ids['count']);
           }
-          $ors = [];
-          foreach ($member_ids as $member_id) {
-            // @todo this would be replaced by query template
-            $ors[] = $this->groupMembershipsAttr() . '=' . self::ldapEscape($member_id);
-          }
 
-          if (count($ors)) {
+          if (count($member_ids)) {
             // Example 1: (|(cn=group1)(cn=group2))
             // Example 2: (|(dn=cn=group1,ou=blah...)(dn=cn=group2,ou=blah...))
-            $query_for_child_members = '(|(' . implode(")(", $ors) . '))';
+            $query_for_child_members = '(|(' . implode(")(", $member_ids) . '))';
             // Add or on object classes, otherwise get all object classes.
-            if (count($objectClasses)) {
+            if ($object_classes && count($object_classes)) {
               $object_classes_ors = ['(objectClass=' . $this->groupObjectClass() . ')'];
-              foreach ($objectClasses as $object_class) {
+              foreach ($object_classes as $object_class) {
                 $object_classes_ors[] = '(objectClass=' . $object_class . ')';
               }
               $query_for_child_members = '&(|' . implode($object_classes_ors) . ')(' . $query_for_child_members . ')';
             }
-            // Need to search on all basedns one at a time.
-            foreach ($this->getBaseDn() as $base_dn) {
-              $child_member_entries = $this->search(
-                $base_dn,
-                $query_for_child_members,
-                [
-                  'objectclass',
-                  $this->groupMembershipsAttr(),
-                  $this->groupMembershipsAttrMatchingUserAttr(),
-                ]
-              );
-              if ($child_member_entries !== FALSE) {
-                $this->groupMembersRecursive($child_member_entries, $allMemberDns, $testedGroupIds, $level + 1, $maxLevels, $objectClasses);
-              }
+
+            $return_attributes = [
+              'objectclass',
+              $this->groupMembershipsAttr(),
+              $this->groupMembershipsAttrMatchingUserAttr(),
+            ];
+            $child_member_entries = $this->searchAllBaseDns($query_for_child_members, $return_attributes);
+            if ($child_member_entries !== FALSE) {
+              $this->groupMembersRecursive($child_member_entries, $all_member_dns, $tested_group_dns, $level + 1, $max_levels, $object_classes);
             }
           }
         }
@@ -1329,40 +1340,36 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
   /**
    * Get list of all groups that a user is a member of.
    *
-   * If $nested is TRUE, the list will include all parent groups. For example,
-   * if the user is a member of the "programmer" group and the "programmer"
-   * group is a member of the "it" group, the user is a member of both the
-   * "programmer" and the "it" group. If $nested is FALSE, the list will only
-   * include groups which are directly assigned to the user.
+   * If nesting is configured, the list will include all parent groups. For
+   * example, if the user is a member of the "programmer" group and the
+   * "programmer" group is a member of the "it" group, the user is a member of
+   * both the "programmer" and the "it" group. If $nested is FALSE, the list
+   * will only include groups which are directly assigned to the user.
    *
    * @param mixed $user
    *   A Drupal user entity, an LDAP entry array of a user  or a username.
-   * @param bool $nested
-   *   This is configurable as a convenience to ServerTestForm.
    *
    * @return array|false
    *   Array of group dns in mixed case or FALSE on error.
+   *
+   * @TODO: Make the user type argument consistent or split the function.
    */
-  public function groupMembershipsFromUser($user, $nested = NULL) {
+  public function groupMembershipsFromUser($user) {
 
     $group_dns = FALSE;
     $user_ldap_entry = @$this->userUserToExistingLdapEntry($user);
     if (!$user_ldap_entry || $this->groupFunctionalityUnused()) {
       return FALSE;
     }
-    if ($nested === NULL) {
-      $nested = $this->groupNested();
-    }
 
     // Preferred method.
     if ($this->groupUserMembershipsFromAttributeConfigured()) {
-      $group_dns = $this->groupUserMembershipsFromUserAttr($user_ldap_entry, $nested);
+      $group_dns = $this->groupUserMembershipsFromUserAttr($user_ldap_entry);
     }
     elseif ($this->groupGroupEntryMembershipsConfigured()) {
-      $group_dns = $this->groupUserMembershipsFromEntry($user_ldap_entry, $nested);
+      $group_dns = $this->groupUserMembershipsFromEntry($user_ldap_entry);
     }
     return $group_dns;
-
   }
 
   /**
@@ -1370,20 +1377,15 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
    *
    * @param mixed $user
    *   A Drupal user entity, an LDAP entry array of a user  or a username.
-   * @param bool $nested
-   *   If groups should be checked recursively, or not.
    *
    * @return array|false
    *   Array of group dns in mixed case or FALSE on error.
    *
    * @see groupMembershipsFromUser()
    */
-  public function groupUserMembershipsFromUserAttr($user, $nested = NULL) {
+  public function groupUserMembershipsFromUserAttr($user) {
     if (!$this->groupUserMembershipsFromAttributeConfigured()) {
       return FALSE;
-    }
-    if ($nested === NULL) {
-      $nested = $this->groupNested();
     }
 
     $groupAttribute = $this->groupUserMembershipsAttr();
@@ -1400,7 +1402,6 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
     // If not exited yet, $user must be $userLdapEntry.
     $userLdapEntry = $user;
     $allGroupDns = [];
-    $testedGroupIds = [];
     $level = 0;
 
     $membersGroupDns = $userLdapEntry['attr'][$groupAttribute];
@@ -1410,7 +1411,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
     $orFilters = [];
     foreach ($membersGroupDns as $memberGroupDn) {
       $allGroupDns[] = $memberGroupDn;
-      if ($nested) {
+      if ($this->groupNested()) {
         if ($this->groupMembershipsAttrMatchingUserAttr() == 'dn') {
           $member_value = $memberGroupDn;
         }
@@ -1421,7 +1422,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
       }
     }
 
-    if ($nested && count($orFilters)) {
+    if ($this->groupNested() && count($orFilters)) {
       $allGroupDns = $this->getNestedGroupDnFilters($allGroupDns, $orFilters, $level);
     }
 
@@ -1433,20 +1434,15 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
    *
    * @param mixed $user
    *   A Drupal user entity, an LDAP entry array of a user or a username.
-   * @param bool $nested
-   *   If groups should be checked recursively, or not.
    *
    * @return array|false
    *   Array of group dns in mixed case or FALSE on error.
    *
    * @see groupMembershipsFromUser()
    */
-  public function groupUserMembershipsFromEntry($user, $nested = NULL) {
+  public function groupUserMembershipsFromEntry($user) {
     if (!$this->groupGroupEntryMembershipsConfigured()) {
       return FALSE;
-    }
-    if (is_null($nested)) {
-      $nested = $this->groupNested();
     }
 
     $userLdapEntry = $this->userUserToExistingLdapEntry($user);
@@ -1471,8 +1467,8 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
       // Only need dn, so empty array forces return of no attributes.
       $groupEntries = $this->search($baseDn, $groupQuery, []);
       if ($groupEntries !== FALSE) {
-        $maxLevels = $nested ? self::LDAP_SERVER_LDAP_QUERY_RECURSION_LIMIT : 0;
-        $this->groupMembershipsFromEntryResursive($groupEntries, $allGroupDns, $testedGroupIds, $level, $maxLevels);
+        $maxLevels = $this->groupNested() ? self::LDAP_SERVER_LDAP_QUERY_RECURSION_LIMIT : 0;
+        $this->groupMembershipsFromEntryRecursive($groupEntries, $allGroupDns, $testedGroupIds, $level, $maxLevels);
       }
     }
 
@@ -1500,8 +1496,10 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
    * @return bool
    *   False for error or misconfiguration, otherwise TRUE. Results are passed
    *   by reference.
+   *
+   * @TODO: See if we can do this with groupAllMembers().
    */
-  public function groupMembershipsFromEntryResursive(array $currentGroupEntries, array &$allGroupDns, array &$testedGroupIds, $level, $maxLevels) {
+  private function groupMembershipsFromEntryRecursive(array $currentGroupEntries, array &$allGroupDns, array &$testedGroupIds, $level, $maxLevels) {
 
     if (!$this->groupGroupEntryMembershipsConfigured() || !is_array($currentGroupEntries) || count($currentGroupEntries) == 0) {
       return FALSE;
@@ -1543,7 +1541,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
           $group_entries = $this->search($baseDn, $queryForParentGroups);
           if ($group_entries !== FALSE && $level < $maxLevels) {
             // @TODO: Verify recursion with true return.
-            $this->groupMembershipsFromEntryResursive($group_entries, $allGroupDns, $testedGroupIds, $level + 1, $maxLevels);
+            $this->groupMembershipsFromEntryRecursive($group_entries, $allGroupDns, $testedGroupIds, $level + 1, $maxLevels);
           }
         }
       }
@@ -1822,11 +1820,239 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
         // No attributes, just dns needed.
         $groupEntries = $this->search($basedn, $queryForParentGroups);
         if ($groupEntries !== FALSE && $level < self::LDAP_SERVER_LDAP_QUERY_RECURSION_LIMIT) {
-          $this->groupMembershipsFromEntryResursive($groupEntries, $allGroupDns, $testedGroupIds, $level + 1, self::LDAP_SERVER_LDAP_QUERY_RECURSION_LIMIT);
+          $testedGroupIds = [];
+          $this->groupMembershipsFromEntryRecursive($groupEntries, $allGroupDns, $testedGroupIds, $level + 1, self::LDAP_SERVER_LDAP_QUERY_RECURSION_LIMIT);
         }
       }
     }
     return $allGroupDns;
+  }
+
+  /**
+   * Add a group entry.
+   *
+   * Functionality is not in use, only called by server test form.
+   *
+   * @param string $group_dn
+   *   The group DN as an LDAP DN.
+   * @param array $attributes
+   *   Attributes in key value form
+   *    $attributes = array(
+   *      "attribute1" = "value",
+   *      "attribute2" = array("value1", "value2"),
+   *      )
+   *
+   * @return bool
+   *   Operation result.
+   */
+  public function groupAddGroup($group_dn, array $attributes = []) {
+
+    if ($this->checkDnExists($group_dn)) {
+      return FALSE;
+    }
+
+    $attributes = array_change_key_case($attributes, CASE_LOWER);
+    if (empty($attributes['objectclass'])) {
+      $objectClass = $this->groupObjectClass();
+    }
+    else {
+      $objectClass = $attributes['objectclass'];
+    }
+    $attributes['objectclass'] = $objectClass;
+
+    $context = [
+      'action' => 'add',
+      'corresponding_drupal_data' => [$group_dn => $attributes],
+      'corresponding_drupal_data_type' => 'group',
+    ];
+    $ldap_entries = [$group_dn => $attributes];
+    $this->moduleHandler->alter('ldap_entry_pre_provision', $ldap_entries, $this, $context);
+    $attributes = $ldap_entries[$group_dn];
+
+    $ldap_entry_created = $this->createLdapEntry($attributes, $group_dn);
+
+    if ($ldap_entry_created) {
+      $this->moduleHandler->invokeAll('ldap_entry_post_provision', [
+        $ldap_entries,
+        $this,
+        $context,
+      ]
+      );
+      return TRUE;
+    }
+    else {
+      return FALSE;
+    }
+
+  }
+
+  /**
+   * Remove a group entry.
+   *
+   * Functionality is not in use, only called by server test form.
+   *
+   * @param string $group_dn
+   *   Group DN as LDAP dn.
+   * @param bool $only_if_group_empty
+   *   TRUE = group should not be removed if not empty
+   *   FALSE = groups should be deleted regardless of members.
+   *
+   * @return bool
+   *   Removal result.
+   */
+  public function groupRemoveGroup($group_dn, $only_if_group_empty = TRUE) {
+
+    if ($only_if_group_empty) {
+      $members = $this->groupAllMembers($group_dn);
+      if (is_array($members) && count($members) > 0) {
+        return FALSE;
+      }
+    }
+    return $this->deleteLdapEntry($group_dn);
+
+  }
+
+  /**
+   * Add a member to a group.
+   *
+   * Functionality only called by server test form.
+   *
+   * @param string $group_dn
+   *   LDAP group DN.
+   * @param string $user
+   *   LDAP user DN.
+   *
+   * @return bool
+   *   Operation successful.
+   */
+  public function groupAddMember($group_dn, $user) {
+    $result = FALSE;
+    if ($this->groupGroupEntryMembershipsConfigured()) {
+      $this->connectAndBindIfNotAlready();
+      $new_member = [$this->groupMembershipsAttr() => $user];
+      $result = @ldap_mod_add($this->connection, $group_dn, $new_member);
+    }
+
+    return $result;
+  }
+
+  /**
+   * Remove a member from a group.
+   *
+   * Functionality only called by server test form.
+   *
+   * @param string $group_dn
+   *   LDAP DN group.
+   * @param string $member
+   *   LDAP DN member.
+   *
+   * @return bool
+   *   Operation successful.
+   */
+  public function groupRemoveMember($group_dn, $member) {
+    $result = FALSE;
+    if ($this->groupGroupEntryMembershipsConfigured()) {
+      $del = [];
+      $del[$this->groupMembershipsAttr()] = $member;
+      $this->connectAndBindIfNotAlready();
+      $result = @ldap_mod_del($this->connection, $group_dn, $del);
+    }
+    return $result;
+  }
+
+  /**
+   * Get all members of a group.
+   *
+   * Currently not in use.
+   *
+   * @param string $group_dn
+   *   Group DN as LDAP DN.
+   *
+   * @return bool|array
+   *   FALSE on error, otherwise array of group members (could be users or
+   *   groups).
+   *
+   * @TODO: Split return functionality or throw an error.
+   */
+  public function groupAllMembers($group_dn) {
+
+    if (!$this->groupGroupEntryMembershipsConfigured()) {
+      return FALSE;
+    }
+
+    $attributes = [$this->groupMembershipsAttr(), 'cn', 'objectclass'];
+    $group_entry = $this->checkDnExistsIncludeData($group_dn, $attributes);
+    if (!$group_entry) {
+      return FALSE;
+    }
+    else {
+      // If attributes weren't returned, don't give false  empty group.
+      if (empty($group_entry['cn'])) {
+        return FALSE;
+      }
+      if (empty($group_entry[$this->groupMembershipsAttr()])) {
+        // If no attribute returned, no members.
+        return [];
+      }
+      $members = $group_entry[$this->groupMembershipsAttr()];
+      if (isset($members['count'])) {
+        unset($members['count']);
+      }
+      $result = $this->groupMembersRecursive([$group_entry], $members, [], 0, self::LDAP_SERVER_LDAP_QUERY_RECURSION_LIMIT);
+      // Remove the DN of the source group.
+      if (($key = array_search($group_dn, $members)) !== FALSE) {
+        unset($members[$key]);
+      }
+    }
+
+    if ($result !== FALSE) {
+      return $members;
+    }
+    else {
+      return FALSE;
+    }
+  }
+
+  /**
+   * Get direct members of a group.
+   *
+   * Currently not in use.
+   *
+   * @param string $group_dn
+   *   Group DN as LDAP DN.
+   *
+   * @return bool|array
+   *   FALSE on error, otherwise array of group members (could be users or
+   *   groups).
+   *
+   * @TODO: Split return functionality or throw an error.
+   */
+  public function groupMembers($group_dn) {
+
+    if (!$this->groupGroupEntryMembershipsConfigured()) {
+      return FALSE;
+    }
+
+    $attributes = [$this->groupMembershipsAttr(), 'cn', 'objectclass'];
+    $group_entry = $this->checkDnExistsIncludeData($group_dn, $attributes);
+    if (!$group_entry) {
+      return FALSE;
+    }
+    else {
+      // If attributes weren't returned, don't give false  empty group.
+      if (empty($group_entry['cn'])) {
+        return FALSE;
+      }
+      if (empty($group_entry[$this->groupMembershipsAttr()])) {
+        // If no attribute returned, no members.
+        return [];
+      }
+      $members = $group_entry[$this->groupMembershipsAttr()];
+      if (isset($members['count'])) {
+        unset($members['count']);
+      }
+      return $members;
+    }
   }
 
 }

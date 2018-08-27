@@ -10,7 +10,6 @@ use Drupal\Core\Mail\MailManagerInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\Core\Url;
 use Drupal\ldap_servers\ServerFactory;
-use Drupal\user\Entity\User;
 
 /**
  * Locates potential orphan user accounts.

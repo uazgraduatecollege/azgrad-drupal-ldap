@@ -16,7 +16,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 /**
  * Use Drupal\Core\Form\FormBase;.
  */
-class ServerTestForm extends EntityForm {
+final class ServerTestForm extends EntityForm {
 
   /**
    * The main server to work with.
@@ -163,7 +163,7 @@ class ServerTestForm extends EntityForm {
       '#default_value' => $this->ldapServer->get('grp_test_grp_dn_writeable'),
       '#size' => 120,
       '#maxlength' => 255,
-      '#description' => $this->t("<strong>Warning: Writable groups is not fully ported.</strong><br><strong>Warning: Testing writable groups means that active groups can be deleted, created or have members added to it!</strong><br>"),
+      '#description' => $this->t("<strong>Warning: Testing writable groups means that existing groups can be deleted, created or have members added to it!</strong><br>Note that this test assumes that your group definition follows a pattern such as objectClass:['YOUR_CATEGORY','top']. If your directory differs, this might give false negatives."),
     ];
 
     $form['submit'] = [
@@ -180,6 +180,7 @@ class ServerTestForm extends EntityForm {
         'basic' => 'Test Results',
         'group1' => 'Group Create, Delete, Add Member, Remove Member Tests',
         'group2' => 'User Group Membership Functions Test',
+        'group_direct' => 'Direct queries for the group',
         'tokens' => 'User Token Samples',
         'groupfromDN' => 'Groups Derived From User DN',
       ];
@@ -254,16 +255,19 @@ class ServerTestForm extends EntityForm {
 
     $this->testConnection($values);
 
-    if (!empty($values['grp_test_grp_dn_writeable']) && !empty($values['grp_test_grp_dn'])) {
-      $this->testwritableGroup($values);
-    }
-
-    if (!$this->exception && !empty($values['grp_test_grp_dn'])) {
-      $user = !empty($values['testing_drupal_username']) ? $values['testing_drupal_username'] : NULL;
-      $group_entry = $this->testGroupDn($values['grp_test_grp_dn'], $user);
-    }
-
     $ldap_user = $this->testUserMapping($values['testing_drupal_username']);
+
+    if ($ldap_user) {
+      if (!$this->exception && !empty($values['grp_test_grp_dn'])) {
+        $user = !empty($values['testing_drupal_username']) ? $values['testing_drupal_username'] : NULL;
+        $group_entry = $this->testGroupDn($values['grp_test_grp_dn'], $user);
+      }
+
+      if (!empty($values['grp_test_grp_dn_writeable'])) {
+        $this->testWritableGroup($values['grp_test_grp_dn_writeable'], $ldap_user['dn']);
+      }
+    }
+
     if ($ldap_user && isset($ldap_user['attr'])) {
       $tokens = $this->tokenProcessor->tokenizeLdapEntry($ldap_user['attr'], [], TokenProcessor::PREFIX, TokenProcessor::SUFFIX);
     }
@@ -305,12 +309,13 @@ class ServerTestForm extends EntityForm {
 
     if ($group_entry) {
       foreach ([FALSE, TRUE] as $nested) {
+        $this->ldapServer->set('grp_nested', $nested);
         // FALSE.
         $nested_display = ($nested) ? 'Yes' : 'No';
         if ($user) {
           // This is the parent function that will call FromUserAttr or
           // FromEntry.
-          $memberships = $this->ldapServer->groupMembershipsFromUser($user, $nested);
+          $memberships = $this->ldapServer->groupMembershipsFromUser($user);
           $settings = [
             '#theme' => 'item_list',
             '#items' => $memberships,
@@ -322,14 +327,14 @@ class ServerTestForm extends EntityForm {
             $result,
           ];
 
-          $result = ($this->ldapServer->groupIsMember($group_dn, $user, $nested)) ? 'Yes' : 'No';
+          $result = ($this->ldapServer->groupIsMember($group_dn, $user)) ? 'Yes' : 'No';
           $this->resultsTables['group2'][] = [
             'groupIsMember from group DN ' . $group_dn . 'for ' . $user . ' nested=' . $nested_display . ')',
             $result,
           ];
 
           if ($this->ldapServer->groupUserMembershipsFromAttributeConfigured()) {
-            $groupUserMembershipsFromUserAttributes = $this->ldapServer->groupUserMembershipsFromUserAttr($user, $nested);
+            $groupUserMembershipsFromUserAttributes = $this->ldapServer->groupUserMembershipsFromUserAttr($user);
             $settings = [
               '#theme' => 'item_list',
               '#items' => $groupUserMembershipsFromUserAttributes,
@@ -347,7 +352,7 @@ class ServerTestForm extends EntityForm {
           ];
 
           if ($this->ldapServer->groupGroupEntryMembershipsConfigured()) {
-            $groupUserMembershipsFromEntry = $this->ldapServer->groupUserMembershipsFromEntry($user, $nested);
+            $groupUserMembershipsFromEntry = $this->ldapServer->groupUserMembershipsFromEntry($user);
             $settings = [
               '#theme' => 'item_list',
               '#items' => $groupUserMembershipsFromEntry,
@@ -400,9 +405,22 @@ class ServerTestForm extends EntityForm {
         '#items' => $groups_from_dn,
         '#list_type' => 'ul',
       ];
-      $result = $this->renderer->render($settings);
-      $this->resultsTables['groupfromDN'][] = ["Groups from DN", $result];
+      $this->resultsTables['groupfromDN'][] = [
+        $this->t("Groups from DN"),
+        $this->renderer->render($settings),
+      ];
     }
+
+    $result = $this->ldapServer->groupAllMembers($group_dn);
+    $settings = [
+      '#theme' => 'item_list',
+      '#items' => $result,
+      '#list_type' => 'ul',
+    ];
+    $this->resultsTables['group_direct'][] = [
+      $this->t('Entries found on group DN directly'),
+      $this->renderer->render($settings),
+    ];
     return $group_entry;
   }
 
@@ -423,189 +441,6 @@ class ServerTestForm extends EntityForm {
     else {
       return $input;
     }
-  }
-
-  /**
-   * Add a group entry.
-   *
-   * @param string $group_dn
-   *   The group DN as an LDAP DN.
-   * @param array $attributes
-   *   Attributes in key value form
-   *    $attributes = array(
-   *      "attribute1" = "value",
-   *      "attribute2" = array("value1", "value2"),
-   *      )
-   *
-   * @return bool
-   *   Operation result.
-   *
-   * @TODO: NOT TESTED
-   */
-  public function groupAddGroup($group_dn, array $attributes = []) {
-
-    if ($this->ldapServer->dnExists($group_dn, 'boolean')) {
-      return FALSE;
-    }
-
-    $attributes = array_change_key_case($attributes, CASE_LOWER);
-    $objectClass = (empty($attributes['objectclass'])) ? $this->ldapServer->groupObjectClass() : $attributes['objectclass'];
-    $attributes['objectclass'] = $objectClass;
-
-    // 2. give other modules a chance to add or alter attributes.
-    $context = [
-      'action' => 'add',
-      'corresponding_drupal_data' => [$group_dn => $attributes],
-      'corresponding_drupal_data_type' => 'group',
-    ];
-    $ldap_entries = [$group_dn => $attributes];
-    $this->moduleHandler->alter('ldap_entry_pre_provision', $ldap_entries, $this, $context);
-    $attributes = $ldap_entries[$group_dn];
-
-    // 4. provision LDAP entry.
-    // @todo how is error handling done here?
-    $ldap_entry_created = $this->ldapServer->createLdapEntry($attributes, $group_dn);
-
-    // 5. allow other modules to react to provisioned LDAP entry.
-    //    @todo how is error handling done here?
-    if ($ldap_entry_created) {
-      $this->moduleHandler
-        ->invokeAll('ldap_entry_post_provision',
-          [$ldap_entries, $this, $context]
-        );
-      return TRUE;
-    }
-    else {
-      return FALSE;
-    }
-
-  }
-
-  /**
-   * Remove a group entry.
-   *
-   * @param string $group_dn
-   *   Group DN as LDAP dn.
-   * @param bool $only_if_group_empty
-   *   TRUE = group should not be removed if not empty
-   *   FALSE = groups should be deleted regardless of members.
-   *
-   * @return bool
-   *   Removal result.
-   *
-   * @TODO: NOT TESTED
-   */
-  public function groupRemoveGroup($group_dn, $only_if_group_empty = TRUE) {
-
-    if ($only_if_group_empty) {
-      $members = $this->groupAllMembers($group_dn);
-      if (is_array($members) && count($members) > 0) {
-        return FALSE;
-      }
-    }
-    // @FIXME: Incorrect parameters
-    return $this->ldapServer->deleteLdapEntry($group_dn);
-
-  }
-
-  /**
-   * Add a member to a group.
-   *
-   * @param string $group_dn
-   *   LDAP user DN.
-   * @param mixed $user
-   *   A Drupal user entity, an LDAP entry array of a user  or a username.
-   *
-   * @return bool
-   *   Operation successful.
-   *
-   * @TODO: NOT TESTED
-   */
-  public function groupAddMember($group_dn, $user) {
-
-    $user_ldap_entry = $this->ldapServer->userUserToExistingLdapEntry($user);
-    $result = FALSE;
-    if ($user_ldap_entry && $this->ldapServer->groupGroupEntryMembershipsConfigured()) {
-      $add = [];
-      $add[$this->ldapServer->groupMembershipsAttr()] = $user_ldap_entry['dn'];
-      $this->ldapServer->connectAndBindIfNotAlready();
-      $result = @ldap_mod_add($this->connection, $group_dn, $add);
-    }
-
-    return $result;
-  }
-
-  /**
-   * Remove a member from a group.
-   *
-   * @param string $group_dn
-   *   Group DN as LDAP DN.
-   * @param mixed $user
-   *   A Drupal user entity, an LDAP entry array of a user  or a username.
-   *
-   * @return bool
-   *   Operation successful.
-   *
-   * @FIXME: NOT TESTED
-   */
-  public function groupRemoveMember($group_dn, $user) {
-
-    $user_ldap_entry = $this->ldapServer->userUserToExistingLdapEntry($user);
-    $result = FALSE;
-    if ($user_ldap_entry && $this->ldapServer->groupGroupEntryMembershipsConfigured()) {
-      $del = [];
-      $del[$this->ldapServer->groupMembershipsAttr()] = $user_ldap_entry['dn'];
-      $this->ldapServer->connectAndBindIfNotAlready();
-      $result = @ldap_mod_del($this->connection, $group_dn, $del);
-    }
-    return $result;
-  }
-
-  /**
-   * Get all members of a group.
-   *
-   * Currently only used by ServerTestForm and groupRemoveGroup.
-   *
-   * @param string $group_dn
-   *   Group DN as LDAP DN.
-   *
-   * @return bool|array
-   *   FALSE on error, otherwise array of group members (could be users or
-   *   groups).
-   *
-   * @todo: NOT IMPLEMENTED: nested groups
-   */
-  public function groupAllMembers($group_dn) {
-
-    if (!$this->ldapServer->groupGroupEntryMembershipsConfigured()) {
-      return FALSE;
-    }
-    $attributes = [$this->ldapServer->groupMembershipsAttr(), 'cn'];
-    $group_entry = $this->ldapServer->dnExists($group_dn, 'ldap_entry', $attributes);
-    if (!$group_entry) {
-      return FALSE;
-    }
-    else {
-      // If attributes weren't returned, don't give false  empty group.
-      if (empty($group_entry['cn'])) {
-        return FALSE;
-      }
-      if (empty($group_entry[$this->ldapServer->groupMembershipsAttr()])) {
-        // If no attribute returned, no members.
-        return [];
-      }
-      $members = $group_entry[$this->ldapServer->groupMembershipsAttr()];
-      if (isset($members['count'])) {
-        unset($members['count']);
-      }
-      return $members;
-    }
-
-    // FIXME: Unreachable statement.
-    $this->ldapServer->groupMembersRecursive($current_group_entries, $all_group_dns, $tested_group_ids, 0, $max_levels, $object_classes);
-
-    return $all_group_dns;
-
   }
 
   /**
@@ -667,87 +502,103 @@ class ServerTestForm extends EntityForm {
   /**
    * Test writable groups.
    *
-   * @param array $values
-   *   Group data.
-   *
-   * @TODO: Unverified.
+   * @param string $new_group
+   *   The CN of the group to test.
+   * @param string $member
+   *   The CN of the member to test.
    */
-  private function testwritableGroup(array $values) {
+  private function testWritableGroup($new_group, $member) {
 
-    $createGroupTestAttributes = [
+    $writableGroupAttributes = [
       'objectClass' => [
         $this->ldapServer->get('grp_object_cat'),
         'top',
       ],
     ];
-    $validEntry = ['cn', 'member'];
+    $openLdap = FALSE;
 
-    // Delete test group if it exists.
-    if ($this->ldapServer->dnExists($values['grp_test_grp_dn_writeable'], 'ldap_entry', $validEntry)
-    ) {
-      $this->groupRemoveGroup($values['grp_test_grp_dn_writeable'], FALSE);
+    // This empty is needed for OpenLDAP, otherwise it won't get created.
+    if (strtolower($this->ldapServer->get('grp_object_cat')) == 'groupofnames') {
+      $openLdap = TRUE;
+      $writableGroupAttributes['member'] = [''];
     }
 
-    $groupExists = $this->ldapServer->dnExists($values['grp_test_grp_dn_writeable'], 'ldap_entry', [
-      'cn',
-      'member',
-    ]);
+    // Delete test group if it exists.
+    if ($this->ldapServer->checkDnExists($new_group)) {
+      $this->ldapServer->groupRemoveGroup($new_group, FALSE);
+    }
+
     $this->resultsTables['group1'][] = [
-      $this->t('Starting test without group: @group', ['@group' => $values['grp_test_grp_dn_writeable']]),
-      $this->booleanResult(($groupExists === FALSE)),
+      $this->t('Starting test without group (group was deleted if present): @group', ['@group' => $new_group]),
+      $this->booleanResult(($this->ldapServer->checkDnExists($new_group) === FALSE)),
     ];
 
-    // Make sure call to members in empty group returns false.
-    $result = $this->groupAllMembers($values['grp_test_grp_dn_writeable']);
+    // Make sure there are no entries being a member of it.
     $this->resultsTables['group1'][] = [
-      $this->t('Call to members in empty group returns false for @group', ['@group' => $values['grp_test_grp_dn_writeable']]),
-      $this->booleanResult(($result === FALSE)),
+      $this->t('Are there no members in the writable group?', ['@group' => $new_group]),
+      $this->booleanResult(($this->ldapServer->groupMembers($new_group) === FALSE)),
     ];
 
     // Add group.
-    $result = $this->groupAddGroup($values['grp_test_grp_dn_writeable'], $createGroupTestAttributes);
-    $attr = serialize($createGroupTestAttributes);
+    $attr = json_encode($writableGroupAttributes);
     $this->resultsTables['group1'][] = [
-      $this->t('Add group @group with attributes @attributes', ['@group' => $values['grp_test_grp_dn_writeable'], '@attributes' => $attr]),
-      $this->booleanResult($result),
+      $this->t('Add group @group with attributes @attributes', ['@group' => $new_group, '@attributes' => $attr]),
+      $this->booleanResult($this->ldapServer->groupAddGroup($new_group, $writableGroupAttributes)),
     ];
 
-    // Call to all members in an empty group returns emtpy array, not FALSE.
-    $result = $this->groupAllMembers($values['grp_test_grp_dn_writeable']);
+    // Call to all members in an empty group returns empty array, not FALSE.
+    $result = $this->ldapServer->groupMembers($new_group);
+    if ($openLdap) {
+      array_shift($result);
+    }
     $this->resultsTables['group1'][] = [
-      $this->t('Call to all members in an empty group returns an empty array for group', ['@group' => $values['grp_test_grp_dn_writeable']]),
-      $this->booleanResult((is_array($result) && count($result) == 0)),
+      $this->t('Call to all members in an empty group returns an empty array for group', ['@group' => $new_group]),
+      $this->booleanResult((is_array($result) && empty($result))),
     ];
 
     // Add member to group.
-    $this->groupAddMember($values['grp_test_grp_dn_writeable'], $values['grp_test_grp_dn']);
+    $this->ldapServer->groupAddMember($new_group, $member);
+    $result = $this->ldapServer->groupMembers($new_group);
+    if ($openLdap) {
+      array_shift($result);
+    }
     $this->resultsTables['group1'][] = [
-      $this->t('Add member to group @group with DN @dn', ['@group' => $values['grp_test_grp_dn_writeable'], '@dn' => $values['grp_test_grp_dn']]),
-      $this->booleanResult(is_array($this->groupAllMembers($values['grp_test_grp_dn_writeable']))),
+      $this->t('Add member to group @group with DN @dn', ['@group' => $new_group, '@dn' => $member]),
+      $this->booleanResult(is_array($result) && !empty($result)),
     ];
 
     // Try to remove group with member in it.
-    $onlyIfGroupEmpty = TRUE;
-    $result = $this->groupRemoveGroup($values['grp_test_grp_dn_writeable'], $onlyIfGroupEmpty);
+    $result = $this->ldapServer->groupRemoveGroup($new_group, TRUE);
     $this->resultsTables['group1'][] = [
-      $this->t('Remove group @group with member in it (not allowed)', ['@group' => $values['grp_test_grp_dn_writeable']]),
+      $this->t('Remove group @group with member in it (not allowed)', ['@group' => $new_group]),
       $this->booleanResult(!$result),
     ];
 
     // Remove group member.
-    $this->groupRemoveMember($values['grp_test_grp_dn_writeable'], $values['grp_test_grp_dn']);
-    $result = $this->groupAllMembers($values['grp_test_grp_dn_writeable']);
+    $this->ldapServer->groupRemoveMember($new_group, $member);
+    $result = $this->ldapServer->groupMembers($new_group);
+    if ($openLdap) {
+      array_shift($result);
+    }
     $this->resultsTables['group1'][] = [
-      $this->t('Remove group member @dn from @group', ['@group' => $values['grp_test_grp_dn_writeable'], '@dn' => $values['grp_test_grp_dn']]),
-      $this->booleanResult((is_array($result) && count($result) == 0)),
+      $this->t('Remove group member @dn from @group', ['@group' => $new_group, '@dn' => $member]),
+      $this->booleanResult((is_array($result) && empty($result))),
     ];
 
-    $onlyIfGroupEmpty = TRUE;
-    $this->groupRemoveGroup($values['grp_test_grp_dn_writeable'], $onlyIfGroupEmpty);
-    $this->resultsTables['group1'][] = [
-      $this->t('Remove group @group', ['@group' => $values['grp_test_grp_dn_writeable']]),
-      $this->booleanResult(!($this->ldapServer->dnExists($values['grp_test_grp_dn_writeable'], 'ldap_entry', $validEntry))),
-    ];
+    if ($openLdap) {
+      $this->ldapServer->groupRemoveGroup($new_group, FALSE);
+      $this->resultsTables['group1'][] = [
+        $this->t('Forced group removal of @group because this OpenLDAP configuration does not allow for safe removal.', ['@group' => $new_group]),
+        $this->booleanResult(!($this->ldapServer->checkDnExists($new_group))),
+      ];
+    }
+    else {
+      $this->ldapServer->groupRemoveGroup($new_group, TRUE);
+      $this->resultsTables['group1'][] = [
+        $this->t('Remove group @group if empty', ['@group' => $new_group]),
+        $this->booleanResult(!($this->ldapServer->checkDnExists($new_group))),
+      ];
+    }
   }
 
   /**
@@ -821,7 +672,7 @@ class ServerTestForm extends EntityForm {
    * @param array $values
    *   Input data.
    */
-  protected function testConnection(array $values) {
+  private function testConnection(array $values) {
 
     if ($this->ldapServer->connect() != Server::LDAP_SUCCESS) {
       $this->resultsTables['basic'][] = [

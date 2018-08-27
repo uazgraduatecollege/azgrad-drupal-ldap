@@ -6,7 +6,6 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\ldap_query\Controller\QueryController;
 use Drupal\ldap_servers\Form\ServerTestForm;
-use Drupal\ldap_servers\Helper\MassageAttributes;
 
 /**
  * Test form for queries.

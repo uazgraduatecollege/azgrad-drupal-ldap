@@ -93,8 +93,6 @@ class LdapUserProcessor implements LdapUserAttributesInterface {
       }
 
       if (is_array($proposedLdapEntry) && isset($proposedLdapEntry['dn'])) {
-        // TODO: Unused variable.
-        $existing_ldap_entry = $server->dnExists($proposedLdapEntry['dn'], 'ldap_entry');
         // This array represents attributes to be modified; not comprehensive
         // list of attributes.
         $attributes = [];
@@ -359,7 +357,7 @@ class LdapUserProcessor implements LdapUserAttributesInterface {
       $proposedDn = NULL;
     }
     $proposedDnLowercase = mb_strtolower($proposedDn);
-    $existingLdapEntry = ($proposedDn) ? $ldapServer->dnExists($proposedDn, 'ldap_entry') : NULL;
+    $existingLdapEntry = ($proposedDn) ? $ldapServer->checkDnExistsIncludeData($proposedDn, ['objectclass']) : NULL;
 
     if (!$proposedDn) {
       return [
@@ -557,7 +555,7 @@ class LdapUserProcessor implements LdapUserAttributesInterface {
       return FALSE;
     }
 
-    $ldap_entry = $ldap_server->dnExists($proposed_ldap_entry['dn'], 'ldap_entry', []);
+    $ldap_entry = $ldap_server->checkDnExistsIncludeData($proposed_ldap_entry['dn'], []);
     return $ldap_entry;
 
   }

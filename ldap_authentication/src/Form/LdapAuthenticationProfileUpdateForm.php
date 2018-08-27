@@ -7,7 +7,6 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\ldap_authentication\Routing\EmailTemplateService;
-use Drupal\user\Entity\User;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -29,6 +28,9 @@ class LdapAuthenticationProfileUpdateForm extends FormBase {
     return 'ldap_authentication_profile_update_form';
   }
 
+  /**
+   * Constructor.
+   */
   public function __construct(AccountInterface $current_user, EntityTypeManager $entity_type_manager) {
     $this->currentUser = $current_user;
     $this->entityTypeManager = $entity_type_manager;
@@ -89,7 +91,7 @@ class LdapAuthenticationProfileUpdateForm extends FormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    /** @var User $user */
+    /** @var \Drupal\user\Entity\User $user */
     $user = $this->entityTypeManager->getStorage('user')->load($this->currentUser->id());
     $user->set('mail', $form_state->getValue('mail'));
     $user->save();

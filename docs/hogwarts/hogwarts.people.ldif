@@ -20,6 +20,18 @@ member: cn=faculty,ou=groups,dc=hogwarts,dc=edu
 member: cn=staff,ou=groups,dc=hogwarts,dc=edu
 cn: users
 
+dn: cn=Secondary Users Group,ou=groups,dc=hogwarts,dc=edu
+objectClass: top
+objectClass: groupOfNames
+member: cn=Tertiary' Users Group,ou=groups,dc=hogwarts,dc=edu
+cn: Secondary Users Group
+
+dn: cn=Tertiary' Users Group,ou=groups,dc=hogwarts,dc=edu
+objectClass: top
+objectClass: groupOfNames
+member: cn=ssnape,ou=people,dc=hogwarts,dc=edu
+cn: Tertiary' Users Group
+
 dn: cn=students,ou=groups,dc=hogwarts,dc=edu
 objectClass: top
 objectClass: groupOfNames
