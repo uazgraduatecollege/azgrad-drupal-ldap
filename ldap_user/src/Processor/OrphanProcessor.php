@@ -274,17 +274,8 @@ class OrphanProcessor {
       }
 
       $ldapEntries = $this->enabledServers[$serverId]->searchAllBaseDns($filter, [$persistentUidProperty]);
-      if ($ldapEntries === FALSE) {
-        $this->logger->error('LDAP server %id had error while querying to deal with orphaned LDAP user entries. Please check that the LDAP server is configured correctly',
-            ['%id' => $serverId]
-          );
-        return [];
-      }
-      else {
-        unset($ldapEntries['count']);
-        if (!empty($ldapEntries)) {
-          $user['exists'] = TRUE;
-        }
+      if (!empty($ldapEntries)) {
+        $user['exists'] = TRUE;
       }
     }
     return $user;

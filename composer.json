@@ -9,7 +9,7 @@
         "drupal/authorization": "1.x-dev",
         "drupal/externalauth": "^1.0"
     },
-    "provide": {
+    "replace": {
         "ext-ldap": "*"
     }
 }

@@ -256,10 +256,11 @@ final class ServerTestForm extends EntityForm {
     $values = $form_state->getValues();
     $id = $values['id'];
     $this->ldapServer = Server::load($id);
+    $this->ldapBridge->setServer($this->ldapServer);
 
     $this->resultsTables = [];
 
-    $this->testConnection($values);
+    $this->testConnection();
 
     $ldap_entry = $this->testUserMapping($values['testing_drupal_username']);
 
@@ -311,8 +312,6 @@ final class ServerTestForm extends EntityForm {
    *   Response.
    */
   private function testGroupDn($group_dn, $username) {
-    $this->ldapBridge->setServer($this->ldapServer);
-    $this->ldapBridge->bind();
     $ldap = $this->ldapBridge->get();
     try {
       $group_entry = $ldap->query($group_dn, 'objectClass=*')->execute();
@@ -618,10 +617,13 @@ final class ServerTestForm extends EntityForm {
 
   /**
    * Helper function to bind as required for testing.
+   *
+   * @TODO: Invalid config array.
    */
   public function testBinding() {
     if ($this->config('')) {
-      $bindResult = $this->ldapServer->bind();
+      // TODO: Move to bridge.
+      $bindResult = $this->ldapServer->legacyBind();
     }
     if ($bindResult == Server::LDAP_SUCCESS) {
       $this->resultsTables['basic'][] = [
@@ -683,57 +685,15 @@ final class ServerTestForm extends EntityForm {
    * @param array $values
    *   Input data.
    */
-  private function testConnection(array $values) {
+  private function testConnection() {
 
-    if ($this->ldapServer->connect() != Server::LDAP_SUCCESS) {
+    if (!$this->ldapBridge->bind()) {
       $this->resultsTables['basic'][] = [
         'class' => 'color-error',
-        'data' => [$this->t('Failed to connect to LDAP server: @error', $this->ldapServer->formattedError($this->ldapServer->ldapErrorNumber()))],
+        'data' => [$this->t('Failed to connect and bind to LDAP server, see logs for details.')],
       ];
       $this->exception = TRUE;
       return;
-    }
-
-    if ($this->ldapServer->get('bind_method') == 'service_account') {
-      $this->resultsTables['basic'][] = [$this->t('Binding with DN for non-anonymous search (%bind_dn).', ['%bind_dn' => $this->ldapServer->get('binddn')])];
-      $this->testBinding();
-    }
-    else {
-      $this->resultsTables['basic'][] = [$this->t('Binding with null DN for anonymous search.')];
-      $this->testBinding();
-    }
-
-    if ($this->ldapServer->get('bind_method') == 'anon_user' || $this->ldapServer->get('bind_method') == 'user') {
-      CredentialsStorage::storeUserDn($values['testing_drupal_username']);
-      CredentialsStorage::storeUserPassword($values['testing_drupal_userpw']);
-
-      $this->resultsTables['basic'][] = [$this->t('Binding with user credentials (%bind_dn).', ['%bind_dn' => $values['testing_drupal_username']])];
-      $this->testBinding();
-      $ldap_user = $this->testUserMapping($values['testing_drupal_username']);
-      if (!$this->exception) {
-        $mapping[] = "dn = " . $ldap_user['dn'];
-        foreach ($ldap_user['attr'] as $key => $value) {
-          if (is_array($value)) {
-            $mapping[] = "$key = " . $this->binaryCheck($value[0]);
-          }
-        }
-
-        $item_list = [
-          '#list_type' => 'ul',
-          '#theme' => 'item_list',
-          '#items' => $mapping,
-          '#title' => $this->t('Attributes available to anonymous search', [
-            '%bind_dn' => $this->ldapServer->get('binddn'),
-          ]),
-        ];
-        $this->resultsTables['basic'][] = [render($item_list)];
-      }
-      $this->resultsTables['basic'][] = [
-        $this->t('Binding with DN (%bind_dn), using supplied password.', [
-          '%bind_dn' => $ldap_user['dn'],
-        ]),
-      ];
-      $this->testBinding();
     }
   }
 

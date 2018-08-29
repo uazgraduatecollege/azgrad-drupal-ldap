@@ -109,9 +109,3 @@ ldap_servers.server.*:
     grp_test_grp_dn_writeable:
       type: string
       label: 'Testing LDAP Group DN that is writable.  WARNING the test script for the server will create, delete, and add members to this group!'
-    search_pagination:
-      type: boolean
-      label: 'Use LDAP Pagination.'
-    search_page_size:
-      type: integer
-      label: 'Pagination size limit.'

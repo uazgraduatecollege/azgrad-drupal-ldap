@@ -33,8 +33,6 @@
     'groupUserMembershipsAttr' => NULL,
     'groupMembershipsAttr' => 'member',
     'groupMembershipsAttrMatchingUserAttr' => 'dn',
-    'search_pagination' => 0,
-    'searchPageSize' => NULL,
   ],
   'methodResponses' =>
   [

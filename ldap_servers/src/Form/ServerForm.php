@@ -434,30 +434,6 @@ class ServerForm extends EntityForm {
       ],
     ];
 
-    $form['pagination'] = [
-      '#type' => 'fieldset',
-      '#title' => $this->t('Pagination'),
-    ];
-
-    $form['pagination']['search_pagination'] = [
-      '#default_value' => $server->get('search_pagination'),
-      '#type' => 'checkbox',
-      '#title' => $this->t('Use LDAP Pagination.'),
-    ];
-
-    $form['pagination']['search_page_size'] = [
-      '#default_value' => $server->get('search_page_size'),
-      '#type' => 'textfield',
-      '#size' => 10,
-      '#title' => $this->t('Pagination size limit.'),
-      '#description' => $this->t('This should be equal to or smaller than the max number of entries returned at a time by your LDAP server. 1000 is a good guess when unsure. Other modules such as LDAP Query or LDAP Feeds will be allowed to set a smaller page size, but not a larger one.'),
-      '#states' => [
-        'visible' => [
-          ':input[name="search_pagination"]' => ['checked' => TRUE],
-        ],
-      ],
-    ];
-
     return $form;
   }
 

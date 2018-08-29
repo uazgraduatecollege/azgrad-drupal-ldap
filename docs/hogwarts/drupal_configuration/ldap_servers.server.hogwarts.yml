@@ -35,5 +35,3 @@ grp_derive_from_dn: '0'
 grp_derive_from_dn_attr: ''
 grp_test_grp_dn: ''
 grp_test_grp_dn_writeable: ''
-search_pagination: false
-search_page_size: null

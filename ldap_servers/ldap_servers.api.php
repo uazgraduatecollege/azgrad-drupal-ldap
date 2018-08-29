@@ -130,18 +130,3 @@ function hook_ldap_attributes_needed_alter(array &$attributes, array $params) {
 function hook_ldap_user_alter(array &$ldap_entry, array $params) {
 
 }
-
-/**
- * Allow the results from the LDAP search answer to be modified.
- *
- * The query parameters are provided as context information (read-only).
- *
- * @param array $entries
- *   LDAP entry result.
- * @param array $ldap_query_params
- *   Parameters for the query.
- */
-function hook_ldap_server_search_results_alter(array &$entries, array $ldap_query_params) {
-  // Look for a specific part of the $results array
-  // and maybe change it.
-}

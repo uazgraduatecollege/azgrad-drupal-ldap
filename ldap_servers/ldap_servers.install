@@ -119,3 +119,10 @@ function ldap_servers_update_8304() {
   }
   return t('All server configuration attributes are forced to lowercase. Note that exporting this state can contain configuration overrides. Please review.');
 }
+
+/**
+ * Paged search removal.
+ */
+function ldap_servers_update_8401() {
+  return t('Paged search has been removed in favor of more robust data retrieval. Please retest your configuration if you have used paged search.');
+}

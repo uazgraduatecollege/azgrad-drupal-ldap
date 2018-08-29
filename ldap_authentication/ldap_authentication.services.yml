@@ -18,4 +18,4 @@ services:
       arguments: ['ldap_authentication']
   ldap_authentication.login_validator:
     class: \Drupal\ldap_authentication\Controller\LoginValidator
-    arguments: ['@config.factory', '@ldap.detail_log', '@logger.channel.ldap_authentication', '@entity_type.manager', '@module_handler']
+    arguments: ['@config.factory', '@ldap.detail_log', '@logger.channel.ldap_authentication', '@entity_type.manager', '@module_handler', '@ldap_bridge']

@@ -378,9 +378,8 @@ class LdapUserProcessor implements LdapUserAttributesInterface {
       ];
       \Drupal::moduleHandler()->alter('ldap_entry_pre_provision', $ldapEntries, $ldapServer, $context);
       // Remove altered $proposedLdapEntry from $ldapEntries array.
-      $proposedLdapEntry = $ldapEntries[$proposedDnLowercase];
-
-      $ldapEntryCreated = $ldapServer->createLdapEntry($proposedLdapEntry, $proposedDn);
+      $proposedLdapEntry = new Entry($proposedDn, $ldapEntries[$proposedDnLowercase]);
+      $ldapEntryCreated = $ldapServer->createLdapEntry($proposedLdapEntry);
       $callbackParams = [$ldapEntries, $ldapServer, $context];
       if ($ldapEntryCreated) {
         \Drupal::moduleHandler()

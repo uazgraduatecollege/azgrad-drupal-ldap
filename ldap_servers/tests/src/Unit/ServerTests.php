@@ -13,6 +13,8 @@ class ServerTests extends UnitTestCase {
 
   /**
    * Tests searches across multiple DNs.
+   *
+   * TODO: Fix or remove test.
    */
   public function testSearchAllBaseDns() {
 

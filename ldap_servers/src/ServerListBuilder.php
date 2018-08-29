@@ -78,19 +78,16 @@ class ServerListBuilder extends ConfigEntityListBuilder {
    *   The status string.
    */
   private function checkStatus($server) {
-    $connection_result = $server->connect();
+    /** @var \Drupal\ldap_servers\LdapBridge $bridge */
+    $bridge = \Drupal::service('ldap_bridge');
+    $bridge->setServer($server);
+
     if ($server->get('status')) {
-      if ($connection_result == Server::LDAP_SUCCESS) {
-        $bind_result = $server->bind();
-        if ($bind_result == Server::LDAP_SUCCESS) {
-          return t('Server available');
-        }
-        else {
-          return t('Configuration valid, bind failed.');
-        }
+      if ($bridge->bind()) {
+        return t('Server available');
       }
       else {
-        return t('Configuration invalid, cannot connect.');
+        return t('Binding issues, please see log.');
       }
     }
     else {
