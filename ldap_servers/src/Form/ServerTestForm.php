@@ -10,8 +10,11 @@ use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Render\Renderer;
 use Drupal\ldap_servers\Entity\Server;
 use Drupal\ldap_servers\Helper\CredentialsStorage;
+use Drupal\ldap_servers\LdapBridge;
 use Drupal\ldap_servers\Processor\TokenProcessor;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\Ldap\Entry;
+use Symfony\Component\Ldap\Exception\LdapException;
 
 /**
  * Use Drupal\Core\Form\FormBase;.
@@ -43,6 +46,7 @@ final class ServerTestForm extends EntityForm {
   protected $moduleHandler;
   protected $tokenProcessor;
   protected $renderer;
+  protected $ldapBridge;
 
   /**
    * {@inheritdoc}
@@ -54,11 +58,12 @@ final class ServerTestForm extends EntityForm {
   /**
    * Class constructor.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, ModuleHandler $module_handler, TokenProcessor $token_processor, Renderer $renderer) {
+  public function __construct(ConfigFactoryInterface $config_factory, ModuleHandler $module_handler, TokenProcessor $token_processor, Renderer $renderer, LdapBridge $ldap_bridge) {
     $this->config = $config_factory;
     $this->moduleHandler = $module_handler;
     $this->tokenProcessor = $token_processor;
     $this->renderer = $renderer;
+    $this->ldapBridge = $ldap_bridge;
   }
 
   /**
@@ -69,7 +74,8 @@ final class ServerTestForm extends EntityForm {
       $container->get('config.factory'),
       $container->get('module_handler'),
       $container->get('ldap.token_processor'),
-      $container->get('renderer')
+      $container->get('renderer'),
+      $container->get('ldap_bridge')
     );
   }
 
@@ -195,7 +201,7 @@ final class ServerTestForm extends EntityForm {
       }
 
       if (isset($test_data['username']) && isset($test_data['ldap_user'])) {
-        $rows = $this->computeUserData($test_data);
+        $rows = $this->computeUserData($test_data['ldap_user']);
 
         $settings = [
           '#theme' => 'table',
@@ -204,7 +210,7 @@ final class ServerTestForm extends EntityForm {
         ];
 
         $form['#suffix'] .= '<div class="content">
-        <h2>' . $this->t('LDAP Entry for %username (dn: %dn)', ['%dn' => $test_data['ldap_user']['dn'], '%username' => $test_data['username']]) . '</h2>'
+        <h2>' . $this->t('LDAP Entry for %username (dn: %dn)', ['%dn' => $test_data['ldap_user']->getDn(), '%username' => $test_data['username']]) . '</h2>'
                             . $this->renderer->render($settings) . '</div>';
       }
 
@@ -255,21 +261,21 @@ final class ServerTestForm extends EntityForm {
 
     $this->testConnection($values);
 
-    $ldap_user = $this->testUserMapping($values['testing_drupal_username']);
+    $ldap_entry = $this->testUserMapping($values['testing_drupal_username']);
 
-    if ($ldap_user) {
+    if ($ldap_entry) {
       if (!$this->exception && !empty($values['grp_test_grp_dn'])) {
         $user = !empty($values['testing_drupal_username']) ? $values['testing_drupal_username'] : NULL;
         $group_entry = $this->testGroupDn($values['grp_test_grp_dn'], $user);
       }
 
       if (!empty($values['grp_test_grp_dn_writeable'])) {
-        $this->testWritableGroup($values['grp_test_grp_dn_writeable'], $ldap_user['dn']);
+        $this->testWritableGroup($values['grp_test_grp_dn_writeable'], $ldap_entry->getDn());
       }
     }
 
-    if ($ldap_user && isset($ldap_user['attr'])) {
-      $tokens = $this->tokenProcessor->tokenizeLdapEntry($ldap_user['attr'], [], TokenProcessor::PREFIX, TokenProcessor::SUFFIX);
+    if ($ldap_entry) {
+      $tokens = $this->tokenProcessor->tokenizeLdapEntry($ldap_entry, [], TokenProcessor::PREFIX, TokenProcessor::SUFFIX);
     }
     else {
       $tokens = [];
@@ -283,8 +289,8 @@ final class ServerTestForm extends EntityForm {
       'results_tables' => $this->resultsTables,
     ]);
 
-    if ($ldap_user) {
-      $form_state->set(['ldap_server_test_data', 'ldap_user'], $ldap_user);
+    if ($ldap_entry) {
+      $form_state->set(['ldap_server_test_data', 'ldap_user'], $ldap_entry);
     }
 
     if (isset($group_entry)) {
@@ -298,24 +304,31 @@ final class ServerTestForm extends EntityForm {
    *
    * @param string $group_dn
    *   Group DN.
-   * @param mixed|null $user
-   *   User? Unknown.
+   * @param string|null $username
+   *   Username.
    *
    * @return array
    *   Response.
    */
-  private function testGroupDn($group_dn, $user) {
-    $group_entry = $this->ldapServer->search($group_dn, 'objectClass=*');
+  private function testGroupDn($group_dn, $username) {
+    $this->ldapBridge->setServer($this->ldapServer);
+    $this->ldapBridge->bind();
+    $ldap = $this->ldapBridge->get();
+    try {
+      $group_entry = $ldap->query($group_dn, 'objectClass=*')->execute();
+    } catch (LdapException $e) {
+      $group_entry = FALSE;
+    }
 
-    if ($group_entry) {
+    if ($group_entry && $group_entry->count() > 0) {
       foreach ([FALSE, TRUE] as $nested) {
         $this->ldapServer->set('grp_nested', $nested);
         // FALSE.
         $nested_display = ($nested) ? 'Yes' : 'No';
-        if ($user) {
+        if ($username) {
           // This is the parent function that will call FromUserAttr or
           // FromEntry.
-          $memberships = $this->ldapServer->groupMembershipsFromUser($user);
+          $memberships = $this->ldapServer->groupMembershipsFromUser($username);
           $settings = [
             '#theme' => 'item_list',
             '#items' => $memberships,
@@ -327,14 +340,15 @@ final class ServerTestForm extends EntityForm {
             $result,
           ];
 
-          $result = ($this->ldapServer->groupIsMember($group_dn, $user)) ? 'Yes' : 'No';
+          $result = ($this->ldapServer->groupIsMember($group_dn, $username)) ? 'Yes' : 'No';
           $this->resultsTables['group2'][] = [
-            'groupIsMember from group DN ' . $group_dn . 'for ' . $user . ' nested=' . $nested_display . ')',
+            'groupIsMember from group DN ' . $group_dn . 'for ' . $username . ' nested=' . $nested_display . ')',
             $result,
           ];
 
           if ($this->ldapServer->groupUserMembershipsFromAttributeConfigured()) {
-            $groupUserMembershipsFromUserAttributes = $this->ldapServer->groupUserMembershipsFromUserAttr($user);
+            $entry = $this->ldapServer->matchUsernameToExistingLdapEntry($username);
+            $groupUserMembershipsFromUserAttributes = $this->ldapServer->groupUserMembershipsFromUserAttr($entry);
             $settings = [
               '#theme' => 'item_list',
               '#items' => $groupUserMembershipsFromUserAttributes,
@@ -347,12 +361,13 @@ final class ServerTestForm extends EntityForm {
             $result = "'A user LDAP attribute such as memberOf exists that contains a list of their group' is not configured.";
           }
           $this->resultsTables['group2'][] = [
-            'Group memberships from user attribute for ' . $user . ' (nested=' . $nested_display . ') (' . count($groupUserMembershipsFromUserAttributes) . ' found)',
+            'Group memberships from user attribute for ' . $username . ' (nested=' . $nested_display . ') (' . count($groupUserMembershipsFromUserAttributes) . ' found)',
             $result,
           ];
 
           if ($this->ldapServer->groupGroupEntryMembershipsConfigured()) {
-            $groupUserMembershipsFromEntry = $this->ldapServer->groupUserMembershipsFromEntry($user);
+            $ldap_entry = $this->ldapServer->matchUsernameToExistingLdapEntry($username);
+            $groupUserMembershipsFromEntry = $this->ldapServer->groupUserMembershipsFromEntry($ldap_entry);
             $settings = [
               '#theme' => 'item_list',
               '#items' => $groupUserMembershipsFromEntry,
@@ -365,7 +380,7 @@ final class ServerTestForm extends EntityForm {
             $result = "Groups by entry not configured.";
           }
           $this->resultsTables['group2'][] = [
-            'Group memberships from entry for ' . $user . ' (nested=' . $nested_display . ') (' . count($groupUserMembershipsFromEntry) . ' found)',
+            'Group memberships from entry for ' . $username . ' (nested=' . $nested_display . ') (' . count($groupUserMembershipsFromEntry) . ' found)',
             $result,
           ];
 
@@ -399,7 +414,7 @@ final class ServerTestForm extends EntityForm {
       }
     }
 
-    if ($groups_from_dn = $this->ldapServer->groupUserMembershipsFromDn($user)) {
+    if ($groups_from_dn = $this->ldapServer->groupUserMembershipsFromDn($username)) {
       $settings = [
         '#theme' => 'item_list',
         '#items' => $groups_from_dn,
@@ -449,7 +464,7 @@ final class ServerTestForm extends EntityForm {
    * @param string $drupal_username
    *   The Drupal username.
    *
-   * @return array
+   * @return Entry
    *   Errors and the user.
    */
   public function testUserMapping($drupal_username) {
@@ -626,34 +641,30 @@ final class ServerTestForm extends EntityForm {
   /**
    * Compute user data.
    *
-   * @param array $test_data
+   * @param Entry $ldap_entry
    *   Data to test on.
    *
    * @return array
    *   Computed data.
    */
-  private function computeUserData(array $test_data) {
+  private function computeUserData(Entry $ldap_entry) {
     $rows = [];
-    foreach ($test_data['ldap_user']['attr'] as $key => $value) {
+    foreach ($ldap_entry->getAttributes() as $key => $value) {
       if (is_numeric($key) || $key == 'count') {
       }
       elseif (is_array($value) && count($value) > 1) {
-        $count = (int) $value['count'];
         foreach ($value as $i => $value2) {
 
-          if ((string) $i == 'count') {
-            continue;
-          }
-          elseif ($i == 0 && $count == 1) {
+          if ($i == 0 && count($value) == 1) {
             $token = TokenProcessor::PREFIX . $key . TokenProcessor::SUFFIX;
           }
-          elseif ($i == 0 && $count > 1) {
+          elseif ($i == 0 && count($value) > 1) {
             $token = TokenProcessor::PREFIX . $key . TokenProcessor::DELIMITER . '0' . TokenProcessor::SUFFIX;
           }
-          elseif (($i == $count - 1) && $count > 1) {
+          elseif (($i == count($value) - 1) && count($value) > 1) {
             $token = TokenProcessor::PREFIX . $key . TokenProcessor::DELIMITER . 'last' . TokenProcessor::SUFFIX;
           }
-          elseif ($count > 1) {
+          elseif (count($value) > 1) {
             $token = TokenProcessor::PREFIX . $key . TokenProcessor::DELIMITER . $i . TokenProcessor::SUFFIX;
           }
           else {

@@ -48,12 +48,12 @@ function hook_ldap_user_attrs_list_alter(array &$available_user_attrs, array &$p
  * @param User $account
  *   The edit array (see hook_user_insert). Make changes to this object as
  *   required.
- * @param array $ldap_user
+ * @param \Symfony\Component\Ldap\Entry $ldap_user
  *   The LDAP user object relating to the Drupal user.
  *   For structure @see LdapServer::matchUsernameToExistingLdapEntry()
  * @param array $context
  *   Contains ldap_server and provisioning events.
  */
-function hook_ldap_user_edit_user_alter(User &$account, array &$ldap_user, array $context) {
+function hook_ldap_user_edit_user_alter(User $account, \Symfony\Component\Ldap\Entry $ldap_user, array $context) {
   $account->set('myfield', $context['ldap_server']->getAttributeValue($ldap_user, 'myfield'));
 }

@@ -9,6 +9,7 @@ use Drupal\ldap_servers\Helper\ConversionHelper;
 use Drupal\ldap_servers\Helper\CredentialsStorage;
 use Drupal\ldap_servers\Logger\LdapDetailLog;
 use Drupal\user\UserInterface;
+use Symfony\Component\Ldap\Entry;
 
 /**
  * Helper to manage LDAP tokens and process their content.
@@ -34,7 +35,7 @@ class TokenProcessor {
   /**
    * Replace a token.
    *
-   * @param array|UserInterface $resource
+   * @param \Symfony\Component\Ldap\Entry|UserInterface $resource
    *   The resource to act upon.
    * @param string $text
    *   The text such as "[dn]", "[cn]@my.org", "[displayName] [sn]",
@@ -95,7 +96,7 @@ class TokenProcessor {
   /**
    * Turn an LDAP entry into a token array suitable for the t() function.
    *
-   * @param array $ldap_entry
+   * @param \Symfony\Component\Ldap\Entry $ldap_entry
    *   The LDAP entry.
    * @param array $token_keys
    *   Either an array of key names such as ['cn', 'dn'] or an empty
@@ -143,20 +144,19 @@ class TokenProcessor {
    *     [guid:0;bin2hex] = apply bin2hex() function to value
    *     [guid:0;msguid] = apply convertMsguidToString() function to value
    */
-  public function tokenizeLdapEntry(array $ldap_entry, array $token_keys, $pre = self::PREFIX, $post = self::SUFFIX) {
-    if (!is_array($ldap_entry)) {
+  public function tokenizeLdapEntry(Entry $ldap_entry, array $token_keys, $pre = self::PREFIX, $post = self::SUFFIX) {
+    if (empty($ldap_entry->getAttributes())) {
       $this->detailLog->log(
         'Skipped tokenization of LDAP entry because no LDAP entry provided when called from %calling_function.', [
           '%calling_function' => function_exists('debug_backtrace') ? debug_backtrace()[1]['function'] : 'undefined',
         ]
       );
-      // Empty array.
       return [];
     }
-    list($ldap_entry, $tokens) = $this->compileLdapTokenEntries($ldap_entry, $token_keys, $pre, $post);
+    $tokens = $this->compileLdapTokenEntries($ldap_entry, $token_keys, $pre, $post);
 
     // Include the dn.  it will not be handled correctly by previous loops.
-    $tokens[$pre . 'dn' . $post] = SafeMarkup::checkPlain($ldap_entry['dn']);
+    $tokens[$pre . 'dn' . $post] = SafeMarkup::checkPlain($ldap_entry->getDn());
     return $tokens;
   }
 
@@ -347,15 +347,11 @@ class TokenProcessor {
    * @return array
    *   Tokens.
    */
-  private function compileLdapTokenEntries(array $ldap_entry, array $token_keys, $pre, $post) {
+  private function compileLdapTokenEntries(Entry $ldap_entry, array $token_keys, $pre, $post) {
     $tokens = [];
-    // Add lowercase keyed entries to LDAP array.
-    foreach ($ldap_entry as $key => $values) {
-      $ldap_entry[mb_strtolower($key)] = $values;
-    }
+    $tokens = array_merge($tokens, $this->ldapTokenizationProcessDnParts($ldap_entry->getDn(), $pre, $post));
 
-    $tokens = array_merge($tokens, $this->ldapTokenizationProcessDnParts($ldap_entry, $pre, $post));
-
+    $ldap_entry = $ldap_entry->getAttributes();
     if (empty($token_keys)) {
       // Get all attributes.
       $token_keys = array_keys($ldap_entry);
@@ -369,14 +365,14 @@ class TokenProcessor {
         $tokens = array_merge($tokens, $this->processSingleLdapTokenKey($ldap_entry, $pre, $post, $full_token_key));
       }
     }
-    return [$ldap_entry, $tokens];
+    return $tokens;
   }
 
   /**
    * Tokenization of DN parts.
    *
-   * @param array $ldap_entry
-   *   LDAP entry.
+   * @param string $dn
+   *   DN.
    * @param string $pre
    *   Preamble.
    * @param string $post
@@ -385,11 +381,11 @@ class TokenProcessor {
    * @return array
    *   Tokens.
    */
-  private function ldapTokenizationProcessDnParts(array $ldap_entry, $pre, $post) {
+  private function ldapTokenizationProcessDnParts($dn, $pre, $post) {
     $tokens = [];
     // 1. tokenize dn
     // escapes attribute values, need to be unescaped later.
-    $dn_parts = Server::ldapExplodeDn($ldap_entry['dn'], 0);
+    $dn_parts = Server::ldapExplodeDn($dn, 0);
     unset($dn_parts['count']);
     $parts_count = [];
     $parts_last_value = [];
@@ -436,7 +432,7 @@ class TokenProcessor {
   /**
    * Process a single ldap_entry token.
    *
-   * @param array $ldap_entry
+   * @param array $ldap_entry_result
    *   LDAP entry.
    * @param string $pre
    *   Preamble.
@@ -448,20 +444,20 @@ class TokenProcessor {
    * @return array
    *   Tokens.
    */
-  private function processSingleLdapEntryToken(array $ldap_entry, $pre, $post, $attribute_name) {
+  private function processSingleLdapEntryToken(array $ldap_entry_result, $pre, $post, $attribute_name) {
     $tokens = [];
 
-    $attribute_value = $ldap_entry[$attribute_name];
-    if (is_array($attribute_value) && is_scalar($attribute_value[0]) && $attribute_value['count'] == 1) {
+    $attribute_value = $ldap_entry_result[$attribute_name];
+    if (is_array($attribute_value) && is_scalar($attribute_value[0]) && count($attribute_value) == 1) {
       // Only one entry, example output: ['cn', 'cn:0', 'cn:last'].
       $tokens[$pre . mb_strtolower($attribute_name) . $post] = SafeMarkup::checkPlain($attribute_value[0]);
       $tokens[$pre . mb_strtolower($attribute_name) . self::DELIMITER . '0' . $post] = SafeMarkup::checkPlain($attribute_value[0]);
       $tokens[$pre . mb_strtolower($attribute_name) . self::DELIMITER . 'last' . $post] = SafeMarkup::checkPlain($attribute_value[0]);
     }
-    elseif (is_array($attribute_value) && $attribute_value['count'] > 1) {
+    elseif (is_array($attribute_value) && count($attribute_value) > 1) {
       // Multiple entries, example: ['cn:last', 'cn:0', 'cn:1'].
-      $tokens[$pre . mb_strtolower($attribute_name) . self::DELIMITER . 'last' . $post] = SafeMarkup::checkPlain($attribute_value[$attribute_value['count'] - 1]);
-      for ($i = 0; $i < $attribute_value['count']; $i++) {
+      $tokens[$pre . mb_strtolower($attribute_name) . self::DELIMITER . 'last' . $post] = SafeMarkup::checkPlain($attribute_value[count($attribute_value) - 1]);
+      for ($i = 0; $i < count($attribute_value); $i++) {
         $tokens[$pre . mb_strtolower($attribute_name) . self::DELIMITER . $i . $post] = SafeMarkup::checkPlain($attribute_value[$i]);
       }
     }
@@ -477,7 +473,7 @@ class TokenProcessor {
   /**
    * Process a single LDAP Token key.
    *
-   * @param array $ldap_entry
+   * @param array $ldap_entry_result
    *   LDAP entry.
    * @param string $pre
    *   Preamble.
@@ -489,7 +485,7 @@ class TokenProcessor {
    * @return array
    *   Tokens.
    */
-  private function processSingleLdapTokenKey(array $ldap_entry, $pre, $post, $full_token_key) {
+  private function processSingleLdapTokenKey(array $ldap_entry_result, $pre, $post, $full_token_key) {
     $tokens = [];
     // A token key is for example 'dn', 'mail:0', 'mail:last', or
     // 'guid:0;tobase64'.
@@ -504,17 +500,17 @@ class TokenProcessor {
     $i = NULL;
 
     // Don't use empty() since a 0, "", etc value may be a desired value.
-    if ($attribute_name == 'dn' || !isset($ldap_entry[$attribute_name])) {
+    if ($attribute_name == 'dn' || !isset($ldap_entry_result[$attribute_name])) {
       return [];
     }
     else {
-      $count = $ldap_entry[$attribute_name]['count'];
+      $count = count($ldap_entry_result[$attribute_name]);
       if ($ordinal_key === 'last') {
         $i = ($count > 0) ? $count - 1 : 0;
-        $value = $ldap_entry[$attribute_name][$i];
+        $value = $ldap_entry_result[$attribute_name][$i];
       }
       elseif (is_numeric($ordinal_key) || $ordinal_key == '0') {
-        $value = $ldap_entry[$attribute_name][$ordinal_key];
+        $value = $ldap_entry_result[$attribute_name][$ordinal_key];
       }
       else {
         // don't add token if case not covered.

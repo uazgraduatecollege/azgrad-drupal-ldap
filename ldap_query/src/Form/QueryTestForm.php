@@ -36,36 +36,31 @@ class QueryTestForm extends FormBase {
       $data = $controller->getRawResults();
 
       $form['result_count'] = [
-        '#markup' => '<h2>' . $this->t('@count results', ['@count' => $data['count']]) . '</h2>',
+        '#markup' => '<h2>' . $this->t('@count results', ['@count' => count($data)]) . '</h2>',
       ];
-      unset($data['count']);
 
       $header[] = 'DN';
-
       $attributes = $controller->availableFields();
-
       foreach ($attributes as $attribute) {
         $header[] = $attribute;
       }
 
       $rows = [];
-
       foreach ($data as $entry) {
-        $row = [$entry['dn']];
+        $row = [$entry->getDn()];
         foreach ($attributes as $attribute_data) {
-          $processedAttributeName = mb_strtolower($attribute_data);
-          if (!isset($entry[$processedAttributeName])) {
+          if (!$entry->hasAttribute($attribute_data)) {
             $row[] = 'No data';
           }
-          elseif (is_array($entry[$processedAttributeName])) {
-            unset($entry[$processedAttributeName]['count']);
-            $row[] = ServerTestForm::binaryCheck(implode("\n", $entry[$processedAttributeName]));
-          }
           else {
-            $row[] = ServerTestForm::binaryCheck($entry[$processedAttributeName]);
+            if (count($entry->getAttribute($attribute_data)) > 1) {
+              $row[] = ServerTestForm::binaryCheck(implode("\n", $entry->getAttribute($attribute_data)));
+            }
+            else {
+              $row[] = ServerTestForm::binaryCheck($entry->getAttribute($attribute_data)[0]);
+            }
           }
         }
-        unset($entry['count']);
         $rows[] = $row;
       }
 

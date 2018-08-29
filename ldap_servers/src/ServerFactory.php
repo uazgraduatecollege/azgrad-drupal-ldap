@@ -49,6 +49,8 @@ class ServerFactory implements LdapUserAttributesInterface {
    *
    * @return \Drupal\Core\Entity\EntityInterface|\Drupal\ldap_servers\Entity\Server
    *   Server entity.
+   *
+   * @deprecated
    */
   public function getServerById($sid) {
     return $this->entityManager->load($sid);
@@ -107,8 +109,7 @@ class ServerFactory implements LdapUserAttributesInterface {
    * @param string $id
    *   Server id.
    *
-   * @return array|bool
-   *   Result data or false.
+   * @return \Symfony\Component\Ldap\Entry|FALSE
    */
   public function getUserDataFromServerByIdentifier($identifier, $id) {
     // Try to retrieve the user from the cache.
@@ -124,16 +125,14 @@ class ServerFactory implements LdapUserAttributesInterface {
       return FALSE;
     }
 
-    $ldap_user = $server->matchUsernameToExistingLdapEntry($identifier);
-
-    if ($ldap_user) {
-      $ldap_user['id'] = $id;
+    $ldap_entry = $server->matchUsernameToExistingLdapEntry($identifier);
+    if ($ldap_entry) {
       $cache_expiry = 5 * 60 + time();
       $cache_tags = ['ldap', 'ldap_servers', 'ldap_servers.user_data'];
-      $this->cache->set('ldap_servers:user_data:' . $identifier, $ldap_user, $cache_expiry, $cache_tags);
+      $this->cache->set('ldap_servers:user_data:' . $identifier, $ldap_entry, $cache_expiry, $cache_tags);
     }
 
-    return $ldap_user;
+    return $ldap_entry;
   }
 
   /**
@@ -149,11 +148,10 @@ class ServerFactory implements LdapUserAttributesInterface {
    * @return array|bool
    *   Returns data or FALSE.
    */
-  public function getUserDataFromServerByAccount(UserInterface $account, $id, $ldap_context = NULL) {
+  public function getUserDataFromServerByAccount(UserInterface $account, $id) {
     $identifier = ExternalAuthenticationHelper::getUserIdentifierFromMap($account->id());
     if ($identifier) {
-      // TODO: Fix parameters.
-      return $this->getUserDataFromServerByIdentifier($identifier, $id, $ldap_context);
+      return $this->getUserDataFromServerByIdentifier($identifier, $id);
     }
     else {
       return FALSE;
@@ -215,6 +213,10 @@ class ServerFactory implements LdapUserAttributesInterface {
    *
    * @return array
    *   Altered attributes.
+   *
+   * TODO: Split this out into a separate class.
+   * TODO: $params is a bad argument, it only needs the sid parameter and
+   * otherwise depends on the Server class.
    */
   public function alterLdapAttributes(array &$attributes, array $params) {
     // Force this data type.
@@ -227,7 +229,7 @@ class ServerFactory implements LdapUserAttributesInterface {
 
         if ($ldap_server) {
           // The attributes mail, unique_persistent_attr, user_attr,
-          // mail_template, and user_dn_expression are needed for all
+          // mail_template, and user_dn _expression are needed for all
           // functionality.
           if (!isset($attributes[$ldap_server->get('mail_attr')])) {
             $attributes[$ldap_server->get('mail_attr')] = ConversionHelper::setAttributeMap();
@@ -263,6 +265,10 @@ class ServerFactory implements LdapUserAttributesInterface {
    *
    * @return array
    *   Attribute list.
+   *
+   * TODO: Split this out into a separate class.
+   * TODO: $params is a bad argument, it only needs the ldap_server and
+   * direction parameter and otherwise depends on the Server class.
    */
   public function alterLdapUserAttributesList(array &$available_user_attrs, array &$params) {
     if (isset($params['ldap_server']) && $params['ldap_server']) {

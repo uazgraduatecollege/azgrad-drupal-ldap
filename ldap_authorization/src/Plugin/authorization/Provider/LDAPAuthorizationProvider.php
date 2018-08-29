@@ -164,25 +164,25 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
     $factory = \Drupal::service('ldap.servers');
     /** @var \Drupal\ldap_servers\Entity\Server $server */
     $server = $factory->getServerByIdEnabled($server_id);
-    $ldapUserData = $factory->getUserDataFromServerByAccount($user, $server_id);
+    $ldap_user_data = $factory->getUserDataFromServerByAccount($user, $server_id);
 
-    if (!$ldapUserData && $user->isNew()) {
+    if (!$ldap_user_data && $user->isNew()) {
       // If we don't have a real user yet, fall back to the account name.
-      $ldapUserData = $factory->getUserDataFromServerByIdentifier($user->getAccountName(), $server_id);
+      $ldap_user_data = $factory->getUserDataFromServerByIdentifier($user->getAccountName(), $server_id);
     }
 
-    if (!$ldapUserData && $this->configuration['status']['only_ldap_authenticated'] == TRUE) {
+    if (!$ldap_user_data && $this->configuration['status']['only_ldap_authenticated'] == TRUE) {
       throw new AuthorizationSkipAuthorization();
     }
 
     // Get user groups from DN.
-    $derive_from_dn_authorizations = $server->groupUserMembershipsFromDn($user);
+    $derive_from_dn_authorizations = $server->groupUserMembershipsFromDn($user->getAccountName());
     if (!$derive_from_dn_authorizations) {
       $derive_from_dn_authorizations = [];
     }
 
     // Get user groups from membership.
-    $group_dns = $server->groupMembershipsFromUser($user);
+    $group_dns = $server->groupMembershipsFromUser($user->getAccountName());
     if (!$group_dns) {
       $group_dns = [];
     }

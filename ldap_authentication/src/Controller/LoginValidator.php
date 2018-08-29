@@ -18,6 +18,9 @@ use Drupal\ldap_servers\LdapUserAttributesInterface;
 use Drupal\ldap_user\Processor\DrupalUserProcessor;
 use Drupal\user\Entity\User;
 use Drupal\Core\Form\FormStateInterface;
+use Symfony\Component\Ldap\Entry;
+use Symfony\Component\Ldap\Exception\ConnectionException;
+use Symfony\Component\Ldap\Exception\LdapException;
 
 /**
  * Handles the actual testing of credentials and authentication of users.
@@ -53,7 +56,17 @@ final class LoginValidator implements LdapUserAttributesInterface {
    * @var \Drupal\user\Entity\User
    */
   protected $drupalUser = FALSE;
+
+  /**
+   * @var bool|array
+   * @deprecated
+   */
   protected $ldapUser = FALSE;
+
+  /**
+   * @var \Symfony\Component\Ldap\Entry
+   */
+  protected $ldapEntry;
 
   protected $emailTemplateUsed = FALSE;
   protected $emailTemplateTokens = [];
@@ -322,9 +335,9 @@ final class LoginValidator implements LdapUserAttributesInterface {
       }
 
       // Check if user exists in LDAP.
-      $this->ldapUser = $this->serverDrupalUser->matchUsernameToExistingLdapEntry($this->authName);
+      $this->ldapEntry = $this->serverDrupalUser->matchUsernameToExistingLdapEntry($this->authName);
 
-      if (!$this->ldapUser) {
+      if (!$this->ldapEntry) {
         $this->detailLog->log(
           '%username: User not found for server %id with %bind_method.', [
             '%username' => $this->authName,
@@ -342,7 +355,7 @@ final class LoginValidator implements LdapUserAttributesInterface {
         continue;
       }
 
-      if (!$this->checkAllowedExcluded($this->authName, $this->ldapUser)) {
+      if (!$this->checkAllowedExcluded($this->authName, $this->ldapEntry)) {
         $authenticationResult = self::AUTHENTICATION_FAILURE_DISALLOWED;
         // Regardless of how many servers, disallowed user fails.
         break;
@@ -360,7 +373,7 @@ final class LoginValidator implements LdapUserAttributesInterface {
         $authenticationResult = self::AUTHENTICATION_SUCCESS;
         if ($this->serverDrupalUser->get('bind_method') == 'anon_user') {
           // After successful bind, lookup user again to get private attributes.
-          $this->ldapUser = $this->serverDrupalUser->matchUsernameToExistingLdapEntry($this->authName);
+          $this->ldapEntry= $this->serverDrupalUser->matchUsernameToExistingLdapEntry($this->authName);
         }
         if ($this->serverDrupalUser->get('bind_method') == 'service_account' ||
           $this->serverDrupalUser->get('bind_method') == 'anon_user') {
@@ -399,9 +412,14 @@ final class LoginValidator implements LdapUserAttributesInterface {
       $loginValid = TRUE;
     }
     else {
-      CredentialsStorage::storeUserDn($this->ldapUser['dn']);
+      CredentialsStorage::storeUserDn($this->ldapEntry->getDn());
       CredentialsStorage::testCredentials(TRUE);
-      $bindResult = $this->serverDrupalUser->bind();
+      try {
+        $bindResult = $this->serverDrupalUser->bind();
+      } catch (ConnectionException $e) {
+        // TODO: Simplify when other code path obsolete.
+        $bindResult = FALSE;
+      }
       CredentialsStorage::testCredentials(FALSE);
       if ($bindResult == Server::LDAP_SUCCESS) {
         $loginValid = TRUE;
@@ -453,9 +471,9 @@ final class LoginValidator implements LdapUserAttributesInterface {
         continue;
       }
 
-      $this->ldapUser = $this->serverDrupalUser->matchUsernameToExistingLdapEntry($authName);
+      $this->ldapEntry= $this->serverDrupalUser->matchUsernameToExistingLdapEntry($authName);
 
-      if (!$this->ldapUser) {
+      if (!$this->ldapEntry) {
         $this->detailLog->log(
           '%username: Trying server %id where bind_method = %bind_method. Error: %err_text', [
             '%username' => $authName,
@@ -473,7 +491,7 @@ final class LoginValidator implements LdapUserAttributesInterface {
         continue;
       }
 
-      if (!$this->checkAllowedExcluded($this->authName, $this->ldapUser)) {
+      if (!$this->checkAllowedExcluded($this->authName, $this->ldapEntry)) {
         $authenticationResult = self::AUTHENTICATION_FAILURE_DISALLOWED;
         // Regardless of how many servers, disallowed user fails.
         break;
@@ -482,7 +500,7 @@ final class LoginValidator implements LdapUserAttributesInterface {
       $authenticationResult = self::AUTHENTICATION_SUCCESS;
       if ($this->serverDrupalUser->get('bind_method') == 'anon_user') {
         // After successful bind, lookup user again to get private attributes.
-        $this->ldapUser = $this->serverDrupalUser->matchUsernameToExistingLdapEntry($authName);
+        $this->ldapEntry= $this->serverDrupalUser->matchUsernameToExistingLdapEntry($authName);
       }
       if ($this->serverDrupalUser->get('bind_method') == 'service_account' ||
         $this->serverDrupalUser->get('bind_method') == 'anon_user') {
@@ -606,15 +624,18 @@ final class LoginValidator implements LdapUserAttributesInterface {
   /**
    * Check if exclusion criteria match.
    *
+   * @param $authName
+   * @param \Symfony\Component\Ldap\Entry $ldap_user
+   *
    * @return bool
    *   Exclusion result.
    */
-  public function checkAllowedExcluded($authName, $ldap_user) {
+  public function checkAllowedExcluded($authName, Entry $ldap_user) {
 
     // Do one of the exclude attribute pairs match? If user does not already
     // exists and deferring to user settings AND user settings only allow.
     foreach ($this->config->get('excludeIfTextInDn') as $test) {
-      if (stripos($ldap_user['dn'], $test) !== FALSE) {
+      if (stripos($ldap_user->getDn(), $test) !== FALSE) {
         return FALSE;
       }
     }
@@ -623,7 +644,7 @@ final class LoginValidator implements LdapUserAttributesInterface {
     if (count($this->config->get('allowOnlyIfTextInDn'))) {
       $fail = TRUE;
       foreach ($this->config->get('allowOnlyIfTextInDn') as $test) {
-        if (stripos($ldap_user['dn'], $test) !== FALSE) {
+        if (stripos($ldap_user->getDn(), $test) !== FALSE) {
           $fail = FALSE;
         }
       }
@@ -708,18 +729,19 @@ final class LoginValidator implements LdapUserAttributesInterface {
       return FALSE;
     }
 
-    if ($this->drupalUser->getEmail() == $this->ldapUser['mail']) {
+    if ($this->drupalUser->get('mail')->value == $this->serverDrupalUser->userEmailFromLdapEntry($this->ldapEntry)) {
       return FALSE;
     }
 
+
     if ($this->config->get('emailUpdate') == LdapAuthenticationConfiguration::$emailUpdateOnLdapChangeEnableNotify ||
         $this->config->get('emailUpdate') == LdapAuthenticationConfiguration::$emailUpdateOnLdapChangeEnable) {
-      $this->drupalUser->set('mail', $this->ldapUser['mail']);
+      $this->drupalUser->set('mail', $this->serverDrupalUser->userEmailFromLdapEntry($this->ldapEntry));
       if (!$this->drupalUser->save()) {
         $this->logger
           ->error('Failed to make changes to user %username updated %changed.', [
             '%username' => $this->drupalUser->getAccountName(),
-            '%changed' => $this->ldapUser['mail'],
+            '%changed' => $this->serverDrupalUser->userEmailFromLdapEntry($this->ldapEntry),
           ]
           );
         return FALSE;
@@ -728,7 +750,7 @@ final class LoginValidator implements LdapUserAttributesInterface {
       ) {
         drupal_set_message($this->t(
           'Your e-mail has been updated to match your current account (%mail).',
-          ['%mail' => $this->ldapUser['mail']]),
+          ['%mail' => $this->serverDrupalUser->userEmailFromLdapEntry($this->ldapEntry)]),
           'status'
         );
         return TRUE;
@@ -744,7 +766,7 @@ final class LoginValidator implements LdapUserAttributesInterface {
    * saved in Drupal account.
    */
   private function updateAuthNameFromPuid() {
-    $puid = $this->serverDrupalUser->userPuidFromLdapEntry($this->ldapUser['attr']);
+    $puid = $this->serverDrupalUser->userPuidFromLdapEntry($this->ldapEntry);
     if ($puid) {
       $this->drupalUser = $this->serverDrupalUser->userAccountFromPuid($puid);
       /** @var \Drupal\user\Entity\User $userMatchingPuid */
@@ -1052,14 +1074,24 @@ final class LoginValidator implements LdapUserAttributesInterface {
         $replace = [$basedn, $this->authName];
         CredentialsStorage::storeUserDn(str_replace($search, $replace, $this->serverDrupalUser->get('user_dn_expression')));
         CredentialsStorage::testCredentials(TRUE);
-        $bindResult = $this->serverDrupalUser->bind();
+        try {
+          $bindResult = $this->serverDrupalUser->bind();
+        } catch (ConnectionException $e) {
+          // TODO: Simplify when other code path obsolete.
+          $bindResult = FALSE;
+        }
         if ($bindResult == Server::LDAP_SUCCESS) {
           break;
         }
       }
     }
     else {
-      $bindResult = $this->serverDrupalUser->bind();
+      try {
+        $bindResult = $this->serverDrupalUser->bind();
+      } catch (ConnectionException $e) {
+        // TODO: Simplify when other code path obsolte.
+        $bindResult = FALSE;
+      }
     }
 
     if ($bindResult != Server::LDAP_SUCCESS) {

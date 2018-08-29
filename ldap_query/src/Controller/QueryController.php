@@ -4,12 +4,17 @@ namespace Drupal\ldap_query\Controller;
 
 use Drupal\ldap_query\Entity\QueryEntity;
 use Drupal\ldap_servers\Entity\Server;
+use Symfony\Component\Ldap\Entry;
+use Symfony\Component\Ldap\Exception\LdapException;
 
 /**
  * Controller class for LDAP queries, in assistance to the entity itself.
  */
 class QueryController {
 
+  /**
+   * @var Entry[]
+   */
   private $results = [];
   private $qid;
   private $query;
@@ -40,44 +45,55 @@ class QueryController {
    *   queries requiring filtering.
    */
   public function execute($filter = NULL) {
-    $count = 0;
-
     if ($this->query) {
-      $ldap_server = Server::load($this->query->get('server_id'));
-      $ldap_server->connectAndBindIfNotAlready();
-
       if ($filter == NULL) {
         $filter = $this->query->get('filter');
       }
 
-      foreach ($this->query->getProcessedBaseDns() as $base_dn) {
-        $result = $ldap_server->search(
-          $base_dn,
-          $filter,
-          $this->query->getProcessedAttributes(),
-          0,
-          $this->query->get('size_limit'),
-          $this->query->get('time_limit'),
-          $this->query->get('dereference'),
-          $this->query->get('scope')
-        );
+      //TODO:DI, exception handling.
 
-        if ($result !== FALSE && $result['count'] > 0) {
-          $count = $count + $result['count'];
-          $this->results = array_merge($this->results, $result);
+      /** @var \Drupal\ldap_servers\LdapBridge $bridge */
+      $bridge = \Drupal::service('ldap_bridge');
+      $bridge->setServerById($this->query->get('server_id'));
+
+      if ($bridge->bind()) {
+
+        foreach ($this->query->getProcessedBaseDns() as $base_dn) {
+          $options = [
+            'filter' => $this->query->getProcessedAttributes(),
+            'maxItems' => $this->query->get('size_limit'),
+            'timeout' => $this->query->get('time_limit'),
+            'deref' => $this->query->get('dereference'),
+            'scope' => $this->query->get('scope'),
+          ];
+
+          try {
+            $ldap_response = $bridge
+              ->get()
+              ->query($base_dn, $filter, $options)
+              ->execute()
+              ->toArray();
+          } catch (LdapException $e) {
+            \Drupal::logger('ldap_query')->warning('LDAP query exception %message', ['@message' => $e->getMessage()]);
+            $ldap_response = FALSE;
+          }
+
+          if ($ldap_response && !empty($ldap_response)) {
+            $this->results = array_merge($this->results, $ldap_response);
+          }
         }
       }
-      $this->results['count'] = $count;
     }
     else {
-      \Drupal::logger('ldap_query')->warning('Could not load query @query', ['@query' => $this->qid]);
+      \Drupal::logger('ldap_query')
+        ->warning('Could not load query @query', ['@query' => $this->qid]);
     }
   }
 
   /**
    * Return raw results.
    *
-   * @return array
+   * @return Entry[]
    *   Raw results.
    */
   public function getRawResults() {
@@ -95,12 +111,8 @@ class QueryController {
     // We loop through all results since some users might not have fields set
     // for them and those are missing and not null.
     foreach ($this->results as $result) {
-      if (is_array($result)) {
-        foreach ($result as $k => $v) {
-          if (is_numeric($k)) {
-            $attributes[$v] = $v;
-          }
-        }
+      foreach ($result->getAttributes() as $field_name => $field_value) {
+        $attributes[$field_name] = $field_name;
       }
     }
     return $attributes;

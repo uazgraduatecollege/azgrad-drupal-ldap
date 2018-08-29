@@ -1,10 +1,13 @@
 services:
-  logger.channel.ldap_servers:
-    parent: logger.channel_base
-    arguments: ['ldap_servers']
+  ldap_bridge:
+    class: Drupal\ldap_servers\LdapBridge
+    arguments: ['@logger.channel.ldap_servers', '@entity_type.manager']
   ldap.servers:
     class: Drupal\ldap_servers\ServerFactory
     arguments: ['@config.factory', '@logger.channel.ldap_servers', '@entity_type.manager', '@cache.default']
+  logger.channel.ldap_servers:
+    parent: logger.channel_base
+    arguments: ['ldap_servers']
   ldap.detail_log:
     class: Drupal\ldap_servers\Logger\LdapDetailLog
     arguments: ['@logger.factory', '@config.factory']

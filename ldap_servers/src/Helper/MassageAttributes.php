@@ -8,22 +8,6 @@ namespace Drupal\ldap_servers\Helper;
 class MassageAttributes {
 
   /**
-   * Escape filter values and attribute values when querying ldap.
-   *
-   * @param string|array $value
-   *   Value to escape.
-   *
-   * @return array
-   *   Escaped value.
-   */
-  public function queryLdapAttributeValue($value) {
-    if (!empty($value)) {
-      $value = ConversionHelper::escapeFilterValue($value);
-    }
-    return $value;
-  }
-
-  /**
    * Prepare text for storing LDAP attribute values.
    *
    * Use unescaped, mixed case attribute values when storing attribute values

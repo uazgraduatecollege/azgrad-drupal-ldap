@@ -59,6 +59,13 @@ class LdapQuery extends QueryPluginBase {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function getCacheMaxAge() {
+    return 0;
+  }
+
+  /**
    * Execute the query.
    *
    * @param \Drupal\views\ViewExecutable $view
@@ -82,17 +89,15 @@ class LdapQuery extends QueryPluginBase {
     $fields = $controller->availableFields();
 
     $index = 0;
-    unset($results['count']);
     $rows = [];
     foreach ($results as $result) {
       $row = [];
-      // TODO: Try to only fetch requested fields instead of all available.
       foreach ($fields as $field_key => $void) {
-        if (isset($result[$field_key])) {
-          unset($result[$field_key]['count']);
-          $row[$field_key] = $result[$field_key];
+        if ($result->hasAttribute($field_key)) {
+          $row[$field_key] = $result->getAttribute($field_key);
         }
       }
+      $row['dn'] = [0 => $result->getDn()];
       $row['index'] = $index++;
       $rows[] = $row;
     }

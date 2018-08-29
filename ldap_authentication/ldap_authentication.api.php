@@ -5,6 +5,8 @@
  * Summary of hooks and other developer related functions.
  */
 
+use Symfony\Component\Ldap\Entry;
+
 /**
  * Alter the allowed user results.
  *
@@ -20,7 +22,7 @@
  *   TRUE for allow, FALSE for deny. If set to TRUE or FALSE, another module has
  *   already set this and function should be careful about overriding this.
  */
-function hook_ldap_authentication_allowuser_results_alter(array $ldap_user, $name, &$hook_result) {
+function hook_ldap_authentication_allowuser_results_alter(Entry $ldap_user, $name, &$hook_result) {
 
   // Other module has denied user, should not override.
   if ($hook_result === FALSE) {
