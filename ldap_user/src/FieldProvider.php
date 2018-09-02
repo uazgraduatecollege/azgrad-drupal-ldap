@@ -6,6 +6,7 @@ use Drupal\Core\Config\ConfigFactory;
 use Drupal\Core\Entity\EntityFieldManager;
 use Drupal\Core\Entity\EntityTypeManager;
 use Drupal\Core\Extension\ModuleHandler;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\ldap_servers\Helper\ConversionHelper;
 use Drupal\ldap_servers\LdapUserAttributesInterface;
 use Drupal\ldap_user\Helper\LdapConfiguration;
@@ -14,6 +15,8 @@ use Drupal\ldap_user\Helper\LdapConfiguration;
  * Provides the basic and required fields needed for user mappings.
  */
 class FieldProvider implements LdapUserAttributesInterface {
+
+  use StringTranslationTrait;
 
   protected $config;
   protected $entityTypeManager;
