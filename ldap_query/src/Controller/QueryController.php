@@ -3,8 +3,6 @@
 namespace Drupal\ldap_query\Controller;
 
 use Drupal\ldap_query\Entity\QueryEntity;
-use Drupal\ldap_servers\Entity\Server;
-use Symfony\Component\Ldap\Entry;
 use Symfony\Component\Ldap\Exception\LdapException;
 
 /**
@@ -13,7 +11,7 @@ use Symfony\Component\Ldap\Exception\LdapException;
 class QueryController {
 
   /**
-   * @var Entry[]
+   * @var \Symfony\Component\Ldap\Entry[]
    */
   private $results = [];
   private $qid;
@@ -50,8 +48,7 @@ class QueryController {
         $filter = $this->query->get('filter');
       }
 
-      //TODO:DI, exception handling.
-
+      // TODO:DI, exception handling.
       /** @var \Drupal\ldap_servers\LdapBridge $bridge */
       $bridge = \Drupal::service('ldap_bridge');
       $bridge->setServerById($this->query->get('server_id'));
@@ -73,7 +70,8 @@ class QueryController {
               ->query($base_dn, $filter, $options)
               ->execute()
               ->toArray();
-          } catch (LdapException $e) {
+          }
+          catch (LdapException $e) {
             \Drupal::logger('ldap_query')->warning('LDAP query exception %message', ['@message' => $e->getMessage()]);
             $ldap_response = FALSE;
           }
@@ -93,7 +91,7 @@ class QueryController {
   /**
    * Return raw results.
    *
-   * @return Entry[]
+   * @return \Symfony\Component\Ldap\Entry[]
    *   Raw results.
    */
   public function getRawResults() {

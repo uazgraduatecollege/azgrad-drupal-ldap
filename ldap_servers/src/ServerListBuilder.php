@@ -71,7 +71,7 @@ class ServerListBuilder extends ConfigEntityListBuilder {
   /**
    * Format a server status response.
    *
-   * @param Server $server
+   * @param \Drupal\ldap_servers\Entity\Server $server
    *   Server.
    *
    * @return \Drupal\Core\StringTranslation\TranslatableMarkup

@@ -4,13 +4,10 @@ namespace Drupal\ldap_servers\Entity;
 
 use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\ldap_servers\Helper\ConversionHelper;
-use Drupal\ldap_servers\Helper\CredentialsStorage;
 use Drupal\ldap_servers\LdapProtocolInterface;
-use Drupal\ldap_servers\Helper\MassageAttributes;
 use Drupal\ldap_servers\ServerInterface;
 use Drupal\ldap_servers\Processor\TokenProcessor;
 use Drupal\user\Entity\User;
-use Drupal\user\UserInterface;
 use Symfony\Component\Ldap\Adapter\ExtLdap\Collection;
 use Symfony\Component\Ldap\Entry;
 use Symfony\Component\Ldap\Exception\LdapException;
@@ -154,14 +151,13 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
   }
 
   /**
-   *  Only required for status overview page.
+   * Only required for status overview page.
    */
   public function bind() {
     if ($this->ldapBridge->bind()) {
       $this->ldap = $this->ldapBridge->get();
     }
   }
-
 
   /**
    * Checks if connected and connects and binds otherwise.
@@ -193,13 +189,15 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
 
     try {
       $result = $this->ldap->query($dn, '(objectclass=*)', $options)->execute();
-    } catch (LdapException $e) {
+    }
+    catch (LdapException $e) {
       return FALSE;
     }
 
     if ($result->count() > 0) {
       return $result->toArray()[0];
-    } else {
+    }
+    else {
       return FALSE;
     }
   }
@@ -223,13 +221,15 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
 
     try {
       $result = $this->ldap->query($dn, '(objectclass=*)', $options)->execute();
-    } catch (LdapException $e) {
+    }
+    catch (LdapException $e) {
       return FALSE;
     }
 
     if ($result->count() > 0) {
       return TRUE;
-    } else {
+    }
+    else {
       return FALSE;
     }
   }
@@ -249,9 +249,9 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
    * @return bool
    *   Result of action.
    *
-   * TODO: Remove doc above or file bug upstream.
-   * TODO: Relies on one server attribute, consider moving into an
-   * EntryManagerAdapter (possibly a subclass of bridge or trait).
+   *   TODO: Remove doc above or file bug upstream.
+   *   TODO: Relies on one server attribute, consider moving into an
+   *   EntryManagerAdapter (possibly a subclass of bridge or trait).
    */
   public function createLdapEntry(Entry $entry) {
     $this->connectAndBindIfNotAlready();
@@ -262,17 +262,18 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
     }
 
     if ($entry->hasAttribute('unicodePwd') && $this->get('type') == 'ad') {
-      $entry->setAttribute('unicodePwd',  [$this->convertPasswordForActiveDirectoryunicodePwd($entry->getAttribute('unicodePwd')[0])]);
+      $entry->setAttribute('unicodePwd', [$this->convertPasswordForActiveDirectoryunicodePwd($entry->getAttribute('unicodePwd')[0])]);
     }
 
     try {
       $this->ldap->getEntryManager()->add($entry);
-    } catch (LdapException $e) {
+    }
+    catch (LdapException $e) {
       $this->logger->error("LDAP server %id exception: %ldap_error", [
-          '%id' => $this->id(),
-          '%ldap_error' => $e->getMessage(),
-        ]
-      );
+        '%id' => $this->id(),
+        '%ldap_error' => $e->getMessage(),
+      ]
+          );
       return FALSE;
     }
     return TRUE;
@@ -292,12 +293,13 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
 
     try {
       $this->ldap->getEntryManager()->remove(new Entry($dn));
-    } catch (LdapException $e) {
+    }
+    catch (LdapException $e) {
       $this->logger->error("LDAP serrver deletion error on %id: %message", [
-          '%message' => $e->getMessage(),
-          '%id' => $this->id(),
-        ]
-      );
+        '%message' => $e->getMessage(),
+        '%id' => $this->id(),
+      ]
+          );
       return FALSE;
     }
     return TRUE;
@@ -371,10 +373,11 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
   /**
    * Modify attributes of LDAP entry.
    *
-   * @param Entry $entry
+   * @param \Symfony\Component\Ldap\Entry $entry
    *
    * @return bool
    *   Result of query.
+   *
    * @deprecated symfony/ldap refactoring needed.
    */
   public function modifyLdapEntry(Entry $entry) {
@@ -383,15 +386,16 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
 
     try {
       $current = $this->ldap->query($entry->getDn(), 'objectClass=*')->execute();
-    } catch (LdapException $e) {
+    }
+    catch (LdapException $e) {
       $error_message = $e->getMessage();
     }
 
     if ($error_message || $current->count() != 0) {
       $this->logger->error("LDAP server read error on modify in %id: %message ", [
-          '%message' => $error_message,
-          '%id' => $this->id(),
-        ]
+        '%message' => $error_message,
+        '%id' => $this->id(),
+      ]
       );
       return FALSE;
     }
@@ -413,13 +417,14 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
     if (count($entry->getAttributes()) > 0) {
       try {
         $this->ldap->getEntryManager()->update($entry);
-      } catch (LdapException $e) {
+      }
+      catch (LdapException $e) {
         $this->logger->error("LDAP server error updating %dn on %id: %message", [
-            '%dn' => $entry->getDn(),
-            '%id' => $this->id(),
-            '%message' => $e->getMessage(),
-          ]
-        );
+          '%dn' => $entry->getDn(),
+          '%id' => $this->id(),
+          '%message' => $e->getMessage(),
+        ]
+              );
         return FALSE;
       }
     }
@@ -436,7 +441,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
    * @param array $attributes
    *   List of desired attributes. If omitted, we only return "dn".
    *
-   * @return Entry[]
+   * @return \Symfony\Component\Ldap\Entry[]
    *   An array of matching entries combined from all DN.
    */
   public function searchAllBaseDns($filter, array $attributes = []) {
@@ -450,7 +455,8 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
       $relative_filter = str_replace(',' . $base_dn, '', $filter);
       try {
         $ldap_response = $this->ldap->query($base_dn, $relative_filter, $options)->execute();
-      } catch (LdapException $e) {
+      }
+      catch (LdapException $e) {
         $this->logger->critical('LDAP search error with %message', [
           '%message' => $e->getMessage(),
         ]);
@@ -471,8 +477,8 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
    * @return array
    *   All base DN.
    *
-   * TODO: Make this function unnecessary by providing a field configuration
-   * and UI to keep DN as a proper array.
+   *   TODO: Make this function unnecessary by providing a field configuration
+   *   and UI to keep DN as a proper array.
    */
   public function getBaseDn() {
     $baseDn = $this->get('basedn');
@@ -573,7 +579,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
     }
     // Template is of form [cn]@illinois.edu.
     elseif ($this->get('mail_template')) {
-      //TODO: Refactor
+      // TODO: Refactor.
       return $this->tokenProcessor->tokenReplace($ldap_entry, $this->get('mail_template'), 'ldap_entry');
     }
     else {
@@ -607,10 +613,10 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
    * @param string $drupal_username
    *   Drupal user name.
    *
-   * @return \Symfony\Component\Ldap\Entry|FALSE|NULL
+   * @return \Symfony\Component\Ldap\Entry|false|null
    *
-   * Todo: This function does return data and check for validity of response,
-   * this makes responses difficult to parse and should be optimized.
+   *   Todo: This function does return data and check for validity of response,
+   *   this makes responses difficult to parse and should be optimized.
    */
   public function matchUsernameToExistingLdapEntry($drupal_username) {
 
@@ -625,24 +631,26 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
 
       try {
         $ldap_response = $this->ldap->query($base_dn, $query)->execute();
-      } catch (LdapException $e) {
+      }
+      catch (LdapException $e) {
         // Must find exactly one user for authentication to work.
         $this->logger->error('LDAP server query error %message', [
-            '%message' => $e->getMessage(),
-          ]
-        );
+          '%message' => $e->getMessage(),
+        ]
+              );
         return FALSE;
       }
       if ($ldap_response->count() == 0) {
         continue;
-      } elseif ($ldap_response->count() != 1) {
+      }
+      elseif ($ldap_response->count() != 1) {
         // Must find exactly one user for authentication to work.
         $this->logger->error('Error: %count users found with %filter under %base_dn.', [
           '%count' => $ldap_response->count(),
           '%filter' => $query,
           '%base_dn' => $base_dn,
         ]
-          );
+                );
         continue;
       }
 
@@ -650,10 +658,10 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
       // TODO: Make this more elegant.
       foreach ($match->getAttributes() as $key => $value) {
         $match->removeAttribute($key);
-        $match->setAttribute(mb_strtolower($key),$value);
+        $match->setAttribute(mb_strtolower($key), $value);
       }
 
-      //TODO: Remove this if we are sure no one needs it anymore.
+      // TODO: Remove this if we are sure no one needs it anymore.
       $match->setAttribute('ldap_server_id', [$this->id()]);
 
       if ($this->get('bind_method') == 'anon_user') {
@@ -813,7 +821,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
   /**
    * Get list of groups that a user is a member of using the memberOf attribute.
    *
-   * @param Entry  $ldap_entry
+   * @param \Symfony\Component\Ldap\Entry $ldap_entry
    *   A Drupal user entity, an LDAP entry array of a user  or a username.
    *
    * @return array|false
@@ -895,11 +903,11 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
     // Need to search on all basedns one at a time.
     foreach ($this->getBaseDn() as $baseDn) {
       // Only need dn, so empty array forces return of no attributes.
-
       // TODO: See if this syntax is correct and returns us valid DN with no attributes.
       try {
         $ldap_result = $this->ldap->query($baseDn, $groupQuery, ['filter' => []])->execute();
-      } catch (LdapException $e) {
+      }
+      catch (LdapException $e) {
         $this->logger->critical('LDAP search error with %message', [
           '%message' => $e->getMessage(),
         ]);
@@ -945,7 +953,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
     }
 
     $or_filters = [];
-    /** @var Entry $group_entry */
+    /** @var \Symfony\Component\Ldap\Entry $group_entry */
     foreach ($current_group_entries->toArray() as $key => $group_entry) {
       if ($this->get('grp_memb_attr_match_user_attr') == 'dn') {
         $member_id = $group_entry->getDn();
@@ -979,7 +987,8 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
           // No attributes, just dns needed.
           try {
             $ldap_result = $this->ldap->query($base_dn, $query_for_parent_groups, ['filter' => []])->execute();
-          } catch (LdapException $e) {
+          }
+          catch (LdapException $e) {
             $this->logger->critical('LDAP search error with %message', [
               '%message' => $e->getMessage(),
             ]);
@@ -1172,7 +1181,8 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
         // No attributes, just dns needed.
         try {
           $ldap_result = $this->ldap->query($base_dn, $query_for_parent_groups, ['filter' => []])->execute();
-        } catch (LdapException $e) {
+        }
+        catch (LdapException $e) {
           $this->logger->critical('LDAP search error with %message', [
             '%message' => $e->getMessage(),
           ]);
@@ -1310,6 +1320,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
    *
    * @return bool
    *   Operation successful.
+   *
    * @deprecated symfony/ldap refactoring needed.
    */
   public function groupRemoveMember($group_dn, $member) {
@@ -1407,7 +1418,8 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
       if (!$group_entry->hasAttribute($this->get('grp_memb_attr'))) {
         // If no attribute returned, no members.
         return [];
-      } else {
+      }
+      else {
         return $group_entry->getAttribute($this->get('grp_memb_attr'));
       }
     }

@@ -57,9 +57,9 @@ class LdapUserProcessor implements LdapUserAttributesInterface {
    * @return array|bool
    *   Successful sync.
    *
-   * Verify that we need actually need those for a missing test case or remove.
+   *   Verify that we need actually need those for a missing test case or remove.
    *
-   * TODO: Restructure this function to provide an Entry all the time.
+   *   TODO: Restructure this function to provide an Entry all the time.
    */
   public function syncToLdapEntry(User $account) {
 
@@ -123,7 +123,7 @@ class LdapUserProcessor implements LdapUserAttributesInterface {
 
         $attributes = array_change_key_case($attributes);
         $entry = new Entry($proposedLdapEntry['dn']);
-        //TODO: Verify multi-value attributes.
+        // TODO: Verify multi-value attributes.
         foreach ($attributes as $key => $value) {
           $entry->setAttribute($key, [$value]);
         }
@@ -526,7 +526,7 @@ class LdapUserProcessor implements LdapUserAttributesInterface {
       return FALSE;
     }
     // $user_entity->ldap_user_prov_entries,.
-    //TODO: DI
+    // TODO: DI.
     $ldap_server = Server::load($sid);
     $params = [
       'direction' => self::PROVISION_TO_LDAP,

@@ -14,7 +14,6 @@ use Drupal\ldap_user\Helper\SemaphoreStorage;
 use Drupal\ldap_user\Helper\SyncMappingHelper;
 use Drupal\user\Entity\User;
 use Drupal\user\UserInterface;
-use Symfony\Component\Ldap\Entry;
 
 /**
  * Handles processing of a user from LDAP to Drupal.
@@ -113,7 +112,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
       }
       $this->account->set('ldap_user_puid_property', $ldapServer->get('unique_persistent_attr'));
       $this->account->set('ldap_user_puid_sid', $ldapServer->id());
-      $this->account->set('ldap_user_current_dn',  $this->ldapEntry->getDn());
+      $this->account->set('ldap_user_current_dn', $this->ldapEntry->getDn());
       $this->account->set('ldap_user_last_checked', time());
       $this->account->set('ldap_user_ldap_exclude', 0);
       $this->saveAccount();
@@ -701,7 +700,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
   /**
    * Process user picture from LDAP entry.
    *
-   * @return bool|\Drupal\file\Entity\File
+   * @return FALSE|\Drupal\file\Entity\File
    *   Drupal file object image user's thumbnail or FALSE if none present or
    *   an error occurs.
    */

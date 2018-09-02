@@ -6,12 +6,14 @@ use Drupal\Core\Entity\EntityTypeManager;
 use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\ldap_servers\Entity\Server;
 use Drupal\ldap_servers\Helper\CredentialsStorage;
-use Symfony\Component\Ldap\Adapter\ExtLdap\ConnectionOptions;
 use Symfony\Component\Ldap\Exception\ConnectionException;
 use Symfony\Component\Ldap\Exception\LdapException;
 use Symfony\Component\Ldap\Ldap;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
+/**
+ *
+ */
 class LdapBridge {
 
   /**
@@ -42,7 +44,7 @@ class LdapBridge {
    */
   public function setServerById($sid) {
     $server = $this->entityManager->load($sid);
-    /** @var Server $server */
+    /** @var \Drupal\ldap_servers\Entity\Server $server */
     if ($server) {
       $this->setServer($server);
     }
@@ -59,8 +61,8 @@ class LdapBridge {
       'host' => $server->get('address'),
       'port' => $server->get('port'),
       'encryption' => 'none',
-      //TODO network timeout
-      'options' => []
+      // TODO network timeout.
+      'options' => [],
     ];
     if ($server->get('tls')) {
       $parameters['encryption'] = 'tls';
@@ -82,7 +84,8 @@ class LdapBridge {
       ($this->bindMethod == 'anon_user' && !CredentialsStorage::validateCredentials())) {
       $userDn = NULL;
       $password = NULL;
-    } else {
+    }
+    else {
       // Default credentials form service account.
       $userDn = $this->bindDn;
       $password = $this->bindPw;
@@ -94,7 +97,7 @@ class LdapBridge {
       }
 
       if (mb_strlen($password) == 0 || mb_strlen($userDn) == 0) {
-        $this->logger->notice("LDAP bind failure due to missing credentials for user userdn=%userdn",[
+        $this->logger->notice("LDAP bind failure due to missing credentials for user userdn=%userdn", [
           '%userdn' => $userDn,
         ]);
         return FALSE;
@@ -103,12 +106,14 @@ class LdapBridge {
 
     try {
       $this->ldap->bind($userDn, $password);
-    } catch (ConnectionException $e) {
+    }
+    catch (ConnectionException $e) {
       $this->logger->notice("LDAP connection failure: %message.", [
         '%message' => $e->getMessage(),
       ]);
       return FALSE;
-    } catch (LdapException $e) {
+    }
+    catch (LdapException $e) {
       $this->logger->notice("LDAP bind failure: %message.", [
         '%message' => $e->getMessage(),
       ]);

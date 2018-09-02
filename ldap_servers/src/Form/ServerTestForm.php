@@ -9,7 +9,6 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Render\Renderer;
 use Drupal\ldap_servers\Entity\Server;
-use Drupal\ldap_servers\Helper\CredentialsStorage;
 use Drupal\ldap_servers\LdapBridge;
 use Drupal\ldap_servers\Processor\TokenProcessor;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -315,7 +314,8 @@ final class ServerTestForm extends EntityForm {
     $ldap = $this->ldapBridge->get();
     try {
       $group_entry = $ldap->query($group_dn, 'objectClass=*')->execute();
-    } catch (LdapException $e) {
+    }
+    catch (LdapException $e) {
       $group_entry = FALSE;
     }
 
@@ -463,7 +463,7 @@ final class ServerTestForm extends EntityForm {
    * @param string $drupal_username
    *   The Drupal username.
    *
-   * @return Entry
+   * @return \Symfony\Component\Ldap\Entry
    *   Errors and the user.
    */
   public function testUserMapping($drupal_username) {
@@ -643,7 +643,7 @@ final class ServerTestForm extends EntityForm {
   /**
    * Compute user data.
    *
-   * @param Entry $ldap_entry
+   * @param \Symfony\Component\Ldap\Entry $ldap_entry
    *   Data to test on.
    *
    * @return array

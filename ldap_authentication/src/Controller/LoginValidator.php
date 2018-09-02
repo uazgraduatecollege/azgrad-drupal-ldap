@@ -20,8 +20,6 @@ use Drupal\ldap_user\Processor\DrupalUserProcessor;
 use Drupal\user\Entity\User;
 use Drupal\Core\Form\FormStateInterface;
 use Symfony\Component\Ldap\Entry;
-use Symfony\Component\Ldap\Exception\ConnectionException;
-use Symfony\Component\Ldap\Exception\LdapException;
 
 /**
  * Handles the actual testing of credentials and authentication of users.
@@ -30,18 +28,19 @@ final class LoginValidator implements LdapUserAttributesInterface {
 
   use StringTranslationTrait;
 
-  // TODO: Convert this into an authentication class so we can pass the
-  // state and value.
-  const AUTHENTICATION_FAILURE_CONNECTION = 1;
+  // TODO: Convert this into an authentication class so we can pass the.
+  /**
+ * State and value.
+ */
   const AUTHENTICATION_FAILURE_BIND = 2;
   const AUTHENTICATION_FAILURE_FIND = 3;
   const AUTHENTICATION_FAILURE_DISALLOWED = 4;
   const AUTHENTICATION_FAILURE_CREDENTIALS = 5;
   const AUTHENTICATION_SUCCESS = 6;
-  const AUTHENTICATION_FAILURE_GENERIC = 7;
   const AUTHENTICATION_FAILURE_SERVER = 8;
 
   protected $authName = FALSE;
+  protected $ssoLogin = FALSE;
 
   protected $drupalUserAuthMapped = FALSE;
   protected $drupalUserName = FALSE;
@@ -117,18 +116,14 @@ final class LoginValidator implements LdapUserAttributesInterface {
 
   /**
    * Perform the actual logging in.
-   *
-   * @return bool
-   *   Success or failure of authentication.
-   *
-   * @TODO: Return values aren't actually reviewed, can be simplified.
    */
   private function processLogin() {
-    if (!$this->validateAlreadyAuthenticated()) {
-      return FALSE;
+    if (!$this->ssoLogin && !$this->validateAlreadyAuthenticated()) {
+      return;
     }
+
     if (!$this->validateCommonLoginConstraints()) {
-      return FALSE;
+      return;
     }
 
     $credentialsAuthenticationResult = $this->testCredentials();
@@ -139,11 +134,11 @@ final class LoginValidator implements LdapUserAttributesInterface {
     }
 
     if ($credentialsAuthenticationResult != self::AUTHENTICATION_SUCCESS) {
-      return FALSE;
+      return;
     }
 
     if (!$this->deriveDrupalUserName()) {
-      return FALSE;
+      return;
     }
 
     // We now have an LDAP account, matching username and password and the
@@ -155,7 +150,7 @@ final class LoginValidator implements LdapUserAttributesInterface {
     // Existing Drupal but not mapped to LDAP.
     if ($this->drupalUser && !$this->drupalUserAuthMapped) {
       if (!$this->matchExistingUserWithLdap()) {
-        return FALSE;
+        return;
       }
     }
 
@@ -165,16 +160,14 @@ final class LoginValidator implements LdapUserAttributesInterface {
     // No existing Drupal account. Consider provisioning Drupal account.
     if (!$this->drupalUser) {
       if (!$this->provisionDrupalUser()) {
-        return FALSE;
+        return;
       }
     }
 
     // All passed, log the user in by handing over the UID.
-    if ($this->drupalUser) {
+    if (!$this->ssoLogin && $this->drupalUser) {
       $this->formState->set('uid', $this->drupalUser->id());
     }
-
-    return TRUE;
   }
 
   /**
@@ -182,57 +175,11 @@ final class LoginValidator implements LdapUserAttributesInterface {
    *
    * @param string $authName
    *   The provided authentication name.
-   *
-   * @Todo: Postprocessing could be wrapped in a function, identical in
-   * processLogin().
-   * @TODO: Return values aren't actually reviewed, can be simplified.
    */
   public function processSsoLogin($authName) {
     $this->authName = $authName;
-
-    if (!$this->validateCommonLoginConstraints()) {
-      return FALSE;
-    }
-
-    $credentialsAuthenticationResult = $this->testSsoCredentials($this->authName);
-
-    if ($credentialsAuthenticationResult == self::AUTHENTICATION_FAILURE_FIND &&
-      $this->config->get('authenticationMode') == LdapAuthenticationConfiguration::MODE_EXCLUSIVE) {
-      $this->formState->setErrorByName('non_ldap_login_not_allowed', $this->t('User disallowed'));
-    }
-
-    if ($credentialsAuthenticationResult != self::AUTHENTICATION_SUCCESS) {
-      return FALSE;
-    }
-
-    if (!$this->deriveDrupalUserName()) {
-      return FALSE;
-    }
-
-    // We now have an LDAP account, matching username and password and the
-    // reference Drupal user.
-    if (!$this->drupalUser && $this->serverDrupalUser) {
-      $this->updateAuthNameFromPuid();
-    }
-
-    // Existing Drupal but not mapped to LDAP.
-    if ($this->drupalUser && !$this->drupalUserAuthMapped) {
-      if (!$this->matchExistingUserWithLdap()) {
-        return FALSE;
-      }
-    }
-
-    // Existing Drupal account with incorrect email. Fix email if appropriate.
-    $this->fixOutdatedEmailAddress();
-
-    // No existing Drupal account. Consider provisioning Drupal account.
-    if (!$this->drupalUser) {
-      if (!$this->provisionDrupalUser()) {
-        return FALSE;
-      }
-    }
-
-    return TRUE;
+    $this->ssoLogin = TRUE;
+    $this->processLogin();
   }
 
   /**
@@ -308,10 +255,7 @@ final class LoginValidator implements LdapUserAttributesInterface {
    *   Returns the authentication result.
    */
   private function testCredentials() {
-    $authenticationResult = self::AUTHENTICATION_FAILURE_GENERIC;
-
     foreach (LdapAuthenticationConfiguration::getEnabledAuthenticationServers() as $server) {
-      $authenticationResult = self::AUTHENTICATION_FAILURE_GENERIC;
       $this->serverDrupalUser = Server::load($server);
       $this->ldapBridge->setServer($this->serverDrupalUser);
       $this->detailLog->log(
@@ -322,11 +266,10 @@ final class LoginValidator implements LdapUserAttributesInterface {
         ], 'ldap_authentication'
       );
 
-      //TODO: Verify new usage of credentialsstorage here.
-      $bindStatus = $this->bindToServer();
-      // @FIXME: We can do this better.
-      if ($bindStatus != 'success') {
-        $authenticationResult = $bindStatus;
+      // TODO: Verify new usage of credentialsstorage here.
+      $bindResult = $this->bindToServer();
+      if ($bindResult !== TRUE) {
+        $authenticationResult = $bindResult;
         // If bind fails, onto next server.
         continue;
       }
@@ -346,21 +289,15 @@ final class LoginValidator implements LdapUserAttributesInterface {
         break;
       }
 
-      if (!$this->testUserPassword()) {
+      if (!$this->ssoLogin && !$this->testUserPassword()) {
         $authenticationResult = self::AUTHENTICATION_FAILURE_CREDENTIALS;
         // Next server, please.
         continue;
       }
       else {
         $authenticationResult = self::AUTHENTICATION_SUCCESS;
-        if ($this->serverDrupalUser->get('bind_method') == 'anon_user') {
-          // After successful bind, lookup user again to get private attributes.
-          $this->ldapEntry= $this->serverDrupalUser->matchUsernameToExistingLdapEntry($this->authName);
-        }
-        // Success.
         break;
       }
-      // End of loop through servers.
     }
 
     $this->detailLog->log(
@@ -371,7 +308,7 @@ final class LoginValidator implements LdapUserAttributesInterface {
       ], 'ldap_authentication'
     );
 
-    if ($authenticationResult != self::AUTHENTICATION_SUCCESS) {
+    if (!$this->ssoLogin && $authenticationResult != self::AUTHENTICATION_SUCCESS) {
       $this->failureResponse($authenticationResult);
     }
 
@@ -391,7 +328,7 @@ final class LoginValidator implements LdapUserAttributesInterface {
     }
     else {
       $this->ldapBridge->setServer($this->serverDrupalUser);
-      //TODO: Verify value in userPW, document!
+      // TODO: Verify value in userPW, document!
       CredentialsStorage::storeUserDn($this->ldapEntry->getDn());
       CredentialsStorage::testCredentials(TRUE);
       $bindResult = $this->ldapBridge->bind();
@@ -413,77 +350,6 @@ final class LoginValidator implements LdapUserAttributesInterface {
   }
 
   /**
-   * Test the SSO credentials.
-   *
-   * @return int
-   *   Returns the authentication result.
-   */
-  public function testSsoCredentials($authName) {
-    // TODO: Verify if MODE_EXCLUSIVE check is a regression.
-    $authenticationResult = self::AUTHENTICATION_FAILURE_GENERIC;
-
-    foreach (LdapAuthenticationConfiguration::getEnabledAuthenticationServers() as $server) {
-      $authenticationResult = self::AUTHENTICATION_FAILURE_GENERIC;
-      $this->serverDrupalUser = Server::load($server);
-      $this->detailLog->log(
-        '%username: Trying server %id where bind_method = %bind_method',
-        [
-          '%username' => $authName,
-          '%id' => $this->serverDrupalUser->id(),
-          '%bind_method' => $this->serverDrupalUser->get('bind_method'),
-        ], 'ldap_authentication'
-      );
-
-      $bindResult = $this->bindToServerSso();
-      if ($bindResult != 'success') {
-        $authenticationResult = $bindResult;
-        // If bind fails, onto next server.
-        continue;
-      }
-
-      $this->ldapEntry = $this->serverDrupalUser->matchUsernameToExistingLdapEntry($authName);
-
-      if (!$this->ldapEntry) {
-        $this->detailLog->log(
-          '%username: Trying server %id where bind_method = %bind_method.', [
-            '%username' => $authName,
-            '%bind_method' => $this->serverDrupalUser->get('bind_method'),
-          ], 'ldap_authentication'
-        );
-
-        $authenticationResult = self::AUTHENTICATION_FAILURE_FIND;
-        // Next server, please.
-        continue;
-      }
-
-      if (!$this->checkAllowedExcluded($this->authName, $this->ldapEntry)) {
-        $authenticationResult = self::AUTHENTICATION_FAILURE_DISALLOWED;
-        // Regardless of how many servers, disallowed user fails.
-        break;
-      }
-
-      $authenticationResult = self::AUTHENTICATION_SUCCESS;
-      if ($this->serverDrupalUser->get('bind_method') == 'anon_user') {
-        // After successful bind, lookup user again to get private attributes.
-        $this->ldapEntry= $this->serverDrupalUser->matchUsernameToExistingLdapEntry($authName);
-      }
-      // Success.
-      break;
-      // End loop through servers.
-    }
-
-    $this->detailLog->log(
-      'Authentication result for %username is: %err_text',
-      [
-        '%username' => $authName,
-        '%err_text' => $this->authenticationHelpText($authenticationResult) . ' ' . $this->additionalDebuggingResponse($authenticationResult),
-      ], 'ldap_authentication'
-    );
-
-    return $authenticationResult;
-  }
-
-  /**
    * Provides formatting for authentication failures.
    *
    * @return string
@@ -498,10 +364,6 @@ final class LoginValidator implements LdapUserAttributesInterface {
 
       case self::AUTHENTICATION_FAILURE_CREDENTIALS:
         $information = $this->t('(wrong credentials)');
-        break;
-
-      case self::AUTHENTICATION_FAILURE_GENERIC:
-        $information = $this->t('(generic)');
         break;
     }
     return $information;
@@ -548,10 +410,6 @@ final class LoginValidator implements LdapUserAttributesInterface {
   private function authenticationHelpText($error) {
 
     switch ($error) {
-      case self::AUTHENTICATION_FAILURE_CONNECTION:
-        $msg = $this->t('Failed to connect to LDAP server');
-        break;
-
       case self::AUTHENTICATION_FAILURE_BIND:
         $msg = $this->t('Failed to bind to LDAP server');
         break;
@@ -562,12 +420,7 @@ final class LoginValidator implements LdapUserAttributesInterface {
 
       case self::AUTHENTICATION_FAILURE_FIND:
       case self::AUTHENTICATION_FAILURE_CREDENTIALS:
-      case self::AUTHENTICATION_FAILURE_GENERIC:
         $msg = $this->t('Sorry, unrecognized username or password.');
-        break;
-
-      case self::AUTHENTICATION_FAILURE_SERVER:
-        $msg = $this->t('Authentication Server or Configuration Error.');
         break;
 
       case self::AUTHENTICATION_SUCCESS:
@@ -693,7 +546,6 @@ final class LoginValidator implements LdapUserAttributesInterface {
     if ($this->drupalUser->get('mail')->value == $this->serverDrupalUser->userEmailFromLdapEntry($this->ldapEntry)) {
       return FALSE;
     }
-
 
     if ($this->config->get('emailUpdate') == LdapAuthenticationConfiguration::$emailUpdateOnLdapChangeEnableNotify ||
         $this->config->get('emailUpdate') == LdapAuthenticationConfiguration::$emailUpdateOnLdapChangeEnable) {
@@ -986,83 +838,69 @@ final class LoginValidator implements LdapUserAttributesInterface {
   }
 
   /**
+ * Bind to server.
+ *
+ * @return int|TRUE
+ *   Success or failure result.
+ */
+  private function bindToServer() {
+    if ($this->serverDrupalUser->get('bind_method') == 'user') {
+      return $this->bindToServerAsUser();
+    }
+
+    $bindResult = $this->ldapBridge->bind();
+
+    if (!$bindResult) {
+      $this->detailLog->log(
+        '%username: Unsuccessful with server %id (bind method: %bind_method)', [
+        '%username' => $this->authName,
+        '%id' => $this->serverDrupalUser->id(),
+        '%bind_method' => $this->serverDrupalUser->get('bind_method'),
+      ], 'ldap_authentication'
+      );
+
+      return self::AUTHENTICATION_FAILURE_BIND;
+    }
+    return TRUE;
+  }
+
+  /**
    * Bind to server.
    *
-   *
-   * @return mixed
+   * @return int|TRUE
    *   Success or failure result.
    */
-  private function bindToServer() {
+  private function bindToServerAsUser() {
     $bindResult = FALSE;
-    $bindMethod = $this->serverDrupalUser->get('bind_method');
-    if ($bindMethod == 'user') {
-      foreach ($this->serverDrupalUser->getBaseDn() as $base_dn) {
-        $search = ['%basedn', '%username'];
-        $replace = [$base_dn, $this->authName];
-        CredentialsStorage::storeUserDn(str_replace($search, $replace, $this->serverDrupalUser->get('user_dn_expression')));
-        CredentialsStorage::testCredentials(TRUE);
-        if ($this->ldapBridge->bind()) {
-          break;
-        }
-      }
+
+    if ($this->ssoLogin) {
+      $this->logger->error('Trying to use SSO with user bind method.');
+      return self::AUTHENTICATION_FAILURE_CREDENTIALS;
     }
-    else {
+
+    foreach ($this->serverDrupalUser->getBaseDn() as $base_dn) {
+      $search = ['%basedn', '%username'];
+      $replace = [$base_dn, $this->authName];
+      CredentialsStorage::storeUserDn(str_replace($search, $replace, $this->serverDrupalUser->get('user_dn_expression')));
+      CredentialsStorage::testCredentials(TRUE);
       $bindResult = $this->ldapBridge->bind();
+      if ($bindResult) {
+        break;
+      }
     }
 
     if (!$bindResult) {
       $this->detailLog->log(
         '%username: Unsuccessful with server %id (bind method: %bind_method)', [
-          '%username' => $this->authName,
-          '%id' => $this->serverDrupalUser->id(),
-          '%bind_method' => $this->serverDrupalUser->get('bind_method'),
-        ], 'ldap_authentication'
+        '%username' => $this->authName,
+        '%id' => $this->serverDrupalUser->id(),
+        '%bind_method' => $this->serverDrupalUser->get('bind_method'),
+      ], 'ldap_authentication'
       );
 
-      if ($this->serverDrupalUser->get('bind_method') == 'user') {
-        return self::AUTHENTICATION_FAILURE_CREDENTIALS;
-      }
-      else {
-        return self::AUTHENTICATION_FAILURE_BIND;
-
-      }
-    }
-    return 'success';
-  }
-
-  /**
-   * Bind to SSO server.
-   *
-   * @return bool
-   *   Binding successful.
-   */
-  private function bindToServerSso() {
-    $bindResult = FALSE;
-
-    if ($this->serverDrupalUser->get('bind_method') == 'user') {
-      $this->logger
-        ->error('Trying to use SSO with user bind method.');
-      $this->logger
-        ->debug('No bind method set in ldap_server->bind_method in ldap_authentication_user_login_authenticate_validate.');
       return self::AUTHENTICATION_FAILURE_CREDENTIALS;
     }
-    else {
-      $bindResult = $this->ldapBridge->bind();
-    }
-
-    if (!$bindResult) {
-      $this->detailLog->log(
-        '%username: Unsuccessful with server %id where bind_method = %bind_method.',
-        [
-          '%username' => $this->authName,
-          '%bind_method' => $this->serverDrupalUser->get('bind_method'),
-        ],
-        'ldap_authentication'
-      );
-
-      return self::AUTHENTICATION_FAILURE_BIND;
-    }
-    return 'success';
+    return TRUE;
   }
 
   /**

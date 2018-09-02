@@ -109,7 +109,7 @@ class ServerFactory implements LdapUserAttributesInterface {
    * @param string $id
    *   Server id.
    *
-   * @return \Symfony\Component\Ldap\Entry|FALSE
+   * @return \Symfony\Component\Ldap\Entry|false
    */
   public function getUserDataFromServerByIdentifier($identifier, $id) {
     // Try to retrieve the user from the cache.
@@ -214,9 +214,9 @@ class ServerFactory implements LdapUserAttributesInterface {
    * @return array
    *   Altered attributes.
    *
-   * TODO: Split this out into a separate class.
-   * TODO: $params is a bad argument, it only needs the sid parameter and
-   * otherwise depends on the Server class.
+   *   TODO: Split this out into a separate class.
+   *   TODO: $params is a bad argument, it only needs the sid parameter and
+   *   otherwise depends on the Server class.
    */
   public function alterLdapAttributes(array &$attributes, array $params) {
     // Force this data type.
@@ -266,9 +266,9 @@ class ServerFactory implements LdapUserAttributesInterface {
    * @return array
    *   Attribute list.
    *
-   * TODO: Split this out into a separate class.
-   * TODO: $params is a bad argument, it only needs the ldap_server and
-   * direction parameter and otherwise depends on the Server class.
+   *   TODO: Split this out into a separate class.
+   *   TODO: $params is a bad argument, it only needs the ldap_server and
+   *   direction parameter and otherwise depends on the Server class.
    */
   public function alterLdapUserAttributesList(array &$available_user_attrs, array &$params) {
     if (isset($params['ldap_server']) && $params['ldap_server']) {
