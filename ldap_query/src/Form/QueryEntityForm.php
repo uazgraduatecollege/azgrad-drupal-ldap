@@ -38,11 +38,12 @@ class QueryEntityForm extends EntityForm {
       '#disabled' => !$ldap_query_entity->isNew(),
     ];
 
-    $factory = \Drupal::service('ldap.servers');
-    $servers = $factory->getAllServers();
+    /** @var \Drupal\Core\Entity\EntityStorageInterface $storage */
+    $storage = \Drupal::service('entity_type.manager')->getStorage('ldap_server');
+    $servers = $storage->getQuery()->execute();
     $options = [];
     /** @var \Drupal\ldap_servers\Entity\Server $server */
-    foreach ($servers as $server) {
+    foreach ($storage->loadMultiple($servers) as $server) {
       $options[$server->id()] = $server->label();
     }
 

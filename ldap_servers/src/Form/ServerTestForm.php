@@ -74,7 +74,7 @@ final class ServerTestForm extends EntityForm {
       $container->get('module_handler'),
       $container->get('ldap.token_processor'),
       $container->get('renderer'),
-      $container->get('ldap_bridge')
+      $container->get('ldap.bridge')
     );
   }
 

@@ -2,7 +2,9 @@
 
 namespace Drupal\ldap_query\Controller;
 
-use Drupal\ldap_query\Entity\QueryEntity;
+use Drupal\Core\Entity\EntityTypeManager;
+use Drupal\Core\Logger\LoggerChannelInterface;
+use Drupal\ldap_servers\LdapBridge;
 use Symfony\Component\Ldap\Exception\LdapException;
 
 /**
@@ -17,12 +19,25 @@ class QueryController {
   private $qid;
   private $query;
 
+  protected $storage;
+  protected $ldapBridge;
+  protected $logger;
+
   /**
    * Constructor.
    */
-  public function __construct($id) {
+  public function __construct(EntityTypeManager $entity_type_manager, LdapBridge $ldap_bridge, LoggerChannelInterface $logger) {
+    $this->storage = $entity_type_manager->getStorage('ldap_query_entity');
+    $this->ldapBridge = $ldap_bridge;
+    $this->logger = $logger;
+  }
+
+  /**
+   *
+   */
+  public function load($id) {
     $this->qid = $id;
-    $this->query = QueryEntity::load($this->qid);
+    $this->query = $this->storage->load($this->qid);
   }
 
   /**
@@ -48,12 +63,10 @@ class QueryController {
         $filter = $this->query->get('filter');
       }
 
-      // TODO:DI, exception handling.
-      /** @var \Drupal\ldap_servers\LdapBridge $bridge */
-      $bridge = \Drupal::service('ldap_bridge');
-      $bridge->setServerById($this->query->get('server_id'));
+      // TODO: exception handling.
+      $this->ldapBridge->setServerById($this->query->get('server_id'));
 
-      if ($bridge->bind()) {
+      if ($this->ldapBridge->bind()) {
 
         foreach ($this->query->getProcessedBaseDns() as $base_dn) {
           $options = [
@@ -65,14 +78,14 @@ class QueryController {
           ];
 
           try {
-            $ldap_response = $bridge
+            $ldap_response = $this->ldapBridge
               ->get()
               ->query($base_dn, $filter, $options)
               ->execute()
               ->toArray();
           }
           catch (LdapException $e) {
-            \Drupal::logger('ldap_query')->warning('LDAP query exception %message', ['@message' => $e->getMessage()]);
+            $this->logger->warning('LDAP query exception %message', ['@message' => $e->getMessage()]);
             $ldap_response = FALSE;
           }
 
@@ -83,8 +96,7 @@ class QueryController {
       }
     }
     else {
-      \Drupal::logger('ldap_query')
-        ->warning('Could not load query @query', ['@query' => $this->qid]);
+      $this->logger->warning('Could not load query @query', ['@query' => $this->qid]);
     }
   }
 
@@ -114,31 +126,6 @@ class QueryController {
       }
     }
     return $attributes;
-  }
-
-  /**
-   * Returns all available LDAP query entities.
-   *
-   * @return \Drupal\Core\Entity\EntityInterface[]
-   *   Entity Queries.
-   */
-  public static function getAllQueries() {
-    $query = \Drupal::entityQuery('ldap_query_entity');
-    $ids = $query->execute();
-    return QueryEntity::loadMultiple($ids);
-  }
-
-  /**
-   * Returns all enabled LDAP query entities.
-   *
-   * @return \Drupal\Core\Entity\EntityInterface[]
-   *   Entity Queries.
-   */
-  public static function getAllEnabledQueries() {
-    $query = \Drupal::entityQuery('ldap_query_entity')
-      ->condition('status', 1);
-    $ids = $query->execute();
-    return QueryEntity::loadMultiple($ids);
   }
 
 }

@@ -4,7 +4,6 @@ namespace Drupal\ldap_query\Plugin\views\query;
 
 use Drupal\Component\Utility\SafeMarkup;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\ldap_query\Controller\QueryController;
 use Drupal\views\Plugin\views\query\QueryPluginBase;
 use Drupal\views\ResultRow;
 use Drupal\views\ViewExecutable;
@@ -82,7 +81,9 @@ class LdapQuery extends QueryPluginBase {
     $start = microtime(TRUE);
 
     // FIXME: DI.
-    $controller = new QueryController($this->options['query_id']);
+    /** @var \Drupal\ldap_query\Controller\QueryController $controller */
+    $controller = \Drupal::service('ldap.query');
+    $controller->load($this->options['query_id']);
     $filter = $this->buildLdapFilter($controller->getFilter());
 
     $controller->execute($filter);

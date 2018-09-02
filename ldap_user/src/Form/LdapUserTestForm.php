@@ -10,8 +10,6 @@ use Drupal\externalauth\Authmap;
 use Drupal\ldap_servers\ServerFactory;
 use Drupal\ldap_user\Helper\LdapConfiguration;
 use Drupal\ldap_servers\LdapUserAttributesInterface;
-use Drupal\ldap_user\Processor\DrupalUserProcessor;
-use Drupal\ldap_user\Processor\LdapUserProcessor;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 
@@ -116,8 +114,8 @@ class LdapUserTestForm extends FormBase implements LdapUserAttributesInterface {
     $selected_action = $form_state->getValue(['action']);
 
     $config = $this->configFactory()->get('ldap_user.settings')->get();
-    $processor =  \Drupal::service('ldap_user.drupal_user_processor');
-    $ldapProcessor = \Drupal::service('ldap_user.ldap_user_processor');
+    $processor = \Drupal::service('ldap.drupal_user_processor');
+    $ldapProcessor = \Drupal::service('ldap.ldap_user_processor');
     $user_ldap_entry = FALSE;
 
     if ($config['drupalAcctProvisionServer']) {

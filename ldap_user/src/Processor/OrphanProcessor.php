@@ -35,11 +35,14 @@ class OrphanProcessor {
     $this->logger = $logger;
     $this->configFactory = $config;
     $this->configLdapUser = $config->get('ldap_user.settings');
-    $this->enabledServers = $factory->getEnabledServers();
     $this->mailManager = $mail_manager;
     $this->languageManager = $language_manager;
     $this->state = $state;
     $this->entityTypeManager = $entity_type_manager;
+
+    $storage = $this->entityTypeManager->getStorage('ldap_server');
+    $data = $storage->getQuery()->condition('status', 1)->execute();
+    $this->enabledServers = $storage->loadMultiple($data);
   }
 
   /**
@@ -216,7 +219,7 @@ class OrphanProcessor {
    */
   private function processOrphanedAccounts(array $users) {
     // FIXME: DI.
-    $drupalUserProcessor = \Drupal::service('ldap_user.drupal_user_processor');
+    $drupalUserProcessor = \Drupal::service('ldap.drupal_user_processor');
     foreach ($users as $user) {
       if (isset($user['uid'])) {
         $account = $this->entityTypeManager->getStorage('user')->load($user['uid']);

@@ -2,13 +2,16 @@
 
 namespace Drupal\ldap_user\Helper;
 
+use Drupal\Core\Cache\CacheBackendInterface;
+use Drupal\Core\Config\ConfigFactory;
+use Drupal\Core\Extension\ModuleHandler;
+use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\ldap_servers\Entity\Server;
 use Drupal\ldap_servers\Helper\ConversionHelper;
 use Drupal\ldap_servers\LdapUserAttributesInterface;
 
 /**
  * Helper class to process user field synchronisation mappings.
- *
  */
 class SyncMappingHelper implements LdapUserAttributesInterface {
 
@@ -42,13 +45,19 @@ class SyncMappingHelper implements LdapUserAttributesInterface {
    */
   private $syncMapping;
 
-  private $config;
+  protected $logger;
+  protected $config;
+  protected $cache;
+  protected $moduleHandler;
 
   /**
    * Constructor.
    */
-  public function __construct() {
-    $this->config = \Drupal::config('ldap_user.settings');
+  public function __construct(LoggerChannelInterface $logger, ConfigFactory $config_factory, CacheBackendInterface $cache, ModuleHandler $module_handler) {
+    $this->logger = $logger;
+    $this->config = $config_factory->get('ldap_user.settings');
+    $this->cache = $cache;
+    $this->moduleHandler = $module_handler;
     $this->loadSyncMappings();
   }
 
@@ -156,13 +165,14 @@ class SyncMappingHelper implements LdapUserAttributesInterface {
    * Fetches the sync mappings from cache or loads them from configuration.
    */
   public function loadSyncMappings() {
-    $syncMappingsCache = \Drupal::cache()->get('ldap_user_sync_mapping');
+    // TODO: DI.
+    $syncMappingsCache = $this->cache->get('ldap_user_sync_mapping');
     if ($syncMappingsCache) {
       $this->syncMapping = $syncMappingsCache->data;
     }
     else {
       $this->processSyncMappings();
-      \Drupal::cache()->set('ldap_user_sync_mapping', $this->syncMapping);
+      $this->cache->set('ldap_user_sync_mapping', $this->syncMapping);
     }
   }
 
@@ -192,7 +202,7 @@ class SyncMappingHelper implements LdapUserAttributesInterface {
           $ldap_server = Server::load($sid);
         }
         catch (\Exception $e) {
-          \Drupal::logger('ldap_user')->error('Missing server');
+          $this->logger->error('Missing server');
         }
       }
 
@@ -203,7 +213,7 @@ class SyncMappingHelper implements LdapUserAttributesInterface {
 
       // This function does not add any attributes by itself but allows modules
       // such as ldap_user to inject them through this hook.
-      \Drupal::moduleHandler()->alter(
+      $this->moduleHandler->alter(
         'ldap_user_attrs_list',
         $available_user_attributes[$direction],
         $params

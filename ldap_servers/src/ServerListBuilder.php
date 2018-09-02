@@ -77,9 +77,9 @@ class ServerListBuilder extends ConfigEntityListBuilder {
    * @return \Drupal\Core\StringTranslation\TranslatableMarkup
    *   The status string.
    */
-  private function checkStatus($server) {
+  private function checkStatus(Server $server) {
     /** @var \Drupal\ldap_servers\LdapBridge $bridge */
-    $bridge = \Drupal::service('ldap_bridge');
+    $bridge = \Drupal::service('ldap.bridge');
     $bridge->setServer($server);
 
     if ($server->get('status')) {

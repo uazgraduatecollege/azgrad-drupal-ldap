@@ -6,7 +6,6 @@ use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\ldap_servers\Helper\ConversionHelper;
 use Drupal\ldap_servers\LdapProtocolInterface;
 use Drupal\ldap_servers\ServerInterface;
-use Drupal\ldap_servers\Processor\TokenProcessor;
 use Drupal\user\Entity\User;
 use Symfony\Component\Ldap\Adapter\ExtLdap\Collection;
 use Symfony\Component\Ldap\Entry;
@@ -98,11 +97,15 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
   protected $moduleHandler;
 
   /**
+   * LDAP Bridge.
+   *
    * @var \Drupal\ldap_servers\LdapBridge
    */
   protected $ldapBridge;
 
   /**
+   * Symfony LDAP object.
+   *
    * @var \Symfony\Component\Ldap\Ldap
    */
   protected $ldap;
@@ -118,7 +121,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
     $this->moduleHandler = \Drupal::service('module_handler');
     // TODO: The bridge should not be needed here.
     // Functionality requiring it should be abstracted out of the Server entity.
-    $this->ldapBridge = \Drupal::service('ldap_bridge');
+    $this->ldapBridge = \Drupal::service('ldap.bridge');
     $this->ldapBridge->setServer($this);
   }
 
@@ -374,6 +377,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
    * Modify attributes of LDAP entry.
    *
    * @param \Symfony\Component\Ldap\Entry $entry
+   *   LDAP entry.
    *
    * @return bool
    *   Result of query.
@@ -590,7 +594,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
   /**
    * Fetches the persistent UID from the LDAP entry.
    *
-   * @param array $ldapEntry
+   * @param \Symfony\Component\Ldap\Entry $ldapEntry
    *   The LDAP entry.
    *
    * @return string
@@ -707,7 +711,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
   /**
    * Recurse through all child groups and add members.
    *
-   * @param array $group_dn_entries
+   * @param \Symfony\Component\Ldap\Entry $group_dn_entries
    *   Entries of LDAP group entries that are starting point. Should include at
    *   least 1 entry and must include 'objectclass'.
    * @param array $all_member_dns
@@ -728,6 +732,8 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
    *
    * @return bool
    *   If operation was successful.
+   *
+   *   Todo: Should the type hint for Entry not be Entry[]?
    */
   public function groupMembersRecursive(Entry $group_dn_entries, array &$all_member_dns, array $tested_group_dns, $level, $max_levels, $object_classes = FALSE) {
 
@@ -794,7 +800,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
    * both the "programmer" and the "it" group. If $nested is FALSE, the list
    * will only include groups which are directly assigned to the user.
    *
-   * @param string $user
+   * @param string $username
    *   A Drupal user entity.
    *
    * @return array|false
@@ -872,6 +878,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
    * Get list of all groups that a user is a member of by querying groups.
    *
    * @param \Symfony\Component\Ldap\Entry $ldap_entry
+   *   LDAP entry.
    *
    * @return array|false
    *   Array of group dns in mixed case or FALSE on error.
@@ -1010,7 +1017,7 @@ class Server extends ConfigEntityBase implements ServerInterface, LdapProtocolIn
    *
    * Has limited usefulness.
    *
-   * @param string $user
+   * @param string $username
    *   A username.
    *
    * @return array|bool

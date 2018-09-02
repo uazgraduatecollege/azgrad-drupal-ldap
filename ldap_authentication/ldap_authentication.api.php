@@ -14,8 +14,8 @@ use Symfony\Component\Ldap\Entry;
  * authentication. The actual $hook_result is passed by reference. See also:
  * http://drupal.org/node/1634930
  *
- * @param array $ldap_user
- *   See README.developers.txt for structure.
+ * @param \Symfony\Component\Ldap\Entry $ldap_user
+ *   An LDAP entry.
  * @param string $name
  *   The Drupal account name or proposed Drupal account name if none exists yet.
  * @param bool $hook_result

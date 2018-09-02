@@ -10,8 +10,6 @@ use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\ldap_servers\Helper\CredentialsStorage;
 use Drupal\ldap_servers\LdapUserAttributesInterface;
 use Drupal\ldap_user\Helper\LdapConfiguration;
-use Drupal\ldap_user\Processor\DrupalUserProcessor;
-use Drupal\ldap_user\Processor\LdapUserProcessor;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Form\FormState;
@@ -23,13 +21,15 @@ use Drupal\Core\Field\FieldStorageDefinitionInterface;
 function ldap_user_cron() {
   $check_orphans = \Drupal::config('ldap_user.settings')->get('orphanedDrupalAcctBehavior');
   if ($check_orphans != 'ldap_user_orphan_do_not_check') {
-    $processor = \Drupal::service('ldap_user.orphan_processor');
+    /** @var \Drupal\ldap_user\Processor\OrphanProcessor $processor */
+    $processor = \Drupal::service('ldap.orphan_processor');
     $processor->checkOrphans();
   }
 
   $ldapUpdateQuery = \Drupal::config('ldap_user.settings')->get('userUpdateCronQuery');
   if (\Drupal::moduleHandler()->moduleExists('ldap_query') && $ldapUpdateQuery != NULL && $ldapUpdateQuery != 'none') {
-    $processor = \Drupal::service('ldap_user.group_user_update_processor');
+    /** @var \Drupal\ldap_user\Processor\GroupUserUpdateProcessor $processor */
+    $processor = \Drupal::service('ldap.group_user_update_processor');
     if ($processor->updateDue()) {
       $processor->runQuery($ldapUpdateQuery);
     }
@@ -55,7 +55,8 @@ function ldap_user_mail($key, &$message, $params) {
  * Implements hook_ldap_attributes_needed_alter().
  */
 function ldap_user_ldap_attributes_needed_alter(&$attributes, $params) {
-  $processor = \Drupal::service('ldap_user.drupal_user_processor');
+  /** @var \Drupal\ldap_user\Processor\FieldProvider $processor */
+  $processor = \Drupal::service('ldap_user.field_provider');
   $attributes = $processor->alterUserAttributes($attributes, $params);
 }
 
@@ -63,7 +64,8 @@ function ldap_user_ldap_attributes_needed_alter(&$attributes, $params) {
  * Implements hook_ldap_user_attrs_list_alter().
  */
 function ldap_user_ldap_user_attrs_list_alter(&$available_user_attrs, &$params) {
-  $processor = \Drupal::service('ldap_user.drupal_user_processor');
+  /** @var \Drupal\ldap_user\Processor\FieldProvider $processor */
+  $processor = \Drupal::service('ldap_user.field_provider');
   list($available_user_attrs, $params) = $processor->alterLdapUserAttributes($available_user_attrs, $params);
 }
 
@@ -101,7 +103,8 @@ function ldap_user_module_implements_alter(&$implementations, $hook) {
  * Implements hook_user_login().
  */
 function ldap_user_user_login($account) {
-  $processor =  \Drupal::service('ldap_user.drupal_user_processor');
+  /** @var \Drupal\ldap_user\Processor\DrupalUserProcessor $processor */
+  $processor = \Drupal::service('ldap.drupal_user_processor');
   $processor->drupalUserLogsIn($account);
 }
 
@@ -109,7 +112,8 @@ function ldap_user_user_login($account) {
  * Implements hook_ENTITY_TYPE_insert().
  */
 function ldap_user_user_insert($account) {
-  $processor = \Drupal::service('ldap_user.drupal_user_processor');
+  /** @var \Drupal\ldap_user\Processor\DrupalUserProcessor $processor */
+  $processor = \Drupal::service('ldap.drupal_user_processor');
   $processor->newDrupalUserCreated($account);
 }
 
@@ -117,7 +121,8 @@ function ldap_user_user_insert($account) {
  * Implements hook_ENTITY_TYPE_update().
  */
 function ldap_user_user_update($account) {
-  $processor = \Drupal::service('ldap_user.drupal_user_processor');
+  /** @var \Drupal\ldap_user\Processor\DrupalUserProcessor $processor */
+  $processor = \Drupal::service('ldap.drupal_user_processor');
   $processor->drupalUserUpdated($account);
 }
 
@@ -125,7 +130,8 @@ function ldap_user_user_update($account) {
  * Implements hook_ENTITY_TYPE_delete().
  */
 function ldap_user_user_delete($account) {
-  $processor =  \Drupal::service('ldap_user.drupal_user_processor');
+  /** @var \Drupal\ldap_user\Processor\DrupalUserProcessor $processor */
+  $processor = \Drupal::service('ldap.drupal_user_processor');
   $processor->drupalUserDeleted($account);
 }
 
@@ -304,6 +310,7 @@ function ldap_user_form_register_form_validate($form, FormStateInterface &$form_
     $form_state->set('ldap_user_ldap_exclude', 1);
   }
 
+  /** @var \Drupal\ldap_servers\ServerFactory $factory */
   $factory = \Drupal::service('ldap.servers');
 
   // If the corresponding LDAP account does not exist and provision not
@@ -364,7 +371,8 @@ function ldap_user_form_register_form_submit2(&$form, FormState $form_state) {
   // Create LDAP account.
   if ($values['ldap_user_create_ldap_acct']) {
     if ($account = user_load_by_name($values['name'])) {
-      $ldapProcessor = \Drupal::service('ldap_user.ldap_user_processor');
+      /** @var \Drupal\ldap_user\Processor\LdapUserProcessor $ldapProcessor */
+      $ldapProcessor = \Drupal::service('ldap.ldap_user_processor');
       // We check that the entry does not exist, validation should prevent this
       // in nearly all cases.
       $ldap_provision_entry = $ldapProcessor->getProvisionRelatedLdapEntry($account);
@@ -381,7 +389,8 @@ function ldap_user_form_register_form_submit2(&$form, FormState $form_state) {
     }
   }
 
-  $userProcessor = \Drupal::service('ldap_user.drupal_user_processor');
+  /** @var \Drupal\ldap_user\Processor\DrupalUserProcessor $userProcessor */
+  $userProcessor = \Drupal::service('ldap.drupal_user_processor');
   if ($values['ldap_user_association'] == LdapUserAttributesInterface::MANUAL_ACCOUNT_CONFLICT_NO_LDAP_ASSOCIATE) {
     $userProcessor->ldapExcludeDrupalAccount($values['name']);
   }

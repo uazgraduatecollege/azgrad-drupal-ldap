@@ -3,6 +3,7 @@
 namespace Drupal\ldap_authentication\Form;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Entity\EntityTypeManager;
 use Drupal\Core\Extension\ModuleHandler;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\ConfigFormBase;
@@ -19,6 +20,7 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
 
   protected $serverFactory;
   protected $moduleHandler;
+  protected $storage;
 
   /**
    * {@inheritdoc}
@@ -37,10 +39,11 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
   /**
    * {@inheritdoc}
    */
-  public function __construct(ConfigFactoryInterface $config_factory, ServerFactory $ldap_servers, ModuleHandler $module_handler) {
+  public function __construct(ConfigFactoryInterface $config_factory, ServerFactory $ldap_servers, ModuleHandler $module_handler, EntityTypeManager $entity_type_manager) {
     parent::__construct($config_factory);
     $this->serverFactory = $ldap_servers;
     $this->moduleHandler = $module_handler;
+    $this->storage = $entity_type_manager->getStorage('ldap_server');
   }
 
   /**
@@ -50,7 +53,8 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
     return new static(
       $container->get('config.factory'),
       $container->get('ldap.servers'),
-      $container->get('module_handler')
+      $container->get('module_handler'),
+      $container->get('entity_type.manager')
     );
   }
 
@@ -60,13 +64,12 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
   public function buildForm(array $form, FormStateInterface $form_state) {
     $config = $this->config('ldap_authentication.settings');
 
-    $servers = $this->serverFactory->getEnabledServers();
+    $query_result = $this->storage->getQuery()->execute();
+    $servers = $this->storage->loadMultiple($query_result);
     $authenticationServers = [];
-    if ($servers) {
-      foreach ($servers as $sid => $ldap_server) {
-        $enabled = ($ldap_server->get('status')) ? 'Enabled' : 'Disabled';
-        $authenticationServers[$sid] = $ldap_server->get('label') . ' (' . $ldap_server->get('address') . ') Status: ' . $enabled;
-      }
+    foreach ($servers as $sid => $ldap_server) {
+      $enabled = ($ldap_server->get('status')) ? 'Enabled' : 'Disabled';
+      $authenticationServers[$sid] = $ldap_server->get('label') . ' (' . $ldap_server->get('address') . ') Status: ' . $enabled;
     }
 
     if (count($authenticationServers) == 0) {
@@ -93,7 +96,6 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
       '#collapsed' => FALSE,
     ];
 
-    // @TODO 2914053.
     $form['logon']['authenticationMode'] = [
       '#type' => 'radios',
       '#title' => $this->t('Allowable Authentications'),
@@ -104,8 +106,8 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
         'exclusive' => $this->t('Exclusive mode: Only LDAP Authentication is allowed, except for user 1.'),
       ],
       '#description' => $this->t('If exclusive is selected: <br> (1) reset password links will be replaced with links to LDAP end user documentation below.<br>
-        (2) The reset password form will be left available at user/password for user 1; but no links to it will be provided to anonymous users.<br>
-        (3) Password fields in user profile form will be removed except for user 1.'),
+        (2) The reset password form will be left available at user/password for administrators; but no links to it will be provided to anonymous users.<br>
+        (3) Password fields in user profile form will be removed except for administrators.'),
     ];
 
     $form['logon']['authenticationServers'] = [

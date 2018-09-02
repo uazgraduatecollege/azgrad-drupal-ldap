@@ -8,8 +8,6 @@ use Drupal\Core\Extension\ModuleHandler;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Serialization\Yaml;
-use Drupal\ldap_query\Controller\QueryController;
-use Drupal\ldap_servers\ServerFactory;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -120,9 +118,9 @@ class DebuggingReviewForm extends FormBase {
         '#markup' => '<h2>' . $this->t('Drupal LDAP servers') . '</h2>',
       ];
 
-      // FIXME: Service.
-      $servers = new ServerFactory();
-      foreach ($servers->getAllServers() as $sid => $server) {
+      $storage = $this->entityTypeManager->getStorage('ldap_server');
+      $servers = $storage->getQuery()->execute();
+      foreach ($storage->loadMultiple($servers) as $sid => $server) {
         /** @var \Drupal\ldap_servers\Entity\Server $server */
         $form['config_server_' . $sid] = [
           '#markup' =>
@@ -152,7 +150,8 @@ class DebuggingReviewForm extends FormBase {
         '#markup' => '<h2>' . $this->t('Configured LDAP queries') . '</h2>',
       ];
 
-      foreach (QueryController::getAllQueries() as $query) {
+      $queries_found = $this->entityTypeManager->getStorage('ldap_query_entity')->getQuery()->execute();
+      foreach ($this->entityTypeManager->getStorage('ldap_query_entity')->loadMultiple($queries_found) as $query) {
         /** @var \Drupal\ldap_query\Entity\QueryEntity $query */
         $form['query_' . $query->id()] = [
           '#markup' =>

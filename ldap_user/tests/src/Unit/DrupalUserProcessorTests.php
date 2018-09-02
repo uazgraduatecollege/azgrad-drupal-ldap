@@ -2,10 +2,8 @@
 
 namespace Drupal\Tests\ldap_user\Unit;
 
-use Drupal\authorization_drupal_roles\Plugin\authorization\Consumer\DrupalRolesConsumer;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\ldap_servers\LdapUserAttributesInterface;
-use Drupal\ldap_user\Processor\DrupalUserProcessor;
 use Drupal\Tests\UnitTestCase;
 
 /**
@@ -86,7 +84,7 @@ class DrupalUserProcessorTests extends UnitTestCase implements LdapUserAttribute
    */
   public function testUserExclusion() {
 
-    $processor = \Drupal::service('ldap_user.drupal_user_processor');
+    $processor = \Drupal::service('ldap.drupal_user_processor');
 
     // @TODO 2914053.
     /* Disallow user 1 */

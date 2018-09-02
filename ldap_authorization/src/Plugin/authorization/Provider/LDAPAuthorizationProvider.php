@@ -7,7 +7,6 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\authorization\Provider\ProviderPluginBase;
 use Drupal\ldap_servers\Entity\Server;
 use Drupal\ldap_servers\Helper\ConversionHelper;
-use Drupal\ldap_user\Processor\DrupalUserProcessor;
 use Drupal\user\UserInterface;
 
 /**
@@ -48,9 +47,11 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
     }
 
     // FIXME: DI.
-    /** @var \Drupal\ldap_servers\ServerFactory $factory */
-    $factory = \Drupal::service('ldap.servers');
-    $servers = $factory->getEnabledServers();
+    /** @var \Drupal\Core\Entity\EntityStorageInterface $storage */
+    $storage = \Drupal::service('entity_type.manager')->getStorage('ldap_server');
+    $query_results = $storage->getQuery()->execute();
+    /** @var \Drupal\ldap_servers\Entity\Server[] $servers */
+    $servers = $storage->loadMultiple($query_results);
 
     $form['status'] = [
       '#type' => 'fieldset',
@@ -152,7 +153,8 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
    */
   public function getProposals(UserInterface $user) {
 
-    $processor = \Drupal::service('ldap_user.drupal_user_processor');
+    /** @var \Drupal\ldap_user\Processor\DrupalUserProcessor $processor */
+    $processor = \Drupal::service('ldap.drupal_user_processor');
     // Do not continue if user should be excluded from LDAP authentication.
     if ($processor->excludeUser($user)) {
       throw new AuthorizationSkipAuthorization();
@@ -163,10 +165,16 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
 
     // Load the correct server.
     $server_id = $config['status']['server'];
+    /** @var \Drupal\ldap_servers\Entity\Server $server */
+    $server = \Drupal::service('entity_type.manager')
+      ->getStorage('ldap_server')
+      ->load($server_id);
+    if (!$server->status()) {
+      return [];
+    }
+
     /** @var \Drupal\ldap_servers\ServerFactory $factory */
     $factory = \Drupal::service('ldap.servers');
-    /** @var \Drupal\ldap_servers\Entity\Server $server */
-    $server = $factory->getServerByIdEnabled($server_id);
     $ldap_user_data = $factory->getUserDataFromServerByAccount($user, $server_id);
 
     if (!$ldap_user_data && $user->isNew()) {

@@ -9,7 +9,6 @@ use Drupal\Core\Extension\ModuleHandler;
 use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\externalauth\Authmap;
-use Drupal\externalauth\ExternalAuth;
 use Drupal\ldap_authentication\Helper\LdapAuthenticationConfiguration;
 use Drupal\ldap_servers\Entity\Server;
 use Drupal\ldap_servers\Helper\CredentialsStorage;
@@ -17,7 +16,6 @@ use Drupal\ldap_servers\LdapBridge;
 use Drupal\ldap_servers\Logger\LdapDetailLog;
 use Drupal\ldap_user\Helper\LdapConfiguration;
 use Drupal\ldap_servers\LdapUserAttributesInterface;
-use Drupal\ldap_user\Processor\DrupalUserProcessor;
 use Drupal\user\Entity\User;
 use Drupal\Core\Form\FormStateInterface;
 use Symfony\Component\Ldap\Entry;
@@ -29,10 +27,7 @@ final class LoginValidator implements LdapUserAttributesInterface {
 
   use StringTranslationTrait;
 
-  // TODO: Convert this into an authentication class so we can pass the.
-  /**
- * State and value.
- */
+
   const AUTHENTICATION_FAILURE_BIND = 2;
   const AUTHENTICATION_FAILURE_FIND = 3;
   const AUTHENTICATION_FAILURE_DISALLOWED = 4;
@@ -216,8 +211,6 @@ final class LoginValidator implements LdapUserAttributesInterface {
    * @TODO: This duplicates DrupalUserProcessor->excludeUser().
    */
   private function verifyUserAllowed() {
-
-    //fixme: missing config
     if ($this->config->get('skipAdministrators')) {
       $admin_roles = $this->entityTypeManager
         ->getStorage('user_role')
@@ -251,7 +244,6 @@ final class LoginValidator implements LdapUserAttributesInterface {
       'ldap_authentication'
     );
     return TRUE;
-
   }
 
   /**
@@ -470,8 +462,10 @@ final class LoginValidator implements LdapUserAttributesInterface {
   /**
    * Check if exclusion criteria match.
    *
-   * @param $authName
+   * @param string $authName
+   *   Authname.
    * @param \Symfony\Component\Ldap\Entry $ldap_user
+   *   LDAP Entry.
    *
    * @return bool
    *   Exclusion result.
@@ -666,7 +660,8 @@ final class LoginValidator implements LdapUserAttributesInterface {
 
     if ($this->drupalUser) {
       $result = $this->verifyUserAllowed();
-    } else {
+    }
+    else {
       $result = $this->verifyAccountCreation();
     }
     return $result;
@@ -850,8 +845,8 @@ final class LoginValidator implements LdapUserAttributesInterface {
       $user_values['mail'] = $this->serverDrupalUser->userEmailFromLdapEntry($this->ldapEntry);
     }
 
-    //TODO: DI.
-    $processor = \Drupal::service('ldap_user.drupal_user_processor');
+    // TODO: DI.
+    $processor = \Drupal::service('ldap.drupal_user_processor');
     $result = $processor->provisionDrupalAccount($user_values);
 
     if (!$result) {

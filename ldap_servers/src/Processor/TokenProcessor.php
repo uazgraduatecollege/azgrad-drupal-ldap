@@ -2,6 +2,7 @@
 
 namespace Drupal\ldap_servers\Processor;
 
+use Drupal\Core\Entity\EntityTypeManager;
 use Drupal\Core\File\FileSystem;
 use Drupal\Component\Utility\SafeMarkup;
 use Drupal\ldap_servers\Entity\Server;
@@ -23,13 +24,15 @@ class TokenProcessor {
 
   protected $detailLog;
   protected $fileSystem;
+  protected $entityTypeManager;
 
   /**
    * {@inheritdoc}
    */
-  public function __construct(LdapDetailLog $ldap_detail_log, FileSystem $file_system) {
+  public function __construct(LdapDetailLog $ldap_detail_log, FileSystem $file_system, EntityTypeManager $entity_type_manager) {
     $this->detailLog = $ldap_detail_log;
     $this->fileSystem = $file_system;
+    $this->entityTypeManager = $entity_type_manager;
   }
 
   /**
@@ -323,7 +326,9 @@ class TokenProcessor {
     elseif (!empty($account->get($attribute_name)->getValue())) {
       $file_reference = $account->get($attribute_name)->getValue();
       if (isset($file_reference[0]['target_id'])) {
-        $file = file_load($file_reference[0]['target_id']);
+        $file = $this->entityTypeManager
+          ->getStorage('file')
+          ->load($file_reference[0]['target_id']);
         if ($file) {
           $value = file_get_contents($this->fileSystem->realpath($file->getFileUri()));
         }
@@ -335,7 +340,7 @@ class TokenProcessor {
   /**
    * Compile LDAP token entries.
    *
-   * @param array $ldap_entry
+   * @param \Symfony\Component\Ldap\Entry $ldap_entry
    *   LDAP entry.
    * @param array $token_keys
    *   Token keys.

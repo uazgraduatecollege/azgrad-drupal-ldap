@@ -3,7 +3,6 @@
 namespace Drupal\Tests\ldap_user\Kernel;
 
 use Drupal\KernelTests\KernelTestBase;
-use Drupal\ldap_user\Processor\DrupalUserProcessor;
 
 /**
  * Integration tests for ldap_user.
@@ -45,7 +44,7 @@ class IntegrationTests extends KernelTestBase {
    * Test the integration of the user processor.
    */
   public function brokenTestProcessor() {
-    $processor = \Drupal::service('ldap_user.drupal_user_processor');
+    $processor = \Drupal::service('ldap.drupal_user_processor');
     $result = $processor->provisionDrupalAccount(['name' => 'hpotter']);
     $user = $processor->getUserAccount();
     // @TODO: Inject a server configuration for the provisioning server,

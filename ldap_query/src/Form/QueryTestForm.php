@@ -4,7 +4,6 @@ namespace Drupal\ldap_query\Form;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\FormBase;
-use Drupal\ldap_query\Controller\QueryController;
 use Drupal\ldap_servers\Form\ServerTestForm;
 
 /**
@@ -32,7 +31,9 @@ class QueryTestForm extends FormBase {
   public function buildForm(array $form, FormStateInterface $form_state, $ldap_query_entity = NULL) {
     if ($ldap_query_entity) {
       // FIXME: DI.
-      $controller = new QueryController($ldap_query_entity);
+      /** @var \Drupal\ldap_query\Controller\QueryController $controller */
+      $controller = \Drupal::service('ldap.query');
+      $controller->load($$ldap_query_entity);
       $controller->execute();
       $data = $controller->getRawResults();
 

@@ -43,10 +43,11 @@ function ldap_servers_requirements($phase) {
  * Updates bind method to new value.
  */
 function ldap_servers_update_8301() {
-  $factory = \Drupal::service('ldap.servers');
-  /** @var \Drupal\ldap_servers\ServerFactory $factory */
-  $servers = $factory->getAllServers();
-  foreach ($servers as $server) {
+  /** @var \Drupal\Core\Entity\EntityStorageInterface $storage */
+  $storage = \Drupal::service('entity_type.manager')->getStorage('ldap_server');
+  $servers = $storage->getQuery()->execute();
+  /** @var \Drupal\ldap_servers\Entity\Server $server */
+  foreach ($storage->loadMultiple($servers) as $server) {
     $currentMethod = $server->get('bind_method');
     if ($currentMethod == 1) {
       $server->set('bind_method', 'service_account');
@@ -79,10 +80,11 @@ function ldap_servers_update_8302() {
  * Adds default timeout to all servers.
  */
 function ldap_servers_update_8303() {
-  $factory = \Drupal::service('ldap.servers');
-  /** @var \Drupal\ldap_servers\ServerFactory $factory */
-  $servers = $factory->getAllServers();
-  foreach ($servers as $server) {
+  /** @var \Drupal\Core\Entity\EntityStorageInterface $storage */
+  $storage = \Drupal::service('entity_type.manager')->getStorage('ldap_server');
+  $servers = $storage->getQuery()->execute();
+  /** @var \Drupal\ldap_servers\Entity\Server $server */
+  foreach ($storage->loadMultiple($servers) as $server) {
     $server->set('timeout', 10);
     $server->save();
   }
@@ -93,10 +95,11 @@ function ldap_servers_update_8303() {
  * Force server attributes to be lowercase.
  */
 function ldap_servers_update_8304() {
-  $factory = \Drupal::service('ldap.servers');
-  /** @var \Drupal\ldap_servers\ServerFactory $factory */
-  $servers = $factory->getAllServers();
-  foreach ($servers as $server) {
+  /** @var \Drupal\Core\Entity\EntityStorageInterface $storage */
+  $storage = \Drupal::service('entity_type.manager')->getStorage('ldap_server');
+  $servers = $storage->getQuery()->execute();
+  /** @var \Drupal\ldap_servers\Entity\Server $server */
+  foreach ($storage->loadMultiple($servers) as $server) {
     $fields = [
       'user_attr',
       'account_name_attr',

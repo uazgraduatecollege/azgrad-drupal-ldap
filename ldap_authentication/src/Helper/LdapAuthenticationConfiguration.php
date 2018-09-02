@@ -19,12 +19,17 @@ class LdapAuthenticationConfiguration {
    */
   public static function getEnabledAuthenticationServers() {
     // FIXME: DI.
-    $servers = \Drupal::config('ldap_authentication.settings')->get('sids');
-    /** @var \Drupal\ldap_servers\ServerFactory $factory */
-    $factory = \Drupal::service('ldap.servers');
+    $configured_servers = \Drupal::config('ldap_authentication.settings')->get('sids');
+    $available_servers =
+      \Drupal::service('entity_type.manager')
+        ->getStorage('ldap_server')
+        ->getQuery()
+        ->condition('status', 1)
+        ->execute();
+
     $result = [];
-    foreach ($servers as $server) {
-      if ($factory->getServerByIdEnabled($server)) {
+    foreach ($configured_servers as $server) {
+      if (isset($available_servers[$server])) {
         $result[] = $server;
       }
     }

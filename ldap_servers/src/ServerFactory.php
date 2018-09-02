@@ -27,7 +27,7 @@ class ServerFactory implements LdapUserAttributesInterface {
 
   protected $config;
   protected $logger;
-  protected $entityManager;
+  protected $storage;
   protected $cache;
 
   /**
@@ -36,68 +36,8 @@ class ServerFactory implements LdapUserAttributesInterface {
   public function __construct(ConfigFactoryInterface $config_factory, LoggerChannelInterface $logger, EntityTypeManager $entity_type_manager, CacheBackendInterface $cache) {
     $this->config = $config_factory;
     $this->logger = $logger;
-    $this->entityManager = $entity_type_manager->getStorage('ldap_server');
+    $this->storage = $entity_type_manager->getStorage('ldap_server');
     $this->cache = $cache;
-  }
-
-  /**
-   * Fetch server by ID.
-   *
-   * @param string $sid
-   *   Server id.
-   *
-   * @return \Drupal\Core\Entity\EntityInterface|\Drupal\ldap_servers\Entity\Server
-   *   Server entity.
-   *
-   * @deprecated
-   */
-  public function getServerById($sid) {
-    return $this->entityManager->load($sid);
-  }
-
-  /**
-   * Fetch server by ID if enabled.
-   *
-   * @param string $sid
-   *   Server id.
-   *
-   * @return bool|EntityInterface|\Drupal\ldap_servers\Entity\Server
-   *   Server entity if enabled or false.
-   */
-  public function getServerByIdEnabled($sid) {
-    $server = $this->entityManager->load($sid);
-    if ($server && $server->status()) {
-      return $server;
-    }
-    else {
-      return FALSE;
-    }
-  }
-
-  /**
-   * Fetch all servers.
-   *
-   * @return \Drupal\Core\Entity\EntityInterface[]|\Drupal\ldap_servers\Entity\Server[]
-   *   An array of all servers.
-   */
-  public function getAllServers() {
-    $ids = $this->entityManager->getQuery()->execute();
-    return $this->entityManager->loadMultiple($ids);
-  }
-
-  /**
-   * Fetch all enabled servers.
-   *
-   * @return \Drupal\Core\Entity\EntityInterface[]|\Drupal\ldap_servers\Entity\Server[]
-   *   An array of all enabled servers.
-   */
-  public function getEnabledServers() {
-    $ids = $this->entityManager
-      ->getQuery()
-      ->condition('status', 1)
-      ->execute();
-
-    return $this->entityManager->loadMultiple($ids);
   }
 
   /**
@@ -117,9 +57,10 @@ class ServerFactory implements LdapUserAttributesInterface {
       return $cache->data;
     }
 
-    $server = $this->getServerByIdEnabled($id);
+    /** @var \Drupal\ldap_servers\Entity\Server $server */
+    $server = $this->storage->load($id);
 
-    if (!$server) {
+    if (!$server || !$server->status()) {
       $this->logger->error('Failed to load server object %sid in _ldap_servers_get_user_ldap_data', ['%sid' => $id]);
       return FALSE;
     }
@@ -162,51 +103,6 @@ class ServerFactory implements LdapUserAttributesInterface {
   }
 
   /**
-   * Fetch user data from account.
-   *
-   *  Uses the regular provisioning server.
-   *
-   * @param \Drupal\user\UserInterface $account
-   *   Drupal user account.
-   * @param array $ldap_context
-   *   LDAP context.
-   *
-   * @return array|bool
-   *   Returns data or FALSE.
-   */
-  public function getUserDataByAccount(UserInterface $account, array $ldap_context = NULL) {
-    $provisioningServer = $this->config('ldap_user.settings')->get('drupalAcctProvisionServer');
-    $id = NULL;
-    if (!$account) {
-      return FALSE;
-    }
-
-    // TODO: While this functionality is now consistent with 7.x, it hides
-    // a corner case: server which are no longer available can still be set in
-    // the user as a preference and those users will not be able to sync.
-    // This needs to get cleaned up or fallback differently.
-    if (property_exists($account, 'ldap_user_puid_sid') &&
-      !empty($account->get('ldap_user_puid_sid')->value)) {
-      $id = $account->get('ldap_user_puid_sid')->value;
-    }
-    elseif ($provisioningServer) {
-      $id = $provisioningServer;
-    }
-    else {
-      $servers = $this->getEnabledServers();
-      if (count($servers) == 1) {
-        $ids = array_keys($servers);
-        $id = $ids[0];
-      }
-      else {
-        $this->logger->error('Multiple servers enabled, one has to be set up for user provision.');
-        return FALSE;
-      }
-    }
-    return $this->getUserDataFromServerByAccount($account, $id, $ldap_context);
-  }
-
-  /**
    * Alter the LDAP attributes.
    *
    * @param array $attributes
@@ -228,7 +124,8 @@ class ServerFactory implements LdapUserAttributesInterface {
     // Puid attributes are server specific.
     if (isset($params['sid']) && $params['sid']) {
       if (is_scalar($params['sid'])) {
-        $ldap_server = $this->getServerById($params['sid']);
+        /** @var \Drupal\ldap_servers\Entity\Server $ldap_server */
+        $ldap_server = $this->storage->load($params['sid']);
 
         if ($ldap_server) {
           // The attributes mail, unique_persistent_attr, user_attr,

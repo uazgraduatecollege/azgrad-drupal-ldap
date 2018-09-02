@@ -10,15 +10,12 @@ use Drupal\Core\State\StateInterface;
 use Drupal\externalauth\Authmap;
 use Drupal\ldap_query\Controller\QueryController;
 use Drupal\ldap_servers\Logger\LdapDetailLog;
-use Drupal\ldap_servers\ServerFactory;
 use Drupal\user\Entity\User;
 
 /**
  * Provides functionality to generically update existing users.
  */
 class GroupUserUpdateProcessor {
-
-  protected $queryController;
 
   protected $logger;
   protected $detailLog;
@@ -28,22 +25,33 @@ class GroupUserUpdateProcessor {
   protected $moduleHandler;
   protected $entityTypeManager;
   protected $externalAuth;
+  protected $queryController;
+  protected $drupalUserProcessor;
+
+  /**
+   * LDAP Server.
+   *
+   * @var \Drupal\ldap_servers\Entity\Server|null
+   */
+  protected $ldapServer;
 
   /**
    * Constructor for update process.
    */
-  public function __construct(LoggerChannelInterface $logger, LdapDetailLog $detail_log, ConfigFactory $config, ServerFactory $factory, StateInterface $state, ModuleHandler $module_handler, EntityTypeManager $entity_type_manager, Authmap $external_auth) {
+  public function __construct(LoggerChannelInterface $logger, LdapDetailLog $detail_log, ConfigFactory $config, StateInterface $state, ModuleHandler $module_handler, EntityTypeManager $entity_type_manager, Authmap $external_auth, QueryController $query_controller, DrupalUserProcessor $drupal_user_processor) {
     $this->logger = $logger;
     $this->detailLog = $detail_log;
     $this->config = $config->get('ldap_user.settings');
-    $this->ldapServerFactory = $factory;
-    $this->ldapDrupalUserProcessor = \Drupal::service('ldap_user.drupal_user_processor');
-    $this->ldapServer = $this->ldapServerFactory
-      ->getServerByIdEnabled($this->config->get('drupalAcctProvisionServer'));
+    $this->drupalUserProcessor = $drupal_user_processor;
     $this->state = $state;
     $this->moduleHandler = $module_handler;
     $this->entityTypeManager = $entity_type_manager;
     $this->externalAuth = $external_auth;
+    $this->queryController = $query_controller;
+
+    $this->ldapServer = $this->entityTypeManager
+      ->getStorage('ldap_server')
+      ->load($this->config->get('drupalAcctProvisionServer'));
   }
 
   /**
@@ -116,8 +124,7 @@ class GroupUserUpdateProcessor {
    */
   public function runQuery($id) {
 
-    // FIXME: DI.
-    $this->queryController = new QueryController($id);
+    $this->queryController->load($id);
     if (!$this->constraintsValid()) {
       return;
     }
@@ -138,7 +145,7 @@ class GroupUserUpdateProcessor {
           $uid = $this->externalAuth->getUid($username, 'ldap_user');
           if ($uid) {
             $drupalAccount = $this->entityTypeManager->getStorage('user')->load($uid);
-            $this->ldapDrupalUserProcessor->drupalUserLogsIn($drupalAccount);
+            $this->drupalUserProcessor->drupalUserLogsIn($drupalAccount);
             // Reload since data has changed.
             $drupalAccount = $this->entityTypeManager->getStorage('user')->load($drupalAccount->id());
             $this->updateAuthorizations($drupalAccount);
@@ -149,11 +156,11 @@ class GroupUserUpdateProcessor {
             );
           }
           else {
-            $result = $this->ldapDrupalUserProcessor
+            $result = $this->drupalUserProcessor
               ->provisionDrupalAccount(['name' => $username, 'status' => TRUE]);
             if ($result) {
-              $drupalAccount = $this->ldapDrupalUserProcessor->getUserAccount();
-              $this->ldapDrupalUserProcessor->drupalUserLogsIn($drupalAccount);
+              $drupalAccount = $this->drupalUserProcessor->getUserAccount();
+              $this->drupalUserProcessor->drupalUserLogsIn($drupalAccount);
               // Reload since data has changed.
               $drupalAccount = $this->entityTypeManager->getStorage('user')->load($drupalAccount->id());
               $this->updateAuthorizations($drupalAccount);

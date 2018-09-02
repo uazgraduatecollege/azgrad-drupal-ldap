@@ -5,19 +5,18 @@ namespace Drupal\ldap_user\Form;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Config\Config;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
+use Drupal\Core\Entity\EntityTypeManager;
 use Drupal\Core\Extension\ModuleHandler;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Url;
-use Drupal\ldap_query\Controller\QueryController;
 use Drupal\ldap_servers\Helper\ConversionHelper;
 use Drupal\ldap_servers\ServerFactory;
 use Drupal\ldap_user\Helper\LdapConfiguration;
 use Drupal\ldap_servers\LdapUserAttributesInterface;
 use Drupal\ldap_user\Helper\SemaphoreStorage;
-use Drupal\ldap_user\Helper\SyncMappingHelper;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -28,6 +27,7 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
   protected $serverFactory;
   protected $cache;
   protected $moduleHandler;
+  protected $entityTypeManager;
 
   protected $drupalAcctProvisionServerOptions;
 
@@ -36,24 +36,15 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
   /**
    * {@inheritdoc}
    */
-  public function __construct(ConfigFactoryInterface $config_factory, ServerFactory $server_factory, CacheBackendInterface $cache, ModuleHandler $module_handler) {
+  public function __construct(ConfigFactoryInterface $config_factory, ServerFactory $server_factory, CacheBackendInterface $cache, ModuleHandler $module_handler, EntityTypeManager $entity_type_manager) {
     parent::__construct($config_factory);
 
     $this->serverFactory = $server_factory;
     $this->cache = $cache;
     $this->moduleHandler = $module_handler;
+    $this->entityTypeManager = $entity_type_manager;
 
-    $ldap_servers = $this->serverFactory->getEnabledServers();
-    if ($ldap_servers) {
-      foreach ($ldap_servers as $sid => $ldap_server) {
-        /** @var \Drupal\ldap_servers\Entity\Server $ldap_server */
-        $enabled = ($ldap_server->get('status')) ? 'Enabled' : 'Disabled';
-        $this->drupalAcctProvisionServerOptions[$sid] = $ldap_server->label() . ' (' . $ldap_server->get('address') . ') Status: ' . $enabled;
-        $this->ldapEntryProvisionServerOptions[$sid] = $ldap_server->label() . ' (' . $ldap_server->get('address') . ') Status: ' . $enabled;
-      }
-    }
-    $this->drupalAcctProvisionServerOptions['none'] = $this->t('None');
-    $this->ldapEntryProvisionServerOptions['none'] = $this->t('None');
+    $this->prepareBaseData();
   }
 
   /**
@@ -64,7 +55,8 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
       $container->get('config.factory'),
       $container->get('ldap.servers'),
       $container->get('cache.default'),
-      $container->get('module_handler')
+      $container->get('module_handler'),
+      $container->get('entity_type.manager')
     );
   }
 
@@ -199,7 +191,12 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
 
     if ($this->moduleHandler->moduleExists('ldap_query')) {
       $updateMechanismOptions = ['none' => $this->t('Do not update')];
-      $queries = QueryController::getAllEnabledQueries();
+
+      $ids = $this->entityTypeManager->getStorage('ldap_query_entity')
+        ->getQuery()
+        ->condition('status', 1)
+        ->execute();
+      $queries = $this->storage->loadMultiple($ids);
       foreach ($queries as $query) {
         $updateMechanismOptions[$query->id()] = $query->label();
       }
@@ -591,7 +588,7 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
   private function checkPuidForOrphans($orphanCheck, $serverId) {
     if ($orphanCheck != 'ldap_user_orphan_do_not_check') {
       /** @var \Drupal\ldap_servers\Entity\Server $server */
-      $server = $this->serverFactory->getServerById($serverId);
+      $server = $this->entityTypeManager->getStorage('ldap_server')->load($serverId);
       if (empty($server->get('unique_persistent_attr'))) {
         return FALSE;
       }
@@ -763,7 +760,7 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
     $text = ($direction == self::PROVISION_TO_DRUPAL) ? 'target' : 'source';
     $userAttributeOptions = ['0' => $this->t('Select') . ' ' . $text];
 
-    /** @var SyncMappingHelper $syncMappingsHelper */
+    /** @var \Drupal\ldap_user\Helper\SyncMappingHelper $syncMappingsHelper */
     $syncMappingsHelper = \Drupal::service('sync_mapper');
     $syncMappings = $syncMappingsHelper->getAllSyncMappings();
     if (!empty($syncMappings[$direction])) {
@@ -1110,6 +1107,25 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
       self::EVENT_CREATE_LDAP_ENTRY => $this->t('On LDAP Entry Creation'),
       self::EVENT_SYNC_TO_LDAP_ENTRY => $this->t('On Sync to LDAP Entry'),
     ];
+  }
+
+  /**
+   * Load servers and set their default values.
+   */
+  private function prepareBaseData() {
+    $ids = $this->entityTypeManager->getStorage('ldap_server')
+      ->getQuery()
+      ->condition('status', 1)
+      ->execute();
+    foreach ($this->entityTypeManager->loadMultiple($ids) as $sid => $server) {
+      /** @var \Drupal\ldap_servers\Entity\Server $server */
+      $enabled = ($server->get('status')) ? 'Enabled' : 'Disabled';
+      $this->drupalAcctProvisionServerOptions[$sid] = $server->label() . ' (' . $server->get('address') . ') Status: ' . $enabled;
+      $this->ldapEntryProvisionServerOptions[$sid] = $server->label() . ' (' . $server->get('address') . ') Status: ' . $enabled;
+    }
+
+    $this->drupalAcctProvisionServerOptions['none'] = $this->t('None');
+    $this->ldapEntryProvisionServerOptions['none'] = $this->t('None');
   }
 
 }

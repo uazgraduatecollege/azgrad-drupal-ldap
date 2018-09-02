@@ -3,8 +3,10 @@
 namespace Drupal\ldap_user\Processor;
 
 use Drupal\Core\Config\ConfigFactory;
+use Drupal\Core\Entity\EntityTypeManager;
 use Drupal\Core\Extension\ModuleHandler;
 use Drupal\Core\Logger\LoggerChannelInterface;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\ldap_servers\Entity\Server;
 use Drupal\ldap_servers\Helper\ConversionHelper;
 use Drupal\ldap_servers\Logger\LdapDetailLog;
@@ -22,23 +24,27 @@ use Symfony\Component\Ldap\Entry;
  */
 class LdapUserProcessor implements LdapUserAttributesInterface {
 
+  use StringTranslationTrait;
+
   protected $logger;
   protected $config;
   protected $detailLog;
   protected $tokenProcessor;
   protected $syncMapper;
   protected $moduleHandler;
+  protected $entityTypeManager;
 
   /**
    * Constructor.
    */
-  public function __construct(LoggerChannelInterface $logger, ConfigFactory $config_factory, LdapDetailLog $detail_log, TokenProcessor $token_processor, SyncMappingHelper $sync_mapper, ModuleHandler $module_handler) {
+  public function __construct(LoggerChannelInterface $logger, ConfigFactory $config_factory, LdapDetailLog $detail_log, TokenProcessor $token_processor, SyncMappingHelper $sync_mapper, ModuleHandler $module_handler, EntityTypeManager $entity_type_manager) {
     $this->logger = $logger;
     $this->config = $config_factory->get('ldap_user.settings');
     $this->detailLog = $detail_log;
     $this->tokenProcessor = $token_processor;
     $this->syncMapper = $sync_mapper;
     $this->moduleHandler = $module_handler;
+    $this->entityTypeManager = $entity_type_manager;
   }
 
   /**
@@ -52,20 +58,15 @@ class LdapUserProcessor implements LdapUserAttributesInterface {
    *
    *   Verify that we need actually need those for a missing test case or remove.
    *
-   *   TODO: Restructure this function to provide an Entry all the time.
+   *   fixme: Restructure this function to provide an Entry all the time.
    */
   public function syncToLdapEntry(User $account) {
-
-    // @TODO 2914053.
-    if ($account->id() == 1) {
-      // Do not provision or sync user 1.
-      return FALSE;
-    }
-
     $result = FALSE;
 
     if ($this->config->get('ldapEntryProvisionServer')) {
-      $server = Server::load($this->config->get('ldapEntryProvisionServer'));
+      $server = $this->entityTypeManager
+        ->getStorage('ldap_server')
+        ->load($this->config->get('ldapEntryProvisionServer'));
 
       $params = [
         'direction' => self::PROVISION_TO_LDAP,
@@ -140,10 +141,10 @@ class LdapUserProcessor implements LdapUserAttributesInterface {
 
     $tokens = [
       '%dn' => isset($proposedLdapEntry['dn']) ? $proposedLdapEntry['dn'] : 'null',
-      '%sid' => $this->config['ldapEntryProvisionServer'],
+      '%sid' => $this->config->get('ldapEntryProvisionServer'),
       '%username' => $account->getAccountName(),
       '%uid' => (!method_exists($account, 'id') || empty($account->id())) ? '' : $account->id(),
-      '%action' => $result ? t('synced') : t('not synced'),
+      '%action' => $result ? $this->t('synced') : $this->t('not synced'),
     ];
 
     \Drupal::logger('ldap_user')
@@ -267,8 +268,8 @@ class LdapUserProcessor implements LdapUserAttributesInterface {
    *
    * If one exists do nothing, takes Drupal user as argument.
    *
-   * @param \Drupal\user\Entity\User|string $account
-   *   Drupal account object with minimum of name property.
+   * @param \Drupal\user\UserInterface $account
+   *   Drupal user.
    * @param array $ldap_user
    *   LDAP user as pre-populated LDAP entry. Usually not provided.
    *
@@ -280,7 +281,7 @@ class LdapUserProcessor implements LdapUserAttributesInterface {
    *     array('existing' => existing LDAP entry),
    *     array('description' = > blah blah)
    */
-  public function provisionLdapEntry($account, array $ldap_user = NULL) {
+  public function provisionLdapEntry(UserInterface $account, array $ldap_user = NULL) {
 
     $result = [
       'status' => NULL,
@@ -290,32 +291,22 @@ class LdapUserProcessor implements LdapUserAttributesInterface {
       'description' => NULL,
     ];
 
-    if (is_scalar($account)) {
-      $account = user_load_by_name($account);
-    }
-
-    // @TODO 2914053.
-    if (is_object($account) && $account->id() == 1) {
+    if ($account->isAnonymous()) {
       $result['status'] = 'fail';
-      $result['error_description'] = 'can not provision Drupal user 1';
-      // Do not provision or sync user 1.
+      $result['error_description'] = 'cannot provision LDAP user unless corresponding Drupal account exists.';
       return $result;
     }
 
-    if ($account == FALSE || $account->isAnonymous()) {
-      $result['status'] = 'fail';
-      $result['error_description'] = 'can not provision LDAP user unless corresponding Drupal account exists first.';
-      return $result;
-    }
-
-    if (!$this->config['ldapEntryProvisionServer']) {
+    if (!$this->config->get('ldapEntryProvisionServer')) {
       $result['status'] = 'fail';
       $result['error_description'] = 'no provisioning server enabled';
       return $result;
     }
-    $factory = \Drupal::service('ldap.servers');
+
     /** @var \Drupal\ldap_servers\Entity\Server $ldapServer */
-    $ldapServer = $factory->getServerById($this->config['ldapEntryProvisionServer']);
+    $ldapServer = $this->entityTypeManager
+      ->getStorage('ldap_server')
+      ->load($this->config('ldapEntryProvisionServer'));
     $params = [
       'direction' => self::PROVISION_TO_LDAP,
       'prov_events' => [self::EVENT_CREATE_LDAP_ENTRY],
@@ -349,7 +340,7 @@ class LdapUserProcessor implements LdapUserAttributesInterface {
     if (!$proposedDn) {
       return [
         'status' => 'fail',
-        'description' => t('failed to derive dn and or mappings'),
+        'description' => $this->t('failed to derive dn and or mappings'),
       ];
     }
     elseif ($existingLdapEntry) {
@@ -442,8 +433,7 @@ class LdapUserProcessor implements LdapUserAttributesInterface {
         );
       }
       elseif ($result['status'] == 'fail') {
-        \Drupal::logger('ldap_user')
-          ->error('LDAP entry on server %sid not created because of error. %description. username=%username, uid=%uid, proposed dn=%dn', $tokens);
+        $this->logger->error('LDAP entry on server %sid not created because of error. %description. username=%username, uid=%uid, proposed dn=%dn', $tokens);
       }
     }
     return $result;
@@ -470,8 +460,8 @@ class LdapUserProcessor implements LdapUserAttributesInterface {
       $parts = explode('|', $entry['value']);
       if (count($parts) == 2) {
         list($sid, $dn) = $parts;
-        $factory = \Drupal::service('ldap.servers');
-        $ldap_server = $factory->getServerById($sid);
+        $ldap_server = $this->entityTypeManager->getStorage('ldap_server')->load($sid);
+
         if (is_object($ldap_server) && $dn) {
           /** @var \Drupal\ldap_servers\Entity\Server $ldap_server */
           $result = $ldap_server->deleteLdapEntry($dn);
@@ -482,12 +472,10 @@ class LdapUserProcessor implements LdapUserAttributesInterface {
             '%uid' => $account->id(),
           ];
           if ($result) {
-            \Drupal::logger('ldap_user')
-              ->info('LDAP entry on server %sid deleted dn=%dn. username=%username, uid=%uid', $tokens);
+            $this->logger->info('LDAP entry on server %sid deleted dn=%dn. username=%username, uid=%uid', $tokens);
           }
           else {
-            \Drupal::logger('ldap_user')
-              ->error('LDAP entry on server %sid not deleted because error. username=%username, uid=%uid', $tokens);
+            $this->logger->error('LDAP entry on server %sid not deleted because error. username=%username, uid=%uid', $tokens);
           }
         }
         else {
@@ -513,7 +501,7 @@ class LdapUserProcessor implements LdapUserAttributesInterface {
     if (!$prov_events) {
       $prov_events = LdapConfiguration::getAllEvents();
     }
-    $sid = $this->config['ldapEntryProvisionServer'];
+    $sid = $this->config->get('ldapEntryProvisionServer');
     if (!$sid) {
       return FALSE;
     }
@@ -532,7 +520,7 @@ class LdapUserProcessor implements LdapUserAttributesInterface {
       $proposed_ldap_entry = $this->drupalUserToLdapEntry($account, $ldap_server, $params);
     }
     catch (\Exception $e) {
-      \Drupal::logger('ldap_user')->error('Unable to prepare LDAP entry: %message', ['%message', $e->getMessage()]);
+      $this->logger->error('Unable to prepare LDAP entry: %message', ['%message', $e->getMessage()]);
       return FALSE;
     }
 

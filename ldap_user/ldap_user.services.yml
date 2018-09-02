@@ -7,17 +7,21 @@ services:
     tags:
       -
         name: event_subscriber
-  ldap_user.drupal_user_processor:
+  ldap.drupal_user_processor:
     class: Drupal\ldap_user\Processor\DrupalUserProcessor
-    arguments: ['@logger.channel.ldap_user', '@config.factory', '@ldap.detail_log', '@ldap.token_processor', '@ldap.servers', '@externalauth.authmap', '@entity_type.manager', '@ldap_user.ldap_user_processor', '@file_system', '@token', '@module_handler', '@entity_field.manager', '@current_user', '@sync_mapper']
-  ldap_user.ldap_user_processor:
+    arguments: ['@logger.channel.ldap_user', '@config.factory', '@ldap.detail_log', '@ldap.token_processor', '@ldap.servers', '@externalauth.authmap', '@entity_type.manager', '@ldap.ldap_user_processor', '@file_system', '@token', '@module_handler', '@current_user', '@ldap.sync_mapper']
+  ldap.ldap_user_processor:
     class: Drupal\ldap_user\Processor\LdapUserProcessor
-    arguments: ['@logger.channel.ldap_user', '@config.factory', '@ldap.detail_log', '@ldap.token_processor', '@sync_mapper', '@module_handler']
-  ldap_user.sync_mapper:
+    arguments: ['@logger.channel.ldap_user', '@config.factory', '@ldap.detail_log', '@ldap.token_processor', '@ldap.sync_mapper', '@module_handler', '@entity_type.manager']
+  ldap_user.field_provider:
+    class: Drupal\ldap_user\FieldProvider
+    arguments: ['@config.factory', '@entity_type.manager', '@module_handler', '@entity_field.manager']
+  ldap.sync_mapper:
      class: Drupal\ldap_user\Helper\SyncMappingHelper
-  ldap_user.orphan_processor:
+     arguments: ['@logger.channel.ldap_user', '@config.factory', '@cache.default', '@module_handler']
+  ldap.orphan_processor:
     class: Drupal\ldap_user\Processor\OrphanProcessor
     arguments: ['@logger.channel.ldap_user', '@config.factory', '@ldap.servers', '@plugin.manager.mail', '@language_manager', '@state', '@entity_type.manager']
-  ldap_user.group_user_update_processor:
+  ldap.group_user_update_processor:
     class: Drupal\ldap_user\Processor\GroupUserUpdateProcessor
-    arguments: ['@logger.channel.ldap_user', '@ldap.detail_log', '@config.factory', '@ldap.servers', '@state', '@module_handler', '@entity_type.manager', '@externalauth.authmap']
+    arguments: ['@logger.channel.ldap_user', '@ldap.detail_log', '@config.factory', '@state', '@module_handler', '@entity_type.manager', '@externalauth.authmap', '@ldap.drupal_user_processor']
