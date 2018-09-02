@@ -55,7 +55,7 @@ function ldap_user_mail($key, &$message, $params) {
  * Implements hook_ldap_attributes_needed_alter().
  */
 function ldap_user_ldap_attributes_needed_alter(&$attributes, $params) {
-  $processor = new DrupalUserProcessor();
+  $processor = \Drupal::service('ldap_user.drupal_user_processor');
   $attributes = $processor->alterUserAttributes($attributes, $params);
 }
 
@@ -63,7 +63,7 @@ function ldap_user_ldap_attributes_needed_alter(&$attributes, $params) {
  * Implements hook_ldap_user_attrs_list_alter().
  */
 function ldap_user_ldap_user_attrs_list_alter(&$available_user_attrs, &$params) {
-  $processor = new DrupalUserProcessor();
+  $processor = \Drupal::service('ldap_user.drupal_user_processor');
   list($available_user_attrs, $params) = $processor->alterLdapUserAttributes($available_user_attrs, $params);
 }
 
@@ -101,7 +101,7 @@ function ldap_user_module_implements_alter(&$implementations, $hook) {
  * Implements hook_user_login().
  */
 function ldap_user_user_login($account) {
-  $processor = new DrupalUserProcessor();
+  $processor =  \Drupal::service('ldap_user.drupal_user_processor');
   $processor->drupalUserLogsIn($account);
 }
 
@@ -109,7 +109,7 @@ function ldap_user_user_login($account) {
  * Implements hook_ENTITY_TYPE_insert().
  */
 function ldap_user_user_insert($account) {
-  $processor = new DrupalUserProcessor();
+  $processor = \Drupal::service('ldap_user.drupal_user_processor');
   $processor->newDrupalUserCreated($account);
 }
 
@@ -117,7 +117,7 @@ function ldap_user_user_insert($account) {
  * Implements hook_ENTITY_TYPE_update().
  */
 function ldap_user_user_update($account) {
-  $processor = new DrupalUserProcessor();
+  $processor = \Drupal::service('ldap_user.drupal_user_processor');
   $processor->drupalUserUpdated($account);
 }
 
@@ -125,7 +125,7 @@ function ldap_user_user_update($account) {
  * Implements hook_ENTITY_TYPE_delete().
  */
 function ldap_user_user_delete($account) {
-  $processor = new DrupalUserProcessor();
+  $processor =  \Drupal::service('ldap_user.drupal_user_processor');
   $processor->drupalUserDeleted($account);
 }
 
@@ -364,7 +364,7 @@ function ldap_user_form_register_form_submit2(&$form, FormState $form_state) {
   // Create LDAP account.
   if ($values['ldap_user_create_ldap_acct']) {
     if ($account = user_load_by_name($values['name'])) {
-      $ldapProcessor = new LdapUserProcessor();
+      $ldapProcessor = \Drupal::service('ldap_user.ldap_user_processor');
       // We check that the entry does not exist, validation should prevent this
       // in nearly all cases.
       $ldap_provision_entry = $ldapProcessor->getProvisionRelatedLdapEntry($account);
@@ -381,7 +381,7 @@ function ldap_user_form_register_form_submit2(&$form, FormState $form_state) {
     }
   }
 
-  $userProcessor = new DrupalUserProcessor();
+  $userProcessor = \Drupal::service('ldap_user.drupal_user_processor');
   if ($values['ldap_user_association'] == LdapUserAttributesInterface::MANUAL_ACCOUNT_CONFLICT_NO_LDAP_ASSOCIATE) {
     $userProcessor->ldapExcludeDrupalAccount($values['name']);
   }

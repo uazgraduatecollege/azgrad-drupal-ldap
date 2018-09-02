@@ -8,7 +8,7 @@
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\ldap_authentication\Helper\LdapAuthenticationConfiguration;
-use Drupal\ldap_user\Helper\ExternalAuthenticationHelper;
+use Drupal\user\UserInterface;
 
 /**
  * Implements hook_help().
@@ -25,28 +25,6 @@ function ldap_authentication_help($path, $arg) {
       $output = '<p>' . $authentication_help . '</p>';
       return $output;
   }
-}
-
-/**
- * Are we LDAP authenticated.
- *
- * @param int|User $user
- *   The user account.
- *
- * @return bool
- *   True if user is recorded as LDAP authenticated and identified.
- *
- * @deprecated
- */
-function ldap_authentication_ldap_authenticated($user) {
-  if (is_numeric($user)) {
-    $user = @\Drupal::entityManager()->getStorage('user')->load((int) $user);
-  }
-  if (!is_object($user) || $user->id() == 0) {
-    return FALSE;
-  }
-  $authname = ExternalAuthenticationHelper::getUserIdentifierFromMap($user->id());
-  return !empty($authname);
 }
 
 /**
@@ -100,8 +78,11 @@ function ldap_authentication_user_pass_validate(array &$form, FormStateInterface
     $account = user_load_by_name($name_or_mail);
   }
   $config = \Drupal::config('ldap_authentication.settings');
-  if ($account && ldap_authentication_ldap_authenticated($account)) {
-    if ($config->get('passwordOption') != LdapAuthenticationConfiguration::$passwordFieldAllow) {
+  /** @var \Drupal\externalauth\Authmap $authmap */
+  $authmap = \Drupal::service('externalauth.authmap');
+  $authname = $authmap->get($account->id(), 'ldap_user');
+  if ($account && $authname) {
+    if ($config->get('passwordOption') != 'allow') {
       if ($config->get('ldapUserHelpLinkUrl')) {
         $helpLink = \Drupal::l($config->get('ldapUserHelpLinkText'),
           Url::fromUri($config->get('ldapUserHelpLinkUrl')));
@@ -130,23 +111,26 @@ function ldap_authentication_form_user_form_alter(&$form, FormStateInterface $fo
 
   $user = $form_state->getBuildInfo()['callback_object']->getEntity();
   $config = \Drupal::config('ldap_authentication.settings');
-  if (ldap_authentication_ldap_authenticated($user)) {
-    if ($config->get('emailOption') == LdapAuthenticationConfiguration::$emailFieldRemove) {
+  /** @var \Drupal\externalauth\Authmap $authmap */
+  $authmap = \Drupal::service('externalauth.authmap');
+  $authname = $authmap->get($user->id(), 'ldap_user');
+  if ($authname) {
+    if ($config->get('emailOption') == 'remove') {
       $form['account']['mail']['#access'] = FALSE;
     }
-    elseif ($config->get('emailOption') == LdapAuthenticationConfiguration::$emailFieldDisable) {
+    elseif ($config->get('emailOption') == 'disable') {
       $form['account']['mail']['#disabled'] = TRUE;
       $form['account']['mail']['#description'] = t('This email address is automatically set and may not be changed.');
     }
 
-    if (!LdapAuthenticationConfiguration::showPasswordField($user)) {
-      if ($config->get('passwordOption') == LdapAuthenticationConfiguration::$passwordFieldHide) {
+    if (!ldap_authentication_show_password_field($user)) {
+      if ($config->get('passwordOption') == 'hide') {
         // TODO: Allow for the case where email changes are allowed to show
         // current pass.
         $form['account']['current_pass']['#access'] = FALSE;
         $form['account']['pass']['#access'] = FALSE;
       }
-      elseif ($config->get('emailOption') == LdapAuthenticationConfiguration::$emailFieldDisable) {
+      elseif ($config->get('emailOption') == 'disable') {
         $form['account']['current_pass']['#disabled'] = TRUE;
         $form['account']['pass']['#disabled'] = TRUE;
         if ($config->get('ldapUserHelpLinkUrl')) {
@@ -158,6 +142,40 @@ function ldap_authentication_form_user_form_alter(&$form, FormStateInterface $fo
       }
     }
   }
+}
+
+/**
+ * Should the password field be shown?
+ *
+ * @param \Drupal\user\UserInterface $user
+ *   User account.
+ *
+ * @return bool
+ *   Password status.
+ */
+function ldap_authentication_show_password_field(UserInterface $user = NULL) {
+
+  if (!$user) {
+    $user = \Drupal::currentUser();
+  }
+
+  if ($user->hasPermission('administer users')) {
+    return TRUE;
+  }
+
+  // Hide if LDAP authenticated and updating password is not allowed,
+  // otherwise show.
+  /** @var \Drupal\externalauth\Authmap $authmap */
+  $authmap = \Drupal::service('externalauth.authmap');
+  $authname = $authmap->get($user->id(), 'ldap_user');
+  if ($authname) {
+    if (\Drupal::config('ldap_authentication.settings')->get('passwordOption') == 'allow') {
+      return TRUE;
+    }
+    return FALSE;
+  }
+  return TRUE;
+
 }
 
 /**
@@ -209,7 +227,7 @@ function ldap_authentication_user_login_authenticate_validate(array $form, FormS
  *   The form ID.
  */
 function _ldap_authentication_login_form_alter(array &$form, FormStateInterface &$form_state, $form_id) {
-  if (!LdapAuthenticationConfiguration::hasEnabledAuthenticationServers()) {
+  if (count(LdapAuthenticationConfiguration::getEnabledAuthenticationServers()) == 0) {
     return;
   }
 

@@ -6,8 +6,8 @@ use Drupal\Core\Entity\EntityTypeManager;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Url;
+use Drupal\externalauth\Authmap;
 use Drupal\ldap_servers\ServerFactory;
-use Drupal\ldap_user\Helper\ExternalAuthenticationHelper;
 use Drupal\ldap_user\Helper\LdapConfiguration;
 use Drupal\ldap_servers\LdapUserAttributesInterface;
 use Drupal\ldap_user\Processor\DrupalUserProcessor;
@@ -25,6 +25,7 @@ class LdapUserTestForm extends FormBase implements LdapUserAttributesInterface {
   protected $request;
   protected $serverFactory;
   protected $entityTypeManager;
+  protected $externalAuth;
 
   /**
    * {@inheritdoc}
@@ -36,10 +37,11 @@ class LdapUserTestForm extends FormBase implements LdapUserAttributesInterface {
   /**
    * {@inheritdoc}
    */
-  public function __construct(RequestStack $request_stack, ServerFactory $server_factory, EntityTypeManager $entity_type_manager) {
+  public function __construct(RequestStack $request_stack, ServerFactory $server_factory, EntityTypeManager $entity_type_manager, Authmap $external_auth) {
     $this->request = $request_stack->getCurrentRequest();
     $this->serverFactory = $server_factory;
     $this->entityTypeManager = $entity_type_manager;
+    $this->externalAuth = $external_auth;
 
     self::$syncTriggerOptions = [
       self::PROVISION_DRUPAL_USER_ON_USER_UPDATE_CREATE => $this->t('On sync to Drupal user create or update. Requires a server with binding method of "Service Account Bind" or "Anonymous Bind".'),
@@ -58,7 +60,8 @@ class LdapUserTestForm extends FormBase implements LdapUserAttributesInterface {
     return new static(
       $container->get('request_stack'),
       $container->get('ldap.servers'),
-      $container->get('entity_type.manager')
+      $container->get('entity_type.manager'),
+      $container->get('externalauth.authmap')
     );
   }
 
@@ -113,8 +116,8 @@ class LdapUserTestForm extends FormBase implements LdapUserAttributesInterface {
     $selected_action = $form_state->getValue(['action']);
 
     $config = $this->configFactory()->get('ldap_user.settings')->get();
-    $processor = new DrupalUserProcessor();
-    $ldapProcessor = new LdapUserProcessor();
+    $processor =  \Drupal::service('ldap_user.drupal_user_processor');
+    $ldapProcessor = \Drupal::service('ldap_user.ldap_user_processor');
     $user_ldap_entry = FALSE;
 
     if ($config['drupalAcctProvisionServer']) {
@@ -134,7 +137,7 @@ class LdapUserTestForm extends FormBase implements LdapUserAttributesInterface {
     $existingAccount = $existingAccount ? reset($existingAccount) : FALSE;
     if ($existingAccount) {
       $results['user entity (before provisioning or syncing)'] = $existingAccount->toArray();
-      $results['User Authmap'] = ExternalAuthenticationHelper::getUserIdentifierFromMap($existingAccount->id());
+      $results['User Authmap'] = $this->externalAuth->get($existingAccount->id(), 'ldap_user');
     }
     else {
       $results['User Authmap'] = 'No authmaps available.  Authmaps only shown if user account exists beforehand';

@@ -55,8 +55,8 @@ class LdapBridge {
    */
   public function setServer(Server $server) {
     $options = new OptionsResolver();
-    //TODO: Fix network timeout option
-    //$options->setAllowedValues('network_timeout', $this->server->get('timeout'));
+    // TODO: Fix network timeout option
+    // $options->setAllowedValues('network_timeout', $this->server->get('timeout'));.
     $parameters = [
       'host' => $server->get('address'),
       'port' => $server->get('port'),

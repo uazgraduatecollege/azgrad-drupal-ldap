@@ -762,7 +762,9 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
 
     $text = ($direction == self::PROVISION_TO_DRUPAL) ? 'target' : 'source';
     $userAttributeOptions = ['0' => $this->t('Select') . ' ' . $text];
-    $syncMappingsHelper = new SyncMappingHelper();
+
+    /** @var SyncMappingHelper $syncMappingsHelper */
+    $syncMappingsHelper = \Drupal::service('sync_mapper');
     $syncMappings = $syncMappingsHelper->getAllSyncMappings();
     if (!empty($syncMappings[$direction])) {
       foreach ($syncMappings[$direction] as $target_id => $mapping) {

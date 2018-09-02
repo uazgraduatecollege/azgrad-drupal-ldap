@@ -81,6 +81,7 @@ class LdapQuery extends QueryPluginBase {
     }
     $start = microtime(TRUE);
 
+    // FIXME: DI.
     $controller = new QueryController($this->options['query_id']);
     $filter = $this->buildLdapFilter($controller->getFilter());
 

@@ -31,6 +31,7 @@ class QueryTestForm extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state, $ldap_query_entity = NULL) {
     if ($ldap_query_entity) {
+      // FIXME: DI.
       $controller = new QueryController($ldap_query_entity);
       $controller->execute();
       $data = $controller->getRawResults();

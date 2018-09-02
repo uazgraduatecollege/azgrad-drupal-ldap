@@ -8,6 +8,7 @@ use Drupal\ldap_servers\LdapUserAttributesInterface;
 
 /**
  * Helper class to process user field synchronisation mappings.
+ *
  */
 class SyncMappingHelper implements LdapUserAttributesInterface {
 

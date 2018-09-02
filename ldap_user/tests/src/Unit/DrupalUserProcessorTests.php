@@ -2,8 +2,10 @@
 
 namespace Drupal\Tests\ldap_user\Unit;
 
+use Drupal\authorization_drupal_roles\Plugin\authorization\Consumer\DrupalRolesConsumer;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\ldap_servers\LdapUserAttributesInterface;
+use Drupal\ldap_user\Processor\DrupalUserProcessor;
 use Drupal\Tests\UnitTestCase;
 
 /**
@@ -77,6 +79,37 @@ class DrupalUserProcessorTests extends UnitTestCase implements LdapUserAttribute
    */
   public function testBase() {
     $this->assertTrue(TRUE);
+  }
+
+  /**
+   * Tests user exclusion for the authentication helper.
+   */
+  public function testUserExclusion() {
+
+    $processor = \Drupal::service('ldap_user.drupal_user_processor');
+
+    // @TODO 2914053.
+    /* Disallow user 1 */
+    $account = $this->prophesize('\Drupal\user\Entity\User');
+    $account->id()->willReturn(1);
+    $this->assertTrue($processor->excludeUser($account->reveal()));
+
+    /* Disallow checkbox exclusion (everyone else allowed). */
+    $account = $this->prophesize('\Drupal\user\Entity\User');
+    $account->id()->willReturn(2);
+    $value = new \stdClass();
+    $value->value = 1;
+    $account->get('ldap_user_ldap_exclude')->willReturn($value);
+    $this->assertTrue($processor->excludeUser($account->reveal()));
+
+    /* Everyone else allowed. */
+    $account = $this->prophesize('\Drupal\user\Entity\User');
+    $account->id()->willReturn(2);
+    $value = new \stdClass();
+    $value->value = '';
+    $account->get('ldap_user_ldap_exclude')->willReturn($value);
+    $this->assertFalse($processor->excludeUser($account->reveal()));
+
   }
 
   // @TODO: Write test to show basic functionality of creating users via

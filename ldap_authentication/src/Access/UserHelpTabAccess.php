@@ -6,7 +6,7 @@ use Drupal\Core\Access\AccessResultAllowed;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Routing\Access\AccessInterface;
 use Drupal\Core\Session\AccountInterface;
-use Drupal\ldap_authentication\Helper\LdapAuthenticationConfiguration;
+use Drupal\externalauth\Authmap;
 
 /**
  * Checks whether the use is allowed to see the help tab.
@@ -15,13 +15,15 @@ class UserHelpTabAccess implements AccessInterface {
 
   private $config;
   private $currentUser;
+  private $externalAuth;
 
   /**
    * Constructor.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, AccountInterface $current_user) {
+  public function __construct(ConfigFactoryInterface $config_factory, AccountInterface $current_user, Authmap $external_auth) {
     $this->config = $config_factory->get('ldap_authentication.settings');
     $this->currentUser = $current_user;
+    $this->externalAuth = $external_auth;
   }
 
   /**
@@ -32,13 +34,14 @@ class UserHelpTabAccess implements AccessInterface {
    */
   public function accessLdapHelpTab() {
     $mode = $this->config->get('authenticationMode');
-    if ($mode == LdapAuthenticationConfiguration::MODE_MIXED) {
-      if (ldap_authentication_ldap_authenticated($this->currentUser)) {
+    if ($mode == 'mixed') {
+      if ($this->externalAuth->get($this->currentUser->id(), 'ldap_user')) {
         return TRUE;
       }
     }
-    elseif ($mode == LdapAuthenticationConfiguration::MODE_EXCLUSIVE) {
-      if ($this->currentUser->isAnonymous() || ldap_authentication_ldap_authenticated($this->currentUser)) {
+    else {
+      if ($this->currentUser->isAnonymous() ||
+        $this->externalAuth->get($this->currentUser->id(), 'ldap_user')) {
         return TRUE;
       }
     }

@@ -215,7 +215,8 @@ class OrphanProcessor {
    *   User to process.
    */
   private function processOrphanedAccounts(array $users) {
-    $drupalUserProcessor = new DrupalUserProcessor();
+    // FIXME: DI.
+    $drupalUserProcessor = \Drupal::service('ldap_user.drupal_user_processor');
     foreach ($users as $user) {
       if (isset($user['uid'])) {
         $account = $this->entityTypeManager->getStorage('user')->load($user['uid']);

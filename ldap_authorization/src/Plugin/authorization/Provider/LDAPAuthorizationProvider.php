@@ -7,7 +7,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\authorization\Provider\ProviderPluginBase;
 use Drupal\ldap_servers\Entity\Server;
 use Drupal\ldap_servers\Helper\ConversionHelper;
-use Drupal\ldap_user\Helper\ExternalAuthenticationHelper;
+use Drupal\ldap_user\Processor\DrupalUserProcessor;
 use Drupal\user\UserInterface;
 
 /**
@@ -47,6 +47,8 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
       $tokens += $profile->getConsumer()->getTokens();
     }
 
+    // FIXME: DI.
+    /** @var \Drupal\ldap_servers\ServerFactory $factory */
     $factory = \Drupal::service('ldap.servers');
     $servers = $factory->getEnabledServers();
 
@@ -150,8 +152,9 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
    */
   public function getProposals(UserInterface $user) {
 
+    $processor = \Drupal::service('ldap_user.drupal_user_processor');
     // Do not continue if user should be excluded from LDAP authentication.
-    if (ExternalAuthenticationHelper::excludeUser($user)) {
+    if ($processor->excludeUser($user)) {
       throw new AuthorizationSkipAuthorization();
     }
     /** @var \Drupal\authorization\Entity\AuthorizationProfile $profile */

@@ -100,8 +100,8 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
       '#required' => 1,
       '#default_value' => $config->get('authenticationMode'),
       '#options' => [
-        LdapAuthenticationConfiguration::MODE_MIXED => $this->t('Mixed mode: Drupal authentication is tried first. On failure, LDAP authentication is performed.'),
-        LdapAuthenticationConfiguration::MODE_EXCLUSIVE => $this->t('Exclusive mode: Only LDAP Authentication is allowed, except for user 1.'),
+        'mixed' => $this->t('Mixed mode: Drupal authentication is tried first. On failure, LDAP authentication is performed.'),
+        'exclusive' => $this->t('Exclusive mode: Only LDAP Authentication is allowed, except for user 1.'),
       ],
       '#description' => $this->t('If exclusive is selected: <br> (1) reset password links will be replaced with links to LDAP end user documentation below.<br>
         (2) The reset password form will be left available at user/password for user 1; but no links to it will be provided to anonymous users.<br>
@@ -206,9 +206,9 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
       '#required' => 1,
       '#default_value' => $config->get('emailOption'),
       '#options' => [
-        LdapAuthenticationConfiguration::$emailFieldRemove => $this->t("Don't show an email field on user forms. LDAP derived email will be used for user and cannot be changed by user."),
-        LdapAuthenticationConfiguration::$emailFieldDisable => $this->t('Show disabled email field on user forms with LDAP derived email. LDAP derived email will be used for user and cannot be changed by user.'),
-        LdapAuthenticationConfiguration::$emailFieldAllow => $this->t('Leave email field on user forms enabled. Generally used when provisioning to LDAP or not using email derived from LDAP.'),
+        'remove' => $this->t("Don't show an email field on user forms. LDAP derived email will be used for user and cannot be changed by user."),
+        'disable' => $this->t('Show disabled email field on user forms with LDAP derived email. LDAP derived email will be used for user and cannot be changed by user.'),
+        'allow' => $this->t('Leave email field on user forms enabled. Generally used when provisioning to LDAP or not using email derived from LDAP.'),
       ],
     ];
 
@@ -218,9 +218,9 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
       '#required' => 1,
       '#default_value' => $config->get('emailUpdate'),
       '#options' => [
-        LdapAuthenticationConfiguration::$emailUpdateOnLdapChangeEnableNotify => $this->t('Update stored email if LDAP email differs at login and notify user.'),
-        LdapAuthenticationConfiguration::$emailUpdateOnLdapChangeEnable => $this->t("Update stored email if LDAP email differs at login but don't notify user."),
-        LdapAuthenticationConfiguration::$emailUpdateOnLdapChangeDisable => $this->t("Don't update stored email if LDAP email differs at login."),
+        'update_notify' => $this->t('Update stored email if LDAP email differs at login and notify user.'),
+        'update' => $this->t("Update stored email if LDAP email differs at login but don't notify user."),
+        'no_update' => $this->t("Don't update stored email if LDAP email differs at login."),
       ],
     ];
 
@@ -293,12 +293,12 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
     $form['password']['passwordOption'] = [
       '#type' => 'radios',
       '#title' => $this->t('Password Behavior'),
-      '#required' => 1,
+      '#required' => TRUE,
       '#default_value' => $config->get('passwordOption'),
       '#options' => [
-        LdapAuthenticationConfiguration::$passwordFieldShowDisabled => $this->t('Display password field disabled (Prevents password updates).'),
-        LdapAuthenticationConfiguration::$passwordFieldHide => $this->t("Don't show password field on user forms except login form."),
-        LdapAuthenticationConfiguration::$passwordFieldAllow => $this->t('Display password field and allow updating it. In order to change password in LDAP, LDAP provisioning for this field must be enabled.'),
+        'disable' => $this->t('Display password field disabled (Prevents password updates).'),
+        'hide' => $this->t("Don't show password field on user forms except login form."),
+        'allow' => $this->t('Display password field and allow updating it. In order to change password in LDAP, LDAP provisioning for this field must be enabled.'),
       ],
     ];
 

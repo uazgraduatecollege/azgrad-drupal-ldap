@@ -4,7 +4,6 @@ namespace Drupal\ldap_authentication\Routing;
 
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Routing\RouteSubscriberBase;
-use Drupal\ldap_authentication\Helper\LdapAuthenticationConfiguration;
 use Symfony\Component\Routing\RouteCollection;
 
 /**
@@ -34,13 +33,14 @@ class RouteSubscriber extends RouteSubscriberBase {
     $user = \Drupal::currentUser();
     if ($user->isAnonymous()) {
 
-      if (\Drupal::config('ldap_authentication.settings')->get('authenticationMode') == LdapAuthenticationConfiguration::MODE_MIXED) {
+      // FIXME: DI.
+      if (\Drupal::config('ldap_authentication.settings')->get('authenticationMode') == 'mixed') {
         return AccessResult::allowed();
       }
 
       // Hide reset password for anonymous users if LDAP-only authentication and
       // password updates are disabled, otherwise show.
-      if (\Drupal::config('ldap_authentication.settings')->get('passwordOption') == LdapAuthenticationConfiguration::$passwordFieldAllow) {
+      if (\Drupal::config('ldap_authentication.settings')->get('passwordOption') == 'allow') {
         return AccessResult::allowed();
       }
       else {

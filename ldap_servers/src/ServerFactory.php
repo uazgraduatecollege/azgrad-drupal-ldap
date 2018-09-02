@@ -10,7 +10,6 @@ use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
 use Drupal\ldap_servers\Helper\ConversionHelper;
-use Drupal\ldap_user\Helper\ExternalAuthenticationHelper;
 use Drupal\ldap_user\Helper\LdapConfiguration;
 use Drupal\user\UserInterface;
 
@@ -149,7 +148,11 @@ class ServerFactory implements LdapUserAttributesInterface {
    *   Returns data or FALSE.
    */
   public function getUserDataFromServerByAccount(UserInterface $account, $id) {
-    $identifier = ExternalAuthenticationHelper::getUserIdentifierFromMap($account->id());
+
+    /** FIXME: DI. */
+    /** @var \Drupal\externalauth\Authmap $authmap */
+    $authmap = \Drupal::service('externalauth.authmap');
+    $identifier = $authmap->get($account->id(), 'ldap_user');
     if ($identifier) {
       return $this->getUserDataFromServerByIdentifier($identifier, $id);
     }

@@ -45,7 +45,7 @@ class IntegrationTests extends KernelTestBase {
    * Test the integration of the user processor.
    */
   public function brokenTestProcessor() {
-    $processor = new DrupalUserProcessor();
+    $processor = \Drupal::service('ldap_user.drupal_user_processor');
     $result = $processor->provisionDrupalAccount(['name' => 'hpotter']);
     $user = $processor->getUserAccount();
     // @TODO: Inject a server configuration for the provisioning server,

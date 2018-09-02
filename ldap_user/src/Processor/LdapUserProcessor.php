@@ -2,8 +2,12 @@
 
 namespace Drupal\ldap_user\Processor;
 
+use Drupal\Core\Config\ConfigFactory;
+use Drupal\Core\Extension\ModuleHandler;
+use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\ldap_servers\Entity\Server;
 use Drupal\ldap_servers\Helper\ConversionHelper;
+use Drupal\ldap_servers\Logger\LdapDetailLog;
 use Drupal\ldap_servers\Processor\TokenProcessor;
 use Drupal\ldap_user\Exception\LdapBadParamsException;
 use Drupal\ldap_user\Helper\LdapConfiguration;
@@ -18,34 +22,23 @@ use Symfony\Component\Ldap\Entry;
  */
 class LdapUserProcessor implements LdapUserAttributesInterface {
 
-  /**
-   * Configuration settings from ldap_user.
-   *
-   * @var \Drupal\Core\Config\Config
-   */
-  private $config;
-
-  /**
-   * LDAP Details logger.
-   *
-   * @var \Drupal\ldap_servers\Logger\LdapDetailLog
-   */
-  private $detailLog;
-
-  /**
-   * Token processor.
-   *
-   * @var \Drupal\ldap_servers\Processor\TokenProcessor
-   */
+  protected $logger;
+  protected $config;
+  protected $detailLog;
   protected $tokenProcessor;
+  protected $syncMapper;
+  protected $moduleHandler;
 
   /**
    * Constructor.
    */
-  public function __construct() {
-    $this->config = \Drupal::config('ldap_user.settings')->get();
-    $this->detailLog = \Drupal::service('ldap.detail_log');
-    $this->tokenProcessor = \Drupal::service('ldap.token_processor');
+  public function __construct(LoggerChannelInterface $logger, ConfigFactory $config_factory, LdapDetailLog $detail_log, TokenProcessor $token_processor, SyncMappingHelper $sync_mapper, ModuleHandler $module_handler) {
+    $this->logger = $logger;
+    $this->config = $config_factory->get('ldap_user.settings');
+    $this->detailLog = $detail_log;
+    $this->tokenProcessor = $token_processor;
+    $this->syncMapper = $sync_mapper;
+    $this->moduleHandler = $module_handler;
   }
 
   /**
@@ -64,15 +57,15 @@ class LdapUserProcessor implements LdapUserAttributesInterface {
   public function syncToLdapEntry(User $account) {
 
     // @TODO 2914053.
-    if (is_object($account) && $account->id() == 1) {
+    if ($account->id() == 1) {
       // Do not provision or sync user 1.
       return FALSE;
     }
 
     $result = FALSE;
 
-    if ($this->config['ldapEntryProvisionServer']) {
-      $server = Server::load($this->config['ldapEntryProvisionServer']);
+    if ($this->config->get('ldapEntryProvisionServer')) {
+      $server = Server::load($this->config->get('ldapEntryProvisionServer'));
 
       $params = [
         'direction' => self::PROVISION_TO_LDAP,
@@ -86,7 +79,7 @@ class LdapUserProcessor implements LdapUserAttributesInterface {
         $proposedLdapEntry = $this->drupalUserToLdapEntry($account, $server, $params);
       }
       catch (\Exception $e) {
-        \Drupal::logger('ldap_user')->error('Unable to prepare LDAP entry: %message', ['%message', $e->getMessage()]);
+        $this->logger->error('Unable to prepare LDAP entry: %message', ['%message', $e->getMessage()]);
         return FALSE;
       }
 
@@ -117,7 +110,7 @@ class LdapUserProcessor implements LdapUserAttributesInterface {
           'corresponding_drupal_data_type' => 'user',
           'account' => $account,
         ];
-        \Drupal::moduleHandler()->alter('ldap_entry_pre_provision', $ldap_entries, $server, $context);
+        $this->moduleHandler->alter('ldap_entry_pre_provision', $ldap_entries, $server, $context);
         // Remove altered $proposedLdapEntry from $ldap_entries array.
         $attributes = $ldap_entries[$proposedDnLowerCase];
 
@@ -130,7 +123,7 @@ class LdapUserProcessor implements LdapUserAttributesInterface {
         $result = $server->modifyLdapEntry($entry);
 
         if ($result) {
-          \Drupal::moduleHandler()
+          $this->moduleHandler
             ->invokeAll('ldap_entry_post_provision', [
               $ldap_entries,
               $server,
@@ -198,8 +191,7 @@ class LdapUserProcessor implements LdapUserAttributesInterface {
     $direction = isset($params['direction']) ? $params['direction'] : self::PROVISION_TO_ALL;
     $prov_events = empty($params['prov_events']) ? LdapConfiguration::getAllEvents() : $params['prov_events'];
 
-    $syncMapper = new SyncMappingHelper();
-    $mappings = $syncMapper->getSyncMappings($direction, $prov_events);
+    $mappings = $this->syncMapper->getSyncMappings($direction, $prov_events);
     // Loop over the mappings.
     foreach ($mappings as $field_key => $field_detail) {
       list($ldapAttributeName, $ordinal) = $this->extractTokenParts($field_key);
@@ -209,7 +201,7 @@ class LdapUserProcessor implements LdapUserAttributesInterface {
         continue;
       }
 
-      $synced = $syncMapper->isSynced($field_key, $params['prov_events'], self::PROVISION_TO_LDAP);
+      $synced = $this->syncMapper->isSynced($field_key, $params['prov_events'], self::PROVISION_TO_LDAP);
       if ($synced) {
         $token = ($field_detail['user_attr'] == 'user_tokens') ? $field_detail['user_tokens'] : $field_detail['user_attr'];
         $value = $this->tokenProcessor->tokenReplace($account, $token, 'user_account');
@@ -238,7 +230,7 @@ class LdapUserProcessor implements LdapUserAttributesInterface {
     }
 
     // Allow other modules to alter $ldap_user.
-    \Drupal::moduleHandler()->alter('ldap_entry', $ldap_user_entry, $params);
+    $this->moduleHandler->alter('ldap_entry', $ldap_user_entry, $params);
 
     return $ldap_user_entry;
   }
@@ -376,13 +368,13 @@ class LdapUserProcessor implements LdapUserAttributesInterface {
         'corresponding_drupal_data_type' => 'user',
         'account' => $account,
       ];
-      \Drupal::moduleHandler()->alter('ldap_entry_pre_provision', $ldapEntries, $ldapServer, $context);
+      $this->moduleHandler->alter('ldap_entry_pre_provision', $ldapEntries, $ldapServer, $context);
       // Remove altered $proposedLdapEntry from $ldapEntries array.
       $proposedLdapEntry = new Entry($proposedDn, $ldapEntries[$proposedDnLowercase]);
       $ldapEntryCreated = $ldapServer->createLdapEntry($proposedLdapEntry);
       $callbackParams = [$ldapEntries, $ldapServer, $context];
       if ($ldapEntryCreated) {
-        \Drupal::moduleHandler()
+        $this->moduleHandler
           ->invokeAll('ldap_entry_post_provision', $callbackParams);
         $result = [
           'status' => 'success',
@@ -464,13 +456,13 @@ class LdapUserProcessor implements LdapUserAttributesInterface {
    * normally this will be 0 or 1 entry, but the ldap_user_prov_entries field
    * attached to the user entity track each LDAP entry provisioned.
    *
-   * @param \Drupal\user\Entity\User $account
+   * @param \Drupal\user\UserInterface $account
    *   Drupal user account.
    *
    * @return bool
    *   FALSE indicates failed or action not enabled in LDAP user configuration.
    */
-  public function deleteProvisionedLdapEntries(User $account) {
+  public function deleteProvisionedLdapEntries(UserInterface $account) {
     // Determine server that is associated with user.
     $result = FALSE;
     $entries = $account->get('ldap_user_prov_entries')->getValue();

@@ -32,6 +32,7 @@ trait VariableAttributeCustomization {
       ];
       return;
     }
+    // FIXME: DI.
     $controller = new QueryController($queryOptions['query_id']);
     $controller->execute();
     $options = $controller->availableFields();

@@ -15,6 +15,7 @@ class DynamicUserHelpLink extends DeriverBase {
    * Constructor.
    */
   public function __construct() {
+    // FIXME: DI.
     $this->config = \Drupal::config('ldap_authentication.settings');
   }
 
