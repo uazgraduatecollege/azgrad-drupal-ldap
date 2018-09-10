@@ -749,7 +749,7 @@ final class LoginValidator implements LdapUserAttributesInterface {
       $this->drupalUser = $this->serverDrupalUser->userAccountFromPuid($puid);
       /** @var \Drupal\user\Entity\User $userMatchingPuid */
       if ($this->drupalUser) {
-        $oldName = $this->drupalUser->accountName();
+        $oldName = $this->drupalUser->getAccountName();
         $this->drupalUser->setUsername($this->drupalUserName);
         $this->drupalUser->save();
         ExternalAuthenticationHelper::setUserIdentifier($this->drupalUser, $this->authName);
