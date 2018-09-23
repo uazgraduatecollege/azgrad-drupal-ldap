@@ -21,7 +21,6 @@ use Drupal\ldap_user\Helper\LdapConfiguration;
 use Drupal\ldap_user\Helper\SemaphoreStorage;
 use Drupal\ldap_user\Helper\SyncMappingHelper;
 use Drupal\Core\Utility\Token;
-use Drupal\user\Entity\User;
 use Drupal\user\UserInterface;
 
 /**
@@ -158,7 +157,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
         return FALSE;
       }
 
-      $persistentUid = $ldapServer->userPuidFromLdapEntry($this->ldapEntry);
+      $persistentUid = $ldapServer->derivePuidFromLdapResponse($this->ldapEntry);
       if ($persistentUid) {
         $this->account->set('ldap_user_puid', $persistentUid);
       }
@@ -192,7 +191,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
    */
   public function provisionDrupalAccount(array $userData) {
 
-    $this->account = User::create($userData);
+    $this->account = $this->entityTypeManager->getStorage('user')->create($userData);
 
     // Get an LDAP user from the LDAP server.
     if ($this->config->get('drupalAcctProvisionServer')) {
@@ -231,7 +230,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
 
     // Look for existing Drupal account with the same PUID. If found, update
     // that user instead of creating a new user.
-    $persistentUid = $this->server->userPuidFromLdapEntry($this->ldapEntry);
+    $persistentUid = $this->server->derivePuidFromLdapResponse($this->ldapEntry);
     $accountFromPuid = ($persistentUid) ? $this->server->userAccountFromPuid($persistentUid) : FALSE;
     if ($accountFromPuid) {
       $this->updateExistingAccountByPersistentUid($accountFromPuid);
@@ -252,7 +251,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
    *   TRUE on success, FALSE on error or failure because of invalid user.
    */
   public function ldapExcludeDrupalAccount($drupalUsername) {
-    $account = User::load($drupalUsername);
+    $account = $this->entityTypeManager->getStorage('user')->load($drupalUsername);
     if (!$account) {
       $this->logger->error('Failed to exclude user from LDAP association because Drupal account %username was not found', ['%username' => $drupalUsername]);
       return FALSE;
@@ -561,8 +560,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
       // Provision entry.
       if (SemaphoreStorage::get('provision', $this->account->getAccountName()) == FALSE
       && !$this->ldapUserProcessor->getProvisionRelatedLdapEntry($this->account)) {
-        $provisionResult = $this->ldapUserProcessor->provisionLdapEntry($this->account);
-        if ($provisionResult['status'] == 'success') {
+        if ($this->ldapUserProcessor->provisionLdapEntry($this->account)) {
           SemaphoreStorage::set('provision', $this->account->getAccountName());
         }
       }
@@ -604,8 +602,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
 
     // Check if provisioning to LDAP has already occurred this page load.
     if (!$this->ldapUserProcessor->getProvisionRelatedLdapEntry($this->account)) {
-      $provisionResult = $this->ldapUserProcessor->provisionLdapEntry($this->account);
-      if ($provisionResult['status'] == 'success') {
+      if ($this->ldapUserProcessor->provisionLdapEntry($this->account)) {
         SemaphoreStorage::set('provision', $this->account->getAccountName());
       }
     }
@@ -697,8 +694,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
     }
 
     if ($this->config->get('drupalAcctProvisionServer')) {
-      // fixme: di.
-      $this->server = Server::load($this->config->get('drupalAcctProvisionServer'));
+      $this->server = $this->entityTypeManager->getStorage('ldap_server')->load($this->config->get('drupalAcctProvisionServer'));
       $this->applyAttributesToAccount(self::PROVISION_TO_DRUPAL, [$provisioningEvent]);
     }
 
@@ -716,8 +712,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
     if ($this->provisionsLdapEntriesFromDrupalUsers()) {
       if (LdapConfiguration::provisionAvailableToLdap(self::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_UPDATE_CREATE)) {
         if (!$this->ldapUserProcessor->getProvisionRelatedLdapEntry($account)) {
-          $provision_result = $this->ldapUserProcessor->provisionLdapEntry($account);
-          if ($provision_result['status'] == 'success') {
+          if ($this->ldapUserProcessor->provisionLdapEntry($account)) {
             SemaphoreStorage::set('provision', $account->getAccountName());
           }
         }
@@ -755,7 +750,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
    *   Ldap user data.
    */
   private function setFieldsOnDrupalUserCreation() {
-    $derived_mail = $this->server->userEmailFromLdapEntry($this->ldapEntry);
+    $derived_mail = $this->server->deriveEmailFromLdapResponse($this->ldapEntry);
     if (!$this->account->getEmail()) {
       $this->account->set('mail', $derived_mail);
     }
@@ -781,11 +776,11 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
   private function setLdapBaseFields($direction, array $prov_events) {
     // Basic $user LDAP fields.
     if ($this->syncMapper->isSynced('[property.name]', $prov_events, $direction)) {
-      $this->account->set('name', $this->server->userUsernameFromLdapEntry($this->ldapEntry));
+      $this->account->set('name', $this->server->deriveUsernameFromLdapResponse($this->ldapEntry));
     }
 
     if ($this->syncMapper->isSynced('[property.mail]', $prov_events, $direction)) {
-      $derived_mail = $this->server->userEmailFromLdapEntry($this->ldapEntry);
+      $derived_mail = $this->server->deriveEmailFromLdapResponse($this->ldapEntry);
       if ($derived_mail) {
         $this->account->set('mail', $derived_mail);
       }
@@ -799,7 +794,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
     }
 
     if ($this->syncMapper->isSynced('[field.ldap_user_puid]', $prov_events, $direction)) {
-      $ldap_user_puid = $this->server->userPuidFromLdapEntry($this->ldapEntry);
+      $ldap_user_puid = $this->server->derivePuidFromLdapResponse($this->ldapEntry);
       if ($ldap_user_puid) {
         $this->account->set('ldap_user_puid', $ldap_user_puid);
       }

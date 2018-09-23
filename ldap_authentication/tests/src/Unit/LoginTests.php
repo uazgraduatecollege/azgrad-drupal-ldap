@@ -14,7 +14,7 @@ class LoginTests extends UnitTestCase {
    * Test mixed user mode.
    */
   public function testMixedUserMode() {
-    $this->assertTrue(TRUE);
+    $this->markTestIncomplete('Test missing.');
     // TODO: Write test
     // assert right credentials LDAP
     // assert
@@ -25,7 +25,7 @@ class LoginTests extends UnitTestCase {
    * Test exclusive user mode.
    */
   public function testExclusiveUserMode() {
-    $this->assertTrue(TRUE);
+    $this->markTestIncomplete('Test missing.');
     // TODO: Write test
     // assert right credentials LDAP
     // assert local Drupal user without mapping (associated, not associated)
@@ -36,7 +36,7 @@ class LoginTests extends UnitTestCase {
    * Test SSO validation.
    */
   public function testSsoValidation() {
-    $this->assertTrue(TRUE);
+    $this->markTestIncomplete('Test missing.');
     // TODO: Write test
     // assert right credentials LDAP
     // assert wrong credentials (i.e. password random as it should be)
@@ -50,7 +50,7 @@ class LoginTests extends UnitTestCase {
    * Test the whitelist.
    */
   public function testWhiteList() {
-    $this->assertTrue(TRUE);
+    $this->markTestIncomplete('Test missing.');
     // TODO: Write test
     // one value, two values, zero values
     // logon with whitelisted and w/o.
@@ -60,7 +60,7 @@ class LoginTests extends UnitTestCase {
    * Test the blacklist.
    */
   public function testBlacklist() {
-    $this->assertTrue(TRUE);
+    $this->markTestIncomplete('Test missing.');
     // TODO: Write test
     // one value, two values, zero values
     // logon with blacklisted and w/o.

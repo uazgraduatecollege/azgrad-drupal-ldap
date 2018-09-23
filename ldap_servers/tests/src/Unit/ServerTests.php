@@ -3,7 +3,9 @@
 namespace Drupal\Tests\ldap_servers\Unit;
 
 use Drupal\ldap_servers\Entity\Server;
+use Drupal\ldap_servers\LdapBridge;
 use Drupal\Tests\UnitTestCase;
+use Symfony\Component\Ldap\Entry;
 
 /**
  * @coversDefaultClass \Drupal\ldap_servers\Entity\Server
@@ -13,31 +15,33 @@ class ServerTests extends UnitTestCase {
 
   /**
    * Tests searches across multiple DNs.
-   *
-   * TODO: Fix or remove test.
    */
   public function testSearchAllBaseDns() {
-
-    $stub = $this->getMockBuilder(Server::class)
+    $this->markTestIncomplete('Cannot be easily tested as is, research and implement mocking symfony/ldap responses.');
+    $stub = $this->getMockBuilder()
       ->disableOriginalConstructor()
-      ->setMethods(['search', 'getBasedn'])
+      ->setMethods(['search', 'getBasedn', 'bind'])
       ->getMock();
 
     $baseDn = 'ou=people,dc=example,dc=org';
 
     $validResult = [
-      'count' => 1,
       0 => ['dn' => ['cn=hpotter,ou=people,dc=example,dc=org']],
     ];
     $valueMap = [
-      [$baseDn, '(|(cn=hpotter))', ['dn'], 0, 0, 0, NULL, Server::SCOPE_SUBTREE],
-      [$baseDn, '(cn=hpotter)', ['dn'], 0, 0, 0, NULL, Server::SCOPE_SUBTREE],
-      [$baseDn, 'cn=hpotter', ['dn'], 0, 0, 0, NULL, Server::SCOPE_SUBTREE],
+      [$baseDn, '(|(cn=hpotter))', ['dn'], 0, 0, 0, NULL, 'sub'],
+      [$baseDn, '(cn=hpotter)', ['dn'], 0, 0, 0, NULL, 'sub'],
+      [$baseDn, 'cn=hpotter', ['dn'], 0, 0, 0, NULL, 'sub'],
     ];
 
     $stub->method('getBasedn')
       ->willReturn([$baseDn]);
-    $stub->method('search')
+    $stub->method('bind')
+      ->willReturn(TRUE);
+
+    $ldapStub = $this->getMockBuilder(LdapBridge::class)
+      ->setMethods(['query'])
+      ->method('query')
       ->will($this->returnCallback(function () use ($valueMap, $validResult) {
         $arguments = func_get_args();
 
@@ -47,12 +51,13 @@ class ServerTests extends UnitTestCase {
           }
 
           if ($arguments === $map) {
+            // TODO: This result needs to be a Collection.
             return $validResult;
           }
         }
         return ['count' => 0];
       }));
-
+    /** @var \Drupal\ldap_servers\Entity\Server $stub */
     $result = $stub->searchAllBaseDns('(|(cn=hpotter,ou=people,dc=example,dc=org))', ['dn']);
     $this->assertEquals(1, $result['count']);
     $result = $stub->searchAllBaseDns('(|(cn=invalid_cn,ou=people,dc=example,dc=org))', ['dn']);
@@ -64,48 +69,9 @@ class ServerTests extends UnitTestCase {
   }
 
   /**
-   * Test removing unchanged attributes.
-   */
-  public function testRemoveUnchangedAttributes() {
-
-    $existing_data = [
-      'cn' => [0 => 'hpotter', 'count' => 1],
-      'memberof' => [
-        0 => 'cn=gryffindor,ou=groups,dc=hogwarts,dc=edu',
-        1 => 'cn=students,ou=groups,dc=hogwarts,dc=edu',
-        2 => 'cn=honors students,ou=groups,dc=hogwarts,dc=edu',
-        'count' => 3,
-      ],
-      'count' => 2,
-    ];
-
-    $new_data = [
-      'cn' => 'hpotter',
-      'test_example_value' => 'Test1',
-      'memberOf' => [
-        'Group1',
-        // TODO: This is not correctly supported.
-        // 'cn=honors students,ou=groups,dc=hogwarts,dc=edu',.
-      ],
-    ];
-
-    $result = Server::removeUnchangedAttributes($new_data, $existing_data);
-
-    $result_expected = [
-      'test_example_value' => 'Test1',
-      'memberOf' => [
-        'Group1',
-      ],
-    ];
-
-    $this->assertEquals($result_expected, $result);
-
-  }
-
-  /**
    * Test getting username from LDAP entry.
    */
-  public function testUserUsernameFromLdapEntry() {
+  public function testderiveUsernameFromLdapResponse() {
     $stub = $this->getMockBuilder(Server::class)
       ->disableOriginalConstructor()
       ->setMethods(['get'])
@@ -115,31 +81,30 @@ class ServerTests extends UnitTestCase {
       ['account_name_attr', ''],
       ['user_attr', 'cn'],
     ];
-    $stub->method('get')
-      ->willReturnMap($map);
+    $stub->method('get')->willReturnMap($map);
 
-    $username = $stub->userUsernameFromLdapEntry([]);
+    /** @var \Drupal\ldap_servers\Entity\Server $stub */
+    $username = $stub->deriveUsernameFromLdapResponse(new Entry('undefined', []));
     $this->assertEquals(FALSE, $username);
 
-    $userOpenLdap = [
-      'cn' => [0 => 'hpotter', 'count' => 1],
-      'mail' => [0 => 'hpotter@hogwarts.edu', 'count' => 1],
-      'uid' => [0 => '1', 'count' => 1],
-      'guid' => [0 => '101', 'count' => 1],
-      'sn' => [0 => 'Potter', 'count' => 1],
-      'givenname' => [0 => 'Harry', 'count' => 1],
-      'house' => [0 => 'Gryffindor', 'count' => 1],
-      'department' => [0 => '', 'count' => 1],
-      'faculty' => [0 => 1, 'count' => 1],
-      'staff' => [0 => 1, 'count' => 1],
-      'student' => [0 => 1, 'count' => 1],
-      'gpa' => [0 => '3.8', 'count' => 1],
-      'probation' => [0 => 1, 'count' => 1],
-      'password' => [0 => 'goodpwd', 'count' => 1],
-      'count' => 14,
-    ];
+    $userOpenLdap = new Entry('undefined', [
+      'cn' => [0 => 'hpotter'],
+      'mail' => [0 => 'hpotter@hogwarts.edu'],
+      'uid' => [0 => '1'],
+      'guid' => [0 => '101'],
+      'sn' => [0 => 'Potter'],
+      'givenname' => [0 => 'Harry'],
+      'house' => [0 => 'Gryffindor'],
+      'department' => [0 => ''],
+      'faculty' => [0 => 1],
+      'staff' => [0 => 1],
+      'student' => [0 => 1],
+      'gpa' => [0 => '3.8'],
+      'probation' => [0 => 1],
+      'password' => [0 => 'goodpwd'],
+    ]);
 
-    $username = $stub->userUsernameFromLdapEntry($userOpenLdap);
+    $username = $stub->deriveUsernameFromLdapResponse($userOpenLdap);
     $this->assertEquals('hpotter', $username);
 
   }
@@ -163,40 +128,38 @@ class ServerTests extends UnitTestCase {
     $stub->method('get')
       ->willReturnMap($map);
 
-    $username = $stub->userUsernameFromLdapEntry([]);
+    /** @var \Drupal\ldap_servers\Entity\Server $stub */
+    $username = $stub->deriveUsernameFromLdapResponse(new Entry('undefined', []));
     $this->assertEquals(FALSE, $username);
 
-    $userActiveDirectory = [
-      'cn' => [0 => 'hpotter', 'count' => 1],
-      'mail' => [0 => 'hpotter@hogwarts.edu', 'count' => 1],
-      'uid' => [0 => '1', 'count' => 1],
-      'guid' => [0 => '101', 'count' => 1],
-      'sn' => [0 => 'Potter', 'count' => 1],
-      'givenname' => [0 => 'Harry', 'count' => 1],
-      'house' => [0 => 'Gryffindor', 'count' => 1],
-      'department' => [0 => '', 'count' => 1],
-      'faculty' => [0 => 1, 'count' => 1],
-      'staff' => [0 => 1, 'count' => 1],
-      'student' => [0 => 1, 'count' => 1],
-      'gpa' => [0 => '3.8', 'count' => 1],
-      'probation' => [0 => 1, 'count' => 1],
-      'password' => [0 => 'goodpwd', 'count' => 1],
+    $userActiveDirectory = new Entry('undefined', [
+      'cn' => [0 => 'hpotter'],
+      'mail' => [0 => 'hpotter@hogwarts.edu'],
+      'uid' => [0 => '1'],
+      'guid' => [0 => '101'],
+      'sn' => [0 => 'Potter'],
+      'givenname' => [0 => 'Harry'],
+      'house' => [0 => 'Gryffindor'],
+      'department' => [0 => ''],
+      'faculty' => [0 => 1],
+      'staff' => [0 => 1],
+      'student' => [0 => 1],
+      'gpa' => [0 => '3.8'],
+      'probation' => [0 => 1],
+      'password' => [0 => 'goodpwd'],
       // Divergent data for AD below.
-      'samaccountname' => [0 => 'hpotter', 'count' => 1],
+      'samaccountname' => [0 => 'hpotter'],
       'distinguishedname' => [
         0 => 'cn=hpotter,ou=people,dc=hogwarts,dc=edu',
-        'count' => 1,
       ],
       'memberof' => [
         0 => 'cn=gryffindor,ou=groups,dc=hogwarts,dc=edu',
         1 => 'cn=students,ou=groups,dc=hogwarts,dc=edu',
         2 => 'cn=honors students,ou=groups,dc=hogwarts,dc=edu',
-        'count' => 3,
       ],
-      'count' => 16,
-    ];
+    ]);
 
-    $username = $stub->userUsernameFromLdapEntry($userActiveDirectory);
+    $username = $stub->deriveUsernameFromLdapResponse($userActiveDirectory);
     $this->assertEquals('hpotter', $username);
 
   }
@@ -205,38 +168,34 @@ class ServerTests extends UnitTestCase {
    * Test the group membership of the user from an entry.
    */
   public function testGroupUserMembershipsFromEntry() {
-    // TODO: Unported.
-    $this->assertTrue(TRUE);
+    $this->markTestIncomplete('TODO: Unported');
 
     $user_dn = 'cn=hpotter,ou=people,dc=hogwarts,dc=edu';
     $user_ldap_entry = [
-      'cn' => [0 => 'hpotter', 'count' => 1],
-      'mail' => [0 => 'hpotter@hogwarts.edu', 'count' => 1],
-      'uid' => [0 => '1', 'count' => 1],
-      'guid' => [0 => '101', 'count' => 1],
-      'sn' => [0 => 'Potter', 'count' => 1],
-      'givenname' => [0 => 'Harry', 'count' => 1],
-      'house' => [0 => 'Gryffindor', 'count' => 1],
-      'department' => [0 => '', 'count' => 1],
-      'faculty' => [0 => 1, 'count' => 1],
-      'staff' => [0 => 1, 'count' => 1],
-      'student' => [0 => 1, 'count' => 1],
-      'gpa' => [0 => '3.8', 'count' => 1],
-      'probation' => [0 => 1, 'count' => 1],
-      'password' => [0 => 'goodpwd', 'count' => 1],
+      'cn' => [0 => 'hpotter'],
+      'mail' => [0 => 'hpotter@hogwarts.edu'],
+      'uid' => [0 => '1'],
+      'guid' => [0 => '101'],
+      'sn' => [0 => 'Potter'],
+      'givenname' => [0 => 'Harry'],
+      'house' => [0 => 'Gryffindor'],
+      'department' => [0 => ''],
+      'faculty' => [0 => 1],
+      'staff' => [0 => 1],
+      'student' => [0 => 1],
+      'gpa' => [0 => '3.8'],
+      'probation' => [0 => 1],
+      'password' => [0 => 'goodpwd'],
       // Divergent data for AD below.
-      'samaccountname' => [0 => 'hpotter', 'count' => 1],
+      'samaccountname' => [0 => 'hpotter'],
       'distinguishedname' => [
         0 => 'cn=hpotter,ou=people,dc=hogwarts,dc=edu',
-        'count' => 1,
       ],
       'memberof' => [
         0 => 'cn=gryffindor,ou=groups,dc=hogwarts,dc=edu',
         1 => 'cn=students,ou=groups,dc=hogwarts,dc=edu',
         2 => 'cn=honors students,ou=groups,dc=hogwarts,dc=edu',
-        'count' => 3,
       ],
-      'count' => 16,
     ];
 
     $desired = [];

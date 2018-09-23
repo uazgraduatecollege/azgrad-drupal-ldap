@@ -7,7 +7,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Url;
 use Drupal\externalauth\Authmap;
-use Drupal\ldap_servers\ServerFactory;
+use Drupal\ldap_servers\LdapUserManager;
 use Drupal\ldap_user\Helper\LdapConfiguration;
 use Drupal\ldap_servers\LdapUserAttributesInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -21,7 +21,7 @@ class LdapUserTestForm extends FormBase implements LdapUserAttributesInterface {
   private static $syncTriggerOptions;
 
   protected $request;
-  protected $serverFactory;
+  protected $ldapUserManager;
   protected $entityTypeManager;
   protected $externalAuth;
 
@@ -35,9 +35,9 @@ class LdapUserTestForm extends FormBase implements LdapUserAttributesInterface {
   /**
    * {@inheritdoc}
    */
-  public function __construct(RequestStack $request_stack, ServerFactory $server_factory, EntityTypeManager $entity_type_manager, Authmap $external_auth) {
+  public function __construct(RequestStack $request_stack, LdapUserManager $ldap_user_manager, EntityTypeManager $entity_type_manager, Authmap $external_auth) {
     $this->request = $request_stack->getCurrentRequest();
-    $this->serverFactory = $server_factory;
+    $this->ldapUserManager = $ldap_user_manager;
     $this->entityTypeManager = $entity_type_manager;
     $this->externalAuth = $external_auth;
 
@@ -57,7 +57,7 @@ class LdapUserTestForm extends FormBase implements LdapUserAttributesInterface {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('request_stack'),
-      $container->get('ldap.servers'),
+      $container->get('ldap.user_manager'),
       $container->get('entity_type.manager'),
       $container->get('externalauth.authmap')
     );
@@ -119,11 +119,13 @@ class LdapUserTestForm extends FormBase implements LdapUserAttributesInterface {
     $user_ldap_entry = FALSE;
 
     if ($config['drupalAcctProvisionServer']) {
-      $user_ldap_entry = $this->serverFactory->getUserDataFromServerByIdentifier($username, $config['drupalAcctProvisionServer']);
+      $this->ldapUserManager->setServer($config['drupalAcctProvisionServer']);
+      $user_ldap_entry = $this->ldapUserManager->getUserDataByIdentifier($username);
     }
     if ($config['ldapEntryProvisionServer']) {
       if (!$user_ldap_entry) {
-        $user_ldap_entry = $this->serverFactory->getUserDataFromServerByIdentifier($username, $config['ldapEntryProvisionServer']);
+        $this->ldapUserManager->setServer($config['ldapEntryProvisionServer']);
+        $user_ldap_entry = $this->ldapUserManager->getUserDataByIdentifier($username);
       }
     }
     $results = [];

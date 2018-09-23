@@ -9,7 +9,7 @@ use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\Core\Mail\MailManagerInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\Core\Url;
-use Drupal\ldap_servers\ServerFactory;
+use Drupal\ldap_servers\LdapUserManager;
 
 /**
  * Locates potential orphan user accounts.
@@ -22,16 +22,39 @@ class OrphanProcessor {
   private $enabledServers;
 
   protected $logger;
+  protected $configFactory;
   protected $configLdapUser;
   protected $mailManager;
   protected $languageManager;
   protected $state;
   protected $entityTypeManager;
+  protected $drupalUserProcessor;
+  protected $ldapUserManager;
 
   /**
    * Constructor.
+   *
+   * @param \Drupal\Core\Logger\LoggerChannelInterface $logger
+   * @param \Drupal\Core\Config\ConfigFactory $config
+   * @param \Drupal\Core\Mail\MailManagerInterface $mail_manager
+   * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
+   * @param \Drupal\Core\State\StateInterface $state
+   * @param \Drupal\Core\Entity\EntityTypeManager $entity_type_manager
+   * @param \Drupal\ldap_user\Processor\DrupalUserProcessor $drupal_user_processor
+   * @param \Drupal\ldap_servers\LdapUserManager $ldap_user_manager
+   *
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
-  public function __construct(LoggerChannelInterface $logger, ConfigFactory $config, ServerFactory $factory, MailManagerInterface $mail_manager, LanguageManagerInterface $language_manager, StateInterface $state, EntityTypeManager $entity_type_manager) {
+  public function __construct(
+    LoggerChannelInterface $logger,
+    ConfigFactory $config,
+    MailManagerInterface $mail_manager,
+    LanguageManagerInterface $language_manager,
+    StateInterface $state,
+    EntityTypeManager $entity_type_manager,
+    DrupalUserProcessor $drupal_user_processor,
+    LdapUserManager $ldap_user_manager) {
     $this->logger = $logger;
     $this->configFactory = $config;
     $this->configLdapUser = $config->get('ldap_user.settings');
@@ -39,6 +62,8 @@ class OrphanProcessor {
     $this->languageManager = $language_manager;
     $this->state = $state;
     $this->entityTypeManager = $entity_type_manager;
+    $this->drupalUserProcessor = $drupal_user_processor;
+    $this->ldapUserManager = $ldap_user_manager;
 
     $storage = $this->entityTypeManager->getStorage('ldap_server');
     $data = $storage->getQuery()->condition('status', 1)->execute();
@@ -218,12 +243,10 @@ class OrphanProcessor {
    *   User to process.
    */
   private function processOrphanedAccounts(array $users) {
-    // FIXME: DI.
-    $drupalUserProcessor = \Drupal::service('ldap.drupal_user_processor');
     foreach ($users as $user) {
       if (isset($user['uid'])) {
         $account = $this->entityTypeManager->getStorage('user')->load($user['uid']);
-        $drupalUserProcessor->drupalUserLogsIn($account);
+        $this->drupalUserProcessor->drupalUserLogsIn($account);
         if ($user['exists'] == FALSE) {
           switch ($this->configLdapUser->get('orphanedDrupalAcctBehavior')) {
             case 'ldap_user_orphan_email';
@@ -277,7 +300,8 @@ class OrphanProcessor {
         $filter = "($persistentUidProperty=$persistentUid)";
       }
 
-      $ldapEntries = $this->enabledServers[$serverId]->searchAllBaseDns($filter, [$persistentUidProperty]);
+      $this->ldapUserManager->setServerById($serverId);
+      $ldapEntries = $this->ldapUserManager->searchAllBaseDns($filter, [$persistentUidProperty]);
       if (!empty($ldapEntries)) {
         $user['exists'] = TRUE;
       }

@@ -12,11 +12,13 @@ use Symfony\Component\Ldap\Ldap;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
- *
+ * Ldap Bridge to symfony/ldap.
  */
 class LdapBridge {
 
   /**
+   * Bind method.
+   *
    * @var string
    */
   protected $bindMethod;
@@ -24,6 +26,8 @@ class LdapBridge {
   protected $bindPw;
 
   /**
+   * LDAP.
+   *
    * @var \Symfony\Component\Ldap\Ldap
    */
   protected $ldap;
@@ -33,6 +37,11 @@ class LdapBridge {
 
   /**
    * Constructor.
+   *
+   * @param \Drupal\Core\Logger\LoggerChannelInterface $logger
+   *   Logger.
+   * @param \Drupal\Core\Entity\EntityTypeManager $entity_type_manager
+   *   Entity type manager.
    */
   public function __construct(LoggerChannelInterface $logger, EntityTypeManager $entity_type_manager) {
     $this->logger = $logger;
@@ -40,7 +49,10 @@ class LdapBridge {
   }
 
   /**
+   * Set Server by ID.
+   *
    * @param string $sid
+   *   Server machine name.
    */
   public function setServerById($sid) {
     $server = $this->entityManager->load($sid);
@@ -51,7 +63,10 @@ class LdapBridge {
   }
 
   /**
+   * Set Server.
+   *
    * @param \Drupal\ldap_servers\Entity\Server $server
+   *   Server object.
    */
   public function setServer(Server $server) {
     $options = new OptionsResolver();
@@ -77,6 +92,7 @@ class LdapBridge {
    * Bind (authenticate) against an active LDAP database.
    *
    * @return bool
+   *   Binding successful.
    */
   public function bind() {
 
@@ -123,7 +139,10 @@ class LdapBridge {
   }
 
   /**
+   * Get LDAP service.
+   *
    * @return \Symfony\Component\Ldap\Ldap
+   *   LDAP service.
    */
   public function get() {
     return $this->ldap;

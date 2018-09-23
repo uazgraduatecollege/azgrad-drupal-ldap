@@ -10,6 +10,7 @@ use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Render\Renderer;
 use Drupal\ldap_servers\Entity\Server;
 use Drupal\ldap_servers\LdapBridge;
+use Drupal\ldap_servers\LdapGroupManager;
 use Drupal\ldap_servers\Processor\TokenProcessor;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Ldap\Entry;
@@ -46,6 +47,7 @@ final class ServerTestForm extends EntityForm {
   protected $tokenProcessor;
   protected $renderer;
   protected $ldapBridge;
+  protected $ldapGroupManager;
 
   /**
    * {@inheritdoc}
@@ -56,13 +58,21 @@ final class ServerTestForm extends EntityForm {
 
   /**
    * Class constructor.
+   *
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   * @param \Drupal\Core\Extension\ModuleHandler $module_handler
+   * @param \Drupal\ldap_servers\Processor\TokenProcessor $token_processor
+   * @param \Drupal\Core\Render\Renderer $renderer
+   * @param \Drupal\ldap_servers\LdapBridge $ldap_bridge
+   * @param \Drupal\ldap_servers\LdapGroupManager $ldap_group_manager
    */
-  public function __construct(ConfigFactoryInterface $config_factory, ModuleHandler $module_handler, TokenProcessor $token_processor, Renderer $renderer, LdapBridge $ldap_bridge) {
+  public function __construct(ConfigFactoryInterface $config_factory, ModuleHandler $module_handler, TokenProcessor $token_processor, Renderer $renderer, LdapBridge $ldap_bridge, LdapGroupManager $ldap_group_manager) {
     $this->config = $config_factory;
     $this->moduleHandler = $module_handler;
     $this->tokenProcessor = $token_processor;
     $this->renderer = $renderer;
     $this->ldapBridge = $ldap_bridge;
+    $this->ldapGroupManager = $ldap_group_manager;
   }
 
   /**
@@ -74,7 +84,8 @@ final class ServerTestForm extends EntityForm {
       $container->get('module_handler'),
       $container->get('ldap.token_processor'),
       $container->get('renderer'),
-      $container->get('ldap.bridge')
+      $container->get('ldap.bridge'),
+      $container->get('ldap.group_manager')
     );
   }
 
@@ -253,8 +264,7 @@ final class ServerTestForm extends EntityForm {
     $form_state->setRebuild(TRUE);
 
     $values = $form_state->getValues();
-    $id = $values['id'];
-    $this->ldapServer = Server::load($id);
+    $this->ldapServer = Server::load($values['id']);
     $this->ldapBridge->setServer($this->ldapServer);
 
     $this->resultsTables = [];
@@ -311,6 +321,7 @@ final class ServerTestForm extends EntityForm {
    *   Response.
    */
   private function testGroupDn($group_dn, $username) {
+
     $ldap = $this->ldapBridge->get();
     try {
       $group_entry = $ldap->query($group_dn, 'objectClass=*')->execute();
@@ -320,14 +331,16 @@ final class ServerTestForm extends EntityForm {
     }
 
     if ($group_entry && $group_entry->count() > 0) {
-      foreach ([FALSE, TRUE] as $nested) {
+      foreach ([FALSE] as $nested) {
         $this->ldapServer->set('grp_nested', $nested);
+        // TODO: Need to pass server by reference to inject nesting state.
+        $this->ldapGroupManager->setServerById($this->ldapServer->id());
         // FALSE.
         $nested_display = ($nested) ? 'Yes' : 'No';
         if ($username) {
           // This is the parent function that will call FromUserAttr or
           // FromEntry.
-          $memberships = $this->ldapServer->groupMembershipsFromUser($username);
+          $memberships = $this->ldapGroupManager->groupMembershipsFromUser($username);
           $settings = [
             '#theme' => 'item_list',
             '#items' => $memberships,
@@ -339,15 +352,15 @@ final class ServerTestForm extends EntityForm {
             $result,
           ];
 
-          $result = ($this->ldapServer->groupIsMember($group_dn, $username)) ? 'Yes' : 'No';
+          $result = ($this->ldapGroupManager->groupIsMember($group_dn, $username)) ? 'Yes' : 'No';
           $this->resultsTables['group2'][] = [
             'groupIsMember from group DN ' . $group_dn . 'for ' . $username . ' nested=' . $nested_display . ')',
             $result,
           ];
 
-          if ($this->ldapServer->groupUserMembershipsFromAttributeConfigured()) {
+          if ($this->ldapGroupManager->groupUserMembershipsFromAttributeConfigured()) {
             $entry = $this->ldapServer->matchUsernameToExistingLdapEntry($username);
-            $groupUserMembershipsFromUserAttributes = $this->ldapServer->groupUserMembershipsFromUserAttr($entry);
+            $groupUserMembershipsFromUserAttributes = $this->ldapGroupManager->groupUserMembershipsFromUserAttr($entry);
             $settings = [
               '#theme' => 'item_list',
               '#items' => $groupUserMembershipsFromUserAttributes,
@@ -364,9 +377,9 @@ final class ServerTestForm extends EntityForm {
             $result,
           ];
 
-          if ($this->ldapServer->groupGroupEntryMembershipsConfigured()) {
+          if ($this->ldapGroupManager->groupGroupEntryMembershipsConfigured()) {
             $ldap_entry = $this->ldapServer->matchUsernameToExistingLdapEntry($username);
-            $groupUserMembershipsFromEntry = $this->ldapServer->groupUserMembershipsFromEntry($ldap_entry);
+            $groupUserMembershipsFromEntry = $this->ldapGroupManager->groupUserMembershipsFromEntry($ldap_entry);
             $settings = [
               '#theme' => 'item_list',
               '#items' => $groupUserMembershipsFromEntry,
@@ -413,7 +426,7 @@ final class ServerTestForm extends EntityForm {
       }
     }
 
-    if ($groups_from_dn = $this->ldapServer->groupUserMembershipsFromDn($username)) {
+    if ($groups_from_dn = $this->ldapGroupManager->groupUserMembershipsFromDn($username)) {
       $settings = [
         '#theme' => 'item_list',
         '#items' => $groups_from_dn,
@@ -425,7 +438,7 @@ final class ServerTestForm extends EntityForm {
       ];
     }
 
-    $result = $this->ldapServer->groupAllMembers($group_dn);
+    $result = $this->ldapGroupManager->groupAllMembers($group_dn);
     $settings = [
       '#theme' => 'item_list',
       '#items' => $result,
@@ -522,6 +535,9 @@ final class ServerTestForm extends EntityForm {
    *   The CN of the member to test.
    */
   private function testWritableGroup($new_group, $member) {
+    if (!$this->ldapGroupManager->setServerById($this->ldapServer->id())) {
+      return;
+    }
 
     $writableGroupAttributes = [
       'objectClass' => [
@@ -539,7 +555,7 @@ final class ServerTestForm extends EntityForm {
 
     // Delete test group if it exists.
     if ($this->ldapServer->checkDnExists($new_group)) {
-      $this->ldapServer->groupRemoveGroup($new_group, FALSE);
+      $this->ldapGroupManager->groupRemoveGroup($new_group, FALSE);
     }
 
     $this->resultsTables['group1'][] = [
@@ -550,18 +566,18 @@ final class ServerTestForm extends EntityForm {
     // Make sure there are no entries being a member of it.
     $this->resultsTables['group1'][] = [
       $this->t('Are there no members in the writable group?', ['@group' => $new_group]),
-      $this->booleanResult(($this->ldapServer->groupMembers($new_group) === FALSE)),
+      $this->booleanResult(($this->ldapGroupManager->groupMembers($new_group) === FALSE)),
     ];
 
     // Add group.
     $attr = json_encode($writableGroupAttributes);
     $this->resultsTables['group1'][] = [
       $this->t('Add group @group with attributes @attributes', ['@group' => $new_group, '@attributes' => $attr]),
-      $this->booleanResult($this->ldapServer->groupAddGroup($new_group, $writableGroupAttributes)),
+      $this->booleanResult($this->ldapGroupManager->groupAddGroup($new_group, $writableGroupAttributes)),
     ];
 
     // Call to all members in an empty group returns empty array, not FALSE.
-    $result = $this->ldapServer->groupMembers($new_group);
+    $result = $this->ldapGroupManager->groupMembers($new_group);
     if ($openLdap) {
       array_shift($result);
     }
@@ -571,8 +587,8 @@ final class ServerTestForm extends EntityForm {
     ];
 
     // Add member to group.
-    $this->ldapServer->groupAddMember($new_group, $member);
-    $result = $this->ldapServer->groupMembers($new_group);
+    $this->ldapGroupManager->groupAddMember($new_group, $member);
+    $result = $this->ldapGroupManager->groupMembers($new_group);
     if ($openLdap) {
       array_shift($result);
     }
@@ -582,15 +598,15 @@ final class ServerTestForm extends EntityForm {
     ];
 
     // Try to remove group with member in it.
-    $result = $this->ldapServer->groupRemoveGroup($new_group, TRUE);
+    $result = $this->ldapGroupManager->groupRemoveGroup($new_group, TRUE);
     $this->resultsTables['group1'][] = [
       $this->t('Remove group @group with member in it (not allowed)', ['@group' => $new_group]),
       $this->booleanResult(!$result),
     ];
 
     // Remove group member.
-    $this->ldapServer->groupRemoveMember($new_group, $member);
-    $result = $this->ldapServer->groupMembers($new_group);
+    $this->ldapGroupManager->groupRemoveMember($new_group, $member);
+    $result = $this->ldapGroupManager->groupMembers($new_group);
     if ($openLdap) {
       array_shift($result);
     }
@@ -600,14 +616,14 @@ final class ServerTestForm extends EntityForm {
     ];
 
     if ($openLdap) {
-      $this->ldapServer->groupRemoveGroup($new_group, FALSE);
+      $this->ldapGroupManager->groupRemoveGroup($new_group, FALSE);
       $this->resultsTables['group1'][] = [
         $this->t('Forced group removal of @group because this OpenLDAP configuration does not allow for safe removal.', ['@group' => $new_group]),
         $this->booleanResult(!($this->ldapServer->checkDnExists($new_group))),
       ];
     }
     else {
-      $this->ldapServer->groupRemoveGroup($new_group, TRUE);
+      $this->ldapGroupManager->groupRemoveGroup($new_group, TRUE);
       $this->resultsTables['group1'][] = [
         $this->t('Remove group @group if empty', ['@group' => $new_group]),
         $this->booleanResult(!($this->ldapServer->checkDnExists($new_group))),
@@ -619,13 +635,10 @@ final class ServerTestForm extends EntityForm {
    * Helper function to bind as required for testing.
    *
    * @TODO: Invalid config array.
+   * Unused function?!
    */
   public function testBinding() {
-    if ($this->config('')) {
-      // TODO: Move to bridge.
-      $bindResult = $this->ldapServer->legacyBind();
-    }
-    if ($bindResult == Server::LDAP_SUCCESS) {
+    if ($this->ldapBridge->bind()) {
       $this->resultsTables['basic'][] = [
         'class' => 'color-success',
         'data' => [$this->t('Successfully bound to server')],

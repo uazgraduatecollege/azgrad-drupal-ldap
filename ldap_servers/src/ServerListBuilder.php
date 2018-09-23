@@ -35,21 +35,20 @@ class ServerListBuilder extends ConfigEntityListBuilder {
    * {@inheritdoc}
    */
   public function buildRow(EntityInterface $entity) {
-    $server = Server::load($entity->id());
-
+    /** @var \Drupal\ldap_servers\Entity\Server $entity */
     $row = [];
     $row['label'] = $this->getLabel($entity);
-    $row['bind_method'] = ucfirst($server->getFormattedBind());
-    if ($server->get('bind_method') == 'service_account') {
-      $row['binddn'] = $server->get('binddn');
+    $row['bind_method'] = ucfirst($entity->getFormattedBind());
+    if ($entity->get('bind_method') == 'service_account') {
+      $row['binddn'] = $entity->get('binddn');
     }
     else {
       $row['binddn'] = $this->t('N/A');
     }
-    $row['status'] = $server->get('status') ? 'Yes' : 'No';
-    $row['address'] = $server->get('address');
-    $row['port'] = $server->get('port');
-    $row['current_status'] = $this->checkStatus($server);
+    $row['status'] = $entity->get('status') ? 'Yes' : 'No';
+    $row['address'] = $entity->get('address');
+    $row['port'] = $entity->get('port');
+    $row['current_status'] = $this->checkStatus($entity);
 
     $fields = [
       'bind_method',
@@ -60,7 +59,7 @@ class ServerListBuilder extends ConfigEntityListBuilder {
     ];
 
     foreach ($fields as $field) {
-      if ($entity->get($field) != $server->get($field)) {
+      if ($entity->get($field) != $entity->get($field)) {
         $row[$field] .= ' ' . $this->t('(overridden)');
       }
     }

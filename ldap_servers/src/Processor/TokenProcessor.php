@@ -5,9 +5,9 @@ namespace Drupal\ldap_servers\Processor;
 use Drupal\Core\Entity\EntityTypeManager;
 use Drupal\Core\File\FileSystem;
 use Drupal\Component\Utility\SafeMarkup;
-use Drupal\ldap_servers\Entity\Server;
 use Drupal\ldap_servers\Helper\ConversionHelper;
 use Drupal\ldap_servers\Helper\CredentialsStorage;
+use Drupal\ldap_servers\LdapTransformationTraits;
 use Drupal\ldap_servers\Logger\LdapDetailLog;
 use Drupal\user\UserInterface;
 use Symfony\Component\Ldap\Entry;
@@ -16,6 +16,8 @@ use Symfony\Component\Ldap\Entry;
  * Helper to manage LDAP tokens and process their content.
  */
 class TokenProcessor {
+
+  use LdapTransformationTraits;
 
   const PREFIX = '[';
   const SUFFIX = ']';
@@ -390,7 +392,7 @@ class TokenProcessor {
     $tokens = [];
     // 1. tokenize dn
     // escapes attribute values, need to be unescaped later.
-    $dn_parts = Server::ldapExplodeDn($dn, 0);
+    $dn_parts = $this->ldapExplodeDn($dn, 0);
     unset($dn_parts['count']);
     $parts_count = [];
     $parts_last_value = [];

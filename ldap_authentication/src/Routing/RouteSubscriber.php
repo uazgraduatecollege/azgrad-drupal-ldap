@@ -30,10 +30,8 @@ class RouteSubscriber extends RouteSubscriberBase {
    *   Show password or not.
    */
   public static function validateResetPasswordAllowed() {
-    $user = \Drupal::currentUser();
-    if ($user->isAnonymous()) {
+    if (\Drupal::currentUser()->isAnonymous()) {
 
-      // FIXME: DI.
       if (\Drupal::config('ldap_authentication.settings')->get('authenticationMode') == 'mixed') {
         return AccessResult::allowed();
       }

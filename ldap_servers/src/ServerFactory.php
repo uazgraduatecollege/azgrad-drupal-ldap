@@ -5,12 +5,10 @@ namespace Drupal\ldap_servers;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityTypeManager;
-use Drupal\Core\Link;
 use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
-use Drupal\Core\Url;
-use Drupal\ldap_servers\Helper\ConversionHelper;
-use Drupal\ldap_user\Helper\LdapConfiguration;
+use Drupal\externalauth\Authmap;
+use Drupal\externalauth\ExternalAuth;
 use Drupal\user\UserInterface;
 
 /**
@@ -29,15 +27,26 @@ class ServerFactory implements LdapUserAttributesInterface {
   protected $logger;
   protected $storage;
   protected $cache;
+  protected $externalAuth;
 
   /**
    * Constructor.
+   *
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   * @param \Drupal\Core\Logger\LoggerChannelInterface $logger
+   * @param \Drupal\Core\Entity\EntityTypeManager $entity_type_manager
+   * @param \Drupal\Core\Cache\CacheBackendInterface $cache
+   * @param \Drupal\externalauth\Authmap $external_auth
+   *
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
-  public function __construct(ConfigFactoryInterface $config_factory, LoggerChannelInterface $logger, EntityTypeManager $entity_type_manager, CacheBackendInterface $cache) {
+  public function __construct(ConfigFactoryInterface $config_factory, LoggerChannelInterface $logger, EntityTypeManager $entity_type_manager, CacheBackendInterface $cache, Authmap $external_auth) {
     $this->config = $config_factory;
     $this->logger = $logger;
     $this->storage = $entity_type_manager->getStorage('ldap_server');
     $this->cache = $cache;
+    $this->externalAuth = $external_auth;
   }
 
   /**
@@ -49,6 +58,8 @@ class ServerFactory implements LdapUserAttributesInterface {
    *   Server id.
    *
    * @return \Symfony\Component\Ldap\Entry|false
+   *
+   * @deprecated moved to LdapUserManager
    */
   public function getUserDataFromServerByIdentifier($identifier, $id) {
     // Try to retrieve the user from the cache.
@@ -82,245 +93,20 @@ class ServerFactory implements LdapUserAttributesInterface {
    *   Drupal user account.
    * @param string $id
    *   Server id.
-   * @param string $ldap_context
-   *   Provisioning direction.
    *
    * @return array|bool
    *   Returns data or FALSE.
+   *
+   * @deprecated moved to LdapUserManager
    */
   public function getUserDataFromServerByAccount(UserInterface $account, $id) {
-
-    /** FIXME: DI. */
-    /** @var \Drupal\externalauth\Authmap $authmap */
-    $authmap = \Drupal::service('externalauth.authmap');
-    $identifier = $authmap->get($account->id(), 'ldap_user');
+    $identifier = $this->externalAuth->get($account->id(), 'ldap_user');
     if ($identifier) {
       return $this->getUserDataFromServerByIdentifier($identifier, $id);
     }
     else {
       return FALSE;
     }
-  }
-
-  /**
-   * Alter the LDAP attributes.
-   *
-   * @param array $attributes
-   *   Attributes.
-   * @param array $params
-   *   Parameters.
-   *
-   * @return array
-   *   Altered attributes.
-   *
-   *   TODO: Split this out into a separate class.
-   *   TODO: $params is a bad argument, it only needs the sid parameter and
-   *   otherwise depends on the Server class.
-   */
-  public function alterLdapAttributes(array &$attributes, array $params) {
-    // Force this data type.
-    $attributes['dn'] = ConversionHelper::setAttributeMap(@$attributes['dn'], 'ldap_dn');
-
-    // Puid attributes are server specific.
-    if (isset($params['sid']) && $params['sid']) {
-      if (is_scalar($params['sid'])) {
-        /** @var \Drupal\ldap_servers\Entity\Server $ldap_server */
-        $ldap_server = $this->storage->load($params['sid']);
-
-        if ($ldap_server) {
-          // The attributes mail, unique_persistent_attr, user_attr,
-          // mail_template, and user_dn _expression are needed for all
-          // functionality.
-          if (!isset($attributes[$ldap_server->get('mail_attr')])) {
-            $attributes[$ldap_server->get('mail_attr')] = ConversionHelper::setAttributeMap();
-          }
-          if ($ldap_server->get('picture_attr') && !isset($attributes[$ldap_server->get('picture_attr')])) {
-            $attributes[$ldap_server->get('picture_attr')] = ConversionHelper::setAttributeMap();
-          }
-          if ($ldap_server->get('unique_persistent_attr') && !isset($attributes[$ldap_server->get('unique_persistent_attr')])) {
-            $attributes[$ldap_server->get('unique_persistent_attr')] = ConversionHelper::setAttributeMap();
-          }
-          if ($ldap_server->get('user_dn_expression')) {
-            ConversionHelper::extractTokenAttributes($attributes, $ldap_server->get('user_dn_expression'));
-          }
-          if ($ldap_server->get('mail_template')) {
-            ConversionHelper::extractTokenAttributes($attributes, $ldap_server->get('mail_template'));
-          }
-          if (!isset($attributes[$ldap_server->get('user_attr')])) {
-            $attributes[$ldap_server->get('user_attr')] = ConversionHelper::setAttributeMap();
-          }
-        }
-      }
-    }
-    return $attributes;
-  }
-
-  /**
-   * Alter ldap_user attributes lists.
-   *
-   * @param array $available_user_attrs
-   *   Available user attributes.
-   * @param array $params
-   *   Parameters.
-   *
-   * @return array
-   *   Attribute list.
-   *
-   *   TODO: Split this out into a separate class.
-   *   TODO: $params is a bad argument, it only needs the ldap_server and
-   *   direction parameter and otherwise depends on the Server class.
-   */
-  public function alterLdapUserAttributesList(array &$available_user_attrs, array &$params) {
-    if (isset($params['ldap_server']) && $params['ldap_server']) {
-      /** @var \Drupal\ldap_servers\Entity\Server $ldap_server */
-      $ldap_server = $params['ldap_server'];
-
-      $direction = $params['direction'];
-
-      $url = Url::fromRoute('entity.ldap_server.collection');
-      $tokens = [
-        '%edit_link' => Link::fromTextAndUrl($url->toString(), $url)->toString(),
-        '%sid' => $ldap_server->id(),
-      ];
-
-      $server_edit_path = 'admin/config/people/ldap/servers/edit/' . $ldap_server->id();
-
-      if ($direction == self::PROVISION_TO_DRUPAL) {
-
-        // These 4 user fields identify where in LDAP and which LDAP server they
-        // are associated with. They are required for a Drupal account to be
-        // "LDAP associated" regardless of if any other fields/properties are
-        // provisioned or synced.
-        if ($ldap_server->get('unique_persistent_attr')) {
-          $attributes = [
-            'field.ldap_user_puid_sid',
-            'field.ldap_user_puid',
-            'field.ldap_user_puid_property',
-          ];
-          foreach ($attributes as $property_id) {
-            $property_token = '[' . $property_id . ']';
-            if (!isset($available_user_attrs[$property_token]) || !is_array($available_user_attrs[$property_token])) {
-              $available_user_attrs[$property_token] = [];
-            }
-          }
-
-          $available_user_attrs['[field.ldap_user_puid_sid]'] = [
-            'name' => $this->t('Field: sid providing PUID'),
-            'configurable_to_drupal' => 0,
-            'configurable_to_ldap' => 1,
-            'source' => $this->t('%sid', $tokens),
-            'notes' => 'not configurable',
-            'direction' => self::PROVISION_TO_DRUPAL,
-            'enabled' => TRUE,
-            'prov_events' => [self::EVENT_CREATE_DRUPAL_USER],
-            'config_module' => 'ldap_servers',
-            'prov_module' => 'ldap_user',
-          ] + $available_user_attrs['[field.ldap_user_puid_sid]'];
-
-          $available_user_attrs['[field.ldap_user_puid]'] = [
-            'name' => $this->t('Field: PUID', $tokens),
-            'configurable_to_drupal' => 0,
-            'configurable_to_ldap' => 1,
-            'source' => '[' . $ldap_server->get('unique_persistent_attr') . ']',
-            'notes' => 'configure at ' . $server_edit_path,
-            'convert' => $ldap_server->get('unique_persistent_attr_binary'),
-            'direction' => self::PROVISION_TO_DRUPAL,
-            'enabled' => TRUE,
-            'prov_events' => [self::EVENT_CREATE_DRUPAL_USER],
-            'config_module' => 'ldap_servers',
-            'prov_module' => 'ldap_user',
-          ] + $available_user_attrs['[field.ldap_user_puid]'];
-
-          $available_user_attrs['[field.ldap_user_puid_property]'] =
-            [
-              'name' => $this->t('Field: PUID Attribute', $tokens),
-              'configurable_to_drupal' => 0,
-              'configurable_to_ldap' => 1,
-              'source' => $ldap_server->get('unique_persistent_attr'),
-              'notes' => 'configure at ' . $server_edit_path,
-              'direction' => self::PROVISION_TO_DRUPAL,
-              'enabled' => TRUE,
-              'prov_events' => [self::EVENT_CREATE_DRUPAL_USER],
-              'config_module' => 'ldap_servers',
-              'prov_module' => 'ldap_user',
-            ] + $available_user_attrs['[field.ldap_user_puid_property]'];
-        }
-
-        $token = '[field.ldap_user_current_dn]';
-        if (!isset($available_user_attrs[$token]) || !is_array($available_user_attrs[$token])) {
-          $available_user_attrs[$token] = [];
-        }
-        $available_user_attrs[$token] =
-          [
-            'name' => $this->t('Field: Most Recent DN', $tokens),
-            'configurable_to_drupal' => 0,
-            'configurable_to_ldap' => 0,
-            'source' => '[dn]',
-            'notes' => 'not configurable',
-            'direction' => self::PROVISION_TO_DRUPAL,
-            'enabled' => TRUE,
-            'prov_events' => [
-              self::EVENT_CREATE_DRUPAL_USER,
-              self::EVENT_SYNC_TO_DRUPAL_USER,
-            ],
-            'config_module' => 'ldap_servers',
-            'prov_module' => 'ldap_user',
-          ] + $available_user_attrs[$token];
-
-        if (LdapConfiguration::provisionsDrupalAccountsFromLdap()) {
-          if (!isset($available_user_attrs['[property.name]']) || !is_array($available_user_attrs['[property.name]'])) {
-            $available_user_attrs['[property.name]'] = [];
-          }
-          $available_user_attrs['[property.name]'] = [
-            'name' => 'Property: Username',
-            'source' => '[' . $ldap_server->get('user_attr') . ']',
-            'direction' => self::PROVISION_TO_DRUPAL,
-            'enabled' => TRUE,
-            'prov_events' => [
-              self::EVENT_CREATE_DRUPAL_USER,
-              self::EVENT_SYNC_TO_DRUPAL_USER,
-            ],
-            'config_module' => 'ldap_servers',
-            'prov_module' => 'ldap_user',
-          ] + $available_user_attrs['[property.name]'];
-
-          if (!isset($available_user_attrs['[property.mail]']) || !is_array($available_user_attrs['[property.mail]'])) {
-            $available_user_attrs['[property.mail]'] = [];
-          }
-          $available_user_attrs['[property.mail]'] = [
-            'name' => 'Property: Email',
-            'source' => ($ldap_server->get('mail_template')) ? $ldap_server->get('mail_template') : '[' . $ldap_server->get('mail_attr') . ']',
-            'direction' => self::PROVISION_TO_DRUPAL,
-            'enabled' => TRUE,
-            'prov_events' => [
-              self::EVENT_CREATE_DRUPAL_USER,
-              self::EVENT_SYNC_TO_DRUPAL_USER,
-            ],
-            'config_module' => 'ldap_servers',
-            'prov_module' => 'ldap_user',
-          ] + $available_user_attrs['[property.mail]'];
-
-          if ($ldap_server->get('picture_attr')) {
-            if (!isset($available_user_attrs['[property.picture]']) || !is_array($available_user_attrs['[property.picture]'])) {
-              $available_user_attrs['[property.picture]'] = [];
-            }
-            $available_user_attrs['[property.picture]'] = [
-              'name' => 'Property: Picture',
-              'source' => '[' . $ldap_server->get('picture_attr') . ']',
-              'direction' => self::PROVISION_TO_DRUPAL,
-              'enabled' => TRUE,
-              'prov_events' => [
-                self::EVENT_CREATE_DRUPAL_USER,
-                self::EVENT_SYNC_TO_DRUPAL_USER,
-              ],
-              'config_module' => 'ldap_servers',
-              'prov_module' => 'ldap_user',
-            ] + $available_user_attrs['[property.picture]'];
-          }
-        }
-      }
-    }
-    return [$params, $available_user_attrs];
   }
 
 }

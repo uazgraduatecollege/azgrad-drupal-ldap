@@ -4,7 +4,13 @@ services:
     arguments: ['@logger.channel.ldap_servers', '@entity_type.manager']
   ldap.servers:
     class: Drupal\ldap_servers\ServerFactory
-    arguments: ['@config.factory', '@logger.channel.ldap_servers', '@entity_type.manager', '@cache.default']
+    arguments: ['@config.factory', '@logger.channel.ldap_servers', '@entity_type.manager', '@cache.default', '@externalauth.authmap']
+  ldap.group_manager:
+    class: Drupal\ldap_servers\LdapGroupManager
+    arguments: ['@logger.channel.ldap_servers', '@entity_type.manager', '@ldap.bridge', '@module_handler']
+  ldap.user_manager:
+    class: Drupal\ldap_servers\LdapUserManager
+    arguments: ['@logger.channel.ldap_servers', '@entity_type.manager', '@ldap.bridge', '@module_handler', '@cache.default', '@externalauth.authmap']
   logger.channel.ldap_servers:
     parent: logger.channel_base
     arguments: ['ldap_servers']
@@ -14,3 +20,6 @@ services:
   ldap.token_processor:
     class: Drupal\ldap_servers\Processor\TokenProcessor
     arguments: [ '@ldap.detail_log', '@file_system', '@entity_type.manager']
+  ldap_servers.user_attributes:
+    class: Drupal\ldap_servers\Helper\LdapUserAttributeProvider
+    arguments: ['@config.factory', '@entity_type.manager']

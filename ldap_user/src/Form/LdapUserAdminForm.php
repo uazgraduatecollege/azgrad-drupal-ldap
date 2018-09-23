@@ -13,7 +13,6 @@ use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Url;
 use Drupal\ldap_servers\Helper\ConversionHelper;
-use Drupal\ldap_servers\ServerFactory;
 use Drupal\ldap_user\Helper\LdapConfiguration;
 use Drupal\ldap_servers\LdapUserAttributesInterface;
 use Drupal\ldap_user\Helper\SemaphoreStorage;
@@ -24,7 +23,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInterface, ContainerInjectionInterface {
 
-  protected $serverFactory;
   protected $cache;
   protected $moduleHandler;
   protected $entityTypeManager;
@@ -36,10 +34,9 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
   /**
    * {@inheritdoc}
    */
-  public function __construct(ConfigFactoryInterface $config_factory, ServerFactory $server_factory, CacheBackendInterface $cache, ModuleHandler $module_handler, EntityTypeManager $entity_type_manager) {
+  public function __construct(ConfigFactoryInterface $config_factory, CacheBackendInterface $cache, ModuleHandler $module_handler, EntityTypeManager $entity_type_manager) {
     parent::__construct($config_factory);
 
-    $this->serverFactory = $server_factory;
     $this->cache = $cache;
     $this->moduleHandler = $module_handler;
     $this->entityTypeManager = $entity_type_manager;
@@ -53,7 +50,6 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
   public static function create(ContainerInterface $container) {
     return new static (
       $container->get('config.factory'),
-      $container->get('ldap.servers'),
       $container->get('cache.default'),
       $container->get('module_handler'),
       $container->get('entity_type.manager')
@@ -192,11 +188,12 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
     if ($this->moduleHandler->moduleExists('ldap_query')) {
       $updateMechanismOptions = ['none' => $this->t('Do not update')];
 
-      $ids = $this->entityTypeManager->getStorage('ldap_query_entity')
+      $storage = $this->entityTypeManager->getStorage('ldap_query_entity');
+      $ids = $storage
         ->getQuery()
         ->condition('status', 1)
         ->execute();
-      $queries = $this->storage->loadMultiple($ids);
+      $queries = $storage->loadMultiple($ids);
       foreach ($queries as $query) {
         $updateMechanismOptions[$query->id()] = $query->label();
       }
@@ -761,7 +758,7 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
     $userAttributeOptions = ['0' => $this->t('Select') . ' ' . $text];
 
     /** @var \Drupal\ldap_user\Helper\SyncMappingHelper $syncMappingsHelper */
-    $syncMappingsHelper = \Drupal::service('sync_mapper');
+    $syncMappingsHelper = \Drupal::service('ldap.sync_mapper');
     $syncMappings = $syncMappingsHelper->getAllSyncMappings();
     if (!empty($syncMappings[$direction])) {
       foreach ($syncMappings[$direction] as $target_id => $mapping) {
@@ -1113,11 +1110,12 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
    * Load servers and set their default values.
    */
   private function prepareBaseData() {
-    $ids = $this->entityTypeManager->getStorage('ldap_server')
+    $storage = $this->entityTypeManager->getStorage('ldap_server');
+    $ids = $storage
       ->getQuery()
       ->condition('status', 1)
       ->execute();
-    foreach ($this->entityTypeManager->loadMultiple($ids) as $sid => $server) {
+    foreach ($storage->loadMultiple($ids) as $sid => $server) {
       /** @var \Drupal\ldap_servers\Entity\Server $server */
       $enabled = ($server->get('status')) ? 'Enabled' : 'Disabled';
       $this->drupalAcctProvisionServerOptions[$sid] = $server->label() . ' (' . $server->get('address') . ') Status: ' . $enabled;

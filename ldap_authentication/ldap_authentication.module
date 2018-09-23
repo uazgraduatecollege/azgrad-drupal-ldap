@@ -7,7 +7,6 @@
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
-use Drupal\ldap_authentication\Helper\LdapAuthenticationConfiguration;
 use Drupal\user\UserInterface;
 
 /**
@@ -227,7 +226,9 @@ function ldap_authentication_user_login_authenticate_validate(array $form, FormS
  *   The form ID.
  */
 function _ldap_authentication_login_form_alter(array &$form, FormStateInterface &$form_state, $form_id) {
-  if (count(LdapAuthenticationConfiguration::getEnabledAuthenticationServers()) == 0) {
+  /** @var \Drupal\ldap_authentication\AuthenticationServers $authentication_servers */
+  $authentication_servers = \Drupal::service('ldap_authentication.servers');
+  if (!$authentication_servers->authenticationServersAvailable()) {
     return;
   }
 

@@ -28,18 +28,18 @@ function ldap_servers_help($route_name, RouteMatchInterface $route_match) {
  * Implements hook_ldap_attributes_needed_alter().
  */
 function ldap_servers_ldap_attributes_needed_alter(&$attributes, $params) {
-  /** @var \Drupal\ldap_servers\ServerFactory $factory */
-  $factory = \Drupal::service('ldap.servers');
-  $attributes = $factory->alterLdapAttributes($attributes, $params);
+  /** @var \Drupal\ldap_servers\Helper\LdapUserAttributeProvider $service */
+  $service = \Drupal::service('ldap_servers.user_attributes');
+  $service->alterLdapAttributes($attributes, $params);
 }
 
 /**
  * Implements hook_ldap_user_attrs_list_alter().
  */
 function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$params) {
-  /** @var \Drupal\ldap_servers\ServerFactory $factory */
-  $factory = \Drupal::service('ldap.servers');
-  list($params, $available_user_attrs) = $factory->alterLdapUserAttributesList($available_user_attrs, $params);
+  /** @var \Drupal\ldap_servers\Helper\LdapUserAttributeProvider  $service */
+  $service = \Drupal::service('ldap_servers.user_attributes');
+  $service->alterLdapUserAttributesList($available_user_attrs, $params);
 }
 
 /**

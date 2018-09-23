@@ -13,6 +13,9 @@ use Drupal\Core\Logger\LoggerChannelFactoryInterface;
  */
 class LdapDetailLog {
 
+  protected $loggerFactory;
+  protected $config;
+
   /**
    * LdapDetailLog constructor.
    *

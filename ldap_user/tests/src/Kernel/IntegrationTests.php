@@ -16,6 +16,7 @@ class IntegrationTests extends KernelTestBase {
    */
   public static $modules = [
     'authorization',
+    'externalauth',
     'ldap_servers',
     'ldap_user',
     'user',

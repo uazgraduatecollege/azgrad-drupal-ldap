@@ -4,7 +4,6 @@ namespace Drupal\ldap_query\Form;
 
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\ldap_servers\Entity\Server;
 
 /**
  * Class QueryEntityForm.
@@ -12,6 +11,13 @@ use Drupal\ldap_servers\Entity\Server;
  * @package Drupal\ldap_query\Form
  */
 class QueryEntityForm extends EntityForm {
+
+  /**
+   * Query Entity.
+   *
+   * @var \Drupal\ldap_query\Entity\QueryEntity
+   */
+  protected $entity;
 
   /**
    * {@inheritdoc}
@@ -38,9 +44,10 @@ class QueryEntityForm extends EntityForm {
       '#disabled' => !$ldap_query_entity->isNew(),
     ];
 
-    /** @var \Drupal\Core\Entity\EntityStorageInterface $storage */
-    $storage = \Drupal::service('entity_type.manager')->getStorage('ldap_server');
+    $storage = $this->entityTypeManager
+      ->getStorage('ldap_server');
     $servers = $storage->getQuery()->execute();
+
     $options = [];
     /** @var \Drupal\ldap_servers\Entity\Server $server */
     foreach ($storage->loadMultiple($servers) as $server) {
@@ -128,14 +135,10 @@ class QueryEntityForm extends EntityForm {
       ],
     ];
 
-    $scope = $ldap_query_entity->get('scope');
-    if (!$scope) {
-      $scope = Server::SCOPE_SUBTREE;
-    }
     $form['scope'] = [
       '#type' => 'radios',
       '#title' => $this->t('Scope of search'),
-      '#default_value' => $scope,
+      '#default_value' => $ldap_query_entity->get('scope') ? $ldap_query_entity->get('scope') : 'sub',
       '#required' => TRUE,
       '#options' => [
         'sub' => $this->t('Subtree (default)'),

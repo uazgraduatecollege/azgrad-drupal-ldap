@@ -37,8 +37,27 @@ class GroupUserUpdateProcessor {
 
   /**
    * Constructor for update process.
+   *
+   * @param \Drupal\Core\Logger\LoggerChannelInterface $logger
+   * @param \Drupal\ldap_servers\Logger\LdapDetailLog $detail_log
+   * @param \Drupal\Core\Config\ConfigFactory $config
+   * @param \Drupal\Core\State\StateInterface $state
+   * @param \Drupal\Core\Extension\ModuleHandler $module_handler
+   * @param \Drupal\Core\Entity\EntityTypeManager $entity_type_manager
+   * @param \Drupal\externalauth\Authmap $external_auth
+   * @param \Drupal\ldap_query\Controller\QueryController $query_controller
+   * @param \Drupal\ldap_user\Processor\DrupalUserProcessor $drupal_user_processor
    */
-  public function __construct(LoggerChannelInterface $logger, LdapDetailLog $detail_log, ConfigFactory $config, StateInterface $state, ModuleHandler $module_handler, EntityTypeManager $entity_type_manager, Authmap $external_auth, QueryController $query_controller, DrupalUserProcessor $drupal_user_processor) {
+  public function __construct(
+    LoggerChannelInterface $logger,
+    LdapDetailLog $detail_log,
+    ConfigFactory $config,
+    StateInterface $state,
+    ModuleHandler $module_handler,
+    EntityTypeManager $entity_type_manager,
+    Authmap $external_auth,
+    QueryController $query_controller,
+    DrupalUserProcessor $drupal_user_processor) {
     $this->logger = $logger;
     $this->detailLog = $detail_log;
     $this->config = $config->get('ldap_user.settings');
@@ -131,15 +150,16 @@ class GroupUserUpdateProcessor {
 
     // @TODO: Batch users as OrphanProcessor does.
     $this->queryController->execute();
+    /** @var \Symfony\Component\Ldap\Entry[] $accountsToProcess */
     $accountsToProcess = $this->queryController->getRawResults();
     $attribute = $this->ldapServer->get('user_attr');
     $this->logger->notice('Processing @count accounts for periodic update.',
-        ['@count' => $accountsToProcess['count']]
+        ['@count' => count($accountsToProcess)]
       );
 
     foreach ($accountsToProcess as $account) {
-      if (isset($account[$attribute], $account[$attribute][0])) {
-        $username = $account[$attribute][0];
+      if ($account->hasAttribute($attribute)) {
+        $username = $account->getAttribute($attribute)[0];
         $match = $this->ldapServer->matchUsernameToExistingLdapEntry($username);
         if ($match) {
           $uid = $this->externalAuth->getUid($username, 'ldap_user');

@@ -4,12 +4,16 @@ namespace Drupal\ldap_query\Form;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\FormBase;
+use Drupal\ldap_query\Controller\QueryController;
 use Drupal\ldap_servers\Form\ServerTestForm;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Test form for queries.
  */
 class QueryTestForm extends FormBase {
+
+  protected $ldapQuery;
 
   /**
    * {@inheritdoc}
@@ -21,8 +25,15 @@ class QueryTestForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function __construct() {
+  public function __construct(QueryController $ldap_query) {
+    $this->ldapQuery = $ldap_query;
+  }
 
+  /**
+   *
+   */
+  public static function create(ContainerInterface $container) {
+    return new static($container->get('ldap.query'));
   }
 
   /**
@@ -30,19 +41,16 @@ class QueryTestForm extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state, $ldap_query_entity = NULL) {
     if ($ldap_query_entity) {
-      // FIXME: DI.
-      /** @var \Drupal\ldap_query\Controller\QueryController $controller */
-      $controller = \Drupal::service('ldap.query');
-      $controller->load($$ldap_query_entity);
-      $controller->execute();
-      $data = $controller->getRawResults();
+      $this->ldapQuery->load($ldap_query_entity);
+      $this->ldapQuery->execute();
+      $data = $this->ldapQuery->getRawResults();
 
       $form['result_count'] = [
         '#markup' => '<h2>' . $this->t('@count results', ['@count' => count($data)]) . '</h2>',
       ];
 
       $header[] = 'DN';
-      $attributes = $controller->availableFields();
+      $attributes = $this->ldapQuery->availableFields();
       foreach ($attributes as $attribute) {
         $header[] = $attribute;
       }

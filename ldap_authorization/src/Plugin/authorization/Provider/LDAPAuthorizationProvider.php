@@ -3,11 +3,14 @@
 namespace Drupal\ldap_authorization\Plugin\authorization\Provider;
 
 use Drupal\authorization\AuthorizationSkipAuthorization;
+use Drupal\Core\Entity\EntityTypeManager;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\authorization\Provider\ProviderPluginBase;
-use Drupal\ldap_servers\Entity\Server;
+use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\ldap_servers\Helper\ConversionHelper;
+use Drupal\ldap_servers\LdapTransformationTraits;
 use Drupal\user\UserInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * The LDAP authorization provider for authorization module.
@@ -17,7 +20,9 @@ use Drupal\user\UserInterface;
  *   label = @Translation("LDAP Authorization")
  * )
  */
-class LDAPAuthorizationProvider extends ProviderPluginBase {
+class LDAPAuthorizationProvider extends ProviderPluginBase implements ContainerFactoryPluginInterface {
+
+  use LdapTransformationTraits;
 
   /**
    * {@inheritdoc}
@@ -34,6 +39,28 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
    */
   protected $revocationSupported = TRUE;
 
+  protected $entityTypeManager;
+
+  /**
+   *
+   */
+  public function __construct(array $configuration, $plugin_id, array $plugin_definition, EntityTypeManager $entity_type_manager) {
+    parent::__construct($configuration, $plugin_id, $plugin_definition);
+    $this->entityTypeManager = $entity_type_manager;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    return new static(
+      $configuration,
+      $plugin_id,
+      $plugin_definition,
+      $container->get('entity_type.manager')
+    );
+  }
+
   /**
    * {@inheritdoc}
    */
@@ -46,9 +73,7 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
       $tokens += $profile->getConsumer()->getTokens();
     }
 
-    // FIXME: DI.
-    /** @var \Drupal\Core\Entity\EntityStorageInterface $storage */
-    $storage = \Drupal::service('entity_type.manager')->getStorage('ldap_server');
+    $storage = $this->entityTypeManager->getStorage('ldap_server');
     $query_results = $storage->getQuery()->execute();
     /** @var \Drupal\ldap_servers\Entity\Server[] $servers */
     $servers = $storage->loadMultiple($query_results);
@@ -154,6 +179,7 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
   public function getProposals(UserInterface $user) {
 
     /** @var \Drupal\ldap_user\Processor\DrupalUserProcessor $processor */
+    // TODO: Inject, DI.
     $processor = \Drupal::service('ldap.drupal_user_processor');
     // Do not continue if user should be excluded from LDAP authentication.
     if ($processor->excludeUser($user)) {
@@ -173,27 +199,33 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
       return [];
     }
 
-    /** @var \Drupal\ldap_servers\ServerFactory $factory */
-    $factory = \Drupal::service('ldap.servers');
-    $ldap_user_data = $factory->getUserDataFromServerByAccount($user, $server_id);
+    /** @var \Drupal\ldap_servers\LdapUserManager $ldap_user_manager */
+    $ldap_user_manager = \Drupal::service('ldap.user_manager');
+    $ldap_user_manager->setServer($server);
+
+    $ldap_user_data = $ldap_user_manager->getUserDataByAccount($user);
 
     if (!$ldap_user_data && $user->isNew()) {
       // If we don't have a real user yet, fall back to the account name.
-      $ldap_user_data = $factory->getUserDataFromServerByIdentifier($user->getAccountName(), $server_id);
+      $ldap_user_data = $ldap_user_manager->getUserDataByIdentifier($user->getAccountName());
     }
 
     if (!$ldap_user_data && $this->configuration['status']['only_ldap_authenticated'] == TRUE) {
       throw new AuthorizationSkipAuthorization();
     }
 
+    /** @var \Drupal\ldap_servers\LdapGroupManager $group_manager */
+    $group_manager = \Drupal::service('ldap.group_manager');
+    $group_manager->setServerById($server_id);
+
     // Get user groups from DN.
-    $derive_from_dn_authorizations = $server->groupUserMembershipsFromDn($user->getAccountName());
+    $derive_from_dn_authorizations = $group_manager->groupUserMembershipsFromDn($user->getAccountName());
     if (!$derive_from_dn_authorizations) {
       $derive_from_dn_authorizations = [];
     }
 
     // Get user groups from membership.
-    $group_dns = $server->groupMembershipsFromUser($user->getAccountName());
+    $group_dns = $group_manager->groupMembershipsFromUser($user->getAccountName());
     if (!$group_dns) {
       $group_dns = [];
     }
@@ -253,7 +285,7 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
     $config = $profile->getProviderConfig();
     foreach ($proposals as $key => $authorization_id) {
       if ($config['filter_and_mappings']['use_first_attr_as_groupid']) {
-        $attr_parts = Server::ldapExplodeDn($authorization_id, 0);
+        $attr_parts = $this->ldapExplodeDn($authorization_id, 0);
         if (count($attr_parts) > 0) {
           $first_part = explode('=', $attr_parts[0]);
           if (count($first_part) > 1) {

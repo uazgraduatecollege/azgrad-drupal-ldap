@@ -9,8 +9,6 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Link;
 use Drupal\Core\Url;
-use Drupal\ldap_authentication\Helper\LdapAuthenticationConfiguration;
-use Drupal\ldap_servers\ServerFactory;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -18,7 +16,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 class LdapAuthenticationAdminForm extends ConfigFormBase {
 
-  protected $serverFactory;
   protected $moduleHandler;
   protected $storage;
 
@@ -39,9 +36,8 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
   /**
    * {@inheritdoc}
    */
-  public function __construct(ConfigFactoryInterface $config_factory, ServerFactory $ldap_servers, ModuleHandler $module_handler, EntityTypeManager $entity_type_manager) {
+  public function __construct(ConfigFactoryInterface $config_factory, ModuleHandler $module_handler, EntityTypeManager $entity_type_manager) {
     parent::__construct($config_factory);
-    $this->serverFactory = $ldap_servers;
     $this->moduleHandler = $module_handler;
     $this->storage = $entity_type_manager->getStorage('ldap_server');
   }
@@ -52,7 +48,6 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('config.factory'),
-      $container->get('ldap.servers'),
       $container->get('module_handler'),
       $container->get('entity_type.manager')
     );
@@ -108,6 +103,20 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
       '#description' => $this->t('If exclusive is selected: <br> (1) reset password links will be replaced with links to LDAP end user documentation below.<br>
         (2) The reset password form will be left available at user/password for administrators; but no links to it will be provided to anonymous users.<br>
         (3) Password fields in user profile form will be removed except for administrators.'),
+    ];
+
+    // TODO: DI.
+    $admin_roles = \Drupal::entityTypeManager()
+      ->getStorage('user_role')
+      ->getQuery()
+      ->condition('is_admin', TRUE)
+      ->execute();
+
+    $form['logon']['skipAdministrators'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Exclude members of the administrative group from LDAP authentication'),
+      '#default_value' => $config->get('skipAdministrators') ? $config->get('skipAdministrators') : 1,
+      '#description' => $this->t('Members in the group(s) "@groups" will not be able to log in with LDAP', ['@groups' => implode(', ', $admin_roles)]),
     ];
 
     $form['logon']['authenticationServers'] = [
@@ -172,7 +181,7 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
     $form['restrictions']['allowOnlyIfTextInDn'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Allow Only Text Test'),
-      '#default_value' => LdapAuthenticationConfiguration::arrayToLines($config->get('allowOnlyIfTextInDn')),
+      '#default_value' => is_array($config->get('allowOnlyIfTextInDn')) ? implode("\n", $config->get('allowOnlyIfTextInDn')) : '',
       '#cols' => 50,
       '#rows' => 3,
       '#description' => $this->t("A list of text such as ou=education or cn=barclay that at least one of be found in user's DN string. Enter one per line such as <pre>ou=education<br>ou=engineering</pre> This test will be case insensitive."),
@@ -181,7 +190,7 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
     $form['restrictions']['excludeIfTextInDn'] = [
       '#type' => 'textarea',
       '#title' => $this->t('Excluded Text Test'),
-      '#default_value' => LdapAuthenticationConfiguration::arrayToLines($config->get('excludeIfTextInDn')),
+      '#default_value' => implode("\n", $config->get('excludeIfTextInDn')),
       '#cols' => 50,
       '#rows' => 3,
       '#description' => $this->t("A list of text such as ou=evil or cn=bad that if found in a user's DN, exclude them from LDAP authentication. Enter one per line such as <pre>ou=evil<br>cn=bad</pre> This test will be case insensitive."),
@@ -327,9 +336,10 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
     $values = $form_state->getValues();
     $this->config('ldap_authentication.settings')
       ->set('authenticationMode', $values['authenticationMode'])
+      ->set('skipAdministrators', $values['skipAdministrators'])
       ->set('sids', $values['authenticationServers'])
-      ->set('allowOnlyIfTextInDn', LdapAuthenticationConfiguration::linesToArray($values['allowOnlyIfTextInDn']))
-      ->set('excludeIfTextInDn', LdapAuthenticationConfiguration::linesToArray($values['excludeIfTextInDn']))
+      ->set('allowOnlyIfTextInDn', $this->linesToArray($values['allowOnlyIfTextInDn']))
+      ->set('excludeIfTextInDn', $this->linesToArray($values['excludeIfTextInDn']))
       ->set('loginUIUsernameTxt', $values['loginUIUsernameTxt'])
       ->set('loginUIPasswordTxt', $values['loginUIPasswordTxt'])
       ->set('ldapUserHelpLinkUrl', $values['ldapUserHelpLinkUrl'])
@@ -346,7 +356,30 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
       ->set('emailTemplateUsagePromptRegex', $values['templateUsagePromptRegex'])
       ->set('passwordOption', $values['passwordOption'])
       ->save();
+  }
 
+  /**
+   * Helper function to convert array to serialized lines.
+   *
+   * @param string $lines
+   *   Serialized lines.
+   *
+   * @return array
+   *   Deserialized content.
+   */
+  private function linesToArray($lines) {
+    $lines = trim($lines);
+
+    if ($lines) {
+      $array = preg_split('/[\n\r]+/', $lines);
+      foreach ($array as $i => $value) {
+        $array[$i] = trim($value);
+      }
+    }
+    else {
+      $array = [];
+    }
+    return $array;
   }
 
 }

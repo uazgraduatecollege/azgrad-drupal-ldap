@@ -301,6 +301,8 @@ function ldap_user_form_user_register_form_alter(&$form, $form_state) {
  */
 function ldap_user_form_register_form_validate($form, FormStateInterface &$form_state) {
   $config = \Drupal::config('ldap_user.settings');
+  /** @var \Drupal\ldap_servers\LdapUserManager $ldap_user_manager */
+  $ldap_user_manager = \Drupal::service('ldap.user_manager');
 
   if (empty($form_state->getValue('ldap_user_association'))) {
     $form_state->setValue('ldap_user_association', $config->get('manualAccountConflict'));
@@ -309,9 +311,6 @@ function ldap_user_form_register_form_validate($form, FormStateInterface &$form_
   if ($form_state->getValue('ldap_user_association') == LdapUserAttributesInterface::MANUAL_ACCOUNT_CONFLICT_NO_LDAP_ASSOCIATE) {
     $form_state->set('ldap_user_ldap_exclude', 1);
   }
-
-  /** @var \Drupal\ldap_servers\ServerFactory $factory */
-  $factory = \Drupal::service('ldap.servers');
 
   // If the corresponding LDAP account does not exist and provision not
   // selected and make LDAP associated is selected, throw error.
@@ -332,7 +331,8 @@ function ldap_user_form_register_form_validate($form, FormStateInterface &$form_
         ->error('No server available for provisioning to LDAP.');
     }
     else {
-      $ldap_user = $factory->getUserDataFromServerByIdentifier($form_state->getValue('name'), $config->get('ldapEntryProvisionServer'), 'ldap_user_prov_to_ldap');
+      $ldap_user_manager->setServerById($config->get('ldapEntryProvisionServer'));
+      $ldap_user = $ldap_user_manager->getUserDataByIdentifier($form_state->getValue('name'));
       if ($ldap_user) {
         $form_state->setErrorByName(
           'ldap_user_create_ldap_acct', t(
@@ -348,7 +348,8 @@ function ldap_user_form_register_form_validate($form, FormStateInterface &$form_
 
   // If a conflict with an LDAP account exists (no association), throw error.
   if ($form_state->getValue('ldap_user_association') == LdapUserAttributesInterface::MANUAL_ACCOUNT_CONFLICT_REJECT) {
-    $ldap_user = $factory->getUserDataFromServerByIdentifier($form_state->getValue('name'), $config->get('drupalAcctProvisionServer'));
+    $ldap_user_manager->setServerById($config->get('drupalAcctProvisionServer'));
+    $ldap_user = $ldap_user_manager->getUserDataByIdentifier($form_state->getValue('name'));
     if ($ldap_user) {
       $form_state->setErrorByName(
         'name', t(
@@ -377,8 +378,7 @@ function ldap_user_form_register_form_submit2(&$form, FormState $form_state) {
       // in nearly all cases.
       $ldap_provision_entry = $ldapProcessor->getProvisionRelatedLdapEntry($account);
       if (!$ldap_provision_entry) {
-        $provision_result = $ldapProcessor->provisionLdapEntry($account);
-        if ($provision_result['status'] == 'fail') {
+        if (!$ldapProcessor->provisionLdapEntry($account)) {
           drupal_set_message(t('An error occurred while creating your LDAP entry, please see the log for details.'), 'error');
         }
       }
