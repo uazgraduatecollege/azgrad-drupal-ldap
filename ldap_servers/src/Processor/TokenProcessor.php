@@ -50,6 +50,8 @@ class TokenProcessor {
    *
    * @return string
    *   The text with tokens replaced or NULL if replacement not available.
+   *
+   * @deprecated
    */
   public function tokenReplace($resource, $text, $resource_type = 'ldap_entry') {
     // Desired tokens are of form "cn","mail", etc.
@@ -67,9 +69,93 @@ class TokenProcessor {
         break;
 
       case 'user_account':
-        $tokens = $this->tokenizeUserAccount($resource, $desired_tokens, self::PREFIX, self::SUFFIX);
+        $tokens = $this->tokenizeUserAccount($resource, $desired_tokens);
         break;
     }
+
+    // Add lowercase tokens to avoid case sensitivity.
+    foreach ($tokens as $attribute => $value) {
+      $tokens[mb_strtolower($attribute)] = $value;
+    }
+
+    // Array of attributes (sn, givenname, etc)
+    $attributes = array_keys($tokens);
+    // Array of attribute values (Lincoln, Abe, etc)
+    $values = array_values($tokens);
+    // TODO: This comparison is likely not ideal:
+    // The sub-functions redundantly lowercase replacements in addition to the
+    // source formatting. Otherwise comparison would fail here in
+    // case-insensitive requests. Ideally, a reimplementation would resolve this
+    // redundant and inconsistent approach with a clearer API.
+    $result = str_replace($attributes, $values, $text);
+
+    // Strip out any unreplace tokens.
+    $result = preg_replace('/^\[.*\]$/', '', $result);
+    // Return NULL if $result is empty, else $result.
+    if ($result == '') {
+      return NULL;
+    }
+    else {
+      return $result;
+    }
+  }
+
+  /**
+   *
+   */
+  public function drupalAccountReplacementsForLdap($resource, $text) {
+    // Desired tokens are of form "cn","mail", etc.
+    $desired_tokens = ConversionHelper::findTokensNeededForTemplate($text);
+
+    if (empty($desired_tokens)) {
+      // If no tokens exist in text, return text itself.  It is literal value.
+      return $text;
+    }
+
+    $tokens = [];
+    $tokens = $this->tokenizeUserAccount($resource, $desired_tokens);
+
+    // Add lowercase tokens to avoid case sensitivity.
+    foreach ($tokens as $attribute => $value) {
+      $tokens[mb_strtolower($attribute)] = $value;
+    }
+
+    // Array of attributes (sn, givenname, etc)
+    $attributes = array_keys($tokens);
+    // Array of attribute values (Lincoln, Abe, etc)
+    $values = array_values($tokens);
+    // TODO: This comparison is likely not ideal:
+    // The sub-functions redundantly lowercase replacements in addition to the
+    // source formatting. Otherwise comparison would fail here in
+    // case-insensitive requests. Ideally, a reimplementation would resolve this
+    // redundant and inconsistent approach with a clearer API.
+    $result = str_replace($attributes, $values, $text);
+
+    // Strip out any unreplace tokens.
+    $result = preg_replace('/^\[.*\]$/', '', $result);
+    // Return NULL if $result is empty, else $result.
+    if ($result == '') {
+      return NULL;
+    }
+    else {
+      return $result;
+    }
+  }
+
+  /**
+   *
+   */
+  public function ldapEntryReplacementsForDrupalAccount($resource, $text) {
+    // Desired tokens are of form "cn","mail", etc.
+    $desired_tokens = ConversionHelper::findTokensNeededForTemplate($text);
+
+    if (empty($desired_tokens)) {
+      // If no tokens exist in text, return text itself.  It is literal value.
+      return $text;
+    }
+
+    $tokens = [];
+    $tokens = $this->tokenizeLdapEntry($resource, $desired_tokens, self::PREFIX, self::SUFFIX);
 
     // Add lowercase tokens to avoid case sensitivity.
     foreach ($tokens as $attribute => $value) {
@@ -184,7 +270,8 @@ class TokenProcessor {
    *   Should return token/value pairs in array such as 'status' => 1,
    *   'uid' => 17.
    */
-  public function tokenizeUserAccount(UserInterface $account, array $token_keys = [], $pre = self::PREFIX, $post = self::SUFFIX) {
+  public function tokenizeUserAccount(UserInterface $account, array $token_keys = []) {
+    $pre = self::PREFIX; $post = self::SUFFIX;
     if (empty($token_keys)) {
       $token_keys = $this->discoverUserAttributes($account);
     }

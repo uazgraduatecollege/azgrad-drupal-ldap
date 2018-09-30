@@ -8,7 +8,6 @@ use Drupal\Core\Form\FormBase;
 use Drupal\Core\Url;
 use Drupal\externalauth\Authmap;
 use Drupal\ldap_servers\LdapUserManager;
-use Drupal\ldap_user\Helper\LdapConfiguration;
 use Drupal\ldap_servers\LdapUserAttributesInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -148,8 +147,8 @@ class LdapUserTestForm extends FormBase implements LdapUserAttributesInterface {
     foreach ([self::PROVISION_TO_DRUPAL, self::PROVISION_TO_LDAP] as $direction) {
       if ($this->provisionEnabled($direction, $selected_action)) {
         if ($direction == self::PROVISION_TO_DRUPAL) {
-          $processor->provisionDrupalAccount($account);
-          $results['provisionDrupalAccount method results']["context = $sync_trigger_description"]['proposed'] = $account;
+          $processor->createDrupalUserFromLdapEntry($account);
+          $results['createDrupalUserFromLdapEntry method results']["context = $sync_trigger_description"]['proposed'] = $account;
         }
         else {
           $provision_result = $ldapProcessor->provisionLdapEntry($username, NULL);
@@ -158,7 +157,7 @@ class LdapUserTestForm extends FormBase implements LdapUserAttributesInterface {
       }
       else {
         if ($direction == self::PROVISION_TO_DRUPAL) {
-          $results['provisionDrupalAccount method results']["context = $sync_trigger_description"] = 'Not enabled.';
+          $results['createDrupalUserFromLdapEntry method results']["context = $sync_trigger_description"] = 'Not enabled.';
         }
         else {
           $results['provisionLdapEntry method results']["context = $sync_trigger_description"] = 'Not enabled.';
@@ -200,12 +199,12 @@ class LdapUserTestForm extends FormBase implements LdapUserAttributesInterface {
   private function provisionEnabled($direction, $provision_trigger) {
     $result = FALSE;
 
+    $config = $this->config->get('ldap_user.settings');
     if ($direction == self::PROVISION_TO_LDAP) {
-      $result = LdapConfiguration::provisionAvailableToLdap($provision_trigger);
-
+      $result = in_array($provision_trigger, $config->get('ldapEntryProvisionTriggers'));
     }
     elseif ($direction == self::PROVISION_TO_DRUPAL) {
-      $result = LdapConfiguration::provisionAvailableToDrupal($provision_trigger);
+      $result = in_array($provision_trigger, $config->get('drupalAcctProvisionTriggers'));
     }
 
     return $result;

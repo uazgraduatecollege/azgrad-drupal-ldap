@@ -222,7 +222,7 @@ class LdapUserManager extends LdapBaseManager {
    * @param string $puid
    *   As returned from ldap_read or other LDAP function (can be binary).
    *
-   * @return false|User|EntityInterface
+   * @return false|UserInterface|EntityInterface
    *   The updated user or error.
    */
   public function getUserAccountFromPuid($puid) {

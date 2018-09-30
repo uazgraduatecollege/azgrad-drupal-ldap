@@ -9,7 +9,7 @@ use Drupal\Core\Extension\ModuleHandler;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\ldap_servers\Helper\ConversionHelper;
 use Drupal\ldap_servers\LdapUserAttributesInterface;
-use Drupal\ldap_user\Helper\LdapConfiguration;
+use Drupal\ldap_user\Helper\SyncMappingHelper;
 
 /**
  * Provides the basic and required fields needed for user mappings.
@@ -22,81 +22,28 @@ class FieldProvider implements LdapUserAttributesInterface {
   protected $entityTypeManager;
   protected $moduleHandler;
   protected $entityFieldManager;
+  protected $syncMapper;
 
   /**
    * Constructor.
+   *
+   * @param \Drupal\Core\Config\ConfigFactory $config_factory
+   * @param \Drupal\Core\Entity\EntityTypeManager $entity_type_manager
+   * @param \Drupal\Core\Extension\ModuleHandler $module_handler
+   * @param \Drupal\Core\Entity\EntityFieldManager $entity_field_manager
+   * @param \Drupal\ldap_user\Helper\SyncMappingHelper $sync_mapper
    */
-  public function __construct(ConfigFactory $config_factory, EntityTypeManager $entity_type_manager, ModuleHandler $module_handler, EntityFieldManager $entity_field_manager) {
+  public function __construct(
+    ConfigFactory $config_factory,
+    EntityTypeManager $entity_type_manager,
+    ModuleHandler $module_handler,
+    EntityFieldManager $entity_field_manager,
+    SyncMappingHelper $sync_mapper) {
     $this->config = $config_factory->get('ldap_user.settings');
     $this->entityTypeManager = $entity_type_manager;
     $this->moduleHandler = $module_handler;
     $this->entityFieldManager = $entity_field_manager;
-  }
-
-  /**
-   * Alter the user's attributes.
-   *
-   * @param array $attributes
-   *   Attributes to change.
-   * @param array $params
-   *   Parameters.
-   *
-   * @return array
-   *   Altered attributes.
-   */
-  public function alterUserAttributes(array $attributes, array $params) {
-    // TODO: Make parameters more sensible, only pass Server in one way.
-    // Puid attributes are server specific.
-    if (isset($params['sid']) && $params['sid']) {
-      if (is_scalar($params['sid'])) {
-        $ldapServer =
-         $this->entityTypeManager
-           ->getStorage('ldap_server')
-           ->load($params['sid']);
-      }
-      else {
-        $ldapServer = $params['sid'];
-      }
-
-      if ($ldapServer && $ldapServer->status()) {
-        if (!isset($attributes['dn'])) {
-          $attributes['dn'] = [];
-        }
-        // Force dn "attribute" to exist.
-        $attributes['dn'] = ConversionHelper::setAttributeMap($attributes['dn']);
-        // Add the attributes required by the user configuration when
-        // provisioning Drupal users.
-        switch ($params['ldap_context']) {
-          case 'ldap_user_insert_drupal_user':
-          case 'ldap_user_update_drupal_user':
-          case 'ldap_user_ldap_associate':
-            if ($ldapServer->get('user_attr')) {
-              $attributes[$ldapServer->get('user_attr')] = ConversionHelper::setAttributeMap(@$attributes[$ldapServer->get('user_attr')]);
-            }
-            if ($ldapServer->get('mail_attr')) {
-              $attributes[$ldapServer->get('mail_attr')] = ConversionHelper::setAttributeMap(@$attributes[$ldapServer->get('mail_attr')]);
-            }
-            if ($ldapServer->get('picture_attr')) {
-              $attributes[$ldapServer->get('picture_attr')] = ConversionHelper::setAttributeMap(@$attributes[$ldapServer->get('picture_attr')]);
-            }
-            if ($ldapServer->get('unique_persistent_attr')) {
-              $attributes[$ldapServer->get('unique_persistent_attr')] = ConversionHelper::setAttributeMap(@$attributes[$ldapServer->get('unique_persistent_attr')]);
-            }
-            if ($ldapServer->get('mail_template')) {
-              ConversionHelper::extractTokenAttributes($attributes, $ldapServer->get('mail_template'));
-            }
-            break;
-        }
-
-        $ldapContext = empty($params['ldap_context']) ? NULL : $params['ldap_context'];
-        $direction = empty($params['direction']) ? $this->ldapContextToProvDirection($ldapContext) : $params['direction'];
-        $attributesRequiredByOtherModuleMappings = $this->syncMapper->getLdapUserRequiredAttributes($direction, $ldapContext);
-        $attributes = array_merge($attributesRequiredByOtherModuleMappings, $attributes);
-        return $attributes;
-
-      }
-    }
-    return $attributes;
+    $this->syncMapper = $sync_mapper;
   }
 
   /**
@@ -233,7 +180,9 @@ class FieldProvider implements LdapUserAttributesInterface {
       ];
     }
 
-    if (!LdapConfiguration::provisionsDrupalAccountsFromLdap()) {
+    $server = $this->config->get('drupalAcctProvisionServer');
+    $triggers = $this->config->get('drupalAcctProvisionTriggers');
+    if ($server && !empty($triggers)) {
       $availableUserAttributes['[property.mail]']['config_module'] = 'ldap_user';
       $availableUserAttributes['[property.name]']['config_module'] = 'ldap_user';
       $availableUserAttributes['[property.picture]']['config_module'] = 'ldap_user';

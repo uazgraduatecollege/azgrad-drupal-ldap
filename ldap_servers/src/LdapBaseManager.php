@@ -186,8 +186,8 @@ abstract class LdapBaseManager {
         $ldap_response = $this->ldap->query($base_dn, $relative_filter, $options)->execute();
       }
       catch (LdapException $e) {
-        $this->logger->critical('LDAP search error with %message', [
-          '%message' => $e->getMessage(),
+        $this->logger->critical('LDAP search error with @message', [
+          '@message' => $e->getMessage(),
         ]);
         continue;
       }
@@ -215,8 +215,8 @@ abstract class LdapBaseManager {
       $this->ldap->getEntryManager()->add($entry);
     }
     catch (LdapException $e) {
-      $this->logger->error("LDAP server %id exception: %ldap_error", [
-        '%id' => $this->id(),
+      $this->logger->error("LDAP server @sid exception: %ldap_error", [
+        '@sid' => $this->id(),
         '%ldap_error' => $e->getMessage(),
       ]
       );
@@ -249,9 +249,9 @@ abstract class LdapBaseManager {
     }
 
     if ($error_message || $current->count() != 0) {
-      $this->logger->error("LDAP server read error on modify in %id: %message ", [
-        '%message' => $error_message,
-        '%id' => $this->id(),
+      $this->logger->error("LDAP server read error on modify in @sid: @message ", [
+        '@message' => $error_message,
+        '@sid' => $this->id(),
       ]
       );
       return FALSE;
@@ -264,10 +264,11 @@ abstract class LdapBaseManager {
         $this->ldap->getEntryManager()->update($entry);
       }
       catch (LdapException $e) {
-        $this->logger->error("LDAP server error updating %dn on %id: %message", [
+        $this->logger->error("LDAP server error updating %dn on @sid: @message", [
+          // TODO: Check if we can also go with @dn.
           '%dn' => $entry->getDn(),
-          '%id' => $this->id(),
-          '%message' => $e->getMessage(),
+          '@sid' => $this->id(),
+          '@message' => $e->getMessage(),
         ]
         );
         return FALSE;
@@ -292,13 +293,19 @@ abstract class LdapBaseManager {
       $this->ldap->getEntryManager()->remove(new Entry($dn));
     }
     catch (LdapException $e) {
-      $this->logger->error("LDAP server deletion error on %id: %message", [
-        '%message' => $e->getMessage(),
-        '%id' => $this->id(),
+      $this->logger->error("LDAP entry '%dn' could not be delete from from server @sid: @message", [
+        '%dn' => $dn,
+        '@sid' => $this->id(),
+        '@message' => $e->getMessage(),
       ]
       );
       return FALSE;
     }
+    $this->logger->info("LDAP entry '%dn' deleted from server @sid", [
+      '%dn' => $dn,
+      '@sid' => $this->id(),
+    ]);
+
     return TRUE;
   }
 

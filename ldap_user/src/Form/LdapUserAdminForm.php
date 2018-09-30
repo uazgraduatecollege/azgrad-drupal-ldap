@@ -12,10 +12,10 @@ use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Url;
+use Drupal\ldap_servers\Entity\Server;
 use Drupal\ldap_servers\Helper\ConversionHelper;
-use Drupal\ldap_user\Helper\LdapConfiguration;
 use Drupal\ldap_servers\LdapUserAttributesInterface;
-use Drupal\ldap_user\Helper\SemaphoreStorage;
+use Drupal\ldap_user\Mapping;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -68,6 +68,19 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
    */
   public function getEditableConfigNames() {
     return ['ldap_user.settings'];
+  }
+
+  /**
+   * Provisioning events from Drupal.
+   *
+   * @return array
+   *   Available events.
+   */
+  private static function provisionsDrupalEvents() {
+    return [
+      self::EVENT_CREATE_DRUPAL_USER => t('On Drupal User Creation'),
+      self::EVENT_SYNC_TO_DRUPAL_USER => t('On Sync to Drupal User'),
+    ];
   }
 
   /**
@@ -623,8 +636,8 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
     $this->config('ldap_user.settings')
       ->set('drupalAcctProvisionServer', $drupalAcctProvisionServer)
       ->set('ldapEntryProvisionServer', $ldapEntryProvisionServer)
-      ->set('drupalAcctProvisionTriggers', $form_state->getValue('drupalAcctProvisionTriggers'))
-      ->set('ldapEntryProvisionTriggers', $form_state->getValue('ldapEntryProvisionTriggers'))
+      ->set('drupalAcctProvisionTriggers', $this->reduceTriggerList($form_state->getValue('drupalAcctProvisionTriggers')))
+      ->set('ldapEntryProvisionTriggers', $this->reduceTriggerList($form_state->getValue('ldapEntryProvisionTriggers')))
       ->set('userUpdateCronQuery', $form_state->getValue('userUpdateCronQuery'))
       ->set('userUpdateCronInterval', $form_state->getValue('userUpdateCronInterval'))
       ->set('orphanedDrupalAcctBehavior', $form_state->getValue('orphanedDrupalAcctBehavior'))
@@ -638,7 +651,6 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
       ->save();
     $form_state->getValues();
 
-    SemaphoreStorage::flushAllValues();
     $this->cache->invalidate('ldap_user_sync_mapping');
     drupal_set_message($this->t('User synchronization configuration updated.'));
   }
@@ -661,7 +673,7 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
         ],
         [
           'data' => $this->t('Synchronization event'),
-          'colspan' => count(LdapConfiguration::provisionsDrupalEvents()),
+          'colspan' => count($this->provisionsDrupalEvents()),
           'rowspan' => 1,
         ],
 
@@ -682,7 +694,7 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
         ],
       ];
 
-      foreach (LdapConfiguration::provisionsDrupalEvents() as $col_name) {
+      foreach ($this->provisionsDrupalEvents() as $col_name) {
         $second_header[] = [
           'data' => $col_name,
           'header' => TRUE,
@@ -757,20 +769,15 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
     $text = ($direction == self::PROVISION_TO_DRUPAL) ? 'target' : 'source';
     $userAttributeOptions = ['0' => $this->t('Select') . ' ' . $text];
 
-    /** @var \Drupal\ldap_user\Helper\SyncMappingHelper $syncMappingsHelper */
-    $syncMappingsHelper = \Drupal::service('ldap.sync_mapper');
-    $syncMappings = $syncMappingsHelper->getAllSyncMappings();
+    $syncMappings = $this->processSyncMappings();
     if (!empty($syncMappings[$direction])) {
       foreach ($syncMappings[$direction] as $target_id => $mapping) {
 
         if (!isset($mapping['name']) || isset($mapping['exclude_from_mapping_ui']) && $mapping['exclude_from_mapping_ui']) {
           continue;
         }
-        if (
-          (isset($mapping['configurable_to_drupal']) && $mapping['configurable_to_drupal'] && $direction == self::PROVISION_TO_DRUPAL)
-          ||
-          (isset($mapping['configurable_to_ldap']) && $mapping['configurable_to_ldap'] && $direction == self::PROVISION_TO_LDAP)
-        ) {
+        if ((isset($mapping['configurable_to_drupal']) && $mapping['configurable_to_drupal'] && $direction == self::PROVISION_TO_DRUPAL)
+          || (isset($mapping['configurable_to_ldap']) && $mapping['configurable_to_ldap'] && $direction == self::PROVISION_TO_LDAP)) {
           $userAttributeOptions[$target_id] = $mapping['name'];
         }
       }
@@ -794,19 +801,14 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
         $row++;
       }
     }
+
     $config = $this->config('ldap_user.settings');
 
     // 2. existing configurable mappings rows.
     if (!empty($config->get('ldapUserSyncMappings')[$direction])) {
       // Key could be LDAP attribute name or user attribute name.
       foreach ($config->get('ldapUserSyncMappings')[$direction] as $mapping) {
-        if ($direction == self::PROVISION_TO_DRUPAL) {
-          $mapping_key = $mapping['user_attr'];
-        }
-        else {
-          $mapping_key = $mapping['ldap_attr'];
-        }
-        if (isset($mapping['enabled']) && $mapping['enabled'] && $this->isMappingConfigurable($syncMappings[$direction][$mapping_key], 'ldap_user')) {
+        if (isset($mapping['enabled']) && $mapping['enabled'] && $this->isMappingConfigurable($mapping, 'ldap_user')) {
           $rowId = 'row-' . $row;
           $rows[$rowId] = $this->getSyncFormRow('update', $direction, $mapping, $userAttributeOptions, $rowId);
           $row++;
@@ -935,7 +937,7 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
     // $col = ($direction == LdapUserAttributesInterface::PROVISION_TO_LDAP) ?
     // 5 : 4;.
     if (($direction == self::PROVISION_TO_DRUPAL)) {
-      $syncEvents = LdapConfiguration::provisionsDrupalEvents();
+      $syncEvents = $this->provisionsDrupalEvents();
     }
     else {
       $syncEvents = $this->provisionsLdapEvents();
@@ -1081,7 +1083,7 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
             'enabled' => 1,
           ];
 
-          $syncEvents = ($direction == self::PROVISION_TO_DRUPAL) ? LdapConfiguration::provisionsDrupalEvents() : $this->provisionsLdapEvents();
+          $syncEvents = ($direction == self::PROVISION_TO_DRUPAL) ? $this->provisionsDrupalEvents() : $this->provisionsLdapEvents();
           foreach ($syncEvents as $prov_event => $discard) {
             if (isset($columns[$prov_event]) && $columns[$prov_event]) {
               $mappings[$key]['prov_events'][] = $prov_event;
@@ -1107,6 +1109,19 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
   }
 
   /**
+   *
+   */
+  private function reduceTriggerList($values) {
+    $result = [];
+    foreach ($values as $value) {
+      if ($value !== 0) {
+        $result[] = $value;
+      }
+    }
+    return $result;
+  }
+
+  /**
    * Load servers and set their default values.
    */
   private function prepareBaseData() {
@@ -1124,6 +1139,48 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
 
     $this->drupalAcctProvisionServerOptions['none'] = $this->t('None');
     $this->ldapEntryProvisionServerOptions['none'] = $this->t('None');
+  }
+
+  /**
+   * Derive synchronization mappings from configuration.
+   *
+   * @return array
+   */
+  private function processSyncMappings() {
+    $config = $this->config('ldap_user.settings');
+    $available_user_attributes = [];
+    $directions = [
+      self::PROVISION_TO_DRUPAL => $config->get('drupalAcctProvisionServer'),
+      self::PROVISION_TO_LDAP => $config->get('ldapEntryProvisionServer'),
+    ];
+
+    foreach ($directions as $direction => $sid) {
+      $available_user_attributes[$direction] = [];
+      $ldap_server = FALSE;
+      if ($sid) {
+        try {
+          //TODO: DI.
+          $ldap_server = Server::load($sid);
+        }
+        catch (\Exception $e) {
+          \Drupal::logger('ldap_user')->error('Missing server');
+        }
+      }
+
+      $params = [
+        'ldap_server' => $ldap_server,
+        'direction' => $direction,
+      ];
+
+      // This function does not add any attributes by itself but allows modules
+      // such as ldap_user to inject them through this hook.
+      $this->moduleHandler->alter(
+        'ldap_user_attributes',
+        $available_user_attributes[$direction],
+        $params
+      );
+    }
+    return $available_user_attributes;
   }
 
 }

@@ -2,9 +2,6 @@ services:
   ldap.bridge:
     class: Drupal\ldap_servers\LdapBridge
     arguments: ['@logger.channel.ldap_servers', '@entity_type.manager']
-  ldap.servers:
-    class: Drupal\ldap_servers\ServerFactory
-    arguments: ['@config.factory', '@logger.channel.ldap_servers', '@entity_type.manager', '@cache.default', '@externalauth.authmap']
   ldap.group_manager:
     class: Drupal\ldap_servers\LdapGroupManager
     arguments: ['@logger.channel.ldap_servers', '@entity_type.manager', '@ldap.bridge', '@module_handler']

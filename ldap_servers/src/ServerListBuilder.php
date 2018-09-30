@@ -83,14 +83,14 @@ class ServerListBuilder extends ConfigEntityListBuilder {
 
     if ($server->get('status')) {
       if ($bridge->bind()) {
-        return t('Server available');
+        return $this->t('Server available');
       }
       else {
-        return t('Binding issues, please see log.');
+        return $this->t('Binding issues, please see log.');
       }
     }
     else {
-      return t('Deactivated');
+      return $this->t('Deactivated');
     }
   }
 

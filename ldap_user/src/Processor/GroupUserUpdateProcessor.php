@@ -177,7 +177,7 @@ class GroupUserUpdateProcessor {
           }
           else {
             $result = $this->drupalUserProcessor
-              ->provisionDrupalAccount(['name' => $username, 'status' => TRUE]);
+              ->createDrupalUserFromLdapEntry(['name' => $username, 'status' => TRUE]);
             if ($result) {
               $drupalAccount = $this->drupalUserProcessor->getUserAccount();
               $this->drupalUserProcessor->drupalUserLogsIn($drupalAccount);

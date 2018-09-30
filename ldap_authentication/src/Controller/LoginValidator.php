@@ -14,7 +14,6 @@ use Drupal\ldap_servers\Helper\CredentialsStorage;
 use Drupal\ldap_servers\LdapBridge;
 use Drupal\ldap_servers\LdapUserManager;
 use Drupal\ldap_servers\Logger\LdapDetailLog;
-use Drupal\ldap_user\Helper\LdapConfiguration;
 use Drupal\ldap_servers\LdapUserAttributesInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Symfony\Component\Ldap\Entry;
@@ -319,7 +318,7 @@ final class LoginValidator implements LdapUserAttributesInterface {
         ], 'ldap_authentication'
       );
 
-      // TODO: Verify new usage of credentialsstorage here.
+      // TODO: Verify new usage of CredentialsStorage here.
       $bindResult = $this->bindToServer();
       if ($bindResult !== TRUE) {
         $authenticationResult = $bindResult;
@@ -848,7 +847,8 @@ final class LoginValidator implements LdapUserAttributesInterface {
     }
 
     // Do not provision Drupal account if provisioning disabled.
-    if (!LdapConfiguration::provisionAvailableToDrupal(self::PROVISION_DRUPAL_USER_ON_USER_AUTHENTICATION)) {
+    $triggers = $this->config->get('ldap_user.settings')->get('drupalAcctProvisionTriggers');
+    if (!in_array(self::PROVISION_DRUPAL_USER_ON_USER_AUTHENTICATION, $triggers)) {
       $this->logger->error(
         'Drupal account for authname=%authname does not exist and provisioning of Drupal accounts on authentication is not enabled',
         ['%authname' => $this->authName]
@@ -880,8 +880,9 @@ final class LoginValidator implements LdapUserAttributesInterface {
     }
 
     // TODO: DI.
+    /** @var \Drupal\ldap_user\Processor\DrupalUserProcessor $processor */
     $processor = \Drupal::service('ldap.drupal_user_processor');
-    $result = $processor->provisionDrupalAccount($user_values);
+    $result = $processor->createDrupalUserFromLdapEntry($user_values);
 
     if (!$result) {
       $this->logger->error(

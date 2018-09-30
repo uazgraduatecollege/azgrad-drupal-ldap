@@ -14,7 +14,6 @@ use ReflectionClass;
 class SyncMappingHelperTests extends UnitTestCase implements LdapUserAttributesInterface {
 
   public $configFactory;
-  public $serverFactory;
   public $config;
   public $container;
 
@@ -100,31 +99,28 @@ class SyncMappingHelperTests extends UnitTestCase implements LdapUserAttributesI
     $method->invoke($processor, $syncTestData);
 
     /** @var \Drupal\ldap_user\Helper\SyncMappingHelper $processor */
-    $isSynced = $processor->isSynced('[field.ldap_user_puid_sid]', [self::EVENT_CREATE_DRUPAL_USER], self::PROVISION_TO_DRUPAL);
+    $isSynced = $processor->isSyncedToDrupal('[field.ldap_user_puid_sid]', [self::EVENT_CREATE_DRUPAL_USER]);
     $this->assertTrue($isSynced);
 
-    $isSynced = $processor->isSynced('[field.ldap_user_puid_sid]', [self::EVENT_CREATE_DRUPAL_USER], self::PROVISION_TO_LDAP);
+    $isSynced = $processor->isSyncedToLdap('[field.ldap_user_puid_sid]', [self::EVENT_CREATE_DRUPAL_USER]);
     $this->assertFalse($isSynced);
 
-    $isSynced = $processor->isSynced('[field.ldap_user_puid_sid]', [self::EVENT_CREATE_LDAP_ENTRY], self::PROVISION_TO_LDAP);
+    $isSynced = $processor->isSyncedToLdap('[field.ldap_user_puid_sid]', [self::EVENT_CREATE_LDAP_ENTRY]);
     $this->assertFalse($isSynced);
 
-    $isSynced = $processor->isSynced('[field.ldap_user_puid_sid]', [self::EVENT_CREATE_LDAP_ENTRY], self::PROVISION_TO_LDAP);
+    $isSynced = $processor->isSyncedToLdap('[field.ldap_user_puid_sid]', [self::EVENT_CREATE_LDAP_ENTRY]);
     $this->assertFalse($isSynced);
 
-    $isSynced = $processor->isSynced('[property.name]', [self::EVENT_CREATE_LDAP_ENTRY], self::PROVISION_TO_LDAP);
+    $isSynced = $processor->isSyncedToLdap('[property.name]', [self::EVENT_CREATE_LDAP_ENTRY]);
     $this->assertTrue($isSynced);
 
-    $isSynced = $processor->isSynced('[property.xyz]', [self::EVENT_CREATE_DRUPAL_USER], self::PROVISION_TO_DRUPAL);
+    $isSynced = $processor->isSyncedToDrupal('[property.xyz]', [self::EVENT_CREATE_DRUPAL_USER]);
     $this->assertFalse($isSynced);
 
     // TODO: Review behaviour. Should this actually be allowed that one of many
     // events returns true?
-    $isSynced = $processor->isSynced('[field.ldap_user_puid_sid]', [self::EVENT_CREATE_DRUPAL_USER, self::EVENT_SYNC_TO_DRUPAL_USER], self::PROVISION_TO_DRUPAL);
+    $isSynced = $processor->isSyncedToDrupal('[field.ldap_user_puid_sid]', [self::EVENT_CREATE_DRUPAL_USER, self::EVENT_SYNC_TO_DRUPAL_USER]);
     $this->assertTrue($isSynced);
 
   }
-
-  // TODO: Write test for getSyncMappings().
-  // TODO: Write test for getLdapUserRequiredAttributes().
 }

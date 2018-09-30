@@ -2,26 +2,26 @@ services:
   logger.channel.ldap_user:
     parent: logger.channel_base
     arguments: ['ldap_user']
-  init_subscriber:
-    class: Drupal\ldap_user\EventSubscriber\InitSubscriber
-    tags:
-      -
-        name: event_subscriber
   ldap.drupal_user_processor:
     class: Drupal\ldap_user\Processor\DrupalUserProcessor
-    arguments: ['@logger.channel.ldap_user', '@config.factory', '@ldap.detail_log', '@ldap.token_processor', '@ldap.servers', '@externalauth.authmap', '@entity_type.manager', '@ldap.ldap_user_processor', '@file_system', '@token', '@module_handler', '@current_user', '@ldap.sync_mapper']
+    arguments: ['@logger.channel.ldap_user', '@config.factory', '@ldap.detail_log', '@ldap.token_processor', '@externalauth.authmap', '@entity_type.manager', '@ldap.ldap_user_processor', '@file_system', '@token', '@module_handler', '@current_user', '@ldap.sync_mapper', '@ldap.user_manager']
   ldap.ldap_user_processor:
     class: Drupal\ldap_user\Processor\LdapUserProcessor
     arguments: ['@logger.channel.ldap_user', '@config.factory', '@ldap.detail_log', '@ldap.token_processor', '@ldap.sync_mapper', '@module_handler', '@entity_type.manager', '@ldap.user_manager']
   ldap_user.field_provider:
     class: Drupal\ldap_user\FieldProvider
-    arguments: ['@config.factory', '@entity_type.manager', '@module_handler', '@entity_field.manager']
+    arguments: ['@config.factory', '@entity_type.manager', '@module_handler', '@entity_field.manager', '@ldap.sync_mapper']
   ldap.sync_mapper:
      class: Drupal\ldap_user\Helper\SyncMappingHelper
-     arguments: ['@logger.channel.ldap_user', '@config.factory', '@cache.default', '@module_handler']
+     arguments: ['@logger.channel.ldap_user', '@config.factory', '@module_handler']
   ldap.orphan_processor:
     class: Drupal\ldap_user\Processor\OrphanProcessor
     arguments: ['@logger.channel.ldap_user', '@config.factory', '@plugin.manager.mail', '@language_manager', '@state', '@entity_type.manager', '@ldap.drupal_user_processor', '@ldap.user_manager']
   ldap.group_user_update_processor:
     class: Drupal\ldap_user\Processor\GroupUserUpdateProcessor
     arguments: ['@logger.channel.ldap_user', '@ldap.detail_log', '@config.factory', '@state', '@module_handler', '@entity_type.manager', '@externalauth.authmap', '@ldap.query', '@ldap.drupal_user_processor']
+  ldap_user.ldap_provision:
+    class: Drupal\ldap_user\EventSubscriber\LdapEntryProvisionSubscriber
+    arguments: ['@config.factory', '@logger.channel.ldap_user', '@ldap.detail_log', '@entity_type.manager', '@module_handler', '@ldap.user_manager', '@ldap.sync_mapper']
+    tags:
+      - { name: event_subscriber }

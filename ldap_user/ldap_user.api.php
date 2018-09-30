@@ -9,7 +9,7 @@
  * Hook_ldap_user_attrs_alter().
  *
  * Alter list of available Drupal user targets (fields, properties, etc.)
- *   for ldap_user provisioning mapping form (admin/config/people/ldap/user)
+ * for ldap_user provisioning mapping form (admin/config/people/ldap/user)
  *
  * @param array $available_user_attrs
  *   User attributes in the form of:
@@ -31,10 +31,12 @@
  *     'prov_events' => array( )
  * @param array $params
  *   Parameters.
+ *
+ * @see \Drupal\ldap_user\Helper\SyncMappingHelper::processSyncMappings()
  */
-function hook_ldap_user_attrs_list_alter(array &$available_user_attrs, array &$params) {
+function hook_ldap_user_attributes_alter(array &$available_user_attrs, array &$params) {
 
-  // Search for _ldap_user_attrs_list_alter for good examples the general trick
+  // Search for _ldap_user_attributes_alter for good examples the general trick
   // to implementing this hook is make sure to specify config and sync module if
   // its configurable by ldap_user module, don't specify convert user_tokens,
   // direction.  these will be set by UI and stored values be sure to merge with
@@ -53,6 +55,9 @@ function hook_ldap_user_attrs_list_alter(array &$available_user_attrs, array &$p
  *   For structure @see LdapServer::matchUsernameToExistingLdapEntry()
  * @param array $context
  *   Contains ldap_server and provisioning events.
+ *
+ * @see \Drupal\ldap_user\Processor\DrupalUserProcessor::applyAttributesToAccount()
+ * @see \Drupal\ldap_user\Processor\DrupalUserProcessor::applyAttributesToAccountOnCreate()
  */
 function hook_ldap_user_edit_user_alter(User $account, \Symfony\Component\Ldap\Entry $ldap_user, array $context) {
   $account->set('myfield', $context['ldap_server']->getAttributeValue($ldap_user, 'myfield'));

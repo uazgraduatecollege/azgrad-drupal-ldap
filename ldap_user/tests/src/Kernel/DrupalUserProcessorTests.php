@@ -116,11 +116,11 @@ class DrupalUserProcessorTests extends KernelTestBase implements LdapUserAttribu
   }
 
   /**
-   * Test that creating users with provisionDrupalAccount() works.
+   * Test that creating users with createDrupalUserFromLdapEntry() works.
    */
   public function testProvisioning() {
     $this->markTestIncomplete('Broken test');
-    $result = $this->drupalUserProcessor->provisionDrupalAccount(['name' => 'hpotter']);
+    $result = $this->drupalUserProcessor->createDrupalUserFromLdapEntry(['name' => 'hpotter']);
     $this->assertTrue($result);
     $user = $this->drupalUserProcessor->getUserAccount();
     // Override the server factory to provide a dummy server.

@@ -39,7 +39,6 @@ class LdapExplodeDnMock {
  */
 class TokenTests extends UnitTestCase {
 
-  public $serverFactory;
   public $config;
   public $container;
 
