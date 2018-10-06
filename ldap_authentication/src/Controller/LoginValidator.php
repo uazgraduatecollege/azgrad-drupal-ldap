@@ -990,10 +990,12 @@ final class LoginValidator implements LdapUserAttributesInterface {
         'Failed to find or create %drupal_accountname on logon.',
         ['%drupal_accountname' => $this->drupalUserName]
         );
-      $this->formState->setErrorByName('name', $this->t(
+      if ($this->formState) {
+        $this->formState->setErrorByName('name', $this->t(
           'Server Error: Failed to create Drupal user account for %drupal_accountname',
           ['%drupal_accountname' => $this->drupalUserName])
-      );
+        );
+      }
       return FALSE;
     }
     else {
