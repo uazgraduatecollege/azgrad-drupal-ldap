@@ -114,7 +114,8 @@ class LdapUserTestForm extends FormBase implements LdapUserAttributesInterface {
 
     $config = $this->configFactory()->get('ldap_user.settings')->get();
     $processor = \Drupal::service('ldap.drupal_user_processor');
-    $ldapProcessor = \Drupal::service('ldap.ldap_user_processor');
+    // TODO: Fix test. ldapProcessor no longer exists.
+    $ldapProcessor = FALSE;
     $user_ldap_entry = FALSE;
 
     if ($config['drupalAcctProvisionServer']) {

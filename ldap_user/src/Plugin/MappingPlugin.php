@@ -4,8 +4,6 @@ namespace Drupal\ldap_user\Plugin;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\DefaultPluginManager;
-use Drupal\Core\Plugin\PluginBase;
-use Drupal\user\UserInterface;
 
 /**
  * The LDAP authorization provider for authorization module.
@@ -16,7 +14,6 @@ use Drupal\user\UserInterface;
  * )
  */
 class MappingPlugin extends DefaultPluginManager {
-
 
   /**
    * {@inheritdoc}

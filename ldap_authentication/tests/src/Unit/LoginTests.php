@@ -5,7 +5,7 @@ namespace Drupal\Tests\ldap_authentication\Unit;
 use Drupal\Tests\UnitTestCase;
 
 /**
- * @coversDefaultClass \Drupal\ldap_authentication\Controller\LoginValidator
+ * @coversDefaultClass \Drupal\ldap_authentication\Controller\LoginValidatorLoginForm
  * @group ldap
  */
 class LoginTests extends UnitTestCase {

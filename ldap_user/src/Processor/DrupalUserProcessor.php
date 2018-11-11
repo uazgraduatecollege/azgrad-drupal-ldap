@@ -36,7 +36,6 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
   protected $tokenProcessor;
   protected $externalAuth;
   protected $entityTypeManager;
-  protected $ldapUserProcessor;
   protected $fileSystem;
   protected $token;
   protected $moduleHandler;

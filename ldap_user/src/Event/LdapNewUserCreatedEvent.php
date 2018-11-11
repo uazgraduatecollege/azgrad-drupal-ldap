@@ -12,6 +12,9 @@ class LdapNewUserCreatedEvent extends Event {
 
   const EVENT_NAME = 'ldap_new_drupal_user_created';
 
+  /**
+   * @var \Drupal\user\Entity\User
+   */
   public $account;
 
   /**

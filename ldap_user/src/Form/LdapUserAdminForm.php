@@ -15,7 +15,7 @@ use Drupal\Core\Url;
 use Drupal\ldap_servers\Entity\Server;
 use Drupal\ldap_servers\Helper\ConversionHelper;
 use Drupal\ldap_servers\LdapUserAttributesInterface;
-use Drupal\ldap_user\Mapping;
+use Drupal\ldap_servers\Mapping;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -101,7 +101,6 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
       ];
       return $form;
     }
-    $form['#storage'] = [];
 
     $form['intro'] = [
       '#type' => 'item',
@@ -330,25 +329,25 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
     foreach ($directions as $direction) {
 
       if ($direction == self::PROVISION_TO_DRUPAL) {
-        $parentFieldset = 'basic_to_drupal';
+        $parent_fieldset = 'basic_to_drupal';
         $description = $this->t('Provisioning from LDAP to Drupal Mappings:');
       }
       else {
-        $parentFieldset = 'basic_to_ldap';
+        $parent_fieldset = 'basic_to_ldap';
         $description = $this->t('Provisioning from Drupal to LDAP Mappings:');
       }
 
-      $mappingId = 'mappings__' . $direction;
-      $tableId = $mappingId . '__table';
+      $mapping_id = 'mappings__' . $direction;
+      $table_id = $mapping_id . '__table';
 
-      $form[$parentFieldset][$mappingId] = [
+      $form[$parent_fieldset][$mapping_id] = [
         '#type' => 'fieldset',
         '#title' => $description,
         '#description' => $this->t('See also the <a href="@wiki_link">Drupal.org wiki page</a> for further information on using LDAP tokens.',
           ['@wiki_link' => 'http://drupal.org/node/1245736']),
       ];
 
-      $form[$parentFieldset][$mappingId][$tableId] = [
+      $form[$parent_fieldset][$mapping_id][$table_id] = [
         '#type' => 'table',
         '#header' => [
           $this->t('Label'),
@@ -360,45 +359,45 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
       ];
 
       $headers = $this->getServerMappingHeader($direction);
-      $form[$parentFieldset][$mappingId][$tableId]['#header'] = $headers['header'];
+      $form[$parent_fieldset][$mapping_id][$table_id]['#header'] = $headers['header'];
       // Add in the second header as the first row.
-      $form[$parentFieldset][$mappingId][$tableId]['second-header'] = [
+      $form[$parent_fieldset][$mapping_id][$table_id]['second-header'] = [
         '#attributes' => ['class' => 'header'],
       ];
       // Second header uses the same format as header.
       foreach ($headers['second_header'] as $cell) {
-        $form[$parentFieldset][$mappingId][$tableId]['second-header'][] = [
+        $form[$parent_fieldset][$mapping_id][$table_id]['second-header'][] = [
           '#title' => $cell['data'],
           '#type' => 'item',
         ];
         if (isset($cell['class'])) {
-          $form[$parentFieldset][$mappingId][$tableId]['second-header']['#attributes'] = ['class' => [$cell['class']]];
+          $form[$parent_fieldset][$mapping_id][$table_id]['second-header']['#attributes'] = ['class' => [$cell['class']]];
         }
         if (isset($cell['rowspan'])) {
-          $form[$parentFieldset][$mappingId][$tableId]['second-header']['#rowspan'] = $cell['rowspan'];
+          $form[$parent_fieldset][$mapping_id][$table_id]['second-header']['#rowspan'] = $cell['rowspan'];
         }
         if (isset($cell['colspan'])) {
-          $form[$parentFieldset][$mappingId][$tableId]['second-header']['#colspan'] = $cell['colspan'];
+          $form[$parent_fieldset][$mapping_id][$table_id]['second-header']['#colspan'] = $cell['colspan'];
         }
       }
 
-      $mappingsToAdd = $this->getServerMappingFields($direction);
+      $mappings_to_add = $this->getServerMappingFields($direction);
 
-      if ($mappingsToAdd) {
-        $form[$parentFieldset][$mappingId][$tableId] += $mappingsToAdd;
+      if ($mappings_to_add) {
+        $form[$parent_fieldset][$mapping_id][$table_id] += $mappings_to_add;
       }
 
-      $moreLdapInfo = '<h3>' . $this->t('Password Tokens') . '</h3><ul>';
-      $moreLdapInfo .= '<li>' . $this->t('Pwd: Random -- Uses a random Drupal generated password') . '</li>';
-      $moreLdapInfo .= '<li>' . $this->t('Pwd: User or Random -- Uses password supplied on user forms. If none available uses random password.') . '</li></ul>';
-      $moreLdapInfo .= '<h3>' . $this->t('Password Concerns') . '</h3>';
-      $moreLdapInfo .= '<ul>';
-      $moreLdapInfo .= '<li>' . $this->t("Provisioning passwords to LDAP means passwords must meet the LDAP's password requirements.  Password Policy module can be used to add requirements.") . '</li>';
-      $moreLdapInfo .= '<li>' . $this->t('Some LDAPs require a user to reset their password if it has been changed  by someone other that user.  Consider this when provisioning LDAP passwords.') . '</li>';
-      $moreLdapInfo .= '</ul></p>';
-      $moreLdapInfo .= '<h3>' . $this->t('Source Drupal User Tokens and Corresponding Target LDAP Tokens') . '</h3>';
+      $more_ldap_info = '<h3>' . $this->t('Password Tokens') . '</h3><ul>';
+      $more_ldap_info .= '<li>' . $this->t('Pwd: Random -- Uses a random Drupal generated password') . '</li>';
+      $more_ldap_info .= '<li>' . $this->t('Pwd: User or Random -- Uses password supplied on user forms. If none available uses random password.') . '</li></ul>';
+      $more_ldap_info .= '<h3>' . $this->t('Password Concerns') . '</h3>';
+      $more_ldap_info .= '<ul>';
+      $more_ldap_info .= '<li>' . $this->t("Provisioning passwords to LDAP means passwords must meet the LDAP's password requirements.  Password Policy module can be used to add requirements.") . '</li>';
+      $more_ldap_info .= '<li>' . $this->t('Some LDAPs require a user to reset their password if it has been changed  by someone other that user.  Consider this when provisioning LDAP passwords.') . '</li>';
+      $more_ldap_info .= '</ul></p>';
+      $more_ldap_info .= '<h3>' . $this->t('Source Drupal User Tokens and Corresponding Target LDAP Tokens') . '</h3>';
 
-      $moreLdapInfo .= $this->t('Examples in form: Source Drupal User token => Target LDAP Token (notes): <ul>
+      $more_ldap_info .= $this->t('Examples in form: Source Drupal User token => Target LDAP Token (notes): <ul>
         <li>Source Drupal User token => Target LDAP Token</li>
         <li>cn=[property.name],ou=test,dc=ad,dc=mycollege,dc=edu => [dn] (example of token and constants)</li>
         <li>top => [objectclass:0] (example of constants mapped to multivalued attribute)</li>
@@ -410,13 +409,13 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
 
       // Add some password notes.
       if ($direction == self::PROVISION_TO_LDAP) {
-        $form[$parentFieldset]['additional_ldap_hints'] = [
+        $form[$parent_fieldset]['additional_ldap_hints'] = [
           '#type' => 'details',
           '#title' => $this->t('Additional information'),
           '#collapsible' => TRUE,
           '#collapsed' => TRUE,
           'directions' => [
-            '#markup' => $moreLdapInfo,
+            '#markup' => $more_ldap_info,
           ],
         ];
       }
@@ -510,12 +509,11 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
 
     if ($values['drupalAcctProvisionServer'] != 'none') {
       foreach ($values[$drupalMapKey] as $key => $mapping) {
-        if (isset($mapping['configurable_to_drupal']) && $mapping['configurable_to_drupal'] == 1) {
-
+        if (isset($mapping['configured_mapping']) && $mapping['configured_mapping'] == 1) {
           // Check that the source is not empty for the selected field to sync
           // to Drupal.
-          if ($mapping['user_attr'] !== '0') {
-            if ($mapping['ldap_attr'] == NULL) {
+          if (!empty($mapping['drupal_attr'])) {
+            if (empty($mapping['ldap_attr'])) {
               $formElement = $form['basic_to_drupal']['mappings__' . self::PROVISION_TO_DRUPAL][$drupalMapKey][$key];
               $form_state->setError($formElement, $this->t('Missing LDAP attribute'));
             }
@@ -526,9 +524,9 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
 
     if ($values['ldapEntryProvisionServer'] != 'none') {
       foreach ($values[$ldapMapKey] as $key => $mapping) {
-        if (isset($mapping['configurable_to_drupal']) && $mapping['configurable_to_drupal'] == 1) {
+        if (isset($mapping['configured_mapping']) && $mapping['configured_mapping'] == 1) {
           // Check that the token is not empty if a user token is in use.
-          if (isset($mapping['user_attr']) && $mapping['user_attr'] == 'user_tokens') {
+          if (isset($mapping['drupal_attr']) && $mapping['drupal_attr'] == 'user_tokens') {
             if (isset($mapping['user_tokens']) && empty(trim($mapping['user_tokens']))) {
               $formElement = $form['basic_to_ldap']['mappings__' . self::PROVISION_TO_LDAP][$ldapMapKey][$key];
               $form_state->setError($formElement, $this->t('Missing user token.'));
@@ -536,7 +534,7 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
           }
 
           // Check that a target attribute is set.
-          if ($mapping['user_attr'] !== '0') {
+          if ($mapping['drupal_attr'] !== '0') {
             if ($mapping['ldap_attr'] == NULL) {
               $formElement = $form['basic_to_ldap']['mappings__' . self::PROVISION_TO_LDAP][$ldapMapKey][$key];
               $form_state->setError($formElement, $this->t('Missing LDAP attribute'));
@@ -613,10 +611,10 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
    *   Field mappings.
    */
   private function checkEmptyEvents(array $mappings) {
-    foreach ($mappings as $mapping) {
+    foreach ($mappings as $key => $mapping) {
       if (empty($mapping['prov_events'])) {
         drupal_set_message($this->t('No synchronization events checked in %item. This field will not be synchronized until some are checked.',
-          ['%item' => $mapping['ldap_attr']]
+          ['%item' => $key]
         ), 'warning');
       }
     }
@@ -758,6 +756,9 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
    *
    * @return array|bool
    *   Returns the mappings.
+   *
+   * @TODO: We could duplicate this function and remove the entire handling
+   * of "direction" that way.
    */
   private function getServerMappingFields($direction) {
     if ($direction == self::PROVISION_TO_NONE) {
@@ -767,63 +768,80 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
     $rows = [];
 
     $text = ($direction == self::PROVISION_TO_DRUPAL) ? 'target' : 'source';
-    $userAttributeOptions = ['0' => $this->t('Select') . ' ' . $text];
+    $user_attribute_options = ['0' => $this->t('Select') . ' ' . $text];
 
-    $syncMappings = $this->processSyncMappings();
-    if (!empty($syncMappings[$direction])) {
-      foreach ($syncMappings[$direction] as $target_id => $mapping) {
+    $available_mappings = $this->processSyncMappings();
+    if (!empty($available_mappings[$direction])) {
+      /**  @var \Drupal\ldap_servers\Mapping $mapping */
+      foreach ($available_mappings[$direction] as $target_id => $mapping) {
 
-        if (!isset($mapping['name']) || isset($mapping['exclude_from_mapping_ui']) && $mapping['exclude_from_mapping_ui']) {
+        if (empty($mapping->getLabel())) {
           continue;
         }
-        if ((isset($mapping['configurable_to_drupal']) && $mapping['configurable_to_drupal'] && $direction == self::PROVISION_TO_DRUPAL)
-          || (isset($mapping['configurable_to_ldap']) && $mapping['configurable_to_ldap'] && $direction == self::PROVISION_TO_LDAP)) {
-          $userAttributeOptions[$target_id] = $mapping['name'];
+        if ($mapping->isConfigurable()) {
+          $user_attribute_options[$target_id] = $mapping->getLabel();
         }
       }
     }
 
     if ($direction != self::PROVISION_TO_DRUPAL) {
-      $userAttributeOptions['user_tokens'] = '-- user tokens --';
+      $user_attribute_options['user_tokens'] = '-- user tokens --';
     }
 
-    $row = 0;
+    $index = 0;
 
-    // 1. non configurable mapping rows.
-    foreach ($syncMappings[$direction] as $target_id => $mapping) {
-      $rowId = $this->sanitizeMachineName($target_id);
-      if (isset($mapping['exclude_from_mapping_ui']) && $mapping['exclude_from_mapping_ui']) {
-        continue;
-      }
-      // Is configurable by ldap_user module (not direction to ldap_user)
-      if (!$this->isMappingConfigurable($mapping, 'ldap_user') && ($mapping['direction'] == $direction || $mapping['direction'] == self::PROVISION_TO_ALL)) {
-        $rows[$rowId] = $this->getSyncFormRow('nonconfigurable', $direction, $mapping, $userAttributeOptions, $rowId);
-        $row++;
+    // This adds rows for read-only fields not saved to configuration.
+    foreach ($available_mappings[$direction] as $target_id => $mapping) {
+      if ($mapping->isEnabled() && $mapping->getConfigurationModule() == 'ldap_user' && !$mapping->isConfigurable()) {
+        $rows[$index] = $this->getSyncFormRow($direction, $mapping, $user_attribute_options, $index . $this->sanitizeMachineName($mapping->getId()));
+        $index++;
       }
     }
 
+    // This adds rows for fields saved to configuration.
     $config = $this->config('ldap_user.settings');
-
-    // 2. existing configurable mappings rows.
     if (!empty($config->get('ldapUserSyncMappings')[$direction])) {
-      // Key could be LDAP attribute name or user attribute name.
-      foreach ($config->get('ldapUserSyncMappings')[$direction] as $mapping) {
-        if (isset($mapping['enabled']) && $mapping['enabled'] && $this->isMappingConfigurable($mapping, 'ldap_user')) {
-          $rowId = 'row-' . $row;
-          $rows[$rowId] = $this->getSyncFormRow('update', $direction, $mapping, $userAttributeOptions, $rowId);
-          $row++;
+      foreach ($config->get('ldapUserSyncMappings')[$direction] as $key => $value) {
+        $mapping = NULL;
+        // Our available mappings are always keyed by the Drupal attribute.
+        if (isset($value['drupal_attr'], $available_mappings[$direction][$value['drupal_attr']])) {
+          $mapping = $available_mappings[$direction][$value['drupal_attr']];
+          if ($mapping->isEnabled() && $mapping->getConfigurationModule() == 'ldap_user' && $mapping->isConfigurable()) {
+            $rows[$index] = $this->getSyncFormRow($direction, $mapping, $user_attribute_options, 'row-' . $index);
+            $index++;
+          }
         }
       }
     }
 
-    // 3. leave 4 rows for adding more mappings.
+    // Adds four empty rows for adding more mappings.
     for ($i = 0; $i < 4; $i++) {
-      $rowId = 'custom-' . $i;
-      $rows[$rowId] = $this->getSyncFormRow('add', $direction, [], $userAttributeOptions, $rowId);
-      $row++;
+      $empty_mapping = new Mapping(
+        '',
+        '',
+        TRUE,
+        FALSE,
+        [],
+        'ldap_user',
+        'ldap_user'
+      );
+      $rows[$index] = $this->getSyncFormRow($direction, $empty_mapping, $user_attribute_options, 'custom-' . $i);
+      $index++;
     }
 
     return $rows;
+  }
+
+  /**
+   *
+   */
+  private function getSyncFormRow($direction, Mapping $mapping, array $userAttributeOptions, $rowId) {
+    if ($direction == self::PROVISION_TO_DRUPAL) {
+      return $this->getSyncFormRowToDrupal($mapping, $userAttributeOptions);
+    }
+    else {
+      return $this->getSyncFormRowToLdap($mapping, $userAttributeOptions, $rowId);
+    }
   }
 
   /**
@@ -831,9 +849,6 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
    *
    * @param string $action
    *   Action is either add, update, or nonconfigurable.
-   * @param string $direction
-   *   LdapUserAttributesInterface::PROVISION_TO_DRUPAL or
-   *   LdapUserAttributesInterface::PROVISION_TO_LDAP.
    * @param array $mapping
    *   Is current setting for updates or nonconfigurable items.
    * @param array $userAttributeOptions
@@ -844,187 +859,177 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
    * @return array
    *   A single row
    */
-  private function getSyncFormRow($action, $direction, array $mapping, array $userAttributeOptions, $rowId) {
-
+  private function getSyncFormRowToDrupal(Mapping $mapping, array $userAttributeOptions) {
     $result = [];
-    $idPrefix = 'mappings__' . $direction . '__table';
-    $userAttributeInputeId = $idPrefix . "[$rowId][user_attr]";
 
-    if ($action == 'nonconfigurable') {
-      $ldapAttribute = [
-        '#type' => 'item',
-        '#default_value' => isset($mapping['ldap_attr']) ? $mapping['ldap_attr'] : '',
-        '#markup' => isset($mapping['source']) ? $mapping['source'] : '?',
-        '#attributes' => ['class' => ['source']],
-      ];
-    }
-    else {
-      $ldapAttribute = [
+    if ($mapping->isConfigurable()) {
+      $result['ldap_attr'] = [
         '#type' => 'textfield',
         '#title' => 'LDAP attribute',
         '#title_display' => 'invisible',
-        '#default_value' => isset($mapping['ldap_attr']) ? $mapping['ldap_attr'] : '',
+        '#default_value' => $mapping->getLdapAttribute(),
         '#size' => 20,
         '#maxlength' => 255,
         '#attributes' => ['class' => ['ldap-attr']],
       ];
-      // Change the visibility rules if provisioning to LDAP.
-      if ($direction == self::PROVISION_TO_LDAP) {
-        $userTokens = [
-          '#type' => 'textfield',
-          '#title' => 'User tokens',
-          '#title_display' => 'invisible',
-          '#default_value' => isset($mapping['user_tokens']) ? $mapping['user_tokens'] : '',
-          '#size' => 20,
-          '#maxlength' => 255,
-          '#disabled' => ($action == 'nonconfigurable'),
-          '#attributes' => ['class' => ['tokens']],
-        ];
-
-        $userTokens['#states'] = [
-          'visible' => [
-            'select[name="' . $userAttributeInputeId . '"]' => ['value' => 'user_tokens'],
-          ],
-        ];
-      }
-    }
-
-    $convert = [
-      '#type' => 'checkbox',
-      '#title' => 'Convert from binary',
-      '#title_display' => 'invisible',
-      '#default_value' => isset($mapping['convert']) ? $mapping['convert'] : '',
-      '#disabled' => ($action == 'nonconfigurable'),
-      '#attributes' => ['class' => ['convert']],
-    ];
-
-    if ($action == 'nonconfigurable') {
-      $userAttribute = [
-        '#type' => 'item',
-        '#markup' => isset($mapping['name']) ? $mapping['name'] : '?',
+      $result['convert'] = [
+        '#type' => 'checkbox',
+        '#title' => 'Convert from binary',
+        '#title_display' => 'invisible',
+        '#default_value' => $mapping->isBinary(),
+        '#attributes' => ['class' => ['convert']],
       ];
-    }
-    else {
-      $userAttribute = [
+      $result['drupal_attr'] = [
         '#type' => 'select',
         '#title' => 'User attribute',
         '#title_display' => 'invisible',
-        '#default_value' => isset($mapping['user_attr']) ? $mapping['user_attr'] : '',
+        '#default_value' => $mapping->getDrupalAttribute(),
         '#options' => $userAttributeOptions,
       ];
     }
-
-    // Get the order of the columns correctly.
-    if ($direction == self::PROVISION_TO_LDAP) {
-      $result['user_attr'] = $userAttribute;
-      $result['user_tokens'] = $userTokens;
-      $result['convert'] = $convert;
-      $result['ldap_attr'] = $ldapAttribute;
-    }
     else {
-      $result['ldap_attr'] = $ldapAttribute;
-      $result['convert'] = $convert;
-      $result['user_attr'] = $userAttribute;
+      $result['ldap_attr'] = [
+        '#type' => 'item',
+        '#default_value' => $mapping->getLdapAttribute(),
+        '#markup' => $mapping->getLdapAttribute(),
+        '#attributes' => ['class' => ['source']],
+      ];
+      $result['convert'] = [
+        '#type' => 'checkbox',
+        '#title' => 'Convert from binary',
+        '#title_display' => 'invisible',
+        '#default_value' => $mapping->isBinary(),
+        '#disabled' => TRUE,
+        '#attributes' => ['class' => ['convert']],
+      ];
+      $result['drupal_attr'] = [
+        '#type' => 'item',
+        '#markup' => $mapping->getLabel(),
+      ];
     }
 
-    $result['#storage']['sync_mapping_fields'][$direction] = [
-      'action' => $action,
-      'direction' => $direction,
-    ];
-    // FIXME: Add table selection / ordering back:
-    // $col and $row used to be paremeters to $result[$prov_event]. ID possible
-    // not need needed anymore. Row used to be a parameter to this function.
-    // $col = ($direction == LdapUserAttributesInterface::PROVISION_TO_LDAP) ?
-    // 5 : 4;.
-    if (($direction == self::PROVISION_TO_DRUPAL)) {
-      $syncEvents = $this->provisionsDrupalEvents();
-    }
-    else {
-      $syncEvents = $this->provisionsLdapEvents();
-    }
-
-    foreach ($syncEvents as $prov_event => $prov_event_name) {
-      // @FIXME: Leftover code.
-      // See above.
-      // $col++;
-      // $id = $id_prefix . implode('__', array('sm', $prov_event, $row));.
+    foreach ($this->provisionsDrupalEvents() as $prov_event => $prov_event_name) {
       $result[$prov_event] = [
         '#type' => 'checkbox',
         '#title' => $prov_event,
         '#title_display' => 'invisible',
-        '#default_value' => isset($mapping['prov_events']) ? (int) (in_array($prov_event, $mapping['prov_events'])) : '',
-        '#disabled' => (!$this->provisionEventConfigurable($prov_event, $mapping) || ($action == 'nonconfigurable')),
+        '#default_value' => $mapping->getProvisioningEvents() ? (int) (in_array($prov_event, $mapping->getProvisioningEvents())) : NULL,
+        '#disabled' => !$mapping->isConfigurable(),
         '#attributes' => ['class' => ['sync-method']],
       ];
     }
 
     // This one causes the extra column.
-    $result['configurable_to_drupal'] = [
-      '#type' => 'hidden',
-      '#default_value' => ($action != 'nonconfigurable' ? 1 : 0),
-      '#class' => '',
+    $result['configured_mapping'] = [
+      '#type' => 'value',
+      '#value' => $mapping->isConfigurable(),
     ];
 
     return $result;
   }
 
   /**
-   * Is a mapping configurable by a given module?
+   * Get mapping form row to LDAP user provisioning mapping admin form table.
    *
-   * @param array|null $mapping
-   *   As mapping configuration for field, attribute, property, etc.
-   * @param string $module
-   *   Machine name such as ldap_user.
-   *
-   * @return bool
-   *   Whether mapping is configurable.
-   */
-  private function isMappingConfigurable($mapping = [], $module = 'ldap_user') {
-    $configurable = (
-      (
-        (!isset($mapping['configurable_to_drupal']) && !isset($mapping['configurable_to_ldap'])) ||
-        (isset($mapping['configurable_to_drupal']) && $mapping['configurable_to_drupal']) ||
-        (isset($mapping['configurable_to_ldap']) && $mapping['configurable_to_ldap'])
-      )
-      &&
-      (
-        !isset($mapping['config_module']) ||
-        (isset($mapping['config_module']) && $mapping['config_module'] == $module)
-      )
-    );
-    return $configurable;
-  }
-
-  /**
-   * Is a particular sync method viable for a given mapping?
-   *
-   * That is, can it be enabled in the UI by admins?
-   *
-   * @param int $prov_event
-   *   Event to check.
+   * @param string $action
+   *   Action is either add, update, or nonconfigurable.
    * @param array $mapping
-   *   Array of mapping configuration.
+   *   Is current setting for updates or nonconfigurable items.
+   * @param array $userAttributeOptions
+   *   Attributes of Drupal user target options.
+   * @param int $rowId
+   *   Is current row in table.
    *
-   * @return bool
-   *   Whether configurable or not.
+   * @return array
+   *   A single row
    */
-  private function provisionEventConfigurable($prov_event, array $mapping = NULL) {
+  private function getSyncFormRowToLdap(Mapping $mapping, array $userAttributeOptions, $rowId) {
 
-    $configurable = FALSE;
+    $result = [];
+    $idPrefix = 'mappings__ldap__table';
+    $user_attribute_input_id = $idPrefix . "[$rowId][user_attr]";
 
-    if ($mapping) {
-      if ($prov_event == self::EVENT_CREATE_LDAP_ENTRY || $prov_event == self::EVENT_SYNC_TO_LDAP_ENTRY) {
-        $configurable = (boolean) (!isset($mapping['configurable_to_ldap']) || $mapping['configurable_to_ldap']);
-      }
-      elseif ($prov_event == self::EVENT_CREATE_DRUPAL_USER || $prov_event == self::EVENT_SYNC_TO_DRUPAL_USER) {
-        $configurable = (boolean) (!isset($mapping['configurable_to_drupal']) || $mapping['configurable_to_drupal']);
-      }
+    if ($mapping->isConfigurable()) {
+      $result['drupal_attr'] = [
+        '#type' => 'select',
+        '#title' => 'User attribute',
+        '#title_display' => 'invisible',
+        '#default_value' => $mapping->getDrupalAttribute(),
+        '#options' => $userAttributeOptions,
+      ];
+      $result['user_tokens'] = [
+        '#type' => 'textfield',
+        '#title' => 'User tokens',
+        '#title_display' => 'invisible',
+        '#default_value' => $mapping->getUserTokens(),
+        '#size' => 20,
+        '#maxlength' => 255,
+        '#attributes' => ['class' => ['tokens']],
+        '#states' => [
+          'visible' => [
+            'select[name="' . $user_attribute_input_id . '"]' => ['value' => 'user_tokens'],
+          ],
+        ],
+      ];
+
+      $result['convert'] = [
+        '#type' => 'checkbox',
+        '#title' => 'Convert from binary',
+        '#title_display' => 'invisible',
+        '#default_value' => $mapping->isBinary(),
+        '#disabled' => FALSE,
+        '#attributes' => ['class' => ['convert']],
+      ];
+      $result['ldap_attr'] = [
+        '#type' => 'textfield',
+        '#title' => 'LDAP attribute',
+        '#title_display' => 'invisible',
+        '#default_value' => $mapping->getLdapAttribute(),
+        '#size' => 20,
+        '#maxlength' => 255,
+        '#attributes' => ['class' => ['ldap-attr']],
+      ];
     }
     else {
-      $configurable = TRUE;
+      $result['drupal_attr'] = [
+        '#type' => 'item',
+        '#markup' => $mapping->getLabel(),
+      ];
+      $result['user_tokens'] = [];
+      $result['convert'] = [
+        '#type' => 'checkbox',
+        '#title' => 'Convert from binary',
+        '#title_display' => 'invisible',
+        '#default_value' => $mapping->isBinary(),
+        '#disabled' => TRUE,
+        '#attributes' => ['class' => ['convert']],
+      ];
+      $result['ldap_attr'] = [
+        '#type' => 'item',
+        '#default_value' => $mapping->getLdapAttribute(),
+        '#markup' => $mapping->getLdapAttribute(),
+        '#attributes' => ['class' => ['source']],
+      ];
     }
 
-    return $configurable;
+    foreach ($this->provisionsLdapEvents() as $prov_event => $prov_event_name) {
+      $result[$prov_event] = [
+        '#type' => 'checkbox',
+        '#title' => $prov_event,
+        '#title_display' => 'invisible',
+        '#default_value' => $mapping->getProvisioningEvents() ? (int) (in_array($prov_event, $mapping->getProvisioningEvents())) : NULL,
+        '#disabled' => !$mapping->isConfigurable(),
+        '#attributes' => ['class' => ['sync-method']],
+      ];
+    }
+
+    // This one causes the extra column.
+    $result['configured_mapping'] = [
+      '#type' => 'value',
+      '#value' => $mapping->isConfigurable(),
+    ];
+
+    return $result;
   }
 
   /**
@@ -1056,37 +1061,28 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
   private function syncMappingsFromForm(array $values, $direction) {
     $mappings = [];
     foreach ($values as $field_name => $value) {
+      if (in_array($field_name, ['mappings__drupal _table', 'mappings__ldap__table'])) {
+        foreach ($value as $row_descriptor => $columns) {
+          if ($row_descriptor == 'second-header') {
+            continue;
+          }
 
-      $parts = explode('__', $field_name);
-      if ($parts[0] != 'mappings' || !isset($parts[1]) || $parts[1] != $direction) {
-        continue;
-      }
-
-      // These are our rows.
-      foreach ($value as $row_descriptor => $columns) {
-        if ($row_descriptor == 'second-header') {
-          continue;
-        }
-
-        $key = ($direction == self::PROVISION_TO_DRUPAL) ? $this->sanitizeMachineName($columns['user_attr']) : $this->sanitizeMachineName($columns['ldap_attr']);
-        // Only save if its configurable and has an LDAP and Drupal attributes.
-        // The others are optional.
-        if ($columns['configurable_to_drupal'] && $columns['ldap_attr'] && $columns['user_attr']) {
-          $mappings[$key] = [
-            'ldap_attr' => trim($columns['ldap_attr']),
-            'user_attr' => trim($columns['user_attr']),
-            'convert' => $columns['convert'],
-            'direction' => $direction,
-            'user_tokens' => isset($columns['user_tokens']) ? $columns['user_tokens'] : '',
-            'config_module' => 'ldap_user',
-            'prov_module' => 'ldap_user',
-            'enabled' => 1,
-          ];
-
-          $syncEvents = ($direction == self::PROVISION_TO_DRUPAL) ? $this->provisionsDrupalEvents() : $this->provisionsLdapEvents();
-          foreach ($syncEvents as $prov_event => $discard) {
-            if (isset($columns[$prov_event]) && $columns[$prov_event]) {
-              $mappings[$key]['prov_events'][] = $prov_event;
+          $key = ($direction == self::PROVISION_TO_DRUPAL) ? $this->sanitizeMachineName($columns['drupal_attr']) : $this->sanitizeMachineName($columns['ldap_attr']);
+          // Only save if its configurable and has an LDAP and Drupal attributes.
+          // The others are optional.
+          if (isset($columns['configured_mapping']) && $columns['configured_mapping'] && !empty($columns['drupal_attr']) && !empty($columns['ldap_attr'])) {
+            $mappings[$key] = [
+              'drupal_attr' => trim($columns['drupal_attr']),
+              'ldap_attr' => trim($columns['ldap_attr']),
+              'convert' => $columns['convert'],
+              'user_tokens' => isset($columns['user_tokens']) ? $columns['user_tokens'] : '',
+              'enabled' => TRUE,
+            ];
+            $syncEvents = ($direction == self::PROVISION_TO_DRUPAL) ? $this->provisionsDrupalEvents() : $this->provisionsLdapEvents();
+            foreach ($syncEvents as $prov_event => $discard) {
+              if (isset($columns[$prov_event]) && $columns[$prov_event]) {
+                $mappings[$key]['prov_events'][] = $prov_event;
+              }
             }
           }
         }
@@ -1159,10 +1155,11 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
       $ldap_server = FALSE;
       if ($sid) {
         try {
-          //TODO: DI.
+          // TODO: DI.
           $ldap_server = Server::load($sid);
         }
         catch (\Exception $e) {
+          // TODO: DI.
           \Drupal::logger('ldap_user')->error('Missing server');
         }
       }

@@ -12,6 +12,9 @@ class LdapUserDeletedEvent extends Event {
 
   const EVENT_NAME = 'ldap_drupal_user_deleted';
 
+  /**
+   * @var \Drupal\user\Entity\User
+   */
   public $account;
 
   /**

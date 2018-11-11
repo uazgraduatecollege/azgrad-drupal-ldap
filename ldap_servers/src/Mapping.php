@@ -2,67 +2,50 @@
 
 namespace Drupal\ldap_servers;
 
-class Mapping  {
+/**
+ *
+ */
+class Mapping {
 
   private $id;
   private $label;
-  private $configurableToDrupal;
-  private $configurableToLdap;
-  private $source;
+  private $configurable = FALSE;
+  private $binary = FALSE;
   private $notes;
-  private $direction;
-  private $enabled;
-  private $provisioningEvents;
+  private $enabled = FALSE;
+  private $provisioningEvents = [];
   private $configurationModule;
   private $provisioningModule;
-  private $ldapAttribute;
-  private $drupalAttribute;
+  private $ldapAttribute = '';
+  private $drupalAttribute = '';
+  private $userTokens = '';
 
   /**
    * Mapping constructor.
    *
    * @param $id
    * @param null $label
-   * @param bool $configurable_to_drupal
-   * @param bool $configurable_to_Ldap
-   * @param null $source
-   * @param null $notes
-   * @param string $direction
+   * @param bool $configurable
    * @param bool $enabled
    * @param null $provisioning_events
    * @param null $configuration_module
    * @param null $provisioning_module
-   * @param null $ldap_attribute
-   * @param null $drupal_attribute
    */
   public function __construct(
     $id,
     $label = NULL,
-    $configurable_to_drupal = FALSE,
-    $configurable_to_Ldap = FALSE,
-    $source = NULL,
-    $notes = NULL,
-    $direction = LdapUserAttributesInterface::PROVISION_TO_ALL,
+    $configurable = FALSE,
     $enabled = FALSE,
-    $provisioning_events = NULL,
+    $provisioning_events = [],
     $configuration_module = NULL,
-    $provisioning_module = NULL,
-    $ldap_attribute = NULL,
-    $drupal_attribute = NULL) {
+    $provisioning_module = NULL) {
     $this->id = $id;
     $this->label = $label;
-    $this->configurableToDrupal = $configurable_to_drupal;
-    $this->configurableToLdap = $configurable_to_Ldap;
-    $this->source = $source;
-    $this->notes = $notes;
-    $this->direction = $direction;
+    $this->configurable = $configurable;
     $this->enabled = $enabled;
     $this->provisioningEvents = $provisioning_events;
     $this->configurationModule = $configuration_module;
     $this->provisioningModule = $provisioning_module;
-    $this->ldapAttribute = $ldap_attribute;
-    $this->drupalAttribute = $drupal_attribute;
-
   }
 
   /**
@@ -80,52 +63,10 @@ class Mapping  {
   }
 
   /**
-   * @return bool
+   *
    */
-  public function isConfigurableToEither() {
-    return ($this->configurableToLdap || $this->configurableToDrupal) ? TRUE : FALSE;
-  }
-
-  /**
-   * @return bool
-   */
-  public function isConfigurableToDrupal() {
-    return $this->configurableToDrupal;
-  }
-
-  /**
-   * @param bool $configurableToDrupal
-   */
-  public function setConfigurableToDrupal(bool $configurableToDrupal) {
-    $this->configurableToDrupal = $configurableToDrupal;
-  }
-
-  /**
-   * @return bool
-   */
-  public function isConfigurableToLdap() {
-    return $this->configurableToLdap;
-  }
-
-  /**
-   * @param bool $configurableToLdap
-   */
-  public function setConfigurableToLdap(bool $configurableToLdap) {
-    $this->configurableToLdap = $configurableToLdap;
-  }
-
-  /**
-   * @return null
-   */
-  public function getSource() {
-    return $this->source;
-  }
-
-  /**
-   * @param null $source
-   */
-  public function setSource($source) {
-    $this->source = $source;
+  public function isConfigurable() {
+    return $this->configurable;
   }
 
   /**
@@ -140,20 +81,6 @@ class Mapping  {
    */
   public function setNotes($notes) {
     $this->notes = $notes;
-  }
-
-  /**
-   * @return null
-   */
-  public function getDirection() {
-    return $this->direction;
-  }
-
-  /**
-   * @param null $direction
-   */
-  public function setDirection($direction) {
-    $this->direction = $direction;
   }
 
   /**
@@ -173,15 +100,15 @@ class Mapping  {
   /**
    * @return array
    */
-  public function getProvEvents() {
-    return $this->prov_events;
+  public function getProvisioningEvents() {
+    return $this->provisioningEvents;
   }
 
   /**
    * @param array $prov_events
    */
-  public function setProvEvents(array $prov_events) {
-    $this->prov_events = $prov_events;
+  public function setProvisioningEvents(array $prov_events) {
+    $this->provisioningEvents = $prov_events;
   }
 
   /**
@@ -197,6 +124,7 @@ class Mapping  {
   public function setConfigurationModule($configurationModule) {
     $this->configurationModule = $configurationModule;
   }
+
   /**
    * @return null
    */
@@ -247,17 +175,38 @@ class Mapping  {
   }
 
   /**
-   * @return mixed
+   * @return null
    */
-  public function getProvisioningEvents() {
-    return $this->provisioning_events;
+  public function getUserTokens() {
+    return $this->userTokens;
   }
 
   /**
-   * @param mixed $provisioning_events
+   * @param null $userTokens
    */
-  public function setProvisioningEvents($provisioning_events) {
-    $this->provisioning_events = $provisioning_events;
+  public function setUserTokens($userTokens) {
+    $this->userTokens = $userTokens;
+  }
+
+  /**
+   * @return bool
+   */
+  public function isBinary() {
+    return $this->binary;
+  }
+
+  /**
+   * @param bool $binary
+   */
+  public function convertBinary(bool $binary) {
+    $this->binary = $binary;
+  }
+
+  /**
+   * @param bool $configurable
+   */
+  public function setConfigurable(bool $configurable) {
+    $this->configurable = $configurable;
   }
 
 }

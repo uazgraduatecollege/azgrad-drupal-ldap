@@ -4,10 +4,7 @@ services:
     arguments: ['ldap_user']
   ldap.drupal_user_processor:
     class: Drupal\ldap_user\Processor\DrupalUserProcessor
-    arguments: ['@logger.channel.ldap_user', '@config.factory', '@ldap.detail_log', '@ldap.token_processor', '@externalauth.authmap', '@entity_type.manager', '@ldap.ldap_user_processor', '@file_system', '@token', '@module_handler', '@current_user', '@ldap.sync_mapper', '@ldap.user_manager']
-  ldap.ldap_user_processor:
-    class: Drupal\ldap_user\Processor\LdapUserProcessor
-    arguments: ['@logger.channel.ldap_user', '@config.factory', '@ldap.detail_log', '@ldap.token_processor', '@ldap.sync_mapper', '@module_handler', '@entity_type.manager', '@ldap.user_manager']
+    arguments: ['@logger.channel.ldap_user', '@config.factory', '@ldap.detail_log', '@ldap.token_processor', '@externalauth.authmap', '@entity_type.manager', '@file_system', '@token', '@module_handler', '@current_user', '@ldap.sync_mapper', '@ldap.user_manager', '@event_dispatcher']
   ldap_user.field_provider:
     class: Drupal\ldap_user\FieldProvider
     arguments: ['@config.factory', '@entity_type.manager', '@module_handler', '@entity_field.manager', '@ldap.sync_mapper']
@@ -22,6 +19,6 @@ services:
     arguments: ['@logger.channel.ldap_user', '@ldap.detail_log', '@config.factory', '@state', '@module_handler', '@entity_type.manager', '@externalauth.authmap', '@ldap.query', '@ldap.drupal_user_processor']
   ldap_user.ldap_provision:
     class: Drupal\ldap_user\EventSubscriber\LdapEntryProvisionSubscriber
-    arguments: ['@config.factory', '@logger.channel.ldap_user', '@ldap.detail_log', '@entity_type.manager', '@module_handler', '@ldap.user_manager', '@ldap.sync_mapper']
+    arguments: ['@config.factory', '@logger.channel.ldap_user', '@ldap.detail_log', '@entity_type.manager', '@module_handler', '@ldap.user_manager', '@ldap.sync_mapper', '@ldap.token_processor']
     tags:
       - { name: event_subscriber }

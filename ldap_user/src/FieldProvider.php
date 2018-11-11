@@ -7,8 +7,8 @@ use Drupal\Core\Entity\EntityFieldManager;
 use Drupal\Core\Entity\EntityTypeManager;
 use Drupal\Core\Extension\ModuleHandler;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
-use Drupal\ldap_servers\Helper\ConversionHelper;
 use Drupal\ldap_servers\LdapUserAttributesInterface;
+use Drupal\ldap_servers\Mapping;
 use Drupal\ldap_user\Helper\SyncMappingHelper;
 
 /**
@@ -49,7 +49,7 @@ class FieldProvider implements LdapUserAttributesInterface {
   /**
    * LDAP attributes to alter.
    *
-   * @param array $availableUserAttributes
+   * @param array $available_user_attributes
    *   Available attributes.
    * @param array $params
    *   Parameters.
@@ -57,280 +57,210 @@ class FieldProvider implements LdapUserAttributesInterface {
    * @return array
    *   Altered attributes.
    */
-  public function alterLdapUserAttributes(array $availableUserAttributes, array $params) {
-    if (isset($params['direction'])) {
-      $direction = $params['direction'];
-    }
-    else {
-      $direction = self::PROVISION_TO_NONE;
-    }
+  public function alterLdapUserAttributes(array $available_user_attributes, array $params) {
+    $direction = $params['direction'];
 
     if ($direction == self::PROVISION_TO_LDAP) {
-      $availableUserAttributes['[property.name]'] = [
-        'name' => 'Property: Username',
-        'source' => '',
-        'direction' => self::PROVISION_TO_LDAP,
-        'enabled' => TRUE,
-        'prov_events' => [
-          self::EVENT_CREATE_DRUPAL_USER,
-          self::EVENT_SYNC_TO_DRUPAL_USER,
-        ],
-        'config_module' => 'ldap_user',
-        'prov_module' => 'ldap_user',
-        'configurable_to_ldap' => TRUE,
-      ];
-
-      $availableUserAttributes['[property.mail]'] = [
-        'name' => 'Property: Email',
-        'source' => '',
-        'direction' => self::PROVISION_TO_LDAP,
-        'enabled' => TRUE,
-        'prov_events' => [
-          self::EVENT_CREATE_DRUPAL_USER,
-          self::EVENT_SYNC_TO_DRUPAL_USER,
-        ],
-        'config_module' => 'ldap_user',
-        'prov_module' => 'ldap_user',
-        'configurable_to_ldap' => TRUE,
-      ];
-
-      $availableUserAttributes['[property.picture]'] = [
-        'name' => 'Property: picture',
-        'source' => '',
-        'direction' => self::PROVISION_TO_LDAP,
-        'enabled' => TRUE,
-        'prov_events' => [
-          self::EVENT_CREATE_DRUPAL_USER,
-          self::EVENT_SYNC_TO_DRUPAL_USER,
-        ],
-        'config_module' => 'ldap_user',
-        'prov_module' => 'ldap_user',
-        'configurable_to_ldap' => TRUE,
-      ];
-
-      $availableUserAttributes['[property.uid]'] = [
-        'name' => 'Property: Drupal User Id (uid)',
-        'source' => '',
-        'direction' => self::PROVISION_TO_LDAP,
-        'enabled' => TRUE,
-        'prov_events' => [
-          self::EVENT_CREATE_DRUPAL_USER,
-          self::EVENT_SYNC_TO_DRUPAL_USER,
-        ],
-        'config_module' => 'ldap_user',
-        'prov_module' => 'ldap_user',
-        'configurable_to_ldap' => TRUE,
-      ];
-
+      $available_user_attributes = $this->addToLdapProvisioningFields($available_user_attributes);
     }
 
-    // 1. Drupal user properties
-    // 1.a make sure empty array are present so array + function works.
-    foreach (['property.status', 'property.timezone', 'property.signature'] as $property_id) {
-      $property_token = '[' . $property_id . ']';
-      if (!isset($availableUserAttributes[$property_token]) || !is_array($availableUserAttributes[$property_token])) {
-        $availableUserAttributes[$property_token] = [];
-      }
-    }
+    $available_user_attributes = $this->addUserEntityFields($available_user_attributes);
+    $available_user_attributes = $this->exposeAvailableBaseFields($available_user_attributes);
 
-    // @todo make these merges so they don't override saved values such as 'enabled'
-    $availableUserAttributes['[property.status]'] = $availableUserAttributes['[property.status]'] + [
-      'name' => 'Property: Account Status',
-      'configurable_to_drupal' => 1,
-      'configurable_to_ldap' => 1,
-      'user_tokens' => '1=enabled, 0=blocked.',
-      'enabled' => FALSE,
-      'config_module' => 'ldap_user',
-      'prov_module' => 'ldap_user',
-    ];
-
-    $availableUserAttributes['[property.timezone]'] = $availableUserAttributes['[property.timezone]'] + [
-      'name' => 'Property: User Timezone',
-      'configurable_to_drupal' => 1,
-      'configurable_to_ldap' => 1,
-      'enabled' => FALSE,
-      'config_module' => 'ldap_user',
-      'prov_module' => 'ldap_user',
-    ];
-
-    $availableUserAttributes['[property.signature]'] = $availableUserAttributes['[property.signature]'] + [
-      'name' => 'Property: User Signature',
-      'configurable_to_drupal' => 1,
-      'configurable_to_ldap' => 1,
-      'enabled' => FALSE,
-      'config_module' => 'ldap_user',
-      'prov_module' => 'ldap_user',
-    ];
-
-    // 2. Drupal user fields.
-    $user_fields = $this->entityFieldManager->getFieldStorageDefinitions('user');
-    foreach ($user_fields as $field_name => $field_instance) {
-      $field_id = "[field.$field_name]";
-      if (!isset($availableUserAttributes[$field_id]) || !is_array($availableUserAttributes[$field_id])) {
-        $availableUserAttributes[$field_id] = [];
-      }
-
-      $availableUserAttributes[$field_id] = $availableUserAttributes[$field_id] + [
-        'name' => $this->t('Field: @label', ['@label' => $field_instance->getLabel()]),
-        'configurable_to_drupal' => 1,
-        'configurable_to_ldap' => 1,
-        'enabled' => FALSE,
-        'config_module' => 'ldap_user',
-        'prov_module' => 'ldap_user',
-      ];
-    }
-
-    $server = $this->config->get('drupalAcctProvisionServer');
-    $triggers = $this->config->get('drupalAcctProvisionTriggers');
-    if ($server && !empty($triggers)) {
-      $availableUserAttributes['[property.mail]']['config_module'] = 'ldap_user';
-      $availableUserAttributes['[property.name]']['config_module'] = 'ldap_user';
-      $availableUserAttributes['[property.picture]']['config_module'] = 'ldap_user';
-    }
-
-    if ($direction == self::PROVISION_TO_LDAP) {
-      $availableUserAttributes['[password.random]'] = [
-        'name' => 'Password: Random password',
-        'source' => '',
-        'direction' => self::PROVISION_TO_LDAP,
-        'enabled' => TRUE,
-        'prov_events' => [
-          self::EVENT_CREATE_DRUPAL_USER,
-          self::EVENT_SYNC_TO_DRUPAL_USER,
-        ],
-        'config_module' => 'ldap_user',
-        'prov_module' => 'ldap_user',
-        'configurable_to_ldap' => TRUE,
-      ];
-
-      // Use user password when available fall back to random pwd.
-      $availableUserAttributes['[password.user-random]'] = [
-        'name' => 'Password: Plain user password or random',
-        'source' => '',
-        'direction' => self::PROVISION_TO_LDAP,
-        'enabled' => TRUE,
-        'prov_events' => [
-          self::EVENT_CREATE_DRUPAL_USER,
-          self::EVENT_SYNC_TO_DRUPAL_USER,
-        ],
-        'config_module' => 'ldap_user',
-        'prov_module' => 'ldap_user',
-        'configurable_to_ldap' => TRUE,
-      ];
-
-      // Use user password, do not modify if unavailable.
-      $availableUserAttributes['[password.user-only]'] = [
-        'name' => 'Password: Plain user password',
-        'source' => '',
-        'direction' => self::PROVISION_TO_LDAP,
-        'enabled' => TRUE,
-        'prov_events' => [
-          self::EVENT_CREATE_DRUPAL_USER,
-          self::EVENT_SYNC_TO_DRUPAL_USER,
-        ],
-        'config_module' => 'ldap_user',
-        'prov_module' => 'ldap_user',
-        'configurable_to_ldap' => TRUE,
-      ];
-
-    }
-
-    // TODO: This is possibly an overlap with SyncMappingHelper.
     $mappings = $this->config->get('ldapUserSyncMappings');
-
-    // This is where need to be added to arrays.
     if (!empty($mappings[$direction])) {
-      $availableUserAttributes = $this->applyUserAttributes($availableUserAttributes, $mappings, $direction);
+      $available_user_attributes = $this->applyUserAttributes($available_user_attributes, $mappings[$direction]);
     }
 
-    return [$availableUserAttributes, $params];
-  }
-
-  /**
-   * Return context to provision direction.
-   *
-   * Converts the more general ldap_context string to its associated LDAP user
-   * prov direction.
-   *
-   * @param string|null $ldapContext
-   *   The relevant context.
-   *
-   * @return string
-   *   The provisioning direction.
-   */
-  private function ldapContextToProvDirection($ldapContext = NULL) {
-
-    switch ($ldapContext) {
-      case 'ldap_user_prov_to_drupal':
-        $result = self::PROVISION_TO_DRUPAL;
-        break;
-
-      case 'ldap_user_prov_to_ldap':
-      case 'ldap_user_delete_drupal_user':
-        $result = self::PROVISION_TO_LDAP;
-        break;
-
-      // Provisioning is can happen in both directions in most contexts.
-      case 'ldap_user_insert_drupal_user':
-      case 'ldap_user_update_drupal_user':
-      case 'ldap_authentication_authenticate':
-      case 'ldap_user_disable_drupal_user':
-        $result = self::PROVISION_TO_ALL;
-        break;
-
-      default:
-        $result = self::PROVISION_TO_ALL;
-        break;
-    }
-    return $result;
+    return [$available_user_attributes, $params];
   }
 
   /**
    * Apply user attributes.
    *
-   * @param array $availableUserAttributes
+   * @param \Drupal\ldap_servers\Mapping[] $available_user_attributes
    *   Available attributes.
-   * @param array $mappings
+   * @param array $saved_mappings
    *   Mappings.
    * @param string $direction
    *   Synchronization direction.
    *
    * @return array
    *   All attributes applied.
+   *
+   * @TODO: Make this private regular again once the other issues are fixed.
    */
-  private function applyUserAttributes(array $availableUserAttributes, array $mappings, $direction) {
-    foreach ($mappings[$direction] as $target_token => $mapping) {
-      if ($direction == self::PROVISION_TO_DRUPAL && isset($mapping['user_attr'])) {
-        $key = $mapping['user_attr'];
-      }
-      elseif ($direction == self::PROVISION_TO_LDAP && isset($mapping['ldap_attr'])) {
-        $key = $mapping['ldap_attr'];
-      }
-      else {
+  public static function applyUserAttributes(array $available_user_attributes, array $saved_mappings) {
+    foreach ($saved_mappings as $mapping) {
+      // Cannot use array key here, needs unsanitized name.
+      $key = $mapping['drupal_attr'];
+
+      if (!isset($available_user_attributes[$key])) {
+        // Mapping not found in list of available
+        // TODO: DI.
+        \Drupal::logger('ldap_user')
+          ->warning('Configuration contains unavailable field @field', ['@field' => $key]);
         continue;
       }
 
-      $keys = [
-        'ldap_attr',
-        'user_attr',
-        'convert',
-        'direction',
-        'enabled',
-        'prov_events',
-      ];
+      if (isset($mapping['ldap_attr'])) {
+        $available_user_attributes[$key]->setLdapAttribute($mapping['ldap_attr']);
+      }
 
-      foreach ($keys as $subKey) {
-        if (isset($mapping[$subKey])) {
-          $availableUserAttributes[$key][$subKey] = $mapping[$subKey];
+      if (isset($mapping['drupal_attr'])) {
+        if ($mapping['drupal_attr'] == 'user_tokens') {
+          $available_user_attributes[$key]->setDrupalAttribute($mapping['user_tokens']);
         }
         else {
-          $availableUserAttributes[$key][$subKey] = NULL;
+          $available_user_attributes[$key]->setDrupalAttribute($mapping['drupal_attr']);
         }
-        $availableUserAttributes[$key]['config_module'] = 'ldap_user';
-        $availableUserAttributes[$key]['prov_module'] = 'ldap_user';
       }
-      if ($mapping['user_attr'] == 'user_tokens') {
-        $availableUserAttributes['user_attr'] = $mapping['user_tokens'];
+
+      if (isset($mapping['convert'])) {
+        $available_user_attributes[$key]->convertBinary($mapping['convert']);
+      }
+
+      if (isset($mapping['enabled'])) {
+        $available_user_attributes[$key]->setEnabled($mapping['enabled']);
+      }
+
+      if (isset($mapping['prov_events'])) {
+        $available_user_attributes[$key]->setProvisioningEvents($mapping['prov_events']);
+      }
+
+    }
+    return $available_user_attributes;
+  }
+
+  /**
+   * @param \Drupal\ldap_servers\Mapping[] $availableUserAttributes
+   *
+   * @return array
+   */
+  private function addToLdapProvisioningFields(array $availableUserAttributes) {
+    if (isset($availableUserAttributes['[property.name]'])) {
+      $availableUserAttributes['[property.name]']->setConfigurationModule('ldap_user');
+      $availableUserAttributes['[property.name]']->setConfigurable(TRUE);
+    }
+
+    $fields = [
+      '[property.name]' => 'Property: Name',
+      '[property.mail]' => 'Property: Email',
+      '[property.picture]' => 'Property: Picture',
+      '[property.uid]' => 'Property: Drupal User Id (uid)',
+      '[password.random]' => 'Password: Random password',
+      '[password.user-random]' => 'Password: Plain user password or random',
+      '[password.user-only]' => 'Password: Plain user password',
+    ];
+
+    foreach ($fields as $key => $name) {
+      if (isset($availableUserAttributes[$key])) {
+        $availableUserAttributes[$key]->setConfigurationModule('ldap_user');
+        $availableUserAttributes[$key]->setConfigurable(TRUE);
+      }
+      else {
+        $availableUserAttributes[$key] = new Mapping(
+          $key,
+          $name,
+          TRUE,
+          FALSE,
+          [
+            self::EVENT_CREATE_DRUPAL_USER,
+            self::EVENT_SYNC_TO_DRUPAL_USER,
+          ],
+          'ldap_user',
+          'ldap_user'
+              );
+      }
+    }
+    return $availableUserAttributes;
+  }
+
+  /**
+   * Additional access needed in direction to Drupal.
+   *
+   * @param \Drupal\ldap_servers\Mapping[] $availableUserAttributes
+   *
+   * @return array
+   */
+  private function exposeAvailableBaseFields(array $availableUserAttributes): array {
+    $server = $this->config->get('drupalAcctProvisionServer');
+    $triggers = $this->config->get('drupalAcctProvisionTriggers');
+    if ($server && !empty($triggers)) {
+      /** @var \Drupal\ldap_servers\Mapping availableUserAttributes<> */
+      $fields = [
+        '[property.mail]',
+        '[property.name]',
+        '[property.picture]',
+        '[field.ldap_user_puid_sid]',
+        '[field.ldap_user_puid]',
+      ];
+      foreach ($fields as $field) {
+        if (isset($availableUserAttributes[$field])) {
+          $availableUserAttributes[$field]->setConfigurationModule('ldap_user');
+        }
+      }
+    }
+    return $availableUserAttributes;
+  }
+
+  /**
+   * @param \Drupal\ldap_servers\Mapping[] $availableUserAttributes
+   * @param $direction
+   *
+   * @return array
+   */
+  private function addUserEntityFields(array $availableUserAttributes) {
+    // Todo: Verify that the next step (loading fields) cannot do this via BaseDefinition.
+    // Drupal user properties.
+    $availableUserAttributes['[property.status]'] = new Mapping(
+      '[property.status]',
+      'Property: Account Status',
+      TRUE,
+      FALSE,
+      [],
+       'ldap_user',
+       'ldap_user'
+    );
+
+    $availableUserAttributes['[property.timezone]'] = new Mapping(
+      '[property.timezone]',
+       'Property: User Timezone',
+      TRUE,
+      FALSE,
+      [],
+      'ldap_user',
+      'ldap_user'
+    );
+
+    $availableUserAttributes['[property.signature]'] = new Mapping(
+      '[property.signature]',
+      'Property: User Signature',
+      TRUE,
+      FALSE,
+      [],
+      'ldap_user',
+      'ldap_user'
+    );
+
+    // Load active Drupal user fields.
+    // TODO: Consider not hard-coding the other properties.
+    $user_fields = $this->entityFieldManager->getFieldStorageDefinitions('user');
+    foreach ($user_fields as $field_name => $field_instance) {
+      $field_id = "[field." . $field_name . "]";
+      if (isset($availableUserAttributes[$field_id])) {
+        $availableUserAttributes[$field_id]->isConfigurable(TRUE);
+      }
+      else {
+        $availableUserAttributes[$field_id] = new Mapping(
+          $field_id,
+          $this->t('Field: @label', ['@label' => $field_instance->getLabel()]),
+          TRUE,
+          FALSE,
+          [],
+          'ldap_user',
+          'ldap_user'
+              );
       }
     }
     return $availableUserAttributes;

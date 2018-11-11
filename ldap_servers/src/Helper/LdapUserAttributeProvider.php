@@ -7,7 +7,7 @@ use Drupal\Core\Entity\EntityTypeManager;
 use Drupal\Core\Link;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
-use Drupal\ldap_servers\Entity\Mapping;
+use Drupal\ldap_servers\Mapping;
 use Drupal\ldap_servers\LdapUserAttributesInterface;
 use Drupal\ldap_servers\ServerInterface;
 
@@ -47,10 +47,6 @@ class LdapUserAttributeProvider implements LdapUserAttributesInterface {
    *
    * @return array
    *   Attribute list.
-   *
-   *   TODO: Split this out into a separate class.
-   *   TODO: $params is a bad argument, it only needs the ldap_server and
-   *   direction parameter and otherwise depends on the Server class.
    */
   public function alterLdapUserAttributesList(array &$available_user_attrs, array &$params) {
     if ($params['direction'] != self::PROVISION_TO_DRUPAL) {
@@ -58,97 +54,22 @@ class LdapUserAttributeProvider implements LdapUserAttributesInterface {
       return;
     }
 
-  if (isset($params['ldap_server']) && $params['ldap_server']) {
-    /** @var \Drupal\ldap_servers\Entity\Server $ldap_server */
-    $ldap_server = $params['ldap_server'];
+    if (isset($params['ldap_server']) && $params['ldap_server']) {
+      /** @var \Drupal\ldap_servers\Entity\Server $ldap_server */
+      $ldap_server = $params['ldap_server'];
 
-    $url = Url::fromRoute('entity.ldap_server.collection');
-    $tokens = [
-      '%edit_link' => Link::fromTextAndUrl($url->toString(), $url)->toString(),
-      '%sid' => $ldap_server->id(),
-    ];
-
-    $server_edit_path = 'admin/config/people/ldap/servers/edit/' . $ldap_server->id();
-
-    if (!isset($available_user_attrs['[field.ldap_user_current_dn]']) || !is_array($available_user_attrs['[field.ldap_user_current_dn]'])) {
-      $available_user_attrs['[field.ldap_user_current_dn]'] = [];
-    }
-    $available_user_attrs['[field.ldap_user_current_dn]'] =
-      [
-        'name' => $this->t('Field: Most Recent DN', $tokens),
-        'configurable_to_drupal' => 0,
-        'configurable_to_ldap' => 0,
-        'source' => '[dn]',
-        'notes' => 'not configurable',
-        'direction' => self::PROVISION_TO_DRUPAL,
-        'enabled' => TRUE,
-        'prov_events' => [
-          self::EVENT_CREATE_DRUPAL_USER,
-          self::EVENT_SYNC_TO_DRUPAL_USER,
-        ],
-        'config_module' => 'ldap_servers',
-        'prov_module' => 'ldap_user',
-      ] + $available_user_attrs['[field.ldap_user_current_dn]'];
+      // TODO: Shouldn't this also be as an initial entry on LDAP?
+      // on LDAP's side Field: Most Recent DN.
+      $available_user_attrs = $this->addDn($available_user_attrs);
 
       if ($ldap_server->get('unique_persistent_attr')) {
-        $available_user_attrs = $this->addPuidFields($available_user_attrs, $tokens, $ldap_server, $server_edit_path);
+        $available_user_attrs = $this->addPuidFields($available_user_attrs, $ldap_server);
       }
 
-
       $config = $this->config->get('ldap_user.settings');
-      $server = $config->get('drupalAcctProvisionServer');
       $triggers = $config->get('drupalAcctProvisionTriggers');
-
-      if ($server && !empty($triggers)) {
-        if (!isset($available_user_attrs['[property.name]']) || !is_array($available_user_attrs['[property.name]'])) {
-          $available_user_attrs['[property.name]'] = [];
-        }
-        $available_user_attrs['[property.name]'] = [
-          'name' => 'Property: Username',
-          'source' => '[' . $ldap_server->get('user_attr') . ']',
-          'direction' => self::PROVISION_TO_DRUPAL,
-          'enabled' => TRUE,
-          'prov_events' => [
-            self::EVENT_CREATE_DRUPAL_USER,
-            self::EVENT_SYNC_TO_DRUPAL_USER,
-          ],
-          'config_module' => 'ldap_servers',
-          'prov_module' => 'ldap_user',
-        ] + $available_user_attrs['[property.name]'];
-
-        if (!isset($available_user_attrs['[property.mail]']) || !is_array($available_user_attrs['[property.mail]'])) {
-          $available_user_attrs['[property.mail]'] = [];
-        }
-        $available_user_attrs['[property.mail]'] = [
-          'name' => 'Property: Email',
-          'source' => ($ldap_server->get('mail_template')) ? $ldap_server->get('mail_template') : '[' . $ldap_server->get('mail_attr') . ']',
-          'direction' => self::PROVISION_TO_DRUPAL,
-          'enabled' => TRUE,
-          'prov_events' => [
-            self::EVENT_CREATE_DRUPAL_USER,
-            self::EVENT_SYNC_TO_DRUPAL_USER,
-          ],
-          'config_module' => 'ldap_servers',
-          'prov_module' => 'ldap_user',
-        ] + $available_user_attrs['[property.mail]'];
-
-        if ($ldap_server->get('picture_attr')) {
-          if (!isset($available_user_attrs['[property.picture]']) || !is_array($available_user_attrs['[property.picture]'])) {
-            $available_user_attrs['[property.picture]'] = [];
-          }
-          $available_user_attrs['[property.picture]'] = [
-              'name' => 'Property: Picture',
-              'source' => '[' . $ldap_server->get('picture_attr') . ']',
-              'direction' => self::PROVISION_TO_DRUPAL,
-              'enabled' => TRUE,
-              'prov_events' => [
-                self::EVENT_CREATE_DRUPAL_USER,
-                self::EVENT_SYNC_TO_DRUPAL_USER,
-              ],
-              'config_module' => 'ldap_servers',
-              'prov_module' => 'ldap_user',
-            ] + $available_user_attrs['[property.picture]'];
-        }
+      if (!empty($triggers)) {
+        $available_user_attrs = $this->addBaseProperties($available_user_attrs, $ldap_server);
       }
     }
   }
@@ -161,66 +82,117 @@ class LdapUserAttributeProvider implements LdapUserAttributesInterface {
    * "LDAP associated" regardless of if any other fields/properties are
    * provisioned or synced.
    *
-   * @param array $available_user_attrs
+   * @param \Drupal\ldap_servers\Mapping[] $available_user_attrs
    * @param $tokens
    * @param $ldap_server
    * @param $server_edit_path
    *
    * @return array
    */
-  private function addPuidFields(array &$available_user_attrs, $tokens, ServerInterface $ldap_server, $server_edit_path) {
-    $attributes = [
-      'field.ldap_user_puid_sid',
-      'field.ldap_user_puid',
-      'field.ldap_user_puid_property',
+  private function addPuidFields(array &$available_user_attrs, ServerInterface $ldap_server) {
+    $url = Url::fromRoute('entity.ldap_server.collection');
+    $tokens = [
+      '%edit_link' => Link::fromTextAndUrl($url->toString(), $url)->toString(),
+      '%sid' => $ldap_server->id(),
     ];
-    foreach ($attributes as $property_id) {
-      $property_token = '[' . $property_id . ']';
-      if (!isset($available_user_attrs[$property_token]) || !is_array($available_user_attrs[$property_token])) {
-        $available_user_attrs[$property_token] = [];
-      }
+
+    $fields = [
+      '[field.ldap_user_puid_sid]' => $this->t('Field: sid providing PUID'),
+      '[field.ldap_user_puid]' => $this->t('Field: PUID'),
+      '[field.ldap_user_puid_property]' => $this->t('Field: PUID Attribute'),
+    ];
+    foreach ($fields as $key => $name) {
+      $available_user_attrs[$key] = new Mapping(
+        $key,
+        $name,
+        FALSE,
+        TRUE,
+        [self::EVENT_CREATE_DRUPAL_USER],
+        'ldap_user',
+        'ldap_servers'
+      );
+      $available_user_attrs[$key]->setNotes($this->t('configure at %edit_link', $tokens));
     }
 
-    $available_user_attrs['[field.ldap_user_puid_sid]'] = [
-        'name' => $this->t('Field: sid providing PUID'),
-        'configurable_to_drupal' => 0,
-        'configurable_to_ldap' => 1,
-        'source' => $this->t('%sid', $tokens),
-        'notes' => 'not configurable',
-        'direction' => self::PROVISION_TO_DRUPAL,
-        'enabled' => TRUE,
-        'prov_events' => [self::EVENT_CREATE_DRUPAL_USER],
-        'config_module' => 'ldap_servers',
-        'prov_module' => 'ldap_user',
-      ] + $available_user_attrs['[field.ldap_user_puid_sid]'];
+    $available_user_attrs['[field.ldap_user_puid_sid]']->setLdapAttribute($ldap_server->id());
+    $available_user_attrs['[field.ldap_user_puid]']->setLdapAttribute($this->addTokens($ldap_server->get('unique_persistent_attr')));
+    $available_user_attrs['[field.ldap_user_puid_property]']->setLdapAttribute($ldap_server->get('unique_persistent_attr'));
 
-    $available_user_attrs['[field.ldap_user_puid]'] = [
-        'name' => $this->t('Field: PUID', $tokens),
-        'configurable_to_drupal' => 0,
-        'configurable_to_ldap' => 1,
-        'source' => '[' . $ldap_server->get('unique_persistent_attr') . ']',
-        'notes' => 'configure at ' . $server_edit_path,
-        'convert' => $ldap_server->get('unique_persistent_attr_binary'),
-        'direction' => self::PROVISION_TO_DRUPAL,
-        'enabled' => TRUE,
-        'prov_events' => [self::EVENT_CREATE_DRUPAL_USER],
-        'config_module' => 'ldap_servers',
-        'prov_module' => 'ldap_user',
-      ] + $available_user_attrs['[field.ldap_user_puid]'];
+    return $available_user_attrs;
+  }
 
-    $available_user_attrs['[field.ldap_user_puid_property]'] =
-      [
-        'name' => $this->t('Field: PUID Attribute', $tokens),
-        'configurable_to_drupal' => 0,
-        'configurable_to_ldap' => 1,
-        'source' => $ldap_server->get('unique_persistent_attr'),
-        'notes' => 'configure at ' . $server_edit_path,
-        'direction' => self::PROVISION_TO_DRUPAL,
-        'enabled' => TRUE,
-        'prov_events' => [self::EVENT_CREATE_DRUPAL_USER],
-        'config_module' => 'ldap_servers',
-        'prov_module' => 'ldap_user',
-      ] + $available_user_attrs['[field.ldap_user_puid_property]'];
+  /**
+   * @param \Drupal\ldap_servers\Mapping[] $available_user_attrs
+   * @param \Drupal\ldap_servers\Entity\Server $ldap_server
+   *
+   * @return array
+   */
+  private function addBaseProperties(array &$available_user_attrs, $ldap_server) {
+    $fields = [
+      '[property.name]' => 'Property: Username',
+      '[property.mail]' => 'Property: Email',
+    ];
+
+    if ($ldap_server->get('picture_attr')) {
+      $fields['[property.picture]'] = 'Property: Picture';
+    }
+
+    foreach ($fields as $key => $name) {
+      $available_user_attrs[$key] = new Mapping(
+        $key,
+        $name,
+        FALSE,
+        TRUE,
+        [self::EVENT_CREATE_DRUPAL_USER, self::EVENT_SYNC_TO_DRUPAL_USER],
+        'ldap_servers',
+        'ldap_user'
+      );
+    }
+
+    $available_user_attrs['[property.name]']->setLdapAttribute($this->addTokens($ldap_server->get('user_attr')));
+
+    if ($ldap_server->get('mail_template')) {
+      $available_user_attrs['[property.mail]']->setLdapAttribute($ldap_server->get('mail_template'));
+    }
+    else {
+      $available_user_attrs['[property.mail]']->setLdapAttribute($this->addTokens($ldap_server->get('mail_attr')));
+    }
+
+    if ($ldap_server->get('picture_attr')) {
+      $available_user_attrs['[property.picture]']->setLdapAttribute($this->addTokens($ldap_server->get('picture_attr')));
+    }
+
+    return $available_user_attrs;
+  }
+
+  /**
+   * @param $input
+   *
+   * @return string
+   */
+  private function addTokens($input) {
+    return '[' . $input . ']';
+  }
+
+  /**
+   * @param \Drupal\ldap_servers\Mapping[] $available_user_attrs
+   * @param $tokens
+   *
+   * @return array
+   */
+  private function addDn(array &$available_user_attrs) {
+    $available_user_attrs['[field.ldap_user_current_dn]'] = new Mapping(
+       '[field.ldap_user_current_dn]',
+        $this->t('Field: Most Recent DN'),
+        FALSE,
+        TRUE,
+         [self::EVENT_CREATE_DRUPAL_USER, self::EVENT_SYNC_TO_DRUPAL_USER],
+      'ldap_user',
+        'ldap_servers'
+      );
+    $available_user_attrs['[field.ldap_user_current_dn]']->setLdapAttribute('[dn]');
+    $available_user_attrs['[field.ldap_user_current_dn]']->setNotes('not configurable');
+
     return $available_user_attrs;
   }
 

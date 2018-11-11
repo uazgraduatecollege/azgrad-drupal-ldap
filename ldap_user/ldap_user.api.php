@@ -18,7 +18,7 @@
  *     'source' => LDAP attribute (even if target of sync.  this should be
  *       refactored at some point to avoid confusion)
  *     'configurable' =>
- *     'configurable_to_drupal'  0 | 1, is this configurable?
+ *     'configured_mapping'  0 | 1, is this configurable?
  *     'configurable_to_ldap' =>  0 | 1, is this configurable?
  *     'user_tokens' => <user_tokens>
  *     'convert' => 1 | 0 convert from binary to string for storage and

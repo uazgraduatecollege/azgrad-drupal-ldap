@@ -5,8 +5,6 @@ namespace Drupal\ldap_user\Helper;
 use Drupal\Core\Config\ConfigFactory;
 use Drupal\Core\Extension\ModuleHandler;
 use Drupal\Core\Logger\LoggerChannelInterface;
-use Drupal\ldap_servers\Entity\Server;
-use Drupal\ldap_servers\Helper\ConversionHelper;
 use Drupal\ldap_servers\LdapUserAttributesInterface;
 
 /**
@@ -91,14 +89,14 @@ class SyncMappingHelper implements LdapUserAttributesInterface {
   public function getFieldsSyncedToDrupal($event) {
     $mappings_on_event = [];
     $mappings = $this->config->get('ldapUserSyncMappings')[self::PROVISION_TO_DRUPAL];
-      foreach ($mappings as $mapping) {
-        if (!empty($mapping['prov_events'])) {
-          $result = in_array($event, $mapping['prov_events']);
-          if ($result && isset($mapping['user_attr'])) {
-            $mappings_on_event[] = $mapping['user_attr'];
-          }
+    foreach ($mappings as $mapping) {
+      if (!empty($mapping['prov_events'])) {
+        $result = in_array($event, $mapping['prov_events']);
+        if ($result && isset($mapping['user_attr'])) {
+          $mappings_on_event[] = $mapping['user_attr'];
         }
       }
+    }
     return $mappings_on_event;
   }
 
@@ -113,8 +111,8 @@ class SyncMappingHelper implements LdapUserAttributesInterface {
     foreach ($mappings as $mapping) {
       if (!empty($mapping['prov_events'])) {
         $result = in_array($event, $mapping['prov_events']);
-        if ($result && isset($mapping['ldap_attr'])) {
-          $mappings_on_event[] = $mapping['ldap_attr'];
+        if ($result && isset($mapping['target'])) {
+          $mappings_on_event[] = $mapping['target'];
         }
       }
     }

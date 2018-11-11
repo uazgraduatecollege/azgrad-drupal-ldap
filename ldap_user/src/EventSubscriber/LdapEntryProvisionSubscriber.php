@@ -7,7 +7,6 @@ use Drupal\ldap_user\Event\LdapNewUserCreatedEvent;
 use Drupal\ldap_user\Event\LdapUserLoginEvent;
 use Drupal\ldap_user\Event\LdapUserUpdatedEvent;
 use Drupal\ldap_user\Exception\LdapBadParamsException;
-use Drupal\ldap_user\Helper\LdapConfiguration;
 use Drupal\user\UserInterface;
 use Symfony\Component\Ldap\Entry;
 
@@ -21,36 +20,43 @@ class LdapEntryProvisionSubscriber extends LdapEntryBaseSubscriber {
    */
   public static function getSubscribedEvents() {
     $events[LdapNewUserCreatedEvent::EVENT_NAME] = ['provisionLdapEntryOnUserCreation'];
-    $events[LdapUserLoginEvent::EVENT_NAME] = ['provisionLdapEntryOnUserCreation'];
-    $events[LdapUserUpdatedEvent::EVENT_NAME] = ['provisionLdapEntryOnUserCreation'];
+    $events[LdapUserLoginEvent::EVENT_NAME] = ['loginLdapEntryProvisioning'];
+    $events[LdapUserUpdatedEvent::EVENT_NAME] = ['provisionLdapEntryOnUserUpdated'];
     return $events;
   }
 
-  // TODO: Make sure we are not working on excluded accounts.
+  /**
+   * TODO: Make sure we are not working on excluded accounts.
+   */
+  public function provisionLdapEntryOnUserUpdated(LdapUserUpdatedEvent $event) {
+  }
 
   /**
    * Handle account login with LDAP entry provisioning.
    *
    * @deprecated move one level down
    */
-  private function loginLdapEntryProvisioning() {
+  public function loginLdapEntryProvisioning(LdapUserLoginEvent $event) {
     $triggers = $this->config->get('ldapEntryProvisionTriggers');
     if ($this->provisionsLdapEntriesFromDrupalUsers() && in_array(self::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_AUTHENTICATION, $triggers)) {
       // Provision entry.
-      if (!$this->ldapUserManager->checkDnExists($this->account)) {
-        $this->provisionLdapEntry($this->account);
+      // TODO: Is it consistent with 3.x to pass the account_name directly to DN here?
+      // FIXME: We need to fix account loading here, would be best the event passed that.
+      $account = NULL;
+      if (!$this->ldapUserManager->checkDnExists($event->accountName)) {
+        $this->provisionLdapEntry($account);
       }
       else {
-        $this->syncToLdapEntry($this->account);
+        $this->syncToLdapEntry($account);
       }
     }
   }
 
-  /*
+  /**
    * This method is called whenever the ldap_new_drupal_user_created event is
    * dispatched.
    *
-   * @param \Symfony\Component\HttpKernel\Event\GetResponseEvent $event
+   * @TODO: Wrong event passed.
    */
   public function provisionLdapEntryOnUserCreation(LdapNewUserCreatedEvent $event) {
     if ($this->provisionsLdapEntriesFromDrupalUsers()) {
@@ -255,12 +261,11 @@ class LdapEntryProvisionSubscriber extends LdapEntryBaseSubscriber {
     return $ldap_user_entry;
   }
 
-
   /**
    * Update LDAP Entry event.
    *
    * @param \Drupal\ldap_user\Event\LdapUserUpdatedEvent $event
-   * todo: needed?
+   *   todo: needed?
    */
   public function updateLdapEntry(LdapUserUpdatedEvent $event) {
     /** @var \Drupal\user\Entity\User $account */
@@ -278,7 +283,7 @@ class LdapEntryProvisionSubscriber extends LdapEntryBaseSubscriber {
    *
    * @return bool
    *   Provision.
-   * todo: needed?
+   *   todo: needed?
    */
   private function ldapEntryProvisionValid($account_name) {
     $triggers = $this->config->get('ldapEntryProvisionTriggers');

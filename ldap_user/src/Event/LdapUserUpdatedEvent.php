@@ -12,6 +12,9 @@ class LdapUserUpdatedEvent extends Event {
 
   const EVENT_NAME = 'ldap_drupal_user_update';
 
+  /**
+   * @var \Drupal\user\Entity\User
+   */
   public $account;
 
   /**

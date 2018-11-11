@@ -51,7 +51,7 @@ class SyncMappingHelperTests extends UnitTestCase implements LdapUserAttributesI
         '[field.ldap_user_puid_sid]' => [
           // Actually TranslatableMarkup.
           'name' => 'SID',
-          'configurable_to_drupal' => 0,
+          'configured_mapping' => 0,
           'configurable_to_ldap' => 1,
           'notes' => 'not configurable',
           'direction' => 'drupal',
@@ -123,4 +123,5 @@ class SyncMappingHelperTests extends UnitTestCase implements LdapUserAttributesI
     $this->assertTrue($isSynced);
 
   }
+
 }

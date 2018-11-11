@@ -157,6 +157,7 @@ class LdapGroupManager extends LdapBaseManager {
    *
    * @return bool
    *   Removal result.
+   * @TODO: When actually in use split into two to remove boolean modifier.
    */
   public function groupRemoveGroup($group_dn, $only_if_group_empty = TRUE) {
     $this->checkAvailability();
