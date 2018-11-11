@@ -3,7 +3,7 @@
 namespace Drupal\ldap_authentication\Form;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
-use Drupal\Core\Entity\EntityTypeManager;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandler;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Form\ConfigFormBase;
@@ -36,7 +36,7 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
   /**
    * {@inheritdoc}
    */
-  public function __construct(ConfigFactoryInterface $config_factory, ModuleHandler $module_handler, EntityTypeManager $entity_type_manager) {
+  public function __construct(ConfigFactoryInterface $config_factory, ModuleHandler $module_handler, EntityTypeManagerInterface $entity_type_manager) {
     parent::__construct($config_factory);
     $this->moduleHandler = $module_handler;
     $this->storage = $entity_type_manager->getStorage('ldap_server');

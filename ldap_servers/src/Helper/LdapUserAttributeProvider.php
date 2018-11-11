@@ -3,7 +3,7 @@
 namespace Drupal\ldap_servers\Helper;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
-use Drupal\Core\Entity\EntityTypeManager;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Link;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
@@ -30,9 +30,9 @@ class LdapUserAttributeProvider implements LdapUserAttributesInterface {
    * Constructor.
    *
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
-   * @param \Drupal\Core\Entity\EntityTypeManager $entity_type_manager
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    */
-  public function __construct(ConfigFactoryInterface $config_factory, EntityTypeManager $entity_type_manager) {
+  public function __construct(ConfigFactoryInterface $config_factory, EntityTypeManagerInterface $entity_type_manager) {
     $this->config = $config_factory;
     $this->storage = $entity_type_manager->getStorage('ldap_server');
   }

@@ -3,7 +3,7 @@
 namespace Drupal\ldap_authorization\Plugin\authorization\Provider;
 
 use Drupal\authorization\AuthorizationSkipAuthorization;
-use Drupal\Core\Entity\EntityTypeManager;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\authorization\Provider\ProviderPluginBase;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
@@ -44,7 +44,7 @@ class LDAPAuthorizationProvider extends ProviderPluginBase implements ContainerF
   /**
    *
    */
-  public function __construct(array $configuration, $plugin_id, array $plugin_definition, EntityTypeManager $entity_type_manager) {
+  public function __construct(array $configuration, $plugin_id, array $plugin_definition, EntityTypeManagerInterface $entity_type_manager) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->entityTypeManager = $entity_type_manager;
   }

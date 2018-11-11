@@ -4,12 +4,12 @@ namespace Drupal\ldap_user\Form;
 
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Config\Config;
-use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
-use Drupal\Core\Entity\EntityTypeManager;
-use Drupal\Core\Extension\ModuleHandler;
-use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Extension\ModuleHandler;
+use Drupal\Core\Form\ConfigFormBase;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Url;
 use Drupal\ldap_servers\Entity\Server;
@@ -34,7 +34,7 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
   /**
    * {@inheritdoc}
    */
-  public function __construct(ConfigFactoryInterface $config_factory, CacheBackendInterface $cache, ModuleHandler $module_handler, EntityTypeManager $entity_type_manager) {
+  public function __construct(ConfigFactoryInterface $config_factory, CacheBackendInterface $cache, ModuleHandler $module_handler, EntityTypeManagerInterface $entity_type_manager) {
     parent::__construct($config_factory);
 
     $this->cache = $cache;

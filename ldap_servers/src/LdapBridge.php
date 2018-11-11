@@ -2,7 +2,7 @@
 
 namespace Drupal\ldap_servers;
 
-use Drupal\Core\Entity\EntityTypeManager;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\ldap_servers\Entity\Server;
 use Drupal\ldap_servers\Helper\CredentialsStorage;
@@ -43,7 +43,7 @@ class LdapBridge {
    * @param \Drupal\Core\Entity\EntityTypeManager $entity_type_manager
    *   Entity type manager.
    */
-  public function __construct(LoggerChannelInterface $logger, EntityTypeManager $entity_type_manager) {
+  public function __construct(LoggerChannelInterface $logger, EntityTypeManagerInterface $entity_type_manager) {
     $this->logger = $logger;
     $this->entityManager = $entity_type_manager->getStorage('ldap_server');
   }

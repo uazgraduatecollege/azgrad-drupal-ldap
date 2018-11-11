@@ -2,7 +2,7 @@
 
 namespace Drupal\ldap_servers\Processor;
 
-use Drupal\Core\Entity\EntityTypeManager;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\File\FileSystem;
 use Drupal\Component\Utility\SafeMarkup;
 use Drupal\ldap_servers\Helper\ConversionHelper;
@@ -31,7 +31,7 @@ class TokenProcessor {
   /**
    * {@inheritdoc}
    */
-  public function __construct(LdapDetailLog $ldap_detail_log, FileSystem $file_system, EntityTypeManager $entity_type_manager) {
+  public function __construct(LdapDetailLog $ldap_detail_log, FileSystem $file_system, EntityTypeManagerInterface $entity_type_manager) {
     $this->detailLog = $ldap_detail_log;
     $this->fileSystem = $file_system;
     $this->entityTypeManager = $entity_type_manager;

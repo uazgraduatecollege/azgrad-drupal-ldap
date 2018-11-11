@@ -2,7 +2,7 @@
 
 namespace Drupal\ldap_servers;
 
-use Drupal\Core\Entity\EntityTypeManager;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandler;
 use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\ldap_servers\Entity\Server;
@@ -45,7 +45,7 @@ abstract class LdapBaseManager {
    *   LDAP Bridge.
    * @param \Drupal\Core\Extension\ModuleHandler $module_handler
    */
-  public function __construct(LoggerChannelInterface $logger, EntityTypeManager $entity_type_manager, LdapBridge $ldap_bridge, ModuleHandler $module_handler) {
+  public function __construct(LoggerChannelInterface $logger, EntityTypeManagerInterface $entity_type_manager, LdapBridge $ldap_bridge, ModuleHandler $module_handler) {
     $this->logger = $logger;
     $this->entityTypeManager = $entity_type_manager;
     $this->ldapBridge = $ldap_bridge;
