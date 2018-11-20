@@ -6,6 +6,7 @@ dependencies[] = ldap_servers
 dependencies[] = entity
 
 core = 7.x
+php = 5.4
 
 files[] = ldap_servers.conf.inc
 files[] = ldap_user.conf.inc

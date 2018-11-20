@@ -6,6 +6,7 @@ dependencies[] = entity
 dependencies[] = number
 
 core = 7.x
+php = 5.4
 
 files[] = ldap_user.api.php
 files[] = ldap_user.inc

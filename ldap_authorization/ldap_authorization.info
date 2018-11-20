@@ -4,6 +4,7 @@ package = Lightweight Directory Access Protocol
 dependencies[] = ldap_servers
 dependencies[] = ldap_user
 core = 7.x
+php = 5.4
 
 files[] = LdapAuthorizationConsumerAbstract.class.php
 files[] = LdapAuthorizationConsumer.class.php
