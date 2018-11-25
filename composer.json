@@ -10,6 +10,9 @@
         "drupal/externalauth": "^1.0"
     },
     "provide": {
-        "ext-ldap": "1.0"
+        "ext-ldap": "*"
+    },
+    "replace": {
+        "ext-ldap": "*"
     }
 }
