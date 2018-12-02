@@ -281,30 +281,3 @@ function ldap_user_update_8307() {
   $config->save();
 }
 
-/**
- * Remove regular field definitions from migrated sites.
- */
-function ldap_user_update_8308() {
-  /** @var \Drupal\Core\Entity\EntityFieldManager $field_manager */
-  $field_manager = \Drupal::service('entity_field.manager');
-  $stored_instances = $field_manager->getFieldDefinitions('user', 'user');
-  $stored_storages = $field_manager->getFieldStorageDefinitions('user');
-  $ldap_fields = [
-    'ldap_user_puid_sid',
-    'ldap_user_puid',
-    'ldap_user_puid_property',
-    'ldap_user_current_dn',
-    'ldap_user_prov_entries',
-    'ldap_user_last_checked',
-    'ldap_user_ldap_exclude',
-  ];
-
-  foreach ($ldap_fields as $field) {
-    if ($stored_instances[$field] instanceof FieldConfig) {
-      /** @var \Drupal\Core\Field\DeletedFieldsRepository $deleted_fields_repository */
-      $deleted_fields_repository = \Drupal::service('entity_field.deleted_fields_repository');
-      $deleted_fields_repository->removeFieldDefinition($stored_instances[$field]);
-      $deleted_fields_repository->removeFieldStorageDefinition($stored_storages[$field]);
-    }
-  }
-}
