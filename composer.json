@@ -8,11 +8,5 @@
         "symfony/ldap": "~3.4.0",
         "drupal/authorization": "1.x-dev",
         "drupal/externalauth": "^1.0"
-    },
-    "provide": {
-        "ext-ldap": "1"
-    },
-    "replace": {
-        "ext-ldap": "*"
     }
 }
