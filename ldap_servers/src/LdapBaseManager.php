@@ -216,7 +216,7 @@ abstract class LdapBaseManager {
     }
     catch (LdapException $e) {
       $this->logger->error("LDAP server @sid exception: %ldap_error", [
-        '@sid' => $this->id(),
+        '@sid' => $this->server->id(),
         '%ldap_error' => $e->getMessage(),
       ]
       );
@@ -234,45 +234,21 @@ abstract class LdapBaseManager {
    * @return bool
    *   Result of query.
    *
-   * @TODO: Untested, can potentially be simplified through symfony/ldap itself.
    */
   public function modifyLdapEntry(Entry $entry) {
     $this->checkAvailability();
 
-    $error_message = FALSE;
-
     try {
-      $current = $this->ldap->query($entry->getDn(), 'objectClass=*')->execute();
+      $this->ldap->getEntryManager()->update($entry);
     }
     catch (LdapException $e) {
-      $error_message = $e->getMessage();
-    }
-
-    if ($error_message || $current->count() != 0) {
-      $this->logger->error("LDAP server read error on modify in @sid: @message ", [
-        '@message' => $error_message,
-        '@sid' => $this->id(),
-      ]
+      $this->logger->error("LDAP server error updating %dn on @sid exception: %ldap_error", [
+          '%dn' => $entry->getDn(),
+          '@sid' => $this->server->id(),
+          '%ldap_error' => $e->getMessage(),
+        ]
       );
       return FALSE;
-    }
-
-    $this->applyModificationsToEntry($entry, $current->toArray()[0]);
-
-    if (count($entry->getAttributes()) > 0) {
-      try {
-        $this->ldap->getEntryManager()->update($entry);
-      }
-      catch (LdapException $e) {
-        $this->logger->error("LDAP server error updating %dn on @sid: @message", [
-          // TODO: Check if we can also go with @dn.
-          '%dn' => $entry->getDn(),
-          '@sid' => $this->id(),
-          '@message' => $e->getMessage(),
-        ]
-        );
-        return FALSE;
-      }
     }
     return TRUE;
   }

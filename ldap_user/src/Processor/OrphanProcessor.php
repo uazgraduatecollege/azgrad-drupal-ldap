@@ -3,6 +3,7 @@
 namespace Drupal\ldap_user\Processor;
 
 use Drupal\Core\Config\ConfigFactory;
+use Drupal\Core\Entity\EntityTypeManager;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Logger\LoggerChannelInterface;
