@@ -3,12 +3,11 @@
 namespace Drupal\ldap_servers;
 
 use Drupal\Core\Cache\CacheBackendInterface;
-use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeManager;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandler;
 use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\externalauth\Authmap;
-use Drupal\ldap_servers\Helper\ConversionHelper;
 use Drupal\user\UserInterface;
 use Symfony\Component\Ldap\Entry;
 use Symfony\Component\Ldap\Exception\LdapException;
@@ -23,11 +22,24 @@ class LdapUserManager extends LdapBaseManager {
   protected $externalAuth;
 
   /**
+   * Constructor.
    *
+   * @param \Drupal\Core\Logger\LoggerChannelInterface $logger
+   *   Logger.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   *   Entity Type Manager.
+   * @param \Drupal\ldap_servers\LdapBridge $ldap_bridge
+   *   LDAP bridge.
+   * @param \Drupal\Core\Extension\ModuleHandler $module_handler
+   *   Module handler.
+   * @param \Drupal\Core\Cache\CacheBackendInterface $cache
+   *   Cache.
+   * @param \Drupal\externalauth\Authmap $external_auth
+   *   External auth.
    */
   public function __construct(
     LoggerChannelInterface $logger,
-    EntityTypeManager $entity_type_manager,
+    EntityTypeManagerInterface $entity_type_manager,
     LdapBridge $ldap_bridge,
     ModuleHandler $module_handler,
     CacheBackendInterface $cache,
@@ -69,7 +81,7 @@ class LdapUserManager extends LdapBaseManager {
   }
 
   /**
-   *
+   * @TODO / @FIXME: This is not called.
    */
   protected function applyModificationsToEntry(Entry $entry, $current) {
     if (!empty($attributes['unicodePwd']) && $this->get('type') == 'ad') {
@@ -102,118 +114,6 @@ class LdapUserManager extends LdapBaseManager {
       // in the $attributes array, hence it will be at index 0 and we return in
       // kind.
       return [mb_convert_encoding("\"{$password[0]}\"", "UTF-16LE")];
-    }
-  }
-
-  /**
-   * @deprecated
-   */
-  public function matchUsernameToExistingLdapEntry($drupal_username) {
-    $result = $this->queryAllBaseDnLdapForUsername($drupal_username);
-    if ($result !== FALSE) {
-      $result = $this->sanitizeUserDataResponse($result, $drupal_username);
-    }
-    return $result;
-  }
-
-  /**
-   * Queries LDAP server for the user.
-   *
-   * @param string $drupal_username
-   *   Drupal user name.
-   *
-   * @return \Symfony\Component\Ldap\Entry|false|null
-   *
-   * @Todo: This function does return data and check for validity of response.
-   *  This makes responses difficult to parse and should be optimized.
-   */
-  public function queryAllBaseDnLdapForUsername($drupal_username) {
-    $this->checkAvailability();
-
-    foreach ($this->server->getBaseDn() as $base_dn) {
-      $result = $this->queryLdapForUsername($base_dn, $drupal_username);
-      if ($result === FALSE || $result instanceof Entry) {
-        return $result;
-      }
-    }
-    return FALSE;
-  }
-
-  /**
-   * Queries LDAP server for the user.
-   *
-   * @param string $base_dn
-   *   Base DN.
-   * @param string $drupal_username
-   *   Drupal user name.
-   *
-   * @return \Symfony\Component\Ldap\Entry|false|null
-   *
-   * @throws \Drupal\ldap_servers\Exception\LdapManagerException
-   *
-   * @Todo: This function does return data and check for validity of response.
-   *  This makes responses difficult to parse and should be optimized.
-   */
-  public function queryLdapForUsername($base_dn, $drupal_username) {
-    $this->checkAvailability();
-
-    if (empty($base_dn)) {
-      return NULL;
-    }
-
-    $query = '(' . $this->server->get('user_attr') . '=' . ConversionHelper::escapeFilterValue($drupal_username) . ')';
-    try {
-      $ldap_response = $this->ldap->query($base_dn, $query)->execute();
-    }
-    catch (LdapException $e) {
-      // Must find exactly one user for authentication to work.
-      $this->logger->error('LDAP server query error %message', [
-        '%message' => $e->getMessage(),
-      ]
-      );
-      return FALSE;
-    }
-
-    if ($ldap_response->count() == 0) {
-      return NULL;
-    }
-    elseif ($ldap_response->count() != 1) {
-      // Must find exactly one user for authentication to work.
-      $this->logger->error('Error: %count users found with %filter under %base_dn.', [
-        '%count' => $ldap_response->count(),
-        '%filter' => $query,
-        '%base_dn' => $base_dn,
-      ]
-      );
-      return NULL;
-    }
-    return $ldap_response->toArray()[0];
-  }
-
-  /**
-   *
-   */
-  public function sanitizeUserDataResponse(Entry $entry, $drupal_username) {
-    // TODO: Make this more elegant.
-    foreach ($entry->getAttributes() as $key => $value) {
-      $entry->removeAttribute($key);
-      $entry->setAttribute(mb_strtolower($key), $value);
-    }
-
-    // TODO: Remove this if we are sure no one needs it anymore.
-    $entry->setAttribute('ldap_server_id', [$this->server->id()]);
-
-    if ($this->server->get('bind_method') == 'anon_user') {
-      return $entry;
-    }
-
-    // Filter out results with spaces added before or after, which are
-    // considered OK by LDAP but are no good for us. Some setups have multiple
-    // $nameAttribute per entry, so we loop through all possible options.
-    foreach ($entry->getAttribute($this->server->get('user_attr')) as $value) {
-      if (mb_strtolower(trim($value)) == mb_strtolower($drupal_username)) {
-        return $entry;
-      }
     }
   }
 

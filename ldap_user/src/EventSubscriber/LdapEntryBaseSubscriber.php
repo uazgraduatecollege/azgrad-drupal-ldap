@@ -14,7 +14,6 @@ use Drupal\ldap_servers\Logger\LdapDetailLog;
 use Drupal\ldap_servers\Processor\TokenProcessor;
 use Drupal\ldap_user\Exception\LdapBadParamsException;
 use Drupal\ldap_user\Helper\SyncMappingHelper;
-use Drupal\user\Entity\User;
 use Drupal\user\UserInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\Ldap\Entry;
@@ -39,13 +38,21 @@ abstract class LdapEntryBaseSubscriber implements EventSubscriberInterface, Ldap
    * @TODO: Consider moving this into the final class, not enough overlap.
    *
    * @param \Drupal\Core\Config\ConfigFactory $config_factory
+   *   Config factory.
    * @param \Drupal\Core\Logger\LoggerChannelInterface $logger
+   *   Logger.
    * @param \Drupal\ldap_servers\Logger\LdapDetailLog $detail_log
+   *   Detail log.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   *   Entity type manager.
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
+   *   Module handler.
    * @param \Drupal\ldap_servers\LdapUserManager $ldap_user_manager
+   *   LDAP user manager.
    * @param \Drupal\ldap_user\Helper\SyncMappingHelper $sync_mapping_helper
+   *   Sync mapping helper.
    * @param \Drupal\ldap_servers\Processor\TokenProcessor $token_processor
+   *   Token processor.
    */
   public function __construct(
     ConfigFactory $config_factory,
@@ -72,7 +79,7 @@ abstract class LdapEntryBaseSubscriber implements EventSubscriberInterface, Ldap
    * @return bool
    *   Provisioning available.
    */
-  protected function provisionsLdapEntriesFromDrupalUsers() {
+  protected function provisionLdapEntriesFromDrupalUsers() {
     if ($this->config->get('ldapEntryProvisionServer') &&
       count(array_filter(array_values($this->config->get('ldapEntryProvisionTriggers')))) > 0) {
       return TRUE;
@@ -92,7 +99,7 @@ abstract class LdapEntryBaseSubscriber implements EventSubscriberInterface, Ldap
    * @param string $prov_event
    *   Provisioning event.
    *
-   * @return Entry
+   * @return \Symfony\Component\Ldap\Entry
    *   Entry to send *to* LDAP.
    *
    * @throws \Drupal\ldap_user\Exception\LdapBadParamsException

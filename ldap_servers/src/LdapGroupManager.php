@@ -16,6 +16,10 @@ class LdapGroupManager extends LdapBaseManager {
 
   use LdapTransformationTraits;
 
+  const LDAP_QUERY_CHUNK = 50;
+  const LDAP_QUERY_RECURSION_LIMIT = 10;
+
+
   /**
    * Check if group memberships from attribute are configured.
    *
@@ -51,14 +55,13 @@ class LdapGroupManager extends LdapBaseManager {
    */
   private function getNestedGroupDnFilters(array $all_group_dns, array $or_filters, $level) {
     // Only 50 or so per query.
-    for ($key = 0; $key < count($or_filters); $key = $key + Server::LDAP_SERVER_LDAP_QUERY_CHUNK) {
-      $current_or_filters = array_slice($or_filters, $key, Server::LDAP_SERVER_LDAP_QUERY_CHUNK);
+    for ($key = 0; $key < count($or_filters); $key = $key + self::LDAP_QUERY_CHUNK) {
+      $current_or_filters = array_slice($or_filters, $key, self::LDAP_QUERY_CHUNK);
       // Example 1: (|(cn=group1)(cn=group2))
       // Example 2: (|(dn=cn=group1,ou=blah...)(dn=cn=group2,ou=blah...))
       $orFilter = '(|(' . implode(")(", $current_or_filters) . '))';
       $query_for_parent_groups = '(&(objectClass=' . $this->server->get('grp_object_cat') . ')' . $orFilter . ')';
 
-      $this->server->connectAndBindIfNotAlready();
       // Need to search on all base DN one at a time.
       foreach ($this->server->getBaseDn() as $base_dn) {
         // No attributes, just dns needed.
@@ -71,9 +74,9 @@ class LdapGroupManager extends LdapBaseManager {
           ]);
           continue;
         }
-        if ($ldap_result->count() > 0 && $level < Server::LDAP_SERVER_LDAP_QUERY_RECURSION_LIMIT) {
+        if ($ldap_result->count() > 0 && $level < self::LDAP_QUERY_RECURSION_LIMIT) {
           $tested_group_ids = [];
-          $this->groupMembershipsFromEntryRecursive($ldap_result, $all_group_dns, $tested_group_ids, $level + 1, Server::LDAP_SERVER_LDAP_QUERY_RECURSION_LIMIT);
+          $this->groupMembershipsFromEntryRecursive($ldap_result, $all_group_dns, $tested_group_ids, $level + 1, self::LDAP_QUERY_RECURSION_LIMIT);
         }
       }
     }
@@ -100,7 +103,7 @@ class LdapGroupManager extends LdapBaseManager {
   public function groupAddGroup($group_dn, array $attributes = []) {
     $this->checkAvailability();
 
-    if ($this->server->checkDnExists($group_dn)) {
+    if ($this->checkDnExists($group_dn)) {
       return FALSE;
     }
 
@@ -157,6 +160,7 @@ class LdapGroupManager extends LdapBaseManager {
    *
    * @return bool
    *   Removal result.
+   *
    * @TODO: When actually in use split into two to remove boolean modifier.
    */
   public function groupRemoveGroup($group_dn, $only_if_group_empty = TRUE) {
@@ -168,7 +172,7 @@ class LdapGroupManager extends LdapBaseManager {
         return FALSE;
       }
     }
-    return $this->server->deleteLdapEntry($group_dn);
+    return $this->deleteLdapEntry($group_dn);
 
   }
 
@@ -192,9 +196,22 @@ class LdapGroupManager extends LdapBaseManager {
 
     $result = FALSE;
     if ($this->groupGroupEntryMembershipsConfigured()) {
-      $this->server->connectAndBindIfNotAlready();
-      $new_member = [$this->server->get('grp_memb_attr') => $user];
-      $result = @ldap_mod_add($this->connection, $group_dn, $new_member);
+      try {
+        $entry = new Entry($group_dn);
+        // TODO: Bugreport upstream interface.
+        /** @var \Symfony\Component\Ldap\Adapter\ExtLdap\EntryManager $manager */
+        $manager = $this->ldap->getEntryManager();
+        $manager->addAttributeValues($entry, $this->server->get('grp_memb_attr'), [$user]);
+        $result = TRUE;
+      }
+      catch (LdapException $e) {
+        $this->logger->error("LDAP server error updating %dn on @sid exception: %ldap_error", [
+          '%dn' => $entry->getDn(),
+          '@sid' => $this->server->id(),
+          '%ldap_error' => $e->getMessage(),
+        ]
+        );
+      }
     }
 
     return $result;
@@ -212,18 +229,28 @@ class LdapGroupManager extends LdapBaseManager {
    *
    * @return bool
    *   Operation successful.
-   *
-   * @FIXME symfony/ldap refactoring needed.
    */
   public function groupRemoveMember($group_dn, $member) {
     $this->checkAvailability();
 
     $result = FALSE;
     if ($this->groupGroupEntryMembershipsConfigured()) {
-      $del = [];
-      $del[$this->server->get('grp_memb_attr')] = $member;
-      $this->server->connectAndBindIfNotAlready();
-      $result = @ldap_mod_del($this->connection, $group_dn, $del);
+      try {
+        $entry = new Entry($group_dn);
+        // TODO: Bugreport upstream interface.
+        /** @var \Symfony\Component\Ldap\Adapter\ExtLdap\EntryManager $manager */
+        $manager = $this->ldap->getEntryManager();
+        $manager->removeAttributeValues($entry, $this->server->get('grp_memb_attr'), [$member]);
+        $result = TRUE;
+      }
+      catch (LdapException $e) {
+        $this->logger->error("LDAP server error updating %dn on @sid exception: %ldap_error", [
+          '%dn' => $entry->getDn(),
+          '@sid' => $this->server->id(),
+          '%ldap_error' => $e->getMessage(),
+        ]
+        );
+      }
     }
     return $result;
   }
@@ -250,7 +277,7 @@ class LdapGroupManager extends LdapBaseManager {
     }
 
     $attributes = [$this->server->get('grp_memb_attr'), 'cn', 'objectclass'];
-    $group_entry = $this->server->checkDnExistsIncludeData($group_dn, $attributes);
+    $group_entry = $this->checkDnExistsIncludeData($group_dn, $attributes);
     if (!$group_entry) {
       return FALSE;
     }
@@ -265,7 +292,7 @@ class LdapGroupManager extends LdapBaseManager {
       }
       $members = $group_entry->getAttribute($this->server->get('grp_memb_attr'));
 
-      $result = $this->groupMembersRecursive($group_entry, $members, [], 0, Server::LDAP_SERVER_LDAP_QUERY_RECURSION_LIMIT);
+      $result = $this->groupMembersRecursive($group_entry, $members, [], 0, self::LDAP_QUERY_RECURSION_LIMIT);
       // Remove the DN of the source group.
       if (($key = array_search($group_dn, $members)) !== FALSE) {
         unset($members[$key]);
@@ -302,7 +329,7 @@ class LdapGroupManager extends LdapBaseManager {
     }
 
     $attributes = [$this->server->get('grp_memb_attr'), 'cn', 'objectclass'];
-    $group_entry = $this->server->checkDnExistsIncludeData($group_dn, $attributes);
+    $group_entry = $this->checkDnExistsIncludeData($group_dn, $attributes);
     if (!$group_entry) {
       return FALSE;
     }
@@ -451,7 +478,7 @@ class LdapGroupManager extends LdapBaseManager {
     $this->checkAvailability();
 
     $group_dns = FALSE;
-    $user_ldap_entry = $this->server->matchUsernameToExistingLdapEntry($username);
+    $user_ldap_entry = $this->matchUsernameToExistingLdapEntry($username);
     if (!$user_ldap_entry || $this->server->get('grp_unused')) {
       return FALSE;
     }
@@ -549,16 +576,13 @@ class LdapGroupManager extends LdapBaseManager {
       $member_value = $ldap_entry->getAttribute($this->server->get('grp_memb_attr_match_user_attr'))[0];
     }
 
-    $groupQuery = '(&(objectClass=' . $this->server->get('grp_object_cat') . ')(' . $this->server->get('grp_memb_attr') . "=$member_value))";
-
-    $this->server->connectAndBindIfNotAlready();
-
     // Need to search on all basedns one at a time.
     foreach ($this->server->getBaseDn() as $baseDn) {
       // Only need dn, so empty array forces return of no attributes.
       // TODO: See if this syntax is correct and returns us valid DN with no attributes.
       try {
-        $ldap_result = $this->ldap->query($baseDn, $groupQuery, ['filter' => []])->execute();
+        $group_query = '(&(objectClass=' . $this->server->get('grp_object_cat') . ')(' . $this->server->get('grp_memb_attr') . "=$member_value))";
+        $ldap_result = $this->ldap->query($baseDn, $group_query, ['filter' => []])->execute();
       }
       catch (LdapException $e) {
         $this->logger->critical('LDAP search error with %message', [
@@ -568,7 +592,7 @@ class LdapGroupManager extends LdapBaseManager {
       }
 
       if ($ldap_result->count() > 0) {
-        $maxLevels = $this->server->get('grp_nested') ? Server::LDAP_SERVER_LDAP_QUERY_RECURSION_LIMIT : 0;
+        $maxLevels = $this->server->get('grp_nested') ? self::LDAP_QUERY_RECURSION_LIMIT : 0;
         $this->groupMembershipsFromEntryRecursive($ldap_result, $all_group_dns, $tested_group_ids, $level, $maxLevels);
       }
     }
@@ -628,8 +652,8 @@ class LdapGroupManager extends LdapBaseManager {
       // Only 50 or so per query.
       // TODO: We can likely remove this since we are fetching one result at a
       // time with symfony/ldap.
-      for ($key = 0; $key < count($or_filters); $key = $key + Server::LDAP_SERVER_LDAP_QUERY_CHUNK) {
-        $current_or_filters = array_slice($or_filters, $key, Server::LDAP_SERVER_LDAP_QUERY_CHUNK);
+      for ($key = 0; $key < count($or_filters); $key = $key + self::LDAP_QUERY_CHUNK) {
+        $current_or_filters = array_slice($or_filters, $key, self::LDAP_QUERY_CHUNK);
         // Example 1: (|(cn=group1)(cn=group2))
         // Example 2: (|(dn=cn=group1,ou=blah...)(dn=cn=group2,ou=blah...))
         $or = '(|(' . implode(")(", $current_or_filters) . '))';
@@ -675,12 +699,11 @@ class LdapGroupManager extends LdapBaseManager {
     if (!$this->server->get('grp_derive_from_dn') || !$this->server->get('grp_derive_from_dn_attr')) {
       return FALSE;
     }
-    elseif ($ldap_entry = $this->server->matchUsernameToExistingLdapEntry($username)) {
-      return $this->server->getAllRdnValuesFromDn($ldap_entry->getDn(), $this->server->get('grp_derive_from_dn_attr'));
+
+    if ($ldap_entry = $this->matchUsernameToExistingLdapEntry($username)) {
+      return $this->getAllRdnValuesFromDn($ldap_entry->getDn(), $this->server->get('grp_derive_from_dn_attr'));
     }
-    else {
-      return FALSE;
-    }
+    return FALSE;
   }
 
   /**

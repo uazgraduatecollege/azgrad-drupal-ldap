@@ -3,7 +3,6 @@
 namespace Drupal\ldap_user\EventSubscriber;
 
 use Drupal\ldap_servers\Entity\Server;
-use Drupal\ldap_servers\Helper\ConversionHelper;
 use Drupal\ldap_user\Event\LdapNewUserCreatedEvent;
 use Drupal\ldap_user\Event\LdapUserLoginEvent;
 use Drupal\ldap_user\Event\LdapUserUpdatedEvent;
@@ -19,30 +18,24 @@ class LdapEntryProvisionSubscriber extends LdapEntryBaseSubscriber {
    * {@inheritdoc}
    */
   public static function getSubscribedEvents() {
-    $events[LdapNewUserCreatedEvent::EVENT_NAME] = ['provisionLdapEntryOnUserCreation'];
-    $events[LdapUserLoginEvent::EVENT_NAME] = ['loginLdapEntryProvisioning'];
-    $events[LdapUserUpdatedEvent::EVENT_NAME] = ['provisionLdapEntryOnUserUpdated'];
+    $events[LdapUserLoginEvent::EVENT_NAME] = ['login'];
+    $events[LdapNewUserCreatedEvent::EVENT_NAME] = ['userCreated'];
+    $events[LdapUserUpdatedEvent::EVENT_NAME] = ['userUpdated'];
     return $events;
-  }
-
-  /**
-   * TODO: Make sure we are not working on excluded accounts.
-   */
-  public function provisionLdapEntryOnUserUpdated(LdapUserUpdatedEvent $event) {
   }
 
   /**
    * Handle account login with LDAP entry provisioning.
    *
-   * @deprecated move one level down
+   * @param \Drupal\ldap_user\Event\LdapUserLoginEvent $event
+   *   Event.
    */
-  public function loginLdapEntryProvisioning(LdapUserLoginEvent $event) {
+  public function login(LdapUserLoginEvent $event) {
     $triggers = $this->config->get('ldapEntryProvisionTriggers');
-    if ($this->provisionsLdapEntriesFromDrupalUsers() && in_array(self::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_AUTHENTICATION, $triggers)) {
-      // TODO: Inject.
-      $authmap = \Drupal::service('externalauth.authmap');
-      $authname = $authmap->get($event->account->id(), 'ldap_user');
-      if (!$this->ldapUserManager->checkDnExists($authname)) {
+    if ($this->provisionLdapEntriesFromDrupalUsers() && in_array(self::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_AUTHENTICATION, $triggers)) {
+      if (!$this->checkExistingLdapEntry($event->account)) {
+        // This should only be necessary if the entry was deleted on the
+        // directory server.
         $this->provisionLdapEntry($event->account);
       }
       else {
@@ -52,13 +45,37 @@ class LdapEntryProvisionSubscriber extends LdapEntryBaseSubscriber {
   }
 
   /**
-   * This method is called whenever the ldap_new_drupal_user_created event is
-   * dispatched.
+   * Create or update LDAP entries on user update.
    *
-   * @TODO: Wrong event passed.
+   * TODO: Make sure we are not working on excluded accounts, see also
+   * other events.
+   *
+   * @param \Drupal\ldap_user\Event\LdapUserUpdatedEvent $event
+   *   Event.
    */
-  public function provisionLdapEntryOnUserCreation(LdapNewUserCreatedEvent $event) {
-    if ($this->provisionsLdapEntriesFromDrupalUsers()) {
+  public function userUpdated(LdapUserUpdatedEvent $event) {
+    if ($this->provisionLdapEntriesFromDrupalUsers()) {
+      if (isset($this->config->get('ldapEntryProvisionTriggers')[self::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_UPDATE_CREATE])) {
+        if (!$this->checkExistingLdapEntry($event->account)) {
+          // This should only be necessary if the entry was deleted on the
+          // directory server.
+          $this->provisionLdapEntry($event->account);
+        }
+        else {
+          $this->syncToLdapEntry($event->account);
+        }
+      }
+    }
+  }
+
+  /**
+   * Create or update LDAP entries on user creation.
+   *
+   * @param \Drupal\ldap_user\Event\LdapNewUserCreatedEvent $event
+   *   Event.
+   */
+  public function userCreated(LdapNewUserCreatedEvent $event) {
+    if ($this->provisionLdapEntriesFromDrupalUsers()) {
       if (isset($this->config->get('ldapEntryProvisionTriggers')[self::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_UPDATE_CREATE])) {
         if (!$this->checkExistingLdapEntry($event->account)) {
           $this->provisionLdapEntry($event->account);
@@ -108,22 +125,23 @@ class LdapEntryProvisionSubscriber extends LdapEntryBaseSubscriber {
       return FALSE;
     }
 
-    $proposed_dn_lowercase = mb_strtolower($entry->getDn());
-
     if (empty($entry->getDn())) {
-      $this->detailLog->log('Failed to derive dn and or mappings', [], 'ldap_user');
+      $this->detailLog->log('Failed to derive DN.', [], 'ldap_user');
+      return FALSE;
+    }
+
+    if (empty($entry->getAttributes())) {
+      $this->detailLog->log('No attributes defined in mappings.', [], 'ldap_user');
       return FALSE;
     }
 
     // Stick $proposedLdapEntry in $ldapEntries array for drupal_alter.
     $context = [
       'action' => 'add',
-      'corresponding_drupal_data' => [$proposed_dn_lowercase => $account],
       'corresponding_drupal_data_type' => 'user',
       'account' => $account,
     ];
     $this->moduleHandler->alter('ldap_entry_pre_provision', $entry, $ldap_server, $context);
-    // Remove altered $proposedLdapEntry from $ldapEntries array.
     $this->ldapUserManager->setServer($ldap_server);
     if ($this->ldapUserManager->createLdapEntry($entry)) {
       $callback_params = [$entry, $ldap_server, $context];
@@ -155,46 +173,43 @@ class LdapEntryProvisionSubscriber extends LdapEntryBaseSubscriber {
   }
 
   /**
-   * Update LDAP Entry event.
+   * Save provisioning entries to database.
    *
-   * @param \Drupal\ldap_user\Event\LdapUserUpdatedEvent $event
-   *   todo: needed?
-   */
-  public function updateLdapEntry(LdapUserUpdatedEvent $event) {
-    /** @var \Drupal\user\Entity\User $account */
-    $account = $event->account;
-    // TODO: Check 3.x to see if we introduced a bug here.
-    if ($this->ldapEntryProvisionValid($account->getAccountName())) {
-      $this->syncToLdapEntry($account);
-    }
-  }
-
-  /**
-   * Should we update the LDAP entry?
+   * Need to store <sid>|<dn> in ldap_user_prov_entries field, which may
+   *  contain more than one.
    *
-   * @param $account_name
-   *   Drupal user name.
-   *
-   * @return bool
-   *   Provision.
-   *   todo: needed?
-   */
-  private function ldapEntryProvisionValid($account_name) {
-    $triggers = $this->config->get('ldapEntryProvisionTriggers');
-    if ($this->provisionsLdapEntriesFromDrupalUsers() && in_array(self::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_AUTHENTICATION, $triggers)) {
-      return TRUE;
-    }
-    return FALSE;
-  }
-
-
-  /**
    * @param \Drupal\user\UserInterface $account
+   * @param \Drupal\ldap_servers\Entity\Server $ldap_server
+   * @param \Symfony\Component\Ldap\Entry $entry
+   *
+   * @throws \Drupal\Core\Entity\EntityStorageException
    */
-  protected function checkExistingLdapEntry(UserInterface $account) {
-    $authmap = \Drupal::service('externalauth.authmap')->get($account->id(), 'ldap_user');
-    if ($authmap) {
-      $this->ldapUserManager->queryAllBaseDnLdapForUsername($authmap);
+  protected function updateUserProvisioningReferences(
+    UserInterface $account,
+    Server $ldap_server,
+    Entry $entry
+  ) {
+    $ldap_user_prov_entry = $ldap_server->id() . '|' . $entry->getDn();
+    if (NULL !== $account->get('ldap_user_prov_entries')) {
+      $account->set('ldap_user_prov_entries', []);
+    }
+    $ldap_user_provisioning_entry_exists = FALSE;
+    if ($account->get('ldap_user_prov_entries')->value) {
+      foreach ($account->get('ldap_user_prov_entries')->value as $field_value_instance) {
+        if ($field_value_instance == $ldap_user_prov_entry) {
+          $ldap_user_provisioning_entry_exists = TRUE;
+        }
+      }
+    }
+    if (!$ldap_user_provisioning_entry_exists) {
+      $prov_entries = $account->get('ldap_user_prov_entries')->value;
+      $prov_entries[] = [
+        'value' => $ldap_user_prov_entry,
+        'format' => NULL,
+        'save_value' => $ldap_user_prov_entry,
+      ];
+      $account->set('ldap_user_prov_entries', $prov_entries);
+      $account->save();
     }
   }
 
@@ -225,7 +240,6 @@ class LdapEntryProvisionSubscriber extends LdapEntryBaseSubscriber {
 
     if (!empty($entry->getDn())) {
       // Stick $proposedLdapEntry in $ldap_entries array for drupal_alter.
-      $proposed_dn_lower_case = mb_strtolower($entry->getDn());
       $context = [
         'action' => 'update',
         'corresponding_drupal_data_type' => 'user',
@@ -246,42 +260,12 @@ class LdapEntryProvisionSubscriber extends LdapEntryBaseSubscriber {
   }
 
   /**
-   * Save provisioning entries to database.
-   *
-   * Need to store <sid>|<dn> in ldap_user_prov_entries field, which may
-   *  contain more than one.
    * @param \Drupal\user\UserInterface $account
-   * @param Server $ldap_server
-   * @param Entry $entry
-   *
-   * @throws \Drupal\Core\Entity\EntityStorageException
    */
-  protected function updateUserProvisioningReferences(
-    UserInterface $account,
-    Server $ldap_server,
-    Entry $entry
-  ) {
-    $ldap_user_prov_entry = $ldap_server->id() . '|' . $entry->getDn();
-    if (NULL !== $account->get('ldap_user_prov_entries')) {
-      $account->set('ldap_user_prov_entries', []);
-    }
-    $ldap_user_provisioning_entry_exists = FALSE;
-    if ($account->get('ldap_user_prov_entries')->value) {
-      foreach ($account->get('ldap_user_prov_entries')->value as $field_value_instance) {
-        if ($field_value_instance == $ldap_user_prov_entry) {
-          $ldap_user_provisioning_entry_exists = TRUE;
-        }
-      }
-    }
-    if (!$ldap_user_provisioning_entry_exists) {
-      $prov_entries = $account->get('ldap_user_prov_entries')->value;
-      $prov_entries[] = [
-        'value' => $ldap_user_prov_entry,
-        'format' => NULL,
-        'save_value' => $ldap_user_prov_entry,
-      ];
-      $account->set('ldap_user_prov_entries', $prov_entries);
-      $account->save();
+  protected function checkExistingLdapEntry(UserInterface $account) {
+    $authmap = \Drupal::service('externalauth.authmap')->get($account->id(), 'ldap_user');
+    if ($authmap) {
+      $this->ldapUserManager->queryAllBaseDnLdapForUsername($authmap);
     }
   }
 

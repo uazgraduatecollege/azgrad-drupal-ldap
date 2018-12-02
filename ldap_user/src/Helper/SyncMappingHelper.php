@@ -34,57 +34,100 @@ class SyncMappingHelper implements LdapUserAttributesInterface {
   }
 
   /**
+   * Is synced to Drupal on creation.
    *
+   * @param $token
+   *   Attribute token.
+   *
+   * @return bool
+   *   Synced.
    */
-  public function isSyncedToDrupalOnCreation($attr_token) {
+  public function isSyncedToDrupalOnCreation($token) {
     $config = $this->config->get('ldapUserSyncMappings');
-    return isset($config[self::PROVISION_TO_DRUPAL][$attr_token]['prov_events'][self::EVENT_CREATE_DRUPAL_USER]) ? TRUE : FALSE;
+    return isset($config[self::PROVISION_TO_DRUPAL][$token]['prov_events'][self::EVENT_CREATE_DRUPAL_USER]) ? TRUE : FALSE;
   }
 
   /**
+   * Is synced to Drupal on update.
    *
+   * @param $token
+   *   Attribute token.
+   *
+   * @return bool
+   *   Synced.
    */
-  public function isSyncedToDrupalOnUpdate($attr_token) {
+  public function isSyncedToDrupalOnUpdate($token) {
     $config = $this->config->get('ldapUserSyncMappings');
-    return isset($config[self::PROVISION_TO_DRUPAL][$attr_token]['prov_events'][self::EVENT_SYNC_TO_DRUPAL_USER]) ? TRUE : FALSE;
+    return isset($config[self::PROVISION_TO_DRUPAL][$token]['prov_events'][self::EVENT_SYNC_TO_DRUPAL_USER]) ? TRUE : FALSE;
   }
 
   /**
+   * Is synced to LDAP on creation.
    *
+   * @param $token
+   *   Attribute token.
+   *
+   * @return bool
+   *   Synced.
    */
-  public function isSyncedToLDAPOnCreation($attr_token) {
+  public function isSyncedToLDAPOnCreation($token) {
     $config = $this->config->get('ldapUserSyncMappings');
-    return isset($config[self::PROVISION_TO_LDAP][$attr_token]['prov_events'][self::EVENT_CREATE_LDAP_ENTRY]) ? TRUE : FALSE;
+    return isset($config[self::PROVISION_TO_LDAP][$token]['prov_events'][self::EVENT_CREATE_LDAP_ENTRY]) ? TRUE : FALSE;
   }
 
   /**
+   * Is synced to LDAP on update.
    *
+   * @param $token
+   *   Attribute token.
+   *
+   * @return bool
+   *   Synced.
    */
-  public function isSyncedToLDAPOnUpdate($attr_token) {
+  public function isSyncedToLDAPOnUpdate($token) {
     $config = $this->config->get('ldapUserSyncMappings');
-    return isset($config[self::PROVISION_TO_LDAP][$attr_token]['prov_events'][self::EVENT_SYNC_TO_LDAP_ENTRY]) ? TRUE : FALSE;
+    return isset($config[self::PROVISION_TO_LDAP][$token]['prov_events'][self::EVENT_SYNC_TO_LDAP_ENTRY]) ? TRUE : FALSE;
   }
 
   /**
+   * Is synced to Drupal.
    *
+   * @param $token
+   *   Attribute token.
+   *
+   * @return bool
+   *   Synced.
    */
-  public function isSyncedToDrupal($attr_token, $event) {
+  public function isSyncedToDrupal($token, $event) {
     $config = $this->config->get('ldapUserSyncMappings');
-    return isset($config[self::PROVISION_TO_DRUPAL][$attr_token]['prov_events'][$event]) ? TRUE : FALSE;
+    return isset($config[self::PROVISION_TO_DRUPAL][$token]['prov_events'][$event]) ? TRUE : FALSE;
   }
 
   /**
+   * Is synced to LDAP.
    *
-   */
-  public function isSyncedToLdap($attr_token, $event) {
-    $config = $this->config->get('ldapUserSyncMappings');
-    return isset($config[self::PROVISION_TO_LDAP][$attr_token]['prov_events'][$event]) ? TRUE : FALSE;
-  }
-
-  /**
+   * @param $token
+   *   Attribute token.
+   *
    * @param $event
+   *   Event.
+   *
+   * @return bool
+   *   Synced.
+   */
+  public function isSyncedToLdap($token, $event) {
+    $config = $this->config->get('ldapUserSyncMappings');
+    return isset($config[self::PROVISION_TO_LDAP][$token]['prov_events'][$event]) ? TRUE : FALSE;
+  }
+
+  /**
+   * Get fields synced to Drupal.
+   *
+   * @param string $event
+   *   Event.
    *
    * @return array
+   *   Fields.
    */
   public function getFieldsSyncedToDrupal($event) {
     $mappings_on_event = [];
@@ -101,9 +144,13 @@ class SyncMappingHelper implements LdapUserAttributesInterface {
   }
 
   /**
-   * @param $event
+   * Get fields synced to LDAP.
+   *
+   * @param string $event
+   *   Event.
    *
    * @return array
+   *   Fields.
    */
   public function getFieldsSyncedToLdap($event) {
     $mappings_on_event = [];

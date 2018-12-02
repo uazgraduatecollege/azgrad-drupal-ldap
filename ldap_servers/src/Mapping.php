@@ -3,7 +3,7 @@
 namespace Drupal\ldap_servers;
 
 /**
- *
+ * Interface for the synchronization mappings ldap_user provides.
  */
 class Mapping {
 
@@ -24,12 +24,19 @@ class Mapping {
    * Mapping constructor.
    *
    * @param $id
+   *   ID.
    * @param null $label
+   *   Label.
    * @param bool $configurable
+   *   Configurable.
    * @param bool $enabled
-   * @param null $provisioning_events
+   *   Enabled.
+   * @param array $provisioning_events
+   *   Provisioning events.
    * @param null $configuration_module
+   *   Configuration module.
    * @param null $provisioning_module
+   *   Provisioning module.
    */
   public function __construct(
     $id,
@@ -49,66 +56,93 @@ class Mapping {
   }
 
   /**
+   * Get label.
+   *
    * @return null|string
+   *   Label.
    */
   public function getLabel() {
     return $this->label;
   }
 
   /**
-   * @param string $name
+   * Set label.
+   *
+   * @param string $label
+   *   Label.
    */
   public function setLabel($label) {
     $this->label = $label;
   }
 
   /**
+   * Is configurable.
    *
+   * @return bool
+   *   Configurable.
    */
   public function isConfigurable() {
     return $this->configurable;
   }
 
   /**
-   * @return null
+   * Get notes.
+   *
+   * @return null|string
+   *   Notes.
    */
   public function getNotes() {
     return $this->notes;
   }
 
   /**
-   * @param null $notes
+   * Set Notes.
+   *
+   * @param string $notes
+   *   Notes.
    */
   public function setNotes($notes) {
     $this->notes = $notes;
   }
 
   /**
+   * Is enabled.
+   *
    * @return bool
+   *   Enabled.
    */
   public function isEnabled() {
     return $this->enabled;
   }
 
   /**
+   * Set enabled.
+   *
    * @param bool $enabled
+   *   Enabled.
    */
   public function setEnabled(bool $enabled) {
     $this->enabled = $enabled;
   }
 
   /**
+   * Get provisioning events.
+   *
    * @return array
+   *   Events.
    */
-  public function getProvisioningEvents() {
+  public function getProvisioningEvents(): array {
     return $this->provisioningEvents;
   }
 
   /**
-   * @param array $prov_events
+   * Set provisioning events.
+   *
+   * @param array $events
+   *   Provisioning vents.
    */
-  public function setProvisioningEvents(array $prov_events) {
-    $this->provisioningEvents = $prov_events;
+  public function setProvisioningEvents(array $events) {
+    $this->provisioningEvents = $events;
   }
 
   /**

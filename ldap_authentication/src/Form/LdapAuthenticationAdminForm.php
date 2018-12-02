@@ -361,13 +361,15 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
   /**
    * Helper function to convert array to serialized lines.
    *
+   * Also used in ldap_sso, thus public.
+   *
    * @param string $lines
    *   Serialized lines.
    *
    * @return array
    *   Deserialized content.
    */
-  private function linesToArray($lines) {
+  public static function linesToArray($lines) {
     $lines = trim($lines);
 
     if ($lines) {

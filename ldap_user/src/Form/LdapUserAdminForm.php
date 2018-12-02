@@ -12,7 +12,6 @@ use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Url;
-use Drupal\ldap_servers\Entity\Server;
 use Drupal\ldap_servers\Helper\ConversionHelper;
 use Drupal\ldap_servers\LdapUserAttributesInterface;
 use Drupal\ldap_servers\Mapping;
@@ -48,7 +47,7 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    return new static (
+    return new static(
       $container->get('config.factory'),
       $container->get('cache.default'),
       $container->get('module_handler'),
@@ -772,7 +771,7 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
 
     $available_mappings = $this->processSyncMappings();
     if (!empty($available_mappings[$direction])) {
-      /**  @var \Drupal\ldap_servers\Mapping $mapping */
+      /** @var \Drupal\ldap_servers\Mapping $mapping */
       foreach ($available_mappings[$direction] as $target_id => $mapping) {
 
         if (empty($mapping->getLabel())) {
@@ -847,14 +846,10 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
   /**
    * Get mapping form row to LDAP user provisioning mapping admin form table.
    *
-   * @param string $action
-   *   Action is either add, update, or nonconfigurable.
-   * @param array $mapping
-   *   Is current setting for updates or nonconfigurable items.
+   * @param \Drupal\ldap_servers\Mapping $mapping
+   *   Is current setting for updates or non-configurable items.
    * @param array $userAttributeOptions
    *   Attributes of Drupal user target options.
-   * @param int $rowId
-   *   Is current row in table.
    *
    * @return array
    *   A single row
@@ -931,9 +926,7 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
   /**
    * Get mapping form row to LDAP user provisioning mapping admin form table.
    *
-   * @param string $action
-   *   Action is either add, update, or nonconfigurable.
-   * @param array $mapping
+   * @param \Drupal\ldap_servers\Mapping $mapping
    *   Is current setting for updates or nonconfigurable items.
    * @param array $userAttributeOptions
    *   Attributes of Drupal user target options.
@@ -1042,8 +1035,7 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
    *   Returns safe string.
    */
   private function sanitizeMachineName($string) {
-    // Replace dots
-    // Replace square brackets.
+    // Replace periods & square brackets.
     return str_replace(['.', '[', ']'], ['-', '', ''], $string);
   }
 
@@ -1155,12 +1147,10 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
       $ldap_server = FALSE;
       if ($sid) {
         try {
-          // TODO: DI.
-          $ldap_server = Server::load($sid);
+          $ldap_server = $this->entityTypeManager->getStorage('ldap_server')->load($sid);
         }
         catch (\Exception $e) {
-          // TODO: DI.
-          \Drupal::logger('ldap_user')->error('Missing server');
+          $this->logger('ldap_user')->error('Missing server');
         }
       }
 

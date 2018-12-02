@@ -46,7 +46,7 @@ class IntegrationTests extends KernelTestBase {
    */
   public function brokenTestProcessor() {
     $processor = \Drupal::service('ldap.drupal_user_processor');
-    $result = $processor->createDrupalUserFromLdapEntry(['name' => 'hpotter']);
+    $processor->createDrupalUserFromLdapEntry(['name' => 'hpotter']);
     $user = $processor->getUserAccount();
     // @TODO: Inject a server configuration for the provisioning server,
     // override the server factory to provide a dummy server.

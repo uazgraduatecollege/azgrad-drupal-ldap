@@ -9,6 +9,7 @@ use Drupal\authorization\Provider\ProviderPluginBase;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\ldap_servers\Helper\ConversionHelper;
 use Drupal\ldap_servers\LdapTransformationTraits;
+use Drupal\ldap_user\Processor\DrupalUserProcessor;
 use Drupal\user\UserInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -41,12 +42,26 @@ class LDAPAuthorizationProvider extends ProviderPluginBase implements ContainerF
 
   protected $entityTypeManager;
 
+  protected $drupalUserProcessor;
+
   /**
+   * Constructor.
    *
+   * @param array $configuration
+   *   Configuration.
+   * @param $plugin_id
+   *   Plugin ID.
+   * @param array $plugin_definition
+   *   Plugin definition.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   *   Entity type manager.
+   * @param \Drupal\ldap_user\Processor\DrupalUserProcessor $drupal_user_processor
+   *   Drupal user processor.
    */
-  public function __construct(array $configuration, $plugin_id, array $plugin_definition, EntityTypeManagerInterface $entity_type_manager) {
+  public function __construct(array $configuration, $plugin_id, array $plugin_definition, EntityTypeManagerInterface $entity_type_manager, DrupalUserProcessor $drupal_user_processor) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->entityTypeManager = $entity_type_manager;
+    $this->drupalUserProcessor = $drupal_user_processor;
   }
 
   /**
@@ -57,7 +72,8 @@ class LDAPAuthorizationProvider extends ProviderPluginBase implements ContainerF
       $configuration,
       $plugin_id,
       $plugin_definition,
-      $container->get('entity_type.manager')
+      $container->get('entity_type.manager'),
+      $container->get('ldap.drupal_user_processor')
     );
   }
 
@@ -178,11 +194,8 @@ class LDAPAuthorizationProvider extends ProviderPluginBase implements ContainerF
    */
   public function getProposals(UserInterface $user) {
 
-    /** @var \Drupal\ldap_user\Processor\DrupalUserProcessor $processor */
-    // TODO: Inject, DI.
-    $processor = \Drupal::service('ldap.drupal_user_processor');
     // Do not continue if user should be excluded from LDAP authentication.
-    if ($processor->excludeUser($user)) {
+    if ($this->drupalUserProcessor->excludeUser($user)) {
       throw new AuthorizationSkipAuthorization();
     }
     /** @var \Drupal\authorization\Entity\AuthorizationProfile $profile */

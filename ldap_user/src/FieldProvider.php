@@ -5,6 +5,7 @@ namespace Drupal\ldap_user;
 use Drupal\Core\Config\ConfigFactory;
 use Drupal\Core\Entity\EntityFieldManager;
 use Drupal\Core\Entity\EntityTypeManager;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandler;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\ldap_servers\LdapUserAttributesInterface;
@@ -28,14 +29,19 @@ class FieldProvider implements LdapUserAttributesInterface {
    * Constructor.
    *
    * @param \Drupal\Core\Config\ConfigFactory $config_factory
-   * @param \Drupal\Core\Entity\EntityTypeManager $entity_type_manager
+   *   Config factory.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   *   Entity type manager.
    * @param \Drupal\Core\Extension\ModuleHandler $module_handler
+   *   Module handler.
    * @param \Drupal\Core\Entity\EntityFieldManager $entity_field_manager
+   *   Entity field manager.
    * @param \Drupal\ldap_user\Helper\SyncMappingHelper $sync_mapper
+   *   Sync mapper.
    */
   public function __construct(
     ConfigFactory $config_factory,
-    EntityTypeManager $entity_type_manager,
+    EntityTypeManagerInterface $entity_type_manager,
     ModuleHandler $module_handler,
     EntityFieldManager $entity_field_manager,
     SyncMappingHelper $sync_mapper) {
@@ -82,8 +88,6 @@ class FieldProvider implements LdapUserAttributesInterface {
    *   Available attributes.
    * @param array $saved_mappings
    *   Mappings.
-   * @param string $direction
-   *   Synchronization direction.
    *
    * @return array
    *   All attributes applied.
@@ -133,14 +137,18 @@ class FieldProvider implements LdapUserAttributesInterface {
   }
 
   /**
-   * @param \Drupal\ldap_servers\Mapping[] $availableUserAttributes
+   * Add to LDAP Provisioning fields.
+   *
+   * @param \Drupal\ldap_servers\Mapping[] $attributes
+   *   Available user attributes.
    *
    * @return array
+   *   Available user attributes.
    */
-  private function addToLdapProvisioningFields(array $availableUserAttributes) {
-    if (isset($availableUserAttributes['[property.name]'])) {
-      $availableUserAttributes['[property.name]']->setConfigurationModule('ldap_user');
-      $availableUserAttributes['[property.name]']->setConfigurable(TRUE);
+  private function addToLdapProvisioningFields(array $attributes) {
+    if (isset($attributes['[property.name]'])) {
+      $attributes['[property.name]']->setConfigurationModule('ldap_user');
+      $attributes['[property.name]']->setConfigurable(TRUE);
     }
 
     $fields = [
@@ -154,12 +162,12 @@ class FieldProvider implements LdapUserAttributesInterface {
     ];
 
     foreach ($fields as $key => $name) {
-      if (isset($availableUserAttributes[$key])) {
-        $availableUserAttributes[$key]->setConfigurationModule('ldap_user');
-        $availableUserAttributes[$key]->setConfigurable(TRUE);
+      if (isset($attributes[$key])) {
+        $attributes[$key]->setConfigurationModule('ldap_user');
+        $attributes[$key]->setConfigurable(TRUE);
       }
       else {
-        $availableUserAttributes[$key] = new Mapping(
+        $attributes[$key] = new Mapping(
           $key,
           $name,
           TRUE,
@@ -173,17 +181,19 @@ class FieldProvider implements LdapUserAttributesInterface {
               );
       }
     }
-    return $availableUserAttributes;
+    return $attributes;
   }
 
   /**
    * Additional access needed in direction to Drupal.
    *
-   * @param \Drupal\ldap_servers\Mapping[] $availableUserAttributes
+   * @param \Drupal\ldap_servers\Mapping[] $attributes
+   *   Available user attributes.
    *
    * @return array
+   *   Available user attributes.
    */
-  private function exposeAvailableBaseFields(array $availableUserAttributes): array {
+  private function exposeAvailableBaseFields(array $attributes): array {
     $server = $this->config->get('drupalAcctProvisionServer');
     $triggers = $this->config->get('drupalAcctProvisionTriggers');
     if ($server && !empty($triggers)) {
@@ -196,24 +206,27 @@ class FieldProvider implements LdapUserAttributesInterface {
         '[field.ldap_user_puid]',
       ];
       foreach ($fields as $field) {
-        if (isset($availableUserAttributes[$field])) {
-          $availableUserAttributes[$field]->setConfigurationModule('ldap_user');
+        if (isset($attributes[$field])) {
+          $attributes[$field]->setConfigurationModule('ldap_user');
         }
       }
     }
-    return $availableUserAttributes;
+    return $attributes;
   }
 
   /**
-   * @param \Drupal\ldap_servers\Mapping[] $availableUserAttributes
-   * @param $direction
+   * Add user entity fields.
+   *
+   * @param \Drupal\ldap_servers\Mapping[] $attributes
+   *   Available user attributes.
    *
    * @return array
+   *   Available user attributes.
    */
-  private function addUserEntityFields(array $availableUserAttributes) {
+  private function addUserEntityFields(array $attributes) {
     // Todo: Verify that the next step (loading fields) cannot do this via BaseDefinition.
     // Drupal user properties.
-    $availableUserAttributes['[property.status]'] = new Mapping(
+    $attributes['[property.status]'] = new Mapping(
       '[property.status]',
       'Property: Account Status',
       TRUE,
@@ -223,7 +236,7 @@ class FieldProvider implements LdapUserAttributesInterface {
        'ldap_user'
     );
 
-    $availableUserAttributes['[property.timezone]'] = new Mapping(
+    $attributes['[property.timezone]'] = new Mapping(
       '[property.timezone]',
        'Property: User Timezone',
       TRUE,
@@ -233,7 +246,7 @@ class FieldProvider implements LdapUserAttributesInterface {
       'ldap_user'
     );
 
-    $availableUserAttributes['[property.signature]'] = new Mapping(
+    $attributes['[property.signature]'] = new Mapping(
       '[property.signature]',
       'Property: User Signature',
       TRUE,
@@ -248,11 +261,11 @@ class FieldProvider implements LdapUserAttributesInterface {
     $user_fields = $this->entityFieldManager->getFieldStorageDefinitions('user');
     foreach ($user_fields as $field_name => $field_instance) {
       $field_id = "[field." . $field_name . "]";
-      if (isset($availableUserAttributes[$field_id])) {
-        $availableUserAttributes[$field_id]->isConfigurable(TRUE);
+      if (isset($attributes[$field_id])) {
+        $attributes[$field_id]->isConfigurable(TRUE);
       }
       else {
-        $availableUserAttributes[$field_id] = new Mapping(
+        $attributes[$field_id] = new Mapping(
           $field_id,
           $this->t('Field: @label', ['@label' => $field_instance->getLabel()]),
           TRUE,
@@ -260,10 +273,10 @@ class FieldProvider implements LdapUserAttributesInterface {
           [],
           'ldap_user',
           'ldap_user'
-              );
+        );
       }
     }
-    return $availableUserAttributes;
+    return $attributes;
   }
 
 }

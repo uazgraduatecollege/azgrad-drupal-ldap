@@ -40,7 +40,7 @@ class LdapBridge {
    *
    * @param \Drupal\Core\Logger\LoggerChannelInterface $logger
    *   Logger.
-   * @param \Drupal\Core\Entity\EntityTypeManager $entity_type_manager
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   Entity type manager.
    */
   public function __construct(LoggerChannelInterface $logger, EntityTypeManagerInterface $entity_type_manager) {

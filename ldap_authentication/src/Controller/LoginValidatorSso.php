@@ -58,10 +58,7 @@ final class LoginValidatorSso extends LoginValidatorBase {
   }
 
   /**
-   * Credentials are tested.
-   *
-   * @return int
-   *   Returns the authentication result.
+   * {@inheritdoc}
    *
    * @Todo: Reduce code duplication w/ LoginValidator, split this function up.
    */

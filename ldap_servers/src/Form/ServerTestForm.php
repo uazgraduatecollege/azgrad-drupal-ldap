@@ -554,13 +554,13 @@ final class ServerTestForm extends EntityForm {
     }
 
     // Delete test group if it exists.
-    if ($this->ldapServer->checkDnExists($new_group)) {
+    if ($this->ldapGroupManager->checkDnExists($new_group)) {
       $this->ldapGroupManager->groupRemoveGroup($new_group, FALSE);
     }
 
     $this->resultsTables['group1'][] = [
       $this->t('Starting test without group (group was deleted if present): @group', ['@group' => $new_group]),
-      $this->booleanResult(($this->ldapServer->checkDnExists($new_group) === FALSE)),
+      $this->booleanResult(($this->ldapGroupManager->checkDnExists($new_group) === FALSE)),
     ];
 
     // Make sure there are no entries being a member of it.
@@ -619,14 +619,14 @@ final class ServerTestForm extends EntityForm {
       $this->ldapGroupManager->groupRemoveGroup($new_group, FALSE);
       $this->resultsTables['group1'][] = [
         $this->t('Forced group removal of @group because this OpenLDAP configuration does not allow for safe removal.', ['@group' => $new_group]),
-        $this->booleanResult(!($this->ldapServer->checkDnExists($new_group))),
+        $this->booleanResult(!($this->ldapGroupManager->checkDnExists($new_group))),
       ];
     }
     else {
       $this->ldapGroupManager->groupRemoveGroup($new_group, TRUE);
       $this->resultsTables['group1'][] = [
         $this->t('Remove group @group if empty', ['@group' => $new_group]),
-        $this->booleanResult(!($this->ldapServer->checkDnExists($new_group))),
+        $this->booleanResult(!($this->ldapGroupManager->checkDnExists($new_group))),
       ];
     }
   }

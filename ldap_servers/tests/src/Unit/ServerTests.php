@@ -3,7 +3,7 @@
 namespace Drupal\Tests\ldap_servers\Unit;
 
 use Drupal\ldap_servers\Entity\Server;
-use Drupal\ldap_servers\LdapBridge;
+use Drupal\ldap_servers\LdapUserManager;
 use Drupal\Tests\UnitTestCase;
 use Symfony\Component\Ldap\Entry;
 
@@ -15,9 +15,12 @@ class ServerTests extends UnitTestCase {
 
   /**
    * Tests searches across multiple DNs.
+   *
+   * TODO: Move to separate test class.
    */
   public function testSearchAllBaseDns() {
     $this->markTestIncomplete('Cannot be easily tested as is, research and implement mocking symfony/ldap responses.');
+
     $stub = $this->getMockBuilder()
       ->disableOriginalConstructor()
       ->setMethods(['search', 'getBasedn', 'bind'])
@@ -39,7 +42,7 @@ class ServerTests extends UnitTestCase {
     $stub->method('bind')
       ->willReturn(TRUE);
 
-    $ldapStub = $this->getMockBuilder(LdapBridge::class)
+    $ldapStub = $this->getMockBuilder(LdapUserManager::class)
       ->setMethods(['query'])
       ->method('query')
       ->will($this->returnCallback(function () use ($valueMap, $validResult) {
@@ -57,14 +60,14 @@ class ServerTests extends UnitTestCase {
         }
         return ['count' => 0];
       }));
-    /** @var \Drupal\ldap_servers\Entity\Server $stub */
-    $result = $stub->searchAllBaseDns('(|(cn=hpotter,ou=people,dc=example,dc=org))', ['dn']);
+    /** @var \Drupal\ldap_servers\LdapUserManager $ldapStub */
+    $result = $ldapStub->searchAllBaseDns('(|(cn=hpotter,ou=people,dc=example,dc=org))', ['dn']);
     $this->assertEquals(1, $result['count']);
-    $result = $stub->searchAllBaseDns('(|(cn=invalid_cn,ou=people,dc=example,dc=org))', ['dn']);
+    $result = $ldapStub->searchAllBaseDns('(|(cn=invalid_cn,ou=people,dc=example,dc=org))', ['dn']);
     $this->assertEquals(0, $result['count']);
-    $result = $stub->searchAllBaseDns('(|(cn=hpotter))', ['dn']);
+    $result = $ldapStub->searchAllBaseDns('(|(cn=hpotter))', ['dn']);
     $this->assertEquals(1, $result['count']);
-    $result = $stub->searchAllBaseDns('(cn=hpotter)', ['dn']);
+    $result = $ldapStub->searchAllBaseDns('(cn=hpotter)', ['dn']);
     $this->assertEquals(1, $result['count']);
   }
 

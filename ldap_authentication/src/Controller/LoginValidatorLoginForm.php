@@ -69,10 +69,7 @@ final class LoginValidatorLoginForm extends LoginValidatorBase {
   }
 
   /**
-   * Credentials are tested.
-   *
-   * @return int
-   *   Returns the authentication result.
+   * {@inheritdoc}
    */
   protected function testCredentials() {
     foreach ($this->authenticationServers->getAvailableAuthenticationServers() as $server) {

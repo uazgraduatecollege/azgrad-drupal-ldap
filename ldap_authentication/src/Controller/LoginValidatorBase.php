@@ -5,6 +5,7 @@ namespace Drupal\ldap_authentication\Controller;
 use Drupal\Component\Utility\SafeMarkup;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityTypeManager;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandler;
 use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
@@ -87,7 +88,7 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
    * @param \Drupal\Core\Config\ConfigFactoryInterface $configFactory
    * @param \Drupal\ldap_servers\Logger\LdapDetailLog $detailLog
    * @param \Drupal\Core\Logger\LoggerChannelInterface $logger
-   * @param \Drupal\Core\Entity\EntityTypeManager $entity_type_manager
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    * @param \Drupal\Core\Extension\ModuleHandler $module_handler
    * @param \Drupal\ldap_servers\LdapBridge $ldap_bridge
    * @param \Drupal\externalauth\Authmap $external_auth
@@ -98,7 +99,7 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
     ConfigFactoryInterface $configFactory,
     LdapDetailLog $detailLog,
     LoggerChannelInterface $logger,
-    EntityTypeManager $entity_type_manager,
+    EntityTypeManagerInterface $entity_type_manager,
     ModuleHandler $module_handler,
     LdapBridge $ldap_bridge,
     Authmap $external_auth,
@@ -118,13 +119,7 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
   }
 
   /**
-   * Starts login process.
-   *
-   * @param \Drupal\Core\Form\FormStateInterface $form_state
-   *   The form state.
-   *
-   * @return \Drupal\Core\Form\FormStateInterface
-   *   The form state.
+   * {@inheritdoc}
    */
   public function validateLogin(FormStateInterface $form_state) {
     $this->authName = trim($form_state->getValue('name'));
@@ -351,15 +346,7 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
   }
 
   /**
-   * Check if exclusion criteria match.
-   *
-   * @param string $authName
-   *   Authname.
-   * @param \Symfony\Component\Ldap\Entry $ldap_user
-   *   LDAP Entry.
-   *
-   * @return bool
-   *   Exclusion result.
+   * {@inheritdoc}
    */
   public function checkAllowedExcluded($authName, Entry $ldap_user) {
 
@@ -494,7 +481,7 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
   protected function updateAuthNameFromPuid() {
     $puid = $this->serverDrupalUser->derivePuidFromLdapResponse($this->ldapEntry);
     if ($puid) {
-      $this->drupalUser = $this->serverDrupalUser->userAccountFromPuid($puid);
+      $this->drupalUser = $this->ldapUserManager->getUserAccountFromPuid($puid);
       /** @var \Drupal\user\Entity\User $userMatchingPuid */
       if ($this->drupalUser) {
         $oldName = $this->drupalUser->getAccountName();
@@ -684,7 +671,7 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
     }
 
     // Do not provision Drupal account if provisioning disabled.
-    $triggers = $this->config->get('ldap_user.settings')->get('drupalAcctProvisionTriggers');
+    $triggers = $this->configFactory->get('ldap_user.settings')->get('drupalAcctProvisionTriggers');
     if (!in_array(self::PROVISION_DRUPAL_USER_ON_USER_AUTHENTICATION, $triggers)) {
       $this->logger->error(
         'Drupal account for authname=%authname does not exist and provisioning of Drupal accounts on authentication is not enabled',
@@ -802,10 +789,7 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
   }
 
   /**
-   * Returns the derived user account.
-   *
-   * @return \Drupal\user\Entity\User
-   *   User account.
+   * {@inheritdoc}
    */
   public function getDrupalUser() {
     return $this->drupalUser;

@@ -30,7 +30,7 @@ class LdapEntryDeletionSubscriber extends LdapEntryBaseSubscriber implements Lda
    */
   protected function deleteProvisionedLdapEntry(LdapUserDeletedEvent $event) {
     $triggers = $this->config->get('ldapEntryProvisionTriggers');
-    if ($this->provisionsLdapEntriesFromDrupalUsers() && in_array(self::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_DELETE, $triggers)) {
+    if ($this->provisionLdapEntriesFromDrupalUsers() && in_array(self::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_DELETE, $triggers)) {
       /** @var \Drupal\user\Entity\User $account */
       $account = $event->account;
       // Determine server that is associated with user.

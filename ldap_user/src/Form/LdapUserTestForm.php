@@ -9,6 +9,8 @@ use Drupal\Core\Url;
 use Drupal\externalauth\Authmap;
 use Drupal\ldap_servers\LdapUserManager;
 use Drupal\ldap_servers\LdapUserAttributesInterface;
+use Drupal\ldap_user\Event\LdapNewUserCreatedEvent;
+use Drupal\ldap_user\Processor\DrupalUserProcessor;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 
@@ -23,6 +25,7 @@ class LdapUserTestForm extends FormBase implements LdapUserAttributesInterface {
   protected $ldapUserManager;
   protected $entityTypeManager;
   protected $externalAuth;
+  protected $drupalUserProcessor;
 
   /**
    * {@inheritdoc}
@@ -32,13 +35,31 @@ class LdapUserTestForm extends FormBase implements LdapUserAttributesInterface {
   }
 
   /**
-   * {@inheritdoc}
+   * LdapUserTestForm constructor.
+   *
+   * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
+   *   Request stack.
+   * @param \Drupal\ldap_servers\LdapUserManager $ldap_user_manager
+   *   LDAP user manager.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   *   Entity type manager.
+   * @param \Drupal\externalauth\Authmap $external_auth
+   *   External auth.
+   * @param \Drupal\ldap_user\Processor\DrupalUserProcessor $drupal_user_processor
+   *   Drupal user processor.
    */
-  public function __construct(RequestStack $request_stack, LdapUserManager $ldap_user_manager, EntityTypeManagerInterface $entity_type_manager, Authmap $external_auth) {
+  public function __construct(
+    RequestStack $request_stack,
+    LdapUserManager $ldap_user_manager,
+    EntityTypeManagerInterface $entity_type_manager,
+    Authmap $external_auth,
+    DrupalUserProcessor $drupal_user_processor
+  ) {
     $this->request = $request_stack->getCurrentRequest();
     $this->ldapUserManager = $ldap_user_manager;
     $this->entityTypeManager = $entity_type_manager;
     $this->externalAuth = $external_auth;
+    $this->drupalUserProcessor = $drupal_user_processor;
 
     self::$syncTriggerOptions = [
       self::PROVISION_DRUPAL_USER_ON_USER_UPDATE_CREATE => $this->t('On sync to Drupal user create or update. Requires a server with binding method of "Service Account Bind" or "Anonymous Bind".'),
@@ -58,7 +79,9 @@ class LdapUserTestForm extends FormBase implements LdapUserAttributesInterface {
       $container->get('request_stack'),
       $container->get('ldap.user_manager'),
       $container->get('entity_type.manager'),
-      $container->get('externalauth.authmap')
+      $container->get('externalauth.authmap'),
+      $container->get('ldap.drupal_user_processor'),
+      $container->get('ldap.ldap_user_manager')
     );
   }
 
@@ -113,9 +136,7 @@ class LdapUserTestForm extends FormBase implements LdapUserAttributesInterface {
     $selected_action = $form_state->getValue(['action']);
 
     $config = $this->configFactory()->get('ldap_user.settings')->get();
-    $processor = \Drupal::service('ldap.drupal_user_processor');
-    // TODO: Fix test. ldapProcessor no longer exists.
-    $ldapProcessor = FALSE;
+
     $user_ldap_entry = FALSE;
 
     if ($config['drupalAcctProvisionServer']) {
@@ -148,12 +169,17 @@ class LdapUserTestForm extends FormBase implements LdapUserAttributesInterface {
     foreach ([self::PROVISION_TO_DRUPAL, self::PROVISION_TO_LDAP] as $direction) {
       if ($this->provisionEnabled($direction, $selected_action)) {
         if ($direction == self::PROVISION_TO_DRUPAL) {
-          $processor->createDrupalUserFromLdapEntry($account);
+          $this->drupalUserProcessor->createDrupalUserFromLdapEntry($account);
           $results['createDrupalUserFromLdapEntry method results']["context = $sync_trigger_description"]['proposed'] = $account;
         }
         else {
-          $provision_result = $ldapProcessor->provisionLdapEntry($username, NULL);
-          $results['provisionLdapEntry method results']["context = $sync_trigger_description"] = $provision_result;
+          // @FIXME: This is not testing all supported event, only the new user created event.
+          // The form needs to be restructured in general for those!
+          $event = new LdapNewUserCreatedEvent($account);
+          /** @var \Symfony\Component\EventDispatcher\EventDispatcher $dispatcher */
+          $dispatcher = \Drupal::service('event_dispatcher');
+          // $dispatcher->dispatch(LdapNewUserCreatedEvent::EVENT_NAME, $event);.
+          $results['provisionLdapEntry method results']["context = $sync_trigger_description"] = "Test not ported";
         }
       }
       else {

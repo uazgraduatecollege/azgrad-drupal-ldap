@@ -5,6 +5,8 @@
  * Hooks and functions relevant to developers.
  */
 
+use Symfony\Component\Ldap\Entry;
+
 /**
  * Hook_ldap_user_attrs_alter().
  *
@@ -51,14 +53,13 @@ function hook_ldap_user_attributes_alter(array &$available_user_attrs, array &$p
  *   The edit array (see hook_user_insert). Make changes to this object as
  *   required.
  * @param \Symfony\Component\Ldap\Entry $ldap_user
- *   The LDAP user object relating to the Drupal user.
- *   For structure @see LdapServer::matchUsernameToExistingLdapEntry()
+ *   The LDAP entry for the Drupal user.
  * @param array $context
  *   Contains ldap_server and provisioning events.
  *
  * @see \Drupal\ldap_user\Processor\DrupalUserProcessor::applyAttributesToAccount()
  * @see \Drupal\ldap_user\Processor\DrupalUserProcessor::applyAttributesToAccountOnCreate()
  */
-function hook_ldap_user_edit_user_alter(User $account, \Symfony\Component\Ldap\Entry $ldap_user, array $context) {
+function hook_ldap_user_edit_user_alter(User $account, Entry $ldap_user, array $context) {
   $account->set('myfield', $context['ldap_server']->getAttributeValue($ldap_user, 'myfield'));
 }

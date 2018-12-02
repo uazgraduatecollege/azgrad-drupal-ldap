@@ -36,16 +36,21 @@ class OrphanProcessor {
    * Constructor.
    *
    * @param \Drupal\Core\Logger\LoggerChannelInterface $logger
+   *   Logger.
    * @param \Drupal\Core\Config\ConfigFactory $config
+   *   Config.
    * @param \Drupal\Core\Mail\MailManagerInterface $mail_manager
+   *   Mail manager.
    * @param \Drupal\Core\Language\LanguageManagerInterface $language_manager
+   *   Language manager.
    * @param \Drupal\Core\State\StateInterface $state
-   * @param \Drupal\Core\Entity\EntityTypeManager $entity_type_manager
+   *   State.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   *   Entity type manager.
    * @param \Drupal\ldap_user\Processor\DrupalUserProcessor $drupal_user_processor
+   *   Drupal user processor.
    * @param \Drupal\ldap_servers\LdapUserManager $ldap_user_manager
-   *
-   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
-   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   *   LDAP user manager.
    */
   public function __construct(
     LoggerChannelInterface $logger,
@@ -53,7 +58,7 @@ class OrphanProcessor {
     MailManagerInterface $mail_manager,
     LanguageManagerInterface $language_manager,
     StateInterface $state,
-    EntityTypeManager $entity_type_manager,
+    EntityTypeManagerInterface $entity_type_manager,
     DrupalUserProcessor $drupal_user_processor,
     LdapUserManager $ldap_user_manager) {
     $this->logger = $logger;

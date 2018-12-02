@@ -3,6 +3,7 @@
 namespace Drupal\ldap_user\Processor;
 
 use Drupal\Core\Config\ConfigFactory;
+use Drupal\Core\Entity\EntityTypeManager;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandler;
 use Drupal\Core\Logger\LoggerChannelInterface;
@@ -39,14 +40,23 @@ class GroupUserUpdateProcessor {
    * Constructor for update process.
    *
    * @param \Drupal\Core\Logger\LoggerChannelInterface $logger
+   *   Logger.
    * @param \Drupal\ldap_servers\Logger\LdapDetailLog $detail_log
+   *   Detail log.
    * @param \Drupal\Core\Config\ConfigFactory $config
+   *   Config factory.
    * @param \Drupal\Core\State\StateInterface $state
+   *   State.
    * @param \Drupal\Core\Extension\ModuleHandler $module_handler
-   * @param \Drupal\Core\Entity\EntityTypeManager $entity_type_manager
+   *   Module handler.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   *   Entity type manager.
    * @param \Drupal\externalauth\Authmap $external_auth
+   *   Externalauth.
    * @param \Drupal\ldap_query\Controller\QueryController $query_controller
+   *   Query controller.
    * @param \Drupal\ldap_user\Processor\DrupalUserProcessor $drupal_user_processor
+   *   Drupal user processor.
    */
   public function __construct(
     LoggerChannelInterface $logger,
@@ -54,7 +64,7 @@ class GroupUserUpdateProcessor {
     ConfigFactory $config,
     StateInterface $state,
     ModuleHandler $module_handler,
-    EntityTypeManager $entity_type_manager,
+    EntityTypeManagerInterface $entity_type_manager,
     Authmap $external_auth,
     QueryController $query_controller,
     DrupalUserProcessor $drupal_user_processor) {
@@ -150,25 +160,27 @@ class GroupUserUpdateProcessor {
 
     // @TODO: Batch users as OrphanProcessor does.
     $this->queryController->execute();
-    /** @var \Symfony\Component\Ldap\Entry[] $accountsToProcess */
-    $accountsToProcess = $this->queryController->getRawResults();
+    /** @var \Symfony\Component\Ldap\Entry[] $accounts_to_process */
+    $accounts_to_process = $this->queryController->getRawResults();
     $attribute = $this->ldapServer->get('user_attr');
     $this->logger->notice('Processing @count accounts for periodic update.',
-        ['@count' => count($accountsToProcess)]
+        ['@count' => count($accounts_to_process)]
       );
 
-    foreach ($accountsToProcess as $account) {
+    $user_storage = $this->entityTypeManager->getStorage('user');
+    foreach ($accounts_to_process as $account) {
       if ($account->hasAttribute($attribute)) {
         $username = $account->getAttribute($attribute)[0];
-        $match = $this->ldapServer->matchUsernameToExistingLdapEntry($username);
+        // TODO: Broken.
+        $match = $this->drupalUserProcessor->drupalUserExists($username);
         if ($match) {
           $uid = $this->externalAuth->getUid($username, 'ldap_user');
           if ($uid) {
-            $drupalAccount = $this->entityTypeManager->getStorage('user')->load($uid);
-            $this->drupalUserProcessor->drupalUserLogsIn($drupalAccount);
+            $drupal_account = $user_storage->load($uid);
+            $this->drupalUserProcessor->drupalUserLogsIn($drupal_account);
             // Reload since data has changed.
-            $drupalAccount = $this->entityTypeManager->getStorage('user')->load($drupalAccount->id());
-            $this->updateAuthorizations($drupalAccount);
+            $drupal_account = $user_storage->load($drupal_account->id());
+            $this->updateAuthorizations($drupal_account);
             $this->detailLog->log(
               'Periodic update: @name updated',
               ['@name' => $username],
@@ -179,11 +191,11 @@ class GroupUserUpdateProcessor {
             $result = $this->drupalUserProcessor
               ->createDrupalUserFromLdapEntry(['name' => $username, 'status' => TRUE]);
             if ($result) {
-              $drupalAccount = $this->drupalUserProcessor->getUserAccount();
-              $this->drupalUserProcessor->drupalUserLogsIn($drupalAccount);
+              $drupal_account = $this->drupalUserProcessor->getUserAccount();
+              $this->drupalUserProcessor->drupalUserLogsIn($drupal_account);
               // Reload since data has changed.
-              $drupalAccount = $this->entityTypeManager->getStorage('user')->load($drupalAccount->id());
-              $this->updateAuthorizations($drupalAccount);
+              $drupal_account = $user_storage->load($drupal_account->id());
+              $this->updateAuthorizations($drupal_account);
               $this->detailLog->log(
                 'Periodic update: @name created',
                 ['@name' => $username],

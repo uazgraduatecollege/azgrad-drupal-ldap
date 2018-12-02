@@ -44,34 +44,3 @@ grants.ldif to allow for it. Here is an example which simply allows anyone:
 >   by * read
 ```
 
-## Various LDAP Project Notes
-
-### Case Sensitivity and Character Escaping in LDAP Modules
-
-The class MassageAttributes should be used for dealing with case sensitivity
-and character escaping consistently. See the functions for further information.
-
-A filter might be built as follows:
-
-```php
-$massage = new MassageAttributes;
-$username = $massage->queryLdapAttributeValue($username);
-$objectclass = mb_strtolower($item);
-$filter = "(&(cn=$username)(objectClass=$objectclass))";
-```
-
-See ConversionHelper for working with fields directly.
-
-### Common variables used in ldap_* and their structures
-
-The structure of $ldap_user and $ldap_entry are different!
-
-#### $ldap_user
-@see LdapServer::matchUsernameToExistingLdapEntry() return
-
-#### $ldap_entry and $ldap_*_entry.
-@see LdapServer::ldap_search() return array
-
-####  $user_attr_key
-key of form <attr_type>.<attr_name>[:<instance>] such as field.lname, 
-property.mail, field.aliases:2
