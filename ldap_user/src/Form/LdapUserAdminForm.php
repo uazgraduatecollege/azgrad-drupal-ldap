@@ -504,17 +504,17 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
   public function validateForm(array &$form, FormStateInterface $form_state) {
     $values = $form_state->getValues();
 
-    $drupalMapKey = 'mappings__' . self::PROVISION_TO_DRUPAL . '__table';
-    $ldapMapKey = 'mappings__' . self::PROVISION_TO_LDAP . '__table';
+    $drupal_map_key = 'mappings__' . self::PROVISION_TO_DRUPAL . '__table';
+    $ldap_map_key = 'mappings__' . self::PROVISION_TO_LDAP . '__table';
 
     if ($values['drupalAcctProvisionServer'] != 'none') {
-      foreach ($values[$drupalMapKey] as $key => $mapping) {
+      foreach ($values[$drupal_map_key] as $key => $mapping) {
         if (isset($mapping['configured_mapping']) && $mapping['configured_mapping'] == 1) {
           // Check that the source is not empty for the selected field to sync
           // to Drupal.
-          if (!empty($mapping['drupal_attr'])) {
+          if (!empty($mapping['user_attr'])) {
             if (empty($mapping['ldap_attr'])) {
-              $formElement = $form['basic_to_drupal']['mappings__' . self::PROVISION_TO_DRUPAL][$drupalMapKey][$key];
+              $formElement = $form['basic_to_drupal']['mappings__' . self::PROVISION_TO_DRUPAL][$drupal_map_key][$key];
               $form_state->setError($formElement, $this->t('Missing LDAP attribute'));
             }
           }
@@ -523,20 +523,20 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
     }
 
     if ($values['ldapEntryProvisionServer'] != 'none') {
-      foreach ($values[$ldapMapKey] as $key => $mapping) {
+      foreach ($values[$ldap_map_key] as $key => $mapping) {
         if (isset($mapping['configured_mapping']) && $mapping['configured_mapping'] == 1) {
           // Check that the token is not empty if a user token is in use.
-          if (isset($mapping['drupal_attr']) && $mapping['drupal_attr'] == 'user_tokens') {
+          if (isset($mapping['user_attr']) && $mapping['user_attr'] == 'user_tokens') {
             if (isset($mapping['user_tokens']) && empty(trim($mapping['user_tokens']))) {
-              $formElement = $form['basic_to_ldap']['mappings__' . self::PROVISION_TO_LDAP][$ldapMapKey][$key];
+              $formElement = $form['basic_to_ldap']['mappings__' . self::PROVISION_TO_LDAP][$ldap_map_key][$key];
               $form_state->setError($formElement, $this->t('Missing user token.'));
             }
           }
 
           // Check that a target attribute is set.
-          if ($mapping['drupal_attr'] !== '0') {
+          if ($mapping['user_attr'] !== '0') {
             if ($mapping['ldap_attr'] == NULL) {
-              $formElement = $form['basic_to_ldap']['mappings__' . self::PROVISION_TO_LDAP][$ldapMapKey][$key];
+              $formElement = $form['basic_to_ldap']['mappings__' . self::PROVISION_TO_LDAP][$ldap_map_key][$key];
               $form_state->setError($formElement, $this->t('Missing LDAP attribute'));
             }
           }
@@ -544,24 +544,24 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
       }
     }
 
-    $processedLdapSyncMappings = $this->syncMappingsFromForm($form_state->getValues(), self::PROVISION_TO_LDAP);
-    $processedDrupalSyncMappings = $this->syncMappingsFromForm($form_state->getValues(), self::PROVISION_TO_DRUPAL);
+    $processed_ldap_sync_mappings = $this->syncMappingsFromForm($form_state->getValues(), self::PROVISION_TO_LDAP);
+    $processed_drupal_sync_mappings = $this->syncMappingsFromForm($form_state->getValues(), self::PROVISION_TO_DRUPAL);
 
     // Set error for entire table if [dn] is missing.
-    if ($values['ldapEntryProvisionServer'] != 'none' && !isset($processedLdapSyncMappings['dn'])) {
-      $form_state->setErrorByName($ldapMapKey,
+    if ($values['ldapEntryProvisionServer'] != 'none' && !isset($processed_ldap_sync_mappings['dn'])) {
+      $form_state->setErrorByName($ldap_map_key,
         $this->t('Mapping rows exist for provisioning to LDAP, but no LDAP attribute is targeted for [dn]. One row must map to [dn]. This row will have a user token like cn=[property.name],ou=users,dc=ldap,dc=mycompany,dc=com')
       );
     }
 
     // Make sure only one attribute column is present.
-    foreach ($processedLdapSyncMappings as $key => $mapping) {
+    foreach ($processed_ldap_sync_mappings as $key => $mapping) {
       $maps = [];
       ConversionHelper::extractTokenAttributes($maps, $mapping['ldap_attr']);
       if (count(array_keys($maps)) > 1) {
         // TODO: Move this check out of processed mappings to be able to set the
         // error by field.
-        $form_state->setErrorByName($ldapMapKey,
+        $form_state->setErrorByName($ldap_map_key,
           $this->t('When provisioning to LDAP, LDAP attribute column must be singular token such as [cn]. %ldap_attr is not. Do not use compound tokens such as "[displayName] [sn]" or literals such as "physics".',
             ['%ldap_attr' => $mapping['ldap_attr']]
           )
@@ -570,8 +570,8 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
     }
 
     // Notify the user if no actual synchronization event is active for a field.
-    $this->checkEmptyEvents($processedLdapSyncMappings);
-    $this->checkEmptyEvents($processedDrupalSyncMappings);
+    $this->checkEmptyEvents($processed_ldap_sync_mappings);
+    $this->checkEmptyEvents($processed_drupal_sync_mappings);
 
     if (!$this->checkPuidForOrphans($values['orphanedDrupalAcctBehavior'], $values['drupalAcctProvisionServer'])) {
       $form_state->setErrorByName('orphanedDrupalAcctBehavior', $this->t('You do not have a persistent user ID set in your server.'));
@@ -804,8 +804,8 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
       foreach ($config->get('ldapUserSyncMappings')[$direction] as $key => $value) {
         $mapping = NULL;
         // Our available mappings are always keyed by the Drupal attribute.
-        if (isset($value['drupal_attr'], $available_mappings[$direction][$value['drupal_attr']])) {
-          $mapping = $available_mappings[$direction][$value['drupal_attr']];
+        if (isset($value['user_attr'], $available_mappings[$direction][$value['user_attr']])) {
+          $mapping = $available_mappings[$direction][$value['user_attr']];
           if ($mapping->isEnabled() && $mapping->getConfigurationModule() == 'ldap_user' && $mapping->isConfigurable()) {
             $rows[$index] = $this->getSyncFormRow($direction, $mapping, $user_attribute_options, 'row-' . $index);
             $index++;
@@ -879,7 +879,7 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
         '#default_value' => $mapping->isBinary(),
         '#attributes' => ['class' => ['convert']],
       ];
-      $result['drupal_attr'] = [
+      $result['user_attr'] = [
         '#type' => 'select',
         '#title' => 'User attribute',
         '#title_display' => 'invisible',
@@ -902,7 +902,7 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
         '#disabled' => TRUE,
         '#attributes' => ['class' => ['convert']],
       ];
-      $result['drupal_attr'] = [
+      $result['user_attr'] = [
         '#type' => 'item',
         '#markup' => $mapping->getLabel(),
       ];
@@ -950,7 +950,7 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
     $user_attribute_input_id = $idPrefix . "[$rowId][user_attr]";
 
     if ($mapping->isConfigurable()) {
-      $result['drupal_attr'] = [
+      $result['user_attr'] = [
         '#type' => 'select',
         '#title' => 'User attribute',
         '#title_display' => 'invisible',
@@ -991,7 +991,7 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
       ];
     }
     else {
-      $result['drupal_attr'] = [
+      $result['user_attr'] = [
         '#type' => 'item',
         '#markup' => $mapping->getLabel(),
       ];
@@ -1067,12 +1067,12 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
             continue;
           }
 
-          $key = ($direction == self::PROVISION_TO_DRUPAL) ? $this->sanitizeMachineName($columns['drupal_attr']) : $this->sanitizeMachineName($columns['ldap_attr']);
+          $key = ($direction == self::PROVISION_TO_DRUPAL) ? $this->sanitizeMachineName($columns['user_attr']) : $this->sanitizeMachineName($columns['ldap_attr']);
           // Only save if its configurable and has an LDAP and Drupal attributes.
           // The others are optional.
-          if (isset($columns['configured_mapping']) && $columns['configured_mapping'] && !empty($columns['drupal_attr']) && !empty($columns['ldap_attr'])) {
+          if (isset($columns['configured_mapping']) && $columns['configured_mapping'] && !empty($columns['user_attr']) && !empty($columns['ldap_attr'])) {
             $mappings[$key] = [
-              'drupal_attr' => trim($columns['drupal_attr']),
+              'user_attr' => trim($columns['user_attr']),
               'ldap_attr' => trim($columns['ldap_attr']),
               'convert' => $columns['convert'],
               'user_tokens' => isset($columns['user_tokens']) ? $columns['user_tokens'] : '',

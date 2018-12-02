@@ -93,7 +93,7 @@ class FieldProvider implements LdapUserAttributesInterface {
   public static function applyUserAttributes(array $available_user_attributes, array $saved_mappings) {
     foreach ($saved_mappings as $mapping) {
       // Cannot use array key here, needs unsanitized name.
-      $key = $mapping['drupal_attr'];
+      $key = $mapping['user_attr'];
 
       if (!isset($available_user_attributes[$key])) {
         // Mapping not found in list of available
@@ -107,12 +107,12 @@ class FieldProvider implements LdapUserAttributesInterface {
         $available_user_attributes[$key]->setLdapAttribute($mapping['ldap_attr']);
       }
 
-      if (isset($mapping['drupal_attr'])) {
-        if ($mapping['drupal_attr'] == 'user_tokens') {
+      if (isset($mapping['user_attr'])) {
+        if ($mapping['user_attr'] == 'user_tokens') {
           $available_user_attributes[$key]->setDrupalAttribute($mapping['user_tokens']);
         }
         else {
-          $available_user_attributes[$key]->setDrupalAttribute($mapping['drupal_attr']);
+          $available_user_attributes[$key]->setDrupalAttribute($mapping['user_attr']);
         }
       }
 
