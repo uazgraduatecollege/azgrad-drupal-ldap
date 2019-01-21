@@ -59,7 +59,7 @@ class OrphanProcessor {
       $batches = floor(count($uids) / $this->ldapQueryOrLimit) + 1;
       $queriedUsers = [];
       for ($batch = 1; $batch <= $batches; $batch++) {
-        $queriedUsers += $this->batchQueryUsers($batch, $uids);
+        $queriedUsers = array_merge($queriedUsers, $this->batchQueryUsers($batch, $uids));
       }
 
       $this->processOrphanedAccounts($queriedUsers);
