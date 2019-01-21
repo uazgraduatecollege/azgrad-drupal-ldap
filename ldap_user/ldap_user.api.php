@@ -61,5 +61,7 @@ function hook_ldap_user_attributes_alter(array &$available_user_attrs, array &$p
  * @see \Drupal\ldap_user\Processor\DrupalUserProcessor::applyAttributesToAccountOnCreate()
  */
 function hook_ldap_user_edit_user_alter(User $account, Entry $ldap_user, array $context) {
-  $account->set('myfield', $context['ldap_server']->getAttributeValue($ldap_user, 'myfield'));
+  $tokenProcessor = \Drupal::service('ldap.token_processor');
+  $value = $tokenProcessor->tokenReplace($ldap_user['attr'], '[sn]', 'ldap_entry');
+  $account->set('myfield', $value);
 }
