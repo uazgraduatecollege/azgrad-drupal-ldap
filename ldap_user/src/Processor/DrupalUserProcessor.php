@@ -179,7 +179,9 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
       $this->updateExistingAccountByPersistentUid($ldapUser, $accountFromPuid);
     }
     else {
-      $this->createDrupalUser($ldapUser);
+      if (!$this->createDrupalUser($ldapUser)) {
+        return FALSE;
+      }
     }
     return TRUE;
   }
