@@ -103,6 +103,11 @@ class GroupUserUpdateProcessor {
       $authorization_manager = \Drupal::service('authorization.manager');
       $authorization_manager->setUser($user);
       $authorization_manager->setAllProfiles();
+    } else {
+      // We are saving here for sites without ldap_authorization since saving is
+      // embedded in setAllProfiles().
+      // TODO: Provide method for decoupling saving users and use it instead.
+      $user->save();
     }
   }
 
