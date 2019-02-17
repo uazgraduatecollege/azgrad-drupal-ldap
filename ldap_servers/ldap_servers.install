@@ -896,3 +896,16 @@ function ldap_servers_install_update_schema($schema, &$change_log) {
     }
   }
 }
+
+/**
+ * Change mcrypt to openssl.
+ */
+function ldap_servers_update_7209() {
+    if (variable_get('ldap_servers_encryption') != LDAP_SERVERS_ENC_TYPE_CLEARTEXT) {
+      variable_set('ldap_servers_encryption', LDAP_SERVERS_ENC_TYPE_OPENSSL);
+      if (!extension_loaded('openssl')) {
+        watchdog('ldap', 'Warning: OpenSSL missing, no alternative for encryption.');
+      }
+      return t('Encryption backend has changed, please re-enter your service account credentials.');
+    }
+}

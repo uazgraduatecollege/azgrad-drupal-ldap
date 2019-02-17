@@ -123,11 +123,6 @@ function ldap_help_get_server($phpinfo, &$info) {
   }
 
   $status[] = array(
-    'title' => 'mcrypt extension loaded',
-    'value' => (extension_loaded('mcrypt')) ? "yes" : "no",
-  );
-
-  $status[] = array(
     'title' => 'open ssl extension loaded',
     'value' => extension_loaded('openssl') ? "yes" : "no",
   );

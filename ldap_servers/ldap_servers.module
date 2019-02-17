@@ -25,18 +25,9 @@ define('LDAP_SERVERS_TOKEN_POST', ']');
 define('LDAP_SERVERS_TOKEN_DEL', ':');
 define('LDAP_SERVERS_TOKEN_MODIFIER_DEL', ';');
 
-define('LDAP_SERVERS_ENC_TYPE_MD5', 1);
-define('LDAP_SERVERS_ENC_TYPE_CRYPT', 2);
-define('LDAP_SERVERS_ENC_TYPE_SALTED_CRYPT', 3);
-define('LDAP_SERVERS_ENC_TYPE_EXTENDED_DES', 4);
-define('LDAP_SERVERS_ENC_TYPE_MD5C', 5);
-define('LDAP_SERVERS_ENC_TYPE_BLOWFISH', 6);
-define('LDAP_SERVERS_ENC_TYPE_SALTED_MD5', 7);
-define('LDAP_SERVERS_ENC_TYPE_SHA', 8);
-define('LDAP_SERVERS_ENC_TYPE_SALTED_SHA', 9);
 define('LDAP_SERVERS_ENC_TYPE_CLEARTEXT', 10);
-
-define('LDAP_SERVERS_CYPHER_MODE', 'cfb');
+define('LDAP_SERVERS_ENC_TYPE_OPENSSL', 20);
+define('LDAP_SERVERS_CYPHER_MODE', 'aes-256-cbc');
 
 define('LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT', 1);
 define('LDAP_SERVERS_BIND_METHOD_USER', 2);
@@ -817,9 +808,9 @@ function ldap_servers_encrypt($text, $encryption = NULL) {
   return _ldap_servers_encrypt($text, $encryption);
 }
 
-function ldap_servers_encrypt_types($category = 'all') {
+function ldap_servers_encrypt_types() {
   ldap_servers_module_load_include('inc', 'ldap_servers', 'ldap_servers.encryption');
-  return _ldap_servers_encrypt_types($category);
+  return _ldap_servers_encrypt_types();
 }
 
 function ldap_servers_decrypt($encrypted, $encryption = NULL) {
