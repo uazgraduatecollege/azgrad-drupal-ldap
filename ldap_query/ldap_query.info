@@ -4,6 +4,7 @@ package = Lightweight Directory Access Protocol
 dependencies[] = ldap_servers
 
 core = 7.x
+php = 5.4
 
 files[] = LdapQuery.class.php
 files[] = LdapQueryAdmin.class.php
