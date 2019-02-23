@@ -12,15 +12,15 @@
  * @see ldap_authentication_profile_update_form_submit()
  */
 function ldap_authentication_profile_update_form($form, &$form_state) {
-  $form['mail'] = array(
+  $form['mail'] = [
     '#type' => 'textfield',
     '#required' => TRUE,
     '#title' => t('Email Address'),
-  );
-  $form['submit'] = array(
+  ];
+  $form['submit'] = [
     '#type' => 'submit',
     '#value' => t('Update Profile'),
-  );
+  ];
   return $form;
 }
 
@@ -51,9 +51,9 @@ function ldap_authentication_profile_update_form_validate($form, &$form_state) {
  */
 function ldap_authentication_profile_update_form_submit($form, &$form_state) {
   global $user;
-  if (user_save($user, array(
+  if (user_save($user, [
     'mail' => $form_state['values']['mail'],
-  ))) {
+  ])) {
     // Prevents the cached setting from being used again.
     unset($_SESSION['ldap_authentication_template']);
     $form_state['redirect'] = isset($_GET['next']) ? $_GET['next'] : '<front>';

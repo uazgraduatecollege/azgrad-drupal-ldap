@@ -24,7 +24,7 @@ class LdapTypeDefault extends LdapTypeAbstract {
   /**
    * Constructor Method.
    */
-  public function __construct($params = array()) {
+  public function __construct($params = []) {
     foreach ($params as $k => $v) {
       if (property_exists($this, $k)) {
         $this->{$k} = $v;

@@ -12,13 +12,13 @@ function _ldap_query_get_queries($qid, $type, $flatten, $reset) {
   static $queries;
 
   if ($reset) {
-    $queries = array();
+    $queries = [];
   }
   if (!isset($queries['all'])) {
     $queries['all'] = LdapQueryAdmin::getLdapQueryObjects('all', 'all');
   }
   if (!isset($queries['enabled'])) {
-    $queries['enabled'] = array();
+    $queries['enabled'] = [];
     foreach ($queries['all'] as $_qid => $ldap_query) {
       if ($ldap_query->status == 1) {
         $queries['enabled'][$_qid] = $ldap_query;

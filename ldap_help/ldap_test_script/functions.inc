@@ -107,7 +107,7 @@ function ldap_help_connect($address, $port, $tls, $test = FALSE) {
     $false_con = ldap_connect("fakehostname.sdfserewerdfsdf.com", 389);
     if (ldap_errno($false_con) == LDAP_SUCCESS) {
       $con = ldap_connect($address, $port);
-      return array(LDAP_OTHER, "ldap_connect does not actually connect until bind with installed extension, so connect is not a valid test.", $con);
+      return [LDAP_OTHER, "ldap_connect does not actually connect until bind with installed extension, so connect is not a valid test.", $con];
     }
   }
 
@@ -115,27 +115,27 @@ function ldap_help_connect($address, $port, $tls, $test = FALSE) {
 
   if (!$con || ldap_errno($con) != LDAP_SUCCESS) {
     $err = ldap_errno($con) . ":" . ldap_error($con) . ":" . ldap_err2str(ldap_errno($con)) . "!";
-    return array(LDAP_CONNECT_ERROR, "LDAP Connect failure to  $address : $port. $err");
+    return [LDAP_CONNECT_ERROR, "LDAP Connect failure to  $address : $port. $err"];
   }
 
   // Use TLS if we are configured and able to.
   if ($tls) {
     ldap_get_option($con, LDAP_OPT_PROTOCOL_VERSION, $vers);
     if ($vers == -1) {
-      return array(LDAP_PROTOCOL_ERROR, "Could not get LDAP protocol version.");
+      return [LDAP_PROTOCOL_ERROR, "Could not get LDAP protocol version."];
     }
     if ($vers != 3) {
-      return array(LDAP_CONNECT_ERROR, 'Could not start TLS, only supported by LDAP v3.');
+      return [LDAP_CONNECT_ERROR, 'Could not start TLS, only supported by LDAP v3.'];
     }
     elseif (!function_exists('ldap_start_tls')) {
-      return array(LDAP_CONNECT_ERROR, 'Could not start TLS. It does not seem to be supported by this PHP setup.');
+      return [LDAP_CONNECT_ERROR, 'Could not start TLS. It does not seem to be supported by this PHP setup.'];
     }
     elseif (!ldap_start_tls($con)) {
-      return array(LDAP_CONNECT_ERROR, "Could not start TLS. (Error " . ldap_errno($con) . ":" . ldap_error($con) . ").");
+      return [LDAP_CONNECT_ERROR, "Could not start TLS. (Error " . ldap_errno($con) . ":" . ldap_error($con) . ")."];
     }
   }
 
-  return array(LDAP_SUCCESS, "Successful Connection!", $con);
+  return [LDAP_SUCCESS, "Successful Connection!", $con];
 }
 
 /**
@@ -187,7 +187,7 @@ function ldap_help_parsePHPModules() {
   phpinfo(INFO_MODULES);
   $s = ob_get_contents();
   ob_end_clean();
-  $matches = array();
+  $matches = [];
   preg_match_all("/(\nLDAP Support.*Vendor Version[^\n]*?).*$/iDsU", $s, $matches);
   return isset($matches[1][0]) ? "\nphpinfo() LDAP Info:" . $matches[1][0] : '';
 }

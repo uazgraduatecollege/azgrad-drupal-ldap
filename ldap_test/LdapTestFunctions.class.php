@@ -15,12 +15,12 @@ require_once 'ldap_authorization.conf.inc';
  */
 class LdapTestFunctions {
 
-  public $data = array();
+  public $data = [];
   /**
    * Data in ldap array format, but keyed on dn.
    */
-  public $ldapData = array();
-  public $csvTables = array();
+  public $ldapData = [];
+  public $csvTables = [];
   public $ldapTypeConf;
 
   /**
@@ -52,7 +52,7 @@ class LdapTestFunctions {
    *
    */
   public function setFakeServerProperty($sid, $prop, $value) {
-    $test_data = variable_get('ldap_test_server__' . $sid, array());
+    $test_data = variable_get('ldap_test_server__' . $sid, []);
     $test_data['properties'][$prop] = $value;
     variable_set('ldap_test_server__' . $sid, $test_data);
   }
@@ -62,7 +62,7 @@ class LdapTestFunctions {
    */
   public function setFakeServerUserAttribute($sid, $dn, $attr_name, $attr_value, $i = 0) {
     $attr_name = drupal_strtolower($attr_name);
-    $test_data = variable_get('ldap_test_server__' . $sid, array());
+    $test_data = variable_get('ldap_test_server__' . $sid, []);
 
     $test_data['entries'][$dn][$attr_name][$i] = $attr_value;
     $count_set = (int) isset($test_data['entries'][$dn][$attr_name]['count']);
@@ -124,9 +124,9 @@ class LdapTestFunctions {
       }
       foreach ($consumer_conf_admin->mappings as $i => $mapping) {
         $mappings = $consumer_obj->normalizeMappings(
-          array(
-            array($mapping['from'], $mapping['user_entered']),
-          ),
+          [
+            [$mapping['from'], $mapping['user_entered']],
+          ],
            FALSE);
         $consumer_conf_admin->mappings[$i] = $mappings[0];
       }
@@ -145,12 +145,12 @@ class LdapTestFunctions {
   /**
    *
    */
-  public function drupalLdapUpdateUser($edit = array(), $ldap_authenticated = FALSE, $user) {
+  public function drupalLdapUpdateUser($edit = [], $ldap_authenticated = FALSE, $user) {
     if (count($edit)) {
       $user = user_save($user, $edit);
     }
     if ($ldap_authenticated) {
-      user_set_authmaps($user, array('authname_ldap_user' => $user->name));
+      user_set_authmaps($user, ['authname_ldap_user' => $user->name]);
     }
     return $user;
   }
@@ -170,13 +170,13 @@ class LdapTestFunctions {
       $rid = array_search($role_name, $roles);
       if ($rid != FALSE) {
         // Make a copy of the roles array, without the deleted one.
-        $new_roles = array();
+        $new_roles = [];
         foreach ($user->roles as $id => $name) {
           if ($id != $rid) {
             $new_roles[$id] = $name;
           }
         }
-        user_save($user, array('roles' => $new_roles));
+        user_save($user, ['roles' => $new_roles]);
       }
     }
   }
@@ -187,7 +187,7 @@ class LdapTestFunctions {
   public function userByNameFlushingCache($name) {
     $user = user_load_by_name($name);
     // Clear user cache.
-    $users = user_load_multiple(array($user->uid), array(), TRUE);
+    $users = user_load_multiple([$user->uid], [], TRUE);
     $user = $users[$user->uid];
     return $user;
   }
@@ -249,20 +249,20 @@ class LdapTestFunctions {
     foreach ($this->csvTables['groups'] as $guid => $group) {
       $dn = 'cn=' . $group['cn'] . ',' . $this->csvTables['conf'][$test_ldap_id]['groupbasedn'];
       $this->csvTables['groups'][$guid]['dn'] = $dn;
-      $attributes = array(
-        'cn' => array(
+      $attributes = [
+        'cn' => [
           0 => $group['cn'],
           'count' => 1,
-        ),
-        'gid' => array(
+        ],
+        'gid' => [
           0 => $group['gid'],
           'count' => 1,
-        ),
-        'guid' => array(
+        ],
+        'guid' => [
           0 => $guid,
           'count' => 1,
-        ),
-      );
+        ],
+      ];
 
       if ($server_properties['groupMembershipsAttr']) {
         $membershipAttr = $server_properties['groupMembershipsAttr'];
@@ -310,7 +310,7 @@ class LdapTestFunctions {
     $this->data['ldap_servers'][$sid]['ldap'] = $this->ldapData['ldap_servers'][$sid];
     $this->data['ldap_servers'][$sid]['csv'] = $this->csvTables;
     variable_set('ldap_test_server__' . $sid, $this->data['ldap_servers'][$sid]);
-    $current_sids = variable_get('ldap_test_servers', array());
+    $current_sids = variable_get('ldap_test_servers', []);
     $current_sids[] = $sid;
     variable_set('ldap_test_servers', array_unique($current_sids));
   }
@@ -319,64 +319,64 @@ class LdapTestFunctions {
    *
    */
   public function generateUserLDAPAttributes($test_ldap_id, $user) {
-    $attributes = array(
-      'cn' => array(
+    $attributes = [
+      'cn' => [
         0 => $user['cn'],
         'count' => 1,
-      ),
-      'mail' => array(
+      ],
+      'mail' => [
         0 => $user['cn'] . '@' . $this->csvTables['conf'][$test_ldap_id]['mailhostname'],
         'count' => 1,
-      ),
-      'uid' => array(
+      ],
+      'uid' => [
         0 => $user['uid'],
         'count' => 1,
-      ),
-      'guid' => array(
+      ],
+      'guid' => [
         0 => $user['guid'],
         'count' => 1,
-      ),
-      'sn' => array(
+      ],
+      'sn' => [
         0 => $user['lname'],
         'count' => 1,
-      ),
-      'givenname' => array(
+      ],
+      'givenname' => [
         0 => $user['fname'],
         'count' => 1,
-      ),
-      'house' => array(
+      ],
+      'house' => [
         0 => $user['house'],
         'count' => 1,
-      ),
-      'department' => array(
+      ],
+      'department' => [
         0 => $user['department'],
         'count' => 1,
-      ),
-      'faculty' => array(
+      ],
+      'faculty' => [
         0 => (int) (boolean) $user['faculty'],
         'count' => 1,
-      ),
-      'staff' => array(
+      ],
+      'staff' => [
         0 => (int) (boolean) $user['staff'],
         'count' => 1,
-      ),
-      'student' => array(
+      ],
+      'student' => [
         0 => (int) (boolean) $user['student'],
         'count' => 1,
-      ),
-      'gpa' => array(
+      ],
+      'gpa' => [
         0 => $user['gpa'],
         'count' => 1,
-      ),
-      'probation' => array(
+      ],
+      'probation' => [
         0 => (int) (boolean) $user['probation'],
         'count' => 1,
-      ),
-      'password'  => array(
+      ],
+      'password'  => [
         0 => 'goodpwd',
         'count' => 1,
-      ),
-    );
+      ],
+    ];
     return $attributes;
   }
 
@@ -386,8 +386,8 @@ class LdapTestFunctions {
   public function addLDAPUserToLDAPArraysFromAttributes($user, $sid, $dn, $attributes, $ldap_type, $user_attr) {
 
     if ($ldap_type == 'activedirectory') {
-      $attributes[$user_attr] = array(0 => $user['cn'], 'count' => 1);
-      $attributes['distinguishedname'] = array(0 => $dn, 'count' => 1);
+      $attributes[$user_attr] = [0 => $user['cn'], 'count' => 1];
+      $attributes['distinguishedname'] = [0 => $dn, 'count' => 1];
     }
     elseif ($ldap_type == 'openldap') {
 
@@ -404,7 +404,7 @@ class LdapTestFunctions {
    *
    */
   public function getCsvLdapData($test_ldap_id) {
-    foreach (array('groups', 'users', 'memberships', 'conf') as $type) {
+    foreach (['groups', 'users', 'memberships', 'conf'] as $type) {
       $path = drupal_get_path('module', 'ldap_test') . '/test_ldap/' . $test_ldap_id . '/' . $type . '.csv';
       $this->csvTables[$type] = $this->parseCsv($path);
     }
@@ -415,7 +415,7 @@ class LdapTestFunctions {
    */
   public function parseCsv($filepath) {
     $row = 1;
-    $table = array();
+    $table = [];
     if (($handle = fopen($filepath, "r")) !== FALSE) {
       while (($data = fgetcsv($handle, 1000, ",")) !== FALSE) {
         if (count($data) > 1) {
@@ -425,7 +425,7 @@ class LdapTestFunctions {
       fclose($handle);
     }
 
-    $table_associative = array();
+    $table_associative = [];
     $headings = array_shift($table);
     foreach ($table as $i => $row) {
       $row_id = $row[0];

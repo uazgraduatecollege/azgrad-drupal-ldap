@@ -23,15 +23,15 @@ function ldap_servers_settings() {
     *   ... thus default needs to be "No Encryption" to avoid confusion.
     */
 
-  $form['previous_encryption'] = array('#type' => 'hidden', '#default_value' => variable_get('ldap_servers_encryption', LDAP_SERVERS_ENC_TYPE_CLEARTEXT));
-  $form['encryption'] = array('#type' => 'fieldset', '#title' => t('Encryption'));
-  $form['encryption']['ldap_servers_encryption'] = array(
+  $form['previous_encryption'] = ['#type' => 'hidden', '#default_value' => variable_get('ldap_servers_encryption', LDAP_SERVERS_ENC_TYPE_CLEARTEXT)];
+  $form['encryption'] = ['#type' => 'fieldset', '#title' => t('Encryption')];
+  $form['encryption']['ldap_servers_encryption'] = [
     '#type' => 'select',
     '#options' => $options,
     '#title' => t('Obfuscate LDAP Passwords?'),
     '#default_value' => variable_get('ldap_servers_encryption', LDAP_SERVERS_ENC_TYPE_CLEARTEXT),
     '#description' => t('With obfuscation enabled, passwords will be stored in encrypted form and decrypted with the site hash.'),
-  );
+  ];
 
   // Disable the form field and explain this to the user.
   if (count($options) == 1) {
@@ -64,7 +64,7 @@ function ldap_servers_settings_submit($form, &$form_state) {
         else {
           $rencrypted = '';
         }
-        db_query("UPDATE {ldap_servers} SET bindpw = :bindpw WHERE sid = :sid", array(':bindpw' => $rencrypted, ':sid' => $sid));
+        db_query("UPDATE {ldap_servers} SET bindpw = :bindpw WHERE sid = :sid", [':bindpw' => $rencrypted, ':sid' => $sid]);
       }
     }
   }

@@ -173,84 +173,84 @@ function ldap_api_version() {
 function ldap_servers_menu() {
   $menu_offset = 4;
 
-  $items['admin/config/people/ldap'] = array(
+  $items['admin/config/people/ldap'] = [
     'title' => 'LDAP Configuration',
     'description' => 'LDAP authentication, authorization, provisioning, etc.',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('ldap_servers_settings'),
-    'access arguments' => array('administer site configuration'),
+    'page arguments' => ['ldap_servers_settings'],
+    'access arguments' => ['administer site configuration'],
     'file' => 'ldap_servers.settings.inc',
-  );
+  ];
 
-  $items['admin/config/people/ldap/settings'] = array(
+  $items['admin/config/people/ldap/settings'] = [
     'title' => '1. Settings',
     'weight' => -2,
     'type' => MENU_DEFAULT_LOCAL_TASK,
-  );
+  ];
 
-  $items['admin/config/people/ldap/servers'] = array(
+  $items['admin/config/people/ldap/servers'] = [
     'title' => '2. Servers',
     'page callback' => 'ldap_servers_edit_index',
     'weight' => -1,
     'type' => MENU_LOCAL_TASK,
-    'access arguments' => array('administer site configuration'),
+    'access arguments' => ['administer site configuration'],
     'file' => 'ldap_servers.admin.inc',
-  );
+  ];
 
-  $items['admin/config/people/ldap/servers/list'] = array(
+  $items['admin/config/people/ldap/servers/list'] = [
     'title' => 'List',
     'type' => MENU_DEFAULT_LOCAL_TASK,
-  );
+  ];
 
-  $items['admin/config/people/ldap/servers/add'] = array(
+  $items['admin/config/people/ldap/servers/add'] = [
     'title' => 'Add LDAP Server Configuration',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('ldap_servers_admin_form', 'add'),
+    'page arguments' => ['ldap_servers_admin_form', 'add'],
     'type' => MENU_LOCAL_TASK + MENU_CONTEXT_INLINE,
     'weight' => 3,
-    'access arguments' => array('administer site configuration'),
+    'access arguments' => ['administer site configuration'],
     'file' => 'ldap_servers.admin.inc',
-  );
+  ];
 
-  $items['admin/config/people/ldap/servers/edit/%'] = array(
+  $items['admin/config/people/ldap/servers/edit/%'] = [
     'title' => 'Edit LDAP Server Configuration',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('ldap_servers_admin_form', 'edit', $menu_offset + 2),
-    'access arguments' => array('administer site configuration'),
+    'page arguments' => ['ldap_servers_admin_form', 'edit', $menu_offset + 2],
+    'access arguments' => ['administer site configuration'],
     'file' => 'ldap_servers.admin.inc',
-  );
+  ];
 
-  $items['admin/config/people/ldap/servers/test/%'] = array(
+  $items['admin/config/people/ldap/servers/test/%'] = [
     'title' => 'Test LDAP Server Configuration',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('ldap_servers_test_form', $menu_offset + 1, $menu_offset + 2),
-    'access arguments' => array('administer site configuration'),
+    'page arguments' => ['ldap_servers_test_form', $menu_offset + 1, $menu_offset + 2],
+    'access arguments' => ['administer site configuration'],
     'file' => 'ldap_servers.test_form.inc',
-  );
+  ];
 
-  $items['admin/config/people/ldap/servers/delete/%'] = array(
+  $items['admin/config/people/ldap/servers/delete/%'] = [
     'title' => 'Delete LDAP Server',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('ldap_servers_admin_delete', $menu_offset + 1, $menu_offset + 2),
-    'access arguments' => array('administer site configuration'),
+    'page arguments' => ['ldap_servers_admin_delete', $menu_offset + 1, $menu_offset + 2],
+    'access arguments' => ['administer site configuration'],
     'file' => 'ldap_servers.admin.inc',
-  );
+  ];
 
-  $items['admin/config/people/ldap/servers/enable/%'] = array(
+  $items['admin/config/people/ldap/servers/enable/%'] = [
     'title' => 'Enable LDAP Server',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('ldap_servers_admin_enable_disable', $menu_offset + 1, $menu_offset + 2),
-    'access arguments' => array('administer site configuration'),
+    'page arguments' => ['ldap_servers_admin_enable_disable', $menu_offset + 1, $menu_offset + 2],
+    'access arguments' => ['administer site configuration'],
     'file' => 'ldap_servers.admin.inc',
-  );
+  ];
 
-  $items['admin/config/people/ldap/servers/disable/%'] = array(
+  $items['admin/config/people/ldap/servers/disable/%'] = [
     'title' => 'Enable LDAP Server',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('ldap_servers_admin_enable_disable', $menu_offset + 1, $menu_offset + 2),
-    'access arguments' => array('administer site configuration'),
+    'page arguments' => ['ldap_servers_admin_enable_disable', $menu_offset + 1, $menu_offset + 2],
+    'access arguments' => ['administer site configuration'],
     'file' => 'ldap_servers.admin.inc',
-  );
+  ];
 
   return $items;
 }
@@ -259,28 +259,28 @@ function ldap_servers_menu() {
  * Implements hook_theme().
  */
 function ldap_servers_theme() {
-  return array(
-    'ldap_servers_list' => array(
-      'variables' => array('ldap_servers' => NULL, 'actions' => TRUE, 'type' => 'table'),
+  return [
+    'ldap_servers_list' => [
+      'variables' => ['ldap_servers' => NULL, 'actions' => TRUE, 'type' => 'table'],
       'render element' => 'element',
       'file' => 'ldap_servers.theme.inc',
-    ),
-    'ldap_servers_server' => array(
-      'variables' => array('ldap_server' => NULL, 'actions' => FALSE, 'type' => 'detail'),
+    ],
+    'ldap_servers_server' => [
+      'variables' => ['ldap_server' => NULL, 'actions' => FALSE, 'type' => 'detail'],
       'render element' => 'element',
       'file' => 'ldap_servers.theme.inc',
-    ),
-    'ldap_server_token_table' => array(
-      'variables' => array('tokens' => array()),
+    ],
+    'ldap_server_token_table' => [
+      'variables' => ['tokens' => []],
       'render element' => 'element',
       'file' => 'ldap_servers.theme.inc',
-    ),
-    'ldap_server_ldap_entry_table' => array(
-      'variables' => array('entry' => array()),
+    ],
+    'ldap_server_ldap_entry_table' => [
+      'variables' => ['entry' => []],
       'render element' => 'element',
       'file' => 'ldap_servers.theme.inc',
-    ),
-  );
+    ],
+  ];
 }
 
 /**
@@ -367,10 +367,10 @@ function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$param
   $ldap_user_conf = $params['ldap_user_conf'];
   $direction = $params['direction'];
 
-  $tokens = array(
+  $tokens = [
     '!edit_link' => l($ldap_server->editPath, $ldap_server->editPath),
     '!sid' => $ldap_server->sid,
-  );
+  ];
 
   $server_edit_path = 'admin/config/people/ldap/servers/edit/' . $ldap_server->sid;
 
@@ -382,18 +382,18 @@ function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$param
     */
 
     if ($ldap_server->unique_persistent_attr) {
-      foreach (array(
+      foreach ([
         'field.ldap_user_puid_sid',
         'field.ldap_user_puid',
         'field.ldap_user_puid_property',
-      ) as $i => $property_id) {
+               ] as $i => $property_id) {
         $property_token = '[' . $property_id . ']';
         if (!isset($available_user_attrs[$property_token]) || !is_array($available_user_attrs[$property_token])) {
-          $available_user_attrs[$property_token] = array();
+          $available_user_attrs[$property_token] = [];
         }
       }
 
-      $available_user_attrs['[field.ldap_user_puid_sid]'] = array(
+      $available_user_attrs['[field.ldap_user_puid_sid]'] = [
         'name' => t('Field: sid providing PUID'),
         'configurable_to_drupal' => 0,
         'configurable_to_ldap' => 1,
@@ -401,12 +401,12 @@ function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$param
         'notes' => 'not configurable',
         'direction' => LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER,
         'enabled' => TRUE,
-        'prov_events' => array(LDAP_USER_EVENT_CREATE_DRUPAL_USER),
+        'prov_events' => [LDAP_USER_EVENT_CREATE_DRUPAL_USER],
         'config_module' => 'ldap_servers',
         'prov_module' => 'ldap_user',
-      ) + $available_user_attrs['[field.ldap_user_puid_sid]'];
+        ] + $available_user_attrs['[field.ldap_user_puid_sid]'];
 
-      $available_user_attrs['[field.ldap_user_puid]'] = array(
+      $available_user_attrs['[field.ldap_user_puid]'] = [
         'name' => t('Field: PUID', $tokens),
         'configurable_to_drupal' => 0,
         'configurable_to_ldap' => 1,
@@ -415,13 +415,13 @@ function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$param
         'convert' => $ldap_server->unique_persistent_attr_binary,
         'direction' => LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER,
         'enabled' => TRUE,
-        'prov_events' => array(LDAP_USER_EVENT_CREATE_DRUPAL_USER),
+        'prov_events' => [LDAP_USER_EVENT_CREATE_DRUPAL_USER],
         'config_module' => 'ldap_servers',
         'prov_module' => 'ldap_user',
-      ) + $available_user_attrs['[field.ldap_user_puid]'];
+        ] + $available_user_attrs['[field.ldap_user_puid]'];
 
       $available_user_attrs['[field.ldap_user_puid_property]'] =
-      array(
+      [
         'name' => t('Field: PUID Attribute', $tokens),
         'configurable_to_drupal' => 0,
         'configurable_to_ldap' => 1,
@@ -429,18 +429,18 @@ function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$param
         'notes' => 'configure at ' . $server_edit_path,
         'direction' => LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER,
         'enabled' => TRUE,
-        'prov_events' => array(LDAP_USER_EVENT_CREATE_DRUPAL_USER),
+        'prov_events' => [LDAP_USER_EVENT_CREATE_DRUPAL_USER],
         'config_module' => 'ldap_servers',
         'prov_module' => 'ldap_user',
-      ) + $available_user_attrs['[field.ldap_user_puid_property]'];
+      ] + $available_user_attrs['[field.ldap_user_puid_property]'];
     }
 
     $token = '[field.ldap_user_current_dn]';
     if (!isset($available_user_attrs[$token]) || !is_array($available_user_attrs[$token])) {
-      $available_user_attrs[$token] = array();
+      $available_user_attrs[$token] = [];
     }
     $available_user_attrs[$token] =
-    array(
+    [
       'name' => t('Field: Most Recent DN', $tokens),
       'configurable_to_drupal' => 0,
       'configurable_to_ldap' => 0,
@@ -448,51 +448,51 @@ function ldap_servers_ldap_user_attrs_list_alter(&$available_user_attrs, &$param
       'notes' => 'not configurable',
       'direction' => LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER,
       'enabled' => TRUE,
-      'prov_events' => array(LDAP_USER_EVENT_CREATE_DRUPAL_USER, LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER),
+      'prov_events' => [LDAP_USER_EVENT_CREATE_DRUPAL_USER, LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER],
       'config_module' => 'ldap_servers',
       'prov_module' => 'ldap_user',
-    ) + $available_user_attrs[$token];
+    ] + $available_user_attrs[$token];
 
     if ($ldap_user_conf->provisionsDrupalAccountsFromLdap) {
       if (!isset($available_user_attrs['[property.name]']) || !is_array($available_user_attrs['[property.name]'])) {
-        $available_user_attrs['[property.name]'] = array();
+        $available_user_attrs['[property.name]'] = [];
       }
-      $available_user_attrs['[property.name]'] = array(
+      $available_user_attrs['[property.name]'] = [
         'name' => 'Property: Username',
         'source' => '[' . $ldap_server->user_attr . ']',
         'direction' => LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER,
         'enabled' => TRUE,
-        'prov_events' => array(LDAP_USER_EVENT_CREATE_DRUPAL_USER, LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER),
+        'prov_events' => [LDAP_USER_EVENT_CREATE_DRUPAL_USER, LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER],
         'config_module' => 'ldap_servers',
         'prov_module' => 'ldap_user',
-      ) + $available_user_attrs['[property.name]'];
+        ] + $available_user_attrs['[property.name]'];
 
       if (!isset($available_user_attrs['[property.mail]']) || !is_array($available_user_attrs['[property.mail]'])) {
-        $available_user_attrs['[property.mail]'] = array();
+        $available_user_attrs['[property.mail]'] = [];
       }
-      $available_user_attrs['[property.mail]'] = array(
+      $available_user_attrs['[property.mail]'] = [
         'name' => 'Property: Email',
         'source' => ($ldap_server->mail_template) ? $ldap_server->mail_template : '[' . $ldap_server->mail_attr . ']',
         'direction' => LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER,
         'enabled' => TRUE,
-        'prov_events' => array(LDAP_USER_EVENT_CREATE_DRUPAL_USER, LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER),
+        'prov_events' => [LDAP_USER_EVENT_CREATE_DRUPAL_USER, LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER],
         'config_module' => 'ldap_servers',
         'prov_module' => 'ldap_user',
-      ) + $available_user_attrs['[property.mail]'];
+        ] + $available_user_attrs['[property.mail]'];
 
       if ($ldap_server->picture_attr) {
         if (!isset($available_user_attrs['[property.picture]']) || !is_array($available_user_attrs['[property.picture]'])) {
-          $available_user_attrs['[property.picture]'] = array();
+          $available_user_attrs['[property.picture]'] = [];
         }
-        $available_user_attrs['[property.picture]'] = array(
+        $available_user_attrs['[property.picture]'] = [
           'name' => 'Property: Picture',
           'source' => '[' . $ldap_server->picture_attr . ']',
           'direction' => LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER,
           'enabled' => TRUE,
-          'prov_events' => array(LDAP_USER_EVENT_CREATE_DRUPAL_USER, LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER),
+          'prov_events' => [LDAP_USER_EVENT_CREATE_DRUPAL_USER, LDAP_USER_EVENT_SYNCH_TO_DRUPAL_USER],
           'config_module' => 'ldap_servers',
           'prov_module' => 'ldap_user',
-        ) + $available_user_attrs['[property.picture]'];
+          ] + $available_user_attrs['[property.picture]'];
       }
     }
   }
@@ -550,14 +550,14 @@ function _ldap_servers_get_servers($sid, $type, $flatten, $reset) {
   static $servers;
   $type = ($type) ? $type : 'all';
   if ($reset) {
-    $servers = array();
+    $servers = [];
   }
   if (!isset($servers['all'])) {
     $servers['all'] = LdapServerAdmin::getLdapServerObjects('all', NULL, 'LdapServer', $reset);
   }
 
   if (!isset($servers['enabled'])) {
-    $servers['enabled'] = array();
+    $servers['enabled'] = [];
     foreach ($servers['all'] as $_sid => $ldap_server) {
       if ($ldap_server->status == 1) {
         $servers['enabled'][$_sid] = $ldap_server;
@@ -569,7 +569,7 @@ function _ldap_servers_get_servers($sid, $type, $flatten, $reset) {
     if (!isset($servers[$type][$sid])) {
       return FALSE;
     }
-    return ($flatten) ? $servers[$type][$sid] : array($sid => $servers[$type][$sid]);
+    return ($flatten) ? $servers[$type][$sid] : [$sid => $servers[$type][$sid]];
   }
 
   if (isset($servers[$type])) {
@@ -601,7 +601,7 @@ function _ldap_servers_get_simpletest_servers($sid, $type = NULL, $flatten, $res
     if (!isset($servers[$type][$sid])) {
       return FALSE;
     }
-    return ($flatten) ? $servers[$type][$sid] : array($sid => $servers[$type][$sid]);
+    return ($flatten) ? $servers[$type][$sid] : [$sid => $servers[$type][$sid]];
   }
 
   if (isset($servers[$type])) {
@@ -740,7 +740,7 @@ function ldap_servers_get_user_ldap_data($drupal_user, $sid = NULL, $ldap_contex
   $ldap_server = ($sid) ? ldap_servers_get_servers($sid, 'enabled', TRUE) : FALSE;
 
   if ($ldap_server === FALSE) {
-    watchdog('ldap_servers', 'Failed to load server object %sid in _ldap_servers_get_user_ldap_data', array('%sid' => $sid), WATCHDOG_ERROR);
+    watchdog('ldap_servers', 'Failed to load server object %sid in _ldap_servers_get_user_ldap_data', ['%sid' => $sid], WATCHDOG_ERROR);
     return FALSE;
   }
 
@@ -774,10 +774,10 @@ function ldap_servers_get_user_ldap_data($drupal_user, $sid = NULL, $ldap_contex
  */
 function ldap_servers_set_attribute_map($attribute = NULL, $conversion = NULL, $values = NULL) {
 
-  $attribute = (is_array($attribute)) ? $attribute : array();
+  $attribute = (is_array($attribute)) ? $attribute : [];
   $attribute['conversion'] = $conversion;
   if (!$values && (!isset($attribute['values']) || !is_array($attribute['values']))) {
-    $attribute['values'] = array(0 => NULL);
+    $attribute['values'] = [0 => NULL];
   }
   // Merge into array overwriting ordinals.
   elseif (is_array($values)) {
@@ -950,35 +950,35 @@ function ldap_servers_ldap_servers_types() {
 
   $path = drupal_get_path('module', 'ldap_servers') . '/ldap_types';
 
-  $types['default'] = array(
+  $types['default'] = [
     'class' => t('LdapTypeDefault'),
     'directory_path' => $path,
     'name' => 'Default LDAP',
-  );
+  ];
 
-  $types['ad'] = array(
+  $types['ad'] = [
     'class' => t('LdapTypeActiveDirectory'),
     'directory_path' => $path,
     'name' => 'Active Directory',
-  );
+  ];
 
-  $types['novell_edir'] = array(
+  $types['novell_edir'] = [
     'class' => t('LdapTypeNovell'),
     'directory_path' => $path,
     'name' => 'Novell',
-  );
+  ];
 
-  $types['openldap'] = array(
+  $types['openldap'] = [
     'class' => t('LdapTypeOpenLdap'),
     'directory_path' => $path,
     'name' => 'Open LDAP',
-  );
+  ];
 
-  $types['opendir'] = array(
+  $types['opendir'] = [
     'class' => t('LdapTypeOpenDirectory'),
     'directory_path' => $path,
     'name' => 'Apple Open Directory',
-  );
+  ];
 
   drupal_alter('ldap_servers_ldap_types', $types);
   return $types;
@@ -1043,7 +1043,7 @@ function ldap_servers_get_all_rdn_values_from_dn($dn, $rdn) {
   $pairs = ldap_explode_dn($dn, 0);
   $count = array_shift($pairs);
   $rdn = drupal_strtolower($rdn);
-  $rdn_values = array();
+  $rdn_values = [];
   foreach ($pairs as $p) {
     $pair = explode('=', $p);
     if (drupal_strtolower(trim($pair[0])) == $rdn) {
@@ -1058,7 +1058,7 @@ function ldap_servers_get_all_rdn_values_from_dn($dn, $rdn) {
  */
 function ldap_servers_ldaps_option_array() {
 
-  $options = array();
+  $options = [];
   foreach (ldap_servers_ldap_servers_types() as $ldap_id => $conf) {
     $options[$ldap_id] = $conf['name'];
   }

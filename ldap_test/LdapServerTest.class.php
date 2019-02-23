@@ -44,7 +44,7 @@ class LdapServerTest extends LdapServer {
       $sid = $test_data['sid'];
     }
     else {
-      $test_data = variable_get('ldap_test_server__' . $sid, array());
+      $test_data = variable_get('ldap_test_server__' . $sid, []);
     }
 
     $bindpw = (isset($test_data['bindpw'])) ? $test_data['bindpw'] : 'goodpwd';
@@ -57,10 +57,10 @@ class LdapServerTest extends LdapServer {
    *
    */
   public function refreshFakeData() {
-    $test_data = variable_get('ldap_test_server__' . $this->sid, array());
-    $this->methodResponses = (is_array($test_data) && isset($test_data['methodResponses'])) ? $test_data['methodResponses'] : array();
-    $this->entries = (is_array($test_data) && isset($test_data['ldap'])) ? $test_data['ldap'] : array();
-    $this->searchResults = (isset($test_data['search_results'])) ? $test_data['search_results'] : array();
+    $test_data = variable_get('ldap_test_server__' . $this->sid, []);
+    $this->methodResponses = (is_array($test_data) && isset($test_data['methodResponses'])) ? $test_data['methodResponses'] : [];
+    $this->entries = (is_array($test_data) && isset($test_data['ldap'])) ? $test_data['ldap'] : [];
+    $this->searchResults = (isset($test_data['search_results'])) ? $test_data['search_results'] : [];
     $this->detailedWatchdogLog = variable_get('ldap_help_watchdog_detail', 0);
     foreach ($test_data['properties'] as $property_name => $property_value) {
       $this->{$property_name} = $property_value;
@@ -122,7 +122,7 @@ class LdapServerTest extends LdapServer {
       }
     }
 
-    $watchdog_tokens = array('%user' => $userdn, '%errno' => $ldap_errno, '%error' => $ldap_error);
+    $watchdog_tokens = ['%user' => $userdn, '%errno' => $ldap_errno, '%error' => $ldap_error];
     watchdog('ldap_servers', "LDAP bind failure for user %user. Error %errno: %error", $watchdog_tokens);
     return $ldap_errno;
 
@@ -149,16 +149,16 @@ class LdapServerTest extends LdapServer {
    *   An array of matching entries->attributes, or FALSE if the search is
    *   empty.
    */
-  public function search($base_dn = NULL, $filter, $attributes = array(), $attrsonly = 0, $sizelimit = 0, $timelimit = 0, $deref = LDAP_DEREF_NEVER, $scope = LDAP_SCOPE_SUBTREE) {
+  public function search($base_dn = NULL, $filter, $attributes = [], $attrsonly = 0, $sizelimit = 0, $timelimit = 0, $deref = LDAP_DEREF_NEVER, $scope = LDAP_SCOPE_SUBTREE) {
 
-    $lcase_attribute = array();
+    $lcase_attribute = [];
     foreach ($attributes as $i => $attribute_name) {
       $lcase_attribute[] = drupal_strtolower($attribute_name);
     }
     $attributes = $lcase_attribute;
 
     // For test matching simplicity remove line breaks and tab spacing.
-    $filter = trim(str_replace(array("\n", "  "), array('', ''), $filter));
+    $filter = trim(str_replace(["\n", "  "], ['', ''], $filter));
 
     if ($base_dn == NULL) {
       if (count($this->basedn) == 1) {
@@ -192,7 +192,7 @@ class LdapServerTest extends LdapServer {
      */
     $base_dn = drupal_strtolower($base_dn);
     $filter = trim($filter, "()");
-    $subqueries = array();
+    $subqueries = [];
     $operand = FALSE;
 
     if (strpos($filter, '&') === 0) {
@@ -235,7 +235,7 @@ class LdapServerTest extends LdapServer {
     }
 
     // Need to perform feaux ldap search here with data in.
-    $results = array();
+    $results = [];
 
     if ($operand == '|') {
       foreach ($subqueries as $i => $subquery) {
@@ -270,7 +270,7 @@ class LdapServerTest extends LdapServer {
           // match!
           $entry['dn'] = $dn;
           if ($attributes) {
-            $selected_data = array();
+            $selected_data = [];
             foreach ($attributes as $i => $attr_name) {
               $selected_data[$attr_name] = (isset($entry[$attr_name])) ? $entry[$attr_name] : NULL;
             }
@@ -317,7 +317,7 @@ class LdapServerTest extends LdapServer {
         if ($match === TRUE) {
           $entry['dn'] = $dn;
           if ($attributes) {
-            $selected_data = array();
+            $selected_data = [];
             foreach ($attributes as $i => $attr_name) {
               $selected_data[$attr_name] = (isset($entry[$attr_name])) ? $entry[$attr_name] : NULL;
             }
@@ -343,9 +343,9 @@ class LdapServerTest extends LdapServer {
    *
    * @param return FALSE or ldap entry array
    */
-  public function dnExists($find_dn, $return = 'boolean', $attributes = array('objectclass')) {
+  public function dnExists($find_dn, $return = 'boolean', $attributes = ['objectclass']) {
     $this->refreshFakeData();
-    $test_data = variable_get('ldap_test_server__' . $this->sid, array());
+    $test_data = variable_get('ldap_test_server__' . $this->sid, []);
     foreach ($this->entries as $entry_dn => $entry) {
       $match = (strcasecmp($entry_dn, $find_dn) == 0);
 
@@ -369,12 +369,12 @@ class LdapServerTest extends LdapServer {
    *
    */
   public static function getLdapServerObjects($sid = NULL, $type = NULL, $flatten = FALSE) {
-    $servers = array();
+    $servers = [];
     if ($sid) {
       $servers[$sid] = new LdapServerTest($sid);
     }
     else {
-      $server_ids = variable_get('ldap_test_servers', array());
+      $server_ids = variable_get('ldap_test_servers', []);
       foreach ($server_ids as $sid => $_sid) {
         $servers[$sid] = new LdapServerTest($sid);
       }
@@ -402,7 +402,7 @@ class LdapServerTest extends LdapServer {
    */
   public function createLdapEntry($ldap_entry, $dn = NULL) {
     $result = FALSE;
-    $test_data = variable_get('ldap_test_server__' . $this->sid, array());
+    $test_data = variable_get('ldap_test_server__' . $this->sid, []);
 
     if (isset($ldap_entry['dn'])) {
       $dn = $ldap_entry['dn'];
@@ -424,9 +424,9 @@ class LdapServerTest extends LdapServer {
    */
   public function modifyLdapEntry($dn, $attributes = NULL, $old_attributes = FALSE) {
     if (!$attributes) {
-      $attributes = array();
+      $attributes = [];
     }
-    $test_data = variable_get('ldap_test_server__' . $this->sid, array());
+    $test_data = variable_get('ldap_test_server__' . $this->sid, []);
     if (!isset($test_data['entries'][$dn])) {
       return FALSE;
     }
@@ -476,9 +476,9 @@ class LdapServerTest extends LdapServer {
    */
   public function delete($dn) {
 
-    $test_data = variable_get('ldap_test_server__' . $this->sid, array());
+    $test_data = variable_get('ldap_test_server__' . $this->sid, []);
     $deleted = FALSE;
-    foreach (array('entries', 'users', 'groups', 'ldap') as $test_data_sub_array) {
+    foreach (['entries', 'users', 'groups', 'ldap'] as $test_data_sub_array) {
       if (isset($test_data[$test_data_sub_array][$dn])) {
         unset($test_data[$test_data_sub_array][$dn]);
         $deleted = TRUE;

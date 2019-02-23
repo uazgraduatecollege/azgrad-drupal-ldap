@@ -20,7 +20,7 @@ class ldap_views_handler_filter extends views_handler_filter {
    */
   public function option_definition() {
     $options = parent::option_definition();
-    $options['expose']['contains']['required'] = array('default' => FALSE);
+    $options['expose']['contains']['required'] = ['default' => FALSE];
     return $options;
   }
 
@@ -30,68 +30,68 @@ class ldap_views_handler_filter extends views_handler_filter {
    * adding/removing items from this array.
    */
   public function operators() {
-    $operators = array(
-      '=' => array(
+    $operators = [
+      '=' => [
         'title' => t('Is equal to'),
         'short' => t('='),
         'method' => 'op_equal',
         'values' => 1,
-      ),
-      '!=' => array(
+      ],
+      '!=' => [
         'title' => t('Is not equal to'),
         'short' => t('!='),
         'method' => 'op_equal',
         'values' => 1,
-      ),
-      'contains' => array(
+      ],
+      'contains' => [
         'title' => t('Contains'),
         'short' => t('contains'),
         'method' => 'op_contains',
         'values' => 1,
-      ),
-      'starts' => array(
+      ],
+      'starts' => [
         'title' => t('Starts with'),
         'short' => t('begins'),
         'method' => 'op_starts',
         'values' => 1,
-      ),
-      'not_starts' => array(
+      ],
+      'not_starts' => [
         'title' => t('Does not start with'),
         'short' => t('not_begins'),
         'method' => 'op_not_starts',
         'values' => 1,
-      ),
-      'ends' => array(
+      ],
+      'ends' => [
         'title' => t('Ends with'),
         'short' => t('ends'),
         'method' => 'op_ends',
         'values' => 1,
-      ),
-      'not_ends' => array(
+      ],
+      'not_ends' => [
         'title' => t('Does not end with'),
         'short' => t('not_ends'),
         'method' => 'op_not_ends',
         'values' => 1,
-      ),
-      'not' => array(
+      ],
+      'not' => [
         'title' => t('Does not contain'),
         'short' => t('!has'),
         'method' => 'op_not',
         'values' => 1,
-      ),
-      'greater' => array(
+      ],
+      'greater' => [
         'title' => t('Greater than or equal to'),
         'short' => t('greater_eq'),
         'method' => 'op_greater_eq',
         'values' => 1,
-      ),
-      'less' => array(
+      ],
+      'less' => [
         'title' => t('Less than or equal to'),
         'short' => t('less_eq'),
         'method' => 'op_less_eq',
         'values' => 1,
-      ),
-    );
+      ],
+    ];
 
     return $operators;
   }
@@ -100,7 +100,7 @@ class ldap_views_handler_filter extends views_handler_filter {
    * Build strings from the operators() for 'select' options.
    */
   public function operator_options($which = 'title') {
-    $options = array();
+    $options = [];
     foreach ($this->operators() as $id => $info) {
       $options[$id] = $info[$which];
     }
@@ -131,7 +131,7 @@ class ldap_views_handler_filter extends views_handler_filter {
    *
    */
   public function operator_values($values = 1) {
-    $options = array();
+    $options = [];
     foreach ($this->operators() as $id => $info) {
       if (isset($info['values']) && $info['values'] == $values) {
         $options[] = $id;
@@ -166,29 +166,29 @@ class ldap_views_handler_filter extends views_handler_filter {
     }
 
     if ($which == 'all' || $which == 'value') {
-      $form['value'] = array(
+      $form['value'] = [
         '#type' => 'textfield',
         '#title' => t('Value'),
         '#size' => 30,
         '#default_value' => $this->value,
-      );
+      ];
       if (!empty($form_state['exposed']) && !isset($form_state['input'][$identifier])) {
         $form_state['input'][$identifier] = $this->value;
       }
 
       if ($which == 'all') {
-        $form['value'] += array(
-          '#dependency' => array($source => $this->operator_values(1)),
-        );
+        $form['value'] += [
+          '#dependency' => [$source => $this->operator_values(1)],
+        ];
       }
     }
 
     if (!isset($form['value'])) {
       // Ensure there is something in the 'value'.
-      $form['value'] = array(
+      $form['value'] = [
         '#type' => 'value',
         '#value' => NULL,
-      );
+      ];
     }
   }
 

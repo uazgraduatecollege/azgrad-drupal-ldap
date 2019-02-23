@@ -15,7 +15,7 @@ function ldap_user_modify($dn, $attributes, $ldap_server) {
   $result = ldap_modify($ldap_server->connection, $dn, $attributes);
   if (!$result) {
     $error = "LDAP Server ldap_modify(%dn) in ldap_user_modify() Error Server ID = %sid, LDAP Err No: %ldap_errno LDAP Err Message: %ldap_err2str ";
-    $tokens = array('%dn' => $dn, '%sid' => $this->sid, '%ldap_errno' => ldap_errno($this->connection), '%ldap_err2str' => ldap_err2str(ldap_errno($this->connection)));
+    $tokens = ['%dn' => $dn, '%sid' => $this->sid, '%ldap_errno' => ldap_errno($this->connection), '%ldap_err2str' => ldap_err2str(ldap_errno($this->connection))];
     watchdog('ldap_servers', $error, $tokens, WATCHDOG_ERROR);
   }
   return $result;
@@ -33,12 +33,12 @@ function ldap_password_modify($userdn, $new_password, $ldap_server) {
     $new_pass .= "{$new_password{$i}}\000";
   }
 
-  $status = ldap_mod_replace($ldap_server->connection, $userdn, array('unicodePwd' => $new_pass));
+  $status = ldap_mod_replace($ldap_server->connection, $userdn, ['unicodePwd' => $new_pass]);
   if (!$status) {
     watchdog(
       'ldap_servers',
       'Error: password_modify() failed to modify ldap password w/ base DN "!dn"',
-      array('!dn' => $userdn),
+      ['!dn' => $userdn],
       WATCHDOG_ERROR
     );
   }
@@ -65,7 +65,7 @@ function ldap_servers_convert_password_for_active_directory_unicodePwd($password
   else {
     // Presumably there is no use case for there being more than one password in
     // the $attributes array, hence it will be at index 0 and we return in kind.
-    return array(mb_convert_encoding("\"{$password[0]}\"", "UTF-16LE"));
+    return [mb_convert_encoding("\"{$password[0]}\"", "UTF-16LE")];
   }
 }
 
@@ -77,14 +77,14 @@ function ldap_servers_convert_password_for_active_directory_unicodePwd($password
  *  Http://www.ietf.org/rfc/rfc2253.txt.
  */
 function ldap_baddn($dn, $dn_name) {
-  $result = array();
+  $result = [];
   $valid_attr_name = '[_a-zA-Z\d\s]';
   $valid_attr_values = '[_\-a-zA-Z\d\s]';
   $regex = '/^(' . $valid_attr_name . '*\=' . $valid_attr_values . '*[,]{1})*(' . $valid_attr_name . '*\=' . $valid_attr_values . '*){1}$/';
   $match = (preg_match($regex, $dn)) ? TRUE : FALSE;
   $result['boolean'] = $match;
   if (!$match) {
-    $tokens = array('%dn' => htmlspecialchars($dn), '%dn_name' => $dn_name);
+    $tokens = ['%dn' => htmlspecialchars($dn), '%dn_name' => $dn_name];
     $result['text'] = t('Possible invalid format for:', $tokens)
     . '<em>' . $tokens['%dn'] . '</em>.<br/>  ' .
     t('The format may be correct for your ldap, but please double check.', $tokens);
@@ -100,13 +100,13 @@ function ldap_baddn($dn, $dn_name) {
  *  Http://www.ietf.org/rfc/rfc2253.txt.
  */
 function ldap_badattr($attr, $attr_name) {
-  $result = array();
+  $result = [];
   $valid_attr_name = '[_a-zA-Z\d\s]';
   $regex = '/^(' . $valid_attr_name . '){1,}$/';
   $match = (preg_match($regex, $attr)) ? TRUE : FALSE;
   $result['boolean'] = $match;
   if (!$match) {
-    $tokens = array('%attr' => htmlspecialchars($attr), '%attr_name' => $attr_name);
+    $tokens = ['%attr' => htmlspecialchars($attr), '%attr_name' => $attr_name];
     $result['text'] = t('Possible invalid format for %attr_name:', $tokens) . ' <code><em>' . $tokens['%attr']
       . '</em></code><br/>' . t('The format may be correct for your ldap, but please double check.', $tokens);
   }
@@ -130,13 +130,13 @@ function ldap_servers_attributes_needed($sid, $ldap_context = 'all', $reset = TR
   $sid = is_object($sid) ? $sid->sid : $sid;
   $static_cache_id = ($sid) ? $ldap_context . '__' . $sid : $ldap_context;
   if (!is_array($attributes)) {
-    $attributes = array();
+    $attributes = [];
   }
   if (!isset($attributes[$static_cache_id]) || $reset) {
-    $params = array(
+    $params = [
       'sid' => $sid,
       'ldap_context' => $ldap_context,
-    );
+    ];
     drupal_alter('ldap_attributes_needed', $attributes[$static_cache_id], $params);
   }
   $return = $attributes[$static_cache_id];
@@ -244,11 +244,11 @@ function ldap_server_massage_text($value, $value_type, $context) {
  *
  * @return array Array $values, but escaped
  */
-function ldap_pear_escape_filter_value($values = array()) {
+function ldap_pear_escape_filter_value($values = []) {
   // Parameter validation.
   $is_scalar = is_scalar($values);
   if ($is_scalar) {
-    $values = array($values);
+    $values = [$values];
   }
   if ($values === NULL) {
     return NULL;
@@ -286,11 +286,11 @@ function ldap_pear_escape_filter_value($values = array()) {
  *
  * @return array Array $values, but unescaped
  */
-function ldap_pear_unescape_filter_value($values = array()) {
+function ldap_pear_unescape_filter_value($values = []) {
   // Parameter validation.
   $is_scalar = is_scalar($values);
   if (!is_array($values)) {
-    $values = array($values);
+    $values = [$values];
   }
 
   foreach ($values as $key => $value) {
@@ -316,12 +316,12 @@ function ldap_pear_unescape_filter_value($values = array()) {
  *
  * @return array The array $values, but escaped
  */
-function ldap_pear_escape_dn_value($values = array()) {
+function ldap_pear_escape_dn_value($values = []) {
   // Parameter validation.
   $is_scalar = is_scalar($values);
 
   if (!is_array($values)) {
-    $values = array($values);
+    $values = [$values];
   }
 
   foreach ($values as $key => $val) {
@@ -374,12 +374,12 @@ function ldap_pear_escape_dn_value($values = array()) {
  *
  * @static
  */
-function ldap_pear_unescape_dn_value($values = array()) {
+function ldap_pear_unescape_dn_value($values = []) {
   $is_scalar = is_scalar($values);
 
   // Parameter validation.
   if (!is_array($values)) {
-    $values = array($values);
+    $values = [$values];
   }
 
   foreach ($values as $key => $val) {

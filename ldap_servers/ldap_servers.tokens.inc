@@ -49,7 +49,7 @@ function ldap_servers_parse_user_attr_name($user_attr_key) {
       $attr_ordinal = $attr_name_parts[1];
     }
   }
-  return array($attr_type, $attr_name, $attr_ordinal);
+  return [$attr_type, $attr_name, $attr_ordinal];
 }
 
 /**
@@ -116,7 +116,7 @@ function ldap_servers_token_replace($resource, $text, $resource_type = 'ldap_ent
 function ldap_servers_token_extract_attributes(&$attribute_maps, $text) {
   $tokens = ldap_servers_token_tokens_needed_for_template($text);
   foreach ($tokens as $token) {
-    $token = str_replace(array(LDAP_SERVERS_TOKEN_PRE, LDAP_SERVERS_TOKEN_POST), array('', ''), $token);
+    $token = str_replace([LDAP_SERVERS_TOKEN_PRE, LDAP_SERVERS_TOKEN_POST], ['', ''], $token);
     $parts = explode(LDAP_SERVERS_TOKEN_DEL, $token);
     $ordinal = (isset($parts[1]) && $parts[1]) ? $parts[1] : 0;
     $attr_name = $parts[0];
@@ -130,7 +130,7 @@ function ldap_servers_token_extract_attributes(&$attribute_maps, $text) {
     else {
       $conversion = NULL;
     }
-    $attribute_maps[$attr_name] = ldap_servers_set_attribute_map(@$attribute_maps[$attr_name], $conversion, array($ordinal => NULL));
+    $attribute_maps[$attr_name] = ldap_servers_set_attribute_map(@$attribute_maps[$attr_name], $conversion, [$ordinal => NULL]);
   }
 }
 
@@ -141,7 +141,7 @@ function ldap_servers_token_extract_attributes(&$attribute_maps, $text) {
  * @return array(<attr_name>, <ordinal>, <conversion>)
  */
 function ldap_servers_token_extract_parts($token) {
-  $attributes = array();
+  $attributes = [];
   ldap_servers_token_extract_attributes($attributes, $token);
   if (is_array($attributes)) {
     $keys = array_keys($attributes);
@@ -149,10 +149,10 @@ function ldap_servers_token_extract_parts($token) {
     $attr_data = $attributes[$attr_name];
     $ordinals = array_keys($attr_data['values']);
     $ordinal = $ordinals[0];
-    return array($attr_name, $ordinal, $attr_data['conversion']);
+    return [$attr_name, $ordinal, $attr_data['conversion']];
   }
   else {
-    return array(NULL, NULL, NULL);
+    return [NULL, NULL, NULL];
   }
 
 }
@@ -211,8 +211,8 @@ function ldap_servers_token_extract_parts($token) {
 function ldap_servers_token_tokenize_entry($ldap_entry, $token_keys = 'all', $pre = LDAP_SERVERS_TOKEN_PRE, $post = LDAP_SERVERS_TOKEN_POST) {
 
   $detailed_watchdog_log = variable_get('ldap_help_watchdog_detail', 0);
-  $tokens = array();
-  $watchdog_tokens = array();
+  $tokens = [];
+  $watchdog_tokens = [];
   if (function_exists('debug_backtrace') && $backtrace = debug_backtrace()) {
     $watchdog_tokens['%calling_function'] = $backtrace[1]['function'];
   }
@@ -233,8 +233,8 @@ function ldap_servers_token_tokenize_entry($ldap_entry, $token_keys = 'all', $pr
   // escapes attribute values, need to be unescaped later.
   $dn_parts = ldap_explode_dn($ldap_entry['dn'], 0);
   unset($dn_parts['count']);
-  $parts_count = array();
-  $parts_last_value = array();
+  $parts_count = [];
+  $parts_last_value = [];
   foreach ($dn_parts as $pair) {
     list($attr_name, $attr_value) = explode('=', $pair);
     $attr_value = ldap_pear_unescape_dn_value($attr_value);
@@ -388,7 +388,7 @@ function ldap_servers_token_tokenize_entry($ldap_entry, $token_keys = 'all', $pr
 function ldap_servers_token_tokenize_user_account($user_account, $token_keys = 'all', $pre = LDAP_SERVERS_TOKEN_PRE, $post = LDAP_SERVERS_TOKEN_POST) {
 
   $detailed_watchdog_log = variable_get('ldap_help_watchdog_detail', 0);
-  $tokens = array();
+  $tokens = [];
 
   $user_entered_password_available = (boolean) ldap_user_ldap_provision_pwd('get');
   if ($token_keys == 'all') {
@@ -517,11 +517,11 @@ function ldap_servers_token_show_sample_user_tokens($sid) {
   }
 
   if ($ldap_user = $ldap_server->userUserNameToExistingLdapEntry($test_username)) {
-    $table = theme('ldap_server_ldap_entry_table', array(
+    $table = theme('ldap_server_ldap_entry_table', [
       'entry' => $ldap_user['attr'],
       'username' => $test_username,
       'dn' => $ldap_user['dn'],
-    ));
+    ]);
   }
   else {
     $table = '<p>' . t('No sample user data found') . '</p>';

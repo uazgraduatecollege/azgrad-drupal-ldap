@@ -10,7 +10,7 @@
  */
 function ldap_authentication_requirements($phase) {
 
-  $requirements = array();
+  $requirements = [];
   if ($phase != "install" && db_table_exists('ldapauth')) {
     $requirements['ldap_authentication_ldap_integration']['title'] = t('LDAP Integration LDAP Auth Upgrade Concern');
     $requirements['ldap_authentication_ldap_integration']['severity'] = REQUIREMENT_WARNING;
@@ -48,7 +48,7 @@ function ldap_authentication_update_7100() {
   ldap_servers_module_load_include('php', 'ldap_authentication', 'LdapAuthenticationConfAdmin.class');
   $sso_enabled = LdapAuthenticationConfAdmin::getSaveableProperty('ssoEnabled');
   if ($sso_enabled) {
-    module_enable(array('ldap_sso'));
+    module_enable(['ldap_sso']);
     return t('Enabled new LDAP SSO module if Single Sign on was previously enabled.  Code for LDAP Single Sign On was moved to new "LDAP SSO" included module.');
   }
 }

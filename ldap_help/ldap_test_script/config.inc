@@ -21,9 +21,9 @@ function ldap_help_config() {
   $bind_pwd = 'password';
   $server_address = 'ad.mycollege.edu';
 
-  $config = array(
-    'servers' => array(
-      'default test' => array(
+  $config = [
+    'servers' => [
+      'default test' => [
         'server_address' => $server_address,
         'server_port'  => 389,
         'server_tls'  => FALSE,
@@ -32,15 +32,15 @@ function ldap_help_config() {
         'server_base_dn' => $user_root,
         'server_bind_dn' => $bind_user,
         'server_bind_pw' => $bind_pwd,
-        'test_queries' => array(
-          'user' => array(
+        'test_queries' => [
+          'user' => [
             'filter'  => 'cn=jbarclay',
-            'show_attr' => array('dn', 'cn', 'displayname', 'sn', 'givenname', 'mail', 'samaccountname', 'email'),
-          ),
-        ),
-        'test_provisions' => array(),
-      ),
-      'query test' => array(
+            'show_attr' => ['dn', 'cn', 'displayname', 'sn', 'givenname', 'mail', 'samaccountname', 'email'],
+          ],
+        ],
+        'test_provisions' => [],
+      ],
+      'query test' => [
         'server_address' => $server_address,
         'server_port'  => 389,
         'server_tls'  => FALSE,
@@ -49,15 +49,15 @@ function ldap_help_config() {
         'server_base_dn' => $query_root,
         'server_bind_dn' => $bind_user,
         'server_bind_pw' => $bind_pwd,
-        'test_queries' => array(
-          'group' => array(
+        'test_queries' => [
+          'group' => [
             'filter'  => 'cn=ed-it-nag',
-            'show_attr' => array('dn', 'cn', 'samaccountname'),
-          ),
-        ),
-        'test_provisions' => array(),
-      ),
-      'provision test' => array(
+            'show_attr' => ['dn', 'cn', 'samaccountname'],
+          ],
+        ],
+        'test_provisions' => [],
+      ],
+      'provision test' => [
         'server_address' => $server_address,
         'server_port'  => 389,
         'server_tls'  => FALSE,
@@ -66,45 +66,45 @@ function ldap_help_config() {
         'server_base_dn' => $provision_root,
         'server_bind_dn' => $bind_user,
         'server_bind_pw' => $bind_pwd,
-        'test_queries' => array(),
-        'test_provisions' => array(
-          'simple_user' => array(
+        'test_queries' => [],
+        'test_provisions' => [
+          'simple_user' => [
             'delete_if_exists' => TRUE,
             'find_filter' => "distinguishedName=cn=ed-drupal-user-17,$provision_root",
             'dn' => "cn=ed-drupal-user-17, $provision_root",
-            'attr' => array(
+            'attr' => [
               "displayName" => "Drupal User",
               "cn" => 'ed-drupal-user-17',
               "samaccountname" => 'ed-drupal-user-17',
-              "objectclass" => array(
+              "objectclass" => [
                 "top", "person", "organizationalPerson", "user",
-              ),
+              ],
               "description" => "test user",
               'mail' => 'ed-drupal-user-17@blah.com',
               'givenName' => 'Drupal',
               'sn' => 'User',
               'distinguishedName' => "cn=ed-drupal-user-17,$provision_root",
-            ),
-          ),
-          'simple_group' => array(
+            ],
+          ],
+          'simple_group' => [
             'delete_if_exists' => TRUE,
             'find_filter' => "distinguishedName=cn=ed-drupal-group2,$provision_root",
             'dn' => "cn=ed-drupal-group2,$provision_root",
-            'attr' => array(
+            'attr' => [
               "cn" => 'ed-drupal-group2',
               "sAMAccountName" => 'ed-drupal-group2',
               'instanceType' => '4',
-              "objectClass" => array(
+              "objectClass" => [
                 "top", "group",
-              ),
+              ],
               'name' => 'ed-drupal-group2',
               'distinguishedName' => "cn=ed-drupal-group2,$provision_root",
-            ),
-          ),
-        ),
-      ),
-    ),
-  );
+            ],
+          ],
+        ],
+      ],
+    ],
+  ];
 
   return $config;
 

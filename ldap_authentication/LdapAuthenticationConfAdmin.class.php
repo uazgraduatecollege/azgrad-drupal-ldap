@@ -20,14 +20,14 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
      * 0.  Logon Options
      */
 
-    $values['authenticationModeOptions'] = array(
+    $values['authenticationModeOptions'] = [
       LDAP_AUTHENTICATION_MIXED => t('Mixed mode. Drupal authentication is tried first.  On failure, LDAP authentication is performed.'),
       LDAP_AUTHENTICATION_EXCLUSIVE => t('Only LDAP Authentication is allowed except for user 1.
         If selected, (1) reset password links will be replaced with links to ldap end user documentation below.
         (2) The reset password form will be left available at user/password for user 1; but no links to it
         will be provided to anonymous users.
         (3) Password fields in user profile form will be removed except for user 1.'),
-    );
+    ];
 
     $values['authenticationServersDescription'] = t('Check all LDAP server configurations to use in authentication.
      Each will be tested for authentication until successful or
@@ -72,44 +72,44 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
     * Email
     */
 
-    $values['emailOptionOptions'] = array(
+    $values['emailOptionOptions'] = [
       LDAP_AUTHENTICATION_EMAIL_FIELD_REMOVE => t('Don\'t show an email field on user forms. LDAP derived email will be used for user and cannot be changed by user.'),
       LDAP_AUTHENTICATION_EMAIL_FIELD_DISABLE => t('Show disabled email field on user forms with LDAP derived email. LDAP derived email will be used for user and cannot be changed by user.'),
       LDAP_AUTHENTICATION_EMAIL_FIELD_ALLOW => t('Leave email field on user forms enabled. Generally used when provisioning to LDAP or not using email derived from LDAP.'),
-    );
+    ];
 
-    $values['emailUpdateOptions'] = array(
+    $values['emailUpdateOptions'] = [
       LDAP_AUTHENTICATION_EMAIL_UPDATE_ON_LDAP_CHANGE_ENABLE_NOTIFY => t('Update stored email if LDAP email differs at login and notify user.'),
       LDAP_AUTHENTICATION_EMAIL_UPDATE_ON_LDAP_CHANGE_ENABLE => t('Update stored email if LDAP email differs at login but don\'t notify user.'),
       LDAP_AUTHENTICATION_EMAIL_UPDATE_ON_LDAP_CHANGE_DISABLE => t('Don\'t update stored email if LDAP email differs at login.'),
-    );
-    $values['emailTemplateHandlingOptions'] = array(
+    ];
+    $values['emailTemplateHandlingOptions'] = [
       LDAP_AUTHENTICATION_EMAIL_TEMPLATE_NONE => t('Never use the template.'),
       LDAP_AUTHENTICATION_EMAIL_TEMPLATE_IF_EMPTY => t('Use the template if no email address was provided by the LDAP server.'),
       LDAP_AUTHENTICATION_EMAIL_TEMPLATE_ALWAYS => t('Always use the template.'),
-    );
+    ];
 
     /**
     * Password
     */
 
-    $values['passwordUpdateOptions'] = array(
+    $values['passwordUpdateOptions'] = [
       LDAP_AUTHENTICATION_PASSWORD_FIELD_SHOW => t('Display password field disabled (Prevents password updates).'),
       LDAP_AUTHENTICATION_PASSWORD_FIELD_HIDE => t('Don\'t show password field on user forms except login form.'),
       LDAP_AUTHENTICATION_PASSWORD_FIELD_ALLOW => t('Display password field and allow updating it. In order to change password in LDAP, LDAP provisioning for this field must be enabled.'),
-    );
+    ];
 
     /**
      *  Single Sign-On / Seamless Sign-On
      */
 
-    $values['ldapImplementationOptions'] = array(
+    $values['ldapImplementationOptions'] = [
       'mod_auth_sspi' => t('mod_auth_sspi'),
       'mod_auth_kerb' => t('mod_auth_kerb'),
-    );
+    ];
 
-    $values['cookieExpirePeriod'] = array(-1 => t('Session'), 0 => t('Immediately')) +
-        drupal_map_assoc(array(3600, 86400, 604800, 2592000, 31536000, 315360000, 630720000), 'format_interval');
+    $values['cookieExpirePeriod'] = [-1 => t('Session'), 0 => t('Immediately')] +
+        drupal_map_assoc([3600, 86400, 604800, 2592000, 31536000, 315360000, 630720000], 'format_interval');
 
     $values['ssoEnabledDescription'] = '<strong>' . t('Single Sign on is enabled.') .
         '</strong> ' . t('To disable it, disable the LDAP SSO Module on the') . ' ' . l(t('Modules Form'), 'admin/modules') . '.<p>' .
@@ -124,7 +124,7 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
     $values['ssoExcludedPathsDescription'] = '<p>' .
         t("Which paths will not check for SSO? cron.php is common example.  Specify pages by using their paths. Enter one path per line. The '*' character is a wildcard.
           Example paths are %blog for the blog page and %blog-wildcard for every personal blog. %front is the front page.",
-          array('%blog' => 'blog', '%blog-wildcard' => 'blog/*', '%front' => '<front>'));
+          ['%blog' => 'blog', '%blog-wildcard' => 'blog/*', '%front' => '<front>']);
     '</p>';
 
     $values['ssoExcludedHostsDescription'] = '<p>' .
@@ -161,7 +161,7 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
   public $authenticationModeOptions;
 
   protected $authenticationServersDescription;
-  protected $authenticationServersOptions = array();
+  protected $authenticationServersOptions = [];
 
   /**
    * 1.  User Login Interface.
@@ -242,7 +242,7 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
    *
    */
   public static function getSaveableProperty($property) {
-    $ldap_authentication_conf = variable_get('ldap_authentication_conf', array());
+    $ldap_authentication_conf = variable_get('ldap_authentication_conf', []);
     return isset($ldap_authentication_conf[$property]) ? $ldap_authentication_conf[$property] : FALSE;
 
   }
@@ -275,110 +275,110 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
 
     if (count($this->authenticationServersOptions) == 0) {
       $message = ldap_servers_no_enabled_servers_msg('configure LDAP Authentication');
-      $form['intro'] = array(
+      $form['intro'] = [
         '#type' => 'item',
         '#markup' => t('<h1>LDAP Authentication Settings</h1>') . $message,
-      );
+      ];
       return $form;
     }
 
     // Not sure what the tokens would be for this form?
-    $tokens = array();
+    $tokens = [];
 
-    $form['intro'] = array(
+    $form['intro'] = [
       '#type' => 'item',
       '#markup' => t('<h1>LDAP Authentication Settings</h1>'),
-    );
+    ];
 
-    $form['logon'] = array(
+    $form['logon'] = [
       '#type' => 'fieldset',
       '#title' => t('Logon Options'),
       '#collapsible' => TRUE,
       '#collapsed' => FALSE,
-    );
+    ];
 
-    $form['logon']['authenticationMode'] = array(
+    $form['logon']['authenticationMode'] = [
       '#type' => 'radios',
       '#title' => t('Allowable Authentications'),
       '#required' => 1,
       '#default_value' => $this->authenticationMode,
       '#options' => $this->authenticationModeOptions,
-    );
+    ];
 
-    $form['logon']['authenticationServers'] = array(
+    $form['logon']['authenticationServers'] = [
       '#type' => 'checkboxes',
       '#title' => t('Authentication LDAP Server Configurations'),
       '#required' => FALSE,
       '#default_value' => $this->sids,
       '#options' => $this->authenticationServersOptions,
       '#description' => $this->authenticationServersDescription,
-    );
+    ];
 
-    $form['login_UI'] = array(
+    $form['login_UI'] = [
       '#type' => 'fieldset',
       '#title' => t('User Login Interface'),
       '#collapsible' => TRUE,
       '#collapsed' => FALSE,
-    );
+    ];
 
-    $form['login_UI']['loginUIUsernameTxt'] = array(
+    $form['login_UI']['loginUIUsernameTxt'] = [
       '#type' => 'textfield',
       '#title' => t('Username Description Text'),
       '#required' => 0,
       '#default_value' => $this->loginUIUsernameTxt,
       '#description' => $this->loginUIUsernameTxtDescription,
-    );
+    ];
 
-    $form['login_UI']['loginUIPasswordTxt'] = array(
+    $form['login_UI']['loginUIPasswordTxt'] = [
       '#type' => 'textfield',
       '#title' => t('Password Description Text'),
       '#required' => 0,
       '#default_value' => $this->loginUIPasswordTxt,
       '#description' => $this->loginUIPasswordTxtDescription,
-    );
+    ];
 
-    $form['login_UI']['ldapUserHelpLinkUrl'] = array(
+    $form['login_UI']['ldapUserHelpLinkUrl'] = [
       '#type' => 'textfield',
       '#title' => t('LDAP Account User Help URL'),
       '#required' => 0,
       '#default_value' => $this->ldapUserHelpLinkUrl,
       '#description' => $this->ldapUserHelpLinkUrlDescription,
-    );
+    ];
 
-    $form['login_UI']['ldapUserHelpLinkText'] = array(
+    $form['login_UI']['ldapUserHelpLinkText'] = [
       '#type' => 'textfield',
       '#title' => t('LDAP Account User Help Link Text'),
       '#required' => 0,
       '#default_value' => $this->ldapUserHelpLinkText,
       '#description' => $this->ldapUserHelpLinkTextDescription,
-    );
+    ];
 
-    $form['restrictions'] = array(
+    $form['restrictions'] = [
       '#type' => 'fieldset',
       '#title' => t('LDAP User "Whitelists" and Restrictions'),
       '#collapsible' => TRUE,
       '#collapsed' => FALSE,
-    );
+    ];
 
-    $form['restrictions']['allowOnlyIfTextInDn'] = array(
+    $form['restrictions']['allowOnlyIfTextInDn'] = [
       '#type' => 'textarea',
       '#title' => t('Allow Only Text Test'),
       '#default_value' => $this->arrayToLines($this->allowOnlyIfTextInDn),
       '#cols' => 50,
       '#rows' => 3,
       '#description' => t($this->allowOnlyIfTextInDnDescription, $tokens),
-    );
+    ];
 
-    $form['restrictions']['excludeIfTextInDn'] = array(
+    $form['restrictions']['excludeIfTextInDn'] = [
       '#type' => 'textarea',
       '#title' => t('Excluded Text Test'),
       '#default_value' => $this->arrayToLines($this->excludeIfTextInDn),
       '#cols' => 50,
       '#rows' => 3,
       '#description' => t($this->excludeIfTextInDnDescription, $tokens),
-    );
+    ];
 
-    $form['restrictions']['allowTestPhp'] = array(
+    $form['restrictions']['allowTestPhp'] = [
       '#type' => 'textarea',
       '#title' => t('PHP to Test for Allowed LDAP Users'),
       '#default_value' => $this->allowTestPhp,
@@ -386,13 +386,13 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
       '#rows' => 3,
       '#description' => t($this->allowTestPhpDescription, $tokens),
       '#disabled' => (boolean) (!module_exists('php')),
-    );
+    ];
 
     if (!module_exists('php')) {
       $form['restrictions']['allowTestPhp']['#title'] .= ' <em>' . t('php module currently disabled') . '</em>';
     }
 
-    $form['restrictions']['excludeIfNoAuthorizations'] = array(
+    $form['restrictions']['excludeIfNoAuthorizations'] = [
       '#type' => 'checkbox',
       '#title' => t('Deny access to users without Ldap Authorization Module
         authorization mappings such as Drupal roles.
@@ -400,191 +400,191 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
       '#default_value' => $this->excludeIfNoAuthorizations,
       '#description' => t($this->excludeIfNoAuthorizationsDescription, $tokens),
       '#disabled' => (boolean) (!module_exists('ldap_authorization')),
-    );
+    ];
 
-    $form['email'] = array(
+    $form['email'] = [
       '#type' => 'fieldset',
       '#title' => t('Email'),
       '#collapsible' => TRUE,
       '#collapsed' => FALSE,
-    );
+    ];
 
-    $form['email']['emailOption'] = array(
+    $form['email']['emailOption'] = [
       '#type' => 'radios',
       '#title' => t('Email Behavior'),
       '#required' => 1,
       '#default_value' => $this->emailOption,
       '#options' => $this->emailOptionOptions,
-    );
+    ];
 
-    $form['email']['emailUpdate'] = array(
+    $form['email']['emailUpdate'] = [
       '#type' => 'radios',
       '#title' => t('Email Update'),
       '#required' => 1,
       '#default_value' => $this->emailUpdate,
       '#options' => $this->emailUpdateOptions,
-    );
+    ];
 
-    $form['email']['template'] = array(
+    $form['email']['template'] = [
       '#type' => 'fieldset',
       '#collapsible' => TRUE,
       '#title' => t('Email Templates'),
-    );
+    ];
 
-    $form['email']['template']['emailTemplateHandling'] = array(
+    $form['email']['template']['emailTemplateHandling'] = [
       '#type' => 'radios',
       '#title' => t('Email Template Handling'),
       '#required' => 1,
       '#default_value' => $this->emailTemplateHandling,
       '#options' => $this->emailTemplateHandlingOptions,
-    );
+    ];
 
-    $form['email']['template']['emailTemplate'] = array(
+    $form['email']['template']['emailTemplate'] = [
       '#type' => 'textfield',
       '#title' => t('Email Template'),
       '#required' => 0,
       '#default_value' => $this->emailTemplate,
-    );
+    ];
 
-    $form['email']['template']['templateUsageResolveConflict'] = array(
+    $form['email']['template']['templateUsageResolveConflict'] = [
       '#type' => 'checkbox',
       '#title' => t('If a Drupal account already exists with the same email, but different account name, use the email template instead of the LDAP email.'),
       '#default_value' => $this->templateUsageResolveConflict,
-    );
+    ];
 
-    $form['email']['template']['templateUsageNeverUpdate'] = array(
+    $form['email']['template']['templateUsageNeverUpdate'] = [
       '#type' => 'checkbox',
       '#title' => t('Ignore the Email Update settings and never update the stored email if the template is used.'),
       '#default_value' => $this->templateUsageNeverUpdate,
-    );
+    ];
 
-    $form['email']['prompts'] = array(
+    $form['email']['prompts'] = [
       '#type' => 'fieldset',
       '#collapsible' => TRUE,
       '#title' => t('User Email Prompt'),
       '#description' => t('These settings allow the user to fill in their email address after logging in if the template was used to generate their email address.'),
-    );
+    ];
 
-    $form['email']['prompts']['templateUsagePromptUser'] = array(
+    $form['email']['prompts']['templateUsagePromptUser'] = [
       '#type' => 'checkbox',
       '#title' => t('Prompt user for email on every page load.'),
       '#default_value' => $this->templateUsagePromptUser,
-    );
+    ];
 
-    $form['email']['prompts']['templateUsageRedirectOnLogin'] = array(
+    $form['email']['prompts']['templateUsageRedirectOnLogin'] = [
       '#type' => 'checkbox',
       '#title' => t('Redirect the user to the form after logging in.'),
       '#default_value' => $this->templateUsageRedirectOnLogin,
-    );
+    ];
 
-    $form['email']['prompts']['templateUsagePromptRegex'] = array(
+    $form['email']['prompts']['templateUsagePromptRegex'] = [
       '#type' => 'textfield',
       '#default_value' => $this->templateUsagePromptRegex,
       '#title' => t('Template Regex'),
       '#description' => t('This regex will be used to determine if the template was used to create an account.'),
-    );
+    ];
 
-    $form['password'] = array(
+    $form['password'] = [
       '#type' => 'fieldset',
       '#title' => t('Password'),
       '#collapsible' => TRUE,
       '#collapsed' => FALSE,
-    );
-    $form['password']['passwordOption'] = array(
+    ];
+    $form['password']['passwordOption'] = [
       '#type' => 'radios',
       '#title' => t('Password Behavior'),
       '#required' => 1,
       '#default_value' => $this->passwordOption,
       '#options' => $this->passwordUpdateOptions,
-    );
+    ];
 
     /**
      * Begin single sign-on settings
      */
-    $form['sso'] = array(
+    $form['sso'] = [
       '#type' => 'fieldset',
       '#title' => t('Single Sign-On'),
       '#collapsible' => TRUE,
       '#collapsed' => (boolean) (!$this->ssoEnabled),
-    );
+    ];
 
     if ($this->ssoEnabled) {
-      $form['sso']['enabled'] = array(
+      $form['sso']['enabled'] = [
         '#type' => 'markup',
         '#markup' => $this->ssoEnabledDescription,
-      );
+      ];
     }
     else {
-      $form['sso']['disabled'] = array(
+      $form['sso']['disabled'] = [
         '#type' => 'markup',
         '#markup' => '<p><em>' . t('LDAP Single Sign-On module must be enabled for options below to work.')
         . ' ' . t('It is currently disabled.')
         . ' ' . l(t('See modules form'), 'admin/modules') . '</p></em>',
-      );
+      ];
     }
 
-    $form['sso']['ssoRemoteUserStripDomainName'] = array(
+    $form['sso']['ssoRemoteUserStripDomainName'] = [
       '#type' => 'checkbox',
       '#title' => t('Strip REMOTE_USER domain name'),
       '#description' => t($this->ssoRemoteUserStripDomainNameDescription),
       '#default_value' => $this->ssoRemoteUserStripDomainName,
       '#disabled' => (boolean) (!$this->ssoEnabled),
-    );
+    ];
 
-    $form['sso']['seamlessLogin'] = array(
+    $form['sso']['seamlessLogin'] = [
       '#type' => 'checkbox',
       '#title' => t('Turn on automated/seamless single sign-on'),
       '#description' => t($this->seamlessLogInDescription),
       '#default_value' => $this->seamlessLogin,
       '#disabled' => (boolean) (!$this->ssoEnabled),
-    );
+    ];
 
-    $form['sso']['ssoNotifyAuthentication'] = array(
+    $form['sso']['ssoNotifyAuthentication'] = [
       '#type' => 'checkbox',
       '#title' => t('Notify user of successful authentication'),
       '#description' => t($this->ssoNotifyAuthenticationDescription),
       '#default_value' => $this->ssoNotifyAuthentication,
       '#disabled' => (boolean) (!$this->ssoEnabled),
-    );
+    ];
 
-    $form['sso']['cookieExpire'] = array(
+    $form['sso']['cookieExpire'] = [
       '#type' => 'select',
       '#title' => t('Cookie Lifetime'),
       '#description' => t($this->cookieExpireDescription),
       '#default_value' => $this->cookieExpire,
       '#options' => $this->cookieExpirePeriod,
       '#disabled' => (boolean) (!$this->ssoEnabled),
-    );
+    ];
 
-    $form['sso']['ldapImplementation'] = array(
+    $form['sso']['ldapImplementation'] = [
       '#type' => 'select',
       '#title' => t('Authentication Mechanism'),
       '#description' => t($this->ldapImplementationDescription),
       '#default_value' => $this->ldapImplementation,
       '#options' => $this->ldapImplementationOptions,
       '#disabled' => (boolean) (!$this->ssoEnabled),
-    );
+    ];
 
-    $form['sso']['ssoExcludedPaths'] = array(
+    $form['sso']['ssoExcludedPaths'] = [
       '#type' => 'textarea',
       '#title' => t('SSO Excluded Paths'),
       '#description' => t($this->ssoExcludedPathsDescription),
       '#default_value' => $this->arrayToLines($this->ssoExcludedPaths),
       '#disabled' => (boolean) (!$this->ssoEnabled),
-    );
+    ];
 
-    $form['sso']['ssoExcludedHosts'] = array(
+    $form['sso']['ssoExcludedHosts'] = [
       '#type' => 'textarea',
       '#title' => t('SSO Excluded Hosts'),
       '#description' => t($this->ssoExcludedHostsDescription),
       '#default_value' => $this->arrayToLines($this->ssoExcludedHosts),
       '#disabled' => (boolean) (!$this->ssoEnabled),
-    );
+    ];
 
-    $form['submit'] = array(
+    $form['submit'] = [
       '#type' => 'submit',
       '#value' => 'Save',
-    );
+    ];
 
     return $form;
   }
@@ -605,21 +605,21 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
    * Validate object, not form.
    */
   public function validate() {
-    $errors = array();
+    $errors = [];
 
     $enabled_servers = ldap_servers_get_servers(NULL, 'enabled');
     if ($this->ssoEnabled) {
       foreach ($this->sids as $sid => $discard) {
         if ($enabled_servers[$sid]->bind_method == LDAP_SERVERS_BIND_METHOD_USER || $enabled_servers[$sid]->bind_method == LDAP_SERVERS_BIND_METHOD_ANON_USER) {
-          $methods = array(
+          $methods = [
             LDAP_SERVERS_BIND_METHOD_USER => 'Bind with Users Credentials',
             LDAP_SERVERS_BIND_METHOD_ANON_USER => 'Anonymous Bind for search, then Bind with Users Credentials',
-          );
-          $tokens = array(
+          ];
+          $tokens = [
             '!edit' => l($enabled_servers[$sid]->name, LDAP_SERVERS_INDEX_BASE_PATH . '/edit/' . $sid),
             '%sid' => $sid,
             '%bind_method' => $methods[$enabled_servers[$sid]->bind_method],
-          );
+          ];
 
           $errors['ssoEnabled'] = t('Single Sign On is not valid with the server !edit (id=%sid) because that server configuration uses %bind_method.  Since the user\'s credentials are never available to this module with single sign on enabled, there is no way for the ldap module to bind to the ldap server with credentials.', $tokens);
         }
@@ -706,7 +706,7 @@ class LdapAuthenticationConfAdmin extends LdapAuthenticationConf {
       }
     }
     else {
-      $array = array();
+      $array = [];
     }
     return $array;
   }

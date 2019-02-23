@@ -39,7 +39,7 @@ foreach ($config['servers'] as $sid => $server) {
   ldap_help_display('anonymous bind', $anon_bind_text);
 
   ldap_help_display('connect result', $results[1]);
-  ldap_help_display('connect context', join("", array("server: ", $server['server_address'], ", port: ", $server['server_port'], ", tls= $tls")));
+  ldap_help_display('connect context', join("", ["server: ", $server['server_address'], ", port: ", $server['server_port'], ", tls= $tls"]));
   $con = FALSE;
   if ($results[0] == LDAP_SUCCESS) {
     $con = $results[2];
@@ -60,16 +60,16 @@ foreach ($config['servers'] as $sid => $server) {
 
   if ($anon_bind) {
     if (@!ldap_bind($con)) {
-      $results = array(ldap_errno($con), "LDAP anonymous bind error." . ldap_help_show_error($con));
+      $results = [ldap_errno($con), "LDAP anonymous bind error." . ldap_help_show_error($con)];
     }
   }
   else {
     $bind_result = @ldap_bind($con, $server['server_bind_dn'], $server['server_bind_pw']);
     if (!$bind_result) {
-      $results = array(ldap_errno($con), "LDAP bind failure for user " . $server['server_bind_dn'] . "." . ldap_help_show_error($con));
+      $results = [ldap_errno($con), "LDAP bind failure for user " . $server['server_bind_dn'] . "." . ldap_help_show_error($con)];
     }
     else {
-      $results = array(LDAP_SUCCESS, "LDAP bind success.");
+      $results = [LDAP_SUCCESS, "LDAP bind success."];
     }
   }
 

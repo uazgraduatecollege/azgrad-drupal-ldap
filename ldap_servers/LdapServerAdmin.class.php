@@ -19,7 +19,7 @@ class LdapServerAdmin extends LdapServer {
    *   = 'all', 'enabled'
    */
   public static function getLdapServerObjects($sid = NULL, $type = NULL, $class = 'LdapServer', $reset = FALSE) {
-    $servers = array();
+    $servers = [];
     if (module_exists('ctools')) {
       ctools_include('export');
       if ($reset) {
@@ -35,8 +35,8 @@ class LdapServerAdmin extends LdapServer {
       }
       catch (Exception $e) {
         drupal_set_message(t('server index query failed. Message = %message, query= %query',
-          array('%message' => $e->getMessage(), '%query' => $e->query_string)), 'error');
-        return array();
+          ['%message' => $e->getMessage(), '%query' => $e->query_string]), 'error');
+        return [];
       }
     }
     foreach ($select as $result) {
@@ -199,7 +199,7 @@ class LdapServerAdmin extends LdapServer {
    */
   public function getLdapServerActions() {
     $switch = ($this->status) ? 'disable' : 'enable';
-    $actions = array();
+    $actions = [];
     $actions[] = l(t('edit'), LDAP_SERVERS_MENU_BASE_PATH . '/servers/edit/' . $this->sid);
     if (property_exists($this, 'type')) {
       if ($this->type == 'Overridden') {
@@ -222,41 +222,41 @@ class LdapServerAdmin extends LdapServer {
    */
   public function drupalForm($op) {
 
-    $form['server'] = array(
+    $form['server'] = [
       '#type' => 'fieldset',
       '#title' => t('Connection settings'),
       '#collapsible' => TRUE,
       '#collapsed' => TRUE,
-    );
+    ];
 
-    $form['bind_method'] = array(
+    $form['bind_method'] = [
       '#type' => 'fieldset',
       '#title' => t('Binding Method'),
       '#description' => t('How the Drupal system is authenticated by the LDAP server.'),
       '#collapsible' => TRUE,
       '#collapsed' => TRUE,
-    );
+    ];
 
-    $form['users'] = array(
+    $form['users'] = [
       '#type' => 'fieldset',
       '#title' => t('LDAP User to Drupal User Relationship'),
       '#description' => t('How are LDAP user entries found based on Drupal username or email?  And vice-versa?
        Needed for LDAP Authentication and Authorization functionality.'),
       '#collapsible' => TRUE,
       '#collapsed' => TRUE,
-    );
+    ];
 
-    $form['groups'] = array(
+    $form['groups'] = [
       '#type' => 'fieldset',
       '#title' => t('LDAP Group Configuration'),
       '#description' => t('How are groups defined on your LDAP server?  This varies slightly from one LDAP implementation to another
       such as Active Directory, Novell, OpenLDAP, etc. Check everything that is true and enter all the values you know.'),
       '#collapsible' => TRUE,
       '#collapsed' => TRUE,
-    );
+    ];
 
     $supports = (ldap_servers_php_supports_pagination()) ? t('support pagination!') : t('NOT support pagination.');
-    $form['pagination'] = array(
+    $form['pagination'] = [
       '#type' => 'fieldset',
       '#title' => t('LDAP Pagination'),
       '#description' => t('In PHP 5.4, pagination is supported in ldap queries.
@@ -271,7 +271,7 @@ class LdapServerAdmin extends LdapServer {
       tasks, its recommended to leave pagination disabled.') . '</p>',
       '#collapsible' => TRUE,
       '#collapsed' => !ldap_servers_php_supports_pagination(),
-    );
+    ];
 
     $field_to_prop_maps = $this->field_to_properties_map();
     foreach ($this->fields() as $field_id => $field) {
@@ -328,11 +328,11 @@ class LdapServerAdmin extends LdapServer {
     }
 
     $action = ($op == 'add') ? 'Add' : 'Update';
-    $form['submit'] = array(
+    $form['submit'] = [
       '#type' => 'submit',
       '#value' => $action,
       '#weight' => 100,
-    );
+    ];
 
     return $form;
 
@@ -342,7 +342,7 @@ class LdapServerAdmin extends LdapServer {
    *
    */
   public function drupalFormValidate($op, $values) {
-    $errors = array();
+    $errors = [];
 
     if ($op == 'delete') {
       if (!$this->sid) {
@@ -365,16 +365,16 @@ class LdapServerAdmin extends LdapServer {
    *
    */
   protected function validate($op) {
-    $errors = array();
+    $errors = [];
     if ($op == 'add') {
       $ldap_servers = $this->getLdapServerObjects(NULL, 'all');
       if (count($ldap_servers)) {
         foreach ($ldap_servers as $sid => $ldap_server) {
           if ($this->name == $ldap_server->name) {
-            $errors['name'] = t('An LDAP server configuration with the  name %name already exists.', array('%name' => $this->name));
+            $errors['name'] = t('An LDAP server configuration with the  name %name already exists.', ['%name' => $this->name]);
           }
           elseif ($this->sid == $ldap_server->sid) {
-            $errors['sid'] = t('An LDAP server configuration with the  id %sid  already exists.', array('%sid' => $this->sid));
+            $errors['sid'] = t('An LDAP server configuration with the  id %sid  already exists.', ['%sid' => $this->sid]);
           }
         }
       }
@@ -418,7 +418,7 @@ class LdapServerAdmin extends LdapServer {
    *
    */
   public function drupalFormWarnings($op, $values, $has_errors = NULL) {
-    $errors = array();
+    $errors = [];
 
     if ($op == 'delete') {
       if (!$this->sid) {
@@ -437,17 +437,17 @@ class LdapServerAdmin extends LdapServer {
    */
   protected function warnings($op, $has_errors = NULL) {
 
-    $warnings = array();
+    $warnings = [];
     if ($this->ldap_type) {
       $defaults = ldap_servers_ldaps_option_array();
       if (isset($defaults['user']['user_attr']) && ($this->user_attr != $defaults['user']['user_attr'])) {
-        $tokens = array('%name' => $defaults['name'], '%default' => $defaults['user']['user_attr'], '%user_attr' => $this->user_attr);
+        $tokens = ['%name' => $defaults['name'], '%default' => $defaults['user']['user_attr'], '%user_attr' => $this->user_attr];
         $warnings['user_attr'] = t('The standard UserName attribute in %name is %default.  You have %user_attr. This may be correct
           for your particular LDAP.', $tokens);
       }
 
       if (isset($defaults['user']['mail_attr']) && $this->mail_attr && ($this->mail_attr != $defaults['user']['mail_attr'])) {
-        $tokens = array('%name' => $defaults['name'], '%default' => $defaults['user']['mail_attr'], '%mail_attr' => $this->mail_attr);
+        $tokens = ['%name' => $defaults['name'], '%default' => $defaults['user']['mail_attr'], '%mail_attr' => $this->mail_attr];
         $warnings['mail_attr'] = t('The standard mail attribute in %name is %default.  You have %mail_attr.  This may be correct
           for your particular LDAP.', $tokens);
       }
@@ -512,7 +512,7 @@ class LdapServerAdmin extends LdapServer {
       }
     }
     else {
-      $array = array();
+      $array = [];
     }
     return $array;
   }
@@ -526,147 +526,147 @@ class LdapServerAdmin extends LdapServer {
      * consumer_type is tag (unique alphanumeric id) of consuming authorization such as
      *   drupal_roles, og_groups, civicrm_memberships
      */
-    $fields = array(
+    $fields = [
 
-      'sid' => array(
-        'form' => array(
+      'sid' => [
+        'form' => [
           'fieldset' => 'server',
           '#type' => 'textfield',
           '#size' => 20,
           '#title' => t('Machine name for this server configuration.'),
           '#description' => t('May only contain alphanumeric characters (a-z, A-Z, 0-9, and _)'),
           '#required' => TRUE,
-        ),
-        'schema' => array(
+        ],
+        'schema' => [
           'type' => 'varchar',
           'length' => 20,
           'not null' => TRUE,
-        ),
-      ),
+        ],
+      ],
 
-      'numeric_sid' => array(
-        'schema' => array(
+      'numeric_sid' => [
+        'schema' => [
           'type' => 'serial',
           'unsigned' => TRUE,
           'not null' => TRUE,
           'description' => 'Primary ID field for the table.  Only used internally.',
           'no export' => TRUE,
-        ),
-      ),
+        ],
+      ],
 
-      'name' => array(
-        'form' => array(
+      'name' => [
+        'form' => [
           'fieldset' => 'server',
           '#type' => 'textfield',
           '#size' => 50,
           '#title' => 'Name',
           '#description' => t('Choose a <em><strong>unique</strong></em> name for this server configuration.'),
-        ),
-        'schema' => array(
+        ],
+        'schema' => [
           'type' => 'varchar',
           'length' => 255,
           'not null' => FALSE,
-        ),
-      ),
+        ],
+      ],
 
-      'status' => array(
-        'form' => array(
+      'status' => [
+        'form' => [
           'fieldset' => 'server',
           '#type' => 'checkbox',
           '#title' => t('Enabled'),
           '#description' => t('Disable in order to keep configuration without having it active.'),
           '#required' => FALSE,
-        ),
-        'schema' => array(
+        ],
+        'schema' => [
           'type' => 'int',
           'size' => 'tiny',
           'not null' => FALSE,
           'default' => 0,
-        ),
-      ),
+        ],
+      ],
 
-      'ldap_type' => array(
-        'form' => array(
+      'ldap_type' => [
+        'form' => [
           'fieldset' => 'server',
           '#type' => 'select',
           '#options' => ldap_servers_ldaps_option_array(),
           '#title' => t('LDAP Server Type'),
           '#description' => t('This field is informative.  It\'s purpose is to assist with default values and give validation warnings.'),
-        ),
-        'schema' => array(
+        ],
+        'schema' => [
           'type' => 'varchar',
           'length' => 20,
           'not null' => FALSE,
-        ),
-      ),
+        ],
+      ],
 
-      'address' => array(
-        'form' => array(
+      'address' => [
+        'form' => [
           'fieldset' => 'server',
           '#type' => 'textfield',
           '#title' => t('LDAP server'),
           '#description' => t('The domain name or IP address of your LDAP Server such as "ad.unm.edu". For SSL
         use the form ldaps://DOMAIN such as "ldaps://ad.unm.edu"'),
           '#size' => 50,
-        ),
-        'schema' => array(
+        ],
+        'schema' => [
           'type' => 'varchar',
           'length' => 255,
           'not null' => FALSE,
-        ),
-      ),
+        ],
+      ],
 
-      'port' => array(
-        'form' => array(
+      'port' => [
+        'form' => [
           'fieldset' => 'server',
           '#type' => 'textfield',
           '#title' => t('LDAP port'),
           '#size' => 5,
           '#description' => t('The TCP/IP port on the above server which accepts LDAP connections. Must be an integer.'),
-        ),
-        'schema' => array(
+        ],
+        'schema' => [
           'type' => 'int',
           'not null' => FALSE,
           'default' => 389,
-        ),
-      ),
+        ],
+      ],
 
-      'tls' => array(
-        'form' => array(
+      'tls' => [
+        'form' => [
           'fieldset' => 'server',
           '#type' => 'checkbox',
           '#title' => t('Use Start-TLS'),
           '#description' => t('Secure the connection between the Drupal and the LDAP servers using TLS.<br /><em>Note: To use START-TLS, you must set the LDAP Port to 389.</em>'),
-        ),
-        'schema' => array(
+        ],
+        'schema' => [
           'type' => 'int',
           'size' => 'tiny',
           'not null' => FALSE,
           'default' => 0,
-        ),
-      ),
+        ],
+      ],
 
-      'followrefs' => array(
-        'form' => array(
+      'followrefs' => [
+        'form' => [
           'fieldset' => 'server',
           '#type' => 'checkbox',
           '#title' => t('Follow LDAP Referrals'),
           '#description' => t('Makes the LDAP client follow referrals (in the responses from the LDAP server) to other LDAP servers. This requires that the Bind Settings you give, is ALSO valid on these other servers.'),
-        ),
-        'schema' => array(
+        ],
+        'schema' => [
           'type' => 'int',
           'size' => 'tiny',
           'not null' => FALSE,
           'default' => 0,
-        ),
-      ),
+        ],
+      ],
 
-      'bind_method' => array(
-        'form' => array(
+      'bind_method' => [
+        'form' => [
           'fieldset' => 'bind_method',
           '#type' => 'radios',
           '#title' => t('Binding Method for Searches (such as finding user object or their group memberships)'),
-          '#options' => array(
+          '#options' => [
             LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT => t('Service Account Bind: Use credentials in the
             <strong>Service Account</strong> field to bind to LDAP.  <em>This option is usually a best practice.</em>'),
 
@@ -685,19 +685,19 @@ class LdapServerAdmin extends LdapServer {
 
             LDAP_SERVERS_BIND_METHOD_ANON => t('Anonymous Bind: Use no credentials to bind to LDAP server.<br/>
             <em>This option will not work on most LDAPS connections.</em>'),
-          ),
-        ),
-        'schema' => array(
+          ],
+        ],
+        'schema' => [
           'type' => 'int',
           'size' => 'small',
           'not null' => FALSE,
           'default' => 0,
           'boolean' => FALSE,
-        ),
-      ),
+        ],
+      ],
 
-      'binding_service_acct' => array(
-        'form' => array(
+      'binding_service_acct' => [
+        'form' => [
           'fieldset' => 'bind_method',
           '#type' => 'markup',
           '#markup' => t('<label>Service Account</label> Some LDAP configurations
@@ -705,56 +705,56 @@ class LdapServerAdmin extends LdapServer {
           for binding. For security reasons, this pair should belong to an
           LDAP account with stripped down permissions.
           This is also required for provisioning LDAP accounts and groups!'),
-        ),
-      ),
+        ],
+      ],
 
-      'binddn' => array(
-        'form' => array(
+      'binddn' => [
+        'form' => [
           'fieldset' => 'bind_method',
           '#type' => 'textfield',
           '#title' => t('DN for non-anonymous search'),
           '#size' => 80,
-          '#states' => array(
-            'enabled' => array(
-              ':input[name=bind_method]' => array('value' => (string) LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT),
-            ),
-          ),
-        ),
-        'schema' => array(
+          '#states' => [
+            'enabled' => [
+              ':input[name=bind_method]' => ['value' => (string) LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT],
+            ],
+          ],
+        ],
+        'schema' => [
           'type' => 'varchar',
           'length' => 511,
-        ),
-      ),
+        ],
+      ],
 
-      'bindpw' => array(
-        'form' => array(
+      'bindpw' => [
+        'form' => [
           'fieldset' => 'bind_method',
           '#type' => 'password',
           '#title' => t('Password for non-anonymous search'),
           '#size' => 20,
-          '#states' => array(
-            'enabled' => array(
-              ':input[name=bind_method]' => array('value' => (string) LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT),
-            ),
-          ),
-        ),
-        'schema' => array(
+          '#states' => [
+            'enabled' => [
+              ':input[name=bind_method]' => ['value' => (string) LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT],
+            ],
+          ],
+        ],
+        'schema' => [
           'type' => 'varchar',
           'length' => 255,
-        ),
-      ),
+        ],
+      ],
 
-      'clear_bindpw' => array(
-        'form' => array(
+      'clear_bindpw' => [
+        'form' => [
           'fieldset' => 'bind_method',
           '#type' => 'checkbox',
           '#title' => t('Clear existing password from database.  Check this when switching away from Service Account Binding.'),
           '#default_value' => 0,
-        ),
-      ),
+        ],
+      ],
 
-      'basedn' => array(
-        'form' => array(
+      'basedn' => [
+        'form' => [
           'fieldset' => 'users',
           '#type' => 'textarea',
           '#cols' => 50,
@@ -765,61 +765,61 @@ class LdapServerAdmin extends LdapServer {
             Keep in mind that every additional basedn likely doubles the number of queries.  Place the
             more heavily used one first and consider using one higher base DN rather than 2 or more lower base DNs.
             Enter one per line in case if you need more than one.') . '</div>',
-        ),
-        'schema' => array(
+        ],
+        'schema' => [
           'type' => 'text',
           'serialize' => TRUE,
-        ),
-      ),
+        ],
+      ],
 
-      'user_attr' => array(
-        'form' => array(
+      'user_attr' => [
+        'form' => [
           'fieldset' => 'users',
           '#type' => 'textfield',
           '#size' => 30,
           '#title' => t('AuthName attribute'),
           '#description' => t('The attribute that holds the users\' login name. (eg. <code>cn</code> for eDir or <code>sAMAccountName</code> for Active Directory).'),
-        ),
-        'schema' => array(
+        ],
+        'schema' => [
           'type' => 'varchar',
           'length' => 255,
           'not null' => FALSE,
-        ),
-      ),
+        ],
+      ],
 
-      'account_name_attr' => array(
-        'form' => array(
+      'account_name_attr' => [
+        'form' => [
           'fieldset' => 'users',
           '#type' => 'textfield',
           '#size' => 30,
           '#title' => t('AccountName attribute'),
           '#description' => t('The attribute that holds the unique account name. Defaults to the same as the AuthName attribute.'),
-        ),
-        'schema' => array(
+        ],
+        'schema' => [
           'type' => 'varchar',
           'length' => 255,
           'not null' => FALSE,
           'default' => '',
-        ),
-      ),
+        ],
+      ],
 
-      'mail_attr' => array(
-        'form' => array(
+      'mail_attr' => [
+        'form' => [
           'fieldset' => 'users',
           '#type' => 'textfield',
           '#size' => 30,
           '#title' => t('Email attribute'),
           '#description' => t('The attribute that holds the users\' email address. (eg. <code>mail</code>). Leave empty if no such attribute exists'),
-        ),
-        'schema' => array(
+        ],
+        'schema' => [
           'type' => 'varchar',
           'length' => 255,
           'not null' => FALSE,
-        ),
-      ),
+        ],
+      ],
 
-      'mail_template' => array(
-        'form' => array(
+      'mail_template' => [
+        'form' => [
           'fieldset' => 'users',
           '#type' => 'textfield',
           '#size' => 30,
@@ -830,31 +830,31 @@ class LdapServerAdmin extends LdapServer {
             such as <code>[cn]@mycompany.com</code>.
             See http://drupal.org/node/997082 for additional documentation on ldap tokens.
             '),
-        ),
-        'schema' => array(
+        ],
+        'schema' => [
           'type' => 'varchar',
           'length' => 255,
           'not null' => FALSE,
-        ),
-      ),
+        ],
+      ],
 
-      'picture_attr' => array(
-        'form' => array(
+      'picture_attr' => [
+        'form' => [
           'fieldset' => 'users',
           '#type' => 'textfield',
           '#size' => 30,
           '#title' => t('Thumbnail attribute'),
           '#description' => t('The attribute that holds the users\' thumnail image. (eg. <code>thumbnailPhoto</code>). Leave empty if no such attribute exists'),
-        ),
-        'schema' => array(
+        ],
+        'schema' => [
           'type' => 'varchar',
           'length' => 255,
           'not null' => FALSE,
-        ),
-      ),
+        ],
+      ],
 
-      'unique_persistent_attr' => array(
-        'form' => array(
+      'unique_persistent_attr' => [
+        'form' => [
           'fieldset' => 'users',
           '#type' => 'textfield',
           '#size' => 30,
@@ -866,16 +866,16 @@ class LdapServerAdmin extends LdapServer {
             where DN does not change, enter "dn" here.
             If no such attribute exists, leave this blank.'
           ),
-        ),
-        'schema' => array(
+        ],
+        'schema' => [
           'type' => 'varchar',
           'length' => 64,
           'not null' => FALSE,
-        ),
-      ),
+        ],
+      ],
 
-      'unique_persistent_attr_binary' => array(
-        'form' => array(
+      'unique_persistent_attr_binary' => [
+        'form' => [
           'fieldset' => 'users',
           '#type' => 'checkbox',
           '#title' => t('Does the <em>Persistent and Unique User ID
@@ -884,17 +884,17 @@ class LdapServerAdmin extends LdapServer {
              attribute such as objectSid in ActiveDirectory for the PUID.<br>
              If you don\'t want this consider switching to another attribute,
              such as samaccountname.'),
-        ),
-        'schema' => array(
+        ],
+        'schema' => [
           'type' => 'int',
           'size' => 'tiny',
           'not null' => FALSE,
           'default' => 0,
-        ),
-      ),
+        ],
+      ],
 
-      'user_dn_expression' => array(
-        'form' => array(
+      'user_dn_expression' => [
+        'form' => [
           'fieldset' => 'users',
           '#type' => 'textfield',
           '#size' => 80,
@@ -903,16 +903,16 @@ class LdapServerAdmin extends LdapServer {
             Typically it will be:<br/> <code>cn=%username,%basedn</code>
              which might evaluate to <code>cn=jdoe,ou=campus accounts,dc=ad,dc=mycampus,dc=edu</code>
              Base DNs are entered above.'),
-        ),
-        'schema' => array(
+        ],
+        'schema' => [
           'type' => 'varchar',
           'length' => 255,
           'not null' => FALSE,
-        ),
-      ),
+        ],
+      ],
 
-      'ldap_to_drupal_user' => array(
-        'form' => array(
+      'ldap_to_drupal_user' => [
+        'form' => [
           'fieldset' => 'users',
           '#disabled' => (!module_exists('php')),
           '#type' => 'textarea',
@@ -926,81 +926,81 @@ class LdapServerAdmin extends LdapServer {
             Careful, bad PHP code here will break your site. If left empty, no name transformation will be done.
             <br/>Example:<br/>Given the user will logon with jdoe@xyz.com and you want the ldap UserName attribute to be
             jdoe.<br/><code>$parts = explode(\'@\', $name); if (count($parts) == 2) {print $parts[0]};</code>'),
-        ),
-        'schema' => array(
+        ],
+        'schema' => [
           'type' => 'varchar',
           'length' => 1024,
           'not null' => FALSE,
-        ),
-      ),
+        ],
+      ],
 
-      'testing_drupal_username' => array(
-        'form' => array(
+      'testing_drupal_username' => [
+        'form' => [
           'fieldset' => 'users',
           '#type' => 'textfield',
           '#size' => 30,
           '#title' => t('Testing Drupal Username'),
           '#description' => t('This is optional and used for testing this server\'s configuration against an actual username.  The user need not exist in Drupal and testing will not affect the user\'s LDAP or Drupal Account.'),
-        ),
-        'schema' => array(
+        ],
+        'schema' => [
           'type' => 'varchar',
           'length' => 255,
           'not null' => FALSE,
-        ),
-      ),
+        ],
+      ],
 
-      'testing_drupal_user_dn' => array(
-        'form' => array(
+      'testing_drupal_user_dn' => [
+        'form' => [
           'fieldset' => 'users',
           '#type' => 'textfield',
           '#size' => 120,
           '#title' => t('DN of testing username, e.g. cn=hpotter,ou=people,dc=hogwarts,dc=edu'),
           '#description' => t('This is optional and used for testing this server\'s configuration against an actual username.  The user need not exist in Drupal and testing will not affect the user\'s LDAP or Drupal Account.'),
-        ),
-        'schema' => array(
+        ],
+        'schema' => [
           'type' => 'varchar',
           'length' => 255,
           'not null' => FALSE,
-        ),
-      ),
+        ],
+      ],
 
-      'grp_unused' => array(
-        'form' => array(
+      'grp_unused' => [
+        'form' => [
           'fieldset' => 'groups',
           '#type' => 'checkbox',
           '#title' => t('Groups are not relevant to this Drupal site.  This is generally true if LDAP Groups, LDAP Authorization, etc are not it use.'),
           '#disabled' => FALSE,
-        ),
-        'schema' => array(
+        ],
+        'schema' => [
           'type' => 'int',
           'size' => 'tiny',
           'not null' => FALSE,
           'default' => 0,
-        ),
-      ),
+        ],
+      ],
 
-      'grp_object_cat' => array(
-        'form' => array(
+      'grp_object_cat' => [
+        'form' => [
           'fieldset' => 'groups',
           '#type' => 'textfield',
           '#size' => 30,
           '#title' => t('Name of Group Object Class'),
           '#description' => t('e.g. groupOfNames, groupOfUniqueNames, group.'),
-          '#states' => array(
-            'visible' => array(
-              ':input[name=grp_unused]' => array('checked' => FALSE),
-            ),
-          ),
-        ),
-        'schema' => array(
+          '#states' => [
+            'visible' => [
+              ':input[name=grp_unused]' => ['checked' => FALSE],
+            ],
+          ],
+        ],
+        'schema' => [
           'type' => 'varchar',
           'length' => 64,
           'not null' => FALSE,
-        ),
-      ),
+        ],
+      ],
 
-      'grp_nested' => array(
-        'form' => array(
+      'grp_nested' => [
+        'form' => [
           'fieldset' => 'groups',
           '#type' => 'checkbox',
           '#title' => t('Nested groups are used in my LDAP'),
@@ -1008,106 +1008,106 @@ class LdapServerAdmin extends LdapServer {
           '#description' => t('If a user is a member of group A and group A is a member of group B,
              user should be considered to be in group A and B.  If your LDAP has nested groups, but you
              want to ignore nesting, leave this unchecked.'),
-          '#states' => array(
-            'visible' => array(
-              ':input[name=grp_unused]' => array('checked' => FALSE),
-            ),
-          ),
-        ),
-        'schema' => array(
+          '#states' => [
+            'visible' => [
+              ':input[name=grp_unused]' => ['checked' => FALSE],
+            ],
+          ],
+        ],
+        'schema' => [
           'type' => 'int',
           'size' => 'tiny',
           'not null' => FALSE,
           'default' => 0,
-        ),
-      ),
+        ],
+      ],
 
-      'grp_user_memb_attr_exists' => array(
-        'form' => array(
+      'grp_user_memb_attr_exists' => [
+        'form' => [
           'fieldset' => 'groups',
           '#type' => 'checkbox',
           '#title' => t('A user LDAP attribute such as <code>memberOf</code> exists that contains a list of their groups.
             Active Directory and openLdap with memberOf overlay fit this model.'),
           '#disabled' => FALSE,
-          '#states' => array(
-            'visible' => array(
-              ':input[name=grp_unused]' => array('checked' => FALSE),
-            ),
-          ),
-        ),
-        'schema' => array(
+          '#states' => [
+            'visible' => [
+              ':input[name=grp_unused]' => ['checked' => FALSE],
+            ],
+          ],
+        ],
+        'schema' => [
           'type' => 'int',
           'size' => 'tiny',
           'not null' => FALSE,
           'default' => 0,
-        ),
-      ),
+        ],
+      ],
 
-      'grp_user_memb_attr' => array(
-        'form' => array(
+      'grp_user_memb_attr' => [
+        'form' => [
           'fieldset' => 'groups',
           '#type' => 'textfield',
           '#size' => 30,
           '#title' => t('Attribute in User Entry Containing Groups'),
           '#description' => t('e.g. memberOf'),
-          '#states' => array(
-            'enabled' => array(
-              ':input[name=grp_user_memb_attr_exists]' => array('checked' => TRUE),
-            ),
-            'visible' => array(
-              ':input[name=grp_unused]' => array('checked' => FALSE),
-            ),
-          ),
-        ),
-        'schema' => array(
+          '#states' => [
+            'enabled' => [
+              ':input[name=grp_user_memb_attr_exists]' => ['checked' => TRUE],
+            ],
+            'visible' => [
+              ':input[name=grp_unused]' => ['checked' => FALSE],
+            ],
+          ],
+        ],
+        'schema' => [
           'type' => 'varchar',
           'length' => 255,
           'not null' => FALSE,
-        ),
-      ),
+        ],
+      ],
 
-      'grp_memb_attr' => array(
-        'form' => array(
+      'grp_memb_attr' => [
+        'form' => [
           'fieldset' => 'groups',
           '#type' => 'textfield',
           '#size' => 30,
           '#title' => t('LDAP Group Entry Attribute Holding User\'s DN, CN, etc.'),
           '#description' => t('e.g uniquemember, memberUid'),
-          '#states' => array(
-            'visible' => array(
-              ':input[name=grp_unused]' => array('checked' => FALSE),
-            ),
-          ),
-        ),
-        'schema' => array(
+          '#states' => [
+            'visible' => [
+              ':input[name=grp_unused]' => ['checked' => FALSE],
+            ],
+          ],
+        ],
+        'schema' => [
           'type' => 'varchar',
           'length' => 255,
           'not null' => FALSE,
-        ),
-      ),
+        ],
+      ],
 
-      'grp_memb_attr_match_user_attr' => array(
-        'form' => array(
+      'grp_memb_attr_match_user_attr' => [
+        'form' => [
           'fieldset' => 'groups',
           '#type' => 'textfield',
           '#size' => 30,
           '#title' => t('User attribute held in "LDAP Group Entry Attribute Holding..."'),
           '#description' => t('This is almost always "dn" (which technically isn\'t an attribute).  Sometimes its "cn".'),
-          '#states' => array(
-            'visible' => array(
-              ':input[name=grp_unused]' => array('checked' => FALSE),
-            ),
-          ),
-        ),
-        'schema' => array(
+          '#states' => [
+            'visible' => [
+              ':input[name=grp_unused]' => ['checked' => FALSE],
+            ],
+          ],
+        ],
+        'schema' => [
           'type' => 'varchar',
           'length' => 255,
           'not null' => FALSE,
-        ),
-      ),
+        ],
+      ],
 
-      'grp_derive_from_dn' => array(
-        'form' => array(
+      'grp_derive_from_dn' => [
+        'form' => [
           'fieldset' => 'groups',
           '#type' => 'checkbox',
           '#title' => t('Groups are derived from user\'s LDAP entry DN.') . '<em>' .
@@ -1115,100 +1115,100 @@ class LdapServerAdmin extends LdapServer {
             group definition has very limited functionality and most modules will
             not take this into account.  LDAP Authorization will.') . '</em>',
           '#disabled' => FALSE,
-          '#states' => array(
-            'visible' => array(
-              ':input[name=grp_unused]' => array('checked' => FALSE),
-            ),
-          ),
-        ),
-        'schema' => array(
+          '#states' => [
+            'visible' => [
+              ':input[name=grp_unused]' => ['checked' => FALSE],
+            ],
+          ],
+        ],
+        'schema' => [
           'type' => 'int',
           'size' => 'tiny',
           'not null' => FALSE,
           'default' => 0,
-        ),
-      ),
+        ],
+      ],
 
-      'grp_derive_from_dn_attr' => array(
-        'form' => array(
+      'grp_derive_from_dn_attr' => [
+        'form' => [
           'fieldset' => 'groups',
           '#type' => 'textfield',
           '#size' => 30,
           '#title' => t('Attribute of the User\'s LDAP Entry DN which contains the group'),
           '#description' => t('e.g. ou'),
-          '#states' => array(
-            'enabled' => array(
-              ':input[name=grp_derive_from_dn]' => array('checked' => TRUE),
-            ),
-            'visible' => array(
-              ':input[name=grp_unused]' => array('checked' => FALSE),
-            ),
-          ),
-        ),
-        'schema' => array(
+          '#states' => [
+            'enabled' => [
+              ':input[name=grp_derive_from_dn]' => ['checked' => TRUE],
+            ],
+            'visible' => [
+              ':input[name=grp_unused]' => ['checked' => FALSE],
+            ],
+          ],
+        ],
+        'schema' => [
           'type' => 'varchar',
           'length' => 255,
           'not null' => FALSE,
-        ),
-      ),
+        ],
+      ],
 
-      'grp_test_grp_dn' => array(
-        'form' => array(
+      'grp_test_grp_dn' => [
+        'form' => [
           'fieldset' => 'groups',
           '#type' => 'textfield',
           '#size' => 120,
           '#title' => t('Testing LDAP Group DN'),
           '#description' => t('This is optional and can be useful for debugging and validating forms.'),
-          '#states' => array(
-            'visible' => array(
-              ':input[name=grp_unused]' => array('checked' => FALSE),
-            ),
-          ),
-        ),
-        'schema' => array(
+          '#states' => [
+            'visible' => [
+              ':input[name=grp_unused]' => ['checked' => FALSE],
+            ],
+          ],
+        ],
+        'schema' => [
           'type' => 'varchar',
           'length' => 255,
           'not null' => FALSE,
-        ),
-      ),
+        ],
+      ],
 
-      'grp_test_grp_dn_writeable' => array(
-        'form' => array(
+      'grp_test_grp_dn_writeable' => [
+        'form' => [
           'fieldset' => 'groups',
           '#type' => 'textfield',
           '#size' => 120,
           '#title' => t('Testing LDAP Group DN that is writable.  WARNING the test script for the server will create, delete, and add members to this group!'),
           '#description' => t('This is optional and can be useful for debugging and validating forms.'),
-          '#states' => array(
-            'visible' => array(
-              ':input[name=grp_unused]' => array('checked' => FALSE),
-            ),
-          ),
-        ),
-        'schema' => array(
+          '#states' => [
+            'visible' => [
+              ':input[name=grp_unused]' => ['checked' => FALSE],
+            ],
+          ],
+        ],
+        'schema' => [
           'type' => 'varchar',
           'length' => 255,
           'not null' => FALSE,
-        ),
-      ),
+        ],
+      ],
 
-      'search_pagination' => array(
-        'form' => array(
+      'search_pagination' => [
+        'form' => [
           'fieldset' => 'pagination',
           '#type' => 'checkbox',
           '#title' => t('Use LDAP Pagination.'),
           '#disabled' => !ldap_servers_php_supports_pagination(),
-        ),
-        'schema' => array(
+        ],
+        'schema' => [
           'type' => 'int',
           'size' => 'tiny',
           'not null' => FALSE,
           'default' => 0,
-        ),
-      ),
+        ],
+      ],
 
-      'search_page_size' => array(
-        'form' => array(
+      'search_page_size' => [
+        'form' => [
           'fieldset' => 'pagination',
           '#type' => 'textfield',
           '#size' => 10,
@@ -1219,29 +1219,29 @@ class LdapServerAdmin extends LdapServer {
             1000 is a good guess when unsure. Other modules such as LDAP Query
             or LDAP Feeds will be allowed to set a smaller page size, but not
             a larger one.'),
-          '#states' => array(
-            'visible' => array(
-              ':input[name="search_pagination"]' => array('checked' => TRUE),
-            ),
-          ),
-        ),
-        'schema' => array(
+          '#states' => [
+            'visible' => [
+              ':input[name="search_pagination"]' => ['checked' => TRUE],
+            ],
+          ],
+        ],
+        'schema' => [
           'type' => 'int',
           'size' => 'medium',
           'not null' => FALSE,
           'default' => 1000,
-        ),
-      ),
+        ],
+      ],
 
-      'weight' => array(
-        'schema' => array(
+      'weight' => [
+        'schema' => [
           'type' => 'int',
           'not null' => FALSE,
           'default' => 0,
-        ),
-      ),
+        ],
+      ],
 
-    );
+    ];
 
     return $fields;
 

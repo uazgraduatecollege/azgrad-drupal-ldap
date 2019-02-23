@@ -43,9 +43,9 @@ function _ldap_user_orphans($ldap_user_conf) {
     ->addMetaData('account', user_load(1));
   $result = $query->execute();
 
-  $email_list = array();
+  $email_list = [];
   $ldap_servers = ldap_servers_get_servers(NULL, 'enabled');
-  $watchdogs_sids_missing_watchdogged = array();
+  $watchdogs_sids_missing_watchdogged = [];
   /**
    * First produce array of form:
    *  $drupal_users[$sid][$puid_attr][$puid]['exists'] = bool
@@ -74,7 +74,7 @@ function _ldap_user_orphans($ldap_user_conf) {
 
   if (count($email_list) > 0) {
     $site_email = variable_get('site_mail', FALSE);
-    $params = array('accounts' => $email_list);
+    $params = ['accounts' => $email_list];
     if ($site_email) {
       drupal_mail(
         'ldap_user',
@@ -104,7 +104,7 @@ function _ldap_user_orphans($ldap_user_conf) {
  */
 function _ldap_user_orphan_process_batch($ldap_user_conf, $batch, $user_count, $uids, $ldap_servers, $watchdogs_sids_missing_watchdogged, $query, $email_list) {
   $filters = [];
-  $drupal_users = array();
+  $drupal_users = [];
   /**
    * 1. populate $drupal_users[$sid][$puid_attr][$puid]['exists']  = TRUE
    *

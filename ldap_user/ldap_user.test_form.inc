@@ -26,7 +26,7 @@ function ldap_user_test_form($form, &$form_state, $op = NULL) {
   $form['#prefix'] .= t('This form simply tests an LDAP User configuration against an individual ldap or drupal user.
     It makes no changes to the drupal or ldap user.');
 
-  $form['testing_drupal_username'] = array(
+  $form['testing_drupal_username'] = [
     '#type' => 'textfield',
     '#title' => t('Testing Drupal Username'),
     '#default_value' => $username,
@@ -34,40 +34,40 @@ function ldap_user_test_form($form, &$form_state, $op = NULL) {
     '#size' => 30,
     '#maxlength' => 255,
     '#description' => t('This is optional and used for testing this server\'s configuration against an actual username.  The user need not exist in Drupal and testing will not affect the user\'s LDAP or Drupal Account.'),
-  );
+  ];
 
-  $form['test_mode'] = array(
+  $form['test_mode'] = [
     '#type' => 'radios',
     '#title' => t('Testing Mode'),
     '#required' => 0,
     '#default_value' => isset($_SESSION['ldap_user_test_form']['test_mode']) ? $_SESSION['ldap_user_test_form']['test_mode'] : 'query',
-    '#options' => array(
+    '#options' => [
       'query' => t('Test Query.  Will not alter anything in drupal or LDAP'),
       'execute' => t('Execute Action.  Will perform provisioning configured for events below.  If this is selected only one action should be selected below'),
-    ),
-  );
+    ],
+  ];
 
   $synch_trigger_options = ldap_user_synch_triggers_key_values();
 
-  $selected_actions = isset($_SESSION['ldap_user_test_form']['action']) ? $_SESSION['ldap_user_test_form']['action'] : array();
-  $form['action'] = array(
+  $selected_actions = isset($_SESSION['ldap_user_test_form']['action']) ? $_SESSION['ldap_user_test_form']['action'] : [];
+  $form['action'] = [
     '#type' => 'checkboxes',
     '#title' => t('Actions/Event Handlers to Test'),
     '#required' => 0,
     '#default_value' => $selected_actions,
     '#options' => $synch_trigger_options,
-    '#states' => array(
-      'visible' => array(
-        ':input[name="wsEnabled"]' => array('checked' => TRUE),
-      ),
-    ),
-  );
+    '#states' => [
+      'visible' => [
+        ':input[name="wsEnabled"]' => ['checked' => TRUE],
+      ],
+    ],
+  ];
 
-  $form['submit'] = array(
+  $form['submit'] = [
     '#type' => 'submit',
     '#value' => 'test',
     '#weight' => 100,
-  );
+  ];
 
   return $form;
 }
@@ -97,7 +97,7 @@ function ldap_user_test_form_submit($form, &$form_state) {
 
     $user_object = user_load_by_name($username);
     if ($user_object) {
-      $user_entities = entity_load('user', array($user_object->uid));
+      $user_entities = entity_load('user', [$user_object->uid]);
       $user_entity = $user_entities[$user_object->uid];
     }
     else {
@@ -105,7 +105,7 @@ function ldap_user_test_form_submit($form, &$form_state) {
     }
 
     $ldap_user_conf = ldap_user_conf();
-    $test_servers = array();
+    $test_servers = [];
     $user_ldap_entry = FALSE;
     if ($ldap_user_conf->drupalAcctProvisionServer) {
       $test_servers[LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER] = $ldap_user_conf->drupalAcctProvisionServer;
@@ -117,7 +117,7 @@ function ldap_user_test_form_submit($form, &$form_state) {
         $user_ldap_entry = ldap_servers_get_user_ldap_data($username, $ldap_user_conf->ldapEntryProvisionServer);
       }
     }
-    $results = array();
+    $results = [];
     $results['username'] = $username;
     $results['user object (before provisioning or synching)'] = $user_object;
     $results['user entity (before provisioning or synching)'] = $user_entity;
@@ -125,7 +125,7 @@ function ldap_user_test_form_submit($form, &$form_state) {
     $results['ldap_user_conf'] = $ldap_user_conf;
 
     if (is_object($user_object)) {
-      $authmaps = db_query("SELECT aid, uid, module, authname FROM {authmap} WHERE uid = :uid", array(':uid' => $user_object->uid))->fetchAllAssoc('aid', PDO::FETCH_ASSOC);
+      $authmaps = db_query("SELECT aid, uid, module, authname FROM {authmap} WHERE uid = :uid", [':uid' => $user_object->uid])->fetchAllAssoc('aid', PDO::FETCH_ASSOC);
     }
     else {
       $authmaps = 'No authmaps available.  Authmaps only shown if user account exists beforehand';
@@ -138,11 +138,11 @@ function ldap_user_test_form_submit($form, &$form_state) {
 
     $save = ($form_state['values']['test_mode'] == 'execute');
     $test_query = ($form_state['values']['test_mode'] != 'execute');
-    $user_edit = array('name' => $username);
+    $user_edit = ['name' => $username];
 
     foreach (array_filter($selected_actions) as $i => $synch_trigger) {
       $synch_trigger_description = $synch_trigger_options[$synch_trigger];
-      foreach (array(LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY) as $direction) {
+      foreach ([LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY] as $direction) {
         if ($ldap_user_conf->provisionEnabled($direction, $synch_trigger)) {
           if ($direction == LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER) {
             $discard = $ldap_user_conf->provisionDrupalAccount(NULL, $user_edit, NULL, $save);
@@ -166,7 +166,7 @@ function ldap_user_test_form_submit($form, &$form_state) {
     // Do all synchs second, in case logic of form changes to allow executing mulitple events.
     foreach (array_filter($selected_actions) as $i => $synch_trigger) {
       $synch_trigger_description = $synch_trigger_options[$synch_trigger];
-      foreach (array(LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY) as $direction) {
+      foreach ([LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY] as $direction) {
         if ($ldap_user_conf->provisionEnabled($direction, $synch_trigger)) {
           if ($direction == LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER) {
             $discard = $ldap_user_conf->synchToDrupalAccount(NULL, $user_edit, NULL, $test_query);
@@ -174,7 +174,7 @@ function ldap_user_test_form_submit($form, &$form_state) {
           }
           // To ldap.
           else {
-            $provision_result = $ldap_user_conf->synchToLdapEntry($user_object, $user_edit, array(), $test_query);
+            $provision_result = $ldap_user_conf->synchToLdapEntry($user_object, $user_edit, [], $test_query);
             $results['synchToLdapEntry method results']["context = $synch_trigger_description"] = $provision_result;
           }
         }

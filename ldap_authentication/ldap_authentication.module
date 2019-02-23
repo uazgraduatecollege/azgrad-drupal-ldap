@@ -71,27 +71,27 @@ define('LDAP_AUTHENTICATION_REDIRECT_ON_LOGIN_DEFAULT', 0);
  * Implements hook_menu().
  */
 function ldap_authentication_menu() {
-  $items = array();
+  $items = [];
 
-  $items['user/ldap-profile-update'] = array(
+  $items['user/ldap-profile-update'] = [
     'title' => 'Update Profile',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('ldap_authentication_profile_update_form'),
+    'page arguments' => ['ldap_authentication_profile_update_form'],
     'access callback' => TRUE,
     'type' => MENU_CALLBACK,
     'file' => 'ldap_authentication.pages.inc',
-  );
+  ];
 
-  $items['admin/config/people/ldap/authentication'] = array(
+  $items['admin/config/people/ldap/authentication'] = [
     'title' => 'Authentication',
     'description' => 'Configure LDAP Authentication',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('ldap_authentication_admin_form'),
-    'access arguments' => array('administer site configuration'),
+    'page arguments' => ['ldap_authentication_admin_form'],
+    'access arguments' => ['administer site configuration'],
     'type' => MENU_LOCAL_TASK,
     'weight' => 3,
     'file' => 'ldap_authentication.admin.inc',
-  );
+  ];
 
   return $items;
 }
@@ -106,13 +106,13 @@ function ldap_authentication_menu_alter(&$items) {
   $items['user/password']['access callback'] = 'ldap_authentication_show_reset_pwd';
   $auth_conf = ldap_authentication_get_valid_conf();
   if (@$auth_conf->ldapUserHelpLinkUrl) {
-    $items['user/ldaphelp'] = array(
+    $items['user/ldaphelp'] = [
       'title' => $auth_conf->ldapUserHelpLinkText,
       'page callback' => 'drupal_goto',
-      'page arguments' => array($auth_conf->ldapUserHelpLinkUrl),
+      'page arguments' => [$auth_conf->ldapUserHelpLinkUrl],
       'access callback' => 'ldap_authentication_show_ldap_help_link',
       'type' => MENU_LOCAL_TASK,
-    );
+    ];
   }
 }
 
@@ -120,38 +120,38 @@ function ldap_authentication_menu_alter(&$items) {
  * Implements hook_theme().
  */
 function ldap_authentication_theme() {
-  return array(
-    'ldap_authentication_user_login_block_links' => array(
-      'variables' => array('ldap_user_help_link' => NULL, 'user_register' => TRUE),
+  return [
+    'ldap_authentication_user_login_block_links' => [
+      'variables' => ['ldap_user_help_link' => NULL, 'user_register' => TRUE],
       'render element' => 'element',
       'file' => 'ldap_authentication.theme.inc',
-    ),
-    'ldap_authentication_user_pass_message' => array(
-      'variables' => array('show_reset_pwd' => NULL, 'auth_conf' => TRUE),
+    ],
+    'ldap_authentication_user_pass_message' => [
+      'variables' => ['show_reset_pwd' => NULL, 'auth_conf' => TRUE],
       'render element' => 'element',
       'file' => 'ldap_authentication.theme.inc',
-    ),
-    'ldap_authentication_user_pass_validate_ldap_authenticated' => array(
-      'variables' => array('account' => NULL, 'auth_conf' => TRUE),
+    ],
+    'ldap_authentication_user_pass_validate_ldap_authenticated' => [
+      'variables' => ['account' => NULL, 'auth_conf' => TRUE],
       'render element' => 'element',
       'file' => 'ldap_authentication.theme.inc',
-    ),
-    'ldap_authentication_login_message' => array(
+    ],
+    'ldap_authentication_login_message' => [
       'render element' => 'element',
-      'variables' => array('message' => NULL),
+      'variables' => ['message' => NULL],
       'file' => 'ldap_authentication.theme.inc',
-    ),
-    'ldap_authentication_message_not_found' => array(
+    ],
+    'ldap_authentication_message_not_found' => [
       'render element' => 'element',
-      'variables' => array('message' => NULL),
+      'variables' => ['message' => NULL],
       'file' => 'ldap_authentication.theme.inc',
-    ),
-    'ldap_authentication_message_not_authenticated' => array(
+    ],
+    'ldap_authentication_message_not_authenticated' => [
       'render element' => 'element',
-      'variables' => array('message' => NULL),
+      'variables' => ['message' => NULL],
       'file' => 'ldap_authentication.theme.inc',
-    ),
-  );
+    ],
+  ];
 }
 
 /**
@@ -162,9 +162,9 @@ function ldap_authentication_help($path, $arg) {
   $authentication_help = t('LDAP authentication allows authentication against an LDAP server.  It
         may be used alongside other authentication means such as built in Drupal authentication,
         open id, etc.  More detailed help is available on drupal.org at !helplink.',
-          array(
+          [
             '!helplink' => l(LDAP_SERVERS_DRUPAL_HELP_URL, LDAP_SERVERS_DRUPAL_HELP_URL),
-          ));
+          ]);
 
   switch ($path) {
     case 'admin/config/people/ldap/authentication':
@@ -203,9 +203,9 @@ function _ldap_authentication_verify_user_profile() {
       if (preg_match($regex, $user->mail)) {
         $result = FALSE;
       }
-      $_SESSION['ldap_authentication_template'] = array(
+      $_SESSION['ldap_authentication_template'] = [
         'verify_user_profile' => $result,
-      );
+      ];
     }
   }
   return $result;
@@ -233,11 +233,11 @@ function ldap_authentication_check_for_email_template() {
       if (isset($_GET['destination'])) {
         unset($_GET['destination']);
       }
-      drupal_goto($url, array(
-        'query' => array(
+      drupal_goto($url, [
+        'query' => [
           'next' => current_path(),
-        ),
-      ));
+        ],
+      ]);
     }
   }
 }
@@ -307,12 +307,12 @@ function ldap_authentication_get_valid_conf($reset = FALSE) {
  */
 function ldap_authentication_ldap_server_in_use($sid, $server_name) {
 
-  $use_warnings = array();
+  $use_warnings = [];
   $auth_conf = ldap_authentication_get_valid_conf();
   if ($auth_conf && in_array($sid, array_keys($auth_conf->sids)) && !empty($auth_conf->sids[$sid])) {
     $use_warnings[] = t('This server (%server_name) may not be deleted or
       disabled because it is being used for ldap authentication.',
-      array('%server_name' => $server_name));
+      ['%server_name' => $server_name]);
   }
   return $use_warnings;
 }
@@ -363,11 +363,11 @@ function ldap_authentication_show_reset_pwd($user = NULL) {
 function ldap_authentication_form_user_pass_alter(&$form, $form_state) {
   // The following could be in a theme preproces function.
   $auth_conf = ldap_authentication_get_valid_conf();
-  $form['ldap_warning'] = array(
+  $form['ldap_warning'] = [
     '#type' => 'item',
-    '#markup' => theme('ldap_authentication_user_pass_message', array('auth_conf' => $auth_conf)),
+    '#markup' => theme('ldap_authentication_user_pass_message', ['auth_conf' => $auth_conf]),
     '#weight' => 10,
-  );
+  ];
 
   // Need to insert before user_pass_validate.
   array_unshift($form['#validate'], 'ldap_authentication_user_pass_validate');
@@ -400,10 +400,10 @@ function ldap_authentication_user_pass_validate(&$form_state) {
   }
 
   if (ldap_authentication_ldap_authenticated($account)) {
-    $vars = array(
+    $vars = [
       'account' => $account,
       'auth_conf' => ldap_authentication_get_valid_conf(),
-    );
+    ];
     $error = TRUE;
     if (is_object($vars['auth_conf'])) {
       if ($vars['auth_conf']->passwordOption == LDAP_AUTHENTICATION_PASSWORD_FIELD_ALLOW) {

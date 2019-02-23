@@ -11,7 +11,7 @@
 function theme_ldap_user_conf_form($variables) {
 
   $form = $variables['form'];
-  $tables = array();
+  $tables = [];
 
   foreach ($form as $key => $element) {
     $parts = explode('__', $key);
@@ -19,7 +19,7 @@ function theme_ldap_user_conf_form($variables) {
       list($direction, $discard, $column_name, $i) = $parts;
       $row = $element['#row'];
       $col = $element['#col'];
-      $tables[$direction]['rows'][$row][$col] = array('data' => drupal_render($form[$key]), 'class' => array('module'), 'colspan' => 1);
+      $tables[$direction]['rows'][$row][$col] = ['data' => drupal_render($form[$key]), 'class' => ['module'], 'colspan' => 1];
     }
   }
 
@@ -31,57 +31,57 @@ function theme_ldap_user_conf_form($variables) {
 
       $direction_text = 'todrupal';
 
-      $header = array(
-        array(
+      $header = [
+        [
           'data' => t('Remove'),
           'rowspan' => 1,
           'class' => 'mixedcase',
-        ),
-        array(
+        ],
+        [
           'data' => t('Source LDAP Tokens. (See http://drupal.org/node/1245736) ') ,
           'class' => 'mixedcase',
           'rowspan' => 1,
           'colspan' => 2,
-        ),
-        array(
+        ],
+        [
           'data' => t('Target Drupal Attribute'),
           'rowspan' => 1,
           'class' => 'mixedcase',
-        ),
-        array(
+        ],
+        [
           'data' => t('When Should Attribute Be Synchronized to Drupal?'),
           'colspan' => count($ldap_user_conf_admin->provisionsDrupalEvents),
           'rowspan' => 1,
           'class' => 'mixedcase',
-        ),
+        ],
 
-      );
+      ];
 
-      $second_header = array(
-        array(
+      $second_header = [
+        [
           'data' => t(''),
           'header' => TRUE,
           'class' => 'mixedcase',
-        ),
-        array(
+        ],
+        [
           'data' => t('e.g: "[sn]", "[mail:0]", "[ou:last]", "[sn], [givenName]" etc.
                 Constants such as "17" or "imported" should not be enclosed in [].'),
           'header' => TRUE,
           'class' => 'mixedcase',
-        ),
-        array(
+        ],
+        [
           'data' => t('Convert From Binary?'),
           'class' => 'mixedcase',
           'header' => TRUE,
-        ),
-        array(
+        ],
+        [
           'data' => "",
           'header' => TRUE,
-        ),
-      );
+        ],
+      ];
 
       foreach ($ldap_user_conf_admin->provisionsDrupalEvents as $col_id => $col_name) {
-        $second_header[] = array('data' => $col_name, 'header' => TRUE, 'class' => 'mixedcase');
+        $second_header[] = ['data' => $col_name, 'header' => TRUE, 'class' => 'mixedcase'];
       }
     }
     // To ldap.
@@ -89,59 +89,59 @@ function theme_ldap_user_conf_form($variables) {
 
       $direction_text = 'toldap';
 
-      $header = array(
-        array(
+      $header = [
+        [
           'data' => t('Remove'),
           'rowspan' => 1,
           'class' => 'mixedcase',
-        ),
-        array(
+        ],
+        [
           'data' => t('Source Drupal User Attribute') ,
           'class' => 'mixedcase',
           'rowspan' => 1,
           'colspan' => 3,
-        ),
-        array(
+        ],
+        [
           'data' => t('Target LDAP Token'),
           'rowspan' => 1,
           'class' => 'mixedcase',
-        ),
-        array(
+        ],
+        [
           'data' => t('When Should Attribute Be Synchronized to LDAP?'),
           'colspan' => count($ldap_user_conf_admin->provisionsLdapEvents),
           'rowspan' => 1,
           'class' => 'mixedcase',
-        ),
-      );
+        ],
+      ];
 
-      $second_header = array(
-        array(
+      $second_header = [
+        [
           'data' => t(''),
           'header' => TRUE,
-        ),
-        array(
+        ],
+        [
           'data' => t('(Select "user tokens" to use token field)'),
           'header' => TRUE,
           'class' => 'mixedcase',
-        ),
-        array(
+        ],
+        [
           'data' => t('Source Drupal User tokens such as: "[property.name]", "[field.field_fname] [field.field_lname]". Constants such as "from_drupal" or "18" should not be enclosed in []'),
           'header' => TRUE,
           'class' => 'mixedcase',
-        ),
-        array(
+        ],
+        [
           'data' => t('Convert From Binary'),
           'header' => TRUE,
           'class' => 'mixedcase',
-        ),
-        array(
+        ],
+        [
           'data' => t('Use singular token format such as [sn], [givenName], etc.'),
           'header' => TRUE,
           'class' => 'mixedcase',
-        ),
-      );
+        ],
+      ];
       foreach ($ldap_user_conf_admin->provisionsLdapEvents as $col_id => $col_name) {
-        $second_header[] = array('data' => $col_name, 'header' => TRUE, 'class' => 'mixedcase');
+        $second_header[] = ['data' => $col_name, 'header' => TRUE, 'class' => 'mixedcase'];
       }
     }
 
@@ -152,7 +152,7 @@ function theme_ldap_user_conf_form($variables) {
     }
 
     $table['header'] = $header;
-    $table['attributes'] = array('class' => array('ldap-provision-' . $direction_text));
+    $table['attributes'] = ['class' => ['ldap-provision-' . $direction_text]];
     array_unshift($table['rows'], $second_header);
     $table_themed = theme('table', $table);
     $rendered_table = theme('table', $table);

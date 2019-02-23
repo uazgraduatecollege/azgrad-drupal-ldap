@@ -18,10 +18,10 @@ class FeedsLdapEntryParser extends FeedsParser {
 
     $mappings = feeds_importer($this->id)->processor->config['mappings'];
     $ldap_entries = $fetcher_result->ldap_result;
-    $parsed_items = array();
+    $parsed_items = [];
     for ($i = 0; $i < $ldap_entries['count']; $i++) {
       $ldap_entry = $ldap_entries[$i];
-      $parsed_item = array('dn' => (string) $ldap_entry['dn']);
+      $parsed_item = ['dn' => (string) $ldap_entry['dn']];
       foreach ($mappings as $j => $map) {
         $source_lcase = drupal_strtolower($map['source']);
         // Dn is already parsed.
@@ -60,7 +60,7 @@ class FeedsLdapEntryParser extends FeedsParser {
    * Source form.
    */
   public function sourceForm($source_config) {
-    $form = array();
+    $form = [];
     $mappings = feeds_importer($this->id)->processor->config['mappings'];
     if (empty($source_config)) {
       $source_config = $this->config;
@@ -72,7 +72,7 @@ class FeedsLdapEntryParser extends FeedsParser {
    * Override parent::configFormValidate().
    */
   public function configFormValidate(&$values) {
-    $this->setConfig(array('sources' => $values));
+    $this->setConfig(['sources' => $values]);
     $this->save();
   }
 
@@ -87,14 +87,14 @@ class FeedsLdapEntryParser extends FeedsParser {
    * Override parent::configDefaults().
    */
   public function configDefaults() {
-    return array();
+    return [];
   }
 
   /**
    * Override parent::configForm().
    */
   public function configForm(&$form_state) {
-    $form = array();
+    $form = [];
     return $form;
   }
 
@@ -102,7 +102,7 @@ class FeedsLdapEntryParser extends FeedsParser {
    *
    */
   public function sourceDefaults() {
-    return array();
+    return [];
   }
 
 }

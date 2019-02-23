@@ -94,11 +94,11 @@ class FeedsDrupalUserLdapEntryFetcher extends FeedsFetcher {
    * Override parent::configDefaults().
    */
   public function configDefaults() {
-    return array(
-      'filterLdapAuthenticated' => array(),
+    return [
+      'filterLdapAuthenticated' => [],
       'availableDrupalUserAttributes' => ldap_feeds_drupal_user_attributes(),
-      'filterRoles' => array(),
-    );
+      'filterRoles' => [],
+    ];
   }
 
   /**
@@ -106,13 +106,13 @@ class FeedsDrupalUserLdapEntryFetcher extends FeedsFetcher {
    */
   public function configForm(&$form_state) {
 
-    $form = array();
-    $form['filterLdapAuthenticated'] = array(
+    $form = [];
+    $form['filterLdapAuthenticated'] = [
       '#type' => 'checkbox',
       '#title' => t('Only return ldap authenticated users.'),
       '#default_value' => $this->config['filterLdapAuthenticated'],
       '#description' => t('If checked, only users who are associated with ldap accounts will be returned.'),
-    );
+    ];
 
     return $form;
   }
@@ -128,16 +128,16 @@ class FeedsDrupalUserLdapEntryFetcher extends FeedsFetcher {
    * Override parent::sourceForm().
    */
   public function sourceForm($source_config) {
-    $tokens = array(
+    $tokens = [
       '!edit_link' => l(t('Edit Feed'), 'admin/structure/feeds/' . $this->id),
-    );
+    ];
 
-    $form_state = array();
+    $form_state = [];
     $form = $this->configForm($form_state);
-    $form['addendum'] = array(
+    $form['addendum'] = [
       '#type' => 'markup',
       '#markup' => t('This import is configured at !edit_link.', $tokens),
-    );
+    ];
 
     return $form;
   }

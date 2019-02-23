@@ -9,8 +9,8 @@
  */
 function ldap_test_ldap_authentication_data() {
 
-  $conf['default'] = array(
-    'sids' => array('activedirectory1' => 'activedirectory1'),
+  $conf['default'] = [
+    'sids' => ['activedirectory1' => 'activedirectory1'],
     'authenticationMode' => LDAP_AUTHENTICATION_MIXED,
     'emailOption' => LDAP_AUTHENTICATION_EMAIL_FIELD_DISABLE,
     'emailUpdate' => LDAP_AUTHENTICATION_EMAIL_UPDATE_ON_LDAP_CHANGE_DISABLE,
@@ -23,12 +23,12 @@ function ldap_test_ldap_authentication_data() {
     'allowTestPhp' => NULL,
     'excludeIfNoAuthorizations' => LDAP_AUTHENTICATION_EXCL_IF_NO_AUTHZ_DEFAULT,
     'ssoEnabled' => FALSE,
-  );
+  ];
 
   $conf['MixedModeUserLogon'] = $conf['default'];
 
   $conf['MixedModeUserLogon3'] = $conf['default'];
-  $conf['MixedModeUserLogon3']['sids'] = array('activedirectory1' => 'activedirectory1');
+  $conf['MixedModeUserLogon3']['sids'] = ['activedirectory1' => 'activedirectory1'];
 
   $conf['ExclusiveModeUserLogon'] = $conf['default'];
   $conf['ExclusiveModeUserLogon']['authenticationMode'] = LDAP_AUTHENTICATION_EXCLUSIVE;
@@ -43,14 +43,14 @@ function ldap_test_ldap_authentication_data() {
   $conf['SSOUserLogon']['ldapImplementation'] = 'mod_auth_sspi';
 
   $conf['ExclusiveModeUserLogon3'] = $conf['default'];
-  $conf['ExclusiveModeUserLogon3']['sids'] = array('activedirectory1' => 'activedirectory1');
+  $conf['ExclusiveModeUserLogon3']['sids'] = ['activedirectory1' => 'activedirectory1'];
   $conf['ExclusiveModeUserLogon3']['authenticationMode'] = LDAP_AUTHENTICATION_EXCLUSIVE;
 
   $conf['WL1'] = $conf['default'];
   $conf['WL1']['authenticationMode'] = LDAP_AUTHENTICATION_EXCLUSIVE;
 
   $conf['WL3'] = $conf['default'];
-  $conf['WL3']['sids'] = array('activedirectory1' => 'activedirectory1');
+  $conf['WL3']['sids'] = ['activedirectory1' => 'activedirectory1'];
   $conf['WL3']['authenticationMode'] = LDAP_AUTHENTICATION_EXCLUSIVE;
 
   // Single sign on tests.

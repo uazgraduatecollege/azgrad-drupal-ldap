@@ -28,11 +28,11 @@ function ldap_query_index() {
 function ldap_query_list($qid = NULL, $actions = FALSE) {
 
   $ldap_queries = ldap_query_get_queries($qid, 'all');
-  $variables = array(
+  $variables = [
     'ldap_queries' => $ldap_queries,
     'action' => TRUE,
     'type' => 'table',
-  );
+  ];
 
   $html = theme('ldap_query_list', $variables);
 
@@ -86,7 +86,7 @@ function ldap_query_admin_form_submit($form, &$form_state) {
   $query->drupalFormSubmit($op, $form_state['values']);
 
   if ($query->hasError() == FALSE) {
-    drupal_set_message(t('LDAP Query %name !verb.', array('!verb' => $verb, '%name' => $query->name)), 'status');
+    drupal_set_message(t('LDAP Query %name !verb.', ['!verb' => $verb, '%name' => $query->name]), 'status');
     ldap_query_cache_clear();
     // If ($form_state['ldap_warnings'] && $op != 'add') {
     // do nothing, but don't redirect away from form.
@@ -118,25 +118,25 @@ function ldap_query_admin_delete($form, &$form_state, $op = NULL, $qid = NULL) {
 
   if ($qid && ($ldap_query = ldap_query_get_queries($qid, 'all', TRUE))) {
     // array()
-    $variables = array(
+    $variables = [
       'ldap_query' => $ldap_query,
       'actions' => FALSE,
       'type' => 'detail',
-    );
+    ];
     $form['#prefix'] = '<div>' . theme('ldap_query', $variables) . '</div>';
-    $form['qid'] = array(
+    $form['qid'] = [
       '#type' => 'hidden',
       '#value' => $qid,
-    );
-    $form['name'] = array(
+    ];
+    $form['name'] = [
       '#type' => 'hidden',
       '#value' => $ldap_query->name,
-    );
+    ];
     return confirm_form(
       $form,
       'Delete Confirmation Form',
       LDAP_QUERY_MENU_BASE_PATH . '/query/list',
-        '<p>' . t('Are you sure you want to delete the LDAP query named <em><strong>%name</strong></em> ?', array('%name' => $ldap_query->name)) . '</p><p>' .
+        '<p>' . t('Are you sure you want to delete the LDAP query named <em><strong>%name</strong></em> ?', ['%name' => $ldap_query->name]) . '</p><p>' .
         t('This action cannot be undone.') . '</p>',
       t('Delete'),
       t('Cancel')
@@ -155,7 +155,7 @@ function ldap_query_admin_delete_submit($form, &$form_state) {
   $ldap_query = new LdapQueryAdmin($qid);
   if ($values['confirm'] && $qid) {
     if ($result = $ldap_query->delete($qid)) {
-      $tokens = array('%name' => $ldap_query->name, '!qid' => $qid);
+      $tokens = ['%name' => $ldap_query->name, '!qid' => $qid];
       drupal_set_message(t('LDAP Server %name (query id = !qid) has been deleted.', $tokens), 'status');
       watchdog('ldap_query', 'LDAP Query deleted: %name (qid = !qid) ', $tokens);
     }
@@ -184,28 +184,28 @@ function ldap_query_admin_delete_submit($form, &$form_state) {
 function ldap_query_admin_enable_disable($form, &$form_state, $action = NULL, $qid = NULL) {
 
   if ($ldap_query = ldap_query_get_queries($qid, 'all', TRUE)) {
-    $variables = array(
+    $variables = [
       'ldap_query' => $ldap_query,
       'actions' => FALSE,
       'type' => 'detail',
-    );
+    ];
     $form['#prefix'] = "<div>" . theme('ldap_query', $variables) . "</div>";
 
-    $form['qid'] = array(
+    $form['qid'] = [
       '#type' => 'hidden',
       '#value' => $qid,
-    );
-    $form['name'] = array(
+    ];
+    $form['name'] = [
       '#type' => 'hidden',
       '#value' => $ldap_query->name,
-    );
-    $form['action'] = array(
+    ];
+    $form['action'] = [
       '#type' => 'hidden',
       '#value' => $action,
-    );
+    ];
     return confirm_form(
       $form,
-      t('Are you sure you want to') . t($action) . ' ' . t('the LDAP query named <em><strong>%name</strong></em>?', array('%name' => $ldap_query->name)),
+      t('Are you sure you want to') . t($action) . ' ' . t('the LDAP query named <em><strong>%name</strong></em>?', ['%name' => $ldap_query->name]),
       LDAP_QUERY_MENU_BASE_PATH . '/query/list',
       t('<p></p>'),
       t($action),
@@ -229,7 +229,7 @@ function ldap_query_admin_enable_disable_submit($form, &$form_state) {
 
     $ldap_query->status = $status;
     $ldap_query->save('edit');
-    $tokens = array('%name' => $values['name'], '!qid' => $qid, '!action' => t($values['action']) . 'd');
+    $tokens = ['%name' => $values['name'], '!qid' => $qid, '!action' => t($values['action']) . 'd'];
     drupal_set_message(t('LDAP Query Configuration %name (query id = !qid) has been !action.', $tokens));
     $message = t('LDAP Query !action: %name (qid = !qid) ', $tokens);
     watchdog('ldap_query', $message);
@@ -245,7 +245,7 @@ function ldap_query_test($qid) {
 
   $ldap_query = ldap_query_get_queries($qid, 'all', TRUE);
   $results = $ldap_query->query();
-  $display = theme('ldap_query_results', array('results' => $results, 'ldap_query' => $ldap_query, 'show_query' => TRUE));
+  $display = theme('ldap_query_results', ['results' => $results, 'ldap_query' => $ldap_query, 'show_query' => TRUE]);
 
   return $display;
 

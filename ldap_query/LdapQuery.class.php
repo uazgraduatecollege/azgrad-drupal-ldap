@@ -23,11 +23,11 @@ class LdapQuery {
   public $sid;
   public $status;
 
-  public $baseDn = array();
+  public $baseDn = [];
   public $base_dn_str = NULL;
   public $filter;
   public $attributes_str = NULL;
-  public $attributes = array();
+  public $attributes = [];
 
   public $sizelimit = 0;
   public $timelimit = 0;
@@ -46,10 +46,10 @@ class LdapQuery {
       return;
     }
 
-    $query_records = array();
+    $query_records = [];
     if (module_exists('ctools')) {
       ctools_include('export');
-      $result = ctools_export_load_object('ldap_query', 'names', array($qid));
+      $result = ctools_export_load_object('ldap_query', 'names', [$qid]);
       if (isset($result[$qid])) {
         $query_record = $result[$qid];
         foreach ($query_record as $property_name => $value) {
@@ -82,7 +82,7 @@ class LdapQuery {
     $this->detailedWatchdogLog = variable_get('ldap_help_watchdog_detail', 0);
 
     $this->baseDn = $this->linesToArray($this->base_dn_str);
-    $this->attributes = ($this->attributes_str) ? $this->csvToArray($this->attributes_str, TRUE) : array();
+    $this->attributes = ($this->attributes_str) ? $this->csvToArray($this->attributes_str, TRUE) : [];
 
   }
 
@@ -108,7 +108,7 @@ class LdapQuery {
     $ldap_server = new LdapServer($this->sid);
     $ldap_server->connect();
     $ldap_server->bind();
-    $results = array();
+    $results = [];
 
     $count = 0;
 
@@ -210,7 +210,7 @@ class LdapQuery {
       }
     }
     else {
-      $array = array();
+      $array = [];
     }
     return $array;
   }
@@ -233,27 +233,27 @@ class LdapQuery {
    *
    */
   public static function fields() {
-    $fields = array(
-      'query_numeric_id' => array(
+    $fields = [
+      'query_numeric_id' => [
         'property_name' => 'query_numeric_id',
-        'schema' => array(
+        'schema' => [
           'type' => 'serial',
           'unsigned' => TRUE,
           'not null' => TRUE,
           'description' => 'Primary ID field for the table.  Only used internally.',
           'no export' => TRUE,
-        ),
-      ),
+        ],
+      ],
 
-      'qid' => array(
+      'qid' => [
         'property_name' => 'qid',
-        'schema' => array(
+        'schema' => [
           'type' => 'varchar',
           'length' => 20,
           'description' => 'Machine name for query.',
           'not null' => TRUE,
-        ),
-        'form' => array(
+        ],
+        'form' => [
           'field_group' => 'basic',
           '#type' => 'textfield',
           '#title' => t('Machine name for this query configuration.'),
@@ -261,18 +261,18 @@ class LdapQuery {
           '#maxlength' => 20,
           '#description' => t('May only contain alphanumeric characters (a-z, A-Z, 0-9, and _)'),
           '#required' => TRUE,
-        ),
-        'form_to_prop_functions' => array('trim'),
-      ),
+        ],
+        'form_to_prop_functions' => ['trim'],
+      ],
 
-      'name' => array(
+      'name' => [
         'property_name' => 'name',
-        'schema' => array(
+        'schema' => [
           'type' => 'varchar',
           'length' => '60',
           'not null' => TRUE,
-        ),
-        'form' => array(
+        ],
+        'form' => [
           'field_group' => 'basic',
           '#type' => 'textfield',
           '#title' => t('Name'),
@@ -280,50 +280,50 @@ class LdapQuery {
           '#size' => 50,
           '#maxlength' => 255,
           '#required' => TRUE,
-        ),
-        'form_to_prop_functions' => array('trim'),
-      ),
+        ],
+        'form_to_prop_functions' => ['trim'],
+      ],
 
-      'sid' => array(
+      'sid' => [
         'property_name' => 'sid',
-        'schema' => array(
+        'schema' => [
           'type' => 'varchar',
           'length' => 20,
           'not null' => TRUE,
-        ),
-        'form' => array(
+        ],
+        'form' => [
           'field_group' => 'basic',
           '#type' => 'radios',
           '#title' => t('LDAP Server used for query.'),
           '#required' => 1,
-        ),
-        'form_to_prop_functions' => array('trim'),
-      ),
+        ],
+        'form_to_prop_functions' => ['trim'],
+      ],
 
-      'status' => array(
+      'status' => [
         'property_name' => 'status',
-        'schema' => array(
+        'schema' => [
           'type' => 'int',
           'size' => 'tiny',
           'not null' => TRUE,
           'default' => 0,
-        ),
-        'form' => array(
+        ],
+        'form' => [
           'field_group' => 'basic',
           '#type' => 'checkbox',
           '#title' => t('Enabled'),
           '#description' => t('Disable in order to keep configuration without having it active.'),
-        ),
-        'form_to_prop_functions' => array('trim'),
-      ),
+        ],
+        'form_to_prop_functions' => ['trim'],
+      ],
 
-      'base_dn_str' => array(
+      'base_dn_str' => [
         'property_name' => 'base_dn_str',
-        'schema' => array(
+        'schema' => [
           'type' => 'text',
           'not null' => FALSE,
-        ),
-        'form' => array(
+        ],
+        'form' => [
           'field_group' => 'query',
           '#type' => 'textarea',
           '#title' => t('Base DNs to search in query.'),
@@ -331,22 +331,22 @@ class LdapQuery {
           '#cols' => 50,
           '#rows' => 6,
           '#required' => TRUE,
-        ),
-        'form_to_prop_functions' => array('trim'),
-      ),
+        ],
+        'form_to_prop_functions' => ['trim'],
+      ],
 
-      'baseDn' => array(
+      'baseDn' => [
         'property_name' => 'baseDn',
         'exportable' => FALSE,
-      ),
+      ],
 
-      'filter' => array(
+      'filter' => [
         'property_name' => 'filter',
-        'schema' => array(
+        'schema' => [
           'type' => 'text',
           'not null' => FALSE,
-        ),
-        'form' => array(
+        ],
+        'form' => [
           'field_group' => 'query',
           '#type' => 'textarea',
           '#title' => t('Filter'),
@@ -355,41 +355,41 @@ class LdapQuery {
           '#cols' => 50,
           '#rows' => 1,
           '#required' => TRUE,
-        ),
-        'form_to_prop_functions' => array('trim'),
-      ),
+        ],
+        'form_to_prop_functions' => ['trim'],
+      ],
 
-      'attributes_str' => array(
+      'attributes_str' => [
         'property_name' => 'attributes_str',
-        'schema' => array(
+        'schema' => [
           'type' => 'text',
           'not null' => FALSE,
-        ),
-        'form' => array(
+        ],
+        'form' => [
           'field_group' => 'query',
           '#type' => 'textarea',
           '#title' => t('Attributes to return.'),
           '#description' => t('Enter as comma separated list. DN is automatically returned. Leave empty to return all attributes. e.g. <code>objectclass,name,cn,samaccountname</code>'),
           '#cols' => 50,
           '#rows' => 6,
-        ),
-        'form_to_prop_functions' => array('trim'),
-      ),
+        ],
+        'form_to_prop_functions' => ['trim'],
+      ],
 
-      'attributes' => array(
+      'attributes' => [
         'property_name' => 'attributes',
         'exportable' => FALSE,
-      ),
+      ],
 
-      'sizelimit' => array(
+      'sizelimit' => [
         'property_name' => 'sizelimit',
-        'schema' => array(
+        'schema' => [
           'type' => 'int',
           'size' => 'small',
           'not null' => TRUE,
           'default' => 0,
-        ),
-        'form' => array(
+        ],
+        'form' => [
           'field_group' => 'query_advanced',
           '#type' => 'textfield',
           '#title' => t('Size Limit of returned data'),
@@ -397,20 +397,20 @@ class LdapQuery {
           '#size' => 7,
           '#maxlength' => 5,
           '#required' => TRUE,
-        ),
-        'form_to_prop_functions' => array('trim'),
-      ),
+        ],
+        'form_to_prop_functions' => ['trim'],
+      ],
 
-      'timelimit' => array(
+      'timelimit' => [
         'property_name' => 'timelimit',
-        'schema' => array(
+        'schema' => [
           'type' => 'int',
           'size' => 'small',
           'not null' => TRUE,
           'default' => 0,
 
-        ),
-        'form' => array(
+        ],
+        'form' => [
           'field_group' => 'query_advanced',
           '#type' => 'textfield',
           '#title' => t('Time Limit in Seconds'),
@@ -418,55 +418,55 @@ class LdapQuery {
           '#size' => 7,
           '#maxlength' => 5,
           '#required' => TRUE,
-        ),
-        'form_to_prop_functions' => array('trim'),
-      ),
+        ],
+        'form_to_prop_functions' => ['trim'],
+      ],
 
-      'deref' => array(
+      'deref' => [
         'property_name' => 'deref',
-        'schema' => array(
+        'schema' => [
           'type' => 'int',
           'size' => 'tiny',
           'not null' => TRUE,
           'default' => LDAP_DEREF_NEVER,
-        ),
-        'form' => array(
+        ],
+        'form' => [
           'field_group' => 'query_advanced',
           '#type' => 'radios',
           '#title' => t('How aliases should be handled during the search.'),
           '#required' => 1,
-          '#options' => array(
+          '#options' => [
             LDAP_DEREF_NEVER => t('(default) aliases are never dereferenced.'),
             LDAP_DEREF_SEARCHING => t('aliases should be dereferenced during the search but not when locating the base object of the search.'),
             LDAP_DEREF_FINDING => t('aliases should be dereferenced when locating the base object but not during the search.'),
             LDAP_DEREF_ALWAYS => t('aliases should be dereferenced always.'),
-          ),
-        ),
-        'form_to_prop_functions' => array('trim'),
-      ),
-      'scope' => array(
+          ],
+        ],
+        'form_to_prop_functions' => ['trim'],
+      ],
+      'scope' => [
         'property_name' => 'scope',
-        'schema' => array(
+        'schema' => [
           'type' => 'int',
           'size' => 'tiny',
           'not null' => TRUE,
           'default' => LDAP_SCOPE_SUBTREE,
-        ),
-        'form' => array(
+        ],
+        'form' => [
           'field_group' => 'query_advanced',
           '#type' => 'radios',
           '#title' => t('Scope of search.'),
           '#required' => 1,
-          '#options' => array(
+          '#options' => [
             LDAP_SCOPE_BASE => t('BASE. This value is used to indicate searching only the entry at the base DN, resulting in only that entry being returned (keeping in mind that it also has to meet the search filter criteria!).'),
             LDAP_SCOPE_ONELEVEL => t('ONELEVEL. This value is used to indicate searching all entries one level under the base DN - but not including the base DN and not including any entries under that one level under the base DN.'),
             LDAP_SCOPE_SUBTREE => t('SUBTREE. (default) This value is used to indicate searching of all entries at all levels under and including the specified base DN.'),
-          ),
-        ),
-        'form_to_prop_functions' => array('trim'),
-      ),
+          ],
+        ],
+        'form_to_prop_functions' => ['trim'],
+      ],
 
-    );
+    ];
     return $fields;
   }
 
