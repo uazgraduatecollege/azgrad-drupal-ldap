@@ -189,7 +189,7 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
     foreach ($proposed_ldap_authorizations as $key => $authorization_id) {
       if ($consumer->consumerConf->useFirstAttrAsGroupId) {
         $attr_parts = ldap_explode_dn($authorization_id, 0);
-        if (count($attr_parts) > 0) {
+        if (!empty($attr_parts) && count($attr_parts) > 0) {
           $first_part = explode('=', $attr_parts[0]);
           if (count($first_part) > 1) {
             $authorization_id = ldap_pear_unescape_dn_value(trim($first_part[1]));
