@@ -3,11 +3,10 @@
 /**
  * @file
  * Defines server classes and related functions.
- *
  */
 
 /**
- * LDAP Server Class
+ * LDAP Server Class.
  *
  *  This class is used to create, work with, and eventually destroy ldap_server
  * objects.
@@ -15,8 +14,9 @@
  * @todo make bindpw protected
  */
 class LdapQuery {
-  // LDAP Settings
-
+  /**
+   * LDAP Settings.
+   */
   public $query_numeric_id;
   public $qid;
   public $name;
@@ -38,11 +38,10 @@ class LdapQuery {
   public $inDatabase = FALSE;
   public $detailedWatchdogLog = FALSE;
 
-
   /**
-   * Constructor Method
+   * Constructor Method.
    */
-  function __construct($qid) {
+  public function __construct($qid) {
     if (!is_scalar($qid)) {
       return;
     }
@@ -71,14 +70,14 @@ class LdapQuery {
         return;
       }
       $query_record = $query_records[$qid];
-      foreach ($this->fields() as $field_id => $field ) {
+      foreach ($this->fields() as $field_id => $field) {
         if (isset($query_record->$field_id)) {
           $this->{$field['property_name']} = @$query_record->$field_id;
         }
       }
     }
 
-    // special properties that don't map directly from storage and defaults
+    // Special properties that don't map directly from storage and defaults.
     $this->inDatabase = TRUE;
     $this->detailedWatchdogLog = variable_get('ldap_help_watchdog_detail', 0);
 
@@ -88,23 +87,23 @@ class LdapQuery {
   }
 
   /**
-   * Destructor Method
+   * Destructor Method.
    */
-  function __destruct() {
+  public function __destruct() {
 
   }
-
 
   /**
-   * Invoke Method
+   * Invoke Method.
    */
-  function __invoke() {
+  public function __invoke() {
 
   }
 
-//  function search($base_dn = NULL, $filter, $attributes = array(), $attrsonly = 0, $sizelimit = 0, $timelimit = 0, $deref = LDAP_DEREF_NEVER) {
-
-  function query() {
+  /**
+   * Function search($base_dn = NULL, $filter, $attributes = array(), $attrsonly = 0, $sizelimit = 0, $timelimit = 0, $deref = LDAP_DEREF_NEVER) {.
+   */
+  public function query() {
     ldap_servers_module_load_include('php', 'ldap_servers', 'LdapServer.class');
     $ldap_server = new LdapServer($this->sid);
     $ldap_server->connect();
@@ -133,22 +132,36 @@ class LdapQuery {
   protected $_hasError = FALSE;
   protected $_errorName = NULL;
 
+  /**
+   *
+   */
   public function setError($_errorName, $_errorMsgText = NULL) {
     $this->_errorMsgText = $_errorMsgText;
     $this->_errorName = $_errorName;
     $this->_hasError = TRUE;
   }
 
+  /**
+   *
+   */
   public function clearError() {
     $this->_hasError = FALSE;
     $this->_errorMsg = NULL;
     $this->_errorName = NULL;
   }
 
+  /**
+   *
+   */
   public function hasError() {
     return ($this->_hasError || $this->ldapErrorNumber());
   }
 
+  /**
+   * @param null $type
+   *
+   * @return string|null
+   */
   public function errorMsg($type = NULL) {
     if ($type == 'ldap' && $this->connection) {
       return ldap_err2str(ldap_errno($this->connection));
@@ -161,6 +174,11 @@ class LdapQuery {
     }
   }
 
+  /**
+   * @param null $type
+   *
+   * @return string|null
+   */
   public function errorName($type = NULL) {
     if ($type == 'ldap' && $this->connection) {
       return "LDAP Error: " . ldap_error($this->connection);
@@ -173,15 +191,16 @@ class LdapQuery {
     }
   }
 
+  /**
+   *
+   */
   public function ldapErrorNumber() {
-   // if ($this->connection && ldap_errno($this->connection)) {
-    //  return ldap_errno($this->connection);
-   // }
-   // else {
-      return FALSE;
-   // }
+    return FALSE;
   }
 
+  /**
+   *
+   */
   protected function linesToArray($lines) {
     $lines = trim($lines);
     if ($lines) {
@@ -196,6 +215,9 @@ class LdapQuery {
     return $array;
   }
 
+  /**
+   *
+   */
   protected function csvToArray($string, $strip_quotes = FALSE) {
     $items = explode(',', $string);
     foreach ($items as $i => $item) {
@@ -207,18 +229,21 @@ class LdapQuery {
     return $items;
   }
 
+  /**
+   *
+   */
   public static function fields() {
     $fields = array(
       'query_numeric_id' => array(
-          'property_name' => 'query_numeric_id',
-          'schema' => array(
-            'type' => 'serial',
-            'unsigned' => TRUE,
-            'not null' => TRUE,
-            'description' => 'Primary ID field for the table.  Only used internally.',
-            'no export' => TRUE,
-          ),
+        'property_name' => 'query_numeric_id',
+        'schema' => array(
+          'type' => 'serial',
+          'unsigned' => TRUE,
+          'not null' => TRUE,
+          'description' => 'Primary ID field for the table.  Only used internally.',
+          'no export' => TRUE,
         ),
+      ),
 
       'qid' => array(
         'property_name' => 'qid',
@@ -227,14 +252,14 @@ class LdapQuery {
           'length' => 20,
           'description' => 'Machine name for query.',
           'not null' => TRUE,
-          ),
+        ),
         'form' => array(
           'field_group' => 'basic',
           '#type' => 'textfield',
           '#title' => t('Machine name for this query configuration.'),
           '#size' => 20,
           '#maxlength' => 20,
-          '#description' => t('May only contain alphanumeric characters (a-z, A-Z, 0-9, and _)' ),
+          '#description' => t('May only contain alphanumeric characters (a-z, A-Z, 0-9, and _)'),
           '#required' => TRUE,
         ),
         'form_to_prop_functions' => array('trim'),
@@ -245,7 +270,7 @@ class LdapQuery {
         'schema' => array(
           'type' => 'varchar',
           'length' => '60',
-          'not null' => TRUE
+          'not null' => TRUE,
         ),
         'form' => array(
           'field_group' => 'basic',
@@ -296,7 +321,7 @@ class LdapQuery {
         'property_name' => 'base_dn_str',
         'schema' => array(
           'type' => 'text',
-          'not null' => FALSE
+          'not null' => FALSE,
         ),
         'form' => array(
           'field_group' => 'query',
@@ -319,7 +344,7 @@ class LdapQuery {
         'property_name' => 'filter',
         'schema' => array(
           'type' => 'text',
-          'not null' => FALSE
+          'not null' => FALSE,
         ),
         'form' => array(
           'field_group' => 'query',
@@ -338,7 +363,7 @@ class LdapQuery {
         'property_name' => 'attributes_str',
         'schema' => array(
           'type' => 'text',
-          'not null' => FALSE
+          'not null' => FALSE,
         ),
         'form' => array(
           'field_group' => 'query',
@@ -419,7 +444,7 @@ class LdapQuery {
         ),
         'form_to_prop_functions' => array('trim'),
       ),
-     'scope' => array(
+      'scope' => array(
         'property_name' => 'scope',
         'schema' => array(
           'type' => 'int',
@@ -444,6 +469,5 @@ class LdapQuery {
     );
     return $fields;
   }
-
 
 }

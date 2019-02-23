@@ -9,7 +9,7 @@
  */
 function ldap_feeds_ctools_plugin_api($owner, $api) {
   if ($owner == 'feeds' && $api == 'plugins') {
-  return array('version' => 1);
+    return array('version' => 1);
   }
 }
 
@@ -25,7 +25,8 @@ function ldap_feeds_feeds_plugins() {
     'name' => 'LDAP Query Fetcher',
     'description' => 'Fetch content from ldap query',
     'handler' => array(
-      'parent' => 'FeedsFetcher', // This is the key name, not the class name.
+       // This is the key name, not the class name.
+      'parent' => 'FeedsFetcher',
       'class' => 'FeedsLdapQueryFetcher',
       'file' => 'FeedsLdapQueryFetcher.inc',
       'path' => $path,
@@ -39,7 +40,8 @@ function ldap_feeds_feeds_plugins() {
       and Drupal user data such as <code>uid, name, mail, created, status, language, </code>and <code>signature</code>.
       Make sure to add dn in your LDAP query for this parser, if you use custom attributes.',
     'handler' => array(
-      'parent' => 'FeedsFetcher', // This is the key name, not the class name.
+      // This is the key name, not the class name.
+      'parent' => 'FeedsFetcher',
       'class' => 'FeedsDrupalUserLdapEntryFetcher',
       'file' => 'FeedsDrupalUserLdapEntryFetcher.inc',
       'path' => $path,
@@ -70,6 +72,9 @@ function ldap_feeds_enable() {
   cache_clear_all('plugins:feeds:plugins', 'cache');
 }
 
+/**
+ *
+ */
 function ldap_feeds_drupal_user_attributes() {
 
   $attributes = array(
@@ -85,17 +90,15 @@ function ldap_feeds_drupal_user_attributes() {
   );
   // ldap_authentication and some other modules may want to add additional drupal user tokens
   // largely derived from the $user->data array, but possibly from related data such as authmaps
-  // some use cases for alter are simply edge cases
-
+  // some use cases for alter are simply edge cases.
   drupal_alter('ldap_feeds_drupal_user_attributes', $attributes);
 
   return $attributes;
 }
 
 /**
- * show some sample ldap user data to help with mapping interface
+ * Show some sample ldap user data to help with mapping interface.
  */
-
 function ldap_feeds_form_feeds_ui_mapping_form_alter(&$form, &$form_state, $form_id) {
 
   $importer = feeds_importer_load($form['#importer']);
@@ -109,36 +112,30 @@ function ldap_feeds_form_feeds_ui_mapping_form_alter(&$form, &$form_state, $form
 }
 
 /**
- * add additional data to mapping form for ldap query fetcher
+ * Add additional data to mapping form for ldap query fetcher.
  */
 function ldap_feeds_query_legend(&$form, $importer) {
 
   $source = feeds_source($importer->id);
   $fetcher = feeds_plugin('FeedsLdapQueryFetcher', $source->importer->id);
- // $fetcher_result = new FeedsLdapQueryFetcher($source->config);
- // $records = $fetcher->getRaw(); // FeedsSource $source
- // foreach ($records[0] as $field_name => $value) {
-  //  $sources[$field_name] = array(
-  //    'name' => array('#markup' => $field_name),
-   //   'description' => array('#markup' =>  _ldap_feeds_query_legend($records, $field_name)));
- // }
- // $form['legendset']['#description'] = t('Name column is the value that should go in the SOURCE column above.  Description column are from first few records of query in fetcher.', $tokens);
- // $form['legendset']['legend']['sources'] = $sources;
-
 }
 
+/**
+ *
+ */
 function _ldap_feeds_query_legend($records, $field_name) {
   $examples = array();
   foreach ($records as $i => $record) {
     $examples[] = $record[$field_name];
-    if ($i > 5 ) {
+    if ($i > 5) {
       break;
     }
   }
   return join(', ', array_filter($examples));
 }
+
 /**
- * add additional data to mapping form for drupal user fetcher
+ * Add additional data to mapping form for drupal user fetcher.
  */
 function ldap_feeds_drupal_user_legend(&$form, $importer) {
 

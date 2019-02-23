@@ -2,7 +2,7 @@
 
 /**
  * @file
- *   LDAP module drush integration.
+ * LDAP module drush integration.
  */
 
 /**
@@ -18,10 +18,10 @@ function ldap_servers_drush_command() {
     'description' => 'Set the password of an otherwise already configured LDAP server.',
     'aliases' => array('lssp'),
     'arguments' => array(
-      'ldap_sid' => 'The configured LDAP server ID.'
+      'ldap_sid' => 'The configured LDAP server ID.',
     ),
     'options' => array(
-      'password' => 'The password to set for the server.'
+      'password' => 'The password to set for the server.',
     ),
     'examples' => array(
       'drush lssp LDAP_SERVER_ID --password="PASSWORD"' => 'Sets the password for LDAP_SERVER_ID. Replace LDAP_SERVER_ID with the "Machine name for this configuration." of
@@ -34,7 +34,9 @@ function ldap_servers_drush_command() {
 /**
  * Callback for the ldap-servers-set-password command.
  *
- * @param string $ldap_sid The server ID for which to set the password.
+ * @param string $ldap_sid
+ *   The server ID for which to set the password.
+ *
  * @option string --password Used to provide the password via an option in the Drush command.
  *
  * @return

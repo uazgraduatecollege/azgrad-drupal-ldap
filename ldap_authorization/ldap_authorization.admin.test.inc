@@ -145,7 +145,7 @@ function ldap_authorization_test_form($form, &$form_state, $consumer_type) {
   $form['usernames'] = array(
     '#type' => 'textarea',
     '#title' => t('Drupal usernames to test !consumer_shortName authorizations results for.  One per line.', $consumer_tokens),
-    '#default_value' => @$_SESSION['ldap_authorization_test_query']['usernames'] ,
+    '#default_value' => @$_SESSION['ldap_authorization_test_query']['usernames'],
     '#cols' => 50,
     '#rows' => 6,
     '#description' => '',

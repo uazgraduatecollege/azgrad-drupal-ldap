@@ -3,19 +3,25 @@
 /**
  * @file
  * Basic textfield filter to handle string filtering commands for a generic ldap attribute
- * Includes new criterias
+ * Includes new criterias.
  */
 
+/**
+ *
+ */
 class ldap_views_handler_filter_attribute extends ldap_views_handler_filter {
 
   /**
    * Determine if a filter can be exposed.
    */
-  function can_expose() {
+  public function can_expose() {
     return TRUE;
   }
 
-  function option_definition() {
+  /**
+   *
+   */
+  public function option_definition() {
     $options = parent::option_definition();
     $options['attribute_name'] = array('default' => '');
     return $options;
@@ -26,7 +32,7 @@ class ldap_views_handler_filter_attribute extends ldap_views_handler_filter {
    * to add or remove functionality by overriding this function and
    * adding/removing items from this array.
    */
-  function operators() {
+  public function operators() {
     $operators = array(
       'exists' => array(
         'title' => t('Exists'),
@@ -44,16 +50,12 @@ class ldap_views_handler_filter_attribute extends ldap_views_handler_filter {
 
     return parent::operators() + $operators;
   }
+
   /**
-   * Provide a simple textfield for equality
+   * Provide a simple textfield for equality.
    */
-  function value_form(&$form, &$form_state) {
-/*
-    $current_display = $this->view->display[$this->view->current_display];
-    $qid             = isset($current_display->display_options['query']['options']['qid']) ? $current_display->display_options['query']['options']['qid']
-                                                                                           : $current_display->handler->default_display->display->display_options['query']['options']['qid'];
- */
-    $ldap_data       = new LdapQuery(ldap_views_get_qid($this->view)); //ldap_data_load($qid);
+  public function value_form(&$form, &$form_state) {
+    $ldap_data = new LdapQuery(ldap_views_get_qid($this->view));
 
     if (empty($ldap_data)) {
       $form['attribute_name'] = array(
@@ -62,7 +64,7 @@ class ldap_views_handler_filter_attribute extends ldap_views_handler_filter {
       return;
     }
 
-    $options         = array();
+    $options = array();
     foreach ($ldap_data->attributes as $attribute) {
       $options[$attribute] = $attribute;
     }
@@ -80,43 +82,74 @@ class ldap_views_handler_filter_attribute extends ldap_views_handler_filter {
 
     parent::value_form($form, $form_state);
   }
-  function op_equal($field) {
+
+  /**
+   *
+   */
+  public function op_equal($field) {
     parent::op_equal($this->options['attribute_name']);
   }
 
-  function op_contains($field) {
+  /**
+   *
+   */
+  public function op_contains($field) {
     parent::op_contains($this->options['attribute_name']);
   }
 
-  function op_starts($field) {
+  /**
+   *
+   */
+  public function op_starts($field) {
     parent::op_starts($this->options['attribute_name']);
   }
 
-  function op_not_starts($field) {
+  /**
+   *
+   */
+  public function op_not_starts($field) {
     parent::op_not_starts($this->options['attribute_name']);
   }
 
-  function op_ends($field) {
+  /**
+   *
+   */
+  public function op_ends($field) {
     parent::op_ends($this->options['attribute_name']);
   }
 
-  function op_not_ends($field) {
+  /**
+   *
+   */
+  public function op_not_ends($field) {
     parent::op_not_ends($this->options['attribute_name']);
   }
 
-  function op_not($field) {
+  /**
+   *
+   */
+  public function op_not($field) {
     parent::op_not($this->options['attribute_name']);
   }
 
-  function op_greater_eq($field) {
+  /**
+   *
+   */
+  public function op_greater_eq($field) {
     parent::op_greater_eq($this->options['attribute_name']);
   }
 
-  function op_less_eq($field) {
+  /**
+   *
+   */
+  public function op_less_eq($field) {
     parent::op_less_eq($this->options['attribute_name']);
   }
 
-  function op_exists($field) {
+  /**
+   *
+   */
+  public function op_exists($field) {
     parent::op_exists($this->options['attribute_name']);
   }
 

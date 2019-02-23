@@ -127,44 +127,41 @@ class LdapAuthorizationConsumerAbstract {
   }
 
   /**
-   * Function to normalize mappings
+   * Function to normalize mappings.
+   *
    * should be overridden when mappings are not stored as map|authorization_id format
    * where authorization_id is the format returned by
-   *   LdapAuthorizationConsumerAbstract::usersAuthorizations()
+   * LdapAuthorizationConsumerAbstract::usersAuthorizations()
    *
    * For example ldap_authorization_og may store mapping target as:
-   *   Campus Accounts|group-name=knitters,role-name=administrator member.
+   * Campus Accounts|group-name=knitters,role-name=administrator member
+   * normalized mappings are of form such as for organic groups:
+   * [
+   *   [
+   *     'from' => 'students',
+   *     'normalized' => 'node:21:1',
+   *     'simplified' => 'node:students:member',
+   *     'user_entered' => 'students'
+   *     'valid' => TRUE,
+   *     'error_message' => '',
+   *   ],
+   * ...
+   * ]
    *
-   *   normalized mappings are of form such as for organic groups:
+   * Or for Drupal role where rid 3 is moderator and rid 2 is admin:
+   * [
+   *   [
+   *     'from' => 'students',
+   *     'normalized' => '2',
+   *     'simplified' => 'admin',
+   *     'user_entered' => 'admin',
+   *     'valid' => TRUE,
+   *     'error_message' => '',
+   *   ],
+   * ...
+   * ]
    *
-   *   array(
-         array(
-           'from' => 'students',
-           'normalized' => 'node:21:1',
-           'simplified' => 'node:students:member',
-           'user_entered' => 'students'
-           'valid' => TRUE,
-           'error_message' => '',
-           ),
-
-         ...
-        )
-
-   *   or for drupal role where rid 3 is moderator and rid 2 is admin:
-   *   array(
-         array(
-           'from' => 'students',
-           'normalized' => '2',
-           'simplified' => 'admin',
-           'user_entered' => 'admin',
-           'valid' => TRUE,
-           'error_message' => '',
-           ),
-         ...
-        )
-
-        where 'normalized' is in id format and 'simplified' is user shorthand
-   )
+   * Where 'normalized' is in id format and 'simplified' is user shorthand.
    */
   public function normalizeMappings($mappings) {
     return $mappings;

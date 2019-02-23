@@ -2,23 +2,24 @@
 
 /**
  * @file
- * admin interface for general ldap api settings
- *
+ * Admin interface for general ldap api settings.
  */
 
+/**
+ *
+ */
 function ldap_servers_settings() {
   ldap_servers_module_load_include('inc', 'ldap_servers', 'ldap_servers.functions');
 
-  if (! ldap_servers_ldap_extension_loaded()) {
+  if (!ldap_servers_ldap_extension_loaded()) {
     drupal_set_message(t('PHP LDAP Extension is not loaded.'), "warning");
   }
 
   $form['#title'] = "Configure LDAP Preferences";
 
-
   $options = ldap_servers_encrypt_types();
 
-   /**  when this is changed, need to decrypt and possibly encrypt pwd in newly selected format
+  /**  when this is changed, need to decrypt and possibly encrypt pwd in newly selected format
     *   ... thus default needs to be "No Encryption" to avoid confusion.
     */
 
@@ -30,8 +31,7 @@ function ldap_servers_settings() {
     '#title' => t('Obfuscate LDAP Passwords?'),
     '#default_value' => variable_get('ldap_servers_encryption', LDAP_SERVERS_ENC_TYPE_CLEARTEXT),
     '#description' => t('With obfuscation enabled, passwords will be stored in encrypted form and decrypted with the site hash.'),
-    );
-
+  );
 
   // Disable the form field and explain this to the user.
   if (count($options) == 1) {
@@ -40,16 +40,20 @@ function ldap_servers_settings() {
   }
 
   $form = system_settings_form($form);
-  array_unshift($form['#submit'], 'ldap_servers_settings_submit');  // needs to be first
+  // Needs to be first.
+  array_unshift($form['#submit'], 'ldap_servers_settings_submit');
   return $form;
 }
 
+/**
+ *
+ */
 function ldap_servers_settings_submit($form, &$form_state) {
   if ($form_state['submitted']) {
     $new_encyption = $form_state['values']['ldap_servers_encryption'];
     $old_encyption = $form_state['values']['previous_encryption'];
 
-    // use db instead of functions to avoid classes encryption and decryption
+    // Use db instead of functions to avoid classes encryption and decryption.
     if ($new_encyption != $old_encyption) {
       $servers = db_query("SELECT sid, bindpw FROM {ldap_servers} WHERE bindpw is not NULL AND bindpw <> ''")->fetchAllAssoc('sid');
       foreach ($servers as $sid => $server) {

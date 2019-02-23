@@ -6,11 +6,19 @@
  * including equality, contains, not contains, etc.
  */
 
+/**
+ *
+ */
 class ldap_views_handler_filter extends views_handler_filter {
-  // exposed filter options
-  var $always_multiple = TRUE;
+  /**
+   * Exposed filter options.
+   */
+  public $always_multiple = TRUE;
 
-  function option_definition() {
+  /**
+   *
+   */
+  public function option_definition() {
     $options = parent::option_definition();
     $options['expose']['contains']['required'] = array('default' => FALSE);
     return $options;
@@ -21,7 +29,7 @@ class ldap_views_handler_filter extends views_handler_filter {
    * to add or remove functionality by overriding this function and
    * adding/removing items from this array.
    */
-  function operators() {
+  public function operators() {
     $operators = array(
       '=' => array(
         'title' => t('Is equal to'),
@@ -89,9 +97,9 @@ class ldap_views_handler_filter extends views_handler_filter {
   }
 
   /**
-   * Build strings from the operators() for 'select' options
+   * Build strings from the operators() for 'select' options.
    */
-  function operator_options($which = 'title') {
+  public function operator_options($which = 'title') {
     $options = array();
     foreach ($this->operators() as $id => $info) {
       $options[$id] = $info[$which];
@@ -100,7 +108,10 @@ class ldap_views_handler_filter extends views_handler_filter {
     return $options;
   }
 
-  function admin_summary() {
+  /**
+   *
+   */
+  public function admin_summary() {
     if (!empty($this->options['exposed'])) {
       return t('exposed');
     }
@@ -116,7 +127,10 @@ class ldap_views_handler_filter extends views_handler_filter {
     return $output;
   }
 
-  function operator_values($values = 1) {
+  /**
+   *
+   */
+  public function operator_values($values = 1) {
     $options = array();
     foreach ($this->operators() as $id => $info) {
       if (isset($info['values']) && $info['values'] == $values) {
@@ -128,9 +142,9 @@ class ldap_views_handler_filter extends views_handler_filter {
   }
 
   /**
-   * Provide a simple textfield for equality
+   * Provide a simple textfield for equality.
    */
-  function value_form(&$form, &$form_state) {
+  public function value_form(&$form, &$form_state) {
     // We have to make some choices when creating this as an exposed
     // filter form. For example, if the operator is locked and thus
     // not rendered, we can't render dependencies; instead we only
@@ -143,7 +157,7 @@ class ldap_views_handler_filter extends views_handler_filter {
       $identifier = $this->options['expose']['identifier'];
 
       if (empty($this->options['expose']['use_operator']) || empty($this->options['expose']['operator_id'])) {
-        // exposed and locked.
+        // Exposed and locked.
         $which = in_array($this->operator, $this->operator_values(1)) ? 'value' : 'none';
       }
       else {
@@ -173,7 +187,7 @@ class ldap_views_handler_filter extends views_handler_filter {
       // Ensure there is something in the 'value'.
       $form['value'] = array(
         '#type' => 'value',
-        '#value' => NULL
+        '#value' => NULL,
       );
     }
   }
@@ -185,7 +199,7 @@ class ldap_views_handler_filter extends views_handler_filter {
    * level of indirection. You will find them in $this->operator
    * and $this->value respectively.
    */
-  function query() {
+  public function query() {
     $this->ensure_my_table();
     $field = $this->real_field;
 
@@ -195,43 +209,73 @@ class ldap_views_handler_filter extends views_handler_filter {
     }
   }
 
-  function op_equal($field) {
+  /**
+   *
+   */
+  public function op_equal($field) {
     $this->query->add_where($this->options['group'], $field, $this->value, $this->operator);
   }
 
-  function op_contains($field) {
+  /**
+   *
+   */
+  public function op_contains($field) {
     $this->query->add_where($this->options['group'], $field, "*$this->value*", '=');
   }
 
-  function op_starts($field) {
+  /**
+   *
+   */
+  public function op_starts($field) {
     $this->query->add_where($this->options['group'], $field, "$this->value*", '=');
   }
 
-  function op_not_starts($field) {
+  /**
+   *
+   */
+  public function op_not_starts($field) {
     $this->query->add_where($this->options['group'], $field, "$this->value*", '!=');
   }
 
-  function op_ends($field) {
+  /**
+   *
+   */
+  public function op_ends($field) {
     $this->query->add_where($this->options['group'], $field, "*$this->value", '=');
   }
 
-  function op_not_ends($field) {
+  /**
+   *
+   */
+  public function op_not_ends($field) {
     $this->query->add_where($this->options['group'], $field, "*$this->value", '!=');
   }
 
-  function op_not($field) {
+  /**
+   *
+   */
+  public function op_not($field) {
     $this->query->add_where($this->options['group'], $field, "*$this->value*", '!=');
   }
 
-  function op_greater_eq($field) {
+  /**
+   *
+   */
+  public function op_greater_eq($field) {
     $this->query->add_where($this->options['group'], $field, $this->value, '>=');
   }
 
-  function op_less_eq($field) {
+  /**
+   *
+   */
+  public function op_less_eq($field) {
     $this->query->add_where($this->options['group'], $field, $this->value, '<=');
   }
 
-  function op_exists($field) {
+  /**
+   *
+   */
+  public function op_exists($field) {
     $this->query->add_where($this->options['group'], $field, '*', $this->operator == 'exists' ? '=' : '!=');
   }
 

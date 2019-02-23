@@ -135,7 +135,7 @@ class LdapUserConfAdmin extends LdapUserConf {
       '#options' => $this->drupalAcctProvisionServerOptions,
       '#description' => $this->drupalAcctProvisionServerDescription,
       '#states' => array(
-        'enabled' => array(   // action to take.
+        'enabled' => array(
           ':input[name=drupalAcctProvisionTriggers]' => array('value' => LDAP_USER_DRUPAL_USER_PROV_ON_AUTHENTICATE),
         ),
       ),
@@ -242,63 +242,6 @@ class LdapUserConfAdmin extends LdapUserConf {
       '#options' => $this->ldapEntryProvisionTriggersOptions,
       '#description' => $this->ldapEntryProvisionTriggersDescription
     );
-
-/**
-    $form['ws'] = array(
-      '#type' => 'fieldset',
-      '#title' => t('[Untested and Unfinished Code] REST Webservice for Provisioning and Synching.'),
-      '#collapsible' => TRUE,
-      '#collapsed' => !$this->wsEnabled,
-      '#description' => t('Once configured, this webservice can be used to trigger creation, synching, deletion, etc of an LDAP associated Drupal account.'),
-    );
-
-    $form['ws']['wsEnabled'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Enable REST Webservice'),
-      '#required' => FALSE,
-      '#default_value' => $this->wsEnabled,
-    );
-
-    $form['ws']['wsUserIps'] = array(
-      '#type' => 'textarea',
-      '#title' => t('Allowed IP Addresses to request webservice.'),
-      '#required' => FALSE,
-      '#default_value' => join("\n", $this->wsUserIps),
-      '#description' => t('One Per Line. The current server address is LOCAL_ADDR and the client ip requesting this page is REMOTE_ADDR .', $_SERVER),
-      '#cols' => 20,
-      '#rows' => 2,
-      '#states' => array(
-        'visible' => array(   // action to take.
-          ':input[name="wsEnabled"]' => array('checked' => TRUE),
-        ),
-      ),
-    );
-
-    if (!$this->wsKey) {
-      $urls = t('URLs are not available until a key is create a key and urls will be generated');
-    }
-    else {
-      $urls = theme('item_list',
-        array(
-          'items' => ldap_user_ws_urls_item_list(),
-          'title' => 'REST urls',
-          'type' => 'ul',
-        ));
-    }
-
-    $form['ws']['wsKey'] = array(
-      '#type' => 'textfield',
-      '#title' => t('Key for webservice'),
-      '#required' => FALSE,
-      '#default_value' => $this->wsKey,
-      '#description' => t('Any random string of characters.') . $urls,
-      '#states' => array(
-        'visible' => array(   // action to take.
-          ':input[name="wsEnabled"]' => array('checked' => TRUE),
-        ),
-      ),
-    );
-*/
 
     $form['basic_to_drupal']['server_mapping_preamble'] = array(
       '#type' => 'markup',
@@ -521,7 +464,8 @@ EOT;
       $to_ldap_entries_mappings_exist = FALSE;
       foreach ($this->ldapUserSynchMappings as $synch_direction => $mappings) {
         $map_index = array();
-        $tokens = array(); // array('%sid' => $sid);
+        // Format ['%sid' => $sid].
+        $tokens = array();
         $to_drupal_user_mappings_exist = FALSE;
         $to_ldap_entries_mappings_exist = FALSE;
 
@@ -556,19 +500,10 @@ EOT;
           if ($mapping['direction'] == LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER) {
             $row_id = $map_index[$mapping['user_attr']];
             $to_drupal_user_mappings_exist = TRUE;
-          //  if (!$is_drupal_user_prov_server) {
-           //   $errors['mappings__'. $sid] =  t('Mapping rows exist for provisioning to drupal user, but server %sid is not enabled for provisioning
-            //    to drupal users.', $tokens);
-          //  }
           }
           if ($mapping['direction'] == LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY) {
             $row_id = $map_index[$mapping['ldap_attr']];
             $to_ldap_entries_mappings_exist = TRUE;
-           // if (!$is_ldap_entry_prov_server) {
-            //  $errors['mappings__'. $sid] =  t('Mapping rows exist for provisioning to ldap entries,
-            //    but server %sid is not enabled for provisioning
-             //   to ldap entries.', $tokens);
-           // }
 
             if (count(array_keys($ldap_attribute_maps_in_token)) != 1) {
               $token_field_id = join('__', array('sm', 'user_tokens', $row_id));
@@ -623,13 +558,6 @@ EOT;
     $this->accountsWithSameEmail = ($values['accountsWithSameEmail']) ? (int)$values['accountsWithSameEmail'] : NULL;
     $this->acctCreation  = ($values['acctCreation']) ? (int)$values['acctCreation'] : NULL;
     $this->disableAdminPasswordField = $values['disableAdminPasswordField'];
-   // $this->wsKey  = ($values['wsKey']) ? $values['wsKey'] : NULL;
-
-   // $this->wsUserIps  = ($values['wsUserIps']) ? explode("\n", $values['wsUserIps']) : array();
-  //  foreach ($this->wsUserIps as $i => $ip) {
-  //    $this->wsUserIps[$i] = trim($ip);
-  //  }
-   // $this->wsEnabled  = ($values['wsEnabled']) ? (int)$values['wsEnabled'] : 0;
 
     $this->ldapUserSynchMappings = $this->synchMappingsFromForm($values, $storage);
 
@@ -903,7 +831,7 @@ EOT;
         '#maxlength' => 255,
         '#disabled' => ($action == 'nonconfigurable'),
         '#states' => array(
-          'visible' => array(   // action to take.
+          'visible' => array(
             ':input[name="' . $user_attr_input_id . '"]' => array('value' => 'user_tokens'),
           )
         ),

@@ -2,13 +2,12 @@
 
 /**
  * @file
- * Definition of ldap_views module
+ * Definition of ldap_views module.
  */
 
 /**
  * Implements hook_views_data().
  */
-
 function ldap_views_views_data() {
   $data['ldap']['table']['group'] = t('LDAP Query');
 
@@ -18,7 +17,7 @@ function ldap_views_views_data() {
     'help' => t('Data from LDAP Server.'),
     'query class' => 'ldap_views',
   );
-  // basedn
+  // Basedn.
   $data['ldap']['basedn'] = array(
     'title' => t('LDAP Base DN'),
     'help' => t('The LDAP search base entry'),
@@ -27,7 +26,7 @@ function ldap_views_views_data() {
     ),
   );
   // filter
-  // Generic column
+  // Generic column.
   $data['ldap']['attribute'] = array(
     'title' => t('LDAP Attribute'),
     'help' => t('An attribute in LDAP Server'),
@@ -90,20 +89,19 @@ function ldap_views_views_data() {
     ),
   );
 
-
   return $data;
 }
 
 /*
 Alternative to 'attribute' field: add fields here, but we need the qid. Alternative: bundles + entity fields
 function ldap_views_views_data_alter(&$data) {
-  $data['ldap']['example_field'] = array(
-    'title' => t('Example field'),
-    'help' => t('Some example content that references a user'),
-    'field' => array(
-      'handler' => 'ldap_views_handler_field',
-    ),
-  );
+$data['ldap']['example_field'] = array(
+'title' => t('Example field'),
+'help' => t('Some example content that references a user'),
+'field' => array(
+'handler' => 'ldap_views_handler_field',
+),
+);
 
 }
  */

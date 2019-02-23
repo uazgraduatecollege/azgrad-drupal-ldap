@@ -2,20 +2,21 @@
 
 /**
  * @file
- * LDAP Server Admin Class
- *
- *
+ * LDAP Server Admin Class.
  */
 
 module_load_include('php', 'ldap_servers', 'LdapServer.class');
-
+/**
+ *
+ */
 class LdapServerAdmin extends LdapServer {
 
   public $bindpw_new = FALSE;
   public $bindpw_clear = FALSE;
 
   /**
-   * @param $type = 'all', 'enabled'
+   * @param $type
+   *   = 'all', 'enabled'
    */
   public static function getLdapServerObjects($sid = NULL, $type = NULL, $class = 'LdapServer', $reset = FALSE) {
     $servers = array();
@@ -45,10 +46,16 @@ class LdapServerAdmin extends LdapServer {
 
   }
 
-  function __construct($sid) {
+  /**
+   *
+   */
+  public function __construct($sid) {
     parent::__construct($sid);
   }
 
+  /**
+   *
+   */
   protected function populateFromDrupalForm($op, $values) {
     $this->inDatabase = ($op == 'edit');
     $this->sid = trim($values['sid']);
@@ -92,16 +99,15 @@ class LdapServerAdmin extends LdapServer {
     $this->groupTestGroupDn = trim($values['grp_test_grp_dn']);
     $this->groupTestGroupDnWriteable = trim($values['grp_test_grp_dn_writeable']);
 
-
     $this->searchPagination = ($values['search_pagination']) ? 1 : 0;
     $this->searchPageSize = trim($values['search_page_size']);
 
   }
 
   /**
-   * @param string enum $op 'add', 'update'
+   * @param string enum $op
+   *   'add', 'update'.
    */
-
   public function save($op) {
 
     $values = new stdClass();
@@ -120,12 +126,12 @@ class LdapServerAdmin extends LdapServer {
       $values->bindpw = NULL;
     }
 
-    $values->tls = (int)$this->tls;
-    $values->followrefs = (int)$this->followrefs;
+    $values->tls = (int) $this->tls;
+    $values->followrefs = (int) $this->followrefs;
 
     if (module_exists('ctools')) {
       ctools_include('export');
-      // Populate our object with ctool's properties
+      // Populate our object with ctool's properties.
       $object = ctools_export_crud_new('ldap_servers');
 
       foreach ($object as $property => $value) {
@@ -138,15 +144,18 @@ class LdapServerAdmin extends LdapServer {
       try {
         $values->export_type = NULL;
         $result = ctools_export_crud_save('ldap_servers', $values);
-      } catch (Exception $e) {
+      }
+      catch (Exception $e) {
         $values->export_type = EXPORT_IN_DATABASE;
         $result = ctools_export_crud_save('ldap_servers', $values);
       }
-      
-      ctools_export_load_object_reset('ldap_servers'); // ctools_export_crud_save doesn't invalidate cache
+
+      // ctools_export_crud_save doesn't invalidate cache.
+      ctools_export_load_object_reset('ldap_servers');
 
     }
-    else { // directly via db
+    // Directly via db.
+    else {
       unset($values->numeric_sid);
       if ($op == 'add') {
         $result = drupal_write_record('ldap_servers', $values);
@@ -166,12 +175,16 @@ class LdapServerAdmin extends LdapServer {
     }
   }
 
+  /**
+   *
+   */
   public function delete($sid) {
     if ($sid == $this->sid) {
       $result = db_delete('ldap_servers')->condition('sid', $sid)->execute();
       if (module_exists('ctools')) {
         ctools_include('export');
-        ctools_export_load_object_reset('ldap_servers'); // invalidate cache
+        // Invalidate cache.
+        ctools_export_load_object_reset('ldap_servers');
       }
       $this->inDatabase = FALSE;
       return $result;
@@ -180,66 +193,73 @@ class LdapServerAdmin extends LdapServer {
       return FALSE;
     }
   }
+
+  /**
+   *
+   */
   public function getLdapServerActions() {
-    $switch = ($this->status ) ? 'disable' : 'enable';
+    $switch = ($this->status) ? 'disable' : 'enable';
     $actions = array();
     $actions[] = l(t('edit'), LDAP_SERVERS_MENU_BASE_PATH . '/servers/edit/' . $this->sid);
     if (property_exists($this, 'type')) {
       if ($this->type == 'Overridden') {
-          $actions[] = l(t('revert'), LDAP_SERVERS_MENU_BASE_PATH . '/servers/delete/' . $this->sid);
+        $actions[] = l(t('revert'), LDAP_SERVERS_MENU_BASE_PATH . '/servers/delete/' . $this->sid);
       }
       if ($this->type == 'Normal') {
-          $actions[] = l(t('delete'), LDAP_SERVERS_MENU_BASE_PATH . '/servers/delete/' . $this->sid);
+        $actions[] = l(t('delete'), LDAP_SERVERS_MENU_BASE_PATH . '/servers/delete/' . $this->sid);
       }
     }
     else {
-        $actions[] = l(t('delete'), LDAP_SERVERS_MENU_BASE_PATH . '/servers/delete/' . $this->sid);
+      $actions[] = l(t('delete'), LDAP_SERVERS_MENU_BASE_PATH . '/servers/delete/' . $this->sid);
     }
     $actions[] = l(t('test'), LDAP_SERVERS_MENU_BASE_PATH . '/servers/test/' . $this->sid);
     $actions[] = l($switch, LDAP_SERVERS_MENU_BASE_PATH . '/servers/' . $switch . '/' . $this->sid);
     return $actions;
   }
 
+  /**
+   *
+   */
   public function drupalForm($op) {
 
-  $form['server'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Connection settings'),
-    '#collapsible' => TRUE,
-    '#collapsed' => TRUE,
-  );
+    $form['server'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Connection settings'),
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+    );
 
-  $form['bind_method'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Binding Method'),
-    '#description' => t('How the Drupal system is authenticated by the LDAP server.'),
-    '#collapsible' => TRUE,
-    '#collapsed' => TRUE,
-  );
+    $form['bind_method'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Binding Method'),
+      '#description' => t('How the Drupal system is authenticated by the LDAP server.'),
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+    );
 
-  $form['users'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('LDAP User to Drupal User Relationship'),
-    '#description' => t('How are LDAP user entries found based on Drupal username or email?  And vice-versa?
+    $form['users'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('LDAP User to Drupal User Relationship'),
+      '#description' => t('How are LDAP user entries found based on Drupal username or email?  And vice-versa?
        Needed for LDAP Authentication and Authorization functionality.'),
-    '#collapsible' => TRUE,
-    '#collapsed' => TRUE,
-  );
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+    );
 
-  $form['groups'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('LDAP Group Configuration'),
-    '#description' => t('How are groups defined on your LDAP server?  This varies slightly from one LDAP implementation to another
+    $form['groups'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('LDAP Group Configuration'),
+      '#description' => t('How are groups defined on your LDAP server?  This varies slightly from one LDAP implementation to another
       such as Active Directory, Novell, OpenLDAP, etc. Check everything that is true and enter all the values you know.'),
-    '#collapsible' => TRUE,
-    '#collapsed' => TRUE,
-  );
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+    );
 
-  $supports = (ldap_servers_php_supports_pagination()) ? t('support pagination!') : t('NOT support pagination.');
-  $form['pagination'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('LDAP Pagination'),
-    '#description' => t('In PHP 5.4, pagination is supported in ldap queries.
+    $supports = (ldap_servers_php_supports_pagination()) ? t('support pagination!') : t('NOT support pagination.');
+    $form['pagination'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('LDAP Pagination'),
+      '#description' => t('In PHP 5.4, pagination is supported in ldap queries.
       A patch to earlier versions of PHP also supports this.')
       . ' <strong>' . t('This PHP installation appears to') . ' ' . $supports . '</strong> '
       . '<p>' . t('The advantage to pagination support is that if an ldap server is setup to return only
@@ -249,78 +269,79 @@ class LdapServerAdmin extends LdapServer {
       Pagination is most useful when large queries for batch creating or
       synching accounts are used.  If you are not using this server for such
       tasks, its recommended to leave pagination disabled.') . '</p>',
-    '#collapsible' => TRUE,
-    '#collapsed' => !ldap_servers_php_supports_pagination(),
-  );
+      '#collapsible' => TRUE,
+      '#collapsed' => !ldap_servers_php_supports_pagination(),
+    );
 
+    $field_to_prop_maps = $this->field_to_properties_map();
+    foreach ($this->fields() as $field_id => $field) {
+      if (isset($field['form'])) {
 
-  $field_to_prop_maps = $this->field_to_properties_map();
-  foreach ($this->fields() as $field_id => $field) {
-    if (isset($field['form'])) {
-
-      if (!isset($field['form']['required']) && isset($field['schema']['not null']) && $field['form']['#type'] != 'checkbox') {
-        $field['form']['#required'] = (boolean)$field['schema']['not null'];
-      }
-      if (isset($field['schema']['length']) && !isset($field['form']['#maxlength'])) {
-        $field['form']['#maxlength'] = $field['schema']['length'];
-      }
-      if (isset($field_to_prop_maps[$field_id])) {
-        $field['form']['#default_value'] = $this->{$field_to_prop_maps[$field_id]};
-      }
-      $fieldset = @$field['form']['fieldset'];
-      if ($fieldset) {
-        unset($field['form']['fieldset']);
-        $form[$fieldset][$field_id] = $field['form'];
-      }
-      else {
-        $form[$field_id] = $field['form'];
+        if (!isset($field['form']['required']) && isset($field['schema']['not null']) && $field['form']['#type'] != 'checkbox') {
+          $field['form']['#required'] = (boolean) $field['schema']['not null'];
+        }
+        if (isset($field['schema']['length']) && !isset($field['form']['#maxlength'])) {
+          $field['form']['#maxlength'] = $field['schema']['length'];
+        }
+        if (isset($field_to_prop_maps[$field_id])) {
+          $field['form']['#default_value'] = $this->{$field_to_prop_maps[$field_id]};
+        }
+        $fieldset = @$field['form']['fieldset'];
+        if ($fieldset) {
+          unset($field['form']['fieldset']);
+          $form[$fieldset][$field_id] = $field['form'];
+        }
+        else {
+          $form[$field_id] = $field['form'];
+        }
       }
     }
-  }
 
-  $form['server']['sid']['#disabled'] = ($op == 'edit');
+    $form['server']['sid']['#disabled'] = ($op == 'edit');
 
-  if (!function_exists('ldap_set_rebind_proc')) {
-    $form['server']['followrefs']['#disabled'] = TRUE;
-    $form['server']['followrefs']['#description'] = t('This functionality is disabled because the function ldap_set_rebind_proc can not be found on this server.  Perhaps your version of php does not have this function.  See php.net/manual/en/function.ldap-set-rebind-proc.php') . $form['server']['followrefs']['#description'];
-  }
+    if (!function_exists('ldap_set_rebind_proc')) {
+      $form['server']['followrefs']['#disabled'] = TRUE;
+      $form['server']['followrefs']['#description'] = t('This functionality is disabled because the function ldap_set_rebind_proc can not be found on this server.  Perhaps your version of php does not have this function.  See php.net/manual/en/function.ldap-set-rebind-proc.php') . $form['server']['followrefs']['#description'];
+    }
 
-  $form['server']['tls']['#required'] = FALSE;
-  $form['server']['followrefs']['#required'] = FALSE;
-  $form['bind_method']['bind_method']['#default_value'] = ($this->bind_method) ? $this->bind_method : LDAP_SERVERS_BIND_METHOD_DEFAULT;
-  $form['users']['basedn']['#default_value'] = $this->arrayToLines($this->basedn);
+    $form['server']['tls']['#required'] = FALSE;
+    $form['server']['followrefs']['#required'] = FALSE;
+    $form['bind_method']['bind_method']['#default_value'] = ($this->bind_method) ? $this->bind_method : LDAP_SERVERS_BIND_METHOD_DEFAULT;
+    $form['users']['basedn']['#default_value'] = $this->arrayToLines($this->basedn);
 
-  if ($this->bindpw) {
-    $pwd_directions = t('You currently have a password stored in the database.
+    if ($this->bindpw) {
+      $pwd_directions = t('You currently have a password stored in the database.
       Leave password field empty to leave password unchanged.  Enter a new password
       to replace the current password.  Check the checkbox below to simply
       remove it from the database.');
-    $pwd_class = 'ldap-pwd-present';
-  }
-  else {
-    $pwd_directions = t('No password is currently stored in the database.
-      If you are using a service account, enter one.');
-    if ($this->bind_method == LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT) {
-      $pwd_class = 'ldap-pwd-abscent';
+      $pwd_class = 'ldap-pwd-present';
     }
     else {
-      $pwd_class = 'ldap-pwd-not-applicable';
+      $pwd_directions = t('No password is currently stored in the database.
+      If you are using a service account, enter one.');
+      if ($this->bind_method == LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT) {
+        $pwd_class = 'ldap-pwd-abscent';
+      }
+      else {
+        $pwd_class = 'ldap-pwd-not-applicable';
+      }
     }
+
+    $action = ($op == 'add') ? 'Add' : 'Update';
+    $form['submit'] = array(
+      '#type' => 'submit',
+      '#value' => $action,
+      '#weight' => 100,
+    );
+
+    return $form;
+
   }
 
-  $action = ($op == 'add') ? 'Add' : 'Update';
-  $form['submit'] = array(
-    '#type' => 'submit',
-    '#value' => $action,
-    '#weight' => 100,
-  );
-
-  return $form;
-
-  }
-
-
-  public function drupalFormValidate($op, $values)  {
+  /**
+   *
+   */
+  public function drupalFormValidate($op, $values) {
     $errors = array();
 
     if ($op == 'delete') {
@@ -332,7 +353,6 @@ class LdapServerAdmin extends LdapServer {
         $errors['status'] = join("<br/>", array_values($warnings));
       }
 
-
     }
     else {
       $this->populateFromDrupalForm($op, $values);
@@ -341,6 +361,9 @@ class LdapServerAdmin extends LdapServer {
     return $errors;
   }
 
+  /**
+   *
+   */
   protected function validate($op) {
     $errors = array();
     if ($op == 'add') {
@@ -357,13 +380,13 @@ class LdapServerAdmin extends LdapServer {
       }
     }
 
-    if ($this->status == 0) { // check that no modules use this server
+    // Check that no modules use this server.
+    if ($this->status == 0) {
       $warnings = module_invoke_all('ldap_server_in_use', $this->sid, $this->name);
       if (count($warnings)) {
         $errors['status'] = join("<br/>", array_values($warnings));
       }
     }
-
 
     if (!is_numeric($this->port)) {
       $errors['port'] = t('The TCP/IP port must be an integer.');
@@ -391,7 +414,10 @@ class LdapServerAdmin extends LdapServer {
     return $errors;
   }
 
-public function drupalFormWarnings($op, $values, $has_errors = NULL)  {
+  /**
+   *
+   */
+  public function drupalFormWarnings($op, $values, $has_errors = NULL) {
     $errors = array();
 
     if ($op == 'delete') {
@@ -406,8 +432,10 @@ public function drupalFormWarnings($op, $values, $has_errors = NULL)  {
     return $warnings;
   }
 
-
-protected function warnings($op, $has_errors = NULL) {
+  /**
+   *
+   */
+  protected function warnings($op, $has_errors = NULL) {
 
     $warnings = array();
     if ($this->ldap_type) {
@@ -424,73 +452,42 @@ protected function warnings($op, $has_errors = NULL) {
           for your particular LDAP.', $tokens);
       }
     }
-  //  if (!$this->status && $has_errors != TRUE) {
-    //  $warnings['status'] =  t('This server configuration is currently disabled.');
-   // }
-
     if (!$this->mail_attr && !$this->mail_template) {
       $warnings['mail_attr'] = t('Mail attribute or Mail Template should be used for most user account functionality.');
     }
 
-   // commented out validation because too many false positives present usability errors.
-   // if ($this->bind_method == LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT) { // Only for service account
-     // $result = ldap_baddn($this->binddn, t('Service Account DN'));
-     // if ($result['boolean'] == FALSE) {
-     //   $warnings['binddn'] =  $result['text'];
-     // }
-   // }
-
-   // foreach ($this->basedn as $basedn) {
-    //  $result = ldap_baddn($basedn, t('User Base DN'));
-     // if ($result['boolean'] == FALSE) {
-     //   $warnings['basedn'] =  $result['text'];
-    //  }
-   // }
-
-   // $result = ldap_badattr($this->user_attr, t('User attribute'));
-   // if ($result['boolean'] == FALSE) {
-    //  $warnings['user_attr'] =  $result['text'];
-   // }
-
-   // if ($this->mail_attr) {
-  //    $result = ldap_badattr($this->mail_attr, t('Mail attribute'));
-   //   if ($result['boolean'] == FALSE) {
-    //    $warnings['mail_attr'] =  $result['text'];
-   //   }
-  //  }
-
-   // $result = ldap_badattr($this->unique_persistent_attr, t('Unique Persistent Attribute'));
-   // if ($result['boolean'] == FALSE) {
-    //  $warnings['unique_persistent_attr'] =  $result['text'];
-   // }
-
     return $warnings;
   }
 
-public function drupalFormSubmit($op, $values) {
+  /**
+   *
+   */
+  public function drupalFormSubmit($op, $values) {
 
-  $this->populateFromDrupalForm($op, $values);
+    $this->populateFromDrupalForm($op, $values);
 
-  if ($values['clear_bindpw']) {
-    $this->bindpw_clear = TRUE;
-  }
-
-  if ($op == 'delete') {
-    $this->delete($this);
-  }
-  else { // add or edit
-    try {
-      $save_result = $this->save($op);
+    if ($values['clear_bindpw']) {
+      $this->bindpw_clear = TRUE;
     }
-    catch (Exception $e) {
-      $this->setError('Save Error',
+
+    if ($op == 'delete') {
+      $this->delete($this);
+    }
+    // Add or edit.
+    else {
+      try {
+        $save_result = $this->save($op);
+      }
+      catch (Exception $e) {
+        $this->setError('Save Error',
         t('Failed to save object.  Your form data was not saved.'));
+      }
     }
   }
-}
 
-
-
+  /**
+   *
+   */
   protected function arrayToLines($array) {
     $lines = "";
     if (is_array($array)) {
@@ -502,6 +499,9 @@ public function drupalFormSubmit($op, $values) {
     return $lines;
   }
 
+  /**
+   *
+   */
   protected function linesToArray($lines) {
     $lines = trim($lines);
 
@@ -517,10 +517,12 @@ public function drupalFormSubmit($op, $values) {
     return $array;
   }
 
-
+  /**
+   *
+   */
   public static function fields() {
 
-     /**
+    /**
      * consumer_type is tag (unique alphanumeric id) of consuming authorization such as
      *   drupal_roles, og_groups, civicrm_memberships
      */
@@ -539,10 +541,10 @@ public function drupalFormSubmit($op, $values) {
           'type' => 'varchar',
           'length' => 20,
           'not null' => TRUE,
-        )
+        ),
       ),
 
-     'numeric_sid' => array(
+      'numeric_sid' => array(
         'schema' => array(
           'type' => 'serial',
           'unsigned' => TRUE,
@@ -646,16 +648,16 @@ public function drupalFormSubmit($op, $values) {
 
       'followrefs' => array(
         'form' => array(
-           'fieldset' => 'server',
-           '#type' => 'checkbox',
-           '#title' => t('Follow LDAP Referrals'),
-           '#description' => t('Makes the LDAP client follow referrals (in the responses from the LDAP server) to other LDAP servers. This requires that the Bind Settings you give, is ALSO valid on these other servers.'),
-          ),
+          'fieldset' => 'server',
+          '#type' => 'checkbox',
+          '#title' => t('Follow LDAP Referrals'),
+          '#description' => t('Makes the LDAP client follow referrals (in the responses from the LDAP server) to other LDAP servers. This requires that the Bind Settings you give, is ALSO valid on these other servers.'),
+        ),
         'schema' => array(
-           'type' => 'int',
-           'size' => 'tiny',
-           'not null' => FALSE,
-           'default' => 0,
+          'type' => 'int',
+          'size' => 'tiny',
+          'not null' => FALSE,
+          'default' => 0,
         ),
       ),
 
@@ -694,18 +696,17 @@ public function drupalFormSubmit($op, $values) {
         ),
       ),
 
-    'binding_service_acct' => array(
-      'form' => array(
-        'fieldset' => 'bind_method',
-        '#type' => 'markup',
-        '#markup' => t('<label>Service Account</label> Some LDAP configurations
+      'binding_service_acct' => array(
+        'form' => array(
+          'fieldset' => 'bind_method',
+          '#type' => 'markup',
+          '#markup' => t('<label>Service Account</label> Some LDAP configurations
           prohibit or restrict the results of anonymous searches. These LDAPs require a DN//password pair
           for binding. For security reasons, this pair should belong to an
           LDAP account with stripped down permissions.
           This is also required for provisioning LDAP accounts and groups!'),
         ),
       ),
-
 
       'binddn' => array(
         'form' => array(
@@ -714,10 +715,10 @@ public function drupalFormSubmit($op, $values) {
           '#title' => t('DN for non-anonymous search'),
           '#size' => 80,
           '#states' => array(
-             'enabled' => array(   // action to take.
-               ':input[name=bind_method]' => array('value' => (string)LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT),
-              ),
+            'enabled' => array(
+              ':input[name=bind_method]' => array('value' => (string) LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT),
             ),
+          ),
         ),
         'schema' => array(
           'type' => 'varchar',
@@ -732,10 +733,10 @@ public function drupalFormSubmit($op, $values) {
           '#title' => t('Password for non-anonymous search'),
           '#size' => 20,
           '#states' => array(
-             'enabled' => array(   // action to take.
-               ':input[name=bind_method]' => array('value' => (string)LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT),
-              ),
+            'enabled' => array(
+              ':input[name=bind_method]' => array('value' => (string) LDAP_SERVERS_BIND_METHOD_SERVICE_ACCT),
             ),
+          ),
         ),
         'schema' => array(
           'type' => 'varchar',
@@ -837,21 +838,21 @@ public function drupalFormSubmit($op, $values) {
         ),
       ),
 
-    'picture_attr' => array(
-      		'form' => array(
-      				'fieldset' => 'users',
-      				'#type' => 'textfield',
-      				'#size' => 30,
-      				'#title' => t('Thumbnail attribute'),
-      				'#description' => t('The attribute that holds the users\' thumnail image. (eg. <code>thumbnailPhoto</code>). Leave empty if no such attribute exists'),
-      		),
-      		'schema' => array(
-      				'type' => 'varchar',
-      				'length' => 255,
-      				'not null' => FALSE,
-      		),
+      'picture_attr' => array(
+        'form' => array(
+          'fieldset' => 'users',
+          '#type' => 'textfield',
+          '#size' => 30,
+          '#title' => t('Thumbnail attribute'),
+          '#description' => t('The attribute that holds the users\' thumnail image. (eg. <code>thumbnailPhoto</code>). Leave empty if no such attribute exists'),
+        ),
+        'schema' => array(
+          'type' => 'varchar',
+          'length' => 255,
+          'not null' => FALSE,
+        ),
       ),
-  
+
       'unique_persistent_attr' => array(
         'form' => array(
           'fieldset' => 'users',
@@ -864,7 +865,7 @@ public function drupalFormSubmit($op, $values) {
             enter a unique and persistent ldap attribute for users.  In cases
             where DN does not change, enter "dn" here.
             If no such attribute exists, leave this blank.'
-            ),
+          ),
         ),
         'schema' => array(
           'type' => 'varchar',
@@ -925,7 +926,7 @@ public function drupalFormSubmit($op, $values) {
             Careful, bad PHP code here will break your site. If left empty, no name transformation will be done.
             <br/>Example:<br/>Given the user will logon with jdoe@xyz.com and you want the ldap UserName attribute to be
             jdoe.<br/><code>$parts = explode(\'@\', $name); if (count($parts) == 2) {print $parts[0]};</code>'),
-          ),
+        ),
         'schema' => array(
           'type' => 'varchar',
           'length' => 1024,
@@ -933,7 +934,7 @@ public function drupalFormSubmit($op, $values) {
         ),
       ),
 
-     'testing_drupal_username' => array(
+      'testing_drupal_username' => array(
         'form' => array(
           'fieldset' => 'users',
           '#type' => 'textfield',
@@ -948,7 +949,7 @@ public function drupalFormSubmit($op, $values) {
         ),
       ),
 
-     'testing_drupal_user_dn' => array(
+      'testing_drupal_user_dn' => array(
         'form' => array(
           'fieldset' => 'users',
           '#type' => 'textfield',
@@ -978,7 +979,7 @@ public function drupalFormSubmit($op, $values) {
         ),
       ),
 
-     'grp_object_cat' => array(
+      'grp_object_cat' => array(
         'form' => array(
           'fieldset' => 'groups',
           '#type' => 'textfield',
@@ -986,10 +987,10 @@ public function drupalFormSubmit($op, $values) {
           '#title' => t('Name of Group Object Class'),
           '#description' => t('e.g. groupOfNames, groupOfUniqueNames, group.'),
           '#states' => array(
-              'visible' => array(   // action to take.
-                ':input[name=grp_unused]' => array('checked' => FALSE),
-              ),
+            'visible' => array(
+              ':input[name=grp_unused]' => array('checked' => FALSE),
             ),
+          ),
         ),
         'schema' => array(
           'type' => 'varchar',
@@ -1008,10 +1009,10 @@ public function drupalFormSubmit($op, $values) {
              user should be considered to be in group A and B.  If your LDAP has nested groups, but you
              want to ignore nesting, leave this unchecked.'),
           '#states' => array(
-              'visible' => array(   // action to take.
-                ':input[name=grp_unused]' => array('checked' => FALSE),
-              ),
+            'visible' => array(
+              ':input[name=grp_unused]' => array('checked' => FALSE),
             ),
+          ),
         ),
         'schema' => array(
           'type' => 'int',
@@ -1029,10 +1030,10 @@ public function drupalFormSubmit($op, $values) {
             Active Directory and openLdap with memberOf overlay fit this model.'),
           '#disabled' => FALSE,
           '#states' => array(
-             'visible' => array(   // action to take.
-               ':input[name=grp_unused]' => array('checked' => FALSE),
-              ),
+            'visible' => array(
+              ':input[name=grp_unused]' => array('checked' => FALSE),
             ),
+          ),
         ),
         'schema' => array(
           'type' => 'int',
@@ -1050,10 +1051,10 @@ public function drupalFormSubmit($op, $values) {
           '#title' => t('Attribute in User Entry Containing Groups'),
           '#description' => t('e.g. memberOf'),
           '#states' => array(
-            'enabled' => array(   // action to take.
+            'enabled' => array(
               ':input[name=grp_user_memb_attr_exists]' => array('checked' => TRUE),
             ),
-              'visible' => array(   // action to take.
+            'visible' => array(
               ':input[name=grp_unused]' => array('checked' => FALSE),
             ),
           ),
@@ -1073,10 +1074,10 @@ public function drupalFormSubmit($op, $values) {
           '#title' => t('LDAP Group Entry Attribute Holding User\'s DN, CN, etc.'),
           '#description' => t('e.g uniquemember, memberUid'),
           '#states' => array(
-              'visible' => array(   // action to take.
-                ':input[name=grp_unused]' => array('checked' => FALSE),
-              ),
+            'visible' => array(
+              ':input[name=grp_unused]' => array('checked' => FALSE),
             ),
+          ),
         ),
         'schema' => array(
           'type' => 'varchar',
@@ -1093,10 +1094,10 @@ public function drupalFormSubmit($op, $values) {
           '#title' => t('User attribute held in "LDAP Group Entry Attribute Holding..."'),
           '#description' => t('This is almost always "dn" (which technically isn\'t an attribute).  Sometimes its "cn".'),
           '#states' => array(
-              'visible' => array(   // action to take.
-                ':input[name=grp_unused]' => array('checked' => FALSE),
-              ),
+            'visible' => array(
+              ':input[name=grp_unused]' => array('checked' => FALSE),
             ),
+          ),
         ),
         'schema' => array(
           'type' => 'varchar',
@@ -1110,15 +1111,15 @@ public function drupalFormSubmit($op, $values) {
           'fieldset' => 'groups',
           '#type' => 'checkbox',
           '#title' => t('Groups are derived from user\'s LDAP entry DN.') . '<em>' .
-            t('This
+          t('This
             group definition has very limited functionality and most modules will
             not take this into account.  LDAP Authorization will.') . '</em>',
           '#disabled' => FALSE,
           '#states' => array(
-              'visible' => array(   // action to take.
-                ':input[name=grp_unused]' => array('checked' => FALSE),
-              ),
+            'visible' => array(
+              ':input[name=grp_unused]' => array('checked' => FALSE),
             ),
+          ),
         ),
         'schema' => array(
           'type' => 'int',
@@ -1136,10 +1137,10 @@ public function drupalFormSubmit($op, $values) {
           '#title' => t('Attribute of the User\'s LDAP Entry DN which contains the group'),
           '#description' => t('e.g. ou'),
           '#states' => array(
-            'enabled' => array(   // action to take.
+            'enabled' => array(
               ':input[name=grp_derive_from_dn]' => array('checked' => TRUE),
             ),
-              'visible' => array(   // action to take.
+            'visible' => array(
               ':input[name=grp_unused]' => array('checked' => FALSE),
             ),
           ),
@@ -1151,7 +1152,7 @@ public function drupalFormSubmit($op, $values) {
         ),
       ),
 
-     'grp_test_grp_dn' => array(
+      'grp_test_grp_dn' => array(
         'form' => array(
           'fieldset' => 'groups',
           '#type' => 'textfield',
@@ -1159,10 +1160,10 @@ public function drupalFormSubmit($op, $values) {
           '#title' => t('Testing LDAP Group DN'),
           '#description' => t('This is optional and can be useful for debugging and validating forms.'),
           '#states' => array(
-              'visible' => array(   // action to take.
-                ':input[name=grp_unused]' => array('checked' => FALSE),
-              ),
+            'visible' => array(
+              ':input[name=grp_unused]' => array('checked' => FALSE),
             ),
+          ),
         ),
         'schema' => array(
           'type' => 'varchar',
@@ -1171,7 +1172,7 @@ public function drupalFormSubmit($op, $values) {
         ),
       ),
 
-     'grp_test_grp_dn_writeable' => array(
+      'grp_test_grp_dn_writeable' => array(
         'form' => array(
           'fieldset' => 'groups',
           '#type' => 'textfield',
@@ -1179,10 +1180,10 @@ public function drupalFormSubmit($op, $values) {
           '#title' => t('Testing LDAP Group DN that is writable.  WARNING the test script for the server will create, delete, and add members to this group!'),
           '#description' => t('This is optional and can be useful for debugging and validating forms.'),
           '#states' => array(
-              'visible' => array(   // action to take.
-                ':input[name=grp_unused]' => array('checked' => FALSE),
-              ),
+            'visible' => array(
+              ':input[name=grp_unused]' => array('checked' => FALSE),
             ),
+          ),
         ),
         'schema' => array(
           'type' => 'varchar',
@@ -1206,7 +1207,7 @@ public function drupalFormSubmit($op, $values) {
         ),
       ),
 
-     'search_page_size' => array(
+      'search_page_size' => array(
         'form' => array(
           'fieldset' => 'pagination',
           '#type' => 'textfield',
@@ -1219,10 +1220,10 @@ public function drupalFormSubmit($op, $values) {
             or LDAP Feeds will be allowed to set a smaller page size, but not
             a larger one.'),
           '#states' => array(
-            'visible' => array(   // action to take.
+            'visible' => array(
               ':input[name="search_pagination"]' => array('checked' => TRUE),
             ),
-      ),
+          ),
         ),
         'schema' => array(
           'type' => 'int',
@@ -1242,7 +1243,8 @@ public function drupalFormSubmit($op, $values) {
 
     );
 
-  return $fields;
+    return $fields;
 
   }
+
 }

@@ -254,7 +254,6 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
             $_authorizations = array_diff($_authorizations, array(drupal_strtolower($map_from)));
             // Add mapped authorization.
             $_authorizations[] = $map_to;
-            // Remove map from;.
           }
         }
       }

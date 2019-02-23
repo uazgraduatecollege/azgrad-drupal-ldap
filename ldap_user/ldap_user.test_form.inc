@@ -17,7 +17,6 @@
  * @return
  *   The form structure.
  */
-
 function ldap_user_test_form($form, &$form_state, $op = NULL) {
 
   $username = @$_SESSION['ldap_user_test_form']['testing_drupal_username'];
@@ -38,31 +37,31 @@ function ldap_user_test_form($form, &$form_state, $op = NULL) {
   );
 
   $form['test_mode'] = array(
-      '#type' => 'radios',
-      '#title' => t('Testing Mode'),
-      '#required' => 0,
-      '#default_value' => isset( $_SESSION['ldap_user_test_form']['test_mode']) ? $_SESSION['ldap_user_test_form']['test_mode'] : 'query',
-      '#options' => array(
-        'query' => t('Test Query.  Will not alter anything in drupal or LDAP'),
-        'execute' => t('Execute Action.  Will perform provisioning configured for events below.  If this is selected only one action should be selected below'),
-      ),
-    );
+    '#type' => 'radios',
+    '#title' => t('Testing Mode'),
+    '#required' => 0,
+    '#default_value' => isset($_SESSION['ldap_user_test_form']['test_mode']) ? $_SESSION['ldap_user_test_form']['test_mode'] : 'query',
+    '#options' => array(
+      'query' => t('Test Query.  Will not alter anything in drupal or LDAP'),
+      'execute' => t('Execute Action.  Will perform provisioning configured for events below.  If this is selected only one action should be selected below'),
+    ),
+  );
 
   $synch_trigger_options = ldap_user_synch_triggers_key_values();
 
   $selected_actions = isset($_SESSION['ldap_user_test_form']['action']) ? $_SESSION['ldap_user_test_form']['action'] : array();
   $form['action'] = array(
-      '#type' => 'checkboxes',
-      '#title' => t('Actions/Event Handlers to Test'),
-      '#required' => 0,
-      '#default_value' => $selected_actions,
-      '#options' => $synch_trigger_options,
-      '#states' => array(
-        'visible' => array(   // action to take.
-          ':input[name="wsEnabled"]' => array('checked' => TRUE),
-        ),
+    '#type' => 'checkboxes',
+    '#title' => t('Actions/Event Handlers to Test'),
+    '#required' => 0,
+    '#default_value' => $selected_actions,
+    '#options' => $synch_trigger_options,
+    '#states' => array(
+      'visible' => array(
+        ':input[name="wsEnabled"]' => array('checked' => TRUE),
       ),
-    );
+    ),
+  );
 
   $form['submit'] = array(
     '#type' => 'submit',
@@ -73,12 +72,14 @@ function ldap_user_test_form($form, &$form_state, $op = NULL) {
   return $form;
 }
 
+/**
+ *
+ */
 function ldap_user_test_form_validate($form, &$form_state) {
   if ($form_state['values']['test_mode'] == 'execute'  &&
-    count(array_filter($form_state['values']['action'])) > 1 ) {
+    count(array_filter($form_state['values']['action'])) > 1) {
     form_set_error('test_mode', t('Only one action may be selected for "Execute Action" testing mode.'));
   }
-
 
 }
 
@@ -128,7 +129,8 @@ function ldap_user_test_form_submit($form, &$form_state) {
     }
     else {
       $authmaps = 'No authmaps available.  Authmaps only shown if user account exists beforehand';
-      $user_object = new stdClass(); // need for testing.
+      // Need for testing.
+      $user_object = new stdClass();
       $user_object->name = $username;
     }
     $results['User Authmap'] = $authmaps;
@@ -161,7 +163,7 @@ function ldap_user_test_form_submit($form, &$form_state) {
         }
       }
     }
-    // do all synchs second, in case logic of form changes to allow executing mulitple events
+    // Do all synchs second, in case logic of form changes to allow executing mulitple events.
     foreach (array_filter($selected_actions) as $i => $synch_trigger) {
       $synch_trigger_description = $synch_trigger_options[$synch_trigger];
       foreach (array(LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER, LDAP_USER_PROV_DIRECTION_TO_LDAP_ENTRY) as $direction) {
@@ -170,7 +172,8 @@ function ldap_user_test_form_submit($form, &$form_state) {
             $discard = $ldap_user_conf->synchToDrupalAccount(NULL, $user_edit, NULL, $test_query);
             $results['synchToDrupalAccount method results']["context = $synch_trigger_description"]['proposed'] = $user_edit;
           }
-          else { // to ldap
+          // To ldap.
+          else {
             $provision_result = $ldap_user_conf->synchToLdapEntry($user_object, $user_edit, array(), $test_query);
             $results['synchToLdapEntry method results']["context = $synch_trigger_description"] = $provision_result;
           }
@@ -179,13 +182,13 @@ function ldap_user_test_form_submit($form, &$form_state) {
           if ($direction == LDAP_USER_PROV_DIRECTION_TO_DRUPAL_USER) {
             $results['synchToDrupalAccount method results']["context = $synch_trigger_description"] = 'Not enabled.';
           }
-          else { // to ldap
+          // To ldap.
+          else {
             $results['synchToLdapEntry method results']["context = $synch_trigger_description"] = 'Not enabled.';
           }
         }
       }
     }
-
 
     if (function_exists('dpm')) {
       dpm($results);

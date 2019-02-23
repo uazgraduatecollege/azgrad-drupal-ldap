@@ -2,22 +2,18 @@
 
 /**
  * @file
- * cron relate functions
- *
+ * Cron relate functions.
  */
 
 /**
- * function to respond to ldap associated drupal accounts which no
- * longer have a related LDAP entry
+ * Function to respond to ldap associated drupal accounts which no
+ * longer have a related LDAP entry.
  *
  * @param LdapUserConf $ldap_user_conf
  *
  * @return boolean FALSE on error or incompletion or TRUE otherwise
  */
 function _ldap_user_orphans($ldap_user_conf) {
-
-  // return TRUE; // this is untested code
-
   if (!$ldap_user_conf->orphanedDrupalAcctBehavior ||
     $ldap_user_conf->orphanedDrupalAcctBehavior == 'ldap_user_orphan_do_not_check') {
     return TRUE;
@@ -43,16 +39,17 @@ function _ldap_user_orphans($ldap_user_conf) {
     ->propertyCondition('status', 1)
     ->propertyOrderBy('uid', 'ASC')
     ->range(0, $ldap_user_conf->orphanedCheckQty)
-    ->addMetaData('account', user_load(1)); // run the query as user 1
+  // Run the query as user 1.
+    ->addMetaData('account', user_load(1));
   $result = $query->execute();
 
   $email_list = array();
   $ldap_servers = ldap_servers_get_servers(NULL, 'enabled');
   $watchdogs_sids_missing_watchdogged = array();
   /**
-   * first produce array of form:
-   *  $drupal_users[$sid][$puid_attr][$puid]['exists'] = FALSE | TRUE;
-   *  signifying if corresponding LDAP Entry exists
+   * First produce array of form:
+   *  $drupal_users[$sid][$puid_attr][$puid]['exists'] = bool
+   *  signifying if corresponding LDAP Entry exists.
    */
   if (!(isset($result['user']) && count($result['user']) > 0)) {
     return TRUE;
@@ -61,7 +58,7 @@ function _ldap_user_orphans($ldap_user_conf) {
   $uids = array_keys($result['user']);
   $user_count = count($uids);
 
-  // if maxed out reset uid check counter
+  // If maxed out reset uid check counter.
   if ($user_count < $ldap_user_conf->orphanedCheckQty) {
     variable_set('ldap_user_cron_last_uid_checked', 1);
   }
@@ -70,7 +67,7 @@ function _ldap_user_orphans($ldap_user_conf) {
   }
 
   $batches = floor($user_count / LDAP_SERVERS_MAXFILTER_ORS) + 1;
-  // e.g. 175 users and  50 max ldap query ors will yield 4 batches
+  // e.g. 175 users and  50 max ldap query ors will yield 4 batches.
   for ($batch = 1; $batch <= $batches; $batch++) {
     $email_list = _ldap_user_orphan_process_batch($ldap_user_conf, $batch, $user_count, $uids, $ldap_servers, $watchdogs_sids_missing_watchdogged, $query, $email_list);
   }
@@ -115,9 +112,12 @@ function _ldap_user_orphan_process_batch($ldap_user_conf, $batch, $user_count, $
    *       2nd batch   $i=50; $i<100; $i++
    *       4th batch   $i=150; $i<175; $i++
    */
-  $start = ($batch - 1) * LDAP_SERVERS_MAXFILTER_ORS; // e.g 0, 50, 100
-  $end_plus_1 = min(($batch) * LDAP_SERVERS_MAXFILTER_ORS, $user_count); // e.g. 50, 100, 150
-  $batch_uids = array_slice($uids, $start, ($end_plus_1 - $start)); // e.g. 50, 50; 100, 50
+  // e.g 0, 50, 100.
+  $start = ($batch - 1) * LDAP_SERVERS_MAXFILTER_ORS;
+  // e.g. 50, 100, 150.
+  $end_plus_1 = min(($batch) * LDAP_SERVERS_MAXFILTER_ORS, $user_count);
+  // e.g. 50, 50; 100, 50.
+  $batch_uids = array_slice($uids, $start, ($end_plus_1 - $start));
   $accounts = entity_load('user', $batch_uids);
 
   foreach ($accounts as $uid => $user) {
@@ -135,13 +135,13 @@ function _ldap_user_orphan_process_batch($ldap_user_conf, $batch, $user_count, $
       $drupal_users[$sid][$puid_attr][$puid]['exists'] = FALSE;
     }
     else {
-      // user with missing ldap data fields
+      // User with missing ldap data fields
       // perhaps should be watchdogged?
     }
   }
 
-  //2. set $drupal_users[$sid][$puid_attr][$puid]['exists'] to FALSE
-  // if entry doesn't exist
+  // 2. set $drupal_users[$sid][$puid_attr][$puid]['exists'] to FALSE
+  // if entry doesn't exist.
   foreach ($filters as $sid => $puid_attrs) {
     if (!isset($ldap_servers[$sid])) {
       if (!isset($watchdogs_sids_missing_watchdogged[$sid])) {
@@ -156,11 +156,12 @@ function _ldap_user_orphan_process_batch($ldap_user_conf, $batch, $user_count, $
       continue;
     }
     foreach ($puid_attrs as $puid_attr => $ors) {
-      // query should look like (|(guid=3243243)(guid=3243243)(guid=3243243))
+      // Query should look like (|(guid=3243243)(guid=3243243)(guid=3243243))
       $ldap_filter = '(|' . join("", $ors) . ')';
       $ldap_entries = $ldap_servers[$sid]->searchAllBaseDns($ldap_filter, [$puid_attr]);
       if ($ldap_entries === FALSE) {
-        unset($drupal_users[$sid]); // if query has error, don't remove ldap entries!
+        // If query has error, don't remove ldap entries!
+        unset($drupal_users[$sid]);
         watchdog(
           'ldap_user',
           'ldap server %sid had error while querying to
@@ -179,7 +180,7 @@ function _ldap_user_orphan_process_batch($ldap_user_conf, $batch, $user_count, $
       }
     }
   }
-  //3. we now have $drupal_users[$sid][$puid_attr][$puid]['exists'] = FALSE | TRUE;
+  // 3. we now have $drupal_users[$sid][$puid_attr][$puid]['exists'] = bool.
   if ($ldap_user_conf->orphanedDrupalAcctBehavior == 'ldap_user_orphan_email') {
     global $base_url;
   }

@@ -1,21 +1,22 @@
 <?php
 
-
-
 /**
  * @file
- * simpletest class for LDAP simpletests
- *
+ * Simpletest class for LDAP simpletests.
  */
 
 module_load_include('php', 'ldap_test', 'LdapTestFunctions.class');
-
+/**
+ *
+ */
 class LdapTestCase extends DrupalWebTestCase {
 
   public $testFunctions;
   public $module_name;
 
-  // storage for test data
+  /**
+   * Storage for test data.
+   */
   public $useFeatureData;
   public $featurePath;
   public $featureName;
@@ -26,14 +27,23 @@ class LdapTestCase extends DrupalWebTestCase {
   public $authenticationData;
   public $testData = array();
 
-  public $sid; // current, or only, sid
+  /**
+   * Current, or only, sid.
+   */
+  public $sid;
 
-  function __construct($test_id = NULL) {
+  /**
+   *
+   */
+  public function __construct($test_id = NULL) {
     parent::__construct($test_id);
     $this->testFunctions = new LdapTestFunctions();
   }
 
-  function setUp() {
+  /**
+   *
+   */
+  public function setUp() {
     $modules = func_get_args();
     if (isset($modules[0]) && is_array($modules[0])) {
       $modules = $modules[0];
@@ -45,29 +55,38 @@ class LdapTestCase extends DrupalWebTestCase {
 
   }
 
-  function tearDown() {
+  /**
+   *
+   */
+  public function tearDown() {
     parent::tearDown();
     variable_del('ldap_help_watchdog_detail');
     variable_del('ldap_simpletest');
   }
 
   /**
-   * setup configuration and fake test data for all ldap modules
+   * Setup configuration and fake test data for all ldap modules.
    *
-   * @param  string $test_ldap_id name of directory in ldap_test where data is (e.g. hogwarts)
+   * @param string $test_ldap_id
+   *   name of directory in ldap_test where data is (e.g. hogwarts)
    *
-   * the following params are ids that indicate what config data in /ldap_test/<module_name>.conf.inc to use
-   * for example if $ldap_user_conf_id = 'ad_authentication', the array /ldap_test/ldap_user.conf.inc with the key
-   *  'ad_authentication' will be used for the user module cofiguration
+   *   the following params are ids that indicate what config data in /ldap_test/<module_name>.conf.inc to use
+   *   for example if $ldap_user_conf_id = 'ad_authentication', the array /ldap_test/ldap_user.conf.inc with the key
+   *   'ad_authentication' will be used for the user module cofiguration.
    *
-   * @param array $sids to setup
+   * @param array $sids
+   *   to setup.
    * @param string $ldap_user_conf_id
-   * @param string $ldap_authentication_conf_id = NULL,
-   * @param string $ldap_authorization_conf_id = NULL,
-   * @param string $ldap_feeds_conf_id = NULL,
-   * @param string $ldap_query_conf_id = NULL
+   * @param string $ldap_authentication_conf_id
+   *   = NULL,.
+   * @param string $ldap_authorization_conf_id
+   *   = NULL,.
+   * @param string $ldap_feeds_conf_id
+   *   = NULL,.
+   * @param string $ldap_query_conf_id
+   *   = NULL.
    */
-  function prepTestData(
+  public function prepTestData(
       $test_ldap_id,
       $sids,
       $ldap_user_conf_id = NULL,
@@ -102,7 +121,7 @@ class LdapTestCase extends DrupalWebTestCase {
   }
 
   /**
-   * attempt to derive a testid from backtrace
+   * Attempt to derive a testid from backtrace.
    */
   public function testId($description = NULL, $method = NULL) {
 
@@ -113,7 +132,8 @@ class LdapTestCase extends DrupalWebTestCase {
       $test_id = NULL;
       $i = 0;
     }
-    elseif ($test_id)  { // default test id
+    // Default test id.
+    elseif ($test_id) {
       $i++;
       return $test_id . '.' . $i;
     }
@@ -131,32 +151,39 @@ class LdapTestCase extends DrupalWebTestCase {
     return $test_id;
 
   }
+
+  /**
+   *
+   */
   public function removeUserFromGroup(&$test_data, $user_dn, $group_dn, $domain = "dc=hogwarts,dc=edu") {
 
-      $filter = "(&(objectClass=group)(member=$user_dn))";
-      if (!empty($test_data['search_results'][$filter][$domain]) &&
+    $filter = "(&(objectClass=group)(member=$user_dn))";
+    if (!empty($test_data['search_results'][$filter][$domain]) &&
             in_array($group_dn, $test_data['search_results'][$filter][$domain])) {
-        $test_data['search_results'][$filter][$domain] = array_diff($test_data['search_results'][$filter][$domain], array($group_dn));
-        $test_data['search_results'][$filter][$domain]['count'] = count($test_data['search_results'][$filter][$domain] - 1);
-      }
-
-      if (!empty($test_data['users'][$user_dn]['attr']['memberof']) && in_array($group_dn, $test_data['users'][$user_dn]['attr']['memberof'])) {
-        $test_data['users'][$user_dn]['attr']['memberof'] = array_diff($test_data['users'][$user_dn]['attr']['memberof'], array($group_dn));
-        $test_data['users'][$user_dn]['attr']['memberof']['count'] = count($test_data['users'][$user_dn]['attr']['memberof'] - 1);
-      }
-
-      if (!empty($test_data['ldap'][$user_dn]['memberof']) && in_array($group_dn, $test_data['ldap'][$user_dn]['memberof'])) {
-        $test_data['ldap'][$user_dn]['memberof'] = array_diff($test_data['ldap'][$user_dn]['memberof'], array($group_dn));
-        $test_data['ldap'][$user_dn]['memberof']['count'] = count($test_data['ldap'][$user_dn]['memberof']) - 1;
-      }
-
-      if (!empty($test_data['groups'][$group_dn]['attr']['member']) && in_array($group_dn, $test_data['groups'][$group_dn]['attr']['member']) ) {
-        $members = array_diff($test_data['groups'][$group_dn]['attr']['member'], array($group_dn));
-        $test_data['groups'][$group_dn]['attr']['member'] = $members;
-        $test_data['groups'][$group_dn]['attr']['member'][$i]['count'] = count($members - 1);
-      }
+      $test_data['search_results'][$filter][$domain] = array_diff($test_data['search_results'][$filter][$domain], array($group_dn));
+      $test_data['search_results'][$filter][$domain]['count'] = count($test_data['search_results'][$filter][$domain] - 1);
     }
 
+    if (!empty($test_data['users'][$user_dn]['attr']['memberof']) && in_array($group_dn, $test_data['users'][$user_dn]['attr']['memberof'])) {
+      $test_data['users'][$user_dn]['attr']['memberof'] = array_diff($test_data['users'][$user_dn]['attr']['memberof'], array($group_dn));
+      $test_data['users'][$user_dn]['attr']['memberof']['count'] = count($test_data['users'][$user_dn]['attr']['memberof'] - 1);
+    }
+
+    if (!empty($test_data['ldap'][$user_dn]['memberof']) && in_array($group_dn, $test_data['ldap'][$user_dn]['memberof'])) {
+      $test_data['ldap'][$user_dn]['memberof'] = array_diff($test_data['ldap'][$user_dn]['memberof'], array($group_dn));
+      $test_data['ldap'][$user_dn]['memberof']['count'] = count($test_data['ldap'][$user_dn]['memberof']) - 1;
+    }
+
+    if (!empty($test_data['groups'][$group_dn]['attr']['member']) && in_array($group_dn, $test_data['groups'][$group_dn]['attr']['member'])) {
+      $members = array_diff($test_data['groups'][$group_dn]['attr']['member'], array($group_dn));
+      $test_data['groups'][$group_dn]['attr']['member'] = $members;
+      $test_data['groups'][$group_dn]['attr']['member'][$i]['count'] = count($members - 1);
+    }
+  }
+
+  /**
+   *
+   */
   public function AttemptLogonNewUser($name, $goodpwd = TRUE) {
 
     $this->drupalLogout();
@@ -173,12 +200,11 @@ class LdapTestCase extends DrupalWebTestCase {
   }
 
   /**
-   * keep user entity fields function for ldap_user
+   * Keep user entity fields function for ldap_user
    * in base class instead of user test class in case
-   * module integration testing is needed
+   * module integration testing is needed.
    */
-
-  function createTestUserFields() {
+  public function createTestUserFields() {
     foreach ($this->ldap_user_test_entity_fields() as $field_id => $field_conf) {
       $field_info = field_info_field($field_id);
       if (!$field_info) {
@@ -189,7 +215,10 @@ class LdapTestCase extends DrupalWebTestCase {
     }
   }
 
-  function ldap_user_test_entity_fields() {
+  /**
+   *
+   */
+  public function ldap_user_test_entity_fields() {
 
     $fields = array();
 
@@ -198,7 +227,7 @@ class LdapTestCase extends DrupalWebTestCase {
       'type' => 'text',
       'settings' => array(
         'max_length' => 64,
-      )
+      ),
     );
 
     $fields['field_lname']['instance'] = array(
@@ -215,15 +244,15 @@ class LdapTestCase extends DrupalWebTestCase {
           'type' => 'text_default',
         ),
       ),
-      'settings' => array('user_register_form' => FALSE)
+      'settings' => array('user_register_form' => FALSE),
     );
 
-  $fields['field_department']['field'] = array(
+    $fields['field_department']['field'] = array(
       'field_name' => 'field_department',
       'type' => 'text',
       'settings' => array(
         'max_length' => 64,
-      )
+      ),
     );
 
     $fields['field_department']['instance'] = array(
@@ -240,16 +269,15 @@ class LdapTestCase extends DrupalWebTestCase {
           'type' => 'text_default',
         ),
       ),
-      'settings' => array('user_register_form' => FALSE)
+      'settings' => array('user_register_form' => FALSE),
     );
-
 
     $fields['field_fname']['field'] = array(
       'field_name' => 'field_fname',
       'type' => 'text',
       'settings' => array(
         'max_length' => 64,
-      )
+      ),
     );
 
     $fields['field_fname']['instance'] = array(
@@ -266,16 +294,16 @@ class LdapTestCase extends DrupalWebTestCase {
           'type' => 'text_default',
         ),
       ),
-      'settings' => array('user_register_form' => FALSE)
+      'settings' => array('user_register_form' => FALSE),
     );
 
-    // display name for testing compound tokens
+    // Display name for testing compound tokens.
     $fields['field_display_name']['field'] = array(
       'field_name' => 'field_display_name',
       'type' => 'text',
       'settings' => array(
         'max_length' => 64,
-      )
+      ),
     );
 
     $fields['field_display_name']['instance'] = array(
@@ -292,10 +320,10 @@ class LdapTestCase extends DrupalWebTestCase {
           'type' => 'text_default',
         ),
       ),
-      'settings' => array('user_register_form' => FALSE)
+      'settings' => array('user_register_form' => FALSE),
     );
 
-    // display name for testing compound tokens
+    // Display name for testing compound tokens.
     $fields['field_binary_test']['field'] = array(
       'field_name' => 'field_binary_test',
       'type' => 'text',
@@ -316,13 +344,16 @@ class LdapTestCase extends DrupalWebTestCase {
           'type' => 'text_default',
         ),
       ),
-      'settings' => array('user_register_form' => FALSE)
+      'settings' => array('user_register_form' => FALSE),
     );
 
     return $fields;
 
   }
 
+  /**
+   *
+   */
   public function checkConsumerConfSetup($conf_id) {
 
     $authorization_data = ldap_test_ldap_authorization_data();
@@ -350,7 +381,9 @@ class LdapTestCase extends DrupalWebTestCase {
     return array($props_set_display, $props_set_correctly);
   }
 
-
+  /**
+   *
+   */
   public function compareFormToProperties($object, $data, $item_id, $map, $lcase_transformed) {
 
     $mismatches = array();
@@ -365,7 +398,8 @@ class LdapTestCase extends DrupalWebTestCase {
       }
       $property_value = $object->{$property};
 
-      $field_value = isset($values[$item_id + 2]) ? $values[$item_id + 2] : $values[$item_id]; // for cases where string input is not same as array.
+      // For cases where string input is not same as array.
+      $field_value = isset($values[$item_id + 2]) ? $values[$item_id + 2] : $values[$item_id];
 
       if (in_array($field_id, $lcase_transformed) && is_scalar($field_value)) {
         $field_value = drupal_strtolower($field_value);

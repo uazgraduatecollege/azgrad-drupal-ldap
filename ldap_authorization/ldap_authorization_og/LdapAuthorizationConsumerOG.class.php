@@ -36,11 +36,7 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
    */
   public function __construct($consumer_type) {
 
-    // @todo these properties are not used in ldap og 2, but when they are their derivation needs to be examined and tested
-    // as they may be per entity rids, not global.
-    // ldap_authorization_og_rid_from_role_name(OG_AUTHENTICATED_ROLE);
     $this->defaultMembershipRid = NULL;
-    // ldap_authorization_og_rid_from_role_name(OG_ANONYMOUS_ROLE);
     $this->anonymousRid = NULL;
 
     $params = ldap_authorization_og_ldap_authorization_consumer();
@@ -496,7 +492,6 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
           // Unattribute to ldap even if user does not currently have role.
           unset($user_auth_data[ldap_authorization_og_authorization_id($gid, $rid, $group_entity_type)]);
         }
-        // define('OG_ANONYMOUS_ROLE', 'non-member'); define('OG_AUTHENTICATED_ROLE', 'member');
         // ungroup if only authenticated and anonymous role left.
         if (in_array($authenticated_rid, $revoking_rids) || count($remaining_rids) == 0) {
           $entity = og_ungroup($group_entity_type, $gid, 'user', $user->uid);

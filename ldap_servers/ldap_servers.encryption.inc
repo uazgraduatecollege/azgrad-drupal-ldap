@@ -6,27 +6,25 @@
  */
 
 /**
- * Return a random salt of a given length for crypt-style passwords
+ * Return a random salt of a given length for crypt-style passwords.
  *
  * @param int length
  *   The requested length.
  *
  * @return string
  *   A (fairly) random salt of the requested length.
- *
  */
-function ldap_servers_random_salt( $length ) {
+function ldap_servers_random_salt($length) {
   $possible = '0123456789' . 'abcdefghijklmnopqrstuvwxyz' . 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' . './';
   $salt = "";
 
-  mt_srand((double)microtime() * 1000000);
-  while ( strlen( $salt ) < $length ) {
-    $salt .= substr( $possible, ( rand() % strlen( $possible ) ), 1 );
+  mt_srand((double) microtime() * 1000000);
+  while (strlen($salt) < $length) {
+    $salt .= substr($possible, (rand() % strlen($possible)), 1);
   }
 
   return $salt;
 }
-
 
 /**
  * Encryption options available.
@@ -46,7 +44,6 @@ function _ldap_servers_encrypt_types() {
   return $options;
 }
 
-
 /**
  * Encrypt string.
  *
@@ -61,7 +58,7 @@ function _ldap_servers_encrypt_types() {
 function _ldap_servers_encrypt($input, $encryption_enabled = NULL) {
 
   if (!$encryption_enabled) {
-    $encryption_enabled = variable_get('ldap_servers_encryption' , LDAP_SERVERS_ENC_TYPE_CLEARTEXT);
+    $encryption_enabled = variable_get('ldap_servers_encryption', LDAP_SERVERS_ENC_TYPE_CLEARTEXT);
   }
 
   if ($encryption_enabled == LDAP_SERVERS_ENC_TYPE_CLEARTEXT) {
@@ -86,11 +83,10 @@ function _ldap_servers_encrypt($input, $encryption_enabled = NULL) {
  * @return string
  *   Clear text.
  */
-
 function _ldap_servers_decrypt($input, $encryption_enabled = NULL) {
 
   if (!$encryption_enabled) {
-    $encryption_enabled = variable_get('ldap_servers_encryption' , LDAP_SERVERS_ENC_TYPE_CLEARTEXT);
+    $encryption_enabled = variable_get('ldap_servers_encryption', LDAP_SERVERS_ENC_TYPE_CLEARTEXT);
   }
 
   if ($encryption_enabled == LDAP_SERVERS_ENC_TYPE_CLEARTEXT) {

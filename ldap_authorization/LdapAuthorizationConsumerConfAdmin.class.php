@@ -17,7 +17,6 @@ class LdapAuthorizationConsumerConfAdmin extends LdapAuthorizationConsumerConf {
   public function save() {
 
     $op = $this->inDatabase ? 'edit' : 'insert';
-    // $this;.
     $values = new stdClass();
     $values->sid = $this->sid;
     $values->numeric_consumer_conf_id = $this->numericConsumerConfId;

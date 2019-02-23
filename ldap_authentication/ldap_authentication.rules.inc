@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  * Rule implementations for the LDAP Authentication module.

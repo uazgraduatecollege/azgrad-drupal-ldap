@@ -120,7 +120,7 @@ class LdapAuthorizationConsumerConf {
     return array(
       'sid' => 'sid',
       'consumer_type' => 'consumerType',
-      'numeric_consumer_conf_id'  => 'numericConsumerConfId' ,
+      'numeric_consumer_conf_id'  => 'numericConsumerConfId',
       'status'  => 'status',
       'only_ldap_authenticated'  => 'onlyApplyToLdapAuthenticated',
       'use_first_attr_as_groupid'  => 'useFirstAttrAsGroupId',

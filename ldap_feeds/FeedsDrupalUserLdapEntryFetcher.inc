@@ -2,12 +2,14 @@
 
 /**
  * @file
- * FeedsDrupalUserLdapEntryFetcher
+ * FeedsDrupalUserLdapEntryFetcher.
  */
 
 define('LDAP_FEEDS_DRUPAL_USER_FETCHER_FILTER_AUTHENTICATED', FALSE);
 define('LDAP_FEEDS_DRUPAL_USER_FETCHER_FILTER_ROLES', FALSE);
-
+/**
+ *
+ */
 class FeedsDrupalUserLdapEntryFetcherResult extends FeedsFetcherResult {
 
   public $filterLdapAuthenticated;
@@ -28,25 +30,23 @@ class FeedsDrupalUserLdapEntryFetcherResult extends FeedsFetcherResult {
   }
 
   /**
-   * Overrides parent::getRaw();
+   * Overrides parent::getRaw();.
    */
   public function getRaw() {
 
-    // needs to loop through all users, and query ldap for each, one at a time
-
-    $query = new EntityFieldQuery;
+    // Needs to loop through all users, and query ldap for each, one at a time.
+    $query = new EntityFieldQuery();
     $entities = $query
       ->entityCondition('entity_type', 'user')
       ->execute();
     $users = entity_load('user', array_keys($entities['user']));
     if ($this->filterRoles) {
       $selectedRoles = array_filter($this->filterRoles);
-      $filterOnRoles = (boolean)(count($selectedRoles));
+      $filterOnRoles = (boolean) (count($selectedRoles));
     }
     else {
       $filterOnRoles = FALSE;
     }
-
 
     foreach ($users as $uid => $user) {
       if (
@@ -64,16 +64,16 @@ class FeedsDrupalUserLdapEntryFetcherResult extends FeedsFetcherResult {
         foreach ($this->availableDrupalUserAttributes as $attr_name => $attr_conf) {
           $ldap_user['attr'][] = $attr_conf['token'];
           $ldap_user['attr'][$attr_conf['token']]['count'] = 1;
-          $ldap_user['attr'][$attr_conf['token']][0] = (string)$user->{$attr_name};
+          $ldap_user['attr'][$attr_conf['token']][0] = (string) $user->{$attr_name};
         }
 
         $results[] = $ldap_user;
       }
     }
     $results['count'] = count($results);
-   // drupal_set_message("<pre>" . print_r($results, TRUE));
     return $results;
   }
+
 }
 
 /**
@@ -141,7 +141,5 @@ class FeedsDrupalUserLdapEntryFetcher extends FeedsFetcher {
 
     return $form;
   }
-
-
 
 }
