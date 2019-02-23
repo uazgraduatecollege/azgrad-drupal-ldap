@@ -10,12 +10,16 @@
  *
  * @param $variables
  *   An associative array containing:
- *   - hide_reset_pwd (boolean) whether reset password link should be visible
+ *   - $show_reset_pwd (boolean) whether reset password link should be visible
  *   - auth_conf: object with ldap authentication configuration data
  *
  * @ingroup themeable
+ *
+ * @return string
  */
 function theme_ldap_authentication_user_login_block_links($variables) {
+  /** @var bool $show_reset_pwd */
+  /** @var object $auth_conf */
   extract($variables);
 
   // The code below modified from user.module user_login_block function.
@@ -42,8 +46,11 @@ function theme_ldap_authentication_user_login_block_links($variables) {
  *   - auth_conf: object with ldap authentication configuration data
  *
  * @ingroup themeable
+ *
+ * @return string|null
  */
 function theme_ldap_authentication_user_pass_message($variables) {
+  /** @var object $auth_conf */
   extract($variables);
   if ($auth_conf->authenticationMode == LDAP_AUTHENTICATION_EXCLUSIVE && $auth_conf->passwordOption != LDAP_AUTHENTICATION_PASSWORD_FIELD_ALLOW) {
     $msg = t('This page is only useful for the site administrator.  All other users
@@ -65,7 +72,8 @@ function theme_ldap_authentication_user_pass_message($variables) {
 }
 
 /**
- * Returns HTML warning text when an ldap authenticated user tries to reset their password.
+ * Returns HTML warning text when an ldap authenticated user tries to reset
+ * their password.
  *
  * @param $variables
  *   An associative array containing:
@@ -73,8 +81,11 @@ function theme_ldap_authentication_user_pass_message($variables) {
  *   - account: user object
  *
  * @ingroup themeable
+ *
+ * @return string|null
  */
 function theme_ldap_authentication_user_pass_validate_ldap_authenticated($variables) {
+  /** @var object $auth_conf */
   extract($variables);
   // Already know user exists and is ldap authenticated.
   if ($auth_conf->ldapUserHelpLinkUrl) {
@@ -98,12 +109,15 @@ function theme_ldap_authentication_user_pass_validate_ldap_authenticated($variab
  * be to use the Real Name module to say "Welcome, User Name" upon successful
  * login.
  *
- * @param $message
- *   A text string containing a translatable success message
+ * @param string $message
+ *   A text string containing a translatable success message.
  *
  * @ingroup themeable
+ *
+ * @return mixed
  */
 function theme_ldap_authentication_login_message($variables) {
+  /** @var string $message */
   extract($variables);
   return $message;
 }
@@ -111,12 +125,15 @@ function theme_ldap_authentication_login_message($variables) {
 /**
  * Provides a theme callback for user not found messages.
  *
- * @param $message
- *   A text string containing a translatable "user not found" message
+ * @param string $message
+ *   A text string containing a translatable "user not found" message.
  *
  * @ingroup themeable
+ *
+ * @return mixed
  */
 function theme_ldap_authentication_message_not_found($variables) {
+  /** @var string $message */
   extract($variables);
   return $message;
 }
@@ -124,12 +141,15 @@ function theme_ldap_authentication_message_not_found($variables) {
 /**
  * Provides a theme callback for authentication failure messages.
  *
- * @param $message
- *   A text string containing a translatable "authentication failure" message
+ * @param string $message
+ *   A text string containing a translatable "authentication failure" message.
  *
  * @ingroup themeable
+ *
+ * @return string
  */
 function theme_ldap_authentication_message_not_authenticated($variables) {
+  /** @var string $message */
   extract($variables);
   return $message;
 }

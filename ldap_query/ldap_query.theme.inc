@@ -10,13 +10,16 @@
  *
  * @param $variables
  *   An associative array containing:
- *   - ldap_query: an array of one or more ldap server configurations.
+ *   - ldap_queries: an array of one or more ldap server configurations.
  *   - actions:  true or false indicating include update, delete, etc. links
  *   - type:  'table', 'list', etc for style to render
  *
  * @ingroup themeable
  */
 function theme_ldap_query_list($variables) {
+  /** @var array $ldap_queries */
+  /** @var bool $actions */
+  /** @var string $type */
   extract($variables);
 
   $table = [
@@ -66,6 +69,8 @@ function theme_ldap_query_list($variables) {
  *   - type:  'table', 'list', etc for style to render
  *
  * @ingroup themeable
+ *
+ * @return string
  */
 function theme_ldap_query($variables) {
   /** @var array $ldap_query */
@@ -100,10 +105,15 @@ function theme_ldap_query($variables) {
 }
 
 /**
+ * @param $variables
  *
+ * @return string
  */
 function theme_ldap_query_results($variables) {
   // $ldap_query, $results, $show_query.
+  /** @var array $ldap_query */
+  /** @var array $results */
+  /** @var mixed $show_query */
   extract($variables);
 
   $query = theme('ldap_query', ['ldap_query' => $ldap_query]);

@@ -53,14 +53,23 @@ function ldap_servers_parse_user_attr_name($user_attr_key) {
 }
 
 /**
- * @param array $ldap_entry
+ * @param array
  * @param string $text
- *   such as "[dn]", "[cn]@my.org", "[displayName] [sn]", "Drupal Provisioned"
- * @return string $text with tokens replaced or NULL if replacement not available
+ *
+ * @return string
  */
 
 /**
  * User_account.
+ *
+ * @param $resource
+ *   $ldap_entry
+ * @param $text
+ *   such as "[dn]", "[cn]@my.org", "[displayName] [sn]", "Drupal Provisioned"
+ * @param string $resource_type
+ *
+ * @return string|string[]|null
+ *   $text with tokens replaced or NULL if replacement not available
  */
 function ldap_servers_token_replace($resource, $text, $resource_type = 'ldap_entry') {
 
@@ -72,6 +81,9 @@ function ldap_servers_token_replace($resource, $text, $resource_type = 'ldap_ent
     return $text;
   }
 
+  $tokens = [];
+
+  // @TODO: Should really be if/else if only those two exist.
   switch ($resource_type) {
     case 'ldap_entry':
       $tokens = ldap_servers_token_tokenize_entry($resource, $desired_tokens, LDAP_SERVERS_TOKEN_PRE, LDAP_SERVERS_TOKEN_POST);
@@ -411,7 +423,7 @@ function ldap_servers_token_tokenize_user_account($user_account, $token_keys = '
       }
     }
     $ldap_user_conf_admin = new LdapUserConfAdmin();
-    if ($ldap_user_conf->setsLdapPassword) {
+    if ($ldap_user_conf_admin->setsLdapPassword) {
       $token_keys[] = 'password.random';
       $token_keys[] = 'password.user-random';
     }

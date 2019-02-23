@@ -76,7 +76,7 @@ class LdapServerTest extends LdapServer {
   public function __destruct() {
     // If alterations to server configuration must be maintained throughout
     // simpletest, Call:
-    // variable_set('ldap_authorization_test_server__'. $sid, []);
+    // variable_set('ldap_authorization_test_server__'. $sid, []);.
   }
 
   /**
@@ -247,7 +247,7 @@ class LdapServerTest extends LdapServer {
           // If not in basedn, skip
           // eg. basedn ou=campus accounts,dc=ad,dc=myuniversity,dc=edu
           // should be leftmost string in:
-          // cn=jdoe,ou=campus accounts,dc=ad,dc=myuniversity,dc=edu
+          // cn=jdoe,ou=campus accounts,dc=ad,dc=myuniversity,dc=edu.
           $substring = strrev(substr(strrev($dn_lcase), 0, strlen($base_dn)));
           $cascmp = strcasecmp($base_dn, $substring);
           if ($cascmp !== 0) {

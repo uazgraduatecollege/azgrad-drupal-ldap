@@ -129,7 +129,7 @@ class LdapAuthorizationConsumerAbstract {
   /**
    * Function to normalize mappings.
    *
-   * should be overridden when mappings are not stored as map|authorization_id format
+   * Should be overridden when mappings are not stored as map|authorization_id format
    * where authorization_id is the format returned by
    * LdapAuthorizationConsumerAbstract::usersAuthorizations()
    *
@@ -361,7 +361,7 @@ class LdapAuthorizationConsumerAbstract {
           $user_auth_data[$consumer_id] = $existing + [
             'date_granted' => time(),
             'consumer_id_mixed_case' => $consumer_id,
-            ];
+          ];
         }
         elseif ($consumer['exists'] !== TRUE) {
           // Grant case 3: something is wrong. consumers should have been created before calling grantsAndRevokes.

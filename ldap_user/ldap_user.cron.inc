@@ -181,9 +181,7 @@ function _ldap_user_orphan_process_batch($ldap_user_conf, $batch, $user_count, $
     }
   }
   // 3. we now have $drupal_users[$sid][$puid_attr][$puid]['exists'] = bool.
-  if ($ldap_user_conf->orphanedDrupalAcctBehavior == 'ldap_user_orphan_email') {
-    global $base_url;
-  }
+  global $base_url;
   foreach ($drupal_users as $sid => $puid_x_puid_attrs) {
     foreach ($puid_x_puid_attrs as $puid_attr => $puids) {
       foreach ($puids as $puid => $user_data) {

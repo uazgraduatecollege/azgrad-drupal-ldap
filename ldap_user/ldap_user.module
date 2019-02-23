@@ -316,7 +316,7 @@ function ldap_user_ldap_user_attrs_list_alter(&$available_user_attrs, &$params) 
     'enabled' => FALSE,
     'config_module' => 'ldap_user',
     'prov_module' => 'ldap_user',
-    ];
+  ];
 
   $available_user_attrs['[property.timezone]'] = $available_user_attrs['[property.timezone]'] + [
     'name' => 'Property: User Timezone',
@@ -325,7 +325,7 @@ function ldap_user_ldap_user_attrs_list_alter(&$available_user_attrs, &$params) 
     'enabled' => FALSE,
     'config_module' => 'ldap_user',
     'prov_module' => 'ldap_user',
-    ];
+  ];
 
   $available_user_attrs['[property.signature]'] = $available_user_attrs['[property.signature]'] + [
     'name' => 'Property: User Signature',
@@ -334,7 +334,7 @@ function ldap_user_ldap_user_attrs_list_alter(&$available_user_attrs, &$params) 
     'enabled' => FALSE,
     'config_module' => 'ldap_user',
     'prov_module' => 'ldap_user',
-    ];
+  ];
 
   // 2. Drupal user fields.
   $user_fields = field_info_instances('user', 'user');
@@ -351,7 +351,7 @@ function ldap_user_ldap_user_attrs_list_alter(&$available_user_attrs, &$params) 
       'enabled' => FALSE,
       'config_module' => 'ldap_user',
       'prov_module' => 'ldap_user',
-      ];
+    ];
   }
 
   if (!$ldap_user_conf->provisionsDrupalAccountsFromLdap) {
@@ -798,6 +798,7 @@ function ldap_user_ldap_provision_pwd($action, $value = NULL, $reset = FALSE) {
  *   = 'set' or 'get'.
  *
  * @value mixed value associate with $op.
+ *
  * @return bool|void
  */
 function ldap_user_ldap_provision_semaphore($action, $op, $value = NULL, $reset = FALSE) {
@@ -1082,7 +1083,7 @@ function ldap_user_field_widget_form(&$form, &$form_state, $field, $instance, $l
             drupal_get_path('module', 'ldap_user') . '/ldap_user.css',
           ],
         ],
-        ];
+      ];
       break;
   }
 

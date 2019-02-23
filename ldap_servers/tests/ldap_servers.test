@@ -356,7 +356,7 @@ class LdapServersTestCase extends LdapTestCase {
       $this->assertTrue(count(array_keys($ldap_servers)) == 1, 'Update form for ldap server didnt delete or add another server.', $this->ldapTestId . '.Update Server');
       // Assert confirmation message without error
       // assert one ldap server exists in db table
-      // assert load of server has correct properties for each input
+      // assert load of server has correct properties for each input.
       $mismatches = $this->compareFormToProperties($ldap_servers['server1'], $server_data['server1'], 1, $field_to_prop_map, $lcase_transformed);
       if (count($mismatches)) {
         debug('mismatches between ldap server properties and form submitted values'); debug($mismatches);

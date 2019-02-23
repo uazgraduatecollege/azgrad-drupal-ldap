@@ -86,7 +86,7 @@ function ldap_authorization_test_form($form, &$form_state, $consumer_type) {
         'items' => $maps,
         'type' => 'ul',
         'title' => 'Configured Mappings',
-        ]
+      ]
       ),
     ];
     if ($consumer->consumerConf->mappings) {
@@ -96,7 +96,7 @@ function ldap_authorization_test_form($form, &$form_state, $consumer_type) {
             'items' => $maps,
             'type' => 'ul',
             'title' => 'Configured Mappings',
-            ]
+          ]
       );
     }
     else {

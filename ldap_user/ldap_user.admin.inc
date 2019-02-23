@@ -44,7 +44,7 @@ function ldap_user_admin_form_submit($form, &$form_state) {
     drupal_goto(LDAP_SERVERS_MENU_BASE_PATH . '/user');
   }
   else {
-    form_set_error($conf->errorName, $conf->errorMsg);
+    form_set_error($ldap_user_conf->errorName, $ldap_user_conf->errorMsg);
     $ldap_user_conf->clearError();
   }
 

@@ -6,7 +6,8 @@
  */
 
 /**
- * @return index of ldap queries
+ * @return string
+ *   Index of ldap queries
  */
 function ldap_query_index() {
 

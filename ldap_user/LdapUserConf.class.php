@@ -1165,7 +1165,7 @@ class LdapUserConf {
    *
    * @param string $drupal_username
    *
-   * @return boolean
+   * @return bool
    *   TRUE on success, FALSE on error or failure because of invalid user or ldap accounts
    */
   public function ldapAssociateDrupalAccount($drupal_username) {

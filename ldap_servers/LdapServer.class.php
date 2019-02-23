@@ -827,7 +827,7 @@ class LdapServer {
       'timelimit = ' . $timelimit,
       'deref = ' . $deref,
       'scope = ' . $scope,
-        ]
+    ]
     );
     if ($this->detailed_watchdog_log) {
       watchdog('ldap_servers', $query, []);
@@ -905,6 +905,13 @@ class LdapServer {
   public function pagedLdapQuery($ldap_query_params) {
 
     if (!($this->searchPagination && $this->paginationEnabled)) {
+      $watchdog_tokens = [
+        '%basedn' => $ldap_query_params['base_dn'],
+        '%filter' => $ldap_query_params['filter'],
+        '%attributes' => print_r($ldap_query_params['attributes'], TRUE),
+        '%errmsg' => $this->errorMsg('ldap'),
+        '%errno' => $this->ldapErrorNumber(),
+      ];
       watchdog('ldap_servers', "LDAP server pagedLdapQuery() called when functionality not available in php install or
         not enabled in ldap server configuration.  error. basedn: %basedn| filter: %filter| attributes:
          %attributes| errmsg: %errmsg| ldap err no: %errno|", $watchdog_tokens);
@@ -1203,10 +1210,10 @@ class LdapServer {
       $md5thumb = md5($image_data);
 
       /**
-             * If the existing account already has picture check if it has changed. If
+       * If the existing account already has picture check if it has changed. If
        * so remove the old file and create the new one. If a picture is not set
        * but the account has an md5 hash, something is wrong and we exit.
-             */
+       */
       if ($drupal_username && $account = user_load_by_name($drupal_username)) {
         if ($account->uid == 0 || $account->uid == 1) {
           return FALSE;
@@ -1242,6 +1249,8 @@ class LdapServer {
   /**
    * @param $image_data
    * @param $md5thumb
+   *
+   * @return bool|\stdClass
    */
   private function savePictureData($image_data, $md5thumb) {
     // Create tmp file to get image format.
@@ -1274,7 +1283,8 @@ class LdapServer {
   /**
    * @param array $ldap_entry
    *
-   * @return string user's PUID or permanent user id (within ldap), converted from binary, if applicable
+   * @return string
+   *   user's PUID or permanent user id (within ldap), converted from binary, if applicable
    */
   public function userPuidFromLdapEntry($ldap_entry) {
 
@@ -1337,10 +1347,13 @@ class LdapServer {
    * @param string $drupal_user_name
    *
    * @param string or int $prov_event
-   *   This could be anything, particularly when used by other modules.  Other modules should use string like 'mymodule_myevent'
-   *   LDAP_USER_EVENT_ALL signifies get all attributes needed by all other contexts/ops.
+   *   This could be anything, particularly when used by other modules.
+   *   Other modules should use string like 'mymodule_myevent'
+   *   LDAP_USER_EVENT_ALL signifies get all attributes needed by all other
+   *   contexts/ops.
    *
-   * @return associative array representing ldap data of a user.  for example of returned value.
+   * @return array
+   *   representing ldap data of a user.  for example of returned value.
    *   'sid' => ldap server id
    *   'mail' => derived from ldap mail (not always populated).
    *   'dn'   => dn of user
@@ -1441,7 +1454,10 @@ class LdapServer {
    *    - ldap dn of user (array)
    *    - drupal user name (string)
    * @param enum $nested
-   *   = NULL (default to server configuration), TRUE, or FALSE indicating to test for nested groups.
+   *   = NULL (default to server configuration), TRUE, or FALSE indicating to
+   *   test for nested groups.
+   *
+   * @return bool
    */
   public function groupIsMember($group_dn, $user, $nested = NULL) {
 
@@ -1518,6 +1534,8 @@ class LdapServer {
    * @param bool $only_if_group_empty
    *   TRUE = group should not be removed if not empty
    *   FALSE = groups should be deleted regardless of members.
+   *
+   * @return bool
    */
   public function groupRemoveGroup($group_dn, $only_if_group_empty = TRUE) {
 
@@ -1540,9 +1558,12 @@ class LdapServer {
    *   as ldap dn.
    * @param mixed $user
    *   - drupal user object (stdClass Object)
-   *    - ldap entry of user (array) (with top level keys of 'dn', 'mail', 'sid' and 'attr' )
+   *    - ldap entry of user (array) (with top level keys of 'dn', 'mail',
+   *   'sid' and 'attr' )
    *    - ldap dn of user (array)
    *    - drupal username of user (string)
+   *
+   * @return bool
    */
   public function groupAddMember($group_dn, $user) {
 
@@ -1566,9 +1587,12 @@ class LdapServer {
    *   as ldap dn.
    * @param mixed $user
    *   - drupal user object (stdClass Object)
-   *    - ldap entry of user (array) (with top level keys of 'dn', 'mail', 'sid' and 'attr' )
+   *    - ldap entry of user (array) (with top level keys of 'dn', 'mail',
+   *   'sid' and 'attr' )
    *    - ldap dn of user (array)
    *    - drupal username of user (string)
+   *
+   * @return bool
    */
   public function groupRemoveMember($group_dn, $user) {
 
@@ -1584,15 +1608,15 @@ class LdapServer {
   }
 
   /**
+   * Get all members of a group.
    *
    * @todo: NOT IMPLEMENTED: nested groups
-   *
-   * get all members of a group
    *
    * @param string $group_dn
    *   as ldap dn.
    *
-   * @return FALSE on error otherwise array of group members (could be users or groups)
+   * @return false
+   *   on error otherwise array of group members (could be users or groups)
    */
   public function groupAllMembers($group_dn) {
     if (!$this->groupGroupEntryMembershipsConfigured) {
@@ -1630,17 +1654,21 @@ class LdapServer {
    * recurse through all child groups and add members.
    *
    * @param array $current_group_entries
-   *   of ldap group entries that are starting point.  should include at least 1 entry.
+   *   of ldap group entries that are starting point.  should include at least
+   *   1 entry.
    * @param array $all_group_dns
    *   as array of all groups user is a member of.  MIXED CASE VALUES.
    * @param array $tested_group_ids
    *   as array of tested group dn, cn, uid, etc.  MIXED CASE VALUES
-   *   whether these value are dn, cn, uid, etc depends on what attribute members, uniquemember, memberUid contains
-   *   whatever attribute is in $this->$tested_group_ids to avoid redundant recursing.
+   *   whether these value are dn, cn, uid, etc depends on what attribute
+   *   members, uniquemember, memberUid contains whatever attribute is in
+   *   $this->$tested_group_ids to avoid redundant recursing.
    * @param int $level
    *   of recursion.
    * @param int $max_levels
    *   as max recursion allowed.
+   *
+   * @return bool
    */
   public function groupMembersResursive($current_member_entries, &$all_member_dns, &$tested_group_ids, $level, $max_levels, $object_classes = FALSE) {
 
@@ -1720,7 +1748,7 @@ class LdapServer {
    *    - ldap entry of user (array) (with top level keys of 'dn', 'mail', 'sid' and 'attr' )
    *    - ldap dn of user (array)
    *    - drupal username of user (string)
-   * @param enum $return
+   * @param mixed $return
    *   = 'group_dns'.
    * @param bool $nested
    *   if groups should be recursed or not.

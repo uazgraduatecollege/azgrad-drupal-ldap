@@ -34,14 +34,14 @@ function ldap_authorizations_admin_index() {
 /**
  * Form for adding, updating, and deleting a single ldap authorization configuration.
  *
- * @param form array $form
- * @param form state array $form_state
+ * @param array $form
+ * @param array $form_state
  * @param string $op
  *   (add, edit, or delete)
  * @param string $consumer_type
  *   e.g. drupal_roles, og_group, etc.  Only needed for adds.
  *
- * @return drupal form array
+ * @return array
  */
 function ldap_authorization_admin_form($form, &$form_state, $consumer_type, $op = NULL) {
   ldap_servers_module_load_include('php', 'ldap_authorization', 'LdapAuthorizationConsumerConfAdmin.class');

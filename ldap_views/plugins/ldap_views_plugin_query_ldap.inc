@@ -56,7 +56,7 @@ class ldap_views_plugin_query_ldap extends views_plugin_query {
       'field' => $field,
       'table' => $table,
       'alias' => $alias,
-      ] + $params;
+    ] + $params;
 
     // Test to see if the field is actually the same or not. Due to
     // differing parameters changing the aggregation function, we need
@@ -254,7 +254,7 @@ class ldap_views_plugin_query_ldap extends views_plugin_query {
     foreach ($this->build_ldap_basedn($ldap_data->baseDn) as $basedn) {
 
       $result = $ldap_server->search($basedn, $this->build_ldap_filter($ldap_data->filter), array_values($attributes), 0, $ldap_data->sizelimit, $ldap_data->timelimit, $ldap_data->deref, $ldap_data->scope);
-     // ldap_sort can't be used because there's no DESC option
+      // ldap_sort can't be used because there's no DESC option
       // Not an error.
       if ($result !== FALSE) {
         $entries = array_merge($entries, $result);
@@ -411,4 +411,5 @@ class ldap_views_plugin_query_ldap extends views_plugin_query {
       $function($view, $this);
     }
   }
+
 }

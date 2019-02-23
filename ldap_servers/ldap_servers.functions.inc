@@ -146,17 +146,20 @@ function ldap_servers_attributes_needed($sid, $ldap_context = 'all', $reset = TR
 
 /**
  * Function to massage (change case, escape, unescape) ldap attribute names
- * and values.  The primary purpose of this is to articulate and ensure consistency
- * across ldap modules.
+ * and values.  The primary purpose of this is to articulate and ensure
+ * consistency across ldap modules.
  *
  * @param mixed $value
  *   to be massaged.
- * @param enum $value_type
+ * @param string $value_type
  *   = 'attr_name' or 'attr_value;.
- * @param enum $context...see
- *   LDAP_SERVER_MASSAGE_* constants
+ * @param enum $context
+ *   ...see LDAP_SERVER_MASSAGE_* constants
  *
- *   .e.g. ldap_server_massage_text($value, 'attr_value', LDAP_SERVER_MASSAGE_QUERY_LDAP)
+ *   .e.g. ldap_server_massage_text($value, 'attr_value',
+ *   LDAP_SERVER_MASSAGE_QUERY_LDAP)
+ *
+ * @return array|mixed|string
  */
 function ldap_server_massage_text($value, $value_type, $context) {
 

@@ -1344,7 +1344,7 @@ class LdapUserUITests extends LdapTestCase {
       '2__sm__ldap_attr__2' => '[dn]',
       '2__sm__4__2' => TRUE,
       '2__sm__4__2' => TRUE,
-      ];
+    ];
 
     $this->drupalPost('admin/config/people/ldap/user', $edit, t('Save'));
 

@@ -7,13 +7,17 @@
 
 module_load_include('php', 'ldap_test', 'LdapTestCase.class');
 module_load_include('module', 'ldap_authentication');
+
 /**
- *
+ * LdapAuthenticationTestCase.
  */
 class LdapAuthenticationTestCase extends LdapTestCase {
 
+  public $module_name = 'ldap_authentication';
+  protected $ldap_test_data;
+
   /**
-   *
+   * Get info.
    */
   public static function getInfo() {
     return [
@@ -24,14 +28,11 @@ class LdapAuthenticationTestCase extends LdapTestCase {
   }
 
   /**
-   *
+   * {@inheritdoc}
    */
   public function __construct($test_id = NULL) {
     parent::__construct($test_id);
   }
-
-  public $module_name = 'ldap_authentication';
-  protected $ldap_test_data;
 
   /**
    *
@@ -303,11 +304,12 @@ class LdapAuthenticationTestCase extends LdapTestCase {
   /**
    * Set mock server variables for sso tests.
    *
-   * @param object $drupal_user
-   *   in drupal stdClass format.
-   * @param array $ldap_user
-   *   array.
-   * @param enum ldap implementation type
+   * @param string $server_var_key
+   * @param string $sso_name
+   * @param string $ldapImplementation
+   * @param bool $seamlessLogin
+   *
+   * @return object
    */
   private function setSsoServerEnvironment(
     $server_var_key = 'REMOTE_USER',
@@ -712,38 +714,34 @@ class LdapAuthenticationTestCase extends LdapTestCase {
           [$sid],
         ],
       ],
-      'loginUIUsernameTxt' =>
-        [
-          'property' => 'loginUIUsernameTxt',
-          'values' => [
-            '',
-            'Hogwarts UserID',
-          ],
+      'loginUIUsernameTxt' => [
+        'property' => 'loginUIUsernameTxt',
+        'values' => [
+          '',
+          'Hogwarts UserID',
         ],
-      'loginUIPasswordTxt' =>
-        [
-          'property' => 'loginUIPasswordTxt',
-          'values' => [
-            '',
-            'Hogwarts UserID Password',
-          ],
+      ],
+      'loginUIPasswordTxt' => [
+        'property' => 'loginUIPasswordTxt',
+        'values' => [
+          '',
+          'Hogwarts UserID Password',
         ],
-      'ldapUserHelpLinkUrl' =>
-        [
-          'property' => 'ldapUserHelpLinkUrl',
-          'values' => [
-            '',
-            'http://passwords.hogwarts.edu',
-          ],
+      ],
+      'ldapUserHelpLinkUrl' => [
+        'property' => 'ldapUserHelpLinkUrl',
+        'values' => [
+          '',
+          'http://passwords.hogwarts.edu',
         ],
-      'ldapUserHelpLinkText' =>
-        [
-          'property' => 'ldapUserHelpLinkText',
-          'values' => [
-            'Hogwarts Password Management Page',
-            'Hogwarts Password Management Page',
-          ],
+      ],
+      'ldapUserHelpLinkText' => [
+        'property' => 'ldapUserHelpLinkText',
+        'values' => [
+          'Hogwarts Password Management Page',
+          'Hogwarts Password Management Page',
         ],
+      ],
       'allowOnlyIfTextInDn' => [
         'property' => 'allowOnlyIfTextInDn',
         'values' => [

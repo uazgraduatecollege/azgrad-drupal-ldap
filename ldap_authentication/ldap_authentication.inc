@@ -181,7 +181,7 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state, $re
    */
   $sso_login = (isset($form_state['sso_login']) && $form_state['sso_login']) ? TRUE : FALSE;
 
-  // patch 1599632.
+  // Patch 1599632.
   $watchdog_tokens = ['%username' => $authname, '%authname' => $authname];
   if ($detailed_watchdog_log) {
     watchdog('ldap_authentication', '%username : Beginning authentification....', $watchdog_tokens, WATCHDOG_DEBUG);
@@ -189,7 +189,7 @@ function _ldap_authentication_user_login_authenticate_validate(&$form_state, $re
 
   if (!$auth_conf = ldap_authentication_get_valid_conf()) {
     watchdog('ldap_authentication', 'Failed to get valid ldap authentication configuration.', [], WATCHDOG_ERROR);
-    form_set_error('name', 'Server Error: Failed to get valid ldap authentication configuration.' . $error);
+    form_set_error('name', 'Server Error: Failed to get valid ldap authentication configuration.');
     return;
   }
 
@@ -511,7 +511,7 @@ function ldap_authentication_corresponding_drupal_user($authname, $auth_conf, &$
   }
 
   if (is_object($drupal_account)) {
-    // patch 1599632.
+    // Patch 1599632.
     $authmaps = user_get_authmaps($authname);
     $drupal_account_is_authmapped = isset($authmaps['ldap_user']);
     $user_data = $drupal_account->data;
@@ -710,7 +710,7 @@ function ldap_authentication_test_credentials($auth_conf, $sso_login, $authname,
       break;
     }
   }
-  // end loop through servers.
+  // End loop through servers.
   $watchdog_tokens['%result'] = $result;
   $watchdog_tokens['%auth_result'] = $authentication_result;
   $watchdog_tokens['%err_text'] = _ldap_authentication_err_text($authentication_result);

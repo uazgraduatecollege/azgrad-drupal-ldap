@@ -492,7 +492,7 @@ class LdapAuthorizationConsumerOG extends LdapAuthorizationConsumerAbstract {
           // Unattribute to ldap even if user does not currently have role.
           unset($user_auth_data[ldap_authorization_og_authorization_id($gid, $rid, $group_entity_type)]);
         }
-        // ungroup if only authenticated and anonymous role left.
+        // Ungroup if only authenticated and anonymous role left.
         if (in_array($authenticated_rid, $revoking_rids) || count($remaining_rids) == 0) {
           $entity = og_ungroup($group_entity_type, $gid, 'user', $user->uid);
           $result = (boolean) ($entity);

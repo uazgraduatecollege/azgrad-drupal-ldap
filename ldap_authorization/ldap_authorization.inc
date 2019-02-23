@@ -5,11 +5,9 @@
  * Bulk of authorization code executed to determine a users authorizations.
  */
 
-// Remove after testing.
 /**
- *
+ * Unclear.
  */
-
 function ldap_authorization_help_watchdog() {
 
   $path = drupal_get_path("module", "ldap_help");
@@ -333,7 +331,7 @@ function _ldap_authorizations_user_authorizations(&$user, $op, $consumer_type, $
  * @param object $consumer
  *   is instance of an authorization consumer class
  *   such as LdapAuthorizationConsumerDrupalRole.
- * @param associative array of lower case authorization ids as keys and
+ * @param array of lower case authorization ids as keys and
  *   mixed case strings as values $filtered_ldap_authorizations
  *   all authorization ids a user is granted via ldap authorization configuration
  * @param object $ldap_entry
