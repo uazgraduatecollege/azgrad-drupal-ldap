@@ -669,7 +669,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
    *   Provisioning event.
    */
   private function setUserDefinedMappings($event) {
-    $mappings = $this->fieldProvider->getAttributesSyncedOnEvent($event);
+    $mappings = $this->fieldProvider->getConfigurableAttributesSyncedOnEvent($event);
 
     foreach ($mappings as $key => $mapping) {
       // If "convert from binary is selected" and no particular method is in
@@ -680,7 +680,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
       $value = $this->tokenProcessor->ldapEntryReplacementsForDrupalAccount($this->ldap_entry, $mapping->getLdapAttribute());
       // The ordinal $value_instance is not used and could probably be
       // removed.
-      list($value_type, $value_name, $value_instance) = $this->parseUserAttributeNames($key);
+      list($value_type, $value_name) = $this->parseUserAttributeNames($key);
 
       if ($value_type == 'field' || $value_type == 'property') {
         $this->account->set($value_name, $value);
@@ -704,16 +704,14 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
     $parts = explode('.', $user_attr_key);
     $attr_type = $parts[0];
     $attr_name = (isset($parts[1])) ? $parts[1] : FALSE;
-    $attr_ordinal = FALSE;
 
     if ($attr_name) {
       $attr_name_parts = explode(':', $attr_name);
       if (isset($attr_name_parts[1])) {
         $attr_name = $attr_name_parts[0];
-        $attr_ordinal = $attr_name_parts[1];
       }
     }
-    return [$attr_type, $attr_name, $attr_ordinal];
+    return [$attr_type, $attr_name];
   }
 
   /**

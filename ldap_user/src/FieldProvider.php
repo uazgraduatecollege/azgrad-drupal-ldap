@@ -4,7 +4,6 @@ namespace Drupal\ldap_user;
 
 use Drupal\Core\Config\ConfigFactory;
 use Drupal\Core\Entity\EntityFieldManager;
-use Drupal\Core\Entity\EntityTypeManager;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandler;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
@@ -97,7 +96,7 @@ class FieldProvider implements LdapUserAttributesInterface {
   }
 
   /**
-   *
+   * Load user-defined mappings from database configuration.
    */
   private function loadUserDefinedMappings() {
     $database_mappings = $this->config->get('ldapUserSyncMappings');
@@ -123,9 +122,17 @@ class FieldProvider implements LdapUserAttributesInterface {
   }
 
   /**
+   * Attribute is synced on event.
    *
+   * @param string $name
+   *   Field name.
+   * @param string $event
+   *   Event.
+   *
+   * @return bool
+   *   Is synced.
    */
-  public function attributeIsSyncedOnEvent($name, $event) {
+  public function attributeIsSyncedOnEvent(string $name, string $event) {
     if (isset($this->attributes[$name]) && $this->attributes[$name]->isEnabled()) {
       if (in_array($event, $this->attributes[$name]->getProvisioningEvents())) {
         return TRUE;
@@ -135,16 +142,41 @@ class FieldProvider implements LdapUserAttributesInterface {
   }
 
   /**
-   * @param $event
+   * Get Attributes synced on event.
+   *
+   * @param string $event
+   *   Event.
    *
    * @return \Drupal\ldap_servers\Mapping[]
+   *   Mapping.
    */
   public function getAttributesSyncedOnEvent($event) {
     $synced_attributes = [];
-    foreach ($this->attributes as $attribute) {
+    foreach ($this->attributes as $key => $attribute) {
       if ($attribute->isEnabled() &&
         in_array($event, $attribute->getProvisioningEvents())) {
-        $synced_attributes[] = $attribute;
+        $synced_attributes[$key] = $attribute;
+      }
+    }
+    return $synced_attributes;
+  }
+
+  /**
+   * Get configurable attributes synced on event.
+   *
+   * @param string $event
+   *   Event.
+   *
+   * @return \Drupal\ldap_servers\Mapping[]
+   *   Mapping.
+   */
+  public function getConfigurableAttributesSyncedOnEvent(string $event) {
+    $synced_attributes = [];
+    foreach ($this->attributes as $key => $attribute) {
+      if ($attribute->isEnabled() &&
+        $attribute->isConfigurable() &&
+        in_array($event, $attribute->getProvisioningEvents())) {
+        $synced_attributes[$key] = $attribute;
       }
     }
     return $synced_attributes;
@@ -191,10 +223,9 @@ class FieldProvider implements LdapUserAttributesInterface {
   }
 
   /**
-   * @param \Drupal\ldap_servers\Mapping[] $this->attributes
-   * @param \Drupal\ldap_servers\Entity\Server $ldap_server
+   * Add base properties.
    *
-   * @return array
+   * @return void
    */
   private function addBaseProperties() {
     $fields = [
@@ -242,10 +273,9 @@ class FieldProvider implements LdapUserAttributesInterface {
   }
 
   /**
-   * @param \Drupal\ldap_servers\Mapping[] $this->attributes
-   * @param $tokens
+   * Add DN.
    *
-   * @return array
+   * @return void
    */
   private function addDn() {
     $this->attributes['[field.ldap_user_current_dn]'] = new Mapping(
@@ -295,12 +325,12 @@ class FieldProvider implements LdapUserAttributesInterface {
           TRUE,
           FALSE,
           [
-            self::EVENT_CREATE_DRUPAL_USER,
-            self::EVENT_SYNC_TO_DRUPAL_USER,
+            self::EVENT_CREATE_LDAP_ENTRY,
+            self::EVENT_SYNC_TO_LDAP_ENTRY,
           ],
           'ldap_user',
           'ldap_user'
-              );
+        );
       }
     }
   }
@@ -308,13 +338,10 @@ class FieldProvider implements LdapUserAttributesInterface {
   /**
    * Additional access needed in direction to Drupal.
    *
-   * @param \Drupal\ldap_servers\Mapping[] $this->attributes
-   *   Available user attributes.
-   *
-   * @return array
+   * @return void
    *   Available user attributes.
    */
-  private function exposeAvailableBaseFields() {
+  private function exposeAvailableBaseFields(): void {
     $this->server = $this->config->get('drupalAcctProvisionServer');
     $triggers = $this->config->get('drupalAcctProvisionTriggers');
     if ($this->server && !empty($triggers)) {
@@ -337,18 +364,13 @@ class FieldProvider implements LdapUserAttributesInterface {
   /**
    * Add user entity fields.
    *
-   * @param \Drupal\ldap_servers\Mapping[] $this->attributes
-   *   Available user attributes.
-   *
-   * @return array
+   * @return void
    *   Available user attributes.
    */
-  private function addUserEntityFields() {
-    // Todo: Verify that the next step (loading fields) cannot do this via BaseDefinition.
+  private function addUserEntityFields(): void {
     // Drupal user properties.
     $this->attributes['[property.status]'] = new Mapping(
       '[property.status]',
-
       'Property: Account Status',
       TRUE,
       FALSE,
@@ -381,9 +403,10 @@ class FieldProvider implements LdapUserAttributesInterface {
 
     // Load active Drupal user fields.
     // TODO: Consider not hard-coding the other properties.
-    $user_fields = $this->entityFieldManager->getFieldStorageDefinitions('user');
+    $user_fields = $this->entityFieldManager
+      ->getFieldStorageDefinitions('user');
     foreach ($user_fields as $field_name => $field_instance) {
-      $field_id = "[field." . $field_name . "]";
+      $field_id = sprintf("[field.%s]", $field_name);
       if (isset($this->attributes[$field_id])) {
         $this->attributes[$field_id]->isConfigurable(TRUE);
       }

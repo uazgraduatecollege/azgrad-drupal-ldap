@@ -60,15 +60,19 @@ abstract class LdapUserMappingBaseForm extends LdapUserBaseForm {
   /**
    * Derive synchronization mappings from configuration.
    *
-   * @param $direction
-   * @param $sid
+   * @param string $direction
+   *   Direction.
+   * @param string $sid
+   *   Server ID.
    *
    * @return array
+   *   Mappings.
    */
   protected function loadAvailableMappings($direction, $sid) {
     $attributes = [];
     if ($sid) {
       try {
+        /** @var \Drupal\ldap_servers\Entity\Server $ldap_server */
         $ldap_server = $this->entityTypeManager
           ->getStorage('ldap_server')
           ->load($sid);
@@ -108,10 +112,8 @@ abstract class LdapUserMappingBaseForm extends LdapUserBaseForm {
   /**
    * Extract sync mappings array from mapping table in admin form.
    *
-   * @param array $rows
-   *   As $form_state['values'] from Drupal FormAPI.
-   * @param string $direction
-   *   Direction to sync to.
+   * @param array $values
+   *   Form values.
    *
    * @return array
    *   Returns the relevant mappings.
@@ -153,9 +155,15 @@ abstract class LdapUserMappingBaseForm extends LdapUserBaseForm {
   }
 
   /**
+   * Sanitize machine name.
    *
+   * @param string $string
+   *   Field name.
+   *
+   * @return string
+   *   Machine name.
    */
-  private function sanitizeMachineName($string) {
+  private function sanitizeMachineName(string $string): string {
     // Replace periods & square brackets.
     return str_replace(['.', '[', ']'], ['-', '', ''], $string);
   }
@@ -193,7 +201,6 @@ abstract class LdapUserMappingBaseForm extends LdapUserBaseForm {
    *   Returns the mappings
    */
   protected function getServerMappingFields(FormStateInterface $form_state) {
-
     $rows = [];
     $user_attribute_options = ['0' => $this->t('Select option')];
 

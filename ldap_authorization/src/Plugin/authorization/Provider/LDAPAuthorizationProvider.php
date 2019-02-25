@@ -49,7 +49,7 @@ class LDAPAuthorizationProvider extends ProviderPluginBase implements ContainerF
    *
    * @param array $configuration
    *   Configuration.
-   * @param $plugin_id
+   * @param string $plugin_id
    *   Plugin ID.
    * @param array $plugin_definition
    *   Plugin definition.
