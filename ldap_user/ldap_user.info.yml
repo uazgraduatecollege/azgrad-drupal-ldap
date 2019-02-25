@@ -5,6 +5,7 @@ core: 8.x
 package: 'Lightweight Directory Access Protocol'
 dependencies:
   - ldap:ldap_servers
+  - ldap:ldap_query
   - externalauth:externalauth
 stylesheets:
   all:

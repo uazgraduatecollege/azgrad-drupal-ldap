@@ -13,7 +13,7 @@ use Drupal\ldap_servers\LdapUserManager;
 use Drupal\ldap_servers\Logger\LdapDetailLog;
 use Drupal\ldap_servers\Processor\TokenProcessor;
 use Drupal\ldap_user\Exception\LdapBadParamsException;
-use Drupal\ldap_user\Helper\SyncMappingHelper;
+use Drupal\ldap_user\FieldProvider;
 use Drupal\user\UserInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\Ldap\Entry;
@@ -29,8 +29,8 @@ abstract class LdapEntryBaseSubscriber implements EventSubscriberInterface, Ldap
   protected $entityTypeManager;
   protected $moduleHandler;
   protected $ldapUserManager;
-  protected $syncMappingHelper;
   protected $tokenProcessor;
+  protected $fieldProvider;
 
   /**
    * Constructor.
@@ -49,8 +49,6 @@ abstract class LdapEntryBaseSubscriber implements EventSubscriberInterface, Ldap
    *   Module handler.
    * @param \Drupal\ldap_servers\LdapUserManager $ldap_user_manager
    *   LDAP user manager.
-   * @param \Drupal\ldap_user\Helper\SyncMappingHelper $sync_mapping_helper
-   *   Sync mapping helper.
    * @param \Drupal\ldap_servers\Processor\TokenProcessor $token_processor
    *   Token processor.
    */
@@ -61,16 +59,16 @@ abstract class LdapEntryBaseSubscriber implements EventSubscriberInterface, Ldap
     EntityTypeManagerInterface $entity_type_manager,
     ModuleHandlerInterface $module_handler,
     LdapUserManager $ldap_user_manager,
-    SyncMappingHelper $sync_mapping_helper,
-    TokenProcessor $token_processor) {
+    TokenProcessor $token_processor,
+    FieldProvider $field_provider) {
     $this->config = $config_factory->get('ldap_user.settings');
     $this->logger = $logger;
     $this->detailLog = $detail_log;
     $this->entityTypeManager = $entity_type_manager;
     $this->moduleHandler = $module_handler;
     $this->ldapUserManager = $ldap_user_manager;
-    $this->syncMappingHelper = $sync_mapping_helper;
     $this->tokenProcessor = $token_processor;
+    $this->fieldProvider = $field_provider;
   }
 
   /**
@@ -112,21 +110,23 @@ abstract class LdapEntryBaseSubscriber implements EventSubscriberInterface, Ldap
       throw new LdapBadParamsException('Missing user or server.');
     }
 
-    $mappings = $this->syncMappingHelper->getFieldsSyncedToLdap($prov_event);
+    $this->fieldProvider->loadAttributes(self::PROVISION_TO_LDAP, $ldap_server);
+
+    $mappings = $this->fieldProvider->getAttributesSyncedOnEvent($prov_event);
 
     foreach ($mappings as $field_key => $field_detail) {
       list($ldap_attribute_name, $ordinal) = $this->extractTokenParts($field_key);
-      $ordinal = (!$ordinal) ? 0 : $ordinal;
-      if ($this->syncMappingHelper->isSyncedToLdap($field_key, array_pop($prov_events))) {
-        $token = ($field_detail['user_attr'] == 'user_tokens') ? $field_detail['user_tokens'] : $field_detail['user_attr'];
-        $value = $this->tokenProcessor->tokenReplace($account, $token, 'user_account');
+      if (!$ordinal) {
+        $ordinal = 0;
+      }
+      $token = $field_detail->getDrupalAttribute() == 'user_tokens' ? $field_detail->getUserTokens() : $field_detail->getDrupalAttribute();
+      $value = $this->tokenProcessor->drupalAccountReplacementsForLdap($account, $token);
 
-        if ($ldap_attribute_name == 'dn' && $value) {
-          $dn = $value;
-        }
-        elseif ($value) {
-          $attributes[$ldap_attribute_name][$ordinal] = $value;
-        }
+      if ($ldap_attribute_name == 'dn' && $value) {
+        $dn = $value;
+      }
+      elseif ($value) {
+        $attributes[$ldap_attribute_name][$ordinal] = $value;
       }
     }
     $entry = new Entry($dn, $attributes);

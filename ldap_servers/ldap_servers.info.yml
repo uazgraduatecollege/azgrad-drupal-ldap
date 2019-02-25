@@ -5,3 +5,6 @@ core: 8.x
 package: 'Lightweight Directory Access Protocol'
 
 configure: entity.ldap_server.collection
+
+dependencies:
+  - externalauth:externalauth

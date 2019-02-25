@@ -19,6 +19,7 @@ class IntegrationTests extends KernelTestBase {
     'externalauth',
     'ldap_servers',
     'ldap_user',
+    'ldap_query',
     'user',
   ];
 

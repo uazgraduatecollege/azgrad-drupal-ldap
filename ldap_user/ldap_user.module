@@ -54,15 +54,6 @@ function ldap_user_mail($key, &$message, $params) {
 }
 
 /**
- * Implements hook_ldap_user_attributes_alter().
- */
-function ldap_user_ldap_user_attributes_alter(&$available_user_attrs, &$params) {
-  /** @var \Drupal\ldap_user\FieldProvider $processor */
-  $processor = \Drupal::service('ldap_user.field_provider');
-  list($available_user_attrs, $params) = $processor->alterLdapUserAttributes($available_user_attrs, $params);
-}
-
-/**
  * Implements hook_help().
  */
 function ldap_user_help($route_name, RouteMatchInterface $route_match) {

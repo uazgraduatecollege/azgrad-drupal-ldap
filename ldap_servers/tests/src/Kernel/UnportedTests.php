@@ -2,16 +2,33 @@
 
 namespace Drupal\Tests\ldap_servers\Unit;
 
+use Drupal\KernelTests\Core\Entity\EntityKernelTestBase;
 use Drupal\ldap_servers\Entity\Server;
 use Drupal\ldap_servers\LdapUserManager;
-use Drupal\Tests\UnitTestCase;
 use Symfony\Component\Ldap\Entry;
 
 /**
  * @coversDefaultClass \Drupal\ldap_servers\Entity\Server
  * @group ldap
  */
-class ServerTests extends UnitTestCase {
+class UnportedTests extends EntityKernelTestBase {
+
+  public static $modules = ['ldap_servers', 'externalauth'];
+
+  /**
+   * @var \Drupal\ldap_servers\Entity\Server
+   */
+  protected $server;
+
+  /**
+   *
+   */
+  public function setUp() {
+    parent::setUp();
+    $this->installEntitySchema('ldap_server');
+    $this->server = Server::create(['id' => 'example'])
+      ->save();
+  }
 
   /**
    * Tests searches across multiple DNs.
@@ -69,47 +86,6 @@ class ServerTests extends UnitTestCase {
     $this->assertEquals(1, $result['count']);
     $result = $ldapStub->searchAllBaseDns('(cn=hpotter)', ['dn']);
     $this->assertEquals(1, $result['count']);
-  }
-
-  /**
-   * Test getting username from LDAP entry.
-   */
-  public function testderiveUsernameFromLdapResponse() {
-    $stub = $this->getMockBuilder(Server::class)
-      ->disableOriginalConstructor()
-      ->setMethods(['get'])
-      ->getMock();
-
-    $map = [
-      ['account_name_attr', ''],
-      ['user_attr', 'cn'],
-    ];
-    $stub->method('get')->willReturnMap($map);
-
-    /** @var \Drupal\ldap_servers\Entity\Server $stub */
-    $username = $stub->deriveUsernameFromLdapResponse(new Entry('undefined', []));
-    $this->assertEquals(FALSE, $username);
-
-    $userOpenLdap = new Entry('undefined', [
-      'cn' => [0 => 'hpotter'],
-      'mail' => [0 => 'hpotter@hogwarts.edu'],
-      'uid' => [0 => '1'],
-      'guid' => [0 => '101'],
-      'sn' => [0 => 'Potter'],
-      'givenname' => [0 => 'Harry'],
-      'house' => [0 => 'Gryffindor'],
-      'department' => [0 => ''],
-      'faculty' => [0 => 1],
-      'staff' => [0 => 1],
-      'student' => [0 => 1],
-      'gpa' => [0 => '3.8'],
-      'probation' => [0 => 1],
-      'password' => [0 => 'goodpwd'],
-    ]);
-
-    $username = $stub->deriveUsernameFromLdapResponse($userOpenLdap);
-    $this->assertEquals('hpotter', $username);
-
   }
 
   /**

@@ -33,8 +33,6 @@ use Symfony\Component\Ldap\Entry;
  *     'prov_events' => array( )
  * @param array $params
  *   Parameters.
- *
- * @see \Drupal\ldap_user\Helper\SyncMappingHelper::processSyncMappings()
  */
 function hook_ldap_user_attributes_alter(array &$available_user_attrs, array &$params) {
 
@@ -62,6 +60,6 @@ function hook_ldap_user_attributes_alter(array &$available_user_attrs, array &$p
  */
 function hook_ldap_user_edit_user_alter(User $account, Entry $ldap_user, array $context) {
   $tokenProcessor = \Drupal::service('ldap.token_processor');
-  $value = $tokenProcessor->tokenReplace($ldap_user['attr'], '[sn]', 'ldap_entry');
+  $value = $tokenProcessor->ldapEntryReplacementsForDrupalAccount($ldap_user['attr'], '[sn]');
   $account->set('myfield', $value);
 }

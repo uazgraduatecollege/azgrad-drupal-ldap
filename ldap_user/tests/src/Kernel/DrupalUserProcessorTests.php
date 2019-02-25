@@ -21,6 +21,7 @@ class DrupalUserProcessorTests extends KernelTestBase implements LdapUserAttribu
     'externalauth',
     'ldap_servers',
     'ldap_user',
+    'ldap_query',
     'ldap_authentication',
     'user',
     'system',

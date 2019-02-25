@@ -19,7 +19,6 @@ class LdapGroupManager extends LdapBaseManager {
   const LDAP_QUERY_CHUNK = 50;
   const LDAP_QUERY_RECURSION_LIMIT = 10;
 
-
   /**
    * Check if group memberships from attribute are configured.
    *

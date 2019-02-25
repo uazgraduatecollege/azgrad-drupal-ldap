@@ -5,6 +5,7 @@ namespace Drupal\ldap_servers\Entity;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\ldap_servers\Helper\ConversionHelper;
 use Drupal\ldap_servers\LdapTransformationTraits;
+use Drupal\ldap_servers\Processor\TokenProcessor;
 use Drupal\ldap_servers\ServerInterface;
 use Symfony\Component\Ldap\Entry;
 
@@ -142,12 +143,13 @@ class Server extends ConfigEntityBase implements ServerInterface {
    * @TODO: Improve storage in database (should be a proper array).
    */
   public function getBaseDn() {
-    $baseDn = $this->get('basedn');
-
-    if (!is_array($baseDn) && is_scalar($baseDn)) {
-      $baseDn = explode("\r\n", $baseDn);
+    if ($this->get('basedn')) {
+      $base_dn = explode("\r\n", $this->get('basedn'));
     }
-    return $baseDn;
+    else {
+      $base_dn = [];
+    }
+    return $base_dn;
   }
 
   /**
@@ -197,7 +199,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
     }
     // Template is of form [cn]@illinois.edu.
     elseif ($this->get('mail_template')) {
-      return $this->tokenProcessor->tokenReplace($ldap_entry, $this->get('mail_template'), 'ldap_entry');
+      return $result = $this->tokenProcessor->ldapEntryReplacementsForDrupalAccount($ldap_entry, $this->get('mail_template'));
     }
     else {
       return FALSE;
@@ -217,7 +219,12 @@ class Server extends ConfigEntityBase implements ServerInterface {
   public function derivePuidFromLdapResponse(Entry $ldapEntry) {
     if ($this->get('unique_persistent_attr') && $ldapEntry->hasAttribute($this->get('unique_persistent_attr'))) {
       $puid = $ldapEntry->getAttribute($this->get('unique_persistent_attr'))[0];
-      return ($this->get('unique_persistent_attr_binary')) ? ConversionHelper::binaryConversionToString($puid) : $puid;
+      if (($this->get('unique_persistent_attr_binary'))) {
+        return ConversionHelper::binaryConversionToString($puid);
+      }
+      else {
+        return $puid;
+      }
     }
     else {
       return FALSE;

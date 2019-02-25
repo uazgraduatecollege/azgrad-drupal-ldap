@@ -76,62 +76,62 @@ class TokenTests extends UnitTestCase {
    * See http://drupal.org/node/1245736 for test tokens.
    */
   public function testTokenReplacement() {
-
-    $tokenHelper = $this->getMockBuilder('\Drupal\ldap_servers\Processor\TokenProcessor')
+    /** @var \Drupal\ldap_servers\Processor\TokenProcessor $processor */
+    $processor = $this->getMockBuilder('\Drupal\ldap_servers\Processor\TokenProcessor')
       ->setMethods(NULL)
       ->disableOriginalConstructor()
       ->getMock();
 
-    $dn = $tokenHelper->tokenReplace($this->ldapEntry, '[dn]');
+    $dn = $processor->ldapEntryReplacementsForDrupalAccount($this->ldapEntry, '[dn]');
     $this->assertEquals($this->ldapEntry->getDn(), $dn);
 
-    $house0 = $tokenHelper->tokenReplace($this->ldapEntry, '[house:0]');
+    $house0 = $processor->ldapEntryReplacementsForDrupalAccount($this->ldapEntry, '[house:0]');
     $this->assertEquals($this->ldapEntry->getAttribute('house')[0], $house0);
 
-    $mixed = $tokenHelper->tokenReplace($this->ldapEntry, 'thisold[house:0]');
+    $mixed = $processor->ldapEntryReplacementsForDrupalAccount($this->ldapEntry, 'thisold[house:0]');
     $this->assertEquals('thisold' . $this->ldapEntry->getAttribute('house')[0], $mixed);
 
-    $compound = $tokenHelper->tokenReplace($this->ldapEntry, '[samaccountname:0][house:0]');
+    $compound = $processor->ldapEntryReplacementsForDrupalAccount($this->ldapEntry, '[samaccountname:0][house:0]');
     // TODO: Expected :'hpotterGryffindor', Actual:'[samaccountname:0]Gryffindor'
     // $this->assertEquals($this->ldapEntry->getAttribute('sAMAccountName')[0] . $this->ldapEntry->getAttribute('house')[0], $compound);.
-    $literalValue = $tokenHelper->tokenReplace($this->ldapEntry, 'literalvalue');
+    $literalValue = $processor->ldapEntryReplacementsForDrupalAccount($this->ldapEntry, 'literalvalue');
     $this->assertEquals('literalvalue', $literalValue);
 
-    $house0 = $tokenHelper->tokenReplace($this->ldapEntry, '[house]');
+    $house0 = $processor->ldapEntryReplacementsForDrupalAccount($this->ldapEntry, '[house]');
     $this->assertEquals($this->ldapEntry->getAttribute('house')[0], $house0);
 
-    $houseLast = $tokenHelper->tokenReplace($this->ldapEntry, '[house:last]');
+    $houseLast = $processor->ldapEntryReplacementsForDrupalAccount($this->ldapEntry, '[house:last]');
     $this->assertEquals($this->ldapEntry->getAttribute('house')[1], $houseLast);
 
-    $sAMAccountName = $tokenHelper->tokenReplace($this->ldapEntry, '[samaccountname:0]');
+    $sAMAccountName = $processor->ldapEntryReplacementsForDrupalAccount($this->ldapEntry, '[samaccountname:0]');
     // TODO: Expected :'hpotter', Actual: NULL
     // $this->assertEquals($this->ldapEntry->getAttribute('sAMAccountName')[0], $sAMAccountName);.
-    $sAMAccountNameMixedCase = $tokenHelper->tokenReplace($this->ldapEntry, '[sAMAccountName:0]');
+    $sAMAccountNameMixedCase = $processor->ldapEntryReplacementsForDrupalAccount($this->ldapEntry, '[sAMAccountName:0]');
     // TODO: Expected :'hpotter', Actual: NULL
     // $this->assertEquals($this->ldapEntry->getAttribute('sAMAccountName')[0], $sAMAccountNameMixedCase);.
-    $sAMAccountName2 = $tokenHelper->tokenReplace($this->ldapEntry, '[samaccountname]');
+    $sAMAccountName2 = $processor->ldapEntryReplacementsForDrupalAccount($this->ldapEntry, '[samaccountname]');
     // TODO: Expected :'hpotter', Actual: NULL
     // $this->assertEquals($this->ldapEntry->getAttribute('sAMAccountName')[0], $sAMAccountName2);.
-    $sAMAccountName3 = $tokenHelper->tokenReplace($this->ldapEntry, '[sAMAccountName]');
+    $sAMAccountName3 = $processor->ldapEntryReplacementsForDrupalAccount($this->ldapEntry, '[sAMAccountName]');
     // TODO: Expected :'hpotter', Actual: NULL
     // $this->assertEquals($this->ldapEntry->getAttribute('sAMAccountName')[0], $sAMAccountName3);.
-    $base64encode = $tokenHelper->tokenReplace($this->ldapEntry, '[guid;base64_encode]');
+    $base64encode = $processor->ldapEntryReplacementsForDrupalAccount($this->ldapEntry, '[guid;base64_encode]');
     $this->assertEquals(base64_encode($this->ldapEntry->getAttribute('guid')[0]), $base64encode);
 
-    $bin2hex = $tokenHelper->tokenReplace($this->ldapEntry, '[guid;bin2hex]');
+    $bin2hex = $processor->ldapEntryReplacementsForDrupalAccount($this->ldapEntry, '[guid;bin2hex]');
     $this->assertEquals(bin2hex($this->ldapEntry->getAttribute('guid')[0]), $bin2hex);
 
-    $msguid = $tokenHelper->tokenReplace($this->ldapEntry, '[guid;msguid]');
+    $msguid = $processor->ldapEntryReplacementsForDrupalAccount($this->ldapEntry, '[guid;msguid]');
     $this->assertEquals(ConversionHelper::convertMsguidToString($this->ldapEntry->getAttribute('guid')[0]), $msguid);
 
-    $binary = $tokenHelper->tokenReplace($this->ldapEntry, '[guid;binary]');
+    $binary = $processor->ldapEntryReplacementsForDrupalAccount($this->ldapEntry, '[guid;binary]');
     $this->assertEquals(ConversionHelper::binaryConversionToString($this->ldapEntry->getAttribute('guid')[0]), $binary);
 
     $account = $this->prophesize('\Drupal\user\Entity\User');
     $value = new \stdClass();
     $value->value = $this->ldapEntry->getAttribute('sAMAccountName')[0];
     $account->get('name')->willReturn($value);
-    $nameReplacement = $tokenHelper->tokenReplace($account->reveal(), '[property.name]', 'user_account');
+    $nameReplacement = $processor->drupalAccountReplacementsForLdap($account->reveal(), '[property.name]');
     $this->assertEquals($this->ldapEntry->getAttribute('sAMAccountName')[0], $nameReplacement);
 
   }
@@ -146,15 +146,15 @@ class TokenTests extends UnitTestCase {
       ->getMock();
 
     // Test regular reversal (2 elements) at beginning.
-    $dc = $tokenHelper->tokenReplace($this->ldapEntry, '[dc:reverse:0]');
+    $dc = $tokenHelper->ldapEntryReplacementsForDrupalAccount($this->ldapEntry, '[dc:reverse:0]');
     $this->assertEquals('edu', $dc);
 
     // Test single element reversion.
-    $ou = $tokenHelper->tokenReplace($this->ldapEntry, '[cn:reverse:0]');
+    $ou = $tokenHelper->ldapEntryReplacementsForDrupalAccount($this->ldapEntry, '[cn:reverse:0]');
     $this->assertEquals('hpotter', $ou);
 
     // Test 3 element reversion at end.
-    $ou2 = $tokenHelper->tokenReplace($this->ldapEntry, '[ou:reverse:2]');
+    $ou2 = $tokenHelper->ldapEntryReplacementsForDrupalAccount($this->ldapEntry, '[ou:reverse:2]');
     $this->assertEquals('Gryffindor', $ou2);
 
   }

@@ -23,9 +23,9 @@ class Mapping {
   /**
    * Mapping constructor.
    *
-   * @param $id
+   * @param string $id
    *   ID.
-   * @param null $label
+   * @param string $label
    *   Label.
    * @param bool $configurable
    *   Configurable.
@@ -33,19 +33,19 @@ class Mapping {
    *   Enabled.
    * @param array $provisioning_events
    *   Provisioning events.
-   * @param null $configuration_module
+   * @param string $configuration_module
    *   Configuration module.
-   * @param null $provisioning_module
+   * @param string $provisioning_module
    *   Provisioning module.
    */
   public function __construct(
-    $id,
-    $label = NULL,
-    $configurable = FALSE,
-    $enabled = FALSE,
-    $provisioning_events = [],
-    $configuration_module = NULL,
-    $provisioning_module = NULL) {
+    string $id,
+    string $label = '',
+    bool $configurable = FALSE,
+    bool $enabled = FALSE,
+    array $provisioning_events = [],
+    string $configuration_module = '',
+    string $provisioning_module = '') {
     $this->id = $id;
     $this->label = $label;
     $this->configurable = $configurable;
@@ -53,6 +53,21 @@ class Mapping {
     $this->provisioningEvents = $provisioning_events;
     $this->configurationModule = $configuration_module;
     $this->provisioningModule = $provisioning_module;
+  }
+
+  /**
+   *
+   */
+  public function serialize() {
+    return [
+      'ldap_attr' => $this->getLdapAttribute(),
+      'user_attr' => $this->getDrupalAttribute(),
+      'convert' => $this->isBinary(),
+      'user_tokens' => $this->getUserTokens(),
+      'config_module' => $this->getConfigurationModule(),
+      'prov_module' => $this->getProvisioningModule(),
+      'prov_events' => $this->getProvisioningEvents(),
+    ];
   }
 
   /**
@@ -133,6 +148,24 @@ class Mapping {
    */
   public function getProvisioningEvents(): array {
     return $this->provisioningEvents;
+  }
+
+  /**
+   * Provisioning event available?
+   *
+   * @param $event
+   *   Event.
+   *
+   * @return bool
+   *   Available.
+   */
+  public function hasProvisioningEvent($event) {
+    if (in_array($event, $this->provisioningEvents)) {
+      return TRUE;
+    }
+    else {
+      return FALSE;
+    }
   }
 
   /**

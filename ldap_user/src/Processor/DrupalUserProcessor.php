@@ -18,7 +18,7 @@ use Drupal\ldap_servers\Logger\LdapDetailLog;
 use Drupal\ldap_servers\Processor\TokenProcessor;
 use Drupal\ldap_servers\LdapUserAttributesInterface;
 use Drupal\ldap_user\Event\LdapUserLoginEvent;
-use Drupal\ldap_user\Helper\SyncMappingHelper;
+use Drupal\ldap_user\FieldProvider;
 use Drupal\Core\Utility\Token;
 use Drupal\user\UserInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
@@ -41,7 +41,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
   protected $token;
   protected $moduleHandler;
   protected $currentUser;
-  protected $syncMapper;
+  protected $fieldProvider;
 
   /**
    * The Drupal user account.
@@ -92,8 +92,6 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
    *   Module handler.
    * @param \Drupal\Core\Session\AccountInterface $current_user
    *   Current user.
-   * @param \Drupal\ldap_user\Helper\SyncMappingHelper $sync_mapper
-   *   Sync mapper.
    * @param \Drupal\ldap_servers\LdapUserManager $ldap_user_manager
    *   LDAP user manager.
    * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $event_dispatcher
@@ -110,9 +108,9 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
     Token $token,
     ModuleHandler $module_handler,
     AccountInterface $current_user,
-    SyncMappingHelper $sync_mapper,
     LdapUserManager $ldap_user_manager,
-    EventDispatcherInterface $event_dispatcher) {
+    EventDispatcherInterface $event_dispatcher,
+    FieldProvider $field_provider) {
     $this->logger = $logger;
     $this->config = $config_factory->get('ldap_user.settings');
     $this->configAuthentication = $config_factory->get('ldap_authentication.settings');
@@ -124,9 +122,9 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
     $this->token = $token;
     $this->moduleHandler = $module_handler;
     $this->currentUser = $current_user;
-    $this->syncMapper = $sync_mapper;
     $this->ldapUserManager = $ldap_user_manager;
     $this->eventDispatcher = $event_dispatcher;
+    $this->fieldProvider = $field_provider;
   }
 
   /**
@@ -527,6 +525,8 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
    * One should not assume all attributes are present in the LDAP entry.
    */
   private function applyAttributesToAccount() {
+    $this->fieldProvider->loadAttributes(self::PROVISION_TO_DRUPAL, $this->server);
+
     $this->setLdapBaseFields(self::EVENT_SYNC_TO_DRUPAL_USER);
     $this->setUserDefinedMappings(self::EVENT_SYNC_TO_DRUPAL_USER);
 
@@ -547,6 +547,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
    * One should not assume all attributes are present in the LDAP entry.
    */
   private function applyAttributesToAccountOnCreate() {
+    $this->fieldProvider->loadAttributes(self::PROVISION_TO_DRUPAL, $this->server);
     $this->setLdapBaseFields(self::EVENT_CREATE_DRUPAL_USER);
     $this->setFieldsOnDrupalUserCreation();
     $this->setUserDefinedMappings(self::EVENT_CREATE_DRUPAL_USER);
@@ -623,39 +624,38 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
    *   Provisioning event.
    */
   private function setLdapBaseFields($event) {
-    $direction = self::PROVISION_TO_DRUPAL;
     // Basic $user LDAP fields.
-    if ($this->syncMapper->isSyncedToDrupal('[property.name]', $event)) {
+    if ($this->fieldProvider->attributeIsSyncedOnEvent('[property.name]', $event)) {
       $this->account->set('name', $this->server->deriveUsernameFromLdapResponse($this->ldap_entry));
     }
 
-    if ($this->syncMapper->isSyncedToDrupal('[property.mail]', $event)) {
+    if ($this->fieldProvider->attributeIsSyncedOnEvent('[property.mail]', $event)) {
       $derived_mail = $this->server->deriveEmailFromLdapResponse($this->ldap_entry);
       if ($derived_mail) {
         $this->account->set('mail', $derived_mail);
       }
     }
 
-    if ($this->syncMapper->isSyncedToDrupal('[property.picture]', $event)) {
+    if ($this->fieldProvider->attributeIsSyncedOnEvent('[property.picture]', $event)) {
       $picture = $this->userPictureFromLdapEntry();
       if ($picture) {
         $this->account->set('user_picture', $picture);
       }
     }
 
-    if ($this->syncMapper->isSyncedToDrupal('[field.ldap_user_puid]', $event)) {
+    if ($this->fieldProvider->attributeIsSyncedOnEvent('[field.ldap_user_puid]', $event)) {
       $ldap_user_puid = $this->server->derivePuidFromLdapResponse($this->ldap_entry);
       if ($ldap_user_puid) {
         $this->account->set('ldap_user_puid', $ldap_user_puid);
       }
     }
-    if ($this->syncMapper->isSyncedToDrupal('[field.ldap_user_puid_property]', $event)) {
+    if ($this->fieldProvider->attributeIsSyncedOnEvent('[field.ldap_user_puid_property]', $event)) {
       $this->account->set('ldap_user_puid_property', $this->server->get('unique_persistent_attr'));
     }
-    if ($this->syncMapper->isSyncedToDrupal('[field.ldap_user_puid_sid]', $event)) {
+    if ($this->fieldProvider->attributeIsSyncedOnEvent('[field.ldap_user_puid_sid]', $event)) {
       $this->account->set('ldap_user_puid_sid', $this->server->id());
     }
-    if ($this->syncMapper->isSyncedToDrupal('[field.ldap_user_current_dn]', $event)) {
+    if ($this->fieldProvider->attributeIsSyncedOnEvent('[field.ldap_user_current_dn]', $event)) {
       $this->account->set('ldap_user_current_dn', $this->ldap_entry->getDn());
     }
   }
@@ -669,27 +669,21 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
    *   Provisioning event.
    */
   private function setUserDefinedMappings($event) {
-    $direction = self::PROVISION_TO_DRUPAL;
-    // Get any additional mappings.
-    $mappings = $this->syncMapper->getFieldsSyncedToDrupal($event);
+    $mappings = $this->fieldProvider->getAttributesSyncedOnEvent($event);
 
-    // Loop over the mappings.
-    foreach ($mappings as $key => $fieldDetails) {
-      // Make sure this mapping is relevant to the sync context.
-      if ($this->syncMapper->isSyncedToDrupal($key, $event)) {
-        // If "convert from binary is selected" and no particular method is in
-        // token default to binaryConversionToString() function.
-        if ($fieldDetails['convert'] && strpos($fieldDetails['ldap_attr'], ';') === FALSE) {
-          $fieldDetails['ldap_attr'] = str_replace(']', ';binary]', $fieldDetails['ldap_attr']);
-        }
-        $value = $this->tokenProcessor->tokenReplace($this->ldap_entry, $fieldDetails['ldap_attr'], 'ldap_entry');
-        // The ordinal $value_instance is not used and could probably be
-        // removed.
-        list($value_type, $value_name, $value_instance) = $this->parseUserAttributeNames($key);
+    foreach ($mappings as $key => $mapping) {
+      // If "convert from binary is selected" and no particular method is in
+      // token default to binaryConversionToString() function.
+      if ($mapping->isBinary() && strpos($mapping->getLdapAttribute(), ';') === FALSE) {
+        $mapping->setLdapAttribute(str_replace(']', ';binary]', $mapping->getLdapAttribute()));
+      }
+      $value = $this->tokenProcessor->ldapEntryReplacementsForDrupalAccount($this->ldap_entry, $mapping->getLdapAttribute());
+      // The ordinal $value_instance is not used and could probably be
+      // removed.
+      list($value_type, $value_name, $value_instance) = $this->parseUserAttributeNames($key);
 
-        if ($value_type == 'field' || $value_type == 'property') {
-          $this->account->set($value_name, $value);
-        }
+      if ($value_type == 'field' || $value_type == 'property') {
+        $this->account->set($value_name, $value);
       }
     }
   }
