@@ -31,7 +31,7 @@ function ldap_user_update_8301(&$sandbox) {
   if (!\Drupal::moduleHandler()->moduleExists('externalauth')) {
     $external_link = Url::fromUri('https://drupal.org/project/externalauth');
     $message = t('Please install the 8301 %external_link module.', ['%external_link' => \Drupal::l('External Auth', $external_link)]);
-    drupal_set_message($message, "error");
+    \Drupal::messenger()->addError($message);
     throw new UpdateException($message);
   }
 
@@ -77,7 +77,7 @@ function ldap_user_update_8302(&$sandbox) {
   if (!\Drupal::moduleHandler()->moduleExists('externalauth')) {
     $external_link = Url::fromUri('https://drupal.org/project/externalauth');
     $message = t('Please install the 8301 %external_link module.', ['%external_link' => \Drupal::l('External Auth', $external_link)]);
-    drupal_set_message($message, "error");
+    \Drupal::messenger()->addError($message);
     throw new UpdateException($message);
   }
   // Drop the table if it exists.
@@ -85,7 +85,7 @@ function ldap_user_update_8302(&$sandbox) {
     db_query("DROP TABLE {ldap_user_identities}");
   }
   catch (Exception $e) {
-    drupal_set_message(t("Couldn't drop the table 'ldap_user_identities'. Maybe it's been dropped already?"), "warning");
+    \Drupal::messenger()->addWarning(t("Couldn't drop the table 'ldap_user_identities'. Maybe it's been dropped already?"));
   }
 }
 

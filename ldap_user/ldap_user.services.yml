@@ -4,7 +4,7 @@ services:
     arguments: ['ldap_user']
   ldap.drupal_user_processor:
     class: Drupal\ldap_user\Processor\DrupalUserProcessor
-    arguments: ['@logger.channel.ldap_user', '@config.factory', '@ldap.detail_log', '@ldap.token_processor', '@externalauth.authmap', '@entity_type.manager', '@file_system', '@token', '@module_handler', '@current_user', '@ldap.user_manager', '@event_dispatcher', '@ldap_user.field_provider']
+    arguments: ['@logger.channel.ldap_user', '@config.factory', '@ldap.detail_log', '@ldap.token_processor', '@externalauth.authmap', '@entity_type.manager', '@file_system', '@token', '@module_handler', '@current_user', '@ldap.user_manager', '@event_dispatcher', '@ldap_user.field_provider', '@messenger']
   ldap_user.field_provider:
     class: Drupal\ldap_user\FieldProvider
     arguments: ['@config.factory', '@entity_type.manager', '@module_handler', '@entity_field.manager']

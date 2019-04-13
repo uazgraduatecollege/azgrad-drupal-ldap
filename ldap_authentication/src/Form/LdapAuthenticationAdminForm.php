@@ -17,6 +17,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class LdapAuthenticationAdminForm extends ConfigFormBase {
 
   protected $moduleHandler;
+
   protected $storage;
 
   /**
@@ -70,11 +71,13 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
     if (count($authenticationServers) == 0) {
 
       $url = Url::fromRoute('entity.ldap_server.collection');
-      $edit_server_link = Link::fromTextAndUrl($this->t('@path', ['@path' => 'LDAP Servers']), $url)->toString();
+      $edit_server_link = Link::fromTextAndUrl($this->t('@path', ['@path' => 'LDAP Servers']), $url)
+        ->toString();
 
-      drupal_set_message($this->t('At least one LDAP server must configured and <em>enabled</em> before configuring LDAP authentication. Please go to @link to configure an LDAP server.',
-        ['@link' => $edit_server_link]
-      ), 'warning');
+      $this->messenger()
+        ->addWarning($this->t('At least one LDAP server must configured and <em>enabled</em> before configuring LDAP authentication. Please go to @link to configure an LDAP server.',
+          ['@link' => $edit_server_link]
+        ));
 
       return $form;
     }

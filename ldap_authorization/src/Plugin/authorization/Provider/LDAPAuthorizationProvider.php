@@ -106,7 +106,7 @@ class LDAPAuthorizationProvider extends ProviderPluginBase implements ContainerF
         '#type' => 'markup',
         '#markup' => t('<strong>Warning</strong>: You must create an LDAP Server first.'),
       ];
-      drupal_set_message(t('You must create an LDAP Server first.'), 'warning');
+      $this->messenger()->addWarning($this->t('You must create an LDAP Server first.'));
     }
     else {
       $server_options = [];

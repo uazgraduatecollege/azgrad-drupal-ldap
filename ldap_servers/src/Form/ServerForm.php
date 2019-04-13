@@ -481,13 +481,13 @@ class ServerForm extends EntityForm {
 
     switch ($status) {
       case SAVED_NEW:
-        drupal_set_message($this->t('Created the %label Server.', [
+        $this->messenger()->addMessage($this->t('Created the %label Server.', [
           '%label' => $this->entity->label(),
         ]));
         break;
 
       default:
-        drupal_set_message($this->t('Saved the %label Server.', [
+        $this->messenger()->addMessage($this->t('Saved the %label Server.', [
           '%label' => $this->entity->label(),
         ]));
     }

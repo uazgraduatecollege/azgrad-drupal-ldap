@@ -95,7 +95,7 @@ class LdapAuthenticationProfileUpdateForm extends FormBase {
     $user = $this->entityTypeManager->getStorage('user')->load($this->currentUser->id());
     $user->set('mail', $form_state->getValue('mail'));
     $user->save();
-    drupal_set_message($this->t('Your profile has been updated.'));
+    \Drupal::messenger()->addMessage($this->t('Your profile has been updated.'));
     $form_state->setRedirect('<front>');
   }
 

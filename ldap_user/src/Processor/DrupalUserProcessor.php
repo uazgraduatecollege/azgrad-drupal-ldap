@@ -9,6 +9,7 @@ use Drupal\Core\Extension\ModuleHandler;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\File\FileSystem;
 use Drupal\Core\Logger\LoggerChannelInterface;
+use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\externalauth\Authmap;
@@ -66,6 +67,8 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
 
   protected $eventDispatcher;
 
+  protected $messenger;
+
   /**
    * Constructor.
    *
@@ -110,7 +113,9 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
     AccountInterface $current_user,
     LdapUserManager $ldap_user_manager,
     EventDispatcherInterface $event_dispatcher,
-    FieldProvider $field_provider) {
+    FieldProvider $field_provider,
+    MessengerInterface $messenger
+    ) {
     $this->logger = $logger;
     $this->config = $config_factory->get('ldap_user.settings');
     $this->configAuthentication = $config_factory->get('ldap_authentication.settings');
@@ -125,6 +130,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
     $this->ldapUserManager = $ldap_user_manager;
     $this->eventDispatcher = $event_dispatcher;
     $this->fieldProvider = $field_provider;
+    $this->messenger = $messenger;
   }
 
   /**
@@ -377,13 +383,13 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
     $this->applyAttributesToAccountOnCreate();
     $tokens = ['%drupal_username' => $this->account->getAccountName()];
     if (empty($this->account->getAccountName())) {
-      drupal_set_message($this->t('User account creation failed because of invalid, empty derived Drupal username.'), 'error');
+      $this->messenger->addError($this->t('User account creation failed because of invalid, empty derived Drupal username.'));
       $this->logger
         ->error('Failed to create Drupal account %drupal_username because Drupal username could not be derived.', $tokens);
       return;
     }
     if (!$mail = $this->account->getEmail()) {
-      drupal_set_message($this->t('User account creation failed because of invalid, empty derived email address.'), 'error');
+      $this->messenger->addError($this->t('User account creation failed because of invalid, empty derived email address.'));
       $this->logger
         ->error('Failed to create Drupal account %drupal_username because email address could not be derived by LDAP User module', $tokens);
       return;
@@ -397,12 +403,12 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
           '%duplicate_name' => $account_with_same_email->getAccountName(),
         ]
       );
-      drupal_set_message($this->t('Another user already exists in the system with the same email address. You should contact the system administrator in order to solve this conflict.'), 'error');
+      $this->messenger->addError($this->t('Another user already exists in the system with the same email address. You should contact the system administrator in order to solve this conflict.'));
       return;
     }
     $this->saveAccount();
     if (!$this->account) {
-      drupal_set_message($this->t('User account creation failed because of system problems.'), 'error');
+      $this->messenger->addError($this->t('User account creation failed because of system problems.'));
     }
     else {
       $this->externalAuth->save($this->account, 'ldap_user', $this->account->getAccountName());

@@ -13,7 +13,9 @@ use Drupal\ldap_user\FieldProvider;
 abstract class LdapUserMappingBaseForm extends LdapUserBaseForm {
 
   protected $events;
+
   protected $direction;
+
   protected $server;
 
   /**
@@ -50,9 +52,9 @@ abstract class LdapUserMappingBaseForm extends LdapUserBaseForm {
   private function checkEmptyEvents(array $mappings) {
     foreach ($mappings as $key => $mapping) {
       if (empty($mapping['prov_events'])) {
-        drupal_set_message($this->t('No synchronization events checked in %item. This field will not be synchronized until some are checked.',
-          ['%item' => $key]
-        ), 'warning');
+
+        $this->messenger()
+          ->addWarning($this->t('No synchronization events checked in %item. This field will not be synchronized until some are checked.', ['%item' => $key]));
       }
     }
   }
@@ -78,8 +80,7 @@ abstract class LdapUserMappingBaseForm extends LdapUserBaseForm {
           ->load($sid);
         $attributes = $this->fieldProvider
           ->loadAttributes($direction, $ldap_server);
-      }
-      catch (\Exception $e) {
+      } catch (\Exception $e) {
         $this->logger('ldap_user')->error('Missing server');
       }
     }
@@ -106,7 +107,7 @@ abstract class LdapUserMappingBaseForm extends LdapUserBaseForm {
       ->set('ldapUserSyncMappings', $mappings)
       ->save();
 
-    drupal_set_message($this->t('User synchronization configuration updated.'));
+    $this->messenger()->addMessage($this->t('User synchronization configuration updated.'));
   }
 
   /**

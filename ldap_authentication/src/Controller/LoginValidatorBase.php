@@ -8,6 +8,7 @@ use Drupal\Core\Entity\EntityTypeManager;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandler;
 use Drupal\Core\Logger\LoggerChannelInterface;
+use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\externalauth\Authmap;
 use Drupal\ldap_authentication\AuthenticationServers;
@@ -27,15 +28,21 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
   use StringTranslationTrait;
 
   const AUTHENTICATION_FAILURE_BIND = 2;
+
   const AUTHENTICATION_FAILURE_FIND = 3;
+
   const AUTHENTICATION_FAILURE_DISALLOWED = 4;
+
   const AUTHENTICATION_FAILURE_CREDENTIALS = 5;
+
   const AUTHENTICATION_SUCCESS = 6;
+
   const AUTHENTICATION_FAILURE_SERVER = 8;
 
   protected $authName = FALSE;
 
   protected $drupalUserAuthMapped = FALSE;
+
   protected $drupalUserName = FALSE;
 
   /**
@@ -60,6 +67,7 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
   protected $ldapEntry;
 
   protected $emailTemplateUsed = FALSE;
+
   protected $emailTemplateTokens = [];
 
   /**
@@ -72,15 +80,26 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
   protected $formState;
 
   protected $configFactory;
+
   protected $config;
+
   protected $detailLog;
+
   protected $logger;
+
   protected $entityTypeManager;
+
   protected $moduleHandler;
+
   protected $ldapBridge;
+
   protected $externalAuth;
+
   protected $authenticationServers;
+
   protected $ldapUserManager;
+
+  protected $messenger;
 
   /**
    * Constructor.
@@ -94,6 +113,7 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
    * @param \Drupal\externalauth\Authmap $external_auth
    * @param \Drupal\ldap_authentication\AuthenticationServers $authentication_servers
    * @param \Drupal\ldap_servers\LdapUserManager $ldap_user_manager
+   * @param \Drupal\Core\Messenger\MessengerInterface $messenger
    */
   public function __construct(
     ConfigFactoryInterface $configFactory,
@@ -104,7 +124,8 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
     LdapBridge $ldap_bridge,
     Authmap $external_auth,
     AuthenticationServers $authentication_servers,
-    LdapUserManager $ldap_user_manager
+    LdapUserManager $ldap_user_manager,
+    MessengerInterface $messenger
   ) {
     $this->configFactory = $configFactory;
     $this->config = $configFactory->get('ldap_authentication.settings');
@@ -116,6 +137,7 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
     $this->externalAuth = $external_auth;
     $this->authenticationServers = $authentication_servers;
     $this->ldapUserManager = $ldap_user_manager;
+    $this->messenger = $messenger;
   }
 
   /**
@@ -128,7 +150,7 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
     $this->detailLog->log(
       '%auth_name : Beginning authentication',
       ['%auth_name' => $this->authName],
-    'ldap_authentication'
+      'ldap_authentication'
     );
 
     $this->processLogin();
@@ -147,7 +169,8 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
     if (!$this->drupalUser) {
       $uid = $this->externalAuth->getUid($this->authName, 'ldap_user');
       if ($uid) {
-        $this->drupalUser = $this->entityTypeManager->getStorage('user')->load($uid);
+        $this->drupalUser = $this->entityTypeManager->getStorage('user')
+          ->load($uid);
       }
     }
     if ($this->drupalUser) {
@@ -249,10 +272,10 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
       else {
         $this->detailLog->log(
           '%username: Error testing user credentials on server %id with %bind_method.', [
-            '%username' => $this->authName,
-            '%bind_method' => $this->serverDrupalUser->getFormattedBind(),
-            '%id' => $this->serverDrupalUser->id(),
-          ], 'ldap_authentication'
+          '%username' => $this->authName,
+          '%bind_method' => $this->serverDrupalUser->getFormattedBind(),
+          '%id' => $this->serverDrupalUser->id(),
+        ], 'ldap_authentication'
         );
       }
     }
@@ -294,7 +317,7 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
         ['%username' => $this->authName], 'ldap_authentication'
       );
 
-      drupal_set_message($this->t('Error: %err_text', ['%err_text' => $this->authenticationHelpText($authenticationResult)]), "error");
+      $this->messenger->addError($this->t('Error: %err_text', ['%err_text' => $this->authenticationHelpText($authenticationResult)]));
     }
     else {
       // Fail scenario 2.  Simply fails LDAP. Return false, but don't throw form
@@ -383,7 +406,8 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
       }
 
       if (!$user) {
-        $user = $this->entityTypeManager->getStorage('user')->create(['name' => $authName]);
+        $user = $this->entityTypeManager->getStorage('user')
+          ->create(['name' => $authName]);
       }
 
       // We are not injecting this service properly to avoid forcing this
@@ -412,7 +436,7 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
       }
 
       if (!$valid_profile) {
-        drupal_set_message($this->t('The site logon is currently not working due to a configuration error. Please see logs for additional details.'), 'warning');
+        $this->messenger->addWarning($this->t('The site logon is currently not working due to a configuration error. Please see logs for additional details.'));
         $this->logger->notice('LDAP Authentication is configured to deny users without LDAP Authorization mappings, but 0 LDAP Authorization consumers are configured.');
         return FALSE;
       }
@@ -454,17 +478,18 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
       if (!$this->drupalUser->save()) {
         $this->logger
           ->error('Failed to make changes to user %username updated %changed.', [
-            '%username' => $this->drupalUser->getAccountName(),
-            '%changed' => $this->serverDrupalUser->deriveEmailFromLdapResponse($this->ldapEntry),
-          ]
+              '%username' => $this->drupalUser->getAccountName(),
+              '%changed' => $this->serverDrupalUser->deriveEmailFromLdapResponse($this->ldapEntry),
+            ]
           );
       }
       else {
         if ($this->config->get('emailUpdate') == 'update_notify') {
-          drupal_set_message($this->t(
-            'Your e-mail has been updated to match your current account (%mail).',
-            ['%mail' => $this->serverDrupalUser->deriveEmailFromLdapResponse($this->ldapEntry)]),
-            'status'
+          $this->messenger->addStatus(
+            $this->t('Your e-mail has been updated to match your current account (%mail).', [
+                '%mail' => $this->serverDrupalUser->deriveEmailFromLdapResponse($this->ldapEntry),
+              ]
+            )
           );
         }
       }
@@ -489,10 +514,14 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
         $this->drupalUser->save();
         $this->externalAuth->save($this->drupalUser, 'ldap_user', $this->authName);
         $this->drupalUserAuthMapped = TRUE;
-        drupal_set_message(
-            $this->t('Your existing account %username has been updated to %new_username.',
-              ['%username' => $oldName, '%new_username' => $this->drupalUserName]),
-            'status');
+        $this->messenger->addStatus(
+          $this->t('Your existing account %username has been updated to %new_username.',
+            [
+              '%username' => $oldName,
+              '%new_username' => $this->drupalUserName,
+            ]
+          )
+        );
       }
     }
   }
@@ -538,9 +567,9 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
       if (!$user_name_from_attribute) {
         $this->logger
           ->error('Derived Drupal username from attribute %account_name_attr returned no username for authname %authname.', [
-            '%authname' => $this->authName,
-            '%account_name_attr' => $this->serverDrupalUser->get('account_name_attr'),
-          ]
+              '%authname' => $this->authName,
+              '%account_name_attr' => $this->serverDrupalUser->get('account_name_attr'),
+            ]
           );
         return FALSE;
       }
@@ -595,7 +624,8 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
             ]
           );
       }
-      drupal_set_message($this->t('Another user already exists in the system with the same login name. You should contact the system administrator in order to solve this conflict.'), 'error');
+      $this->messenger
+        ->addError($this->t('Another user already exists in the system with the same login name. You should contact the system administrator in order to solve this conflict.'));
       return FALSE;
     }
     else {
@@ -619,7 +649,10 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
     if (!empty($this->config->get('emailTemplate'))) {
       $template = $this->config->get('emailTemplate');
     }
-    $this->ldapEntry->setAttribute($this->serverDrupalUser->get('mail_attr'), [SafeMarkup::format($template, $this->emailTemplateTokens)->__toString()]);
+    $this->ldapEntry->setAttribute($this->serverDrupalUser->get('mail_attr'), [
+      SafeMarkup::format($template, $this->emailTemplateTokens)
+        ->__toString(),
+    ]);
   }
 
   /**
@@ -664,14 +697,16 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
           ]
         );
 
-        drupal_set_message($this->t('Another user already exists in the system with the same email address. You should contact the system administrator in order to solve this conflict.'), 'error');
+        $this->messenger
+          ->addError($this->t('Another user already exists in the system with the same email address. You should contact the system administrator in order to solve this conflict.'));
         return FALSE;
       }
 
     }
 
     // Do not provision Drupal account if provisioning disabled.
-    $triggers = $this->configFactory->get('ldap_user.settings')->get('drupalAcctProvisionTriggers');
+    $triggers = $this->configFactory->get('ldap_user.settings')
+      ->get('drupalAcctProvisionTriggers');
     if (!in_array(self::PROVISION_DRUPAL_USER_ON_USER_AUTHENTICATION, $triggers)) {
       $this->logger->error(
         'Drupal account for authname=%authname does not exist and provisioning of Drupal accounts on authentication is not enabled',
@@ -689,8 +724,10 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
      * it here.
      */
 
-    if ($this->configFactory->get('ldap_user.settings')->get('acctCreation') == self::ACCOUNT_CREATION_USER_SETTINGS_FOR_LDAP &&
-      $this->configFactory->get('user.settings')->get('register') == USER_REGISTER_VISITORS_ADMINISTRATIVE_APPROVAL
+    if ($this->configFactory->get('ldap_user.settings')
+        ->get('acctCreation') == self::ACCOUNT_CREATION_USER_SETTINGS_FOR_LDAP &&
+      $this->configFactory->get('user.settings')
+        ->get('register') == USER_REGISTER_VISITORS_ADMINISTRATIVE_APPROVAL
     ) {
       // If admin approval required, set status to 0.
       $user_values = ['name' => $this->drupalUserName, 'status' => 0];
@@ -712,7 +749,7 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
       $this->logger->error(
         'Failed to find or create %drupal_accountname on logon.',
         ['%drupal_accountname' => $this->drupalUserName]
-        );
+      );
       if ($this->formState) {
         $this->formState->setErrorByName('name', $this->t(
           'Server Error: Failed to create Drupal user account for %drupal_accountname',
@@ -743,10 +780,10 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
     if (!$bindResult) {
       $this->detailLog->log(
         '%username: Unsuccessful with server %id (bind method: %bind_method)', [
-          '%username' => $this->authName,
-          '%id' => $this->serverDrupalUser->id(),
-          '%bind_method' => $this->serverDrupalUser->get('bind_method'),
-        ], 'ldap_authentication'
+        '%username' => $this->authName,
+        '%id' => $this->serverDrupalUser->id(),
+        '%bind_method' => $this->serverDrupalUser->get('bind_method'),
+      ], 'ldap_authentication'
       );
 
       return self::AUTHENTICATION_FAILURE_BIND;
@@ -777,10 +814,10 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
     if (!$bindResult) {
       $this->detailLog->log(
         '%username: Unsuccessful with server %id (bind method: %bind_method)', [
-          '%username' => $this->authName,
-          '%id' => $this->serverDrupalUser->id(),
-          '%bind_method' => $this->serverDrupalUser->get('bind_method'),
-        ], 'ldap_authentication'
+        '%username' => $this->authName,
+        '%id' => $this->serverDrupalUser->id(),
+        '%bind_method' => $this->serverDrupalUser->get('bind_method'),
+      ], 'ldap_authentication'
       );
 
       return self::AUTHENTICATION_FAILURE_CREDENTIALS;

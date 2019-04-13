@@ -37,7 +37,7 @@ class ServerListBuilder extends ConfigEntityListBuilder {
   public function buildRow(EntityInterface $entity) {
     /** @var \Drupal\ldap_servers\Entity\Server $entity */
     $row = [];
-    $row['label'] = $this->getLabel($entity);
+    $row['label'] = $entity->label();
     $row['bind_method'] = ucfirst($entity->getFormattedBind());
     if ($entity->get('bind_method') == 'service_account') {
       $row['binddn'] = $entity->get('binddn');

@@ -65,12 +65,14 @@ class ServerEnableDisableForm extends EntityConfirmFormBase {
       '%sid' => $this->entity->id(),
     ];
     if ($this->entity->get('status') == 1) {
-      drupal_set_message(t('LDAP server configuration %name (server id = %sid) has been enabled', $tokens));
+      $this->messenger()
+        ->addMessage($this->t('LDAP server configuration %name (server id = %sid) has been enabled', $tokens));
       \Drupal::logger('ldap_servers')
         ->notice('LDAP server enabled: %name (sid = %sid) ', $tokens);
     }
     else {
-      drupal_set_message(t('LDAP server configuration %name (server id = %sid) has been disabled', $tokens));
+      $this->messenger()
+        ->addMessage($this->t('LDAP server configuration %name (server id = %sid) has been disabled', $tokens));
       \Drupal::logger('ldap_servers')
         ->notice('LDAP server disabled: %name (sid = %sid) ', $tokens);
     }

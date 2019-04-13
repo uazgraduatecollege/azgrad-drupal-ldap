@@ -6,6 +6,7 @@
  */
 
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Link;
 use Drupal\Core\Url;
 use Drupal\user\UserInterface;
 
@@ -15,8 +16,8 @@ use Drupal\user\UserInterface;
 function ldap_authentication_help($path, $arg) {
 
   $authentication_help = t('LDAP authentication allows authentication against an LDAP server. It may be used alongside other authentication means such as built in Drupal authentication, OpenID, etc.  More detailed help is available on drupal.org at !helplink.', [
-    '%helplink' => \Drupal::l('http://drupal.org/node/997082', Url::fromUri('http://drupal.org/node/997082')),
-  ]
+      '%helplink' => Link::fromTextAndUrl('http://drupal.org/node/997082', Url::fromUri('http://drupal.org/node/997082')),
+    ]
   );
   switch ($path) {
     case 'admin/config/people/ldap/authentication':
@@ -83,11 +84,11 @@ function ldap_authentication_user_pass_validate(array &$form, FormStateInterface
   if ($account && $authname) {
     if ($config->get('passwordOption') != 'allow') {
       if ($config->get('ldapUserHelpLinkUrl')) {
-        $helpLink = \Drupal::l($config->get('ldapUserHelpLinkText'),
+        $helpLink = Link::fromTextAndUrl($config->get('ldapUserHelpLinkText'),
           Url::fromUri($config->get('ldapUserHelpLinkUrl')));
         $form_state->setErrorByName('name', t(
-          'You may not reset your password here. You must reset your password via the directions at @link.',
-          ['@link' => $helpLink])
+            'You may not reset your password here. You must reset your password via the directions at @link.',
+            ['@link' => $helpLink])
         );
       }
       else {
@@ -133,7 +134,7 @@ function ldap_authentication_form_user_form_alter(&$form, FormStateInterface $fo
         $form['account']['current_pass']['#disabled'] = TRUE;
         $form['account']['pass']['#disabled'] = TRUE;
         if ($config->get('ldapUserHelpLinkUrl')) {
-          $form['account']['current_pass']['#description'] = \Drupal::l($config->get('ldapUserHelpLinkText'), Url::fromUri($config->get('ldapUserHelpLinkUrl')));
+          $form['account']['current_pass']['#description'] = Link::fromTextAndUrl($config->get('ldapUserHelpLinkText'), Url::fromUri($config->get('ldapUserHelpLinkUrl')));
         }
         else {
           $form['account']['current_pass']['#description'] = t('The password cannot be changed using this website.');

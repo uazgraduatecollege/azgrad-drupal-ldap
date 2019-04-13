@@ -69,7 +69,7 @@ class DebuggingReviewForm extends FormBase {
     ];
 
     if (!extension_loaded('ldap')) {
-      drupal_set_message($this->t('PHP LDAP extension not loaded.'), 'error');
+      $this->messenger()->addError($this->t('PHP LDAP extension not loaded.'));
     }
     else {
       $form['heading_modules'] = [

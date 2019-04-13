@@ -19,10 +19,10 @@ services:
       arguments: ['ldap_authentication']
   ldap_authentication.login_validator:
     class: \Drupal\ldap_authentication\Controller\LoginValidatorLoginForm
-    arguments: ['@config.factory', '@ldap.detail_log', '@logger.channel.ldap_authentication', '@entity_type.manager', '@module_handler', '@ldap.bridge', '@externalauth.authmap', '@ldap_authentication.servers', '@ldap.user_manager']
+    arguments: ['@config.factory', '@ldap.detail_log', '@logger.channel.ldap_authentication', '@entity_type.manager', '@module_handler', '@ldap.bridge', '@externalauth.authmap', '@ldap_authentication.servers', '@ldap.user_manager', '@messenger']
   ldap_authentication.login_validator_sso:
     class: \Drupal\ldap_authentication\Controller\LoginValidatorSso
-    arguments: ['@config.factory', '@ldap.detail_log', '@logger.channel.ldap_authentication', '@entity_type.manager', '@module_handler', '@ldap.bridge', '@externalauth.authmap', '@ldap_authentication.servers', '@ldap.user_manager']
+    arguments: ['@config.factory', '@ldap.detail_log', '@logger.channel.ldap_authentication', '@entity_type.manager', '@module_handler', '@ldap.bridge', '@externalauth.authmap', '@ldap_authentication.servers', '@ldap.user_manager', '@messenger']
   ldap_authentication.servers:
     class: Drupal\ldap_authentication\AuthenticationServers
     arguments: ['@entity_type.manager', '@config.factory']

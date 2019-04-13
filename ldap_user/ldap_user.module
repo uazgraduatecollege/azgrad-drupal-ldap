@@ -379,7 +379,7 @@ function ldap_user_form_register_form_submit2(&$form, FormState $form_state) {
     $association = $userProcessor->ldapAssociateDrupalAccount($values['name']);
 
     if (!$association) {
-      drupal_set_message(t('Account created but no LDAP account found to associate with.'), 'warning');
+      \Drupal::messenger()->addWarning(t('Account created but no LDAP account found to associate with.'));
     }
   }
 

@@ -44,13 +44,13 @@ class ServerDeleteForm extends EntityConfirmFormBase {
         '%title' => $this->entity->label(),
       ]);
 
-    drupal_set_message(
+    $this->messenger()->addMessage(
       $this->t('@type: deleted @label.',
         [
           '@type' => $this->entity->bundle(),
           '@label' => $this->entity->label(),
         ]
-        )
+      )
     );
 
     $form_state->setRedirectUrl($this->getCancelUrl());

@@ -292,7 +292,7 @@ class LdapUserAdminForm extends LdapUserBaseForm {
       ->save();
     $form_state->getValues();
 
-    drupal_set_message($this->t('User synchronization configuration updated.'));
+    $this->messenger()->addMessage($this->t('User synchronization configuration updated.'));
   }
 
   /**

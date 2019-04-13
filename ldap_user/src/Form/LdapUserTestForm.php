@@ -22,9 +22,13 @@ class LdapUserTestForm extends FormBase implements LdapUserAttributesInterface {
   private static $syncTriggerOptions;
 
   protected $request;
+
   protected $ldapUserManager;
+
   protected $entityTypeManager;
+
   protected $externalAuth;
+
   protected $drupalUserProcessor;
 
   /**
@@ -154,7 +158,8 @@ class LdapUserTestForm extends FormBase implements LdapUserAttributesInterface {
     $results['related LDAP entry (before provisioning or syncing)'] = $user_ldap_entry;
 
     /** @var \Drupal\user\Entity\User $account */
-    $existingAccount = $this->entityTypeManager->getStorage('user')->loadByProperties(['name' => $username]);
+    $existingAccount = $this->entityTypeManager->getStorage('user')
+      ->loadByProperties(['name' => $username]);
     $existingAccount = $existingAccount ? reset($existingAccount) : FALSE;
     if ($existingAccount) {
       $results['user entity (before provisioning or syncing)'] = $existingAccount->toArray();
@@ -196,7 +201,8 @@ class LdapUserTestForm extends FormBase implements LdapUserAttributesInterface {
       dpm($results);
     }
     else {
-      drupal_set_message($this->t('This form will not display results unless the devel module is enabled.'), 'warning');
+      $this->messenger()
+        ->addWarning($this->t('This form will not display results unless the devel module is enabled.'));
     }
 
     $params = [
