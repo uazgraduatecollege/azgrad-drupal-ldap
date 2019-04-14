@@ -285,7 +285,7 @@ final class ServerTestForm extends EntityForm {
     }
 
     if ($ldap_entry) {
-      $tokens = $this->tokenProcessor->tokenizeLdapEntry($ldap_entry, [], TokenProcessor::PREFIX, TokenProcessor::SUFFIX);
+      $tokens = $this->tokenProcessor->tokenizeLdapEntry($ldap_entry, []);
     }
     else {
       $tokens = [];
@@ -669,21 +669,19 @@ final class ServerTestForm extends EntityForm {
       }
       elseif (is_array($value) && count($value) > 1) {
         foreach ($value as $i => $value2) {
+          $token = '';
 
           if ($i == 0 && count($value) == 1) {
-            $token = TokenProcessor::PREFIX . $key . TokenProcessor::SUFFIX;
+            $token = sprintf('[%s]', $key);
           }
           elseif ($i == 0 && count($value) > 1) {
-            $token = TokenProcessor::PREFIX . $key . TokenProcessor::DELIMITER . '0' . TokenProcessor::SUFFIX;
+            $token = sprintf('[%s:0]', $key);
           }
           elseif (($i == count($value) - 1) && count($value) > 1) {
-            $token = TokenProcessor::PREFIX . $key . TokenProcessor::DELIMITER . 'last' . TokenProcessor::SUFFIX;
+            $token = sprintf('[%s:last]', $key);
           }
           elseif (count($value) > 1) {
-            $token = TokenProcessor::PREFIX . $key . TokenProcessor::DELIMITER . $i . TokenProcessor::SUFFIX;
-          }
-          else {
-            $token = "";
+            $token = sprintf('[%s:%s]', $key, $i);
           }
           $rows[] = ['data' => [$key, $i, self::binaryCheck($value2), $token]];
         }

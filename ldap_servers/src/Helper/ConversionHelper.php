@@ -176,42 +176,29 @@ class ConversionHelper {
    * Any escape sequence starting with a baskslash - hexpair or special
    * character - will be transformed back to the corresponding character.
    *
-   * @param mixed $values
-   *   Array of DN Values.
+   * @param string $value
+   *  DN Value.
    *
-   * @return array
-   *   Same as $values, but unescaped
+   * @return string
+   *   Same as $value, but unescaped
    */
-  public static function unescapeDnValue($values) {
-    $inputIsScalar = is_scalar($values);
+  public static function unescapeDnValue(string $value): string {
 
-    // Parameter validation.
-    if (!is_array($values)) {
-      $values = [$values];
-    }
-
-    foreach ($values as $key => $val) {
       // Strip slashes from special chars.
-      $val = str_replace('\\\\', '\\', $val);
-      $val = str_replace('\,', ',', $val);
-      $val = str_replace('\+', '+', $val);
-      $val = str_replace('\"', '"', $val);
-      $val = str_replace('\<', '<', $val);
-      $val = str_replace('\>', '>', $val);
-      $val = str_replace('\;', ';', $val);
-      $val = str_replace('\#', '#', $val);
-      $val = str_replace('\=', '=', $val);
+      $value = str_replace('\\\\', '\\', $value);
+      $value = str_replace('\,', ',', $value);
+      $value = str_replace('\+', '+', $value);
+      $value = str_replace('\"', '"', $value);
+      $value = str_replace('\<', '<', $value);
+      $value = str_replace('\>', '>', $value);
+      $value = str_replace('\;', ';', $value);
+      $value = str_replace('\#', '#', $value);
+      $value = str_replace('\=', '=', $value);
 
       // Translate hex code into ascii.
-      $values[$key] = self::hex2asc($val);
-    }
+      $value = self::hex2asc($value);
 
-    if (($inputIsScalar)) {
-      return $values[0];
-    }
-    else {
-      return $values;
-    }
+      return $value;
   }
 
   /**
@@ -272,15 +259,12 @@ class ConversionHelper {
   public static function extractTokenAttributes(array &$attribute_maps, $text) {
     $tokens = self::findTokensNeededForTemplate($text);
     foreach ($tokens as $token) {
-      $token = str_replace([
-        TokenProcessor::PREFIX,
-        TokenProcessor::SUFFIX,
-      ], ['', ''], $token);
-      $parts = explode(TokenProcessor::DELIMITER, $token);
+      $token = str_replace(['[', ']'], ['', ''], $token);
+      $parts = explode(':', $token);
       $ordinal = (isset($parts[1]) && $parts[1]) ? $parts[1] : 0;
       $attr_name = $parts[0];
 
-      $parts2 = explode(TokenProcessor::MODIFIER_DELIMITER, $attr_name);
+      $parts2 = explode(';', $attr_name);
       if (count($parts2) > 1) {
         $attr_name = $parts2[0];
         $conversion = $parts2[1];

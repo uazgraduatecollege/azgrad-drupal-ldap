@@ -124,6 +124,13 @@ function ldap_servers_update_8304() {
 }
 
 /**
+ * Removal of double-escaping.
+ */
+function ldap_servers_update_8305() {
+  return t('Escaping of field data now relies solely on Twig auto-escaping. If you have created custom code make sure it takes this into account. See https://www.drupal.org/project/ldap/issues/2969097 for details.');
+}
+
+/**
  * Paged search removal.
  */
 function ldap_servers_update_8401() {

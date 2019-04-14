@@ -16,7 +16,7 @@ services:
     arguments: ['@logger.factory', '@config.factory']
   ldap.token_processor:
     class: Drupal\ldap_servers\Processor\TokenProcessor
-    arguments: [ '@ldap.detail_log', '@file_system', '@entity_type.manager']
+    arguments: [ '@ldap.detail_log', '@entity_type.manager']
   ldap_servers.user_attributes:
     class: Drupal\ldap_servers\Helper\LdapUserAttributeProvider
     arguments: ['@config.factory', '@entity_type.manager']
