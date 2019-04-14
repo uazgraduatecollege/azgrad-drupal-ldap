@@ -127,36 +127,17 @@ class TokenTests extends UnitTestCase {
     $binary = $processor->ldapEntryReplacementsForDrupalAccount($this->ldapEntry, '[guid;binary]');
     $this->assertEquals(ConversionHelper::binaryConversionToString($this->ldapEntry->getAttribute('guid')[0]), $binary);
 
-    $account = $this->prophesize('\Drupal\user\Entity\User');
-    $value = new \stdClass();
-    $value->value = $this->ldapEntry->getAttribute('sAMAccountName')[0];
-    $account->get('name')->willReturn($value);
-    $nameReplacement = $processor->drupalAccountReplacementsForLdap($account->reveal(), '[property.name]');
-    $this->assertEquals($this->ldapEntry->getAttribute('sAMAccountName')[0], $nameReplacement);
-
-  }
-
-  /**
-   * Additional token tests for the reverse behaviour for DN derivatives.
-   */
-  public function testTokensReverse() {
-    $tokenHelper = $this->getMockBuilder('\Drupal\ldap_servers\Processor\TokenProcessor')
-      ->setMethods(NULL)
-      ->disableOriginalConstructor()
-      ->getMock();
-
     // Test regular reversal (2 elements) at beginning.
-    $dc = $tokenHelper->ldapEntryReplacementsForDrupalAccount($this->ldapEntry, '[dc:reverse:0]');
+    $dc = $processor->ldapEntryReplacementsForDrupalAccount($this->ldapEntry, '[dc:reverse:0]');
     $this->assertEquals('edu', $dc);
 
     // Test single element reversion.
-    $ou = $tokenHelper->ldapEntryReplacementsForDrupalAccount($this->ldapEntry, '[cn:reverse:0]');
+    $ou = $processor->ldapEntryReplacementsForDrupalAccount($this->ldapEntry, '[cn:reverse:0]');
     $this->assertEquals('hpotter', $ou);
 
     // Test 3 element reversion at end.
-    $ou2 = $tokenHelper->ldapEntryReplacementsForDrupalAccount($this->ldapEntry, '[ou:reverse:2]');
+    $ou2 = $processor->ldapEntryReplacementsForDrupalAccount($this->ldapEntry, '[ou:reverse:2]');
     $this->assertEquals('Gryffindor', $ou2);
-
   }
 
 }
