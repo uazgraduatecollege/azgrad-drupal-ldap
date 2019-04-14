@@ -26,148 +26,23 @@ class ConversionHelper {
    * @return array
    *   Array of values, but escaped.
    */
-  public static function escapeFilterValue($values) {
-    // Parameter validation.
-    $input_is_scalar = is_scalar($values);
-    if ($input_is_scalar) {
-      $values = [$values];
+  public static function escapeFilterValue($value) {
+
+    // Escaping of filter meta characters.
+    $value = str_replace('\\', '\5c', $value);
+    $value = str_replace('*', '\2a', $value);
+    $value = str_replace('(', '\28', $value);
+    $value = str_replace(')', '\29', $value);
+
+    // ASCII < 32 escaping.
+    $value = self::asc2hex32($value);
+
+    if (NULL === $value) {
+      // Apply escaped "null" if string is empty.
+      $value = '\0';
     }
 
-    foreach ($values as $key => $val) {
-      // Might be a Drupal field.
-      if (isset($val->value)) {
-        $isField = TRUE;
-        $val = $val->getValue();
-      }
-      else {
-        $isField = FALSE;
-      }
-      // Escaping of filter meta characters.
-      $val = str_replace('\\', '\5c', $val);
-      $val = str_replace('*', '\2a', $val);
-      $val = str_replace('(', '\28', $val);
-      $val = str_replace(')', '\29', $val);
-
-      // ASCII < 32 escaping.
-      $val = self::asc2hex32($val);
-
-      if (NULL === $val) {
-        // Apply escaped "null" if string is empty.
-        $val = '\0';
-      }
-      if ($isField) {
-        $values[$key]->setValue($val);
-      }
-      else {
-        $values[$key] = $val;
-      }
-    }
-
-    if (($input_is_scalar)) {
-      return $values[0];
-    }
-    else {
-      return $values;
-    }
-  }
-
-  /**
-   * Undoes the conversion done by {@link escape_filter_value()}.
-   *
-   * Converts any sequences of a backslash followed by two hex digits into the
-   * corresponding character.
-   *
-   * @param mixed $values
-   *   Array of values to escape.
-   *
-   * @static
-   *
-   * @return array
-   *   Unescaped values.
-   */
-  public static function unescapeFilterValue($values) {
-    // Parameter validation.
-    $inputIsScalar = is_scalar($values);
-    if (!is_array($values)) {
-      $values = [$values];
-    }
-
-    foreach ($values as $key => $value) {
-      // Translate hex code into ascii.
-      $values[$key] = self::hex2asc($value);
-    }
-
-    if (($inputIsScalar)) {
-      return $values[0];
-    }
-    else {
-      return $values;
-    }
-  }
-
-  /**
-   * Escapes a DN value according to RFC 2253.
-   *
-   * Escapes the given VALUES according to RFC 2253 so that they can be safely
-   * used in LDAP DNs. The characters ",", "+", """, "\", "<", ">", ";", "#",
-   * "=" with a special meaning in RFC 2252 are preceded by a backslash. Control
-   * characters with an ASCII code < 32 are represented as \hexpair. Finally all
-   * leading and trailing spaces are converted to sequences of \20.
-   *
-   * @param array|string $values
-   *   An array containing the DN values that should be escaped.
-   *
-   * @static
-   *
-   * @return array
-   *   The array $values, but escaped.
-   */
-  public static function escapeDnValue($values) {
-    // Parameter validation.
-    $inputIsScalar = is_scalar($values);
-    if ($inputIsScalar) {
-      $values = [$values];
-    }
-
-    foreach ($values as $key => $val) {
-      // Escaping of filter meta characters.
-      $val = str_replace('\\', '\\\\', $val);
-      $val = str_replace(',', '\,', $val);
-      $val = str_replace('+', '\+', $val);
-      $val = str_replace('"', '\"', $val);
-      $val = str_replace('<', '\<', $val);
-      $val = str_replace('>', '\>', $val);
-      $val = str_replace(';', '\;', $val);
-      $val = str_replace('#', '\#', $val);
-      $val = str_replace('=', '\=', $val);
-
-      // ASCII < 32 escaping.
-      $val = self::asc2hex32($val);
-
-      // Convert all leading and trailing spaces to sequences of \20.
-      if (preg_match('/^(\s*)(.+?)(\s*)$/', $val, $matches)) {
-        $val = $matches[2];
-        for ($i = 0; $i < strlen($matches[1]); $i++) {
-          $val = '\20' . $val;
-        }
-        for ($i = 0; $i < strlen($matches[3]); $i++) {
-          $val = $val . '\20';
-        }
-      }
-
-      if (NULL === $val) {
-        // Apply escaped "null" if string is empty.
-        $val = '\0';
-      }
-      $values[$key] = $val;
-    }
-
-    if (($inputIsScalar)) {
-      return $values[0];
-    }
-    else {
-      return $values;
-    }
+    return $value;
   }
 
   /**
@@ -176,42 +51,29 @@ class ConversionHelper {
    * Any escape sequence starting with a baskslash - hexpair or special
    * character - will be transformed back to the corresponding character.
    *
-   * @param mixed $values
-   *   Array of DN Values.
+   * @param string $value
+   *  DN Value.
    *
-   * @return array
-   *   Same as $values, but unescaped
+   * @return string
+   *   Same as $value, but unescaped
    */
-  public static function unescapeDnValue($values) {
-    $inputIsScalar = is_scalar($values);
+  public static function unescapeDnValue(string $value): string {
 
-    // Parameter validation.
-    if (!is_array($values)) {
-      $values = [$values];
-    }
-
-    foreach ($values as $key => $val) {
       // Strip slashes from special chars.
-      $val = str_replace('\\\\', '\\', $val);
-      $val = str_replace('\,', ',', $val);
-      $val = str_replace('\+', '+', $val);
-      $val = str_replace('\"', '"', $val);
-      $val = str_replace('\<', '<', $val);
-      $val = str_replace('\>', '>', $val);
-      $val = str_replace('\;', ';', $val);
-      $val = str_replace('\#', '#', $val);
-      $val = str_replace('\=', '=', $val);
+      $value = str_replace('\\\\', '\\', $value);
+      $value = str_replace('\,', ',', $value);
+      $value = str_replace('\+', '+', $value);
+      $value = str_replace('\"', '"', $value);
+      $value = str_replace('\<', '<', $value);
+      $value = str_replace('\>', '>', $value);
+      $value = str_replace('\;', ';', $value);
+      $value = str_replace('\#', '#', $value);
+      $value = str_replace('\=', '=', $value);
 
       // Translate hex code into ascii.
-      $values[$key] = self::hex2asc($val);
-    }
+      $value = self::hex2asc($value);
 
-    if (($inputIsScalar)) {
-      return $values[0];
-    }
-    else {
-      return $values;
-    }
+      return $value;
   }
 
   /**
@@ -272,15 +134,12 @@ class ConversionHelper {
   public static function extractTokenAttributes(array &$attribute_maps, $text) {
     $tokens = self::findTokensNeededForTemplate($text);
     foreach ($tokens as $token) {
-      $token = str_replace([
-        TokenProcessor::PREFIX,
-        TokenProcessor::SUFFIX,
-      ], ['', ''], $token);
-      $parts = explode(TokenProcessor::DELIMITER, $token);
+      $token = str_replace(['[', ']'], ['', ''], $token);
+      $parts = explode(':', $token);
       $ordinal = (isset($parts[1]) && $parts[1]) ? $parts[1] : 0;
       $attr_name = $parts[0];
 
-      $parts2 = explode(TokenProcessor::MODIFIER_DELIMITER, $attr_name);
+      $parts2 = explode(';', $attr_name);
       if (count($parts2) > 1) {
         $attr_name = $parts2[0];
         $conversion = $parts2[1];

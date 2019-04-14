@@ -16,6 +16,8 @@ use Symfony\Component\Ldap\Exception\LdapException;
  */
 abstract class LdapBaseManager {
 
+  use LdapTransformationTraits;
+
   protected $logger;
   protected $entityTypeManager;
   protected $ldapBridge;
@@ -307,6 +309,10 @@ abstract class LdapBaseManager {
    *
    *
    * @see \Drupal\ldap_servers\LdapUserManager::getUserDataByIdentifier
+   *
+   * @param $drupal_username
+   *
+   * @return false|\Symfony\Component\Ldap\Entry
    */
   public function matchUsernameToExistingLdapEntry($drupal_username) {
     $result = $this->queryAllBaseDnLdapForUsername($drupal_username);
@@ -322,7 +328,7 @@ abstract class LdapBaseManager {
    * @param string $drupal_username
    *   Drupal user name.
    *
-   * @return \Symfony\Component\Ldap\Entry|false|null
+   * @return \Symfony\Component\Ldap\Entry|false
    *
    * @Todo: This function does return data and check for validity of response.
    *  This makes responses difficult to parse and should be optimized.
@@ -340,7 +346,10 @@ abstract class LdapBaseManager {
   }
 
   /**
+   * @param \Symfony\Component\Ldap\Entry $entry
+   * @param $drupal_username
    *
+   * @return \Symfony\Component\Ldap\Entry
    */
   public function sanitizeUserDataResponse(Entry $entry, $drupal_username) {
     // TODO: Make this more elegant.
@@ -388,7 +397,7 @@ abstract class LdapBaseManager {
       return NULL;
     }
 
-    $query = '(' . $this->server->get('user_attr') . '=' . ConversionHelper::escapeFilterValue($drupal_username) . ')';
+    $query = sprintf('(%s=%s)', $this->server->get('user_attr'),  $this->ldapEscapeFilter($drupal_username));
     try {
       $ldap_response = $this->ldap->query($base_dn, $query)->execute();
     }

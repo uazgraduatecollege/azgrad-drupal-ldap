@@ -533,7 +533,7 @@ class LdapGroupManager extends LdapBaseManager {
         else {
           $member_value = $this->getFirstRdnValueFromDn($memberGroupDn, $this->server->get('grp_memb_attr_match_user_attr'));
         }
-        $orFilters[] = $this->server->get('grp_memb_attr') . '=' . $this->ldapEscape($member_value);
+        $orFilters[] = $this->server->get('grp_memb_attr') . '=' . $this->ldapEscapeDn($member_value);
       }
     }
 
@@ -643,7 +643,7 @@ class LdapGroupManager extends LdapBaseManager {
         $tested_group_ids[] = $member_id;
         $all_group_dns[] = $group_entry->getDn();
         // Add $group_id (dn, cn, uid) to query.
-        $or_filters[] = $this->server->get('grp_memb_attr') . '=' . $this->ldapEscape($member_id);
+        $or_filters[] = $this->server->get('grp_memb_attr') . '=' . $this->ldapEscapeDn($member_id);
       }
     }
 

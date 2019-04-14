@@ -706,7 +706,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
    */
   private function parseUserAttributeNames($user_attr_key) {
     // Make sure no [] are on attribute.
-    $user_attr_key = trim($user_attr_key, TokenProcessor::PREFIX . TokenProcessor::SUFFIX);
+    $user_attr_key = trim($user_attr_key, '[]');
     $parts = explode('.', $user_attr_key);
     $attr_type = $parts[0];
     $attr_name = (isset($parts[1])) ? $parts[1] : FALSE;
