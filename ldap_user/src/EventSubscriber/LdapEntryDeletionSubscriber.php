@@ -2,13 +2,43 @@
 
 namespace Drupal\ldap_user\EventSubscriber;
 
+use Drupal\Core\Config\ConfigFactory;
+use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\ldap_servers\LdapUserAttributesInterface;
+use Drupal\ldap_servers\LdapUserManager;
 use Drupal\ldap_user\Event\LdapUserDeletedEvent;
+use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
- * Class UpdateLdapEntry.
+ * Delete LDAP entry.
  */
-class LdapEntryDeletionSubscriber extends LdapEntryBaseSubscriber implements LdapUserAttributesInterface {
+class LdapEntryDeletionSubscriber implements EventSubscriberInterface, LdapUserAttributesInterface {
+
+   private $config;
+
+   private $logger;
+
+   private $ldapUserManager;
+
+  /**
+   * Constructor.
+   *
+   * @param \Drupal\Core\Config\ConfigFactory $config_factory
+   *   Config factory.
+   * @param \Drupal\Core\Logger\LoggerChannelInterface $logger
+   *   Logger.
+   * @param \Drupal\ldap_servers\LdapUserManager $ldap_user_manager
+   *   LDAP user manager.
+   */
+  public function __construct(
+    ConfigFactory $config_factory,
+    LoggerChannelInterface $logger,
+    LdapUserManager $ldap_user_manager
+  ) {
+    $this->config = $config_factory->get('ldap_user.settings');
+    $this->logger = $logger;
+    $this->ldapUserManager = $ldap_user_manager;
+  }
 
   /**
    * {@inheritdoc}
@@ -28,9 +58,9 @@ class LdapEntryDeletionSubscriber extends LdapEntryBaseSubscriber implements Lda
    * @param \Drupal\ldap_user\Event\LdapUserDeletedEvent $event
    *   Event.
    */
-  protected function deleteProvisionedLdapEntry(LdapUserDeletedEvent $event) {
-    $triggers = $this->config->get('ldapEntryProvisionTriggers');
-    if ($this->provisionLdapEntriesFromDrupalUsers() && in_array(self::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_DELETE, $triggers)) {
+   protected function deleteProvisionedLdapEntry(LdapUserDeletedEvent $event) {
+    if ($this->config->get('ldapEntryProvisionServer') &&
+      in_array(self::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_DELETE, $this->config->get('ldapEntryProvisionTriggers'))) {
       /** @var \Drupal\user\Entity\User $account */
       $account = $event->account;
       // Determine server that is associated with user.

@@ -8,16 +8,27 @@ namespace Drupal\ldap_servers;
 class Mapping {
 
   private $id;
+
   private $label;
+
   private $configurable = FALSE;
+
   private $binary = FALSE;
+
   private $notes;
+
   private $enabled = FALSE;
+
   private $provisioningEvents = [];
+
   private $configurationModule;
+
   private $provisioningModule;
+
   private $ldapAttribute = '';
+
   private $drupalAttribute = '';
+
   private $userTokens = '';
 
   /**
@@ -45,7 +56,8 @@ class Mapping {
     bool $enabled = FALSE,
     array $provisioning_events = [],
     string $configuration_module = '',
-    string $provisioning_module = '') {
+    string $provisioning_module = ''
+  ) {
     $this->id = $id;
     $this->label = $label;
     $this->configurable = $configurable;

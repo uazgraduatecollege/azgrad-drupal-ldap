@@ -16,6 +16,11 @@ services:
     arguments: ['@logger.channel.ldap_user', '@ldap.detail_log', '@config.factory', '@state', '@module_handler', '@entity_type.manager', '@externalauth.authmap', '@ldap.query', '@ldap.drupal_user_processor']
   ldap_user.ldap_provision:
     class: Drupal\ldap_user\EventSubscriber\LdapEntryProvisionSubscriber
-    arguments: ['@config.factory', '@logger.channel.ldap_user', '@ldap.detail_log', '@entity_type.manager', '@module_handler', '@ldap.user_manager', '@ldap.token_processor', '@ldap_user.field_provider']
+    arguments: ['@config.factory', '@logger.channel.ldap_user', '@ldap.detail_log', '@entity_type.manager', '@module_handler', '@ldap.user_manager', '@ldap.token_processor', '@ldap_user.field_provider', '@file_system']
+    tags:
+      - { name: event_subscriber }
+  ldap_user.ldap_delete:
+    class: Drupal\ldap_user\EventSubscriber\LdapEntryDeletionSubscriber
+    arguments: ['@config.factory', '@logger.channel.ldap_user', '@ldap.user_manager']
     tags:
       - { name: event_subscriber }

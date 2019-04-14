@@ -62,7 +62,7 @@ class LdapUserManager extends LdapBaseManager {
   public function createLdapEntry(Entry $entry) {
     $this->checkAvailability();
 
-    if ($entry->hasAttribute('unicodePwd') && $this->get('type') == 'ad') {
+    if ($entry->hasAttribute('unicodePwd') && $this->server->get('type') == 'ad') {
       $entry->setAttribute('unicodePwd', [$this->convertPasswordForActiveDirectoryUnicodePwd($entry->getAttribute('unicodePwd')[0])]);
     }
 
@@ -71,7 +71,7 @@ class LdapUserManager extends LdapBaseManager {
     }
     catch (LdapException $e) {
       $this->logger->error("LDAP server %id exception: %ldap_error", [
-        '%id' => $this->id(),
+        '%id' => $this->server->id(),
         '%ldap_error' => $e->getMessage(),
       ]
       );
@@ -83,9 +83,9 @@ class LdapUserManager extends LdapBaseManager {
   /**
    * @TODO / @FIXME: This is not called.
    */
-  protected function applyModificationsToEntry(Entry $entry, $current) {
-    if (!empty($attributes['unicodePwd']) && $this->get('type') == 'ad') {
-      $attributes['unicodePwd'] = $this->convertPasswordForActiveDirectoryunicodePwd($attributes['unicodePwd']);
+  protected function applyModificationsToEntry(Entry $entry, Entry $current) {
+    if ($entry->hasAttribute('unicodePwd') && $this->server->get('type') == 'ad') {
+      $entry->setAttribute('unicodePwd', [$this->convertPasswordForActiveDirectoryUnicodePwd($entry->getAttribute('unicodePwd')[0])]);
     }
 
     parent::applyModificationsToEntry($entry, $current);
