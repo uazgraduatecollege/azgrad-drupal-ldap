@@ -2,8 +2,6 @@
 
 namespace Drupal\ldap_servers\Helper;
 
-use Drupal\ldap_servers\Processor\TokenProcessor;
-
 /**
  * Conversion helper to escape values correctly for LDAP filters.
  */

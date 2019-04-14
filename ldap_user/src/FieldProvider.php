@@ -101,10 +101,13 @@ class FieldProvider implements LdapUserAttributesInterface {
   private function loadUserDefinedMappings() {
     $database_mappings = $this->config->get('ldapUserSyncMappings');
 
-    foreach ($database_mappings[$this->direction] as $mapping_name => $mapping) {
+    foreach ($database_mappings[$this->direction] as $id => $mapping) {
+      if (isset($this->attributes[$mapping['user_attr']])) {
+        $label = $this->attributes[$mapping['user_attr']]->getLabel();
+      }
       $prepared_mapping = new Mapping(
-        $mapping_name,
-        $mapping_name,
+        $id,
+        $label ?? $id,
         TRUE,
         TRUE,
         $mapping['prov_events'],
