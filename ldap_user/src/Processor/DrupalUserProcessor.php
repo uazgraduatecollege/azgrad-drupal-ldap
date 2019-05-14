@@ -679,6 +679,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
     }
     else {
       ExternalAuthenticationHelper::setUserIdentifier($this->account, $this->account->getAccountName());
+      return TRUE;
     }
   }
 
