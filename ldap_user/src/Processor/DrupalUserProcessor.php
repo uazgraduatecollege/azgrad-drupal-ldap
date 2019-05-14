@@ -372,10 +372,6 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
   /**
    * Create a Drupal user.
    *
-   * @param array $this
-   *   ->ldapEntry
-   *   The LDAP user.
-   *
    * @return void
    */
   private function createDrupalUser() {
@@ -407,12 +403,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
       return;
     }
     $this->saveAccount();
-    if (!$this->account) {
-      $this->messenger->addError($this->t('User account creation failed because of system problems.'));
-    }
-    else {
-      $this->externalAuth->save($this->account, 'ldap_user', $this->account->getAccountName());
-    }
+    $this->externalAuth->save($this->account, 'ldap_user', $this->account->getAccountName());
   }
 
   /**
