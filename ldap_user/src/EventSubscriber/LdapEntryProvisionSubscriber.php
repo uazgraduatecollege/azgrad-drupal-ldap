@@ -499,7 +499,7 @@ class LdapEntryProvisionSubscriber implements EventSubscriberInterface, LdapUser
 
     }
     else {
-      $this->logger->error('LDAP entry for @username cannot be created on @sid not created because of an error. Proposed DN: %dn)',
+      $this->logger->error('LDAP entry for @username cannot be created on @sid. Proposed DN: %dn)',
         [
           '%dn' => $entry->getDn(),
           '@sid' => $this->ldapServer->id(),

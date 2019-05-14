@@ -3,6 +3,7 @@
 namespace Drupal\ldap_servers;
 
 use Drupal\Core\Cache\CacheBackendInterface;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeManager;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandler;
@@ -19,6 +20,7 @@ class LdapUserManager extends LdapBaseManager {
 
 
   protected $cache;
+
   protected $externalAuth;
 
   /**
@@ -60,7 +62,9 @@ class LdapUserManager extends LdapBaseManager {
    *   Result of action.
    */
   public function createLdapEntry(Entry $entry) {
-    $this->checkAvailability();
+    if (!$this->checkAvailability()) {
+      return FALSE;
+    }
 
     if ($entry->hasAttribute('unicodePwd') && $this->server->get('type') == 'ad') {
       $entry->setAttribute('unicodePwd', [$this->convertPasswordForActiveDirectoryUnicodePwd($entry->getAttribute('unicodePwd')[0])]);
@@ -68,12 +72,11 @@ class LdapUserManager extends LdapBaseManager {
 
     try {
       $this->ldap->getEntryManager()->add($entry);
-    }
-    catch (LdapException $e) {
+    } catch (LdapException $e) {
       $this->logger->error("LDAP server %id exception: %ldap_error", [
-        '%id' => $this->server->id(),
-        '%ldap_error' => $e->getMessage(),
-      ]
+          '%id' => $this->server->id(),
+          '%ldap_error' => $e->getMessage(),
+        ]
       );
       return FALSE;
     }
@@ -127,7 +130,9 @@ class LdapUserManager extends LdapBaseManager {
    *   The updated user or error.
    */
   public function getUserAccountFromPuid($puid) {
-    $this->checkAvailability();
+    if (!$this->checkAvailability()) {
+      return FALSE;
+    }
 
     $query = $this->entityTypeManager->getStorage('user')->getQuery();
     $query->condition('ldap_user_puid_sid', $this->server->id(), '=')
@@ -138,16 +143,17 @@ class LdapUserManager extends LdapBaseManager {
 
     if (!empty($result)) {
       if (count($result) == 1) {
-        return $this->entityTypeManager->getStorage('user')->load(array_values($result)[0]);
+        return $this->entityTypeManager->getStorage('user')
+          ->load(array_values($result)[0]);
       }
       else {
         $uids = implode(',', $result);
         $this->logger->error('Multiple users (uids: %uids) with same puid (puid=%puid, sid=%sid, ldap_user_puid_property=%ldap_user_puid_property)', [
-          '%uids' => $uids,
-          '%puid' => $puid,
-          '%id' => $this->server->id(),
-          '%ldap_user_puid_property' => $this->server->get('unique_persistent_attr'),
-        ]
+            '%uids' => $uids,
+            '%puid' => $puid,
+            '%id' => $this->server->id(),
+            '%ldap_user_puid_property' => $this->server->get('unique_persistent_attr'),
+          ]
         );
       }
     }
@@ -162,10 +168,13 @@ class LdapUserManager extends LdapBaseManager {
    *
    * @return \Symfony\Component\Ldap\Entry|false
    *
-   *   This should go into LdapUserProcessor or LdapUserManager, leaning toward the former.
+   *   This should go into LdapUserProcessor or LdapUserManager, leaning toward
+   *   the former.
    */
   public function getUserDataByIdentifier($identifier) {
-    $this->checkAvailability();
+    if (!$this->checkAvailability()) {
+      return FALSE;
+    }
 
     // Try to retrieve the user from the cache.
     $cache = $this->cache->get('ldap_servers:user_data:' . $identifier);
@@ -193,10 +202,13 @@ class LdapUserManager extends LdapBaseManager {
    * @return array|bool
    *   Returns data or FALSE.
    *
-   *   This should go into LdapUserProcessor or LdapUserManager, leaning toward the former.
+   *   This should go into LdapUserProcessor or LdapUserManager, leaning toward
+   *   the former.
    */
   public function getUserDataByAccount(UserInterface $account) {
-    $this->checkAvailability();
+    if (!$this->checkAvailability()) {
+      return FALSE;
+    }
 
     $identifier = $this->externalAuth->get($account->id(), 'ldap_user');
     if ($identifier) {

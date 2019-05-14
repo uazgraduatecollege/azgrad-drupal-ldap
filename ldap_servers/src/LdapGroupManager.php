@@ -100,7 +100,9 @@ class LdapGroupManager extends LdapBaseManager {
    *   Operation result.
    */
   public function groupAddGroup($group_dn, array $attributes = []) {
-    $this->checkAvailability();
+    if (!$this->checkAvailability()) {
+      return FALSE;
+    }
 
     if ($this->checkDnExists($group_dn)) {
       return FALSE;
@@ -163,7 +165,9 @@ class LdapGroupManager extends LdapBaseManager {
    * @TODO: When actually in use split into two to remove boolean modifier.
    */
   public function groupRemoveGroup($group_dn, $only_if_group_empty = TRUE) {
-    $this->checkAvailability();
+    if (!$this->checkAvailability()) {
+      return FALSE;
+    }
 
     if ($only_if_group_empty) {
       $members = $this->groupAllMembers($group_dn);
@@ -191,7 +195,9 @@ class LdapGroupManager extends LdapBaseManager {
    * @FIXME symfony/ldap refactoring needed.
    */
   public function groupAddMember($group_dn, $user) {
-    $this->checkAvailability();
+    if (!$this->checkAvailability()) {
+      return FALSE;
+    }
 
     $result = FALSE;
     if ($this->groupGroupEntryMembershipsConfigured()) {
@@ -230,7 +236,9 @@ class LdapGroupManager extends LdapBaseManager {
    *   Operation successful.
    */
   public function groupRemoveMember($group_dn, $member) {
-    $this->checkAvailability();
+    if (!$this->checkAvailability()) {
+      return FALSE;
+    }
 
     $result = FALSE;
     if ($this->groupGroupEntryMembershipsConfigured()) {
@@ -269,7 +277,9 @@ class LdapGroupManager extends LdapBaseManager {
    * @TODO: Split return functionality or throw an error.
    */
   public function groupAllMembers($group_dn) {
-    $this->checkAvailability();
+    if (!$this->checkAvailability()) {
+      return FALSE;
+    }
 
     if (!$this->groupGroupEntryMembershipsConfigured()) {
       return FALSE;
@@ -321,7 +331,9 @@ class LdapGroupManager extends LdapBaseManager {
    * @TODO: Split return functionality or throw an error.
    */
   public function groupMembers($group_dn) {
-    $this->checkAvailability();
+    if (!$this->checkAvailability()) {
+      return FALSE;
+    }
 
     if (!$this->groupGroupEntryMembershipsConfigured()) {
       return FALSE;
@@ -359,7 +371,9 @@ class LdapGroupManager extends LdapBaseManager {
    *   Whether the user belongs to the group.
    */
   public function groupIsMember($groupDn, $username) {
-    $this->checkAvailability();
+    if (!$this->checkAvailability()) {
+      return FALSE;
+    }
 
     $groupDns = $this->groupMembershipsFromUser($username);
     // While list of group dns is going to be in correct mixed case, $group_dn
@@ -402,7 +416,9 @@ class LdapGroupManager extends LdapBaseManager {
    *   Todo: Should the type hint for Entry not be Entry[]?
    */
   public function groupMembersRecursive(Entry $group_dn_entries, array &$all_member_dns, array $tested_group_dns, $level, $max_levels, $object_classes = FALSE) {
-    $this->checkAvailability();
+    if (!$this->checkAvailability()) {
+      return FALSE;
+    }
 
     if (!$this->groupGroupEntryMembershipsConfigured() || !is_array($group_dn_entries)) {
       return FALSE;
@@ -474,7 +490,9 @@ class LdapGroupManager extends LdapBaseManager {
    *   Array of group dns in mixed case or FALSE on error.
    */
   public function groupMembershipsFromUser($username) {
-    $this->checkAvailability();
+    if (!$this->checkAvailability()) {
+      return FALSE;
+    }
 
     $group_dns = FALSE;
     $user_ldap_entry = $this->matchUsernameToExistingLdapEntry($username);
@@ -504,7 +522,9 @@ class LdapGroupManager extends LdapBaseManager {
    * @see groupMembershipsFromUser()
    */
   public function groupUserMembershipsFromUserAttr(Entry $ldap_entry) {
-    $this->checkAvailability();
+    if (!$this->checkAvailability()) {
+      return FALSE;
+    }
 
     if (!$this->groupUserMembershipsFromAttributeConfigured()) {
       return FALSE;
@@ -556,7 +576,9 @@ class LdapGroupManager extends LdapBaseManager {
    * @see groupMembershipsFromUser()
    */
   public function groupUserMembershipsFromEntry(Entry $ldap_entry) {
-    $this->checkAvailability();
+    if (!$this->checkAvailability()) {
+      return FALSE;
+    }
 
     if (!$this->groupGroupEntryMembershipsConfigured()) {
       return FALSE;
@@ -693,7 +715,9 @@ class LdapGroupManager extends LdapBaseManager {
    *   Array of group strings.
    */
   public function groupUserMembershipsFromDn($username) {
-    $this->checkAvailability();
+    if (!$this->checkAvailability()) {
+      return FALSE;
+    }
 
     if (!$this->server->get('grp_derive_from_dn') || !$this->server->get('grp_derive_from_dn_attr')) {
       return FALSE;

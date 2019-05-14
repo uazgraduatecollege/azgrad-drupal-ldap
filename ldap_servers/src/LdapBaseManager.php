@@ -91,12 +91,14 @@ abstract class LdapBaseManager {
    *
    * We have to explicitly check this in many calls since the Server might not
    * have been set yet.
-   *
-   * @throws \Drupal\ldap_servers\Exception\LdapManagerException
    */
   protected function checkAvailability() {
-    if (!$this->server) {
-      throw new LdapManagerException('Server not set.');
+    if ($this->server && $this->ldapBridge->bind()) {
+      return TRUE;
+    }
+    else {
+      $this->logger->error("LDAP server unavailable");
+      return FALSE;
     }
   }
 
@@ -112,7 +114,9 @@ abstract class LdapBaseManager {
    *   Return ldap entry or false.
    */
   public function checkDnExistsIncludeData($dn, array $attributes) {
-    $this->checkAvailability();
+    if (!$this->checkAvailability()) {
+      return FALSE;
+    }
 
     $options = [
       'filter' => $attributes,
@@ -144,7 +148,9 @@ abstract class LdapBaseManager {
    *   DN exists.
    */
   public function checkDnExists($dn) {
-    $this->checkAvailability();
+    if (!$this->checkAvailability()) {
+      return FALSE;
+    }
 
     $options = [
       'filter' => ['objectclass'],
@@ -179,9 +185,12 @@ abstract class LdapBaseManager {
    *   An array of matching entries combined from all DN.
    */
   public function searchAllBaseDns($filter, array $attributes = []) {
-    $this->checkAvailability();
-
     $all_entries = [];
+
+    if (!$this->checkAvailability()) {
+      return $all_entries;
+    }
+
     $options = [
       'filter' => $attributes,
     ];
@@ -215,7 +224,9 @@ abstract class LdapBaseManager {
    *   Result of action.
    */
   public function createLdapEntry(Entry $entry) {
-    $this->checkAvailability();
+    if (!$this->checkAvailability()) {
+      return FALSE;
+    }
 
     try {
       $this->ldap->getEntryManager()->add($entry);
@@ -241,7 +252,9 @@ abstract class LdapBaseManager {
    *   Result of query.
    */
   public function modifyLdapEntry(Entry $entry) {
-    $this->checkAvailability();
+    if (!$this->checkAvailability()) {
+      return FALSE;
+    }
 
     // TODO: Verify unicodePwd was modified if present through alter hook.
     try {
@@ -269,7 +282,9 @@ abstract class LdapBaseManager {
    *   Result of ldap_delete() call.
    */
   public function deleteLdapEntry($dn) {
-    $this->checkAvailability();
+    if (!$this->checkAvailability()) {
+      return FALSE;
+    }
 
     try {
       $this->ldap->getEntryManager()->remove(new Entry($dn));
@@ -334,7 +349,9 @@ abstract class LdapBaseManager {
    *  This makes responses difficult to parse and should be optimized.
    */
   public function queryAllBaseDnLdapForUsername($drupal_username) {
-    $this->checkAvailability();
+    if (!$this->checkAvailability()) {
+      return FALSE;
+    }
 
     foreach ($this->server->getBaseDn() as $base_dn) {
       $result = $this->queryLdapForUsername($base_dn, $drupal_username);
@@ -391,7 +408,9 @@ abstract class LdapBaseManager {
    *  This makes responses difficult to parse and should be optimized.
    */
   public function queryLdapForUsername($base_dn, $drupal_username) {
-    $this->checkAvailability();
+    if (!$this->checkAvailability()) {
+      return FALSE;
+    }
 
     if (empty($base_dn)) {
       return NULL;
