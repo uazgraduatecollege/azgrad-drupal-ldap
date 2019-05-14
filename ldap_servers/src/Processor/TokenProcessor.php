@@ -211,7 +211,7 @@ class TokenProcessor {
       $part = mb_strtolower($name);
       for ($i = 0; $i < $count; $i++) {
         $reverse_position = $count - $i - 1;
-        $tokens[sprintf('[%s:reverse:%s]',  $part, $reverse_position)] = $tokens[sprintf('[%s:%s]', $part, $i)];
+        $tokens[sprintf('[%s:reverse:%s]', $part, $reverse_position)] = $tokens[sprintf('[%s:%s]', $part, $i)];
       }
     }
 
@@ -226,7 +226,7 @@ class TokenProcessor {
    *
    * @param string $name
    *   Name.
-   * @param array|NULL $value
+   * @param array|null $value
    *   Value.
    *
    * @return array

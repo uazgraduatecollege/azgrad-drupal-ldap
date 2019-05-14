@@ -16,8 +16,8 @@ use Drupal\user\UserInterface;
 function ldap_authentication_help($path, $arg) {
 
   $authentication_help = t('LDAP authentication allows authentication against an LDAP server. It may be used alongside other authentication means such as built in Drupal authentication, OpenID, etc.  More detailed help is available on drupal.org at !helplink.', [
-      '%helplink' => Link::fromTextAndUrl('http://drupal.org/node/997082', Url::fromUri('http://drupal.org/node/997082')),
-    ]
+    '%helplink' => Link::fromTextAndUrl('http://drupal.org/node/997082', Url::fromUri('http://drupal.org/node/997082')),
+  ]
   );
   switch ($path) {
     case 'admin/config/people/ldap/authentication':

@@ -30,6 +30,8 @@ class FieldProvider implements LdapUserAttributesInterface {
   private $direction;
 
   /**
+   * Mapping.
+   *
    * @var \Drupal\ldap_servers\Mapping[]
    */
   private $attributes;

@@ -50,28 +50,28 @@ class ConversionHelper {
    * character - will be transformed back to the corresponding character.
    *
    * @param string $value
-   *  DN Value.
+   *   DN Value.
    *
    * @return string
    *   Same as $value, but unescaped
    */
   public static function unescapeDnValue(string $value): string {
 
-      // Strip slashes from special chars.
-      $value = str_replace('\\\\', '\\', $value);
-      $value = str_replace('\,', ',', $value);
-      $value = str_replace('\+', '+', $value);
-      $value = str_replace('\"', '"', $value);
-      $value = str_replace('\<', '<', $value);
-      $value = str_replace('\>', '>', $value);
-      $value = str_replace('\;', ';', $value);
-      $value = str_replace('\#', '#', $value);
-      $value = str_replace('\=', '=', $value);
+    // Strip slashes from special chars.
+    $value = str_replace('\\\\', '\\', $value);
+    $value = str_replace('\,', ',', $value);
+    $value = str_replace('\+', '+', $value);
+    $value = str_replace('\"', '"', $value);
+    $value = str_replace('\<', '<', $value);
+    $value = str_replace('\>', '>', $value);
+    $value = str_replace('\;', ';', $value);
+    $value = str_replace('\#', '#', $value);
+    $value = str_replace('\=', '=', $value);
 
-      // Translate hex code into ascii.
-      $value = self::hex2asc($value);
+    // Translate hex code into ascii.
+    $value = self::hex2asc($value);
 
-      return $value;
+    return $value;
   }
 
   /**

@@ -23,7 +23,6 @@ use Drupal\ldap_user\Exception\LdapBadParamsException;
 use Drupal\ldap_user\FieldProvider;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
-
 /**
  * Event subscribers for creating and updating LDAP entries.
  */
@@ -108,7 +107,6 @@ class LdapEntryProvisionSubscriber implements EventSubscriberInterface, LdapUser
     $events[LdapUserUpdatedEvent::EVENT_NAME] = ['userUpdated'];
     return $events;
   }
-
 
   /**
    * Handle account login with LDAP entry provisioning.
@@ -318,7 +316,6 @@ class LdapEntryProvisionSubscriber implements EventSubscriberInterface, LdapUser
     return $tokens;
   }
 
-
   /**
    * Fetch regular field token.
    *
@@ -414,7 +411,6 @@ class LdapEntryProvisionSubscriber implements EventSubscriberInterface, LdapUser
     // We are adding those lowercase duplicates to make sure we can
     // replace all placeholders independent of their case. Note that as a
     // workaround we are lowercasing those on form saving for now.
-
     foreach ($tokens as $attribute => $value) {
       $tokens[mb_strtolower($attribute)] = $value;
     }
@@ -467,7 +463,8 @@ class LdapEntryProvisionSubscriber implements EventSubscriberInterface, LdapUser
 
     try {
       $entry = $this->buildLdapEntry($account, self::EVENT_CREATE_LDAP_ENTRY);
-    } catch (\Exception $e) {
+    }
+    catch (\Exception $e) {
       $this->logger->error('User or server is missing during LDAP provisioning: %message', [
         '%message',
         $e->getMessage(),
@@ -574,7 +571,8 @@ class LdapEntryProvisionSubscriber implements EventSubscriberInterface, LdapUser
 
     try {
       $entry = $this->buildLdapEntry($account, self::EVENT_SYNC_TO_LDAP_ENTRY);
-    } catch (\Exception $e) {
+    }
+    catch (\Exception $e) {
       $this->logger->error('Unable to prepare LDAP entry: %message', [
         '%message',
         $e->getMessage(),

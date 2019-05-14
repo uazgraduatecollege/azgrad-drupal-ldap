@@ -146,7 +146,7 @@ class LdapUserMappingToLdapForm extends LdapUserMappingBaseForm {
   /**
    * {@inheritdoc}
    */
-  protected function getMappingRow(Mapping $mapping, array $target_fields, int $row_id) {
+  protected function getMappingRow(Mapping $mapping, array $target_fields, int $row_id): array {
     $result = [];
 
     if ($mapping->isConfigurable()) {

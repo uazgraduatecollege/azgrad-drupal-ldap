@@ -68,9 +68,12 @@ class Mapping {
   }
 
   /**
+   * Serialized data.
    *
+   * @return array
+   *   Data.
    */
-  public function serialize() {
+  public function serialize(): array {
     return [
       'ldap_attr' => $this->getLdapAttribute(),
       'user_attr' => $this->getDrupalAttribute(),
@@ -191,28 +194,44 @@ class Mapping {
   }
 
   /**
-   * @return null
+   * Get configuration module.
+   *
+   * @return string
+   *   Module.
    */
   public function getConfigurationModule() {
     return $this->configurationModule;
   }
 
   /**
-   * @param null $configurationModule
+   * Set configuration module.
+   *
+   * @param string $configurationModule
+   *  Module.
+   *
+   * @return void
    */
   public function setConfigurationModule($configurationModule) {
     $this->configurationModule = $configurationModule;
   }
 
   /**
-   * @return null
+   * Get provisioning module.
+   *
+   * @return string
+   *   Module.
    */
   public function getProvisioningModule() {
     return $this->provisioningModule;
   }
 
   /**
-   * @param null $provisioningModule
+   * Set provisioning module.
+   *
+   * @param string $provisioningModule
+   *  Module.
+   *
+   * @return void
    */
   public function setProvisioningModule($provisioningModule) {
     $this->provisioningModule = $provisioningModule;

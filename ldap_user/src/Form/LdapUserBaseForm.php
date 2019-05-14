@@ -18,7 +18,9 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 abstract class LdapUserBaseForm extends ConfigFormBase implements LdapUserAttributesInterface, ContainerInjectionInterface {
 
   protected $moduleHandler;
+
   protected $entityTypeManager;
+
   protected $fieldProvider;
 
   protected $drupalAcctProvisionServerOptions;
@@ -60,16 +62,6 @@ abstract class LdapUserBaseForm extends ConfigFormBase implements LdapUserAttrib
    */
   public function getEditableConfigNames() {
     return ['ldap_user.settings'];
-  }
-
-  /**
-   * Provisioning events from Drupal.
-   *
-   * @return array
-   *   Available events.
-   */
-  protected static function provisionsDrupalEvents() {
-
   }
 
   /**

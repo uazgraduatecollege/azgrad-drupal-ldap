@@ -13,7 +13,7 @@ use Drupal\ldap_servers\LdapUserManager;
 final class LoginValidatorLoginForm extends LoginValidatorBase {
 
   /**
-   * Perform the actual logging in.
+   * {@inheritdoc}
    */
   public function processLogin() {
     if ($this->userAlreadyAuthenticated()) {

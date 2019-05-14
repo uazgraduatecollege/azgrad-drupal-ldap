@@ -6,8 +6,6 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandler;
 use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\ldap_servers\Entity\Server;
-use Drupal\ldap_servers\Exception\LdapManagerException;
-use Drupal\ldap_servers\Helper\ConversionHelper;
 use Symfony\Component\Ldap\Entry;
 use Symfony\Component\Ldap\Exception\LdapException;
 
@@ -416,7 +414,7 @@ abstract class LdapBaseManager {
       return NULL;
     }
 
-    $query = sprintf('(%s=%s)', $this->server->get('user_attr'),  $this->ldapEscapeFilter($drupal_username));
+    $query = sprintf('(%s=%s)', $this->server->get('user_attr'), $this->ldapEscapeFilter($drupal_username));
     try {
       $ldap_response = $this->ldap->query($base_dn, $query)->execute();
     }

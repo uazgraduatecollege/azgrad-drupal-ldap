@@ -13,10 +13,7 @@ use Drupal\ldap_servers\LdapUserManager;
 final class LoginValidatorSso extends LoginValidatorBase {
 
   /**
-   * Perform the actual logging in.
-   *
-   * @param string $authName
-   *   Authname.
+   * {@inheritdoc}
    */
   public function processLogin($authName) {
     $this->authName = $authName;

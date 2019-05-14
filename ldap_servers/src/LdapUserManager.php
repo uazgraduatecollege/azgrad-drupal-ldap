@@ -3,7 +3,6 @@
 namespace Drupal\ldap_servers;
 
 use Drupal\Core\Cache\CacheBackendInterface;
-use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeManager;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandler;
@@ -72,12 +71,13 @@ class LdapUserManager extends LdapBaseManager {
 
     try {
       $this->ldap->getEntryManager()->add($entry);
-    } catch (LdapException $e) {
+    }
+    catch (LdapException $e) {
       $this->logger->error("LDAP server %id exception: %ldap_error", [
-          '%id' => $this->server->id(),
-          '%ldap_error' => $e->getMessage(),
-        ]
-      );
+        '%id' => $this->server->id(),
+        '%ldap_error' => $e->getMessage(),
+      ]
+          );
       return FALSE;
     }
     return TRUE;
@@ -149,11 +149,11 @@ class LdapUserManager extends LdapBaseManager {
       else {
         $uids = implode(',', $result);
         $this->logger->error('Multiple users (uids: %uids) with same puid (puid=%puid, sid=%sid, ldap_user_puid_property=%ldap_user_puid_property)', [
-            '%uids' => $uids,
-            '%puid' => $puid,
-            '%id' => $this->server->id(),
-            '%ldap_user_puid_property' => $this->server->get('unique_persistent_attr'),
-          ]
+          '%uids' => $uids,
+          '%puid' => $puid,
+          '%id' => $this->server->id(),
+          '%ldap_user_puid_property' => $this->server->get('unique_persistent_attr'),
+        ]
         );
       }
     }

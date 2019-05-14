@@ -80,7 +80,8 @@ abstract class LdapUserMappingBaseForm extends LdapUserBaseForm {
           ->load($sid);
         $attributes = $this->fieldProvider
           ->loadAttributes($direction, $ldap_server);
-      } catch (\Exception $e) {
+      }
+      catch (\Exception $e) {
         $this->logger('ldap_user')->error('Missing server');
       }
     }
@@ -119,7 +120,7 @@ abstract class LdapUserMappingBaseForm extends LdapUserBaseForm {
    * @return array
    *   Returns the relevant mappings.
    */
-  protected function syncMappingsFromForm(array $values) {
+  protected function syncMappingsFromForm(array $values): array {
     $mappings = [];
     foreach ($values['mappings'] as $row) {
       if (isset($row['source']) &&
@@ -170,7 +171,12 @@ abstract class LdapUserMappingBaseForm extends LdapUserBaseForm {
   }
 
   /**
+   * Set specific mapping.
    *
+   * @param \Drupal\ldap_servers\Mapping $mapping
+   *   Mapping.
+   * @param array $row
+   *   Row.
    */
   protected function setSpecificMapping(Mapping $mapping, array $row) {
     // Sub form does it's variant here.
@@ -189,7 +195,7 @@ abstract class LdapUserMappingBaseForm extends LdapUserBaseForm {
    * @return array
    *   A single row
    */
-  protected function getMappingRow(Mapping $mapping, array $target_fields, int $row_id) {
+  protected function getMappingRow(Mapping $mapping, array $target_fields, int $row_id): array {
     // Sub form does it's variant here.
   }
 

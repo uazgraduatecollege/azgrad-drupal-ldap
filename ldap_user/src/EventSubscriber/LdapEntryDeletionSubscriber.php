@@ -14,11 +14,11 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
  */
 class LdapEntryDeletionSubscriber implements EventSubscriberInterface, LdapUserAttributesInterface {
 
-   private $config;
+  private $config;
 
-   private $logger;
+  private $logger;
 
-   private $ldapUserManager;
+  private $ldapUserManager;
 
   /**
    * Constructor.
@@ -58,9 +58,9 @@ class LdapEntryDeletionSubscriber implements EventSubscriberInterface, LdapUserA
    * @param \Drupal\ldap_user\Event\LdapUserDeletedEvent $event
    *   Event.
    */
-   protected function deleteProvisionedLdapEntry(LdapUserDeletedEvent $event) {
+  protected function deleteProvisionedLdapEntry(LdapUserDeletedEvent $event) {
     if ($this->config->get('ldapEntryProvisionServer') &&
-      in_array(self::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_DELETE, $this->config->get('ldapEntryProvisionTriggers'))) {
+    in_array(self::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_DELETE, $this->config->get('ldapEntryProvisionTriggers'))) {
       /** @var \Drupal\user\Entity\User $account */
       $account = $event->account;
       // Determine server that is associated with user.
