@@ -2,7 +2,7 @@
 
 namespace Drupal\ldap_query\Plugin\views\query;
 
-use Drupal\Component\Utility\SafeMarkup;
+use Drupal\Component\Utility\Html;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\views\Plugin\views\query\QueryPluginBase;
 use Drupal\views\ResultRow;
@@ -315,7 +315,7 @@ class LdapQuery extends QueryPluginBase {
    *   LDAP filter such as (cn=Example).
    */
   private function translateCondition($field, $value, $operator) {
-    $item = '(' . $field . '=' . SafeMarkup::checkPlain($value) . ')';
+    $item = '(' . $field . '=' . Html::escape($value) . ')';
     if (mb_substr($operator, 0, 1) == '!') {
       $condition = "(!$item)";
     }

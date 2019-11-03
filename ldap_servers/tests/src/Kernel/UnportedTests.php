@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\Tests\ldap_servers\Unit;
+namespace Drupal\Tests\ldap_servers\Kernel;
 
 use Drupal\KernelTests\Core\Entity\EntityKernelTestBase;
 use Drupal\ldap_servers\Entity\Server;

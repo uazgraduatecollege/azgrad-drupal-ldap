@@ -2,6 +2,7 @@
 
 namespace Drupal\ldap_authentication\Controller;
 
+use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Component\Utility\SafeMarkup;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityTypeManager;
@@ -661,8 +662,7 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
       $template = $this->config->get('emailTemplate');
     }
     $this->ldapEntry->setAttribute($this->serverDrupalUser->get('mail_attr'), [
-      SafeMarkup::format($template, $this->emailTemplateTokens)
-        ->__toString(),
+      (string) (new FormattableMarkup($template, $this->emailTemplateTokens)),
     ]);
   }
 

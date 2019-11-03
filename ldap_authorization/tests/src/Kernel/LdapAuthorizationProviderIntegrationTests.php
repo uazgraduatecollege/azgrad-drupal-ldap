@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\Tests\authorization_drupal_user\Kernel;
+namespace Drupal\Tests\ldap_authorization\Kernel;
 
 use Drupal\authorization_drupal_roles\Plugin\authorization\Consumer\DrupalRolesConsumer;
 use Drupal\KernelTests\Core\Entity\EntityKernelTestBase;

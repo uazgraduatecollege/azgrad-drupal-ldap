@@ -5,13 +5,15 @@
  * Install, update and uninstall functions for the LDAP authentication module.
  */
 
+use Drupal\Core\Database\Database;
+
 /**
  * Implements hook_requirements().
  */
 function ldap_authentication_requirements($phase) {
 
   $requirements = [];
-  if ($phase != "install" && db_table_exists('ldapauth')) {
+  if ($phase != "install" && Database::getConnection()->schema()->tableExists('ldapauth')) {
     $requirements['ldap_authentication_ldap_integration'] = [
       'title' => t('LDAP Integration LDAP Auth Upgrade Concern'),
       'severity' => REQUIREMENT_WARNING,
