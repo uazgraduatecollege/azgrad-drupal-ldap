@@ -1,8 +1,0 @@
-# Taken from https://cgit.drupalcode.org/drupal/tree/core/drupalci.yml
-build:
-  assessment:
-      container_composer:
-          options: ' install --prefer-dist --no-suggest --no-progress --no-interaction --ignore-platform-reqs'
-  codebase:
-      composer.core_install:
-          options: 'install --prefer-dist --no-suggest --no-interaction --no-progress --ignore-platform-reqs'

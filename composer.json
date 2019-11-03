@@ -9,5 +9,8 @@
         "drupal/authorization": "1.x-dev",
         "drupal/externalauth": "^1.0",
         "php": ">=7.1.0"
+    },
+    "require-dev": {
+        "grahl/fake_ext_ldap": "dev-master"
     }
 }
