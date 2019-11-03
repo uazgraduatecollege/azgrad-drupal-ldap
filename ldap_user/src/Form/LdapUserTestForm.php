@@ -197,12 +197,12 @@ class LdapUserTestForm extends FormBase implements LdapUserAttributesInterface {
       }
     }
 
-    if (function_exists('dpm')) {
-      dpm($results);
+    if (function_exists('kint')) {
+      kint($results);
     }
     else {
       $this->messenger()
-        ->addWarning($this->t('This form will not display results unless the devel module is enabled.'));
+        ->addWarning($this->t('This form will not display results unless the devel and kint module is enabled.'));
     }
 
     $params = [
@@ -223,11 +223,8 @@ class LdapUserTestForm extends FormBase implements LdapUserAttributesInterface {
    *   Provision trigger, see events above, such as 'sync', 'provision',
    *   'delete_ldap_entry', 'delete_drupal_entry', 'cancel_drupal_entry'.
    *
-   * @deprecated
-   *
    * @return bool
    *   Provisioning enabled.
-   *   TODO: Move to ldapusertestform and/or kill.
    */
   private function provisionEnabled($direction, $provision_trigger) {
     $result = FALSE;
