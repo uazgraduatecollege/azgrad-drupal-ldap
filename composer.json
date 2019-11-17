@@ -5,7 +5,7 @@
     "license": "GPL-2.0+",
     "minimum-stability": "dev",
     "require": {
-        "grahl/fake_ext_ldap": "dev-master",
+        "grahl/ldap": "~4.3.0",
         "drupal/authorization": "1.x-dev",
         "drupal/externalauth": "^1.0",
         "php": ">=7.1.0"
