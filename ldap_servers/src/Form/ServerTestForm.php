@@ -675,10 +675,9 @@ final class ServerTestForm extends EntityForm {
   /**
    * Helper function to bind as required for testing.
    *
-   * @TODO: Invalid config array.
-   * Unused function?!
+   * @TODO: Invalid config array. Unused function?!
    */
-  public function testBinding() {
+  public function testBinding(): void {
     if ($this->ldapBridge->bind()) {
       $this->resultsTables['basic'][] = [
         'class' => 'color-success',
@@ -688,7 +687,11 @@ final class ServerTestForm extends EntityForm {
     else {
       $this->resultsTables['basic'][] = [
         'class' => 'color-error',
-        'data' => [$this->t('Failed to bind with service account. LDAP error: @error', ['@error' => $this->ldapServer->formattedError($bindResult)])],
+        'data' => [
+          $this->t(
+            'Failed to bind with service account. LDAP error: @error',
+            ['@error' => $this->ldapServer->formattedError($bindResult)]),
+        ],
       ];
       $this->exception = TRUE;
     }
@@ -703,7 +706,7 @@ final class ServerTestForm extends EntityForm {
    * @return array
    *   Computed data.
    */
-  private function computeUserData(Entry $ldap_entry) {
+  private function computeUserData(Entry $ldap_entry): array {
     $rows = [];
     foreach ($ldap_entry->getAttributes() as $key => $value) {
       if (is_numeric($key) || $key == 'count') {
@@ -733,11 +736,8 @@ final class ServerTestForm extends EntityForm {
 
   /**
    * Test the connection.
-   *
-   * @param array $values
-   *   Input data.
    */
-  private function testConnection() {
+  private function testConnection(): void {
 
     if (!$this->ldapBridge->bind()) {
       $this->resultsTables['basic'][] = [

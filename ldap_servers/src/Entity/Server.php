@@ -132,7 +132,9 @@ class Server extends ConfigEntityBase implements ServerInterface {
    * Constructor.
    *
    * @param array $values
-   * @param $entity_type
+   *   Values.
+   * @param string $entity_type
+   *   Entity Type.
    */
   public function __construct(array $values, $entity_type) {
     parent::__construct($values, $entity_type);
@@ -226,20 +228,15 @@ class Server extends ConfigEntityBase implements ServerInterface {
   public function deriveEmailFromLdapResponse(Entry $ldap_entry) {
     // Not using template.
     if ($this->get('mail_attr') && $ldap_entry->hasAttribute($this->get('mail_attr'))) {
-      if ($ldap_entry->hasAttribute($this->get('mail_attr'))) {
-        return $ldap_entry->getAttribute($this->get('mail_attr'))[0];
-      }
-      else {
-        return FALSE;
-      }
+      return $ldap_entry->getAttribute($this->get('mail_attr'))[0];
     }
-    // Template is of form [cn]@illinois.edu.
-    elseif ($this->get('mail_template')) {
-      return $result = $this->tokenProcessor->ldapEntryReplacementsForDrupalAccount($ldap_entry, $this->get('mail_template'));
+
+    if ($this->get('mail_template')) {
+      // Template is of form [cn]@illinois.edu.
+      return $this->tokenProcessor->ldapEntryReplacementsForDrupalAccount($ldap_entry, $this->get('mail_template'));
     }
-    else {
-      return FALSE;
-    }
+
+    return FALSE;
   }
 
   /**
@@ -248,7 +245,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
    * @param \Symfony\Component\Ldap\Entry $ldapEntry
    *   The LDAP entry.
    *
-   * @return string
+   * @return string|false
    *   The user's PUID or permanent user id (within ldap), converted from
    *   binary, if applicable.
    */

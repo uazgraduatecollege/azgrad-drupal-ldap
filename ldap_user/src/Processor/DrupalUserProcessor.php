@@ -12,7 +12,6 @@ use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\externalauth\Authmap;
-use Drupal\file\Entity\File;
 use Drupal\ldap_servers\LdapUserManager;
 use Drupal\ldap_servers\Logger\LdapDetailLog;
 use Drupal\ldap_servers\Processor\TokenProcessor;
@@ -94,6 +93,8 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
   protected $token;
 
   /**
+   * Module handler.
+   *
    * @var \Drupal\Core\Extension\ModuleHandler
    */
   protected $moduleHandler;
@@ -120,9 +121,11 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
   private $account;
 
   /**
+   * LDAP entry.
+   *
    * @var \Symfony\Component\Ldap\Entry
    */
-  private $ldap_entry;
+  private $ldapEntry;
 
   /**
    * The server interacting with.
@@ -182,6 +185,10 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
    *   LDAP user manager.
    * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $event_dispatcher
    *   Event dispatcher.
+   * @param \Drupal\ldap_user\FieldProvider $field_provider
+   *   Field Provider.
+   * @param \Drupal\Core\Messenger\MessengerInterface $messenger
+   *   Messenger.
    */
   public function __construct(
     LoggerChannelInterface $logger,
@@ -279,19 +286,19 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
         return FALSE;
       }
 
-      $this->ldap_entry = $this->ldapUserManager->matchUsernameToExistingLdapEntry($drupal_username);
-      if (!$this->ldap_entry) {
+      $this->ldapEntry = $this->ldapUserManager->matchUsernameToExistingLdapEntry($drupal_username);
+      if (!$this->ldapEntry) {
         $this->logger->error('Failed to LDAP associate Drupal account %drupal_username because corresponding LDAP entry not found', ['%drupal_username' => $drupal_username]);
         return FALSE;
       }
 
-      $persistent_uid = $ldap_server->derivePuidFromLdapResponse($this->ldap_entry);
+      $persistent_uid = $ldap_server->derivePuidFromLdapResponse($this->ldapEntry);
       if ($persistent_uid) {
         $this->account->set('ldap_user_puid', $persistent_uid);
       }
       $this->account->set('ldap_user_puid_property', $ldap_server->get('unique_persistent_attr'));
       $this->account->set('ldap_user_puid_sid', $ldap_server->id());
-      $this->account->set('ldap_user_current_dn', $this->ldap_entry->getDn());
+      $this->account->set('ldap_user_current_dn', $this->ldapEntry->getDn());
       $this->account->set('ldap_user_last_checked', time());
       $this->account->set('ldap_user_ldap_exclude', 0);
       $this->saveAccount();
@@ -328,10 +335,10 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
     // Get an LDAP user from the LDAP server.
     if ($this->config->get('drupalAcctProvisionServer')) {
       $this->ldapUserManager->setServer($this->server);
-      $this->ldap_entry = $this->ldapUserManager->getUserDataByIdentifier($this->account->getAccountName());
+      $this->ldapEntry = $this->ldapUserManager->getUserDataByIdentifier($this->account->getAccountName());
     }
 
-    if (!$this->ldap_entry) {
+    if (!$this->ldapEntry) {
       $this->detailLog->log(
         '@username: Failed to find associated LDAP entry for username in provision.',
         ['@username' => $this->account->getAccountName()],
@@ -349,11 +356,11 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
       'direction' => self::PROVISION_TO_DRUPAL,
     ];
 
-    $this->moduleHandler->alter('ldap_entry', $this->ldap_entry, $params);
+    $this->moduleHandler->alter('ldap_entry', $this->ldapEntry, $params);
 
     // Look for existing Drupal account with the same PUID. If found, update
     // that user instead of creating a new user.
-    $persistentUid = $this->server->derivePuidFromLdapResponse($this->ldap_entry);
+    $persistentUid = $this->server->derivePuidFromLdapResponse($this->ldapEntry);
     $accountFromPuid = $persistentUid ? $this->ldapUserManager->getUserAccountFromPuid($persistentUid) : FALSE;
     if ($accountFromPuid) {
       $this->updateExistingAccountByPersistentUid($accountFromPuid);
@@ -436,7 +443,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
    * @param \Drupal\user\UserInterface $account
    *   The Drupal user.
    */
-  public function drupalUserLogsIn(UserInterface $account) {
+  public function drupalUserLogsIn(UserInterface $account): void {
     $this->account = $account;
     if ($this->excludeUser($this->account)) {
       return;
@@ -454,10 +461,8 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
 
   /**
    * Create a Drupal user.
-   *
-   * @return void
    */
-  private function createDrupalUser() {
+  private function createDrupalUser(): void {
     $this->account->enforceIsNew();
     $this->applyAttributesToAccountOnCreate();
     $tokens = ['%drupal_username' => $this->account->getAccountName()];
@@ -495,7 +500,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
    * @param \Drupal\user\UserInterface $accountFromPuid
    *   The account from the PUID.
    */
-  private function updateExistingAccountByPersistentUid(UserInterface $accountFromPuid) {
+  private function updateExistingAccountByPersistentUid(UserInterface $accountFromPuid): void {
     $this->account = $accountFromPuid;
     $this->externalAuth->save($this->account, 'ldap_user', $this->account->getAccountName());
     $this->syncToDrupalAccount();
@@ -510,10 +515,10 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
    */
   private function userPictureFromLdapEntry() {
     $picture_attribute = $this->server->get('picture_attr');
-    if ($this->ldap_entry && $picture_attribute) {
+    if ($this->ldapEntry && $picture_attribute) {
       // Check if LDAP entry has been provisioned.
-      if ($this->ldap_entry->hasAttribute($picture_attribute)) {
-        $ldapUserPicture = $this->ldap_entry->getAttribute($picture_attribute)[0];
+      if ($this->ldapEntry->hasAttribute($picture_attribute)) {
+        $ldapUserPicture = $this->ldapEntry->getAttribute($picture_attribute)[0];
       }
       else {
         // No picture present.
@@ -524,17 +529,17 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
       if (empty($currentUserPicture)) {
         return $this->saveUserPicture($this->account->get('user_picture'), $ldapUserPicture);
       }
-      else {
-        // TODO: DI.
-        $file = File::load($currentUserPicture[0]['target_id']);
-        if ($file && md5(file_get_contents($file->getFileUri())) == md5($ldapUserPicture)) {
-          // Same image, do nothing.
-          return FALSE;
-        }
-        else {
-          return $this->saveUserPicture($this->account->get('user_picture'), $ldapUserPicture);
-        }
+
+      /** @var \Drupal\file\Entity\File $file */
+      $file = $this->entityTypeManager
+        ->getStorage('file')
+        ->load($currentUserPicture[0]['target_id']);
+      if ($file && md5(file_get_contents($file->getFileUri())) === md5($ldapUserPicture)) {
+        // Same image, do nothing.
+        return FALSE;
       }
+
+      return $this->saveUserPicture($this->account->get('user_picture'), $ldapUserPicture);
     }
   }
 
@@ -551,7 +556,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
    */
   private function saveUserPicture(FieldItemListInterface $field, $ldapUserPicture) {
     // Create tmp file to get image format and derive extension.
-    $fileName = uniqid();
+    $fileName = uniqid('', FALSE);
     $unmanagedFile = file_directory_temp() . '/' . $fileName;
     file_put_contents($unmanagedFile, $ldapUserPicture);
     // TODO: Declare dependency on exif or resolve it.
@@ -595,7 +600,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
   /**
    * Saves the account, separated to make this testable.
    */
-  private function saveAccount() {
+  private function saveAccount(): void {
     $this->account->save();
   }
 
@@ -604,7 +609,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
    *
    * One should not assume all attributes are present in the LDAP entry.
    */
-  private function applyAttributesToAccount() {
+  private function applyAttributesToAccount(): void {
     $this->fieldProvider->loadAttributes(self::PROVISION_TO_DRUPAL, $this->server);
 
     $this->setLdapBaseFields(self::EVENT_SYNC_TO_DRUPAL_USER);
@@ -614,7 +619,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
     $this->moduleHandler
       ->alter('ldap_user_edit_user',
         $this->account,
-        $this->ldap_entry,
+        $this->ldapEntry,
         $context);
 
     // Set ldap_user_last_checked.
@@ -626,7 +631,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
    *
    * One should not assume all attributes are present in the LDAP entry.
    */
-  private function applyAttributesToAccountOnCreate() {
+  private function applyAttributesToAccountOnCreate(): void {
     $this->fieldProvider->loadAttributes(self::PROVISION_TO_DRUPAL, $this->server);
     $this->setLdapBaseFields(self::EVENT_CREATE_DRUPAL_USER);
     $this->setFieldsOnDrupalUserCreation();
@@ -636,7 +641,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
     $this->moduleHandler
       ->alter('ldap_user_edit_user',
         $this->account,
-        $this->ldap_entry,
+        $this->ldapEntry,
         $context);
 
     // Set ldap_user_last_checked.
@@ -649,7 +654,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
    * @return bool
    *   Attempts to sync, reports failure if unsuccessful.
    */
-  private function syncToDrupalAccount() {
+  private function syncToDrupalAccount(): bool {
     if (!($this->account instanceof UserInterface)) {
       $this->logger
         ->notice('Invalid selection passed to syncToDrupalAccount.');
@@ -661,12 +666,12 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
       return FALSE;
     }
 
-    if (!$this->ldap_entry && $this->config->get('drupalAcctProvisionServer')) {
+    if (!$this->ldapEntry && $this->config->get('drupalAcctProvisionServer')) {
       $this->ldapUserManager->setServerById($this->config->get('drupalAcctProvisionServer'));
-      $this->ldap_entry = $this->ldapUserManager->getUserDataByAccount($this->account);
+      $this->ldapEntry = $this->ldapUserManager->getUserDataByAccount($this->account);
     }
 
-    if (!$this->ldap_entry) {
+    if (!$this->ldapEntry) {
       return FALSE;
     }
 
@@ -681,8 +686,8 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
   /**
    * Sets the fields for initial users.
    */
-  private function setFieldsOnDrupalUserCreation() {
-    $derived_mail = $this->server->deriveEmailFromLdapResponse($this->ldap_entry);
+  private function setFieldsOnDrupalUserCreation(): void {
+    $derived_mail = $this->server->deriveEmailFromLdapResponse($this->ldapEntry);
     if (!$this->account->getEmail()) {
       $this->account->set('mail', $derived_mail);
     }
@@ -703,14 +708,14 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
    * @param string $event
    *   Provisioning event.
    */
-  private function setLdapBaseFields($event) {
+  private function setLdapBaseFields($event): void {
     // Basic $user LDAP fields.
     if ($this->fieldProvider->attributeIsSyncedOnEvent('[property.name]', $event)) {
-      $this->account->set('name', $this->server->deriveUsernameFromLdapResponse($this->ldap_entry));
+      $this->account->set('name', $this->server->deriveUsernameFromLdapResponse($this->ldapEntry));
     }
 
     if ($this->fieldProvider->attributeIsSyncedOnEvent('[property.mail]', $event)) {
-      $derived_mail = $this->server->deriveEmailFromLdapResponse($this->ldap_entry);
+      $derived_mail = $this->server->deriveEmailFromLdapResponse($this->ldapEntry);
       if ($derived_mail) {
         $this->account->set('mail', $derived_mail);
       }
@@ -724,7 +729,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
     }
 
     if ($this->fieldProvider->attributeIsSyncedOnEvent('[field.ldap_user_puid]', $event)) {
-      $ldap_user_puid = $this->server->derivePuidFromLdapResponse($this->ldap_entry);
+      $ldap_user_puid = $this->server->derivePuidFromLdapResponse($this->ldapEntry);
       if ($ldap_user_puid) {
         $this->account->set('ldap_user_puid', $ldap_user_puid);
       }
@@ -736,7 +741,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
       $this->account->set('ldap_user_puid_sid', $this->server->id());
     }
     if ($this->fieldProvider->attributeIsSyncedOnEvent('[field.ldap_user_current_dn]', $event)) {
-      $this->account->set('ldap_user_current_dn', $this->ldap_entry->getDn());
+      $this->account->set('ldap_user_current_dn', $this->ldapEntry->getDn());
     }
   }
 
@@ -748,7 +753,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
    * @param string $event
    *   Provisioning event.
    */
-  private function setUserDefinedMappings($event) {
+  private function setUserDefinedMappings($event): void {
     $mappings = $this->fieldProvider->getConfigurableAttributesSyncedOnEvent($event);
 
     foreach ($mappings as $key => $mapping) {
@@ -757,12 +762,12 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
       if ($mapping->isBinary() && strpos($mapping->getLdapAttribute(), ';') === FALSE) {
         $mapping->setLdapAttribute(str_replace(']', ';binary]', $mapping->getLdapAttribute()));
       }
-      $value = $this->tokenProcessor->ldapEntryReplacementsForDrupalAccount($this->ldap_entry, $mapping->getLdapAttribute());
+      $value = $this->tokenProcessor->ldapEntryReplacementsForDrupalAccount($this->ldapEntry, $mapping->getLdapAttribute());
       // The ordinal $value_instance is not used and could probably be
       // removed.
       list($value_type, $value_name) = $this->parseUserAttributeNames($key);
 
-      if ($value_type == 'field' || $value_type == 'property') {
+      if ($value_type === 'field' || $value_type === 'property') {
         $this->account->set($value_name, $value);
       }
     }
@@ -778,7 +783,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
    * @return array
    *   An array such as array('field','field_user_lname', NULL).
    */
-  private function parseUserAttributeNames($user_attr_key) {
+  private function parseUserAttributeNames(string $user_attr_key): array {
     // Make sure no [] are on attribute.
     $user_attr_key = trim($user_attr_key, '[]');
     $parts = explode('.', $user_attr_key);
@@ -799,13 +804,13 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
    *
    * Convenience function for GroupUserUpdateProcessor (for now).
    *
-   * @param $username
-   *   Username
+   * @param string $username
+   *   Username.
    *
    * @return false|null|\Symfony\Component\Ldap\Entry
    *   Entry.
    */
-  public function drupalUserExists($username) {
+  public function drupalUserExists(string $username) {
     return $this->ldapUserManager->matchUsernameToExistingLdapEntry($username);
   }
 

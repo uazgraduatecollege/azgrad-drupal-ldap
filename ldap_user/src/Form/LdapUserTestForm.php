@@ -9,7 +9,6 @@ use Drupal\Core\Url;
 use Drupal\externalauth\Authmap;
 use Drupal\ldap_servers\LdapUserManager;
 use Drupal\ldap_servers\LdapUserAttributesInterface;
-use Drupal\ldap_user\Event\LdapNewUserCreatedEvent;
 use Drupal\ldap_user\Processor\DrupalUserProcessor;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
@@ -207,13 +206,15 @@ class LdapUserTestForm extends FormBase implements LdapUserAttributesInterface {
           $results['createDrupalUserFromLdapEntry method results']["context = $sync_trigger_description"]['proposed'] = $account;
         }
         else {
-          // @FIXME: This is not testing all supported event, only the new user created event.
+          // @FIXME
+          // This is not testing all supported event, only the new user created event.
           // The form needs to be restructured in general for those!
-          $event = new LdapNewUserCreatedEvent($account);
-          /** @var \Symfony\Component\EventDispatcher\EventDispatcher $dispatcher */
-          $dispatcher = \Drupal::service('event_dispatcher');
-          // $dispatcher->dispatch(LdapNewUserCreatedEvent::EVENT_NAME, $event);.
-          $results['provisionLdapEntry method results']["context = $sync_trigger_description"] = "Test not ported";
+          // $event = new LdapNewUserCreatedEvent($account);
+          // /** @var \Symfony\Component\EventDispatcher\EventDispatcher $dispatcher */
+          // $dispatcher = \Drupal::service('event_dispatcher');
+          // $dispatcher->dispatch(LdapNewUserCreatedEvent::EVENT_NAME, $event);
+          // @FIXME.
+          $results['provisionLdapEntry method results']["context = $sync_trigger_description"] = 'Test not ported';
         }
       }
       else {

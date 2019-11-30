@@ -2,6 +2,7 @@
 
 namespace Drupal\ldap_user\Event;
 
+use Drupal\user\UserInterface;
 use Symfony\Component\EventDispatcher\Event;
 
 /**
@@ -24,7 +25,7 @@ class LdapUserLoginEvent extends Event {
    * @param \Drupal\user\UserInterface $account
    *   Account.
    */
-  public function __construct($account) {
+  public function __construct(UserInterface $account) {
     $this->account = $account;
   }
 

@@ -331,7 +331,7 @@ abstract class LdapBaseManager {
    *
    * @param \Symfony\Component\Ldap\Entry $entry
    *   Entry.
-   * @param $current
+   * @param \Symfony\Component\Ldap\Entry $current
    *   Current.
    */
   protected function applyModificationsToEntry(Entry $entry, Entry $current): void {
@@ -345,13 +345,15 @@ abstract class LdapBaseManager {
   }
 
   /**
+   * Match username to existing LDAP entry.
    *
-   *
-   * @see \Drupal\ldap_servers\LdapUserManager::getUserDataByIdentifier
-   *
-   * @param $drupal_username
+   * @param string $drupal_username
+   *   Drupal username.
    *
    * @return false|\Symfony\Component\Ldap\Entry
+   *   LDAP Entry.
+   *
+   * @see \Drupal\ldap_servers\LdapUserManager::getUserDataByIdentifier
    */
   public function matchUsernameToExistingLdapEntry($drupal_username) {
     $result = $this->queryAllBaseDnLdapForUsername($drupal_username);
@@ -368,6 +370,7 @@ abstract class LdapBaseManager {
    *   Drupal user name.
    *
    * @return \Symfony\Component\Ldap\Entry|false
+   *   LDAP Entry.
    *
    * @Todo: This function does return data and check for validity of response.
    *  This makes responses difficult to parse and should be optimized.
@@ -387,6 +390,8 @@ abstract class LdapBaseManager {
   }
 
   /**
+   * Sanitize user data response.
+   *
    * @param \Symfony\Component\Ldap\Entry $entry
    *   LDAP entry.
    * @param string $drupal_username
@@ -395,7 +400,7 @@ abstract class LdapBaseManager {
    * @return \Symfony\Component\Ldap\Entry
    *   LDAP Entry.
    */
-  public function sanitizeUserDataResponse(Entry $entry, $drupal_username) {
+  public function sanitizeUserDataResponse(Entry $entry, $drupal_username): ?Entry {
     // TODO: Make this more elegant.
     foreach ($entry->getAttributes() as $key => $value) {
       $entry->removeAttribute($key);

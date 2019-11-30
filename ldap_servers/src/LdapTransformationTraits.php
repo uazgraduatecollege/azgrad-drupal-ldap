@@ -12,7 +12,7 @@ trait LdapTransformationTraits {
    *
    * Helpful for unit testing without the PHP LDAP module.
    *
-   * @param string $string
+   * @param string $value
    *   String to escape.
    *
    * @return string
@@ -34,7 +34,7 @@ trait LdapTransformationTraits {
     // Copied from Symfonfy's Adapter.php for ease of use.
     // Per RFC 4514, leading/trailing spaces should be encoded in DNs,
     // as well as carriage returns.
-    if (!empty($value) && ' ' === $value[0]) {
+    if (!empty($value) && strpos($value, ' ') === 0) {
       $value = '\\20' . substr($value, 1);
     }
     if (!empty($value) && ' ' === $value[\strlen($value) - 1]) {
@@ -94,8 +94,6 @@ trait LdapTransformationTraits {
    *
    * @param string $dn
    *   DN to explode.
-   * @param int $attribute
-   *   Attribute.
    *
    * @return array
    *   Exploded DN.

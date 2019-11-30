@@ -296,7 +296,7 @@ class LdapUserAdminForm extends LdapUserBaseForm {
   /**
    * Reduce the trigger list.
    *
-   * @param array values
+   * @param array $values
    *   Triggers.
    *
    * @return array

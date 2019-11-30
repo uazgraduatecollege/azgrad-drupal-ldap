@@ -16,8 +16,18 @@ class TokenProcessor {
 
   use LdapTransformationTraits;
 
+  /**
+   * Detail log.
+   *
+   * @var \Drupal\ldap_servers\Logger\LdapDetailLog
+   */
   protected $detailLog;
 
+  /**
+   * Entity Type Manager.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
   protected $entityTypeManager;
 
   /**
@@ -38,8 +48,9 @@ class TokenProcessor {
    *   "Drupal Provisioned".
    *
    * @return string|null
+   *   Relaced string.
    */
-  public function ldapEntryReplacementsForDrupalAccount(Entry $resource, string $text) {
+  public function ldapEntryReplacementsForDrupalAccount(Entry $resource, string $text): ?string {
     // Desired tokens are of form "cn","mail", etc.
     $desired_tokens = ConversionHelper::findTokensNeededForTemplate($text);
 
@@ -66,7 +77,7 @@ class TokenProcessor {
     // Strip out any un-replaced tokens.
     $result = preg_replace('/^\[.*\]$/', '', $result);
 
-    if ($result == '') {
+    if ($result === '') {
       $result = NULL;
     }
     return $result;
@@ -119,7 +130,7 @@ class TokenProcessor {
    *     [guid:0;bin2hex] = apply bin2hex() function to value
    *     [guid:0;msguid] = apply convertMsguidToString() function to value
    */
-  public function tokenizeLdapEntry(Entry $ldap_entry, array $token_keys) {
+  public function tokenizeLdapEntry(Entry $ldap_entry, array $token_keys): array {
     if (empty($ldap_entry->getAttributes())) {
       $this->detailLog->log(
         'Skipped tokenization of LDAP entry because no LDAP entry provided when called from %calling_function.', [
@@ -146,7 +157,7 @@ class TokenProcessor {
    * @return array
    *   Tokens.
    */
-  private function compileLdapTokenEntries(Entry $ldap_entry, array $token_keys) {
+  private function compileLdapTokenEntries(Entry $ldap_entry, array $token_keys): array {
     $tokens = [];
     $tokens = array_merge($tokens, $this->processDnParts($ldap_entry->getDn()));
 
@@ -178,7 +189,7 @@ class TokenProcessor {
    * @return array
    *   Tokens.
    */
-  private function processDnParts($dn) {
+  private function processDnParts($dn): array {
     $tokens = [];
     // 1. Tokenize dn
     // Escapes attribute values, need to be unescaped later.
@@ -232,13 +243,13 @@ class TokenProcessor {
    * @return array
    *   Tokens.
    */
-  private function processLdapEntryAttribute($name, $value) {
+  private function processLdapEntryAttribute($name, $value): array {
     $tokens = [];
     $key = mb_strtolower($name);
 
     if ($value !== NULL) {
       if (is_array($value)) {
-        if (count($value) == 1) {
+        if (count($value) === 1) {
           // Only one entry, example output: ['cn', 'cn:0', 'cn:last'].
           $tokens[sprintf('[%s]', $key)] = $value[0];
           $tokens[sprintf('[%s:0]', $key)] = $value[0];
@@ -247,8 +258,8 @@ class TokenProcessor {
         elseif (count($value) > 1) {
           // Multiple entries, example: ['cn:last', 'cn:0', 'cn:1'].
           $tokens[sprintf('[%s:last]', $key)] = $value[count($value) - 1];
-          for ($i = 0; $i < count($value); $i++) {
-            $tokens[sprintf('[%s:%s]', $key, $i)] = $value[$i];
+          foreach ($value as $i => $i_value) {
+            $tokens[sprintf('[%s:%s]', $key, $i)] = $i_value;
           }
         }
       }
@@ -268,14 +279,13 @@ class TokenProcessor {
    *
    * @param string $key
    *   Full token with prefix and suffix.
-   *
    * @param \Symfony\Component\Ldap\Entry $entry
    *   Entry.
    *
    * @return array
    *   Tokens.
    */
-  private function processLdapTokenKey($key, Entry $entry) {
+  private function processLdapTokenKey($key, Entry $entry): array {
     $tokens = [];
     // A token key is for example 'dn', 'mail:0', 'mail:last', or
     // 'guid:0;tobase64'. Trailing period to allow for empty value.

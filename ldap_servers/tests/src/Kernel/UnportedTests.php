@@ -13,15 +13,20 @@ use Symfony\Component\Ldap\Entry;
  */
 class UnportedTests extends EntityKernelTestBase {
 
+  /**
+   * {@inheritdoc}
+   */
   public static $modules = ['ldap_servers', 'externalauth'];
 
   /**
+   * Server.
+   *
    * @var \Drupal\ldap_servers\Entity\Server
    */
   protected $server;
 
   /**
-   *
+   * {@inheritdoc}
    */
   public function setUp() {
     parent::setUp();
@@ -35,7 +40,7 @@ class UnportedTests extends EntityKernelTestBase {
    *
    * TODO: Move to separate test class.
    */
-  public function testSearchAllBaseDns() {
+  public function testSearchAllBaseDns(): void {
     $this->markTestIncomplete('Cannot be easily tested as is, research and implement mocking symfony/ldap responses.');
 
     $stub = $this->getMockBuilder()
@@ -62,11 +67,11 @@ class UnportedTests extends EntityKernelTestBase {
     $ldapStub = $this->getMockBuilder(LdapUserManager::class)
       ->setMethods(['query'])
       ->method('query')
-      ->will($this->returnCallback(function () use ($valueMap, $validResult) {
+      ->willReturnCallback(function () use ($valueMap, $validResult) {
         $arguments = func_get_args();
 
         foreach ($valueMap as $map) {
-          if (!is_array($map) || count($arguments) != count($map)) {
+          if (!is_array($map) || count($arguments) !== count($map)) {
             continue;
           }
 
@@ -76,7 +81,7 @@ class UnportedTests extends EntityKernelTestBase {
           }
         }
         return ['count' => 0];
-      }));
+      });
     /** @var \Drupal\ldap_servers\LdapUserManager $ldapStub */
     $result = $ldapStub->searchAllBaseDns('(|(cn=hpotter,ou=people,dc=example,dc=org))', ['dn']);
     $this->assertEquals(1, $result['count']);
@@ -146,7 +151,7 @@ class UnportedTests extends EntityKernelTestBase {
   /**
    * Test the group membership of the user from an entry.
    */
-  public function testGroupUserMembershipsFromEntry() {
+  public function testGroupUserMembershipsFromEntry(): void {
     $this->markTestIncomplete('TODO: Unported');
 
     $user_dn = 'cn=hpotter,ou=people,dc=hogwarts,dc=edu';

@@ -240,17 +240,13 @@ class LdapEntryProvisionSubscriber implements EventSubscriberInterface, LdapUser
    *
    * @param \Drupal\user\UserInterface $account
    *   Drupal account.
-   * @param \Drupal\ldap_servers\Entity\Server $ldap_server
-   *   LDAP server.
    * @param string $prov_event
    *   Provisioning event.
    *
    * @return \Symfony\Component\Ldap\Entry
    *   Entry to send *to* LDAP.
-   *
-   * @throws \Drupal\ldap_user\Exception\LdapBadParamsException
    */
-  private function buildLdapEntry(UserInterface $account, $prov_event) {
+  private function buildLdapEntry(UserInterface $account, $prov_event): Entry {
     $dn = '';
     $attributes = [];
 
@@ -262,17 +258,16 @@ class LdapEntryProvisionSubscriber implements EventSubscriberInterface, LdapUser
 
     $mappings = $this->fieldProvider->getAttributesSyncedOnEvent($prov_event);
 
-    foreach ($mappings as $field_key => $field_detail) {
-
+    foreach ($mappings as $field) {
       // TODO: Trimming here shows that we should not be saving the brackets to
       // the database.
-      $ldap_attribute_name = trim($field_detail->getLdapAttribute(), '[]');
+      $ldap_attribute_name = trim($field->getLdapAttribute(), '[]');
 
-      $attribute = $field_detail->getDrupalAttribute() == 'user_tokens' ? $field_detail->getUserTokens() : $field_detail->getDrupalAttribute();
+      $attribute = $field->getDrupalAttribute() === 'user_tokens' ? $field->getUserTokens() : $field->getDrupalAttribute();
       $value = $this->fetchDrupalAttributeValue($account, $attribute, $ldap_attribute_name);
 
       if ($value) {
-        if ($ldap_attribute_name == 'dn') {
+        if ($ldap_attribute_name === 'dn') {
           $dn = $value;
         }
         else {
@@ -431,10 +426,13 @@ class LdapEntryProvisionSubscriber implements EventSubscriberInterface, LdapUser
    * @param string $text
    *   The text such as "[dn]", "[cn]@my.org", "[displayName] [sn]",
    *   "Drupal Provisioned".
+   * @param string $type
+   *   Type.
    *
    * @return string|null
+   *   Attribute value.
    */
-  private function fetchDrupalAttributeValue(UserInterface $user, string $text, string $type) {
+  private function fetchDrupalAttributeValue(UserInterface $user, string $text, string $type): ?string {
     // Desired tokens are of form "cn","mail", etc.
     $desired_tokens = ConversionHelper::findTokensNeededForTemplate($text);
 
@@ -570,9 +568,9 @@ class LdapEntryProvisionSubscriber implements EventSubscriberInterface, LdapUser
    *  contain more than one.
    *
    * @param \Drupal\user\UserInterface $account
+   *   User.
    * @param \Symfony\Component\Ldap\Entry $entry
-   *
-   * @throws \Drupal\Core\Entity\EntityStorageException
+   *   LDAP Entry.
    */
   private function updateUserProvisioningReferences(
     UserInterface $account,
@@ -647,11 +645,13 @@ class LdapEntryProvisionSubscriber implements EventSubscriberInterface, LdapUser
   }
 
   /**
-   *
+   * Check existing LDAP entry.
    *
    * @param \Drupal\user\UserInterface $account
+   *   User.
    *
    * @return bool|\Symfony\Component\Ldap\Entry|null
+   *   Entry, false or null.
    */
   private function checkExistingLdapEntry(UserInterface $account) {
     $authmap = \Drupal::service('externalauth.authmap')

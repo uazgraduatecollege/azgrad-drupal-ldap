@@ -55,18 +55,32 @@ class QueryController {
   protected $logger;
 
   /**
-   * Constructor.
+   * QueryController constructor.
+   *
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   *   Entity Type Manager.
+   * @param \Drupal\ldap_servers\LdapBridge $ldap_bridge
+   *   LDAP bridge.
+   * @param \Drupal\Core\Logger\LoggerChannelInterface $logger
+   *   Logger.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, LdapBridge $ldap_bridge, LoggerChannelInterface $logger) {
+  public function __construct(
+    EntityTypeManagerInterface $entity_type_manager,
+    LdapBridge $ldap_bridge,
+    LoggerChannelInterface $logger
+  ) {
     $this->storage = $entity_type_manager->getStorage('ldap_query_entity');
     $this->ldapBridge = $ldap_bridge;
     $this->logger = $logger;
   }
 
   /**
+   * Load Query.
    *
+   * @param string $id
+   *   ID.
    */
-  public function load($id) {
+  public function load($id): void {
     $this->qid = $id;
     $this->query = $this->storage->load($this->qid);
   }
@@ -77,7 +91,7 @@ class QueryController {
    * @return string
    *   Set filter.
    */
-  public function getFilter() {
+  public function getFilter(): string {
     return $this->query->get('filter');
   }
 
@@ -88,7 +102,7 @@ class QueryController {
    *   Optional parameter to override filters. Useful for Views and other
    *   queries requiring filtering.
    */
-  public function execute($filter = NULL) {
+  public function execute($filter = NULL): void {
     if ($this->query) {
       if ($filter == NULL) {
         $filter = $this->query->get('filter');
@@ -121,6 +135,7 @@ class QueryController {
           }
 
           if ($ldap_response && !empty($ldap_response)) {
+            // TODO: $this->results[] = $ldap_response should suffice?
             $this->results = array_merge($this->results, $ldap_response);
           }
         }
@@ -137,7 +152,7 @@ class QueryController {
    * @return \Symfony\Component\Ldap\Entry[]
    *   Raw results.
    */
-  public function getRawResults() {
+  public function getRawResults(): array {
     return $this->results;
   }
 
@@ -147,7 +162,7 @@ class QueryController {
    * @return array
    *   Available fields.
    */
-  public function availableFields() {
+  public function availableFields(): array {
     $attributes = [];
     // We loop through all results since some users might not have fields set
     // for them and those are missing and not null.

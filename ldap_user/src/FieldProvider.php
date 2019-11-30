@@ -49,23 +49,16 @@ class FieldProvider implements LdapUserAttributesInterface {
   protected $entityFieldManager;
 
   /**
-   * Sync Mapping Helper.
-   *
-   * @var
-   */
-  protected $syncMappingHelper;
-
-  /**
    * Server.
    *
-   * @var
+   * @var \Drupal\ldap_servers\ServerInterface
    */
   private $server;
 
   /**
    * Direction.
    *
-   * @var
+   * @var string
    */
   private $direction;
 
@@ -236,10 +229,8 @@ class FieldProvider implements LdapUserAttributesInterface {
    * are associated with. They are required for a Drupal account to be
    * "LDAP associated" regardless of if any other fields/properties are
    * provisioned or synced.
-   *
-   * @return array
    */
-  private function addPuidFields() {
+  private function addPuidFields(): void {
     $url = Url::fromRoute('entity.ldap_server.collection');
     $tokens = [
       '%edit_link' => Link::fromTextAndUrl($url->toString(), $url)->toString(),
@@ -317,7 +308,7 @@ class FieldProvider implements LdapUserAttributesInterface {
    * @return string
    *   Tokenized.
    */
-  private function addTokens($input) {
+  private function addTokens($input): string {
     return '[' . $input . ']';
   }
 

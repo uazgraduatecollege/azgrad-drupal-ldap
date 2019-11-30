@@ -13,7 +13,18 @@ use Drupal\Core\Logger\LoggerChannelFactoryInterface;
  */
 class LdapDetailLog {
 
+  /**
+   * Logger.
+   *
+   * @var \Drupal\Core\Logger\LoggerChannelFactoryInterface
+   */
   protected $loggerFactory;
+
+  /**
+   * Config.
+   *
+   * @var \Drupal\Core\Config\ImmutableConfig
+   */
   protected $config;
 
   /**

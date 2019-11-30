@@ -621,7 +621,7 @@ class LdapGroupManager extends LdapBaseManager {
   /**
    * Recurse through all groups, adding parent groups to $all_group_dns array.
    *
-   * @param array $current_group_entries
+   * @param \Symfony\Component\Ldap\Adapter\ExtLdap\Collection $current_group_entries
    *   Entries of LDAP groups, which are that are starting point. Should include
    *   at least one entry.
    * @param array $all_group_dns
@@ -642,7 +642,13 @@ class LdapGroupManager extends LdapBaseManager {
    *
    * @TODO: See if we can do this with groupAllMembers().
    */
-  private function groupMembershipsFromEntryRecursive(Collection $current_group_entries, array &$all_group_dns, array &$tested_group_ids, $level, $max_levels) {
+  private function groupMembershipsFromEntryRecursive(
+    Collection $current_group_entries,
+    array &$all_group_dns,
+    array &$tested_group_ids,
+    $level,
+    $max_levels
+  ) {
 
     if (!$this->groupGroupEntryMembershipsConfigured() || $current_group_entries->count() == 0) {
       return FALSE;

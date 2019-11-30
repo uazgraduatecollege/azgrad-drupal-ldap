@@ -39,11 +39,6 @@ class GroupUserUpdateProcessor {
   protected $config;
 
   /**
-   * @var
-   */
-  protected $factory;
-
-  /**
    * State.
    *
    * @var \Drupal\Core\State\StateInterface
@@ -195,6 +190,7 @@ class GroupUserUpdateProcessor {
       // We are not injecting this service properly to avoid forcing this
       // dependency on authorization.
       /** @var \Drupal\authorization\AuthorizationController $authorization_manager */
+      // phpcs:ignore
       $authorization_manager = \Drupal::service('authorization.manager');
       $authorization_manager->setUser($user);
       $authorization_manager->setAllProfiles();

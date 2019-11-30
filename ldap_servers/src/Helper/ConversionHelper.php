@@ -8,42 +8,6 @@ namespace Drupal\ldap_servers\Helper;
 class ConversionHelper {
 
   /**
-   * Escapes the given values so that they can be safely used in LDAP filters.
-   *
-   * Follow RFC 2254 so that control characters with an ACII code < 32 as well
-   * as the characters with special meaning in LDAP filters "*", "(", ")", and
-   * "\" (the backslash) are converted into the representation of a backslash
-   * followed by two hex digits representing the hexadecimal value of the
-   * character.
-   *
-   * @param array|string $value
-   *   Array of values to escape.
-   *
-   * @static
-   *
-   * @return array
-   *   Array of values, but escaped.
-   */
-  public static function escapeFilterValue($value) {
-
-    // Escaping of filter meta characters.
-    $value = str_replace('\\', '\5c', $value);
-    $value = str_replace('*', '\2a', $value);
-    $value = str_replace('(', '\28', $value);
-    $value = str_replace(')', '\29', $value);
-
-    // ASCII < 32 escaping.
-    $value = self::asc2hex32($value);
-
-    if (NULL === $value) {
-      // Apply escaped "null" if string is empty.
-      $value = '\0';
-    }
-
-    return $value;
-  }
-
-  /**
    * Undoes the conversion done by escape_dn_value().
    *
    * Any escape sequence starting with a baskslash - hexpair or special
@@ -104,7 +68,8 @@ class ConversionHelper {
    *   Converted string.
    */
   public static function asc2hex32($string) {
-    for ($i = 0; $i < strlen($string); $i++) {
+    $length = strlen($string);
+    for ($i = 0; $i < $length; $i++) {
       $char = substr($string, $i, 1);
       if (ord($char) < 32) {
         $hex = dechex(ord($char));
@@ -115,38 +80,6 @@ class ConversionHelper {
       }
     }
     return $string;
-  }
-
-  /**
-   * Extract token attributes.
-   *
-   * @param array $attribute_maps
-   *   Array of attribute maps passed by reference. For example:
-   *   [[<attr_name>, <ordinal>, <data_type>]].
-   * @param string $text
-   *   Text with tokens in it.
-   *
-   * @TODO: Do not pass attribute_maps by reference, merge it into an array if
-   * really necessary.
-   */
-  public static function extractTokenAttributes(array &$attribute_maps, $text) {
-    $tokens = self::findTokensNeededForTemplate($text);
-    foreach ($tokens as $token) {
-      $token = str_replace(['[', ']'], ['', ''], $token);
-      $parts = explode(':', $token);
-      $ordinal = (isset($parts[1]) && $parts[1]) ? $parts[1] : 0;
-      $attr_name = $parts[0];
-
-      $parts2 = explode(';', $attr_name);
-      if (count($parts2) > 1) {
-        $attr_name = $parts2[0];
-        $conversion = $parts2[1];
-      }
-      else {
-        $conversion = NULL;
-      }
-      $attribute_maps[$attr_name] = self::setAttributeMap(@$attribute_maps[$attr_name], $conversion, [$ordinal => NULL]);
-    }
   }
 
   /**
@@ -183,7 +116,7 @@ class ConversionHelper {
    *   Encoded string.
    */
   public static function binaryConversionToString($value) {
-    if (strlen($value) == 16) {
+    if (strlen($value) === 16) {
       $value = self::convertMsguidToString($value);
     }
     else {
@@ -203,7 +136,7 @@ class ConversionHelper {
    * @return string
    *   Converted string.
    */
-  public static function convertAttribute($value, $conversion = NULL) {
+  public static function convertAttribute($value, $conversion = NULL): string {
 
     switch ($conversion) {
       case 'base64_encode':
@@ -215,11 +148,11 @@ class ConversionHelper {
         break;
 
       case 'msguid':
-        $value = ConversionHelper::convertMsguidToString($value);
+        $value = self::convertMsguidToString($value);
         break;
 
       case 'binary':
-        $value = ConversionHelper::binaryConversionToString($value);
+        $value = self::binaryConversionToString($value);
         break;
 
       case 'md5':
@@ -227,42 +160,6 @@ class ConversionHelper {
         break;
     }
     return $value;
-  }
-
-  /**
-   * Set an attribute map.
-   *
-   * @param array $attribute
-   *   For a given attribute in the form ['values' => [], 'data_type' => NULL]
-   *   as outlined in ldap_user/README.developers.txt.
-   * @param string $conversion
-   *   As type of conversion to do @see ldap_servers_convert_attribute(),
-   *   e.g. base64_encode, bin2hex, msguid, md5.
-   * @param array $values
-   *   In form [<ordinal> => <value> | NULL], where NULL indicates value is
-   *   needed for provisioning or other operations.
-   *
-   * @return array
-   *   Converted values. If nothing is passed in, create empty array in the
-   *   proper structure ['values' => [0 => 'john', 1 => 'johnny']].
-   */
-  public static function setAttributeMap(array $attribute = NULL, $conversion = NULL, array $values = NULL) {
-
-    $attribute = (is_array($attribute)) ? $attribute : [];
-    $attribute['conversion'] = $conversion;
-    if (!$values && (!isset($attribute['values']) || !is_array($attribute['values']))) {
-      $attribute['values'] = [0 => NULL];
-    }
-    // Merge into array overwriting ordinals.
-    elseif (is_array($values)) {
-      foreach ($values as $ordinal => $value) {
-        if ($conversion) {
-          $value = self::convertAttribute($value, $conversion);
-        }
-        $attribute['values'][(int) $ordinal] = $value;
-      }
-    }
-    return $attribute;
   }
 
   /**

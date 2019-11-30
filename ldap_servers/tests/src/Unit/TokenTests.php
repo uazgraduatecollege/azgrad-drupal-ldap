@@ -17,6 +17,8 @@ use Drupal\ldap_servers\Processor\TokenProcessor;
 class TokenTests extends UnitTestCase {
 
   /**
+   * LDAP Entry.
+   *
    * @var \Symfony\Component\Ldap\Entry
    */
   private $ldapEntry;
@@ -64,8 +66,12 @@ class TokenTests extends UnitTestCase {
     $this->assertEquals('thisold' . $this->ldapEntry->getAttribute('house')[0], $mixed);
 
     $compound = $processor->ldapEntryReplacementsForDrupalAccount($this->ldapEntry, '[samaccountname:0][house:0]');
-    // TODO: Expected :'hpotterGryffindor', Actual:'[samaccountname:0]Gryffindor'
-    // $this->assertEquals($this->ldapEntry->getAttribute('sAMAccountName')[0] . $this->ldapEntry->getAttribute('house')[0], $compound);.
+    // TODO Expected :'hpotterGryffindor', Actual:'[samaccountname:0]Gryffindor'
+    // $this->assertEquals(
+    // $this->ldapEntry->getAttribute('sAMAccountName')[0] . $this->ldapEntry->getAttribute('house')[0],
+    // $compound
+    // );
+    // End TODO.
     $literalValue = $processor->ldapEntryReplacementsForDrupalAccount($this->ldapEntry, 'literalvalue');
     $this->assertEquals('literalvalue', $literalValue);
 

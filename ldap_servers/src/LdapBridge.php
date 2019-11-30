@@ -77,7 +77,7 @@ class LdapBridge {
    * @param string $sid
    *   Server machine name.
    */
-  public function setServerById($sid) {
+  public function setServerById($sid): void {
     $server = $this->entityManager->load($sid);
     /** @var \Drupal\ldap_servers\Entity\Server $server */
     if ($server) {
@@ -91,7 +91,7 @@ class LdapBridge {
    * @param \Drupal\ldap_servers\Entity\Server $server
    *   Server object.
    */
-  public function setServer(Server $server) {
+  public function setServer(Server $server): void {
     $options = new OptionsResolver();
     // TODO: Fix network timeout option
     // $options->setAllowedValues('network_timeout', $this->server->get('timeout'));.
@@ -119,8 +119,10 @@ class LdapBridge {
    */
   public function bind() {
 
-    if ($this->bindMethod == 'anon' ||
-      ($this->bindMethod == 'anon_user' && !CredentialsStorage::validateCredentials())) {
+    if (
+      $this->bindMethod === 'anon' ||
+      ($this->bindMethod === 'anon_user' && !CredentialsStorage::validateCredentials())
+    ) {
       $userDn = NULL;
       $password = NULL;
     }

@@ -12,15 +12,20 @@ use Symfony\Component\Ldap\Entry;
  */
 class ServerTests extends EntityKernelTestBase {
 
+  /**
+   * {@inheritdoc}
+   */
   public static $modules = ['ldap_servers', 'externalauth'];
 
   /**
+   * Server.
+   *
    * @var \Drupal\ldap_servers\Entity\Server
    */
   protected $server;
 
   /**
-   *
+   * {@inheritdoc}
    */
   public function setUp() {
     parent::setUp();
@@ -29,9 +34,9 @@ class ServerTests extends EntityKernelTestBase {
   }
 
   /**
-   *
+   * Test derive user name.
    */
-  public function testDeriveUserName() {
+  public function testDeriveUserName(): void {
     $entry = new Entry('cn=hpotter,ou=people,dc=example,dc=org');
     $entry->setAttribute('samAccountName', ['hpotter']);
     $entry->setAttribute('username', ['harry']);
@@ -44,9 +49,9 @@ class ServerTests extends EntityKernelTestBase {
   }
 
   /**
-   *
+   * Test the Base DN.
    */
-  public function testGetBasedn() {
+  public function testGetBasedn(): void {
     $this->server->set('basedn', '');
     $this->assertEquals([], $this->server->getBaseDn());
     $this->server->set('basedn', "ou=people,dc=hogwarts,dc=edu\r\nou=groups,dc=hogwarts,dc=edu");
@@ -57,7 +62,7 @@ class ServerTests extends EntityKernelTestBase {
   /**
    * Test getting username from LDAP entry.
    */
-  public function testDeriveAttributesFromLdapResponse() {
+  public function testDeriveAttributesFromLdapResponse(): void {
 
     $this->server->set('account_name_attr', '');
     $this->server->set('user_attr', 'cn');

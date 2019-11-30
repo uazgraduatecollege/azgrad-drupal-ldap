@@ -38,7 +38,7 @@ class Mapping {
   /**
    * Notes.
    *
-   * @var
+   * @var string
    */
   private $notes;
 
@@ -228,7 +228,7 @@ class Mapping {
   /**
    * Provisioning event available?
    *
-   * @param $event
+   * @param string $event
    *   Event.
    *
    * @return bool
@@ -267,8 +267,6 @@ class Mapping {
    *
    * @param string $configurationModule
    *   Module.
-   *
-   * @return void
    */
   public function setConfigurationModule($configurationModule): void {
     $this->configurationModule = $configurationModule;
@@ -289,8 +287,6 @@ class Mapping {
    *
    * @param string $provisioningModule
    *   Module.
-   *
-   * @return void
    */
   public function setProvisioningModule($provisioningModule): void {
     $this->provisioningModule = $provisioningModule;

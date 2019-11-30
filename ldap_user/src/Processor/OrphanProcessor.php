@@ -101,6 +101,8 @@ class OrphanProcessor {
   protected $drupalUserProcessor;
 
   /**
+   * LDAP User Manager.
+   *
    * @var \Drupal\ldap_servers\LdapUserManager
    */
   protected $ldapUserManager;

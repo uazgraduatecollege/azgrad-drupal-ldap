@@ -14,10 +14,25 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
  */
 class LdapEntryDeletionSubscriber implements EventSubscriberInterface, LdapUserAttributesInterface {
 
+  /**
+   * Config.
+   *
+   * @var \Drupal\Core\Config\Config|\Drupal\Core\Config\ImmutableConfig
+   */
   private $config;
 
+  /**
+   * Logger.
+   *
+   * @var \Drupal\Core\Logger\LoggerChannelInterface
+   */
   private $logger;
 
+  /**
+   * LDAP User Manager.
+   *
+   * @var \Drupal\ldap_servers\LdapUserManager
+   */
   private $ldapUserManager;
 
   /**

@@ -14,8 +14,22 @@ use Drupal\ldap_servers\Mapping;
  */
 class LdapUserMappingToDrupalForm extends LdapUserMappingBaseForm {
 
+  /**
+   * Direction.
+   *
+   * @var string
+   */
   protected $direction = self::PROVISION_TO_DRUPAL;
-  protected $events = [self::EVENT_CREATE_DRUPAL_USER, self::EVENT_SYNC_TO_DRUPAL_USER];
+
+  /**
+   * Events.
+   *
+   * @var array
+   */
+  protected $events = [
+    self::EVENT_CREATE_DRUPAL_USER,
+    self::EVENT_SYNC_TO_DRUPAL_USER,
+  ];
 
   /**
    * {@inheritdoc}
@@ -24,7 +38,8 @@ class LdapUserMappingToDrupalForm extends LdapUserMappingBaseForm {
     ConfigFactoryInterface $config_factory,
     ModuleHandler $module_handler,
     EntityTypeManagerInterface $entity_type_manager,
-    FieldProvider $field_provider) {
+    FieldProvider $field_provider
+  ) {
     parent::__construct($config_factory, $module_handler, $entity_type_manager, $field_provider);
     $this->server = $this->currentConfig->get('drupalAcctProvisionServer');
   }
@@ -96,13 +111,13 @@ class LdapUserMappingToDrupalForm extends LdapUserMappingBaseForm {
       [],
       [],
       [
-        '#title' => t('On Drupal User Creation'),
+        '#title' => $this->t('On Drupal User Creation'),
         '#type' => 'item',
         '#class' => 'header-provisioning',
         '#rowspan' => 2,
       ],
       [
-        '#title' => t('On Sync to Drupal User'),
+        '#title' => $this->t('On Sync to Drupal User'),
         '#type' => 'item',
         '#class' => 'header-provisioning',
       ],
@@ -215,9 +230,14 @@ class LdapUserMappingToDrupalForm extends LdapUserMappingBaseForm {
   }
 
   /**
+   * Set specific mapping.
    *
+   * @param \Drupal\ldap_servers\Mapping $mapping
+   *   Mapping.
+   * @param array $row
+   *   Row.
    */
-  protected function setSpecificMapping(Mapping $mapping, array $row) {
+  protected function setSpecificMapping(Mapping $mapping, array $row): void {
     $mapping->setLdapAttribute(trim($row['source']));
     $mapping->setDrupalAttribute(trim($row['target']));
   }

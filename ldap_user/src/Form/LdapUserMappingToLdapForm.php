@@ -14,7 +14,18 @@ use Drupal\ldap_servers\Mapping;
  */
 class LdapUserMappingToLdapForm extends LdapUserMappingBaseForm {
 
+  /**
+   * Direction.
+   *
+   * @var string
+   */
   protected $direction = self::PROVISION_TO_LDAP;
+
+  /**
+   * Events.
+   *
+   * @var array
+   */
   protected $events = [self::EVENT_CREATE_LDAP_ENTRY, self::EVENT_SYNC_TO_LDAP_ENTRY];
 
   /**
@@ -235,9 +246,14 @@ class LdapUserMappingToLdapForm extends LdapUserMappingBaseForm {
   }
 
   /**
+   * Set specific mapping.
    *
+   * @param \Drupal\ldap_servers\Mapping $mapping
+   *   Mapping.
+   * @param array $row
+   *   Row.
    */
-  protected function setSpecificMapping(Mapping $mapping, array $row) {
+  protected function setSpecificMapping(Mapping $mapping, array $row): void {
     $mapping->setDrupalAttribute(trim($row['source']));
     $mapping->setLdapAttribute(trim($row['target']));
   }

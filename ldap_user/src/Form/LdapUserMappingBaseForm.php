@@ -10,10 +10,25 @@ use Drupal\ldap_servers\Mapping;
  */
 abstract class LdapUserMappingBaseForm extends LdapUserBaseForm {
 
+  /**
+   * Events.
+   *
+   * @var array
+   */
   protected $events;
 
+  /**
+   * Direction.
+   *
+   * @var string
+   */
   protected $direction;
 
+  /**
+   * Server.
+   *
+   * @var string
+   */
   protected $server;
 
   /**
@@ -68,7 +83,7 @@ abstract class LdapUserMappingBaseForm extends LdapUserBaseForm {
    * @return array
    *   Mappings.
    */
-  protected function loadAvailableMappings($direction, $sid) {
+  protected function loadAvailableMappings($direction, $sid): array {
     $attributes = [];
     if ($sid) {
       try {
@@ -189,9 +204,6 @@ abstract class LdapUserMappingBaseForm extends LdapUserBaseForm {
    *   Attributes of Drupal user target options.
    * @param int $row_id
    *   Only needed for LDAP.
-   *
-   * @return array
-   *   A single row
    */
   protected function getMappingRow(Mapping $mapping, array $target_fields, int $row_id): array {
     // Sub form does it's variant here.
@@ -201,6 +213,7 @@ abstract class LdapUserMappingBaseForm extends LdapUserBaseForm {
    * Return the server mappings for the fields.
    *
    * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   Form State.
    *
    * @return array|bool
    *   Returns the mappings
@@ -222,7 +235,7 @@ abstract class LdapUserMappingBaseForm extends LdapUserBaseForm {
       }
     }
 
-    if ($this->direction == self::PROVISION_TO_LDAP) {
+    if ($this->direction === self::PROVISION_TO_LDAP) {
       $user_attribute_options['user_tokens'] = '-- user tokens --';
     }
 

@@ -17,8 +17,18 @@ use Symfony\Component\Ldap\Exception\LdapException;
 class LdapUserManager extends LdapBaseManager {
 
 
+  /**
+   * Cache.
+   *
+   * @var \Drupal\Core\Cache\CacheBackendInterface
+   */
   protected $cache;
 
+  /**
+   * Externalauth.
+   *
+   * @var \Drupal\externalauth\Authmap
+   */
   protected $externalAuth;
 
   /**
@@ -55,16 +65,17 @@ class LdapUserManager extends LdapBaseManager {
    * Adds AD-specific password handling.
    *
    * @param \Symfony\Component\Ldap\Entry $entry
+   *   LDAP Entry.
    *
    * @return bool
    *   Result of action.
    */
-  public function createLdapEntry(Entry $entry) {
+  public function createLdapEntry(Entry $entry): bool {
     if (!$this->checkAvailability()) {
       return FALSE;
     }
 
-    if ($entry->hasAttribute('unicodePwd') && $this->server->get('type') == 'ad') {
+    if ($entry->hasAttribute('unicodePwd') && $this->server->get('type') === 'ad') {
       $entry->setAttribute('unicodePwd', [$this->convertPasswordForActiveDirectoryUnicodePwd($entry->getAttribute('unicodePwd')[0])]);
     }
 
@@ -83,10 +94,17 @@ class LdapUserManager extends LdapBaseManager {
   }
 
   /**
+   * Apply modifications to entry.
+   *
+   * @param \Symfony\Component\Ldap\Entry $entry
+   *   LDAP Entry.
+   * @param \Symfony\Component\Ldap\Entry $current
+   *   LDAP Entry.
+   *
    * @TODO / @FIXME: This is not called.
    */
-  protected function applyModificationsToEntry(Entry $entry, Entry $current) {
-    if ($entry->hasAttribute('unicodePwd') && $this->server->get('type') == 'ad') {
+  protected function applyModificationsToEntry(Entry $entry, Entry $current): void {
+    if ($entry->hasAttribute('unicodePwd') && $this->server->get('type') === 'ad') {
       $entry->setAttribute('unicodePwd', [$this->convertPasswordForActiveDirectoryUnicodePwd($entry->getAttribute('unicodePwd')[0])]);
     }
 
@@ -99,7 +117,7 @@ class LdapUserManager extends LdapBaseManager {
    * For the purpose of changing or setting the password. Note that AD needs the
    * field to be called unicodePwd (as opposed to userPassword).
    *
-   * @param string $password
+   * @param string|array $password
    *   The password that is being formatted for Active Directory unicodePwd
    *   field.
    *
@@ -141,7 +159,7 @@ class LdapUserManager extends LdapBaseManager {
     $result = $query->execute();
 
     if (!empty($result)) {
-      if (count($result) == 1) {
+      if (count($result) === 1) {
         return $this->entityTypeManager->getStorage('user')
           ->load(array_values($result)[0]);
       }
@@ -213,9 +231,8 @@ class LdapUserManager extends LdapBaseManager {
     if ($identifier) {
       return $this->getUserDataByIdentifier($identifier);
     }
-    else {
-      return FALSE;
-    }
+
+    return FALSE;
   }
 
 }

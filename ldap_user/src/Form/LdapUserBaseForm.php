@@ -40,21 +40,21 @@ abstract class LdapUserBaseForm extends ConfigFormBase implements LdapUserAttrib
   /**
    * Drupal account provisioning server options.
    *
-   * @var
+   * @var array
    */
-  protected $drupalAcctProvisionServerOptions;
+  protected $drupalAcctProvisionServerOptions = [];
 
   /**
    * LDAP Entry Provisioning server options.
    *
-   * @var
+   * @var array
    */
-  protected $ldapEntryProvisionServerOptions;
+  protected $ldapEntryProvisionServerOptions = [];
 
   /**
    * Current config.
    *
-   * @var
+   * @var \Drupal\Core\Config\ImmutableConfig
    */
   protected $currentConfig;
 
