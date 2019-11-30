@@ -272,8 +272,12 @@ class ServerFactory implements LdapUserAttributesInterface {
       $direction = $params['direction'];
 
       $url = Url::fromRoute('entity.ldap_server.collection');
+      // A plain $url->toString() call in some places (early in the request)
+      // can cause Drupal to throw a 'leaked metadata' exception. To prevent
+      // toString() from handling any metadata in the background, we pass TRUE.
+      $url_string = $url->toString(TRUE)->getGeneratedUrl();
       $tokens = [
-        '%edit_link' => Link::fromTextAndUrl($url->toString(), $url)->toString(),
+        '%edit_link' => Link::fromTextAndUrl($url_string, $url)->toString(),
         '%sid' => $ldap_server->id(),
       ];
 
