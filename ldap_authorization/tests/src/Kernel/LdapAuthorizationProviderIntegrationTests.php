@@ -25,6 +25,7 @@ class LdapAuthorizationProviderIntegrationTests extends EntityKernelTestBase {
     'authorization',
     'ldap_servers',
     'ldap_authorization',
+    'externalauth',
   ];
 
   /**
@@ -47,8 +48,10 @@ class LdapAuthorizationProviderIntegrationTests extends EntityKernelTestBase {
       ->disableOriginalConstructor()
       ->setMethods(NULL)
       ->getMock();
+  }
 
-    // TODO: Write tests.
+  public function testProvider() {
+    $this->markTestIncomplete('Test missing');
   }
 
 }

@@ -182,7 +182,7 @@ class TokenProcessor {
     $tokens = [];
     // 1. Tokenize dn
     // Escapes attribute values, need to be unescaped later.
-    $dn_parts = $this->ldapExplodeDn($dn, 0);
+    $dn_parts = $this->splitDnWithAttributes($dn);
     unset($dn_parts['count']);
     $parts_count = [];
     $parts_last_value = [];

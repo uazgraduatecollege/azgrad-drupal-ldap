@@ -298,7 +298,7 @@ class LDAPAuthorizationProvider extends ProviderPluginBase implements ContainerF
     $config = $profile->getProviderConfig();
     foreach ($proposals as $key => $authorization_id) {
       if ($config['filter_and_mappings']['use_first_attr_as_groupid']) {
-        $attr_parts = $this->ldapExplodeDn($authorization_id, 0);
+        $attr_parts = $this->splitDnWithAttributes($authorization_id);
         if (is_array($attr_parts) && count($attr_parts) > 0) {
           $first_part = explode('=', $attr_parts[0]);
           if (count($first_part) > 1) {

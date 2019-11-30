@@ -23,7 +23,12 @@ trait LdapTransformationTraits {
       $value = ldap_escape($value, '', LDAP_ESCAPE_DN);
     }
     else {
-      $value = str_replace(['*', '\\', '(', ')'], ['\\*', '\\\\', '\\(', '\\)'], $value);
+      $value = str_replace(['*', '\\', '(', ')'], [
+        '\\*',
+        '\\\\',
+        '\\(',
+        '\\)',
+      ], $value);
     }
 
     // Copied from Symfonfy's Adapter.php for ease of use.
@@ -57,7 +62,18 @@ trait LdapTransformationTraits {
     }
     else {
       // Taken from symfony/polyfill-php56.
-      $charMaps['filter'] = ['\\', ',', '=', '+', '<', '>', ';', '"', '#', "\r"];
+      $charMaps['filter'] = [
+        '\\',
+        ',',
+        '=',
+        '+',
+        '<',
+        '>',
+        ';',
+        '"',
+        '#',
+        "\r",
+      ];
       for ($i = 0; $i < 256; ++$i) {
         $charMaps[0][\chr($i)] = sprintf('\\%02x', $i);
       }
@@ -74,7 +90,7 @@ trait LdapTransformationTraits {
   /**
    * Wrapper for ldap_explode_dn().
    *
-   * Helpful for unit testing without the PHP LDAP module.
+   * Try to avoid working with DN directly and instead use Entry objects.
    *
    * @param string $dn
    *   DN to explode.
@@ -84,8 +100,21 @@ trait LdapTransformationTraits {
    * @return array
    *   Exploded DN.
    */
-  public static function ldapExplodeDn($dn, $attribute) {
-    return ldap_explode_dn($dn, $attribute);
+  public static function splitDnWithAttributes($dn): ?array {
+    if (function_exists('ldap_explode_dn')) {
+      return ldap_explode_dn($dn, 0);
+    }
+
+    $rdn = explode(',', $dn);
+    $rdn = array_map(function ($attribute) {
+      $attribute = trim($attribute);
+      // This is a workaround for OpenLDAP escaping Unicode values.
+      $key_value = explode('=', $attribute);
+      $key_value[1] = str_replace('%', '\\', urlencode($key_value[1]));
+      return implode('=', $key_value);
+    }, $rdn);
+    return ['count' => count($rdn)] + $rdn;
+
   }
 
 }

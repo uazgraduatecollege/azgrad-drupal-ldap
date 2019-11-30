@@ -745,7 +745,7 @@ class LdapGroupManager extends LdapBaseManager {
    */
   private function getFirstRdnValueFromDn($dn, $rdn) {
     // Escapes attribute values, need to be unescaped later.
-    $pairs = $this->ldapExplodeDn($dn, 0);
+    $pairs = $this->splitDnWithAttributes($dn);
     array_shift($pairs);
     $rdn = mb_strtolower($rdn);
     $rdn_value = FALSE;
@@ -775,7 +775,7 @@ class LdapGroupManager extends LdapBaseManager {
    */
   public function getAllRdnValuesFromDn($dn, $rdn) {
     // Escapes attribute values, need to be unescaped later.
-    $pairs = $this->ldapExplodeDn($dn, 0);
+    $pairs = $this->splitDnWithAttributes($dn);
     array_shift($pairs);
     $rdn = mb_strtolower($rdn);
     $rdn_values = [];
