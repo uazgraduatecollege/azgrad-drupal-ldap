@@ -2,10 +2,8 @@
 
 namespace Drupal\ldap_user\Form;
 
-use Drupal\Core\Extension\ModuleHandler;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\ldap_servers\Mapping;
-use Drupal\ldap_user\FieldProvider;
 
 /**
  * Provides the form to configure user configuration and field mapping.

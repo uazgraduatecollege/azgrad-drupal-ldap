@@ -25,7 +25,7 @@ class MappingPlugin extends DefaultPluginManager {
     $mappings = $profile->getProviderMappings();
     $row['foo'] = [
       '#type' => 'textfield',
-      '#title' => t('LDAP foo'),
+      '#title' => $this->t('LDAP foo'),
       '#default_value' => isset($mappings[$index]['foo']) ? $mappings[$index]['foo'] : NULL,
     ];
 

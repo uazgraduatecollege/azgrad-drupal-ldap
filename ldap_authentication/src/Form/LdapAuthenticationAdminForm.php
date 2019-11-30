@@ -16,9 +16,26 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 class LdapAuthenticationAdminForm extends ConfigFormBase {
 
+  /**
+   * Module handler.
+   *
+   * @var \Drupal\Core\Extension\ModuleHandler
+   */
   protected $moduleHandler;
 
+  /**
+   * Storage.
+   *
+   * @var \Drupal\Core\Entity\EntityStorageInterface
+   */
   protected $storage;
+
+  /**
+   * Entity Type Manager.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  protected $entityTypeManager;
 
   /**
    * {@inheritdoc}
@@ -37,9 +54,14 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
   /**
    * {@inheritdoc}
    */
-  public function __construct(ConfigFactoryInterface $config_factory, ModuleHandler $module_handler, EntityTypeManagerInterface $entity_type_manager) {
+  public function __construct(
+    ConfigFactoryInterface $config_factory,
+    ModuleHandler $module_handler,
+    EntityTypeManagerInterface $entity_type_manager
+  ) {
     parent::__construct($config_factory);
     $this->moduleHandler = $module_handler;
+    $this->entityTypeManager = $entity_type_manager;
     $this->storage = $entity_type_manager->getStorage('ldap_server');
   }
 
@@ -108,8 +130,7 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
         (3) Password fields in user profile form will be removed except for administrators.'),
     ];
 
-    // TODO: DI.
-    $admin_roles = \Drupal::entityTypeManager()
+    $admin_roles = $this->entityTypeManager
       ->getStorage('user_role')
       ->getQuery()
       ->condition('is_admin', TRUE)

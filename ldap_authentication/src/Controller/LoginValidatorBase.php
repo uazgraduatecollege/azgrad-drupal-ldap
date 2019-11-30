@@ -3,9 +3,7 @@
 namespace Drupal\ldap_authentication\Controller;
 
 use Drupal\Component\Render\FormattableMarkup;
-use Drupal\Component\Utility\SafeMarkup;
 use Drupal\Core\Config\ConfigFactoryInterface;
-use Drupal\Core\Entity\EntityTypeManager;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandler;
 use Drupal\Core\Logger\LoggerChannelInterface;
@@ -28,22 +26,32 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
 
   use StringTranslationTrait;
 
-  const AUTHENTICATION_FAILURE_BIND = 2;
+  public const AUTHENTICATION_FAILURE_BIND = 2;
+  public const AUTHENTICATION_FAILURE_FIND = 3;
+  public const AUTHENTICATION_FAILURE_DISALLOWED = 4;
+  public const AUTHENTICATION_FAILURE_CREDENTIALS = 5;
+  public const AUTHENTICATION_SUCCESS = 6;
+  public const AUTHENTICATION_FAILURE_SERVER = 8;
 
-  const AUTHENTICATION_FAILURE_FIND = 3;
-
-  const AUTHENTICATION_FAILURE_DISALLOWED = 4;
-
-  const AUTHENTICATION_FAILURE_CREDENTIALS = 5;
-
-  const AUTHENTICATION_SUCCESS = 6;
-
-  const AUTHENTICATION_FAILURE_SERVER = 8;
-
+  /**
+   * Authname.
+   *
+   * @var bool|string
+   */
   protected $authName = FALSE;
 
+  /**
+   * Drupal User authmapped.
+   *
+   * @var bool|mixed
+   */
   protected $drupalUserAuthMapped = FALSE;
 
+  /**
+   * Drupal User name.
+   *
+   * @var bool|string
+   */
   protected $drupalUserName = FALSE;
 
   /**
@@ -67,8 +75,18 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
    */
   protected $ldapEntry;
 
+  /**
+   * Email template used.
+   *
+   * @var bool
+   */
   protected $emailTemplateUsed = FALSE;
 
+  /**
+   * Email template tokens.
+   *
+   * @var array
+   */
   protected $emailTemplateTokens = [];
 
   /**
@@ -80,26 +98,81 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
    */
   protected $formState;
 
+  /**
+   * Config factory.
+   *
+   * @var \Drupal\Core\Config\ConfigFactoryInterface
+   */
   protected $configFactory;
 
+  /**
+   * Config.
+   *
+   * @var \Drupal\Core\Config\ImmutableConfig
+   */
   protected $config;
 
+  /**
+   * Detail log.
+   *
+   * @var \Drupal\ldap_servers\Logger\LdapDetailLog
+   */
   protected $detailLog;
 
+  /**
+   * Logger.
+   *
+   * @var \Drupal\Core\Logger\LoggerChannelInterface
+   */
   protected $logger;
 
+  /**
+   * Entity type Manager.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
   protected $entityTypeManager;
 
+  /**
+   * Module handler.
+   *
+   * @var \Drupal\Core\Extension\ModuleHandler
+   */
   protected $moduleHandler;
 
+  /**
+   * LDAP bridge.
+   *
+   * @var \Drupal\ldap_servers\LdapBridge
+   */
   protected $ldapBridge;
 
+  /**
+   * Externalauth.
+   *
+   * @var \Drupal\externalauth\Authmap
+   */
   protected $externalAuth;
 
+  /**
+   * Authentication servers.
+   *
+   * @var \Drupal\ldap_authentication\AuthenticationServers
+   */
   protected $authenticationServers;
 
+  /**
+   * LDAP User Manager.
+   *
+   * @var \Drupal\ldap_servers\LdapUserManager
+   */
   protected $ldapUserManager;
 
+  /**
+   * Messenger.
+   *
+   * @var \Drupal\Core\Messenger\MessengerInterface
+   */
   protected $messenger;
 
   /**

@@ -6,19 +6,24 @@ use Drupal\user\UserInterface;
 use Symfony\Component\EventDispatcher\Event;
 
 /**
- *
+ * LDAP User updated event.
  */
 class LdapUserUpdatedEvent extends Event {
 
-  const EVENT_NAME = 'ldap_drupal_user_update';
+  public const EVENT_NAME = 'ldap_drupal_user_update';
 
   /**
+   * Account.
+   *
    * @var \Drupal\user\Entity\User
    */
   public $account;
 
   /**
+   * Constructor.
    *
+   * @param \Drupal\user\UserInterface $account
+   *   Account.
    */
   public function __construct(UserInterface $account) {
     $this->account = $account;

@@ -23,7 +23,12 @@ class IntegrationTests extends KernelTestBase {
     'user',
   ];
 
-  private $configFactory;
+  /**
+   * Config Factory.
+   *
+   * @var \Drupal\Core\Config\ConfigFactoryInterface
+   */
+  protected $configFactory;
 
   /**
    * Setup of kernel tests.

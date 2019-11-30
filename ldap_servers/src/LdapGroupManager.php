@@ -2,8 +2,6 @@
 
 namespace Drupal\ldap_servers;
 
-use Drupal\Core\Extension\ModuleHandler;
-use Drupal\ldap_servers\Entity\Server;
 use Drupal\ldap_servers\Helper\ConversionHelper;
 use Symfony\Component\Ldap\Adapter\ExtLdap\Collection;
 use Symfony\Component\Ldap\Entry;

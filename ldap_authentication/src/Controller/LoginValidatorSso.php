@@ -2,11 +2,6 @@
 
 namespace Drupal\ldap_authentication\Controller;
 
-use Drupal\Core\Entity\EntityTypeManager;
-use Drupal\ldap_authentication\AuthenticationServers;
-use Drupal\ldap_servers\LdapBridge;
-use Drupal\ldap_servers\LdapUserManager;
-
 /**
  * Handles the actual testing of credentials and authentication of users.
  */

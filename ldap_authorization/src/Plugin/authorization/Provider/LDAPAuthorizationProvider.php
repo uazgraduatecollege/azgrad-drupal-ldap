@@ -40,8 +40,19 @@ class LDAPAuthorizationProvider extends ProviderPluginBase implements ContainerF
    */
   protected $revocationSupported = TRUE;
 
+  /**
+   * Entity Type Manager.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
   protected $entityTypeManager;
 
+
+  /**
+   * Drupal User Processor.
+   *
+   * @var \Drupal\ldap_user\Processor\DrupalUserProcessor
+   */
   protected $drupalUserProcessor;
 
   /**
@@ -96,7 +107,7 @@ class LDAPAuthorizationProvider extends ProviderPluginBase implements ContainerF
 
     $form['status'] = [
       '#type' => 'fieldset',
-      '#title' => t('Base configuration'),
+      '#title' => $this->t('Base configuration'),
       '#collapsible' => TRUE,
       '#collapsed' => FALSE,
     ];
@@ -104,7 +115,7 @@ class LDAPAuthorizationProvider extends ProviderPluginBase implements ContainerF
     if (count($servers) == 0) {
       $form['status']['server'] = [
         '#type' => 'markup',
-        '#markup' => t('<strong>Warning</strong>: You must create an LDAP Server first.'),
+        '#markup' => $this->t('<strong>Warning</strong>: You must create an LDAP Server first.'),
       ];
       $this->messenger()->addWarning($this->t('You must create an LDAP Server first.'));
     }
@@ -130,7 +141,7 @@ class LDAPAuthorizationProvider extends ProviderPluginBase implements ContainerF
       }
       $form['status']['server'] = [
         '#type' => 'radios',
-        '#title' => t('LDAP Server used in @profile_name configuration.', $tokens),
+        '#title' => $this->t('LDAP Server used in @profile_name configuration.', $tokens),
         '#required' => 1,
         '#default_value' => $default_server,
         '#options' => $server_options,
@@ -139,15 +150,15 @@ class LDAPAuthorizationProvider extends ProviderPluginBase implements ContainerF
 
     $form['status']['only_ldap_authenticated'] = [
       '#type' => 'checkbox',
-      '#title' => t('Only apply the following <strong>LDAP</strong> to <strong>@consumer_name</strong> configuration to users authenticated via LDAP', $tokens),
-      '#description' => t('One uncommon reason for disabling this is when you are using Drupal authentication, but want to leverage LDAP for authorization; for this to work the Drupal username still has to map to an LDAP entry.'),
+      '#title' => $this->t('Only apply the following <strong>LDAP</strong> to <strong>@consumer_name</strong> configuration to users authenticated via LDAP', $tokens),
+      '#description' => $this->t('One uncommon reason for disabling this is when you are using Drupal authentication, but want to leverage LDAP for authorization; for this to work the Drupal username still has to map to an LDAP entry.'),
       '#default_value' => isset($provider_config['status'], $provider_config['status']['only_ldap_authenticated']) ? $provider_config['status']['only_ldap_authenticated'] : '',
     ];
 
     $form['filter_and_mappings'] = [
       '#type' => 'fieldset',
-      '#title' => t('LDAP to @consumer_name mapping and filtering', $tokens),
-      '#description' => t('Representations of groups derived from LDAP might initially look like:
+      '#title' => $this->t('LDAP to @consumer_name mapping and filtering', $tokens),
+      '#description' => $this->t('Representations of groups derived from LDAP might initially look like:
         <ul>
         <li><code>cn=students,ou=groups,dc=hogwarts,dc=edu</code></li>
         <li><code>cn=gryffindor,ou=groups,dc=hogwarts,dc=edu</code></li>
@@ -159,8 +170,8 @@ class LDAPAuthorizationProvider extends ProviderPluginBase implements ContainerF
 
     $form['filter_and_mappings']['use_first_attr_as_groupid'] = [
       '#type' => 'checkbox',
-      '#title' => t('Convert full DN to value of first attribute before mapping'),
-      '#description' => t('Example: <code>cn=students,ou=groups,dc=hogwarts,dc=edu</code> would be converted to <code>students</code>'),
+      '#title' => $this->t('Convert full DN to value of first attribute before mapping'),
+      '#description' => $this->t('Example: <code>cn=students,ou=groups,dc=hogwarts,dc=edu</code> would be converted to <code>students</code>'),
       '#default_value' => isset($provider_config['filter_and_mappings'], $provider_config['filter_and_mappings']['use_first_attr_as_groupid']) ? $provider_config['filter_and_mappings']['use_first_attr_as_groupid'] : '',
     ];
 
@@ -177,12 +188,12 @@ class LDAPAuthorizationProvider extends ProviderPluginBase implements ContainerF
     $mappings = $profile->getProviderMappings();
     $row['query'] = [
       '#type' => 'textfield',
-      '#title' => t('LDAP query'),
+      '#title' => $this->t('LDAP query'),
       '#default_value' => isset($mappings[$index]['query']) ? $mappings[$index]['query'] : NULL,
     ];
     $row['is_regex'] = [
       '#type' => 'checkbox',
-      '#title' => t('Is this query a regular expression?'),
+      '#title' => $this->t('Is this query a regular expression?'),
       '#default_value' => isset($mappings[$index]['is_regex']) ? $mappings[$index]['is_regex'] : NULL,
     ];
 
@@ -329,7 +340,7 @@ class LDAPAuthorizationProvider extends ProviderPluginBase implements ContainerF
       if (isset($value['provider_mappings'])) {
         if ($value['provider_mappings']['is_regex'] == 1) {
           if (@preg_match($value['provider_mappings']['query'], NULL) === FALSE) {
-            $form_state->setErrorByName('mapping', t('Invalid regular expression'));
+            $form_state->setErrorByName('mapping', $this->t('Invalid regular expression'));
           }
         }
       }

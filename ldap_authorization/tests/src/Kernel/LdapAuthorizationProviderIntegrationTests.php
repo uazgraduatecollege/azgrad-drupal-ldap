@@ -50,7 +50,10 @@ class LdapAuthorizationProviderIntegrationTests extends EntityKernelTestBase {
       ->getMock();
   }
 
-  public function testProvider() {
+  /**
+   * Test Provider.
+   */
+  public function testProvider(): void {
     $this->markTestIncomplete('Test missing');
   }
 

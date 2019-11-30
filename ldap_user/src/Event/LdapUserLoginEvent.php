@@ -5,18 +5,24 @@ namespace Drupal\ldap_user\Event;
 use Symfony\Component\EventDispatcher\Event;
 
 /**
- *
+ * LDAP User login event.
  */
 class LdapUserLoginEvent extends Event {
 
-  const EVENT_NAME = 'ldap_user_login';
+  public const EVENT_NAME = 'ldap_user_login';
 
+  /**
+   * Account.
+   *
+   * @var \Drupal\user\Entity\User
+   */
   public $account;
 
   /**
-   * LdapUserLoginEvent constructor.
+   * Constructor.
    *
    * @param \Drupal\user\UserInterface $account
+   *   Account.
    */
   public function __construct($account) {
     $this->account = $account;

@@ -4,7 +4,7 @@ namespace Drupal\Tests\ldap_user\Kernel;
 
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\ldap_servers\LdapUserAttributesInterface;
-use Drupal\ldap_user\Processor\DrupalUserProcessor;
+use Drupal\user\Entity\User;
 
 /**
  * Tests for the DrupalUserProcessor.
@@ -40,25 +40,29 @@ class DrupalUserProcessorTests extends KernelTestBase implements LdapUserAttribu
    * @var \Drupal\Core\Entity\EntityTypeManager
    */
   private $entityTypeManager;
-  private $provisioningEvents;
+
+  /**
+   * Provisioning events.
+   *
+   * @var array
+   */
+  private $provisioningEvents = [
+    self::PROVISION_TO_DRUPAL => [
+      self::EVENT_SYNC_TO_DRUPAL_USER,
+      self::EVENT_SYNC_TO_DRUPAL_USER,
+    ],
+
+    self::PROVISION_TO_LDAP => [
+      self::EVENT_SYNC_TO_LDAP_ENTRY,
+      self::EVENT_CREATE_LDAP_ENTRY,
+    ],
+  ];
 
   /**
    * Setup of kernel tests.
    */
   public function setUp() {
     parent::setUp();
-
-    $this->provisioningEvents = [
-      self::PROVISION_TO_DRUPAL => [
-        self::EVENT_SYNC_TO_DRUPAL_USER,
-        self::EVENT_SYNC_TO_DRUPAL_USER,
-      ],
-
-      self::PROVISION_TO_LDAP => [
-        self::EVENT_SYNC_TO_LDAP_ENTRY,
-        self::EVENT_CREATE_LDAP_ENTRY,
-      ],
-    ];
 
     $this->installConfig(['ldap_authentication']);
     $this->installConfig(['ldap_user']);
@@ -98,7 +102,7 @@ class DrupalUserProcessorTests extends KernelTestBase implements LdapUserAttribu
     $this->assertFalse($this->drupalUserProcessor->excludeUser($account->reveal()));
 
     // Disallow checkbox exclusion (everyone else allowed).
-    $account = $this->prophesize('\Drupal\user\Entity\User');
+    $account = $this->prophesize(User::class);
     $account->getRoles()->willReturn(['']);
     $account->id()->willReturn(2);
     $value = new \stdClass();
@@ -107,7 +111,7 @@ class DrupalUserProcessorTests extends KernelTestBase implements LdapUserAttribu
     $this->assertTrue($this->drupalUserProcessor->excludeUser($account->reveal()));
 
     // Everyone else allowed.
-    $account = $this->prophesize('\Drupal\user\Entity\User');
+    $account = $this->prophesize(User::class);
     $account->getRoles()->willReturn(['']);
     $account->id()->willReturn(2);
     $value = new \stdClass();
@@ -125,7 +129,7 @@ class DrupalUserProcessorTests extends KernelTestBase implements LdapUserAttribu
     $this->assertTrue($result);
     $user = $this->drupalUserProcessor->getUserAccount();
     // Override the server factory to provide a dummy server.
-    $this->assertInstanceOf('\Drupal\user\Entity\User', $user);
+    $this->assertInstanceOf(User::class, $user);
     // @TODO: Does not work since getUserDataFromServerByIdentifier() loads
     // live data and the server is missing.
     // @TODO: Amend test scenario to user update, user insert, user delete.

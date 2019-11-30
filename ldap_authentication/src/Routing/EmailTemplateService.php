@@ -17,6 +17,11 @@ use Symfony\Component\HttpKernel\KernelEvents;
  */
 class EmailTemplateService implements EventSubscriberInterface {
 
+  /**
+   * Config.
+   *
+   * @var \Drupal\Core\Config\Config|\Drupal\Core\Config\ImmutableConfig
+   */
   private $config;
 
   /**

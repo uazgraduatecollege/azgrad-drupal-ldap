@@ -5,7 +5,6 @@ namespace Drupal\ldap_servers\Entity;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\ldap_servers\Helper\ConversionHelper;
 use Drupal\ldap_servers\LdapTransformationTraits;
-use Drupal\ldap_servers\Processor\TokenProcessor;
 use Drupal\ldap_servers\ServerInterface;
 use Symfony\Component\Ldap\Entry;
 
@@ -36,6 +35,43 @@ use Symfony\Component\Ldap\Entry;
  *     "edit-form" = "/admin/config/people/ldap/server/{server}/edit",
  *     "delete-form" = "/admin/config/people/ldap/server/{server}/delete",
  *     "collection" = "/admin/config/people/ldap/server"
+ *   },
+ *   config_export = {
+ *    "id",
+ *    "label",
+ *    "uuid",
+ *    "account_name_attr",
+ *    "address",
+ *    "basedn",
+ *    "bind_method",
+ *    "binddn",
+ *    "bindpw",
+ *    "followrefs",
+ *    "grp_derive_from_dn_attr",
+ *    "grp_derive_from_dn",
+ *    "grp_memb_attr_match_user_attr",
+ *    "grp_memb_attr",
+ *    "grp_nested",
+ *    "grp_object_cat",
+ *    "grp_test_grp_dn_writeable",
+ *    "grp_test_grp_dn",
+ *    "grp_unused",
+ *    "grp_user_memb_attr_exists",
+ *    "grp_user_memb_attr",
+ *    "mail_attr",
+ *    "mail_template",
+ *    "picture_attr",
+ *    "port",
+ *    "status",
+ *    "testing_drupal_user_dn",
+ *    "testing_drupal_username",
+ *    "timeout",
+ *    "tls",
+ *    "unique_persistent_attr_binary",
+ *    "unique_persistent_attr",
+ *    "user_attr",
+ *    "user_dn_expression",
+ *    "weight",
  *   }
  * )
  */
@@ -116,19 +152,19 @@ class Server extends ConfigEntityBase implements ServerInterface {
     switch ($this->get('bind_method')) {
       case 'service_account':
       default:
-        $namedBind = t('service account bind');
+        $namedBind = $this->t('service account bind');
         break;
 
       case 'user':
-        $namedBind = t('user credentials bind');
+        $namedBind = $this->t('user credentials bind');
         break;
 
       case 'anon':
-        $namedBind = t('anonymous bind (search), then user credentials');
+        $namedBind = $this->t('anonymous bind (search), then user credentials');
         break;
 
       case 'anon_user':
-        $namedBind = t('anonymous bind');
+        $namedBind = $this->t('anonymous bind');
         break;
     }
     return $namedBind;

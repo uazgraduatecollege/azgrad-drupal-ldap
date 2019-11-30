@@ -5,6 +5,8 @@ namespace Drupal\Tests\ldap_servers\Unit;
 use Drupal\ldap_servers\Helper\ConversionHelper;
 use Drupal\Tests\UnitTestCase;
 use Symfony\Component\Ldap\Entry;
+use Drupal\ldap_servers\Entity\Server;
+use Drupal\ldap_servers\Processor\TokenProcessor;
 
 /**
  * @coversDefaultClass \Drupal\ldap_servers\Processor\TokenProcessor
@@ -14,15 +16,10 @@ use Symfony\Component\Ldap\Entry;
  */
 class TokenTests extends UnitTestCase {
 
-  public $config;
-  public $container;
-
   /**
    * @var \Symfony\Component\Ldap\Entry
    */
   private $ldapEntry;
-  protected $detailLog;
-  protected $fileSystem;
 
   /**
    * Test setup.
@@ -32,8 +29,8 @@ class TokenTests extends UnitTestCase {
 
     // TODO: Move the mock into the token class (was converted to trait.)
     class_alias(
-      '\Drupal\Tests\ldap_servers\Unit\LdapExplodeDnMock',
-      '\Drupal\ldap_servers\Entity\Server',
+      LdapExplodeDnMock::class,
+      Server::class,
       TRUE
     );
 
@@ -52,7 +49,7 @@ class TokenTests extends UnitTestCase {
    */
   public function testTokenReplacement() {
     /** @var \Drupal\ldap_servers\Processor\TokenProcessor $processor */
-    $processor = $this->getMockBuilder('\Drupal\ldap_servers\Processor\TokenProcessor')
+    $processor = $this->getMockBuilder(TokenProcessor::class)
       ->setMethods(NULL)
       ->disableOriginalConstructor()
       ->getMock();

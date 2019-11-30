@@ -13,6 +13,11 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 class QueryTestForm extends FormBase {
 
+  /**
+   * LDAP Query.
+   *
+   * @var \Drupal\ldap_query\Controller\QueryController
+   */
   protected $ldapQuery;
 
   /**
@@ -30,7 +35,7 @@ class QueryTestForm extends FormBase {
   }
 
   /**
-   *
+   * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
     return new static($container->get('ldap.query'));

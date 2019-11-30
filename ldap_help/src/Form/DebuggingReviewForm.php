@@ -15,8 +15,25 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 class DebuggingReviewForm extends FormBase {
 
+  /**
+   * Config Factory.
+   *
+   * @var \Drupal\Core\Config\ConfigFactoryInterface
+   */
   protected $config;
+
+  /**
+   * Module Handler.
+   *
+   * @var \Drupal\Core\Extension\ModuleHandler
+   */
   protected $moduleHandler;
+
+  /**
+   * Entity type manager.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
   protected $entityTypeManager;
 
   /**

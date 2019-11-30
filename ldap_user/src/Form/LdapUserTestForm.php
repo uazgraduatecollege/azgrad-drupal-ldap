@@ -19,16 +19,46 @@ use Symfony\Component\HttpFoundation\RequestStack;
  */
 class LdapUserTestForm extends FormBase implements LdapUserAttributesInterface {
 
+  /**
+   * Sync Trigger Options.
+   *
+   * @var array
+   */
   private static $syncTriggerOptions;
 
+  /**
+   * Request.
+   *
+   * @var \Symfony\Component\HttpFoundation\Request|null
+   */
   protected $request;
 
+  /**
+   * LDAP User Manager.
+   *
+   * @var \Drupal\ldap_servers\LdapUserManager
+   */
   protected $ldapUserManager;
 
+  /**
+   * Entity type manager.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
   protected $entityTypeManager;
 
+  /**
+   * Externalauth.
+   *
+   * @var \Drupal\externalauth\Authmap
+   */
   protected $externalAuth;
 
+  /**
+   * Drupal User Processor.
+   *
+   * @var \Drupal\ldap_user\Processor\DrupalUserProcessor
+   */
   protected $drupalUserProcessor;
 
   /**
@@ -116,7 +146,6 @@ class LdapUserTestForm extends FormBase implements LdapUserAttributesInterface {
     $form['action'] = [
       '#type' => 'radios',
       '#title' => $this->t('Actions/Event Handler to Test'),
-      '#required' => 0,
       '#default_value' => $this->request->query->get('action'),
       '#options' => self::$syncTriggerOptions,
       '#required' => TRUE,

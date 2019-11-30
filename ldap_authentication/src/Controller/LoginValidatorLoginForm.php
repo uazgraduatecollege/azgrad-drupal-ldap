@@ -2,15 +2,10 @@
 
 namespace Drupal\ldap_authentication\Controller;
 
-use Drupal\Core\Entity\EntityTypeManager;
-use Drupal\ldap_authentication\AuthenticationServers;
-use Drupal\ldap_servers\LdapBridge;
-use Drupal\ldap_servers\LdapUserManager;
-
 /**
  * Handles the actual testing of credentials and authentication of users.
  */
-final class LoginValidatorLoginForm extends LoginValidatorBase {
+class LoginValidatorLoginForm extends LoginValidatorBase {
 
   /**
    * {@inheritdoc}
@@ -26,12 +21,12 @@ final class LoginValidatorLoginForm extends LoginValidatorBase {
 
     $credentialsAuthenticationResult = $this->testCredentials();
 
-    if ($credentialsAuthenticationResult == self::AUTHENTICATION_FAILURE_FIND &&
-      $this->config->get('authenticationMode') == 'exclusive') {
+    if ($credentialsAuthenticationResult === self::AUTHENTICATION_FAILURE_FIND &&
+      $this->config->get('authenticationMode') === 'exclusive') {
       $this->formState->setErrorByName('non_ldap_login_not_allowed', $this->t('User disallowed'));
     }
 
-    if ($credentialsAuthenticationResult != self::AUTHENTICATION_SUCCESS) {
+    if ($credentialsAuthenticationResult !== self::AUTHENTICATION_SUCCESS) {
       return;
     }
 
@@ -73,6 +68,7 @@ final class LoginValidatorLoginForm extends LoginValidatorBase {
    */
   protected function testCredentials() {
     foreach ($this->authenticationServers->getAvailableAuthenticationServers() as $server) {
+      $authenticationResult = NULL;
       $this->serverDrupalUser = $this->entityTypeManager
         ->getStorage('ldap_server')
         ->load($server);
@@ -132,7 +128,7 @@ final class LoginValidatorLoginForm extends LoginValidatorBase {
       ], 'ldap_authentication'
     );
 
-    if ($authenticationResult != self::AUTHENTICATION_SUCCESS) {
+    if ($authenticationResult !== self::AUTHENTICATION_SUCCESS) {
       $this->failureResponse($authenticationResult);
     }
 
@@ -145,10 +141,10 @@ final class LoginValidatorLoginForm extends LoginValidatorBase {
    * @return bool
    *   User already authenticated.
    */
-  protected function userAlreadyAuthenticated() {
+  protected function userAlreadyAuthenticated(): bool {
 
     if (!empty($this->formState->get('uid'))) {
-      if ($this->config->get('authenticationMode') == 'mixed') {
+      if ($this->config->get('authenticationMode') === 'mixed') {
         $this->detailLog->log(
           '%username: Previously authenticated in mixed mode, pass on validation.',
           ['%username' => $this->authName],

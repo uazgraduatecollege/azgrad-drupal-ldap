@@ -22,7 +22,19 @@ class LdapBridge {
    * @var string
    */
   protected $bindMethod;
+
+  /**
+   * Bind DN.
+   *
+   * @var string
+   */
   protected $bindDn;
+
+  /**
+   * Bind PW.
+   *
+   * @var string
+   */
   protected $bindPw;
 
   /**
@@ -32,7 +44,18 @@ class LdapBridge {
    */
   protected $ldap;
 
+  /**
+   * Logger.
+   *
+   * @var \Drupal\Core\Logger\LoggerChannelInterface
+   */
   protected $logger;
+
+  /**
+   * Entity Storage.
+   *
+   * @var \Drupal\Core\Entity\EntityStorageInterface
+   */
   protected $entityManager;
 
   /**

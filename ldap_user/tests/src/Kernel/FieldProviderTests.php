@@ -13,6 +13,9 @@ use Drupal\ldap_user\FieldProvider;
  */
 class FieldProviderTests extends EntityKernelTestBase implements LdapUserAttributesInterface {
 
+  /**
+   * {@inheritdoc}
+   */
   public static $modules = [
     'ldap_servers',
     'ldap_user',

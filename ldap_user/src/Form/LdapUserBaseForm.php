@@ -2,7 +2,6 @@
 
 namespace Drupal\ldap_user\Form;
 
-use Drupal\Core\Config\Config;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -17,16 +16,46 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 abstract class LdapUserBaseForm extends ConfigFormBase implements LdapUserAttributesInterface, ContainerInjectionInterface {
 
+  /**
+   * Module handler.
+   *
+   * @var \Drupal\Core\Extension\ModuleHandler
+   */
   protected $moduleHandler;
 
+  /**
+   * Entity type manager.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
   protected $entityTypeManager;
 
+  /**
+   * Field provider.
+   *
+   * @var \Drupal\ldap_user\FieldProvider
+   */
   protected $fieldProvider;
 
+  /**
+   * Drupal account provisioning server options.
+   *
+   * @var
+   */
   protected $drupalAcctProvisionServerOptions;
 
+  /**
+   * LDAP Entry Provisioning server options.
+   *
+   * @var
+   */
   protected $ldapEntryProvisionServerOptions;
 
+  /**
+   * Current config.
+   *
+   * @var
+   */
   protected $currentConfig;
 
   /**

@@ -7,28 +7,88 @@ namespace Drupal\ldap_servers;
  */
 class Mapping {
 
+  /**
+   * ID.
+   *
+   * @var string
+   */
   private $id;
 
+  /**
+   * Label.
+   *
+   * @var string
+   */
   private $label;
 
+  /**
+   * Configurable.
+   *
+   * @var bool
+   */
   private $configurable = FALSE;
 
+  /**
+   * Binary.
+   *
+   * @var bool
+   */
   private $binary = FALSE;
 
+  /**
+   * Notes.
+   *
+   * @var
+   */
   private $notes;
 
+  /**
+   * Enabled.
+   *
+   * @var bool
+   */
   private $enabled = FALSE;
 
+  /**
+   * Provisioning events.
+   *
+   * @var array
+   */
   private $provisioningEvents = [];
 
+  /**
+   * Configuration module.
+   *
+   * @var string
+   */
   private $configurationModule;
 
+  /**
+   * Provisioning module.
+   *
+   * @var string
+   */
   private $provisioningModule;
 
+  /**
+   * LDAP attribute.
+   *
+   * @var string
+   */
   private $ldapAttribute = '';
 
+  /**
+   * Drupal attribute.
+   *
+   * @var string
+   */
   private $drupalAttribute = '';
 
+  /**
+   * User tokens.
+   *
+   * @var string
+   */
   private $userTokens = '';
 
   /**
@@ -174,13 +234,12 @@ class Mapping {
    * @return bool
    *   Available.
    */
-  public function hasProvisioningEvent($event) {
-    if (in_array($event, $this->provisioningEvents)) {
+  public function hasProvisioningEvent($event): bool {
+    if (in_array($event, $this->provisioningEvents, TRUE)) {
       return TRUE;
     }
-    else {
-      return FALSE;
-    }
+
+    return FALSE;
   }
 
   /**
@@ -189,7 +248,7 @@ class Mapping {
    * @param array $events
    *   Provisioning vents.
    */
-  public function setProvisioningEvents(array $events) {
+  public function setProvisioningEvents(array $events): void {
     $this->provisioningEvents = $events;
   }
 
@@ -199,7 +258,7 @@ class Mapping {
    * @return string
    *   Module.
    */
-  public function getConfigurationModule() {
+  public function getConfigurationModule(): string {
     return $this->configurationModule;
   }
 
@@ -207,11 +266,11 @@ class Mapping {
    * Set configuration module.
    *
    * @param string $configurationModule
-   *  Module.
+   *   Module.
    *
    * @return void
    */
-  public function setConfigurationModule($configurationModule) {
+  public function setConfigurationModule($configurationModule): void {
     $this->configurationModule = $configurationModule;
   }
 
@@ -221,7 +280,7 @@ class Mapping {
    * @return string
    *   Module.
    */
-  public function getProvisioningModule() {
+  public function getProvisioningModule(): string {
     return $this->provisioningModule;
   }
 
@@ -229,81 +288,115 @@ class Mapping {
    * Set provisioning module.
    *
    * @param string $provisioningModule
-   *  Module.
+   *   Module.
    *
    * @return void
    */
-  public function setProvisioningModule($provisioningModule) {
+  public function setProvisioningModule($provisioningModule): void {
     $this->provisioningModule = $provisioningModule;
   }
 
   /**
+   * Get LDAP attribute.
+   *
    * @return string
+   *   LDAP attribute.
    */
-  public function getLdapAttribute() {
+  public function getLdapAttribute(): string {
     return $this->ldapAttribute;
   }
 
   /**
+   * Set LDAP attribute.
+   *
    * @param string $ldapAttribute
+   *   LDAP attribute.
    */
-  public function setLdapAttribute($ldapAttribute) {
+  public function setLdapAttribute(string $ldapAttribute): void {
     $this->ldapAttribute = $ldapAttribute;
   }
 
   /**
+   * Get Drupal attribute.
+   *
    * @return string
+   *   Drupal attribute.
    */
-  public function getDrupalAttribute() {
+  public function getDrupalAttribute(): string {
     return $this->drupalAttribute;
   }
 
   /**
+   * Set Drupal attribute.
+   *
    * @param string $drupalAttribute
+   *   Drupal attribute.
    */
-  public function setDrupalAttribute($drupalAttribute) {
+  public function setDrupalAttribute(string $drupalAttribute): void {
     $this->drupalAttribute = $drupalAttribute;
   }
 
   /**
-   * @return mixed
+   * Get ID.
+   *
+   * @return string
+   *   ID.
    */
-  public function getId() {
+  public function getId(): string {
     return $this->id;
   }
 
   /**
-   * @return null
+   * Get user tokens.
+   *
+   * @return string
+   *   Tokens.
    */
-  public function getUserTokens() {
+  public function getUserTokens(): string {
     return $this->userTokens;
   }
 
   /**
-   * @param null $userTokens
+   * Set user tokens.
+   *
+   * @param string $userTokens
+   *   Token.
    */
-  public function setUserTokens($userTokens) {
+  public function setUserTokens(string $userTokens): void {
     $this->userTokens = $userTokens;
   }
 
   /**
+   * Mapping is binary.
+   *
    * @return bool
+   *   Binary.
    */
-  public function isBinary() {
+  public function isBinary(): bool {
     return $this->binary;
   }
 
   /**
+   * Mapping set is binary.
+   *
+   * TODO: improve syntax.
+   *
    * @param bool $binary
+   *   Is binary.
    */
-  public function convertBinary(bool $binary) {
+  public function convertBinary(bool $binary): void {
     $this->binary = $binary;
   }
 
   /**
+   * Mapping set is configurable.
+   *
+   * TODO: improve syntax.
+   *
    * @param bool $configurable
+   *   Is configurable.
    */
-  public function setConfigurable(bool $configurable) {
+  public function setConfigurable(bool $configurable): void {
     $this->configurable = $configurable;
   }
 

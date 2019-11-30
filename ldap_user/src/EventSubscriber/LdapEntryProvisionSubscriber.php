@@ -30,22 +30,67 @@ class LdapEntryProvisionSubscriber implements EventSubscriberInterface, LdapUser
 
   use LdapTransformationTraits;
 
+  /**
+   * Config.
+   *
+   * @var \Drupal\Core\Config\Config|\Drupal\Core\Config\ImmutableConfig
+   */
   private $config;
 
+  /**
+   * Logger.
+   *
+   * @var \Drupal\Core\Logger\LoggerChannelInterface
+   */
   private $logger;
 
+  /**
+   * Detail log.
+   *
+   * @var \Drupal\ldap_servers\Logger\LdapDetailLog
+   */
   private $detailLog;
 
+  /**
+   * Entity type manager.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
   private $entityTypeManager;
 
+  /**
+   * Module handler.
+   *
+   * @var \Drupal\Core\Extension\ModuleHandlerInterface
+   */
   private $moduleHandler;
 
+  /**
+   * Ldap User Manager.
+   *
+   * @var \Drupal\ldap_servers\LdapUserManager
+   */
   private $ldapUserManager;
 
+  /**
+   * Token processor.
+   *
+   * @var \Drupal\ldap_servers\Processor\TokenProcessor
+   */
   private $tokenProcessor;
 
+  /**
+   * Field provider.
+   *
+   * @var \Drupal\ldap_user\FieldProvider
+   */
   private $fieldProvider;
 
+  /**
+   * File system.
+   *
+   * @var \Drupal\Core\File\FileSystem
+   */
   private $fileSystem;
 
   /**

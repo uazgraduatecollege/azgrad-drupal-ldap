@@ -16,13 +16,36 @@ abstract class LdapBaseManager {
 
   use LdapTransformationTraits;
 
+  /**
+   * Logger.
+   *
+   * @var \Drupal\Core\Logger\LoggerChannelInterface
+   */
   protected $logger;
+
+  /**
+   * Entity Type Manager.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
   protected $entityTypeManager;
+
+  /**
+   * LDAP Bridge.
+   *
+   * @var \Drupal\ldap_servers\LdapBridge
+   */
   protected $ldapBridge;
+
+  /**
+   * Module handler.
+   *
+   * @var \Drupal\Core\Extension\ModuleHandler
+   */
   protected $moduleHandler;
 
   /**
-   * Ldap.
+   * Symfony Ldap.
    *
    * @var \Symfony\Component\Ldap\Ldap
    */
@@ -45,6 +68,7 @@ abstract class LdapBaseManager {
    * @param \Drupal\ldap_servers\LdapBridge $ldap_bridge
    *   LDAP Bridge.
    * @param \Drupal\Core\Extension\ModuleHandler $module_handler
+   *   Module handler.
    */
   public function __construct(LoggerChannelInterface $logger, EntityTypeManagerInterface $entity_type_manager, LdapBridge $ldap_bridge, ModuleHandler $module_handler) {
     $this->logger = $logger;
@@ -94,10 +118,9 @@ abstract class LdapBaseManager {
     if ($this->server && $this->ldapBridge->bind()) {
       return TRUE;
     }
-    else {
-      $this->logger->error("LDAP server unavailable");
-      return FALSE;
-    }
+
+    $this->logger->error("LDAP server unavailable");
+    return FALSE;
   }
 
   /**
@@ -131,9 +154,8 @@ abstract class LdapBaseManager {
     if ($result->count() > 0) {
       return $result->toArray()[0];
     }
-    else {
-      return FALSE;
-    }
+
+    return FALSE;
   }
 
   /**
@@ -165,9 +187,8 @@ abstract class LdapBaseManager {
     if ($result->count() > 0) {
       return TRUE;
     }
-    else {
-      return FALSE;
-    }
+
+    return FALSE;
   }
 
   /**
@@ -217,11 +238,12 @@ abstract class LdapBaseManager {
    * Create LDAP entry.
    *
    * @param \Symfony\Component\Ldap\Entry $entry
+   *   Entry.
    *
    * @return bool
    *   Result of action.
    */
-  public function createLdapEntry(Entry $entry) {
+  public function createLdapEntry(Entry $entry): bool {
     if (!$this->checkAvailability()) {
       return FALSE;
     }
@@ -249,7 +271,7 @@ abstract class LdapBaseManager {
    * @return bool
    *   Result of query.
    */
-  public function modifyLdapEntry(Entry $entry) {
+  public function modifyLdapEntry(Entry $entry): bool {
     if (!$this->checkAvailability()) {
       return FALSE;
     }
@@ -279,7 +301,7 @@ abstract class LdapBaseManager {
    * @return bool
    *   Result of ldap_delete() call.
    */
-  public function deleteLdapEntry($dn) {
+  public function deleteLdapEntry($dn): bool {
     if (!$this->checkAvailability()) {
       return FALSE;
     }
@@ -305,10 +327,14 @@ abstract class LdapBaseManager {
   }
 
   /**
+   * Apply modifications to entry.
+   *
    * @param \Symfony\Component\Ldap\Entry $entry
+   *   Entry.
    * @param $current
+   *   Current.
    */
-  protected function applyModificationsToEntry(Entry $entry, Entry $current) {
+  protected function applyModificationsToEntry(Entry $entry, Entry $current): void {
     // TODO: Make sure the empty attributes sent are actually an array.
     // TODO: Make sure that count et al are gone.
     foreach ($entry->getAttributes() as $new_key => $new_value) {
@@ -362,9 +388,12 @@ abstract class LdapBaseManager {
 
   /**
    * @param \Symfony\Component\Ldap\Entry $entry
-   * @param $drupal_username
+   *   LDAP entry.
+   * @param string $drupal_username
+   *   Drupal username.
    *
    * @return \Symfony\Component\Ldap\Entry
+   *   LDAP Entry.
    */
   public function sanitizeUserDataResponse(Entry $entry, $drupal_username) {
     // TODO: Make this more elegant.
@@ -376,7 +405,7 @@ abstract class LdapBaseManager {
     // TODO: Remove this if we are sure no one needs it anymore.
     $entry->setAttribute('ldap_server_id', [$this->server->id()]);
 
-    if ($this->server->get('bind_method') == 'anon_user') {
+    if ($this->server->get('bind_method') === 'anon_user') {
       return $entry;
     }
 
@@ -384,7 +413,7 @@ abstract class LdapBaseManager {
     // considered OK by LDAP but are no good for us. Some setups have multiple
     // $nameAttribute per entry, so we loop through all possible options.
     foreach ($entry->getAttribute($this->server->get('user_attr')) as $value) {
-      if (mb_strtolower(trim($value)) == mb_strtolower($drupal_username)) {
+      if (mb_strtolower(trim($value)) === mb_strtolower($drupal_username)) {
         return $entry;
       }
     }
@@ -399,8 +428,7 @@ abstract class LdapBaseManager {
    *   Drupal user name.
    *
    * @return \Symfony\Component\Ldap\Entry|false|null
-   *
-   * @throws \Drupal\ldap_servers\Exception\LdapManagerException
+   *   LDAP entry.
    *
    * @Todo: This function does return data and check for validity of response.
    *  This makes responses difficult to parse and should be optimized.

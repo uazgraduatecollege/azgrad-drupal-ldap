@@ -13,8 +13,25 @@ use Drupal\externalauth\Authmap;
  */
 class UserHelpTabAccess implements AccessInterface {
 
+  /**
+   * Config.
+   *
+   * @var \Drupal\Core\Config\ImmutableConfig
+   */
   private $config;
+
+  /**
+   * Current user.
+   *
+   * @var \Drupal\Core\Session\AccountInterface
+   */
   private $currentUser;
+
+  /**
+   * Externalauth.
+   *
+   * @var \Drupal\externalauth\Authmap
+   */
   private $externalAuth;
 
   /**
@@ -34,7 +51,7 @@ class UserHelpTabAccess implements AccessInterface {
    */
   public function accessLdapHelpTab() {
     $mode = $this->config->get('authenticationMode');
-    if ($mode == 'mixed') {
+    if ($mode === 'mixed') {
       if ($this->externalAuth->get($this->currentUser->id(), 'ldap_user')) {
         return TRUE;
       }
@@ -55,9 +72,8 @@ class UserHelpTabAccess implements AccessInterface {
     if ($this->accessLdapHelpTab()) {
       return AccessResultAllowed::allowed();
     }
-    else {
-      return AccessResultAllowed::forbidden();
-    }
+
+    return AccessResultAllowed::forbidden();
   }
 
 }

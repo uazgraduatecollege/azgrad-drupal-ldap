@@ -13,14 +13,45 @@ use Symfony\Component\Ldap\Exception\LdapException;
 class QueryController {
 
   /**
+   * LDAP Entry.
+   *
    * @var \Symfony\Component\Ldap\Entry[]
    */
   private $results = [];
+
+  /**
+   * Query ID.
+   *
+   * @var string
+   */
   private $qid;
+
+  /**
+   * Query.
+   *
+   * @var \Drupal\ldap_query\Entity\QueryEntity
+   */
   private $query;
 
+  /**
+   * Entity Storage.
+   *
+   * @var \Drupal\Core\Entity\EntityStorageInterface
+   */
   protected $storage;
+
+  /**
+   * LDAP Bridge.
+   *
+   * @var \Drupal\ldap_servers\LdapBridge
+   */
   protected $ldapBridge;
+
+  /**
+   * Logger.
+   *
+   * @var \Drupal\Core\Logger\LoggerChannelInterface
+   */
   protected $logger;
 
   /**

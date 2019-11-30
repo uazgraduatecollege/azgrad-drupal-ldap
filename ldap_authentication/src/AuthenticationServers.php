@@ -10,11 +10,19 @@ use Drupal\Core\Config\ConfigFactoryInterface;
  */
 class AuthenticationServers {
 
+  /**
+   * Entity Storage.
+   *
+   * @var \Drupal\Core\Entity\EntityStorageInterface
+   */
   protected $storage;
-  protected $config;
 
-  protected $servers;
-  protected $queried;
+  /**
+   * Config.
+   *
+   * @var \Drupal\Core\Config\ImmutableConfig
+   */
+  protected $config;
 
   /**
    * Constructs a new AuthenticationServers object.
@@ -30,21 +38,26 @@ class AuthenticationServers {
   }
 
   /**
+   * Authentication servers available.
+   *
    * @return bool
+   *   Available.
    */
-  public function authenticationServersAvailable() {
+  public function authenticationServersAvailable(): bool {
     if (empty($this->getAvailableAuthenticationServers())) {
       return FALSE;
     }
-    else {
-      return TRUE;
-    }
+
+    return TRUE;
   }
 
   /**
+   * Get available authentication servers.
+   *
    * @return array
+   *   Server IDs.
    */
-  public function getAvailableAuthenticationServers() {
+  public function getAvailableAuthenticationServers(): array {
     $available_servers = $this->storage
       ->getQuery()
       ->condition('status', 1)

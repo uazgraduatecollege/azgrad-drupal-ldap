@@ -3,7 +3,6 @@
 namespace Drupal\ldap_user\Processor;
 
 use Drupal\Core\Config\ConfigFactory;
-use Drupal\Core\Entity\EntityTypeManager;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandler;
 use Drupal\Core\Logger\LoggerChannelInterface;
@@ -18,15 +17,72 @@ use Drupal\user\Entity\User;
  */
 class GroupUserUpdateProcessor {
 
+  /**
+   * Logger.
+   *
+   * @var \Drupal\Core\Logger\LoggerChannelInterface
+   */
   protected $logger;
+
+  /**
+   * Detail log.
+   *
+   * @var \Drupal\ldap_servers\Logger\LdapDetailLog
+   */
   protected $detailLog;
+
+  /**
+   * Config.
+   *
+   * @var \Drupal\Core\Config\Config|\Drupal\Core\Config\ImmutableConfig
+   */
   protected $config;
+
+  /**
+   * @var
+   */
   protected $factory;
+
+  /**
+   * State.
+   *
+   * @var \Drupal\Core\State\StateInterface
+   */
   protected $state;
+
+  /**
+   * Module handler.
+   *
+   * @var \Drupal\Core\Extension\ModuleHandler
+   */
   protected $moduleHandler;
+
+  /**
+   * Entity Type Manager.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
   protected $entityTypeManager;
+
+  /**
+   * Externalauth.
+   *
+   * @var \Drupal\externalauth\Authmap
+   */
   protected $externalAuth;
+
+  /**
+   * Query controller.
+   *
+   * @var \Drupal\ldap_query\Controller\QueryController
+   */
   protected $queryController;
+
+  /**
+   * Drupal user processor.
+   *
+   * @var \Drupal\ldap_user\Processor\DrupalUserProcessor
+   */
   protected $drupalUserProcessor;
 
   /**

@@ -2,8 +2,6 @@
 
 namespace Drupal\ldap_user\Form;
 
-use Drupal\Core\Config\Config;
-use Drupal\Core\Extension\ModuleHandler;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Url;
@@ -26,7 +24,7 @@ class LdapUserAdminForm extends LdapUserBaseForm {
   public function buildForm(array $form, FormStateInterface $form_state) {
     $config = $this->config('ldap_user.settings');
 
-    if (count($this->drupalAcctProvisionServerOptions) == 0) {
+    if (count($this->drupalAcctProvisionServerOptions) === 0) {
       $url = Url::fromRoute('entity.ldap_server.collection');
       $edit_server_link = Link::fromTextAndUrl($this->t('@path', ['@path' => 'LDAP Servers']), $url)->toString();
       $message = $this->t('At least one LDAP server must configured and <em>enabled</em> before configuring LDAP user. Please go to @link to configure an LDAP server.',
@@ -272,8 +270,8 @@ class LdapUserAdminForm extends LdapUserBaseForm {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
 
-    $drupalAcctProvisionServer = ($form_state->getValue('drupalAcctProvisionServer') == 'none') ? NULL : $form_state->getValue('drupalAcctProvisionServer');
-    $ldapEntryProvisionServer = ($form_state->getValue('ldapEntryProvisionServer') == 'none') ? NULL : $form_state->getValue('ldapEntryProvisionServer');
+    $drupalAcctProvisionServer = ($form_state->getValue('drupalAcctProvisionServer') === 'none') ? NULL : $form_state->getValue('drupalAcctProvisionServer');
+    $ldapEntryProvisionServer = ($form_state->getValue('ldapEntryProvisionServer') === 'none') ? NULL : $form_state->getValue('ldapEntryProvisionServer');
 
     $this->config('ldap_user.settings')
       ->set('drupalAcctProvisionServer', $drupalAcctProvisionServer)
@@ -296,9 +294,15 @@ class LdapUserAdminForm extends LdapUserBaseForm {
   }
 
   /**
+   * Reduce the trigger list.
    *
+   * @param array values
+   *   Triggers.
+   *
+   * @return array
+   *   Reduced triggers.
    */
-  private function reduceTriggerList($values) {
+  private function reduceTriggerList(array $values): array {
     $result = [];
     foreach ($values as $value) {
       if ($value !== 0) {

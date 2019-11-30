@@ -39,6 +39,7 @@ use Drupal\ldap_query\QueryEntityInterface;
  * )
  */
 class QueryEntity extends ConfigEntityBase implements QueryEntityInterface {
+
   /**
    * The LDAP Queries ID.
    *
@@ -53,13 +54,60 @@ class QueryEntity extends ConfigEntityBase implements QueryEntityInterface {
    */
   protected $label;
 
+  /**
+   * Status.
+   *
+   * @var bool
+   */
   protected $status;
+
+  /**
+   * Base DN.
+   *
+   * @var string
+   */
   protected $base_dn;
+
+  /**
+   * Filter.
+   *
+   * @var string
+   */
   protected $filter;
+
+  /**
+   * Attributes.
+   *
+   * @var string
+   */
   protected $attributes;
+
+  /**
+   * Size limit.
+   *
+   * @var int
+   */
   protected $size_limit;
+
+  /**
+   * Time limit.
+   *
+   * @var int
+   */
   protected $time_limit;
+
+  /**
+   * Dereference.
+   *
+   * @var int
+   */
   protected $dereference;
+
+  /**
+   * Scope.
+   *
+   * @var string
+   */
   protected $scope;
 
   /**
@@ -68,7 +116,7 @@ class QueryEntity extends ConfigEntityBase implements QueryEntityInterface {
    * @return array
    *   Processed base DN
    */
-  public function getProcessedBaseDns() {
+  public function getProcessedBaseDns(): array {
     return explode("\r\n", $this->base_dn);
   }
 
@@ -78,13 +126,12 @@ class QueryEntity extends ConfigEntityBase implements QueryEntityInterface {
    * @return array
    *   Processed attributes.
    */
-  public function getProcessedAttributes() {
+  public function getProcessedAttributes(): array {
     if (!empty($this->attributes)) {
       return explode(',', $this->attributes);
     }
-    else {
-      return [];
-    }
+
+    return [];
   }
 
 }

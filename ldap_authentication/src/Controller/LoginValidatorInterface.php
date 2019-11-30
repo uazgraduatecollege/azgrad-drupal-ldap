@@ -23,9 +23,6 @@ interface LoginValidatorInterface {
 
   /**
    * Perform the actual logging in.
-   *
-   * @return void
-   *   Check result via getDrupalUser().
    */
   public function processLogin(): void;
 

@@ -3,7 +3,6 @@
 namespace Drupal\ldap_user\Processor;
 
 use Drupal\Core\Config\ConfigFactory;
-use Drupal\Core\Entity\EntityTypeManager;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Logger\LoggerChannelInterface;
@@ -17,19 +16,93 @@ use Drupal\ldap_servers\LdapUserManager;
  */
 class OrphanProcessor {
 
+  /**
+   * List of emails.
+   *
+   * @var array
+   */
   private $emailList = [];
+
+  /**
+   * Query Limit.
+   *
+   * @var int
+   */
   private $ldapQueryOrLimit = 30;
+
+  /**
+   * Missing server semaphore.
+   *
+   * @var array
+   */
   private $missingServerSemaphore = [];
+
+  /**
+   * Enabled servers.
+   *
+   * @var \Drupal\Core\Entity\EntityInterface[]
+   */
   private $enabledServers;
 
+  /**
+   * Logger.
+   *
+   * @var \Drupal\Core\Logger\LoggerChannelInterface
+   */
   protected $logger;
+
+  /**
+   * Config factory.
+   *
+   * @var \Drupal\Core\Config\ConfigFactory
+   */
   protected $configFactory;
+
+  /**
+   * LDAP User config.
+   *
+   * @var \Drupal\Core\Config\Config|\Drupal\Core\Config\ImmutableConfig
+   */
   protected $configLdapUser;
+
+  /**
+   * Mail manager.
+   *
+   * @var \Drupal\Core\Mail\MailManagerInterface
+   */
   protected $mailManager;
+
+  /**
+   * Language manager.
+   *
+   * @var \Drupal\Core\Language\LanguageManagerInterface
+   */
   protected $languageManager;
+
+  /**
+   * State.
+   *
+   * @var \Drupal\Core\State\StateInterface
+   */
   protected $state;
+
+  /**
+   * Entity Type Manager.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
   protected $entityTypeManager;
+
+  /**
+   * Drupal User Processor.
+   *
+   * @var \Drupal\ldap_user\Processor\DrupalUserProcessor
+   */
   protected $drupalUserProcessor;
+
+  /**
+   * @var \Drupal\ldap_servers\LdapUserManager
+   */
   protected $ldapUserManager;
 
   /**

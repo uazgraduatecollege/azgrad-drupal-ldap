@@ -42,11 +42,46 @@ final class ServerTestForm extends EntityForm {
    */
   protected $exception = FALSE;
 
+  /**
+   * Config.
+   *
+   * @var \Drupal\Core\Config\ConfigFactoryInterface
+   */
   protected $config;
+
+  /**
+   * Module handler.
+   *
+   * @var \Drupal\Core\Extension\ModuleHandler
+   */
   protected $moduleHandler;
+
+  /**
+   * Token processor.
+   *
+   * @var \Drupal\ldap_servers\Processor\TokenProcessor
+   */
   protected $tokenProcessor;
+
+  /**
+   * Renderer.
+   *
+   * @var \Drupal\Core\Render\Renderer
+   */
   protected $renderer;
+
+  /**
+   * LDAP bridge.
+   *
+   * @var \Drupal\ldap_servers\LdapBridge
+   */
   protected $ldapBridge;
+
+  /**
+   * LDAP Group Manager.
+   *
+   * @var \Drupal\ldap_servers\LdapGroupManager
+   */
   protected $ldapGroupManager;
 
   /**
@@ -60,11 +95,17 @@ final class ServerTestForm extends EntityForm {
    * Class constructor.
    *
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   *   Config Factory.
    * @param \Drupal\Core\Extension\ModuleHandler $module_handler
+   *   Module handler.
    * @param \Drupal\ldap_servers\Processor\TokenProcessor $token_processor
+   *   Token Processor.
    * @param \Drupal\Core\Render\Renderer $renderer
+   *   Renderer.
    * @param \Drupal\ldap_servers\LdapBridge $ldap_bridge
+   *   LDAP Bridge.
    * @param \Drupal\ldap_servers\LdapGroupManager $ldap_group_manager
+   *   LDAP Group Manager.
    */
   public function __construct(ConfigFactoryInterface $config_factory, ModuleHandler $module_handler, TokenProcessor $token_processor, Renderer $renderer, LdapBridge $ldap_bridge, LdapGroupManager $ldap_group_manager) {
     $this->config = $config_factory;
@@ -125,7 +166,7 @@ final class ServerTestForm extends EntityForm {
       '#default_value' => $this->ldapServer->id(),
     ];
 
-    if ($this->ldapServer->get('bind_method') == 'anon_user' || $this->ldapServer->get('bind_method') == 'user') {
+    if ($this->ldapServer->get('bind_method') === 'anon_user' || $this->ldapServer->get('bind_method') === 'user') {
       $userCredentialsRequired = TRUE;
     }
     else {
@@ -204,7 +245,7 @@ final class ServerTestForm extends EntityForm {
       foreach ($test_data['results_tables'] as $table_name => $table_data) {
         $settings = [
           '#theme' => 'table',
-          '#header' => $table_name == 'basic' ? ['Test'] : ['Test', 'Result'],
+          '#header' => $table_name === 'basic' ? ['Test'] : ['Test', 'Result'],
           '#rows' => $table_data,
         ];
         $form['#suffix'] .= '<h2>' . $titles[$table_name] . '</h2>' . $this->renderer->render($settings);

@@ -12,19 +12,25 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 class DynamicUserHelpLink extends DeriverBase implements ContainerDeriverInterface {
 
+  /**
+   * Config.
+   *
+   * @var \Drupal\Core\Config\Config|\Drupal\Core\Config\ImmutableConfig
+   */
   private $config;
 
   /**
    * Constructor.
    *
    * @param \Drupal\Core\Config\ConfigFactory $config_factory
+   *   Config Factory.
    */
   public function __construct(ConfigFactory $config_factory) {
     $this->config = $config_factory->get('ldap_authentication.settings');
   }
 
   /**
-   *
+   * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, $base_plugin_id) {
     return new static($container->get('config.factory'));

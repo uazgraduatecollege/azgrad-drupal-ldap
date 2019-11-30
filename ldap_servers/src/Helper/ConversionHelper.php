@@ -16,7 +16,7 @@ class ConversionHelper {
    * followed by two hex digits representing the hexadecimal value of the
    * character.
    *
-   * @param array|string $values
+   * @param array|string $value
    *   Array of values to escape.
    *
    * @static

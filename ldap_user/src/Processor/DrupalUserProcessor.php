@@ -3,7 +3,6 @@
 namespace Drupal\ldap_user\Processor;
 
 use Drupal\Core\Config\ConfigFactory;
-use Drupal\Core\Entity\EntityTypeManager;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandler;
 use Drupal\Core\Field\FieldItemListInterface;
@@ -31,17 +30,86 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
 
   use StringTranslationTrait;
 
+  /**
+   * Logger.
+   *
+   * @var \Drupal\Core\Logger\LoggerChannelInterface
+   */
   protected $logger;
+
+  /**
+   * Config.
+   *
+   * @var \Drupal\Core\Config\Config|\Drupal\Core\Config\ImmutableConfig
+   */
   protected $config;
+
+  /**
+   * Authentication config.
+   *
+   * @var \Drupal\Core\Config\Config|\Drupal\Core\Config\ImmutableConfig
+   */
   protected $configAuthentication;
+
+  /**
+   * Detail log.
+   *
+   * @var \Drupal\ldap_servers\Logger\LdapDetailLog
+   */
   protected $detailLog;
+
+  /**
+   * Token Processor.
+   *
+   * @var \Drupal\ldap_servers\Processor\TokenProcessor
+   */
   protected $tokenProcessor;
+
+  /**
+   * Externalauth.
+   *
+   * @var \Drupal\externalauth\Authmap
+   */
   protected $externalAuth;
+
+  /**
+   * Entity Type Manager.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
   protected $entityTypeManager;
+
+  /**
+   * Filesystem.
+   *
+   * @var \Drupal\Core\File\FileSystem
+   */
   protected $fileSystem;
+
+  /**
+   * Token.
+   *
+   * @var \Drupal\Core\Utility\Token
+   */
   protected $token;
+
+  /**
+   * @var \Drupal\Core\Extension\ModuleHandler
+   */
   protected $moduleHandler;
+
+  /**
+   * Current user.
+   *
+   * @var \Drupal\Core\Session\AccountInterface
+   */
   protected $currentUser;
+
+  /**
+   * Field provider.
+   *
+   * @var \Drupal\ldap_user\FieldProvider
+   */
   protected $fieldProvider;
 
   /**
@@ -63,10 +131,25 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
    */
   private $server;
 
+  /**
+   * LDAP User Manager.
+   *
+   * @var \Drupal\ldap_servers\LdapUserManager
+   */
   protected $ldapUserManager;
 
+  /**
+   * Event dispatcher.
+   *
+   * @var \Symfony\Component\EventDispatcher\EventDispatcherInterface
+   */
   protected $eventDispatcher;
 
+  /**
+   * Messenger.
+   *
+   * @var \Drupal\Core\Messenger\MessengerInterface
+   */
   protected $messenger;
 
   /**
@@ -700,7 +783,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
     $user_attr_key = trim($user_attr_key, '[]');
     $parts = explode('.', $user_attr_key);
     $attr_type = $parts[0];
-    $attr_name = (isset($parts[1])) ? $parts[1] : FALSE;
+    $attr_name = $parts[1] ?? FALSE;
 
     if ($attr_name) {
       $attr_name_parts = explode(':', $attr_name);

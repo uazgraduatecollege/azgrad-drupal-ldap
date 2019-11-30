@@ -18,7 +18,18 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 class LdapAuthenticationProfileUpdateForm extends FormBase {
 
+  /**
+   * Current user.
+   *
+   * @var \Drupal\Core\Session\AccountInterface
+   */
   protected $currentUser;
+
+  /**
+   * Entity type manager.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
   protected $entityTypeManager;
 
   /**
@@ -30,6 +41,11 @@ class LdapAuthenticationProfileUpdateForm extends FormBase {
 
   /**
    * Constructor.
+   *
+   * @param \Drupal\Core\Session\AccountInterface $current_user
+   *   Current user.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   *   Entity type manager.
    */
   public function __construct(AccountInterface $current_user, EntityTypeManagerInterface $entity_type_manager) {
     $this->currentUser = $current_user;

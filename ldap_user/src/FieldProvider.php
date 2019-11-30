@@ -20,17 +20,57 @@ class FieldProvider implements LdapUserAttributesInterface {
 
   use StringTranslationTrait;
 
+  /**
+   * Config.
+   *
+   * @var \Drupal\Core\Config\Config|\Drupal\Core\Config\ImmutableConfig
+   */
   protected $config;
+
+  /**
+   * Entity type manager.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
   protected $entityTypeManager;
+
+  /**
+   * Module handler.
+   *
+   * @var \Drupal\Core\Extension\ModuleHandler
+   */
   protected $moduleHandler;
+
+  /**
+   * Entity Field Manager.
+   *
+   * @var \Drupal\Core\Entity\EntityFieldManager
+   */
   protected $entityFieldManager;
+
+  /**
+   * Sync Mapping Helper.
+   *
+   * @var
+   */
   protected $syncMappingHelper;
 
+  /**
+   * Server.
+   *
+   * @var
+   */
   private $server;
+
+  /**
+   * Direction.
+   *
+   * @var
+   */
   private $direction;
 
   /**
-   * Mapping.
+   * Attributes.
    *
    * @var \Drupal\ldap_servers\Mapping[]
    */
@@ -64,7 +104,9 @@ class FieldProvider implements LdapUserAttributesInterface {
    * LDAP attributes to alter.
    *
    * @param string $direction
+   *   Direction.
    * @param \Drupal\ldap_servers\Entity\Server $server
+   *   Server.
    *
    * @return array
    *   All attributes.
@@ -72,7 +114,7 @@ class FieldProvider implements LdapUserAttributesInterface {
   public function loadAttributes(string $direction, Server $server) {
     $this->server = $server;
     $this->direction = $direction;
-    if ($this->direction == self::PROVISION_TO_DRUPAL && $this->server) {
+    if ($this->direction === self::PROVISION_TO_DRUPAL && $this->server) {
       $this->addDn();
 
       if ($this->server->get('unique_persistent_attr')) {
@@ -85,7 +127,7 @@ class FieldProvider implements LdapUserAttributesInterface {
       }
     }
 
-    if ($direction == self::PROVISION_TO_LDAP) {
+    if ($direction === self::PROVISION_TO_LDAP) {
       $this->addToLdapProvisioningFields();
     }
 
@@ -100,7 +142,7 @@ class FieldProvider implements LdapUserAttributesInterface {
   /**
    * Load user-defined mappings from database configuration.
    */
-  private function loadUserDefinedMappings() {
+  private function loadUserDefinedMappings(): void {
     $database_mappings = $this->config->get('ldapUserSyncMappings');
 
     foreach ($database_mappings[$this->direction] as $id => $mapping) {
@@ -137,7 +179,7 @@ class FieldProvider implements LdapUserAttributesInterface {
    * @return bool
    *   Is synced.
    */
-  public function attributeIsSyncedOnEvent(string $name, string $event) {
+  public function attributeIsSyncedOnEvent(string $name, string $event): bool {
     if (isset($this->attributes[$name]) && $this->attributes[$name]->isEnabled()) {
       if (in_array($event, $this->attributes[$name]->getProvisioningEvents())) {
         return TRUE;
@@ -155,7 +197,7 @@ class FieldProvider implements LdapUserAttributesInterface {
    * @return \Drupal\ldap_servers\Mapping[]
    *   Mapping.
    */
-  public function getAttributesSyncedOnEvent($event) {
+  public function getAttributesSyncedOnEvent($event): array {
     $synced_attributes = [];
     foreach ($this->attributes as $key => $attribute) {
       if ($attribute->isEnabled() &&
@@ -175,7 +217,7 @@ class FieldProvider implements LdapUserAttributesInterface {
    * @return \Drupal\ldap_servers\Mapping[]
    *   Mapping.
    */
-  public function getConfigurableAttributesSyncedOnEvent(string $event) {
+  public function getConfigurableAttributesSyncedOnEvent(string $event): array {
     $synced_attributes = [];
     foreach ($this->attributes as $key => $attribute) {
       if ($attribute->isEnabled() &&
@@ -229,10 +271,8 @@ class FieldProvider implements LdapUserAttributesInterface {
 
   /**
    * Add base properties.
-   *
-   * @return void
    */
-  private function addBaseProperties() {
+  private function addBaseProperties(): void {
     $fields = [
       '[property.name]' => 'Property: Username',
       '[property.mail]' => 'Property: Email',
@@ -269,9 +309,13 @@ class FieldProvider implements LdapUserAttributesInterface {
   }
 
   /**
-   * @param $input
+   * Add tokens.
+   *
+   * @param string $input
+   *   Field name.
    *
    * @return string
+   *   Tokenized.
    */
   private function addTokens($input) {
     return '[' . $input . ']';
@@ -279,10 +323,8 @@ class FieldProvider implements LdapUserAttributesInterface {
 
   /**
    * Add DN.
-   *
-   * @return void
    */
-  private function addDn() {
+  private function addDn(): void {
     $this->attributes['[field.ldap_user_current_dn]'] = new Mapping(
       '[field.ldap_user_current_dn]',
       $this->t('Field: Most Recent DN'),
@@ -298,11 +340,8 @@ class FieldProvider implements LdapUserAttributesInterface {
 
   /**
    * Add to LDAP Provisioning fields.
-   *
-   * @return void Available user attributes.
-   *   Available user attributes.
    */
-  private function addToLdapProvisioningFields() {
+  private function addToLdapProvisioningFields(): void {
     if (isset($this->attributes['[property.name]'])) {
       $this->attributes['[property.name]']->setConfigurationModule('ldap_user');
       $this->attributes['[property.name]']->setConfigurable(TRUE);
@@ -342,9 +381,6 @@ class FieldProvider implements LdapUserAttributesInterface {
 
   /**
    * Additional access needed in direction to Drupal.
-   *
-   * @return void
-   *   Available user attributes.
    */
   private function exposeAvailableBaseFields(): void {
     $this->server = $this->config->get('drupalAcctProvisionServer');
@@ -368,9 +404,6 @@ class FieldProvider implements LdapUserAttributesInterface {
 
   /**
    * Add user entity fields.
-   *
-   * @return void
-   *   Available user attributes.
    */
   private function addUserEntityFields(): void {
     // Drupal user properties.
