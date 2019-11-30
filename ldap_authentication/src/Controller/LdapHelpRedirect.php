@@ -8,8 +8,6 @@ use Drupal\Core\Routing\TrustedRedirectResponse;
 
 /**
  * Class LdapHelpRedirect.
- *
- * @package Drupal\ldap_authentication\Controller
  */
 class LdapHelpRedirect extends ControllerBase {
 

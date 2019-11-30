@@ -72,12 +72,6 @@ class LdapEntryProvisionSubscriber implements EventSubscriberInterface, LdapUser
    */
   private $ldapUserManager;
 
-  /**
-   * Token processor.
-   *
-   * @var \Drupal\ldap_servers\Processor\TokenProcessor
-   */
-  private $tokenProcessor;
 
   /**
    * Field provider.
@@ -115,8 +109,6 @@ class LdapEntryProvisionSubscriber implements EventSubscriberInterface, LdapUser
    *   Module handler.
    * @param \Drupal\ldap_servers\LdapUserManager $ldap_user_manager
    *   LDAP user manager.
-   * @param \Drupal\ldap_servers\Processor\TokenProcessor $token_processor
-   *   Token processor.
    * @param \Drupal\ldap_user\FieldProvider $field_provider
    *   Field Provider.
    * @param \Drupal\Core\File\FileSystem $file_system
@@ -129,7 +121,6 @@ class LdapEntryProvisionSubscriber implements EventSubscriberInterface, LdapUser
     EntityTypeManagerInterface $entity_type_manager,
     ModuleHandlerInterface $module_handler,
     LdapUserManager $ldap_user_manager,
-    TokenProcessor $token_processor,
     FieldProvider $field_provider,
     FileSystem $file_system) {
     $this->config = $config_factory->get('ldap_user.settings');
@@ -138,7 +129,6 @@ class LdapEntryProvisionSubscriber implements EventSubscriberInterface, LdapUser
     $this->entityTypeManager = $entity_type_manager;
     $this->moduleHandler = $module_handler;
     $this->ldapUserManager = $ldap_user_manager;
-    $this->tokenProcessor = $token_processor;
     $this->fieldProvider = $field_provider;
     $this->fileSystem = $file_system;
   }
@@ -444,7 +434,7 @@ class LdapEntryProvisionSubscriber implements EventSubscriberInterface, LdapUser
     $tokens = $this->fetchDrupalAttributes($user, $desired_tokens);
 
     // This is inelegant but otherwise we cannot support compound tokens for DN.
-    if ($type == 'dn') {
+    if ($type === 'dn') {
       foreach ($tokens as $key => $value) {
         $tokens[$key] = $this->ldapEscapeDn($value);
       }
@@ -465,7 +455,7 @@ class LdapEntryProvisionSubscriber implements EventSubscriberInterface, LdapUser
     // Strip out any un-replaced tokens.
     $result = preg_replace('/^\[.*\]$/', '', $result);
 
-    if ($result == '') {
+    if ($result === '') {
       $result = NULL;
     }
     return $result;

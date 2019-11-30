@@ -1,6 +1,7 @@
 <?php
 
 // @codingStandardsIgnoreFile
+// @codeCoverageIgnoreStart
 
 [
   'properties' =>
@@ -3301,3 +3302,4 @@
     ],
   ],
 ];
+// @codeCoverageIgnoreEnd
