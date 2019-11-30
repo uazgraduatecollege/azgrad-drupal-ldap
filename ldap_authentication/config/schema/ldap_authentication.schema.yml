@@ -15,7 +15,7 @@ ldap_authentication.settings:
       type: text
       label: 'Password Description Text'
     ldapUserHelpLinkUrl:
-      type: text
+      type: string
       label: 'LDAP Account User Help URL'
     ldapUserHelpLinkText:
       type: text
