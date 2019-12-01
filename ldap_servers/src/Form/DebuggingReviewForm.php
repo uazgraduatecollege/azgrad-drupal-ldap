@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\ldap_help\Form;
+namespace Drupal\ldap_servers\Form;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -40,13 +40,24 @@ class DebuggingReviewForm extends FormBase {
    * {@inheritdoc}
    */
   public function getFormId() {
-    return 'ldap_help_debugging_review';
+    return 'ldap_servers_debugging_review';
   }
 
   /**
    * Class constructor.
+   *
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   *   Config factory.
+   * @param \Drupal\Core\Extension\ModuleHandler $module_handler
+   *   Module handler.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   *   Entity type manager.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, ModuleHandler $module_handler, EntityTypeManagerInterface $entity_type_manager) {
+  public function __construct(
+    ConfigFactoryInterface $config_factory,
+    ModuleHandler $module_handler,
+    EntityTypeManagerInterface $entity_type_manager
+  ) {
     $this->config = $config_factory;
     $this->moduleHandler = $module_handler;
     $this->entityTypeManager = $entity_type_manager;
@@ -122,29 +133,25 @@ class DebuggingReviewForm extends FormBase {
       ];
     }
 
-    if ($this->moduleHandler->moduleExists('ldap_help')) {
-      $form['config_help'] = [
+    $form['config_help'] = [
+      '#markup' =>
+      '<h3>' . $this->t('The LDAP help configuration') . '</h3>' .
+      $this->printConfig('ldap_servers.settings'),
+    ];
+
+    $form['heading_servers'] = [
+      '#markup' => '<h2>' . $this->t('Drupal LDAP servers') . '</h2>',
+    ];
+
+    $storage = $this->entityTypeManager->getStorage('ldap_server');
+    $servers = $storage->getQuery()->execute();
+    foreach ($storage->loadMultiple($servers) as $sid => $server) {
+      /** @var \Drupal\ldap_servers\Entity\Server $server */
+      $form['config_server_' . $sid] = [
         '#markup' =>
-        '<h3>' . $this->t('The LDAP help configuration') . '</h3>' .
-        $this->printConfig('ldap_help.settings'),
+        '<h3>' . $this->t('Server @name:', ['@name' => $server->label()]) . '</h3>' .
+        $this->printConfig('ldap_servers.server.' . $sid),
       ];
-    }
-
-    if ($this->moduleHandler->moduleExists('ldap_servers')) {
-      $form['heading_servers'] = [
-        '#markup' => '<h2>' . $this->t('Drupal LDAP servers') . '</h2>',
-      ];
-
-      $storage = $this->entityTypeManager->getStorage('ldap_server');
-      $servers = $storage->getQuery()->execute();
-      foreach ($storage->loadMultiple($servers) as $sid => $server) {
-        /** @var \Drupal\ldap_servers\Entity\Server $server */
-        $form['config_server_' . $sid] = [
-          '#markup' =>
-          '<h3>' . $this->t('Server @name:', ['@name' => $server->label()]) . '</h3>' .
-          $this->printConfig('ldap_servers.server.' . $sid),
-        ];
-      }
     }
 
     if ($this->moduleHandler->moduleExists('authorization') &&
@@ -187,7 +194,7 @@ class DebuggingReviewForm extends FormBase {
    * @return array
    *   Module list.
    */
-  private function parsePhpModules() {
+  private function parsePhpModules(): array {
     ob_start();
     phpinfo();
     $s = ob_get_contents();
@@ -198,7 +205,8 @@ class DebuggingReviewForm extends FormBase {
     $s = preg_replace('/<td[^>]*>([^<]+)<\/td>/', "<info>\\1</info>", $s);
     $vtmp = preg_split('/(<h2>[^<]+<\/h2>)/', $s, -1, PREG_SPLIT_DELIM_CAPTURE);
     $vmodules = [];
-    for ($i = 1; $i < count($vtmp); $i++) {
+    $items = count($vtmp);
+    for ($i = 1; $i < $items; $i++) {
       if (preg_match('/<h2>([^<]+)<\/h2>/', $vtmp[$i], $vmat)) {
         $vname = trim($vmat[1]);
         $vtmp2 = explode("\n", $vtmp[$i + 1]);

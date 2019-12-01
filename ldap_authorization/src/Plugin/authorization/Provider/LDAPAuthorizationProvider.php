@@ -6,7 +6,6 @@ use Drupal\authorization\AuthorizationSkipAuthorization;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\authorization\Provider\ProviderPluginBase;
-use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\ldap_servers\Helper\ConversionHelper;
 use Drupal\ldap_servers\LdapTransformationTraits;
 use Drupal\ldap_user\Processor\DrupalUserProcessor;
@@ -21,7 +20,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *   label = @Translation("LDAP Authorization")
  * )
  */
-class LDAPAuthorizationProvider extends ProviderPluginBase implements ContainerFactoryPluginInterface {
+class LDAPAuthorizationProvider extends ProviderPluginBase {
 
   use LdapTransformationTraits;
 
@@ -69,7 +68,13 @@ class LDAPAuthorizationProvider extends ProviderPluginBase implements ContainerF
    * @param \Drupal\ldap_user\Processor\DrupalUserProcessor $drupal_user_processor
    *   Drupal user processor.
    */
-  public function __construct(array $configuration, $plugin_id, array $plugin_definition, EntityTypeManagerInterface $entity_type_manager, DrupalUserProcessor $drupal_user_processor) {
+  public function __construct(
+    array $configuration,
+    $plugin_id,
+    array $plugin_definition,
+    EntityTypeManagerInterface $entity_type_manager,
+    DrupalUserProcessor $drupal_user_processor
+  ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->entityTypeManager = $entity_type_manager;
     $this->drupalUserProcessor = $drupal_user_processor;
@@ -78,7 +83,12 @@ class LDAPAuthorizationProvider extends ProviderPluginBase implements ContainerF
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+  public static function create(
+    ContainerInterface $container,
+    array $configuration,
+    $plugin_id,
+    $plugin_definition
+  ) {
     return new static(
       $configuration,
       $plugin_id,
@@ -112,7 +122,7 @@ class LDAPAuthorizationProvider extends ProviderPluginBase implements ContainerF
       '#collapsed' => FALSE,
     ];
 
-    if (count($servers) == 0) {
+    if (count($servers) === 0) {
       $form['status']['server'] = [
         '#type' => 'markup',
         '#markup' => $this->t('<strong>Warning</strong>: You must create an LDAP Server first.'),
@@ -133,7 +143,7 @@ class LDAPAuthorizationProvider extends ProviderPluginBase implements ContainerF
       if (isset($provider_config['status'])) {
         $default_server = $provider_config['status']['server'];
       }
-      elseif (count($server_options) == 1) {
+      elseif (count($server_options) === 1) {
         $default_server = key($server_options);
       }
       else {
@@ -152,7 +162,7 @@ class LDAPAuthorizationProvider extends ProviderPluginBase implements ContainerF
       '#type' => 'checkbox',
       '#title' => $this->t('Only apply the following <strong>LDAP</strong> to <strong>@consumer_name</strong> configuration to users authenticated via LDAP', $tokens),
       '#description' => $this->t('One uncommon reason for disabling this is when you are using Drupal authentication, but want to leverage LDAP for authorization; for this to work the Drupal username still has to map to an LDAP entry.'),
-      '#default_value' => isset($provider_config['status'], $provider_config['status']['only_ldap_authenticated']) ? $provider_config['status']['only_ldap_authenticated'] : '',
+      '#default_value' => $provider_config['status']['only_ldap_authenticated'] ?? '',
     ];
 
     $form['filter_and_mappings'] = [
@@ -172,7 +182,7 @@ class LDAPAuthorizationProvider extends ProviderPluginBase implements ContainerF
       '#type' => 'checkbox',
       '#title' => $this->t('Convert full DN to value of first attribute before mapping'),
       '#description' => $this->t('Example: <code>cn=students,ou=groups,dc=hogwarts,dc=edu</code> would be converted to <code>students</code>'),
-      '#default_value' => isset($provider_config['filter_and_mappings'], $provider_config['filter_and_mappings']['use_first_attr_as_groupid']) ? $provider_config['filter_and_mappings']['use_first_attr_as_groupid'] : '',
+      '#default_value' => $provider_config['filter_and_mappings']['use_first_attr_as_groupid'] ?? '',
     ];
 
     return $form;
@@ -189,12 +199,12 @@ class LDAPAuthorizationProvider extends ProviderPluginBase implements ContainerF
     $row['query'] = [
       '#type' => 'textfield',
       '#title' => $this->t('LDAP query'),
-      '#default_value' => isset($mappings[$index]['query']) ? $mappings[$index]['query'] : NULL,
+      '#default_value' => $mappings[$index]['query'] ?? NULL,
     ];
     $row['is_regex'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Is this query a regular expression?'),
-      '#default_value' => isset($mappings[$index]['is_regex']) ? $mappings[$index]['is_regex'] : NULL,
+      '#default_value' => $mappings[$index]['is_regex'] ?? NULL,
     ];
 
     return $row;
@@ -234,8 +244,8 @@ class LDAPAuthorizationProvider extends ProviderPluginBase implements ContainerF
       $ldap_user_data = $ldap_user_manager->getUserDataByIdentifier($user->getAccountName());
     }
 
-    if (!$ldap_user_data && $this->configuration['status']['only_ldap_authenticated'] == TRUE) {
-      throw new AuthorizationSkipAuthorization();
+    if (!$ldap_user_data && $this->configuration['status']['only_ldap_authenticated'] === TRUE) {
+      throw new AuthorizationSkipAuthorization('Not LDAP authenticated');
     }
 
     /** @var \Drupal\ldap_servers\LdapGroupManager $group_manager */
@@ -262,7 +272,11 @@ class LDAPAuthorizationProvider extends ProviderPluginBase implements ContainerF
         'ldap_authorization'
       );
 
-    return (count($proposed_ldap_authorizations)) ? array_combine($proposed_ldap_authorizations, $proposed_ldap_authorizations) : [];
+    if ((count($proposed_ldap_authorizations))) {
+      return array_combine($proposed_ldap_authorizations, $proposed_ldap_authorizations);
+    }
+
+    return [];
   }
 
   /**
@@ -292,7 +306,7 @@ class LDAPAuthorizationProvider extends ProviderPluginBase implements ContainerF
             );
         }
       }
-      elseif ($value == $providerMapping['query']) {
+      elseif ($value === $providerMapping['query']) {
         $filtered_proposals[$key] = $value;
       }
     }
@@ -323,7 +337,7 @@ class LDAPAuthorizationProvider extends ProviderPluginBase implements ContainerF
         $new_key = mb_strtolower($key);
       }
       $proposals[$new_key] = $authorization_id;
-      if ($key != $new_key) {
+      if ($key !== $new_key) {
         unset($proposals[$key]);
       }
     }

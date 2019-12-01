@@ -10,14 +10,14 @@ final class LoginValidatorSso extends LoginValidatorBase {
   /**
    * {@inheritdoc}
    */
-  public function processLogin($authName) {
+  public function processLogin($authName): void {
     $this->authName = $authName;
 
     if (!$this->validateCommonLoginConstraints()) {
       return;
     }
 
-    if ($this->testCredentials() != self::AUTHENTICATION_SUCCESS) {
+    if ($this->testCredentials() !== self::AUTHENTICATION_SUCCESS) {
       return;
     }
 
@@ -41,11 +41,9 @@ final class LoginValidatorSso extends LoginValidatorBase {
     // Existing Drupal account with incorrect email. Fix email if appropriate.
     $this->fixOutdatedEmailAddress();
 
-    // No existing Drupal account. Consider provisioning Drupal account.
     if (!$this->drupalUser) {
-      if (!$this->provisionDrupalUser()) {
-        return;
-      }
+      // No existing Drupal account, try provisioning Drupal account.
+      $this->provisionDrupalUser();
     }
   }
 

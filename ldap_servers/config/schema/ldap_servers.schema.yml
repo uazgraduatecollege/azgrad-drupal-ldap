@@ -1,4 +1,4 @@
-ldap_help.settings:
+ldap_servers.settings:
   type: mapping
   label: Settings
   mapping:

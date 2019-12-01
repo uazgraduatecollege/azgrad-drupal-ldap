@@ -2,24 +2,13 @@
 
 namespace Drupal\ldap_authentication\Controller;
 
-use Drupal\Core\Form\FormStateInterface;
+use Drupal\user\UserInterface;
 use Symfony\Component\Ldap\Entry;
 
 /**
  * Handles the actual testing of credentials and authentication of users.
  */
 interface LoginValidatorInterface {
-
-  /**
-   * Starts login process.
-   *
-   * @param \Drupal\Core\Form\FormStateInterface $form_state
-   *   The form state.
-   *
-   * @return \Drupal\Core\Form\FormStateInterface
-   *   The form state.
-   */
-  public function validateLogin(FormStateInterface $form_state);
 
   /**
    * Perform the actual logging in.
@@ -37,15 +26,15 @@ interface LoginValidatorInterface {
    * @return bool
    *   Exclusion result.
    */
-  public function checkAllowedExcluded($authName, Entry $ldap_user);
+  public function checkAllowedExcluded($authName, Entry $ldap_user): bool;
 
   /**
    * Returns the derived user account.
    *
-   * @return \Drupal\user\Entity\User
+   * @return \Drupal\user\UserInterface
    *   User account.
    */
-  public function getDrupalUser();
+  public function getDrupalUser(): UserInterface;
 
   /**
    * Credentials are tested.
@@ -53,6 +42,6 @@ interface LoginValidatorInterface {
    * @return int
    *   Returns the authentication result.
    */
-  public function testCredentials();
+  public function testCredentials(): int;
 
 }

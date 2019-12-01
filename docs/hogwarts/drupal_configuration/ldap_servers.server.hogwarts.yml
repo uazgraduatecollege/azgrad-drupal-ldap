@@ -8,7 +8,6 @@ address: localhost
 port: 9389
 timeout: 30
 tls: false
-followrefs: null
 weight: null
 bind_method: service_account
 binddn: 'cn=admin,dc=hogwarts,dc=edu'

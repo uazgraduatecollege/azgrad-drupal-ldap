@@ -18,26 +18,36 @@ class UserHelpTabAccess implements AccessInterface {
    *
    * @var \Drupal\Core\Config\ImmutableConfig
    */
-  private $config;
+  protected $config;
 
   /**
    * Current user.
    *
    * @var \Drupal\Core\Session\AccountInterface
    */
-  private $currentUser;
+  protected $currentUser;
 
   /**
    * Externalauth.
    *
    * @var \Drupal\externalauth\Authmap
    */
-  private $externalAuth;
+  protected $externalAuth;
 
   /**
    * Constructor.
+   *
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   *   Config Factory.
+   * @param \Drupal\Core\Session\AccountInterface $current_user
+   *   Current user.
+   * @param \Drupal\externalauth\Authmap $external_auth
+   *   External auth.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, AccountInterface $current_user, Authmap $external_auth) {
+  public function __construct(
+    ConfigFactoryInterface $config_factory,
+    AccountInterface $current_user,
+    Authmap $external_auth) {
     $this->config = $config_factory->get('ldap_authentication.settings');
     $this->currentUser = $current_user;
     $this->externalAuth = $external_auth;

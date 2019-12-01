@@ -31,7 +31,7 @@ class QueryEntityForm extends EntityForm {
       '#title' => $this->t('Label'),
       '#maxlength' => 255,
       '#default_value' => $ldap_query_entity->label(),
-      '#description' => $this->t("Label for the LDAP Queries."),
+      '#description' => $this->t('Label for the LDAP Queries.'),
       '#required' => TRUE,
     ];
 

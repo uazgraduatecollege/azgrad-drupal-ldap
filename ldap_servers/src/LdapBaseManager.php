@@ -417,7 +417,7 @@ abstract class LdapBaseManager {
     // Filter out results with spaces added before or after, which are
     // considered OK by LDAP but are no good for us. Some setups have multiple
     // $nameAttribute per entry, so we loop through all possible options.
-    foreach ($entry->getAttribute($this->server->get('user_attr')) as $value) {
+    foreach ($entry->getAttribute($this->server->getAuthenticationNameAttribute()) as $value) {
       if (mb_strtolower(trim($value)) === mb_strtolower($drupal_username)) {
         return $entry;
       }
@@ -447,7 +447,7 @@ abstract class LdapBaseManager {
       return NULL;
     }
 
-    $query = sprintf('(%s=%s)', $this->server->get('user_attr'), $this->ldapEscapeFilter($drupal_username));
+    $query = sprintf('(%s=%s)', $this->server->getAuthenticationNameAttribute, $this->ldapEscapeFilter($drupal_username));
     try {
       $ldap_response = $this->ldap->query($base_dn, $query)->execute();
     }

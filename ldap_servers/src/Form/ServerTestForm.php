@@ -8,6 +8,7 @@ use Drupal\Core\Extension\ModuleHandler;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Render\Renderer;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ldap_servers\Entity\Server;
 use Drupal\ldap_servers\LdapBridge;
 use Drupal\ldap_servers\LdapGroupManager;
@@ -107,7 +108,14 @@ final class ServerTestForm extends EntityForm {
    * @param \Drupal\ldap_servers\LdapGroupManager $ldap_group_manager
    *   LDAP Group Manager.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, ModuleHandler $module_handler, TokenProcessor $token_processor, Renderer $renderer, LdapBridge $ldap_bridge, LdapGroupManager $ldap_group_manager) {
+  public function __construct(
+    ConfigFactoryInterface $config_factory,
+    ModuleHandler $module_handler,
+    TokenProcessor $token_processor,
+    Renderer $renderer,
+    LdapBridge $ldap_bridge,
+    LdapGroupManager $ldap_group_manager
+  ) {
     $this->config = $config_factory;
     $this->moduleHandler = $module_handler;
     $this->tokenProcessor = $token_processor;
@@ -138,7 +146,10 @@ final class ServerTestForm extends EntityForm {
       $this->ldapServer = $ldap_server;
     }
 
-    $form['#title'] = $this->t('Test LDAP Server Configuration: @server', ['@server' => $this->ldapServer->label()]);
+    $form['#title'] = $this->t(
+      'Test LDAP Server Configuration: @server',
+      ['@server' => $this->ldapServer->label()]
+    );
 
     $form['#prefix'] = $this->t('<h3>Send test queries</h3><p>Enter identifiers here to query LDAP directly based on your server configuration. The only data this function will modify is the test LDAP group, which will be deleted and added</p>');
 
@@ -166,11 +177,12 @@ final class ServerTestForm extends EntityForm {
       '#default_value' => $this->ldapServer->id(),
     ];
 
-    if ($this->ldapServer->get('bind_method') === 'anon_user' || $this->ldapServer->get('bind_method') === 'user') {
+    $userCredentialsRequired = FALSE;
+    if (in_array($this->ldapServer->get('bind_method'), [
+      'anon_user',
+      'user',
+    ], TRUE)) {
       $userCredentialsRequired = TRUE;
-    }
-    else {
-      $userCredentialsRequired = FALSE;
     }
 
     $form['testing_drupal_username'] = [
@@ -197,12 +209,12 @@ final class ServerTestForm extends EntityForm {
     $form['testing_drupal_user_dn'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Testing Drupal DN'),
-      '#default_value' => $this->ldapServer->get('testing_drupal_user_dn'),
+      '#default_value' => $this->ldapServer->getTestingDrupalUserDn(),
       // TODO: Add this field back in. The logic for it is missing completely.
       '#access' => FALSE,
       '#size' => 120,
       '#maxlength' => 255,
-      '#description' => $this->t("The user is not required to exist in Drupal and testing will not affect the user's LDAP or Drupal Account."),
+      '#description' => $this->t("The user is not required to exist in Drupal and testing will not affect the user's LDAP or Drupal account."),
     ];
 
     $form['grp_test_grp_dn'] = [
@@ -210,7 +222,7 @@ final class ServerTestForm extends EntityForm {
       '#title' => $this->t('Group DN'),
       '#default_value' => $this->ldapServer->get('grp_test_grp_dn'),
       '#size' => 120,
-      '#description' => $this->t("Optionally add a group to received information about it."),
+      '#description' => $this->t('Optionally add a group to received information about it.'),
       '#maxlength' => 255,
     ];
 
@@ -251,7 +263,7 @@ final class ServerTestForm extends EntityForm {
         $form['#suffix'] .= '<h2>' . $titles[$table_name] . '</h2>' . $this->renderer->render($settings);
       }
 
-      if (isset($test_data['username']) && isset($test_data['ldap_user'])) {
+      if (isset($test_data['username'], $test_data['ldap_user'])) {
         $rows = $this->computeUserData($test_data['ldap_user']);
 
         $settings = [
@@ -260,19 +272,32 @@ final class ServerTestForm extends EntityForm {
           '#rows' => $rows,
         ];
 
-        $form['#suffix'] .= '<div class="content">
-        <h2>' . $this->t('LDAP Entry for %username (dn: %dn)', ['%dn' => $test_data['ldap_user']->getDn(), '%username' => $test_data['username']]) . '</h2>'
-                            . $this->renderer->render($settings) . '</div>';
+        $form['#suffix'] .= sprintf(
+          '<div class="content"><h2>%s</h2>%s</div>',
+          $this->t('LDAP Entry for %username (dn: %dn)', [
+            '%dn' => $test_data['ldap_user']->getDn(),
+            '%username' => $test_data['username'],
+          ]),
+          $this->renderer->render($settings)
+        );
       }
 
       if (!empty($test_data['username'])) {
         $user_name = $test_data['username'];
         if ($user = user_load_by_name($user_name)) {
-          $form['#suffix'] .= '<h3>' . $this->t('Corresponding Drupal user object for @user:', ['@user' => $user_name]) . '</h3>';
-          $form['#suffix'] .= '<pre>' . json_encode($user->toArray(), JSON_PRETTY_PRINT) . '</pre>';
-          if (isset($test_data['group_entry'], $test_data['group_entry'][0])) {
-            $form['#suffix'] .= '<h3>' . $this->t('Corresponding test group LDAP entry:') . '</h3>';
-            $form['#suffix'] .= '<pre>' . json_encode($test_data['group_entry'][0], JSON_PRETTY_PRINT) . '</pre>';
+          $form['#suffix'] .= sprintf(
+            '<h3>%s</h3>, <pre>%s</pre>',
+            $this->t('Corresponding Drupal user object for @user:', [
+              '@user' => $user_name,
+            ]),
+            json_encode($user->toArray(), JSON_PRETTY_PRINT)
+          );
+          if (isset($test_data['group_entry'][0])) {
+            $form['#suffix'] .= sprintf(
+              '<h3>%s</h3>, <pre>%s</pre>',
+              $this->t('Corresponding test group LDAP entry:'),
+              json_encode($test_data['group_entry'][0], JSON_PRETTY_PRINT)
+            );
           }
         }
       }
@@ -361,7 +386,7 @@ final class ServerTestForm extends EntityForm {
    * @return array
    *   Response.
    */
-  private function testGroupDn($group_dn, $username) {
+  private function testGroupDn($group_dn, $username): array {
 
     $ldap = $this->ldapBridge->get();
     try {
@@ -430,10 +455,16 @@ final class ServerTestForm extends EntityForm {
           }
           else {
             $groupUserMembershipsFromEntry = [];
-            $result = "Groups by entry not configured.";
+            $result = 'Groups by entry not configured.';
           }
+
           $this->resultsTables['group2'][] = [
-            'Group memberships from entry for ' . $username . ' (nested=' . $nested_display . ') (' . count($groupUserMembershipsFromEntry) . ' found)',
+            sprintf(
+              'Group memberships from entry for %s (nested=%s) (%s found)',
+              $username,
+              $nested_display,
+              count($groupUserMembershipsFromEntry)
+            ),
             $result,
           ];
 
@@ -455,11 +486,11 @@ final class ServerTestForm extends EntityForm {
             $result2 = $this->renderer->render($settings);
 
             $this->resultsTables['group2'][] = [
-              "groupUserMembershipsFromEntry and FromUserAttr Diff)",
+              'groupUserMembershipsFromEntry and FromUserAttr Diff)',
               $result1,
             ];
             $this->resultsTables['group2'][] = [
-              "FromUserAttr and groupUserMembershipsFromEntry Diff)",
+              'FromUserAttr and groupUserMembershipsFromEntry Diff)',
               $result2,
             ];
           }
@@ -474,7 +505,7 @@ final class ServerTestForm extends EntityForm {
         '#list_type' => 'ul',
       ];
       $this->resultsTables['groupfromDN'][] = [
-        $this->t("Groups from DN"),
+        $this->t('Groups from DN'),
         $this->renderer->render($settings),
       ];
     }
@@ -520,17 +551,18 @@ final class ServerTestForm extends EntityForm {
    * @return \Symfony\Component\Ldap\Entry
    *   Errors and the user.
    */
-  public function testUserMapping($drupal_username) {
+  public function testUserMapping($drupal_username): Entry {
     $ldap_user = $this->ldapServer->matchUsernameToExistingLdapEntry($drupal_username);
 
     if (!$ldap_user) {
       $this->resultsTables['basic'][] = [
         'class' => 'color-error',
-        'data' => [$this->t('Failed to find test user %username by searching on %user_attr = %username.',
-          [
-            '%username' => $drupal_username,
-            '%user_attr' => $this->ldapServer->get('user_attr'),
-          ]
+        'data' => [
+          $this->t('Failed to find test user %username by searching on %user_attr = %username.',
+            [
+              '%username' => $drupal_username,
+              '%user_attr' => $this->ldapServer->getAuthenticationNameAttribute,
+            ]
           ),
         ],
       ];
@@ -541,7 +573,10 @@ final class ServerTestForm extends EntityForm {
         'class' => 'color-success',
         'data' => [
           $this->t('Found test user %username by searching on  %user_attr = %username.',
-            ['%username' => $drupal_username, '%user_attr' => $this->ldapServer->get('user_attr')]
+            [
+              '%username' => $drupal_username,
+              '%user_attr' => $this->ldapServer->getAuthenticationNameAttribute,
+            ]
           ),
         ],
       ];
@@ -558,13 +593,12 @@ final class ServerTestForm extends EntityForm {
    * @return \Drupal\Core\StringTranslation\TranslatableMarkup
    *   Output message.
    */
-  private function booleanResult($input) {
+  private function booleanResult($input): TranslatableMarkup {
     if ($input) {
       return $this->t('PASS');
     }
-    else {
-      return $this->t('FAIL');
-    }
+
+    return $this->t('FAIL');
   }
 
   /**
@@ -575,7 +609,7 @@ final class ServerTestForm extends EntityForm {
    * @param string $member
    *   The CN of the member to test.
    */
-  private function testWritableGroup($new_group, $member) {
+  private function testWritableGroup($new_group, $member): void {
     if (!$this->ldapGroupManager->setServerById($this->ldapServer->id())) {
       return;
     }
@@ -589,7 +623,7 @@ final class ServerTestForm extends EntityForm {
     $openLdap = FALSE;
 
     // This empty is needed for OpenLDAP, otherwise it won't get created.
-    if (strtolower($this->ldapServer->get('grp_object_cat')) == 'groupofnames') {
+    if (strtolower($this->ldapServer->get('grp_object_cat')) === 'groupofnames') {
       $openLdap = TRUE;
       $writableGroupAttributes['member'] = [''];
     }
@@ -613,7 +647,10 @@ final class ServerTestForm extends EntityForm {
     // Add group.
     $attr = json_encode($writableGroupAttributes);
     $this->resultsTables['group1'][] = [
-      $this->t('Add group @group with attributes @attributes', ['@group' => $new_group, '@attributes' => $attr]),
+      $this->t('Add group @group with attributes @attributes', [
+        '@group' => $new_group,
+        '@attributes' => $attr,
+      ]),
       $this->booleanResult($this->ldapGroupManager->groupAddGroup($new_group, $writableGroupAttributes)),
     ];
 
@@ -634,7 +671,10 @@ final class ServerTestForm extends EntityForm {
       array_shift($result);
     }
     $this->resultsTables['group1'][] = [
-      $this->t('Add member to group @group with DN @dn', ['@group' => $new_group, '@dn' => $member]),
+      $this->t('Add member to group @group with DN @dn', [
+        '@group' => $new_group,
+        '@dn' => $member,
+      ]),
       $this->booleanResult(is_array($result) && !empty($result)),
     ];
 
@@ -652,7 +692,10 @@ final class ServerTestForm extends EntityForm {
       array_shift($result);
     }
     $this->resultsTables['group1'][] = [
-      $this->t('Remove group member @dn from @group', ['@group' => $new_group, '@dn' => $member]),
+      $this->t('Remove group member @dn from @group', [
+        '@group' => $new_group,
+        '@dn' => $member,
+      ]),
       $this->booleanResult((is_array($result) && empty($result))),
     ];
 
@@ -673,31 +716,6 @@ final class ServerTestForm extends EntityForm {
   }
 
   /**
-   * Helper function to bind as required for testing.
-   *
-   * @TODO: Invalid config array. Unused function?!
-   */
-  public function testBinding(): void {
-    if ($this->ldapBridge->bind()) {
-      $this->resultsTables['basic'][] = [
-        'class' => 'color-success',
-        'data' => [$this->t('Successfully bound to server')],
-      ];
-    }
-    else {
-      $this->resultsTables['basic'][] = [
-        'class' => 'color-error',
-        'data' => [
-          $this->t(
-            'Failed to bind with service account. LDAP error: @error',
-            ['@error' => $this->ldapServer->formattedError($bindResult)]),
-        ],
-      ];
-      $this->exception = TRUE;
-    }
-  }
-
-  /**
    * Compute user data.
    *
    * @param \Symfony\Component\Ldap\Entry $ldap_entry
@@ -708,27 +726,25 @@ final class ServerTestForm extends EntityForm {
    */
   private function computeUserData(Entry $ldap_entry): array {
     $rows = [];
-    foreach ($ldap_entry->getAttributes() as $key => $value) {
-      if (is_numeric($key) || $key == 'count') {
-      }
-      elseif (is_array($value) && count($value) > 1) {
-        foreach ($value as $i => $value2) {
-          $token = '';
+    foreach ($ldap_entry->getAttributes() as $attribute_key => $attribute_value) {
+      foreach ($attribute_value as $item_key => $item_value) {
+        $item_value = self::binaryCheck($item_value);
+        $token = '';
 
-          if ($i == 0 && count($value) == 1) {
-            $token = sprintf('[%s]', $key);
-          }
-          elseif ($i == 0 && count($value) > 1) {
-            $token = sprintf('[%s:0]', $key);
-          }
-          elseif (($i == count($value) - 1) && count($value) > 1) {
-            $token = sprintf('[%s:last]', $key);
-          }
-          elseif (count($value) > 1) {
-            $token = sprintf('[%s:%s]', $key, $i);
-          }
-          $rows[] = ['data' => [$key, $i, self::binaryCheck($value2), $token]];
+        if (count($attribute_value) === 1) {
+          $token = sprintf('[%s]', $attribute_key);
         }
+
+        if (count($attribute_value) > 1) {
+          if ($item_key === count($attribute_value) - 1) {
+            $token = sprintf('[%s:last]', $attribute_key);
+            $rows[] = [
+              'data' => [$attribute_key, $item_key, $item_value, $token],
+            ];
+          }
+          $token = sprintf('[%s:%s]', $attribute_key, $item_key);
+        }
+        $rows[] = ['data' => [$attribute_key, $item_key, $item_value, $token]];
       }
     }
     return $rows;

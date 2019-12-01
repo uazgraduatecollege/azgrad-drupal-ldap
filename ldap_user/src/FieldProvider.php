@@ -110,7 +110,7 @@ class FieldProvider implements LdapUserAttributesInterface {
     if ($this->direction === self::PROVISION_TO_DRUPAL && $this->server) {
       $this->addDn();
 
-      if ($this->server->get('unique_persistent_attr')) {
+      if ($this->server->getUniquePersistentAttribute()) {
         $this->addPuidFields();
       }
 
@@ -174,7 +174,7 @@ class FieldProvider implements LdapUserAttributesInterface {
    */
   public function attributeIsSyncedOnEvent(string $name, string $event): bool {
     if (isset($this->attributes[$name]) && $this->attributes[$name]->isEnabled()) {
-      if (in_array($event, $this->attributes[$name]->getProvisioningEvents())) {
+      if (in_array($event, $this->attributes[$name]->getProvisioningEvents(), TRUE)) {
         return TRUE;
       }
     }
@@ -194,7 +194,7 @@ class FieldProvider implements LdapUserAttributesInterface {
     $synced_attributes = [];
     foreach ($this->attributes as $key => $attribute) {
       if ($attribute->isEnabled() &&
-        in_array($event, $attribute->getProvisioningEvents())) {
+        in_array($event, $attribute->getProvisioningEvents(), TRUE)) {
         $synced_attributes[$key] = $attribute;
       }
     }
@@ -215,7 +215,7 @@ class FieldProvider implements LdapUserAttributesInterface {
     foreach ($this->attributes as $key => $attribute) {
       if ($attribute->isEnabled() &&
         $attribute->isConfigurable() &&
-        in_array($event, $attribute->getProvisioningEvents())) {
+        in_array($event, $attribute->getProvisioningEvents(), TRUE)) {
         $synced_attributes[$key] = $attribute;
       }
     }
@@ -260,8 +260,8 @@ class FieldProvider implements LdapUserAttributesInterface {
     }
 
     $this->attributes['[field.ldap_user_puid_sid]']->setLdapAttribute($this->server->id());
-    $this->attributes['[field.ldap_user_puid]']->setLdapAttribute($this->addTokens($this->server->get('unique_persistent_attr')));
-    $this->attributes['[field.ldap_user_puid_property]']->setLdapAttribute($this->server->get('unique_persistent_attr'));
+    $this->attributes['[field.ldap_user_puid]']->setLdapAttribute($this->addTokens($this->server->getUniquePersistentAttribute()));
+    $this->attributes['[field.ldap_user_puid_property]']->setLdapAttribute($this->server->getUniquePersistentAttribute());
   }
 
   /**
@@ -273,7 +273,7 @@ class FieldProvider implements LdapUserAttributesInterface {
       '[property.mail]' => 'Property: Email',
     ];
 
-    if ($this->server->get('picture_attr')) {
+    if ($this->server->getPictureAttribute()) {
       $fields['[property.picture]'] = 'Property: Picture';
     }
 
@@ -289,17 +289,17 @@ class FieldProvider implements LdapUserAttributesInterface {
       );
     }
 
-    $this->attributes['[property.name]']->setLdapAttribute($this->addTokens($this->server->get('user_attr')));
+    $this->attributes['[property.name]']->setLdapAttribute($this->addTokens($this->server->getAuthenticationNameAttribute()));
 
-    if ($this->server->get('mail_template')) {
-      $this->attributes['[property.mail]']->setLdapAttribute($this->server->get('mail_template'));
+    if ($this->server->getMailTemplate()) {
+      $this->attributes['[property.mail]']->setLdapAttribute($this->server->getMailTemplate());
     }
     else {
-      $this->attributes['[property.mail]']->setLdapAttribute($this->addTokens($this->server->get('mail_attr')));
+      $this->attributes['[property.mail]']->setLdapAttribute($this->addTokens($this->server->getMailAttribute()));
     }
 
-    if ($this->server->get('picture_attr')) {
-      $this->attributes['[property.picture]']->setLdapAttribute($this->addTokens($this->server->get('picture_attr')));
+    if ($this->server->getPictureAttribute()) {
+      $this->attributes['[property.picture]']->setLdapAttribute($this->addTokens($this->server->getPictureAttribute()));
     }
   }
 

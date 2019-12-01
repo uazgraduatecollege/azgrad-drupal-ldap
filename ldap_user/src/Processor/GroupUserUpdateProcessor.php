@@ -220,7 +220,7 @@ class GroupUserUpdateProcessor {
     $this->queryController->execute();
     /** @var \Symfony\Component\Ldap\Entry[] $accounts_to_process */
     $accounts_to_process = $this->queryController->getRawResults();
-    $attribute = $this->ldapServer->get('user_attr');
+    $attribute = $this->ldapServer->getAuthenticationNameAttribute;
     $this->logger->notice('Processing @count accounts for periodic update.',
         ['@count' => count($accounts_to_process)]
       );

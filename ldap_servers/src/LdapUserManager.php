@@ -154,7 +154,7 @@ class LdapUserManager extends LdapBaseManager {
     $query = $this->entityTypeManager->getStorage('user')->getQuery();
     $query->condition('ldap_user_puid_sid', $this->server->id(), '=')
       ->condition('ldap_user_puid', $puid, '=')
-      ->condition('ldap_user_puid_property', $this->server->get('unique_persistent_attr'), '=')
+      ->condition('ldap_user_puid_property', $this->server->getUniquePersistentAttribute(), '=')
       ->accessCheck(FALSE);
     $result = $query->execute();
 
@@ -169,7 +169,7 @@ class LdapUserManager extends LdapBaseManager {
           '%uids' => $uids,
           '%puid' => $puid,
           '%id' => $this->server->id(),
-          '%ldap_user_puid_property' => $this->server->get('unique_persistent_attr'),
+          '%ldap_user_puid_property' => $this->server->getUniquePersistentAttribute(),
         ]
         );
       }

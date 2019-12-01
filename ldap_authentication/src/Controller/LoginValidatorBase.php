@@ -16,7 +16,7 @@ use Drupal\ldap_servers\LdapBridge;
 use Drupal\ldap_servers\LdapUserManager;
 use Drupal\ldap_servers\Logger\LdapDetailLog;
 use Drupal\ldap_servers\LdapUserAttributesInterface;
-use Drupal\Core\Form\FormStateInterface;
+use Drupal\user\UserInterface;
 use Symfony\Component\Ldap\Entry;
 
 /**
@@ -225,30 +225,12 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
   }
 
   /**
-   * {@inheritdoc}
-   */
-  public function validateLogin(FormStateInterface $form_state) {
-    $this->authName = trim($form_state->getValue('name'));
-    $this->formState = $form_state;
-
-    $this->detailLog->log(
-      '%auth_name : Beginning authentication',
-      ['%auth_name' => $this->authName],
-      'ldap_authentication'
-    );
-
-    $this->processLogin();
-
-    return $this->formState;
-  }
-
-  /**
    * Determine if the corresponding Drupal account exists and is mapped.
    *
    * Ideally we would only ask the external authmap but are allowing matching
    * by name, too, for association handling later.
    */
-  protected function initializeDrupalUserFromAuthName() {
+  protected function initializeDrupalUserFromAuthName(): void {
     $this->drupalUser = user_load_by_name($this->authName);
     if (!$this->drupalUser) {
       $uid = $this->externalAuth->getUid($this->authName, 'ldap_user');
@@ -270,7 +252,7 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
    *
    * @TODO: This duplicates DrupalUserProcessor->excludeUser().
    */
-  protected function verifyUserAllowed() {
+  protected function verifyUserAllowed(): bool {
     if ($this->config->get('skipAdministrators')) {
       $admin_roles = $this->entityTypeManager
         ->getStorage('user_role')
@@ -314,8 +296,8 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
    */
   protected function verifyAccountCreation() {
     $ldapUserConfig = $this->configFactory->get('ldap_user.settings');
-    if ($ldapUserConfig->get('acctCreation') == self::ACCOUNT_CREATION_LDAP_BEHAVIOUR ||
-      $ldapUserConfig->get('register') == USER_REGISTER_VISITORS) {
+    if ($ldapUserConfig->get('acctCreation') === self::ACCOUNT_CREATION_LDAP_BEHAVIOUR ||
+      $ldapUserConfig->get('register') === UserInterface::REGISTER_VISITORS) {
       $this->detailLog->log(
         '%username: Existing Drupal user account not found. Continuing on to attempt LDAP authentication', ['%username' => $this->authName],
         'ldap_authentication'
@@ -340,7 +322,7 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
    */
   protected function testUserPassword() {
     $loginValid = FALSE;
-    if ($this->serverDrupalUser->get('bind_method') == 'user') {
+    if ($this->serverDrupalUser->get('bind_method') === 'user') {
       $loginValid = TRUE;
     }
     else {
@@ -395,7 +377,7 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
   protected function failureResponse($authenticationResult) {
     // Fail scenario 1. LDAP auth exclusive and failed  throw error so no other
     // authentication methods are allowed.
-    if ($this->config->get('authenticationMode') == 'exclusive') {
+    if ($this->config->get('authenticationMode') === 'exclusive') {
       $this->detailLog->log(
         '%username: Error raised because failure at LDAP and exclusive authentication is set to true.',
         ['%username' => $this->authName], 'ldap_authentication'
@@ -558,7 +540,7 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
       return;
     }
 
-    if ($this->config->get('emailUpdate') == 'update_notify' || $this->config->get('emailUpdate') == 'update') {
+    if ($this->config->get('emailUpdate') === 'update_notify' || $this->config->get('emailUpdate') === 'update') {
       $this->drupalUser->set('mail', $this->serverDrupalUser->deriveEmailFromLdapResponse($this->ldapEntry));
       if (!$this->drupalUser->save()) {
         $this->logger
@@ -569,7 +551,7 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
           );
       }
       else {
-        if ($this->config->get('emailUpdate') == 'update_notify') {
+        if ($this->config->get('emailUpdate') === 'update_notify') {
           $this->messenger->addStatus(
             $this->t('Your e-mail has been updated to match your current account (%mail).', [
               '%mail' => $this->serverDrupalUser->deriveEmailFromLdapResponse($this->ldapEntry),
@@ -644,23 +626,22 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
    * @return bool
    *   Success of deriving Drupal user name.
    */
-  protected function deriveDrupalUserName() {
+  protected function deriveDrupalUserName(): bool {
     // If account_name_attr is set, Drupal username is different than authName.
-    if (!empty($this->serverDrupalUser->get('account_name_attr'))) {
-      $user_attribute = mb_strtolower($this->serverDrupalUser->get('account_name_attr'));
+    if ($this->serverDrupalUser->hasAccountNameAttribute()) {
+      $user_attribute = mb_strtolower($this->serverDrupalUser->getAccountNameAttribute());
       $user_name_from_attribute = $this->ldapEntry->getAttribute($user_attribute)[0];
       if (!$user_name_from_attribute) {
         $this->logger
           ->error('Derived Drupal username from attribute %account_name_attr returned no username for authname %authname.', [
             '%authname' => $this->authName,
-            '%account_name_attr' => $this->serverDrupalUser->get('account_name_attr'),
+            '%account_name_attr' => $this->serverDrupalUser->getAccountNameAttribute(),
           ]
           );
         return FALSE;
       }
-      else {
-        $this->drupalUserName = $user_name_from_attribute;
-      }
+
+      $this->drupalUserName = $user_name_from_attribute;
     }
     else {
       $this->drupalUserName = $this->authName;
@@ -673,12 +654,12 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
   /**
    * Prepare the email template token.
    */
-  protected function prepareEmailTemplateToken() {
+  protected function prepareEmailTemplateToken(): void {
     $this->emailTemplateTokens = ['@username' => $this->drupalUserName];
 
     if (!empty($this->config->get('emailTemplate'))) {
       $handling = $this->config->get('emailTemplateHandling');
-      if (($handling == 'if_empty' && empty($this->serverDrupalUser->deriveEmailFromLdapResponse($this->ldapEntry))) || $handling == 'always') {
+      if (($handling === 'if_empty' && empty($this->serverDrupalUser->deriveEmailFromLdapResponse($this->ldapEntry))) || $handling === 'always') {
         $this->replaceUserMailWithTemplate();
         $this->detailLog->log(
           'Using template generated email for %username',
@@ -697,7 +678,7 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
    * @return bool
    *   User matched.
    */
-  protected function matchExistingUserWithLdap() {
+  protected function matchExistingUserWithLdap(): bool {
     if ($this->configFactory->get('ldap_user.settings')->get('userConflictResolve') == self::USER_CONFLICT_LOG) {
       if ($account_with_same_email = user_load_by_mail($this->serverDrupalUser->deriveEmailFromLdapResponse($this->ldapEntry))) {
         /** @var \Drupal\user\UserInterface $account_with_same_email */
@@ -728,7 +709,7 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
   /**
    * Replace user email address with template.
    */
-  protected function replaceUserMailWithTemplate() {
+  protected function replaceUserMailWithTemplate(): void {
     // Fallback template in case one was not specified.
     $template = '@username@localhost';
     if (!empty($this->config->get('emailTemplate'))) {
@@ -745,7 +726,7 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
    * @return bool
    *   Provisioning successful.
    */
-  protected function provisionDrupalUser() {
+  protected function provisionDrupalUser(): bool {
 
     // Do not provision Drupal account if another account has same email.
     if ($accountDuplicateMail = user_load_by_mail($this->serverDrupalUser->deriveEmailFromLdapResponse($this->ldapEntry))) {
@@ -842,10 +823,9 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
       }
       return FALSE;
     }
-    else {
-      $this->drupalUser = $processor->getUserAccount();
-      return TRUE;
-    }
+
+    $this->drupalUser = $processor->getUserAccount();
+    return TRUE;
   }
 
   /**
@@ -855,7 +835,7 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
    *   Success or failure result.
    */
   protected function bindToServer() {
-    if ($this->serverDrupalUser->get('bind_method') == 'user') {
+    if ($this->serverDrupalUser->get('bind_method') === 'user') {
       return $this->bindToServerAsUser();
     }
 
@@ -887,7 +867,7 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
     foreach ($this->serverDrupalUser->getBaseDn() as $base_dn) {
       $search = ['%basedn', '%username'];
       $replace = [$base_dn, $this->authName];
-      CredentialsStorage::storeUserDn(str_replace($search, $replace, $this->serverDrupalUser->get('user_dn_expression')));
+      CredentialsStorage::storeUserDn(str_replace($search, $replace, $this->serverDrupalUser->getUserDnExpression()));
       CredentialsStorage::testCredentials(TRUE);
       $bindResult = $this->ldapBridge->bind();
       if ($bindResult) {
@@ -912,7 +892,7 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
   /**
    * {@inheritdoc}
    */
-  public function getDrupalUser() {
+  public function getDrupalUser(): UserInterface {
     return $this->drupalUser;
   }
 

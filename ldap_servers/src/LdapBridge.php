@@ -102,7 +102,7 @@ class LdapBridge {
       // TODO network timeout.
       'options' => [],
     ];
-    if ($server->get('tls')) {
+    if ($server->isUsingStartTls()) {
       $parameters['encryption'] = 'tls';
     }
     $this->bindMethod = $server->get('bind_method');

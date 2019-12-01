@@ -92,7 +92,7 @@ class QueryController {
    *   Set filter.
    */
   public function getFilter(): string {
-    return $this->query->get('filter');
+    return $this->query->getFilter();
   }
 
   /**
@@ -104,22 +104,22 @@ class QueryController {
    */
   public function execute($filter = NULL): void {
     if ($this->query) {
-      if ($filter == NULL) {
-        $filter = $this->query->get('filter');
+      if ($filter === NULL) {
+        $filter = $this->query->getFilter();
       }
 
       // TODO: exception handling.
-      $this->ldapBridge->setServerById($this->query->get('server_id'));
+      $this->ldapBridge->setServerById($this->query->getServerId());
 
       if ($this->ldapBridge->bind()) {
 
         foreach ($this->query->getProcessedBaseDns() as $base_dn) {
           $options = [
             'filter' => $this->query->getProcessedAttributes(),
-            'maxItems' => $this->query->get('size_limit'),
-            'timeout' => $this->query->get('time_limit'),
-            'deref' => $this->query->get('dereference'),
-            'scope' => $this->query->get('scope'),
+            'maxItems' => $this->query->getSizeLimit(),
+            'timeout' => $this->query->getTimeLimit(),
+            'deref' => $this->query->getDereference(),
+            'scope' => $this->query->getScope(),
           ];
 
           try {

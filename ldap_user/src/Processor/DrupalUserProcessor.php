@@ -296,7 +296,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
       if ($persistent_uid) {
         $this->account->set('ldap_user_puid', $persistent_uid);
       }
-      $this->account->set('ldap_user_puid_property', $ldap_server->get('unique_persistent_attr'));
+      $this->account->set('ldap_user_puid_property', $ldap_server->getUniquePersistentAttribute());
       $this->account->set('ldap_user_puid_sid', $ldap_server->id());
       $this->account->set('ldap_user_current_dn', $this->ldapEntry->getDn());
       $this->account->set('ldap_user_last_checked', time());
@@ -514,7 +514,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
    *   an error occurs.
    */
   private function userPictureFromLdapEntry() {
-    $picture_attribute = $this->server->get('picture_attr');
+    $picture_attribute = $this->server->getPictureAttribute();
     if ($this->ldapEntry && $picture_attribute) {
       // Check if LDAP entry has been provisioned.
       if ($this->ldapEntry->hasAttribute($picture_attribute)) {
@@ -735,7 +735,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
       }
     }
     if ($this->fieldProvider->attributeIsSyncedOnEvent('[field.ldap_user_puid_property]', $event)) {
-      $this->account->set('ldap_user_puid_property', $this->server->get('unique_persistent_attr'));
+      $this->account->set('ldap_user_puid_property', $this->server->getUniquePersistentAttribute());
     }
     if ($this->fieldProvider->attributeIsSyncedOnEvent('[field.ldap_user_puid_sid]', $event)) {
       $this->account->set('ldap_user_puid_sid', $this->server->id());

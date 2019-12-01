@@ -136,3 +136,17 @@ function ldap_servers_update_8305() {
 function ldap_servers_update_8401() {
   return t('Paged search has been removed in favor of more robust data retrieval. Please retest your configuration if you have used paged search.');
 }
+
+/**
+ * Corrects a configuration field type.
+ */
+function ldap_help_update_8402() {
+  $config_factory = \Drupal::configFactory();
+  $config_old = $config_factory->getEditable('ldap_servers.settings');
+  if ($config_old) {
+    $config_new = $config_factory->getEditable('ldap_help.settings');
+    $config_new->set('watchdog_detail', $config_old->get('watchdog_detail'));
+    $config_new->save();
+    $config_old->delete();
+  }
+}

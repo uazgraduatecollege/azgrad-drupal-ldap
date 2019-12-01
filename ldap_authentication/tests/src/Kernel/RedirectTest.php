@@ -6,6 +6,8 @@ use Drupal\KernelTests\KernelTestBase;
 use Drupal\ldap_authentication\Controller\LdapHelpRedirect;
 
 /**
+ * Redirect tests.
+ *
  * @group ldap
  */
 class RedirectTest extends KernelTestBase {
@@ -16,9 +18,12 @@ class RedirectTest extends KernelTestBase {
   public static $modules = [
     'externalauth',
     'ldap_servers',
-    'ldap_authentication'
+    'ldap_authentication',
   ];
 
+  /**
+   * {@inheritdoc}
+   */
   protected function setUp() {
     parent::setUp();
     $this->installConfig('ldap_authentication');
@@ -33,8 +38,8 @@ class RedirectTest extends KernelTestBase {
     $controller = LdapHelpRedirect::create($this->container);
 
     $config = $this->config('ldap_authentication.settings');
-    $config ->set('ldapUserHelpLinkUrl', 'https://www.example.com/123.html');
-    $config ->save();
+    $config->set('ldapUserHelpLinkUrl', 'https://www.example.com/123.html');
+    $config->save();
     $redirect = $controller->redirectUrl();
     self::assertEquals('https://www.example.com/123.html', $redirect->getTargetUrl());
     self::assertEquals(0, $redirect->getAge());

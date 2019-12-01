@@ -18,7 +18,6 @@ use Drupal\ldap_servers\Helper\CredentialsStorage;
 use Drupal\ldap_servers\LdapUserAttributesInterface;
 use Drupal\ldap_servers\LdapUserManager;
 use Drupal\ldap_servers\Logger\LdapDetailLog;
-use Drupal\ldap_servers\Processor\TokenProcessor;
 use Drupal\ldap_user\Exception\LdapBadParamsException;
 use Drupal\ldap_user\FieldProvider;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;

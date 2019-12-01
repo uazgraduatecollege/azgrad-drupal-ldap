@@ -2,15 +2,41 @@
 
 namespace Drupal\ldap_authentication\Controller;
 
+use Drupal\Core\Form\FormStateInterface;
+
 /**
  * Handles the actual testing of credentials and authentication of users.
  */
 class LoginValidatorLoginForm extends LoginValidatorBase {
 
   /**
+   * Starts login process.
+   *
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
+   *
+   * @return \Drupal\Core\Form\FormStateInterface
+   *   The form state.
+   */
+  public function validateLogin(FormStateInterface $form_state): FormStateInterface {
+    $this->authName = trim($form_state->getValue('name'));
+    $this->formState = $form_state;
+
+    $this->detailLog->log(
+      '%auth_name : Beginning authentication',
+      ['%auth_name' => $this->authName],
+      'ldap_authentication'
+    );
+
+    $this->processLogin();
+
+    return $this->formState;
+  }
+
+  /**
    * {@inheritdoc}
    */
-  public function processLogin() {
+  public function processLogin(): void {
     if ($this->userAlreadyAuthenticated()) {
       return;
     }

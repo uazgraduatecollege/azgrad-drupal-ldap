@@ -96,21 +96,20 @@ class UnportedTests extends EntityKernelTestBase {
   /**
    * Test getting the user name from AD via account_name_attr.
    */
-  public function testUserUsernameActiveDirectory() {
+  public function testUserUsernameActiveDirectory(): void {
     $stub = $this->getMockBuilder(Server::class)
       ->disableOriginalConstructor()
-      ->setMethods(['get'])
+      ->setMethods(['getAccountNameAttribute', 'getAuthenticationNameAttribute'])
       ->getMock();
-
-    $map = [
-      ['account_name_attr', ''],
-      ['user_attr', 'samaccountname'],
-    ];
 
     // TODO: this does not cover the case sAMAccountName, verify if that's
     // normalized at an earlier place.
-    $stub->method('get')
-      ->willReturnMap($map);
+    $stub
+      ->method('getAccountNameAttribute')
+      ->willReturn('');
+    $stub
+      ->method('getAuthenticationNameAttribute')
+      ->willReturn('samaccountname');
 
     /** @var \Drupal\ldap_servers\Entity\Server $stub */
     $username = $stub->deriveUsernameFromLdapResponse(new Entry('undefined', []));
@@ -208,7 +207,7 @@ class UnportedTests extends EntityKernelTestBase {
       $count = count($groups);
       $diff1 = array_diff($groups_desired, $groups);
       $diff2 = array_diff($groups, $groups_desired);
-      $pass = (count($diff1) == 0 && count($diff2) == 0 && $count == $desired_count);
+      $pass = (count($diff1) === 0 && count($diff2) === 0 && $count === $desired_count);
       $this->assertTrue($pass);
 
       // Test parent groupUserMembershipsFromUserAttr, for openldap should be
@@ -217,7 +216,7 @@ class UnportedTests extends EntityKernelTestBase {
       // $groups = $ldap_server->
       // groupUserMembershipsFromUserAttr($ldap_module_user_entry, $nested);.
       $count = is_array($groups) ? count($groups) : $count;
-      $pass = (count($diff1) == 0 && count($diff2) == 0 && $count == $desired_count);
+      $pass = (count($diff1) === 0 && count($diff2) === 0 && $count === $desired_count);
       $this->assertTrue($pass);
 
       // TODO: Comment out.
@@ -226,7 +225,7 @@ class UnportedTests extends EntityKernelTestBase {
       $count = count($groups);
       $diff1 = array_diff($groups_desired, $groups);
       $diff2 = array_diff($groups, $groups_desired);
-      $pass = (count($diff1) == 0 && count($diff2) == 0 && $count == $desired_count);
+      $pass = (count($diff1) === 0 && count($diff2) === 0 && $count === $desired_count);
       $this->assertTrue($pass);
 
     }

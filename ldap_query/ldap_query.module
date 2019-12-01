@@ -30,7 +30,7 @@ function ldap_query_help($route_name, RouteMatchInterface $route_match) {
 function ldap_query_entity_operation(EntityInterface $entity) {
   $operations = [];
   if (\Drupal::currentUser()->hasPermission('administer ldap')) {
-    if ($entity->getEntityType()->id() == 'ldap_query_entity') {
+    if ($entity->getEntityType()->id() === 'ldap_query_entity') {
       $operations['query_test'] = [
         'title' => t('Test'),
         'weight' => 10,

@@ -35,6 +35,20 @@ use Drupal\ldap_query\QueryEntityInterface;
  *     "delete-form" = "/admin/config/people/ldap/query/{ldap_query_entity}/delete",
  *     "collection" = "/admin/config/people/ldap/query",
  *     "test" = "/admin/config/people/ldap/query/{ldap_query_entity}/test"
+ *   },
+ *   config_export = {
+ *    "id",
+ *    "label",
+ *    "uuid",
+ *    "server_id",
+ *    "status",
+ *    "attributes",
+ *    "base_dn",
+ *    "filter",
+ *    "size_limit",
+ *    "time_limit",
+ *    "scope",
+ *    "dereference",
  *   }
  * )
  */
@@ -53,6 +67,13 @@ class QueryEntity extends ConfigEntityBase implements QueryEntityInterface {
    * @var string
    */
   protected $label;
+
+  /**
+   * Server ID.
+   *
+   * @var string
+   */
+  protected $server_id;
 
   /**
    * Status.
@@ -111,20 +132,14 @@ class QueryEntity extends ConfigEntityBase implements QueryEntityInterface {
   protected $scope;
 
   /**
-   * Returns all base DN.
-   *
-   * @return array
-   *   Processed base DN
+   * {@inheritdoc}
    */
   public function getProcessedBaseDns(): array {
     return explode("\r\n", $this->base_dn);
   }
 
   /**
-   * Returns all processed attributes.
-   *
-   * @return array
-   *   Processed attributes.
+   * {@inheritdoc}
    */
   public function getProcessedAttributes(): array {
     if (!empty($this->attributes)) {
@@ -132,6 +147,55 @@ class QueryEntity extends ConfigEntityBase implements QueryEntityInterface {
     }
 
     return [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getFilter(): string {
+    return $this->filter;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getSizeLimit(): int {
+    return $this->size_limit;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getTimeLimit(): int {
+    return $this->time_limit;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDereference(): int {
+    return $this->dereference;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getScope(): string {
+    return $this->scope;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getServerId(): string {
+    return $this->server_id;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isActive(): bool {
+    return $this->status;
   }
 
 }

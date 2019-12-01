@@ -3,6 +3,7 @@
 namespace Drupal\ldap_servers\Entity;
 
 use Drupal\Core\Config\Entity\ConfigEntityBase;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\ldap_servers\Helper\ConversionHelper;
 use Drupal\ldap_servers\LdapTransformationTraits;
 use Drupal\ldap_servers\ServerInterface;
@@ -46,7 +47,6 @@ use Symfony\Component\Ldap\Entry;
  *    "bind_method",
  *    "binddn",
  *    "bindpw",
- *    "followrefs",
  *    "grp_derive_from_dn_attr",
  *    "grp_derive_from_dn",
  *    "grp_memb_attr_match_user_attr",
@@ -78,27 +78,7 @@ use Symfony\Component\Ldap\Entry;
 class Server extends ConfigEntityBase implements ServerInterface {
 
   use LdapTransformationTraits;
-
-  /**
-   * Server machine name.
-   *
-   * @var string
-   */
-  protected $id;
-
-  /**
-   * Human readable name.
-   *
-   * @var string
-   */
-  protected $label;
-
-  /**
-   * LDAP Server connection.
-   *
-   * @var resource|false
-   */
-  protected $connection = FALSE;
+  use StringTranslationTrait;
 
   /**
    * Logger channel.
@@ -128,6 +108,245 @@ class Server extends ConfigEntityBase implements ServerInterface {
    */
   protected $moduleHandler;
 
+
+  /**
+   * Server machine name.
+   *
+   * @var string
+   */
+  protected $id;
+
+  /**
+   * Human readable name.
+   *
+   * @var string
+   */
+  protected $label;
+
+  /**
+   * LDAP Server connection.
+   *
+   * @var resource|false
+   */
+  protected $connection = FALSE;
+
+  /**
+   * Account name attribute.
+   *
+   * @var string
+   */
+  protected $account_name_attr;
+
+  /**
+   * Server address.
+   *
+   * @var string
+   */
+  protected $address;
+
+  /**
+   * Base DN.
+   *
+   * @var string
+   */
+  protected $basedn;
+
+  /**
+   * Bind method.
+   *
+   * @var string
+   */
+  protected $bind_method;
+
+  /**
+   * Bind DN.
+   *
+   * @var string
+   */
+  protected $binddn;
+
+  /**
+   * Bind password.
+   *
+   * @var string
+   */
+  protected $bindpw;
+
+  /**
+   * Attribute of the User's LDAP Entry DN which contains the group.
+   *
+   * @var string
+   */
+  protected $grp_derive_from_dn_attr;
+
+  /**
+   * Groups are derived from user's LDAP entry DN.
+   *
+   * @var bool
+   */
+  protected $grp_derive_from_dn;
+
+  /**
+   * User attribute held in "LDAP Group Entry Attribute Holding...".
+   *
+   * @var string
+   */
+  protected $grp_memb_attr_match_user_attr;
+
+  /**
+   * LDAP Group Entry Attribute Holding User's DN, CN, etc.
+   *
+   * @var string
+   */
+  protected $grp_memb_attr;
+
+  /**
+   * Nested groups are used in my LDAP.
+   *
+   * @var bool
+   */
+  protected $grp_nested;
+
+  /**
+   * Name of Group Object Class.
+   *
+   * @var string
+   */
+  protected $grp_object_cat;
+
+  /**
+   * Testing LDAP Group DN that is writable.
+   *
+   * @var string
+   */
+  protected $grp_test_grp_dn_writeable;
+
+  /**
+   * Testing LDAP Group DN.
+   *
+   * @var string
+   */
+  protected $grp_test_grp_dn;
+
+  /**
+   * Groups are not relevant to this Drupal site.
+   *
+   * @var bool
+   */
+  protected $grp_unused;
+
+  /**
+   * Attribute in User Entry Containing Groups.
+   *
+   * @var bool
+   */
+  protected $grp_user_memb_attr_exists;
+
+  /**
+   * Attribute in User Entry Containing Groups.
+   *
+   * @var string
+   */
+  protected $grp_user_memb_attr;
+
+  /**
+   * Email attribute.
+   *
+   * @var string
+   */
+  protected $mail_attr;
+
+  /**
+   * Email template.
+   *
+   * @var string
+   */
+  protected $mail_template;
+
+  /**
+   * Thumbnail attribute.
+   *
+   * @var string
+   */
+  protected $picture_attr;
+
+  /**
+   * Port.
+   *
+   * @var int
+   */
+  protected $port;
+
+  /**
+   * Enabled.
+   *
+   * @var bool
+   */
+  protected $status;
+
+  /**
+   * DN of testing username.
+   *
+   * @var string
+   */
+  protected $testing_drupal_user_dn;
+
+  /**
+   * Testing Drupal Username.
+   *
+   * @var string
+   */
+  protected $testing_drupal_username;
+
+  /**
+   * Timeout.
+   *
+   * @var int
+   */
+  protected $timeout;
+
+  /**
+   * Use Start-TLS.
+   *
+   * @var bool
+   */
+  protected $tls;
+
+  /**
+   * Does PUID hold a binary value?
+   *
+   * @var bool
+   */
+  protected $unique_persistent_attr_binary;
+
+  /**
+   * Persistent and Unique User ID Attribute.
+   *
+   * @var string
+   */
+  protected $unique_persistent_attr;
+
+  /**
+   * Authentication name attribute.
+   *
+   * @var string
+   */
+  protected $user_attr;
+
+  /**
+   * Expression for user DN.
+   *
+   * @var string
+   */
+  protected $user_dn_expression;
+
+  /**
+   * Weight.
+   *
+   * @var int
+   */
+  protected $weight;
+
   /**
    * Constructor.
    *
@@ -145,12 +364,9 @@ class Server extends ConfigEntityBase implements ServerInterface {
   }
 
   /**
-   * Returns the formatted label of the bind method.
-   *
-   * @return string
-   *   The formatted text for the current bind.
+   * {@inheritdoc}
    */
-  public function getFormattedBind() {
+  public function getFormattedBind(): string {
     switch ($this->get('bind_method')) {
       case 'service_account':
       default:
@@ -173,14 +389,10 @@ class Server extends ConfigEntityBase implements ServerInterface {
   }
 
   /**
-   * Fetch base DN.
-   *
-   * @return array
-   *   All base DN.
-   *
-   * @TODO: Improve storage in database (should be a proper array).
+   * {@inheritdoc}
    */
-  public function getBaseDn() {
+  public function getBaseDn(): array {
+    // @TODO: Improve storage in database (should be a proper array)./
     if ($this->get('basedn')) {
       $base_dn = explode("\r\n", $this->get('basedn'));
     }
@@ -191,25 +403,19 @@ class Server extends ConfigEntityBase implements ServerInterface {
   }
 
   /**
-   * Returns the username from the LDAP entry.
-   *
-   * @param \Symfony\Component\Ldap\Entry $ldap_entry
-   *   The LDAP entry.
-   *
-   * @return string
-   *   The user name.
+   * {@inheritdoc}
    */
-  public function deriveUsernameFromLdapResponse(Entry $ldap_entry) {
+  public function deriveUsernameFromLdapResponse(Entry $ldap_entry): string {
     $accountName = FALSE;
 
-    if ($this->get('account_name_attr')) {
-      if ($ldap_entry->hasAttribute($this->get('account_name_attr'))) {
-        $accountName = $ldap_entry->getAttribute($this->get('account_name_attr'))[0];
+    if ($this->getAccountNameAttribute()) {
+      if ($ldap_entry->hasAttribute($this->getAccountNameAttribute())) {
+        $accountName = $ldap_entry->getAttribute($this->getAccountNameAttribute())[0];
       }
     }
-    elseif ($this->get('user_attr')) {
-      if ($ldap_entry->hasAttribute($this->get('user_attr'))) {
-        $accountName = $ldap_entry->getAttribute($this->get('user_attr'))[0];
+    elseif ($this->getAuthenticationNameAttribute()) {
+      if ($ldap_entry->hasAttribute($this->getAuthenticationNameAttribute())) {
+        $accountName = $ldap_entry->getAttribute($this->getAuthenticationNameAttribute())[0];
       }
     }
 
@@ -217,51 +423,252 @@ class Server extends ConfigEntityBase implements ServerInterface {
   }
 
   /**
-   * Returns the user's email from the LDAP entry.
-   *
-   * @param \Symfony\Component\Ldap\Entry $ldap_entry
-   *   The LDAP entry.
-   *
-   * @return string|bool
-   *   The user's mail value or FALSE if none present.
+   * {@inheritdoc}
    */
   public function deriveEmailFromLdapResponse(Entry $ldap_entry) {
     // Not using template.
-    if ($this->get('mail_attr') && $ldap_entry->hasAttribute($this->get('mail_attr'))) {
-      return $ldap_entry->getAttribute($this->get('mail_attr'))[0];
+    if ($this->getMailAttribute() && $ldap_entry->hasAttribute($this->getMailAttribute())) {
+      return $ldap_entry->getAttribute($this->getMailAttribute())[0];
     }
 
-    if ($this->get('mail_template')) {
+    if ($this->getMailTemplate()) {
       // Template is of form [cn]@illinois.edu.
-      return $this->tokenProcessor->ldapEntryReplacementsForDrupalAccount($ldap_entry, $this->get('mail_template'));
+      return $this->tokenProcessor->ldapEntryReplacementsForDrupalAccount($ldap_entry, $this->getMailTemplate());
     }
 
     return FALSE;
   }
 
   /**
-   * Fetches the persistent UID from the LDAP entry.
-   *
-   * @param \Symfony\Component\Ldap\Entry $ldapEntry
-   *   The LDAP entry.
-   *
-   * @return string|false
-   *   The user's PUID or permanent user id (within ldap), converted from
-   *   binary, if applicable.
+   * {@inheritdoc}
    */
   public function derivePuidFromLdapResponse(Entry $ldapEntry) {
-    if ($this->get('unique_persistent_attr') && $ldapEntry->hasAttribute($this->get('unique_persistent_attr'))) {
-      $puid = $ldapEntry->getAttribute($this->get('unique_persistent_attr'))[0];
-      if (($this->get('unique_persistent_attr_binary'))) {
+    if ($this->getUniquePersistentAttribute() && $ldapEntry->hasAttribute($this->getUniquePersistentAttribute())) {
+      $puid = $ldapEntry->getAttribute($this->getUniquePersistentAttribute())[0];
+      if (($this->isUniquePersistentAttributeBinary())) {
         return ConversionHelper::binaryConversionToString($puid);
       }
-      else {
-        return $puid;
-      }
+      return $puid;
     }
-    else {
-      return FALSE;
-    }
+
+    return FALSE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getAccountNameAttribute(): ?string {
+    return $this->account_name_attr;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function hasAccountNameAttribute(): bool {
+    return empty($this->account_name_attr) ? TRUE : FALSE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getServerAddress(): string {
+    return $this->address;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getBindMethod(): string {
+    return $this->bind_method;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getBindDn(): ?string {
+    return $this->binddn;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getBindPassword(): ?string {
+    return $this->bindpw;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getDerivedGroupFromDnAttribute(): ?string {
+    return $this->grp_derive_from_dn_attr;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isGroupDerivedFromDn(): bool {
+    return $this->grp_derive_from_dn;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getUserAttributeFromGroupMembershipEntryAttribute(): ?string {
+    return $this->grp_memb_attr_match_user_attr;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getGroupMembershipAttribute(): ?string {
+    return $this->grp_memb_attr;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isGrouppNested(): bool {
+    return $this->grp_nested;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getGroupObjectClass(): ?string {
+    return $this->grp_object_cat;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getGroupTestGroupDnWriteable(): ?string {
+    return $this->grp_test_grp_dn_writeable;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getGroupTestGroupDn(): ?string {
+    return $this->grp_test_grp_dn;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isGroupUnused(): bool {
+    return $this->grp_unused;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isGroupUserMembershipAttributeInUse(): bool {
+    return $this->grp_user_memb_attr_exists;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getGroupUserMembershipAttribute(): ?string {
+    return $this->grp_user_memb_attr;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getMailAttribute(): ?string {
+    return $this->mail_attr;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getMailTemplate(): ?string {
+    return $this->mail_template;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getPictureAttribute(): ?string {
+    return $this->picture_attr;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getPort(): int {
+    return $this->port;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isActive(): bool {
+    return $this->status;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getTestingDrupalUserDn(): ?string {
+    return $this->testing_drupal_user_dn;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getTestingDrupalUsername(): ?string {
+    return $this->testing_drupal_username;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getTimeout(): int {
+    return $this->timeout;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isUsingStartTls(): bool {
+    return $this->tls;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isUniquePersistentAttributeBinary(): bool {
+    return $this->unique_persistent_attr_binary ?: FALSE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getUniquePersistentAttribute(): ?string {
+    return $this->unique_persistent_attr;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getAuthenticationNameAttribute(): ?string {
+    return $this->user_attr;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getUserDnExpression(): ?string {
+    return $this->user_dn_expression;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getWeight(): int {
+    return $this->weight;
   }
 
 }

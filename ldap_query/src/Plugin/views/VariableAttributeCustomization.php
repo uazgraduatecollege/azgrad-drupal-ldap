@@ -49,7 +49,7 @@ trait VariableAttributeCustomization {
   }
 
   /**
-   * Called to add the field to a query.
+   * {@inheritdoc}
    */
   public function query() {
     $this->realField = $this->options['attribute_name'];

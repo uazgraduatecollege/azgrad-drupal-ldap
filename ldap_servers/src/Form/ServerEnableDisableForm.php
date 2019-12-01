@@ -45,7 +45,7 @@ class ServerEnableDisableForm extends EntityConfirmFormBase {
    * {@inheritdoc}
    */
   public function getConfirmText() {
-    if ($this->entity->get('status') == 1) {
+    if ($this->entity->get('status') === 1) {
       return $this->t('Disable');
     }
     else {
@@ -64,7 +64,7 @@ class ServerEnableDisableForm extends EntityConfirmFormBase {
       '%name' => $this->entity->label(),
       '%sid' => $this->entity->id(),
     ];
-    if ($this->entity->get('status') == 1) {
+    if ($this->entity->get('status') === 1) {
       $this->messenger()
         ->addMessage($this->t('LDAP server configuration %name (server id = %sid) has been enabled', $tokens));
       \Drupal::logger('ldap_servers')

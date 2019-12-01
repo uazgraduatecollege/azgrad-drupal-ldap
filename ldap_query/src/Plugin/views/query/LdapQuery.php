@@ -114,7 +114,7 @@ class LdapQuery extends QueryPluginBase {
 
     // Pager.
     $totalItems = count($view->result);
-    $offset = ($view->pager->getCurrentPage()) * $view->pager->getItemsPerPage() + $view->pager->getOffset();
+    $offset = $view->pager->getCurrentPage() * $view->pager->getItemsPerPage() + $view->pager->getOffset();
     $length = NULL;
     if ($view->pager->getItemsPerPage() > 0) {
       $length = $view->pager->getItemsPerPage();
@@ -152,7 +152,7 @@ class LdapQuery extends QueryPluginBase {
         $set[$key]['index'] = $key;
       }
       $parameters[] = $orderCriterion['data'];
-      if ($orderCriterion['direction'] == 'ASC') {
+      if ($orderCriterion['direction'] === 'ASC') {
         $parameters[] = SORT_ASC;
       }
       else {
@@ -238,7 +238,7 @@ class LdapQuery extends QueryPluginBase {
     if (!isset($this->where[$group])) {
       $this->setWhereGroup('AND', $group);
     }
-    if (!empty($operator) && $operator != 'LIKE') {
+    if (!empty($operator) && $operator !== 'LIKE') {
       $this->where[$group]['conditions'][] = [
         'field' => $field,
         'value' => $value,
@@ -290,7 +290,7 @@ class LdapQuery extends QueryPluginBase {
    * @return string
    *   Combined string.
    */
-  private function buildLdapFilter($standardFilter) {
+  private function buildLdapFilter($standardFilter): string {
     $searchFilter = $this->buildConditions();
     if (!empty($searchFilter)) {
       $finalFilter = '(&' . $standardFilter . $searchFilter . ')';
@@ -314,13 +314,12 @@ class LdapQuery extends QueryPluginBase {
    * @return string
    *   LDAP filter such as (cn=Example).
    */
-  private function translateCondition($field, $value, $operator) {
-    $item = '(' . $field . '=' . Html::escape($value) . ')';
-    if (mb_substr($operator, 0, 1) == '!') {
-      $condition = "(!$item)";
+  private function translateCondition($field, $value, $operator): string {
+    if (mb_strpos($operator, '!') === 0) {
+      $condition = sprintf('(!(%s=%s))', $field, Html::escape($value));
     }
     else {
-      $condition = $item;
+      $condition = sprintf('(%s=%s)', $field, Html::escape($value));
     }
     return $condition;
   }

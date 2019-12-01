@@ -24,7 +24,7 @@ class LdapGroupManager extends LdapBaseManager {
    *   Whether group user memberships are configured.
    */
   public function groupUserMembershipsFromAttributeConfigured() {
-    return $this->server->get('grp_user_memb_attr_exists') && $this->server->get('grp_user_memb_attr');
+    return $this->server->get('grp_user_memb_attr_exists') && $this->server->getGroupUserMembershipAttribute();
   }
 
   /**
@@ -528,7 +528,7 @@ class LdapGroupManager extends LdapBaseManager {
       return FALSE;
     }
 
-    $groupAttribute = $this->server->get('grp_user_memb_attr');
+    $groupAttribute = $this->server->getGroupUserMembershipAttribute();
 
     if ($ldap_entry->hasAttribute($groupAttribute)) {
       return FALSE;
@@ -723,12 +723,12 @@ class LdapGroupManager extends LdapBaseManager {
       return FALSE;
     }
 
-    if (!$this->server->get('grp_derive_from_dn') || !$this->server->get('grp_derive_from_dn_attr')) {
+    if (!$this->server->isGroupDerivedFromDn() || !$this->server->getDerivedGroupFromDnAttribute()) {
       return FALSE;
     }
 
     if ($ldap_entry = $this->matchUsernameToExistingLdapEntry($username)) {
-      return $this->getAllRdnValuesFromDn($ldap_entry->getDn(), $this->server->get('grp_derive_from_dn_attr'));
+      return $this->getAllRdnValuesFromDn($ldap_entry->getDn(), $this->server->getDerivedGroupFromDnAttribute());
     }
     return FALSE;
   }
