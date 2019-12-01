@@ -65,7 +65,7 @@ interface ServerInterface {
    * @return string
    *   Attribute.
    */
-  public function getAccountNameAttribute(): string;
+  public function getAccountNameAttribute(): ?string;
 
   /**
    * Account name attribute set.

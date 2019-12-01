@@ -43,7 +43,7 @@ class FieldProviderTests extends EntityKernelTestBase implements LdapUserAttribu
   public function setUp() {
     parent::setUp();
     $this->installEntitySchema('ldap_server');
-    $this->installSchema('ldap_user', []);
+    $this->installConfig('ldap_user');
     $this->server = Server::create([
       'id' => 'example',
       'picture_attr' => 'picture_field',

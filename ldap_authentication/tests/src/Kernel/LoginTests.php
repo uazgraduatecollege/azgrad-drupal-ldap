@@ -4,7 +4,7 @@ namespace Drupal\Tests\ldap_authentication\Kernel;
 
 use Drupal\Core\Form\FormState;
 use Drupal\ldap_authentication\Controller\LoginValidatorLoginForm;
-use Drupal\Tests\token\Kernel\KernelTestBase;
+use Drupal\KernelTests\KernelTestBase;
 
 /**
  * Login tests.
