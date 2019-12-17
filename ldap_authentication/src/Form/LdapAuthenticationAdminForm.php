@@ -123,7 +123,7 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
       '#default_value' => $config->get('authenticationMode'),
       '#options' => [
         'mixed' => $this->t('Mixed mode: Drupal authentication is tried first. On failure, LDAP authentication is performed.'),
-        'exclusive' => $this->t('Exclusive mode: Only LDAP Authentication is allowed, except for user 1.'),
+        'exclusive' => $this->t('Exclusive mode: Only LDAP Authentication is allowed.'),
       ],
       '#description' => $this->t('If exclusive is selected: <br> (1) reset password links will be replaced with links to LDAP end user documentation below.<br>
         (2) The reset password form will be left available at user/password for administrators; but no links to it will be provided to anonymous users.<br>
@@ -139,7 +139,7 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
     $form['logon']['skipAdministrators'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Exclude members of the administrative group from LDAP authentication'),
-      '#default_value' => $config->get('skipAdministrators') ? $config->get('skipAdministrators') : 1,
+      '#default_value' => $config->get('skipAdministrators'),
       '#description' => $this->t('Members in the group(s) "@groups" will not be able to log in with LDAP', ['@groups' => implode(', ', $admin_roles)]),
     ];
 
