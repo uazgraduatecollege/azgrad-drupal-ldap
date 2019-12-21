@@ -180,7 +180,7 @@ class ServerForm extends EntityForm {
     ];
 
     $form['users']['user_attr'] = [
-      '#default_value' => $server->getAuthenticationNameAttribute,
+      '#default_value' => $server->getAuthenticationNameAttribute(),
       '#type' => 'textfield',
       '#size' => 30,
       '#title' => $this->t('Authentication name attribute'),

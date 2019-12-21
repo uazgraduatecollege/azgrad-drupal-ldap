@@ -444,7 +444,7 @@ abstract class LdapBaseManager {
       return NULL;
     }
 
-    $query = sprintf('(%s=%s)', $this->server->getAuthenticationNameAttribute, $this->ldapEscapeFilter($drupal_username));
+    $query = sprintf('(%s=%s)', $this->server->getAuthenticationNameAttribute(), $this->ldapEscapeFilter($drupal_username));
     try {
       $ldap_response = $this->ldap->query($base_dn, $query)->execute();
     }

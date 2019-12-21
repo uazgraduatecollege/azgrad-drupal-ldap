@@ -563,7 +563,7 @@ final class ServerTestForm extends EntityForm {
           $this->t('Failed to find test user %username by searching on %user_attr = %username.',
             [
               '%username' => $drupal_username,
-              '%user_attr' => $this->ldapServer->getAuthenticationNameAttribute,
+              '%user_attr' => $this->ldapServer->getAuthenticationNameAttribute(),
             ]
           ),
         ],
@@ -577,7 +577,7 @@ final class ServerTestForm extends EntityForm {
           $this->t('Found test user %username by searching on  %user_attr = %username.',
             [
               '%username' => $drupal_username,
-              '%user_attr' => $this->ldapServer->getAuthenticationNameAttribute,
+              '%user_attr' => $this->ldapServer->getAuthenticationNameAttribute(),
             ]
           ),
         ],
