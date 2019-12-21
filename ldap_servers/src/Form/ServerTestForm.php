@@ -677,7 +677,7 @@ final class ServerTestForm extends EntityForm {
     if ($this->ldapServer->connect() != Server::LDAP_SUCCESS) {
       $this->resultsTables['basic'][] = [
         'class' => 'color-error',
-        'data' => [$this->t('Failed to connect to LDAP server: @error', $this->ldapServer->formattedError($this->ldapServer->ldapErrorNumber()))],
+        'data' => [$this->t('Failed to connect to LDAP server: @error', ['@error' => $this->ldapServer->formattedError($this->ldapServer->ldapErrorNumber())])],
       ];
       $this->exception = TRUE;
       return;
