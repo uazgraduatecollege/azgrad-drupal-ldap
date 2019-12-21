@@ -9,7 +9,7 @@ use Drupal\KernelTests\KernelTestBase;
  *
  * @group ldap
  */
-class IntegrationTests extends KernelTestBase {
+class IntegrationTest extends KernelTestBase {
 
   /**
    * {@inheritdoc}

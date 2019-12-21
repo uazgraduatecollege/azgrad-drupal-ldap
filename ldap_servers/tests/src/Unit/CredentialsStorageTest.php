@@ -9,7 +9,7 @@ use Drupal\Tests\UnitTestCase;
  * @coversDefaultClass \Drupal\ldap_servers\Helper\CredentialsStorage
  * @group ldap
  */
-class CredentialsStorageTests extends UnitTestCase {
+class CredentialsStorageTest extends UnitTestCase {
 
   /**
    * Test the temporary storage of passwords.

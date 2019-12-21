@@ -10,7 +10,7 @@ use Symfony\Component\Ldap\Entry;
  * @coversDefaultClass \Drupal\ldap_servers\Entity\Server
  * @group ldap
  */
-class ServerTests extends EntityKernelTestBase {
+class ServerTest extends EntityKernelTestBase {
 
   /**
    * {@inheritdoc}

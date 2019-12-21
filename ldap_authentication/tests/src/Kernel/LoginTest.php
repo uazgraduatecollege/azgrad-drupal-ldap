@@ -11,7 +11,7 @@ use Drupal\KernelTests\KernelTestBase;
  *
  * @group ldap
  */
-class LoginTests extends KernelTestBase {
+class LoginTest extends KernelTestBase {
 
   /**
    * {@inheritdoc}

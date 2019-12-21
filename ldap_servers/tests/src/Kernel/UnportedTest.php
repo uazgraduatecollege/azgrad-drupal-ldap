@@ -11,7 +11,7 @@ use Symfony\Component\Ldap\Entry;
  * @coversDefaultClass \Drupal\ldap_servers\Entity\Server
  * @group ldap
  */
-class UnportedTests extends EntityKernelTestBase {
+class UnportedTest extends EntityKernelTestBase {
 
   /**
    * {@inheritdoc}

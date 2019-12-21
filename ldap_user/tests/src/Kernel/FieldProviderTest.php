@@ -11,7 +11,7 @@ use Drupal\ldap_user\FieldProvider;
  * @coversDefaultClass \Drupal\ldap_user\FieldProvider
  * @group ldap
  */
-class FieldProviderTests extends EntityKernelTestBase implements LdapUserAttributesInterface {
+class FieldProviderTest extends EntityKernelTestBase implements LdapUserAttributesInterface {
 
   /**
    * {@inheritdoc}

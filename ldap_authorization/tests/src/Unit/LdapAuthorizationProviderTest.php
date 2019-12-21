@@ -11,7 +11,7 @@ use Drupal\Tests\UnitTestCase;
  * @coversDefaultClass \Drupal\ldap_authorization\Plugin\authorization\Provider\LDAPAuthorizationProvider
  * @group authorization
  */
-class LdapAuthorizationProviderTests extends UnitTestCase {
+class LdapAuthorizationProviderTest extends UnitTestCase {
 
   /**
    * Provider plugin.

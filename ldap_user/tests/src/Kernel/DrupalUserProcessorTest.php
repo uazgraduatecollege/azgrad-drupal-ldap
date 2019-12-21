@@ -12,7 +12,7 @@ use Drupal\user\Entity\User;
  * @coversDefaultClass \Drupal\ldap_user\Processor\DrupalUserProcessor
  * @group ldap
  */
-class DrupalUserProcessorTests extends KernelTestBase implements LdapUserAttributesInterface {
+class DrupalUserProcessorTest extends KernelTestBase implements LdapUserAttributesInterface {
 
   /**
    * {@inheritdoc}

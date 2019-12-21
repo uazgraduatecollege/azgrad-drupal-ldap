@@ -10,7 +10,7 @@ use Drupal\KernelTests\Core\Entity\EntityKernelTestBase;
  *
  * @group ldap
  */
-class LdapAuthorizationProviderIntegrationTests extends EntityKernelTestBase {
+class LdapAuthorizationProviderIntegrationTest extends EntityKernelTestBase {
 
   /**
    * {@inheritdoc}

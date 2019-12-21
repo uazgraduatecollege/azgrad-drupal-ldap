@@ -14,7 +14,7 @@ use Drupal\ldap_servers\Processor\TokenProcessor;
  * @runTestsInSeparateProcesses
  * @preserveGlobalState disabled
  */
-class TokenTests extends UnitTestCase {
+class TokenTest extends UnitTestCase {
 
   /**
    * LDAP Entry.
