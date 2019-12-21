@@ -557,7 +557,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
   private function saveUserPicture(FieldItemListInterface $field, $ldapUserPicture) {
     // Create tmp file to get image format and derive extension.
     $fileName = uniqid('', FALSE);
-    $unmanagedFile = file_directory_temp() . '/' . $fileName;
+    $unmanagedFile = $this->fileSystem->getTempDirectory() . '/' . $fileName;
     file_put_contents($unmanagedFile, $ldapUserPicture);
     // TODO: Declare dependency on exif or resolve it.
     $image_type = exif_imagetype($unmanagedFile);
