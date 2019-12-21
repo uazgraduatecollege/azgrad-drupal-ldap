@@ -96,6 +96,25 @@ class LdapEntryProvisionSubscriber implements EventSubscriberInterface, LdapUser
   private $ldapServer;
 
   /**
+   * Available tokens.
+   *
+   * @var array
+   *
+   * Keys for tokens:
+   *   'all' signifies return all token/value pairs available;
+   *   otherwise array lists token keys. For example:
+   *   property.name ... *not* [property.name].
+   */
+  private $tokens;
+
+  /**
+   * User.
+   *
+   * @var \Drupal\user\Entity\User|\Drupal\user\UserInterface
+   */
+  private $account;
+
+  /**
    * Constructor.
    *
    * @param \Drupal\Core\Config\ConfigFactory $config_factory
@@ -145,22 +164,36 @@ class LdapEntryProvisionSubscriber implements EventSubscriberInterface, LdapUser
   }
 
   /**
+   * Set the user.
+   *
+   * This should not be used in practice and is a workaround to ease testing
+   * this class, before we can refactor it.
+   *
+   * @param \Drupal\user\UserInterface $account
+   *   Account.
+   */
+  public function setUser(UserInterface $account): void {
+    $this->account = $account;
+}
+
+  /**
    * Handle account login with LDAP entry provisioning.
    *
    * @param \Drupal\ldap_user\Event\LdapUserLoginEvent $event
    *   Event.
    */
   public function login(LdapUserLoginEvent $event) {
+    $this->account = $event->account;
     $triggers = $this->config->get('ldapEntryProvisionTriggers');
-    if ($this->provisionLdapEntriesFromDrupalUsers() && in_array(self::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_AUTHENTICATION, $triggers)) {
+    if ($this->provisionLdapEntriesFromDrupalUsers() && in_array(self::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_AUTHENTICATION, $triggers, TRUE)) {
       $this->loadServer();
-      if (!$this->checkExistingLdapEntry($event->account)) {
-        // This should only be necessary if the entry was deleted on the
-        // directory server.
-        $this->provisionLdapEntry($event->account);
+      if ($this->checkExistingLdapEntry()) {
+        $this->syncToLdapEntry();
       }
       else {
-        $this->syncToLdapEntry($event->account);
+        // This should only be necessary if the entry was deleted on the
+        // directory server.
+        $this->provisionLdapEntry();
       }
     }
   }
@@ -175,16 +208,17 @@ class LdapEntryProvisionSubscriber implements EventSubscriberInterface, LdapUser
    *   Event.
    */
   public function userUpdated(LdapUserUpdatedEvent $event) {
+    $this->account = $event->account;
     if ($this->provisionLdapEntriesFromDrupalUsers()) {
-      if (in_array(self::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_UPDATE_CREATE, $this->config->get('ldapEntryProvisionTriggers'))) {
+      if (in_array(self::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_UPDATE_CREATE, $this->config->get('ldapEntryProvisionTriggers'), TRUE)) {
         $this->loadServer();
-        if (!$this->checkExistingLdapEntry($event->account)) {
-          // This should only be necessary if the entry was deleted on the
-          // directory server.
-          $this->provisionLdapEntry($event->account);
+        if ($this->checkExistingLdapEntry()) {
+          $this->syncToLdapEntry();
         }
         else {
-          $this->syncToLdapEntry($event->account);
+          // This should only be necessary if the entry was deleted on the
+          // directory server.
+          $this->provisionLdapEntry();
         }
       }
     }
@@ -197,14 +231,15 @@ class LdapEntryProvisionSubscriber implements EventSubscriberInterface, LdapUser
    *   Event.
    */
   public function userCreated(LdapNewUserCreatedEvent $event) {
+    $this->account = $event->account;
     if ($this->provisionLdapEntriesFromDrupalUsers()) {
-      if (in_array(self::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_UPDATE_CREATE, $this->config->get('ldapEntryProvisionTriggers'))) {
+      if (in_array(self::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_UPDATE_CREATE, $this->config->get('ldapEntryProvisionTriggers'), TRUE)) {
         $this->loadServer();
-        if (!$this->checkExistingLdapEntry($event->account)) {
-          $this->provisionLdapEntry($event->account);
+        if ($this->checkExistingLdapEntry()) {
+          $this->syncToLdapEntry();
         }
         else {
-          $this->syncToLdapEntry($event->account);
+          $this->provisionLdapEntry();
         }
       }
     }
@@ -216,32 +251,29 @@ class LdapEntryProvisionSubscriber implements EventSubscriberInterface, LdapUser
    * @return bool
    *   Provisioning available.
    */
-  private function provisionLdapEntriesFromDrupalUsers() {
+  private function provisionLdapEntriesFromDrupalUsers(): bool {
     if ($this->config->get('ldapEntryProvisionServer') &&
       count(array_filter(array_values($this->config->get('ldapEntryProvisionTriggers')))) > 0) {
       return TRUE;
     }
-    else {
-      return FALSE;
-    }
+
+    return FALSE;
   }
 
   /**
    * Populate LDAP entry array for provisioning.
    *
-   * @param \Drupal\user\UserInterface $account
-   *   Drupal account.
    * @param string $prov_event
    *   Provisioning event.
    *
    * @return \Symfony\Component\Ldap\Entry
    *   Entry to send *to* LDAP.
    */
-  private function buildLdapEntry(UserInterface $account, $prov_event): Entry {
+  private function buildLdapEntry($prov_event): Entry {
     $dn = '';
     $attributes = [];
 
-    if (!is_object($account) || !is_object($this->ldapServer)) {
+    if (!is_object($this->account) || !is_object($this->ldapServer)) {
       throw new LdapBadParamsException('Missing user or server.');
     }
 
@@ -255,7 +287,7 @@ class LdapEntryProvisionSubscriber implements EventSubscriberInterface, LdapUser
       $ldap_attribute_name = trim($field->getLdapAttribute(), '[]');
 
       $attribute = $field->getDrupalAttribute() === 'user_tokens' ? $field->getUserTokens() : $field->getDrupalAttribute();
-      $value = $this->fetchDrupalAttributeValue($account, $attribute, $ldap_attribute_name);
+      $value = $this->fetchDrupalAttributeValue($attribute, $ldap_attribute_name);
 
       if ($value) {
         if ($ldap_attribute_name === 'dn') {
@@ -281,58 +313,29 @@ class LdapEntryProvisionSubscriber implements EventSubscriberInterface, LdapUser
   }
 
   /**
-   * Tokenize a user account.
-   *
-   * @param \Drupal\user\UserInterface $account
-   *   The Drupal user account.
-   * @param array $attributes
-   *   Keys for tokens:
-   *     'all' signifies return
-   *     all token/value pairs available; otherwise array lists
-   *     token keys (e.g. property.name ...NOT [property.name])
-   *
-   * @return array
-   *   Should return token/value pairs in array such as 'status' => 1,
-   *   'uid' => 17.
-   */
-  private function fetchDrupalAttributes(UserInterface $account, array $attributes = []) {
-    $tokens = [];
-    foreach ($attributes as $attribute) {
-      $tokens = array_merge($tokens, $this->fetchDrupalAccountAttribute($account, $attribute));
-    }
-    return $tokens;
-  }
-
-  /**
    * Fetch a single token.
    *
-   * @param \Drupal\user\UserInterface $account
-   *   LDAP entry.
    * @param string $token
    *   Token key.
-   *
-   * @return array
-   *   Tokens.
    */
-  private function fetchDrupalAccountAttribute(UserInterface $account, $token) {
+  private function fetchDrupalAccountAttribute($token): void {
     // Trailing period to allow for empty value.
-    list($attribute_type, $attribute_name, $attribute_conversion) = explode('.', $token . '.');
-    $value = FALSE;
-    $tokens = [];
+    [
+      $attribute_type,
+      $attribute_name,
+      $attribute_conversion,
+    ] = explode('.', $token . '.');
+    $value = NULL;
 
-    switch ($attribute_type) {
-      case 'field':
-      case 'property':
-        $value = $this->fetchDrupalAccountField($account, $attribute_name);
-        break;
-
-      case 'password':
-        $value = $this->fetchDrupalAccountPassword($attribute_name);
-        if (empty($value)) {
-          // Do not evaluate empty passwords, to avoid overwriting them.
-          return [NULL, NULL];
-        }
-        break;
+    if ($attribute_type === 'field' || $attribute_type === 'property') {
+      $value = $this->fetchDrupalAccountField($attribute_name);
+    }
+    elseif ($attribute_type === 'password') {
+      $value = $this->fetchDrupalAccountPassword($attribute_name);
+      if (empty($value)) {
+        // Do not evaluate empty passwords, to avoid overwriting them.
+        return;
+      }
     }
 
     if ($attribute_conversion === 'to-md5') {
@@ -342,29 +345,25 @@ class LdapEntryProvisionSubscriber implements EventSubscriberInterface, LdapUser
       $value = mb_strtolower($value);
     }
 
-    $tokens[sprintf('[%s]', $token)] = $value;
-
-    return $tokens;
+    $this->tokens[sprintf('[%s]', $token)] = $value;
   }
 
   /**
    * Fetch regular field token.
    *
-   * @param \Drupal\user\UserInterface $account
-   *   User.
    * @param string $attribute_name
    *   Field name.
    *
    * @return string
    *   Field data.
    */
-  private function fetchDrupalAccountField(UserInterface $account, $attribute_name) {
+  private function fetchDrupalAccountField($attribute_name): string {
     $value = '';
-    if (is_scalar($account->get($attribute_name)->value)) {
-      $value = $account->get($attribute_name)->value;
+    if (is_scalar($this->account->get($attribute_name)->value)) {
+      $value = $this->account->get($attribute_name)->value;
     }
-    elseif (!empty($account->get($attribute_name)->getValue())) {
-      $file_reference = $account->get($attribute_name)->getValue();
+    elseif (!empty($this->account->get($attribute_name)->getValue())) {
+      $file_reference = $this->account->get($attribute_name)->getValue();
       if (isset($file_reference[0]['target_id'])) {
         /** @var \Drupal\file\Entity\File $file */
         $file = $this->entityTypeManager
@@ -422,8 +421,10 @@ class LdapEntryProvisionSubscriber implements EventSubscriberInterface, LdapUser
    *
    * @return string|null
    *   Attribute value.
+   *
+   * @see \Drupal\ldap_servers\Processor\TokenProcessor::ldapEntryReplacementsForDrupalAccount()
    */
-  private function fetchDrupalAttributeValue(UserInterface $user, string $text, string $type): ?string {
+  private function fetchDrupalAttributeValue(string $text, string $type): ?string {
     // Desired tokens are of form "cn","mail", etc.
     $desired_tokens = ConversionHelper::findTokensNeededForTemplate($text);
 
@@ -432,12 +433,13 @@ class LdapEntryProvisionSubscriber implements EventSubscriberInterface, LdapUser
       return $text;
     }
 
-    $tokens = $this->fetchDrupalAttributes($user, $desired_tokens);
-
+    foreach ($desired_tokens as $desired_token) {
+      $this->fetchDrupalAccountAttribute($desired_token);
+    }
     // This is inelegant but otherwise we cannot support compound tokens for DN.
     if ($type === 'dn') {
-      foreach ($tokens as $key => $value) {
-        $tokens[$key] = $this->ldapEscapeDn($value);
+      foreach ($this->tokens as $key => $value) {
+        $this->tokens[$key] = $this->ldapEscapeDn($value);
       }
     }
 
@@ -445,12 +447,12 @@ class LdapEntryProvisionSubscriber implements EventSubscriberInterface, LdapUser
     // We are adding those lowercase duplicates to make sure we can
     // replace all placeholders independent of their case. Note that as a
     // workaround we are lowercasing those on form saving for now.
-    foreach ($tokens as $attribute => $value) {
-      $tokens[mb_strtolower($attribute)] = $value;
+    foreach ($this->tokens as $attribute => $value) {
+      $this->tokens[mb_strtolower($attribute)] = $value;
     }
 
-    $attributes = array_keys($tokens);
-    $values = array_values($tokens);
+    $attributes = array_keys($this->tokens);
+    $values = array_values($this->tokens);
     $result = str_replace($attributes, $values, $text);
 
     // Strip out any un-replaced tokens.
@@ -477,15 +479,12 @@ class LdapEntryProvisionSubscriber implements EventSubscriberInterface, LdapUser
    *
    * If one exists do nothing, takes Drupal user as argument.
    *
-   * @param \Drupal\user\UserInterface $account
-   *   Drupal user.
-   *
    * @return bool
    *   Provisioning successful.
    */
-  private function provisionLdapEntry(UserInterface $account) {
+  private function provisionLdapEntry() {
 
-    if ($account->isAnonymous()) {
+    if ($this->account->isAnonymous()) {
       $this->logger->notice('Cannot provision LDAP user unless corresponding Drupal account exists.');
       return FALSE;
     }
@@ -496,7 +495,7 @@ class LdapEntryProvisionSubscriber implements EventSubscriberInterface, LdapUser
     }
 
     try {
-      $entry = $this->buildLdapEntry($account, self::EVENT_CREATE_LDAP_ENTRY);
+      $entry = $this->buildLdapEntry(self::EVENT_CREATE_LDAP_ENTRY);
     }
     catch (\Exception $e) {
       $this->logger->error('User or server is missing during LDAP provisioning: %message', [
@@ -520,13 +519,13 @@ class LdapEntryProvisionSubscriber implements EventSubscriberInterface, LdapUser
     $context = [
       'action' => 'add',
       'corresponding_drupal_data_type' => 'user',
-      'account' => $account,
+      'account' => $this->account,
     ];
     $this->moduleHandler->alter('ldap_entry_pre_provision', $entry, $this->ldapServer, $context);
     if ($this->ldapUserManager->createLdapEntry($entry)) {
       $callback_params = [$entry, $this->ldapServer, $context];
       $this->moduleHandler->invokeAll('ldap_entry_post_provision', $callback_params);
-      $this->updateUserProvisioningReferences($account, $entry);
+      $this->updateUserProvisioningReferences($entry);
 
     }
     else {
@@ -534,7 +533,7 @@ class LdapEntryProvisionSubscriber implements EventSubscriberInterface, LdapUser
         [
           '%dn' => $entry->getDn(),
           '@sid' => $this->ldapServer->id(),
-          '@username' => @$account->getAccountName(),
+          '@username' => @$this->account->getAccountName(),
         ]);
       return FALSE;
     }
@@ -544,7 +543,7 @@ class LdapEntryProvisionSubscriber implements EventSubscriberInterface, LdapUser
       [
         '%dn' => $entry->getDn(),
         '@sid' => $this->ldapServer->id(),
-        '@username' => @$account->getAccountName(),
+        '@username' => @$this->account->getAccountName(),
       ],
       'ldap_user'
     );
@@ -558,53 +557,45 @@ class LdapEntryProvisionSubscriber implements EventSubscriberInterface, LdapUser
    * Need to store <sid>|<dn> in ldap_user_prov_entries field, which may
    *  contain more than one.
    *
-   * @param \Drupal\user\UserInterface $account
-   *   User.
    * @param \Symfony\Component\Ldap\Entry $entry
    *   LDAP Entry.
    */
-  private function updateUserProvisioningReferences(
-    UserInterface $account,
-    Entry $entry
-  ) {
+  private function updateUserProvisioningReferences(Entry $entry) {
     $ldap_user_prov_entry = $this->ldapServer->id() . '|' . $entry->getDn();
-    if (NULL !== $account->get('ldap_user_prov_entries')) {
-      $account->set('ldap_user_prov_entries', []);
+    if ($this->account->get('ldap_user_prov_entries') !== NULL) {
+      $this->account->set('ldap_user_prov_entries', []);
     }
     $ldap_user_provisioning_entry_exists = FALSE;
-    if ($account->get('ldap_user_prov_entries')->value) {
-      foreach ($account->get('ldap_user_prov_entries')->value as $field_value_instance) {
-        if ($field_value_instance == $ldap_user_prov_entry) {
+    if ($this->account->get('ldap_user_prov_entries')->value) {
+      foreach ($this->account->get('ldap_user_prov_entries')->value as $field_value_instance) {
+        if ($field_value_instance === $ldap_user_prov_entry) {
           $ldap_user_provisioning_entry_exists = TRUE;
         }
       }
     }
     if (!$ldap_user_provisioning_entry_exists) {
-      $prov_entries = $account->get('ldap_user_prov_entries')->value;
+      $prov_entries = $this->account->get('ldap_user_prov_entries')->value;
       $prov_entries[] = [
         'value' => $ldap_user_prov_entry,
         'format' => NULL,
         'save_value' => $ldap_user_prov_entry,
       ];
-      $account->set('ldap_user_prov_entries', $prov_entries);
-      $account->save();
+      $this->account->set('ldap_user_prov_entries', $prov_entries);
+      $this->account->save();
     }
   }
 
   /**
    * Given a Drupal account, sync to related LDAP entry.
-   *
-   * @param \Drupal\user\UserInterface $account
-   *   Drupal user object.
    */
-  public function syncToLdapEntry(UserInterface $account) {
+  public function syncToLdapEntry() {
     if (!$this->config->get('ldapEntryProvisionServer')) {
       $this->logger->error('Provisioning server not available');
       return;
     }
 
     try {
-      $entry = $this->buildLdapEntry($account, self::EVENT_SYNC_TO_LDAP_ENTRY);
+      $entry = $this->buildLdapEntry(self::EVENT_SYNC_TO_LDAP_ENTRY);
     }
     catch (\Exception $e) {
       $this->logger->error('Unable to prepare LDAP entry: %message', [
@@ -619,7 +610,7 @@ class LdapEntryProvisionSubscriber implements EventSubscriberInterface, LdapUser
       $context = [
         'action' => 'update',
         'corresponding_drupal_data_type' => 'user',
-        'account' => $account,
+        'account' => $this->account,
       ];
       $this->moduleHandler->alter('ldap_entry_pre_provision', $entry, $this->ldapServer, $context);
       $this->ldapUserManager->modifyLdapEntry($entry);
@@ -628,8 +619,8 @@ class LdapEntryProvisionSubscriber implements EventSubscriberInterface, LdapUser
       $tokens = [
         '%dn' => $entry->getDn(),
         '%sid' => $this->ldapServer->id(),
-        '%username' => $account->getAccountName(),
-        '%uid' => (!method_exists($account, 'id') || empty($account->id())) ? '' : $account->id(),
+        '%username' => $this->account->getAccountName(),
+        '%uid' => (!method_exists($this->account, 'id') || empty($this->account->id())) ? '' : $this->account->id(),
       ];
       $this->logger->info('LDAP entry on server %sid synced dn=%dn for username=%username, uid=%uid', $tokens);
     }
@@ -638,19 +629,25 @@ class LdapEntryProvisionSubscriber implements EventSubscriberInterface, LdapUser
   /**
    * Check existing LDAP entry.
    *
-   * @param \Drupal\user\UserInterface $account
-   *   User.
-   *
    * @return bool|\Symfony\Component\Ldap\Entry|null
    *   Entry, false or null.
    */
-  private function checkExistingLdapEntry(UserInterface $account) {
+  private function checkExistingLdapEntry() {
     $authmap = \Drupal::service('externalauth.authmap')
-      ->get($account->id(), 'ldap_user');
+      ->get($this->account->id(), 'ldap_user');
     if ($authmap) {
       return $this->ldapUserManager->queryAllBaseDnLdapForUsername($authmap);
     }
     return FALSE;
+  }
+
+  /**
+   * Tokens.
+   *
+   * @return array
+   */
+  public function getTokens(): array {
+    return $this->tokens;
   }
 
 }

@@ -767,7 +767,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
       list($value_type, $value_name) = $this->parseUserAttributeNames($key);
 
       if ($value_type === 'field' || $value_type === 'property') {
-        $this->account->set($value_name, $value ?? NULL);
+        $this->account->set($value_name, $value === '' ? NULL : $value);
       }
     }
   }

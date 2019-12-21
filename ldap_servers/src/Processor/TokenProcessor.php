@@ -26,18 +26,55 @@ class TokenProcessor {
   protected $detailLog;
 
   /**
-   * Entity Type Manager.
+   * Available tokens.
    *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   * Token array suitable for t() functions of with lowercase keys as
+   * exemplified below.
+   * From dn attribute:
+   *   [cn] = jdoe
+   *   [cn:0] = jdoe
+   *   [cn:last] => jdoe
+   *   [cn:reverse:0] = jdoe
+   *   [ou] = campus accounts
+   *   [ou:0] = campus accounts
+   *   [ou:last] = toledo campus
+   *   [ou:reverse:0] = toledo campus
+   *   [ou:reverse:1] = campus accounts
+   *   [dc] = ad
+   *   [dc:0] = ad
+   *   [dc:1] = myuniversity
+   *   [dc:2] = edu
+   *   [dc:last] = edu
+   *   [dc:reverse:0] = edu
+   *   [dc:reverse:1] = myuniversity
+   *   [dc:reverse:2] = ad
+   * From other attributes:
+   *   [mail] = jdoe@myuniversity.edu
+   *   [mail:0] = jdoe@myuniversity.edu
+   *   [mail:last] = jdoe@myuniversity.edu
+   *   [samaccountname] = jdoe
+   *   [samaccountname:0] = jdoe
+   *   [samaccountname:last] = jdoe
+   *   [guid:0;base64_encode] = apply base64_encode() function to value
+   *   [guid:0;bin2hex] = apply bin2hex() function to value
+   *   [guid:0;msguid] = apply convertMsguidToString() function to value.
+   *
+   * @var array
    */
-  protected $entityTypeManager;
+  public $tokens = [];
+
+  /**
+   * Requested tokens.
+   *
+   * @var array
+   */
+  private $requestedTokens = [];
 
   /**
    * {@inheritdoc}
    */
-  public function __construct(LdapDetailLog $ldap_detail_log, EntityTypeManagerInterface $entity_type_manager) {
+  public function __construct(LdapDetailLog $ldap_detail_log) {
     $this->detailLog = $ldap_detail_log;
-    $this->entityTypeManager = $entity_type_manager;
   }
 
   /**
@@ -51,38 +88,30 @@ class TokenProcessor {
    *
    * @return string|null
    *   Relaced string.
+   *
+   * @see \Drupal\ldap_user\EventSubscriber\LdapEntryProvisionSubscriber::fetchDrupalAttributeValue()
    */
-  public function ldapEntryReplacementsForDrupalAccount(Entry $resource, string $text): ?string {
-    // Desired tokens are of form "cn","mail", etc.
-    $desired_tokens = ConversionHelper::findTokensNeededForTemplate($text);
-
-    if (empty($desired_tokens)) {
+  public function ldapEntryReplacementsForDrupalAccount(Entry $resource, string $text): string {
+    preg_match_all('/\[([^\[\]]*)\]/x', $text, $matches);
+    if (!isset($matches[1]) || empty($matches[1])) {
       // If no tokens exist in text, return text itself.
       return $text;
     }
 
-    $tokens = $this->tokenizeLdapEntry($resource, $desired_tokens);
+    $this->tokenizeLdapEntry($resource, $matches[1]);
 
-    foreach ($tokens as $attribute => $value) {
-      $tokens[mb_strtolower($attribute)] = $value;
+    foreach ($matches[0] as $target) {
+      /** @var string $lowercase_target */
+      $lowercase_target = mb_strtolower($target);
+      if (isset($this->tokens[$lowercase_target])) {
+        $text = str_replace($target, $this->tokens[$lowercase_target], $text);
+      }
     }
-
-    // TODO: This string comparison is likely not ideal.
-    // The sub-functions redundantly lowercase replacements in addition to the
-    // source formatting. Otherwise comparison would fail here in
-    // case-insensitive requests. Ideally, a reimplementation would resolve this
-    // redundant and inconsistent approach with a clearer API.
-    $attributes = array_keys($tokens);
-    $values = array_values($tokens);
-    $result = str_replace($attributes, $values, $text);
 
     // Strip out any un-replaced tokens.
-    $result = preg_replace('/^\[.*\]$/', '', $result);
+    $text = preg_replace('/\[.*\]/', '', $text);
 
-    if ($result === '') {
-      $result = NULL;
-    }
-    return $result;
+    return $text;
   }
 
   /**
@@ -90,96 +119,23 @@ class TokenProcessor {
    *
    * @param \Symfony\Component\Ldap\Entry $ldap_entry
    *   The LDAP entry.
-   * @param array $token_keys
-   *   Either an array of key names such as ['cn', 'dn'] or an empty
-   *   array for all items.
-   *
-   * @return array
-   *   Token array suitable for t() functions of with lowercase keys as
-   *   exemplified below. The LDAP entry should be in form of single entry
-   *   returned from ldap_search() function. For example:
-   *   'dn' => 'cn=jdoe,ou=campus accounts,dc=ad,dc=myuniversity,dc=edu',
-   *   'mail' => array( 0 => 'jdoe@myuniversity.edu', 'count' => 1),
-   *   'sAMAccountName' => array( 0 => 'jdoe', 'count' => 1),
-   *
-   *   Should return tokens such as:
-   *   From dn attribute:
-   *     [cn] = jdoe
-   *     [cn:0] = jdoe
-   *     [cn:last] => jdoe
-   *     [cn:reverse:0] = jdoe
-   *     [ou] = campus accounts
-   *     [ou:0] = campus accounts
-   *     [ou:last] = toledo campus
-   *     [ou:reverse:0] = toledo campus
-   *     [ou:reverse:1] = campus accounts
-   *     [dc] = ad
-   *     [dc:0] = ad
-   *     [dc:1] = myuniversity
-   *     [dc:2] = edu
-   *     [dc:last] = edu
-   *     [dc:reverse:0] = edu
-   *     [dc:reverse:1] = myuniversity
-   *     [dc:reverse:2] = ad
-   *   From other attributes:
-   *     [mail] = jdoe@myuniversity.edu
-   *     [mail:0] = jdoe@myuniversity.edu
-   *     [mail:last] = jdoe@myuniversity.edu
-   *     [samaccountname] = jdoe
-   *     [samaccountname:0] = jdoe
-   *     [samaccountname:last] = jdoe
-   *     [guid:0;base64_encode] = apply base64_encode() function to value
-   *     [guid:0;bin2hex] = apply bin2hex() function to value
-   *     [guid:0;msguid] = apply convertMsguidToString() function to value
    */
-  public function tokenizeLdapEntry(Entry $ldap_entry, array $token_keys): array {
+  public function tokenizeLdapEntry(Entry $ldap_entry, array $required_tokens): void {
     if (empty($ldap_entry->getAttributes())) {
       $this->detailLog->log(
         'Skipped tokenization of LDAP entry because no LDAP entry provided when called from %calling_function.', [
           '%calling_function' => function_exists('debug_backtrace') ? debug_backtrace()[1]['function'] : 'undefined',
         ]
       );
-      return [];
+      return;
     }
-    $tokens = $this->compileLdapTokenEntries($ldap_entry, $token_keys);
 
-    // Include the dn.  it will not be handled correctly by previous loops.
-    $tokens['[dn]'] = $ldap_entry->getDn();
-    return $tokens;
-  }
+    $this->processDnParts($ldap_entry->getDn());
+    $this->tokens['[dn]'] = $ldap_entry->getDn();
 
-  /**
-   * Compile LDAP token entries.
-   *
-   * @param \Symfony\Component\Ldap\Entry $ldap_entry
-   *   LDAP entry.
-   * @param array $token_keys
-   *   Token keys.
-   *
-   * @return array
-   *   Tokens.
-   */
-  private function compileLdapTokenEntries(Entry $ldap_entry, array $token_keys): array {
-    $tokens = [];
-    $tokens = array_merge($tokens, $this->processDnParts($ldap_entry->getDn()));
-
-    if (empty($token_keys)) {
-      // TODO: Check if this really only ever called during the test form.
-      // Get all attributes.
-      $token_keys = array_keys($ldap_entry->getAttributes());
-      $token_keys = array_filter($token_keys, "is_string");
-      foreach ($token_keys as $attribute_name) {
-        $value = $this->processLdapEntryAttribute($attribute_name, $ldap_entry->getAttribute($attribute_name));
-        $tokens = array_merge($tokens, $value);
-      }
+    foreach ($required_tokens as $required_token) {
+      $this->processLdapTokenKey($ldap_entry, $required_token);
     }
-    else {
-      foreach ($token_keys as $attribute_name) {
-        $value = $this->processLdapTokenKey($attribute_name, $ldap_entry);
-        $tokens = array_merge($tokens, $value);
-      }
-    }
-    return $tokens;
   }
 
   /**
@@ -187,15 +143,11 @@ class TokenProcessor {
    *
    * @param string $dn
    *   DN.
-   *
-   * @return array
-   *   Tokens.
    */
-  private function processDnParts($dn): array {
-    $tokens = [];
+  private function processDnParts($dn): void {
     // 1. Tokenize dn
     // Escapes attribute values, need to be unescaped later.
-    $dn_parts = $this->splitDnWithAttributes($dn);
+    $dn_parts = self::splitDnWithAttributes($dn);
     unset($dn_parts['count']);
     $parts_count = [];
     $parts_last_value = [];
@@ -210,10 +162,10 @@ class TokenProcessor {
       }
       if (!isset($parts_count[$name])) {
         // First and general entry.
-        $tokens[sprintf('[%s]', mb_strtolower($name))] = $value;
+        $this->tokens[sprintf('[%s]', mb_strtolower($name))] = $value;
         $parts_count[$name] = 0;
       }
-      $tokens[sprintf('[%s:%s]', mb_strtolower($name), $parts_count[$name])] = $value;
+      $this->tokens[sprintf('[%s:%s]', mb_strtolower($name), $parts_count[$name])] = $value;
 
       $parts_last_value[$name] = $value;
       $parts_count[$name]++;
@@ -224,112 +176,75 @@ class TokenProcessor {
       $part = mb_strtolower($name);
       for ($i = 0; $i < $count; $i++) {
         $reverse_position = $count - $i - 1;
-        $tokens[sprintf('[%s:reverse:%s]', $part, $reverse_position)] = $tokens[sprintf('[%s:%s]', $part, $i)];
+        $this->tokens[sprintf('[%s:reverse:%s]', $part, $reverse_position)] = $this->tokens[sprintf('[%s:%s]', $part, $i)];
       }
     }
 
     foreach ($parts_count as $name => $count) {
-      $tokens[sprintf('[%s:last]', mb_strtolower($name))] = $parts_last_value[$name];
+      $this->tokens[sprintf('[%s:last]', mb_strtolower($name))] = $parts_last_value[$name];
     }
-    return $tokens;
   }
 
   /**
-   * Process a single ldap_entry token.
-   *
-   * @param string $name
-   *   Name.
-   * @param array|null|string $value
-   *   Value.
+   * Get Tokens.
    *
    * @return array
    *   Tokens.
-   *
-   * @TODO: Clean up input types of $value.
    */
-  private function processLdapEntryAttribute(string $name, $value): array {
-    $tokens = [];
-    $key = mb_strtolower($name);
-
-    if ($value !== NULL) {
-      if (is_array($value)) {
-        if (count($value) === 1) {
-          // Only one entry, example output: ['cn', 'cn:0', 'cn:last'].
-          $tokens[sprintf('[%s]', $key)] = $value[0];
-          $tokens[sprintf('[%s:0]', $key)] = $value[0];
-          $tokens[sprintf('[%s:last]', $key)] = $value[0];
-        }
-        elseif (count($value) > 1) {
-          // Multiple entries, example: ['cn:last', 'cn:0', 'cn:1'].
-          $tokens[sprintf('[%s:last]', $key)] = $value[count($value) - 1];
-          foreach ($value as $i => $i_value) {
-            $tokens[sprintf('[%s:%s]', $key, $i)] = $i_value;
-          }
-        }
-      }
-      elseif (is_scalar($value)) {
-        // Only one entry (as string).
-        // Example output: ['cn', 'cn:0', 'cn:last'].
-        $tokens[sprintf('[%s]', $key)] = $value;
-        $tokens[sprintf('[%s:0]', $key)] = $value;
-        $tokens[sprintf('[%s:last]', $key)] = $value;
-      }
-    }
-
-    return $tokens;
+  public function getTokens(): array {
+    return $this->tokens;
   }
 
   /**
    * Process a single LDAP Token key.
    *
-   * @param string $key
-   *   Full token with prefix and suffix.
    * @param \Symfony\Component\Ldap\Entry $entry
    *   Entry.
-   *
-   * @return array
-   *   Tokens.
+   * @param string $required_token
+   *   What was given as replacement pattern. For example 'dn', 'mail:0',
+   *   'mail:last', or 'guid:0;tobase64'.
    */
-  private function processLdapTokenKey($key, Entry $entry): array {
-    $tokens = [];
-    // A token key is for example 'dn', 'mail:0', 'mail:last', or
-    // 'guid:0;tobase64'. Trailing period to allow for empty value.
-    list($token_key, $conversion) = explode(';', $key . ';');
+  private function processLdapTokenKey(Entry $entry, string $required_token): void {
+    // Trailing period to allow for empty value.
+    [$token_key, $conversion] = explode(';', $required_token . ';');
+
 
     $parts = explode(':', $token_key);
-    $name = mb_strtolower($parts[0]);
-    $ordinal_key = $parts[1] ?? 0;
-    $i = NULL;
+    $requested_name = mb_strtolower($parts[0]);
+    if ($requested_name === 'dn') {
+      return;
+    }
 
-    $value = $entry->getAttribute($name);
+    $requested_index = $parts[1] ?? 0;
+
+    $value = NULL;
+    $available_attributes = $entry->getAttributes();
+    foreach ($available_attributes as $attribute_key => $attribute_value) {
+      if ($requested_name === mb_strtolower($attribute_key)) {
+        $value = $attribute_value;
+      }
+    }
 
     // Don't use empty() since a 0, "", etc value may be a desired value.
-    if ($name === 'dn' || $value === NULL) {
-      return [];
+    if ($value === NULL) {
+      return;
     }
 
-    $count = count($value);
-    if ($ordinal_key === 'last') {
-      $i = ($count > 0) ? $count - 1 : 0;
+    if ($requested_index === 'last') {
+      $i = count($value) > 0 ? count($value) - 1 : 0;
       $value = $value[$i];
     }
-    elseif (is_numeric($ordinal_key) || $ordinal_key === '0') {
-      $value = $value[$ordinal_key];
+    elseif (is_numeric($requested_index)) {
+      $value = $value[$requested_index];
     }
     else {
-      // don't add token if case not covered.
-      return [];
+      // Don't add token if case not covered.
+      return;
     }
 
     $value = ConversionHelper::convertAttribute($value, $conversion);
 
-    $tokens[sprintf('[%s]', $key)] = $value;
-    // We are redundantly setting the lowercase value here for consistency with
-    // parent function.
-    if ($key !== mb_strtolower($key)) {
-      $tokens[sprintf('[%s]', mb_strtolower($key))] = $value;
-    }
-    return $tokens;
+    $this->tokens[sprintf('[%s]', mb_strtolower($required_token))] = $value;
   }
 
 }

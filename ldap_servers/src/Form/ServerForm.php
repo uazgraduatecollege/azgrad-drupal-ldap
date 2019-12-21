@@ -476,12 +476,12 @@ class ServerForm extends EntityForm {
     ];
 
     foreach ($fields as $field) {
-      $this->entity->set($field, mb_strtolower(trim($this->entity->get($field))));
+      $this->entity->set($field, trim($this->entity->get($field)));
     }
 
     $status = $this->entity->save();
 
-    if ($status == SAVED_NEW) {
+    if ($status === SAVED_NEW) {
       $this->messenger()->addMessage($this->t('Created the %label Server.', [
         '%label' => $this->entity->label(),
       ]));

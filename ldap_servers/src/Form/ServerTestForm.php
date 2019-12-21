@@ -353,12 +353,14 @@ final class ServerTestForm extends EntityForm {
     }
 
     if ($ldap_entry) {
-      $tokens = $this->tokenProcessor->tokenizeLdapEntry($ldap_entry, []);
+      $desired_attributes = [];
+      foreach (array_keys($ldap_entry->getAttributes()) as $attribute) {
+        $desired_attributes[] = sprintf('[%s]', $attribute);
+      }
+      $this->tokenProcessor->tokenizeLdapEntry($ldap_entry, $desired_attributes);
     }
-    else {
-      $tokens = [];
-    }
-    foreach ($tokens as $key => $value) {
+
+    foreach ($this->tokenProcessor->getTokens() as $key => $value) {
       $this->resultsTables['tokens'][] = [$key, $this->binaryCheck($value)];
     }
 
