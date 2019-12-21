@@ -431,7 +431,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
     }
     $server = $this->config->get('drupalAcctProvisionServer');
     $triggers = $this->config->get('drupalAcctProvisionTriggers');
-    if ($server && isset($triggers[self::EVENT_SYNC_TO_DRUPAL_USER])) {
+    if ($server && in_array(self::PROVISION_DRUPAL_USER_ON_USER_UPDATE_CREATE, $triggers, TRUE)) {
       $this->syncToDrupalAccount();
     }
   }
@@ -450,7 +450,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
     $triggers = $this->config->get('drupalAcctProvisionTriggers');
     $server = $this->config->get('drupalAcctProvisionServer');
 
-    if ($server && isset($triggers[self::EVENT_SYNC_TO_DRUPAL_USER])) {
+    if ($server && in_array(self::PROVISION_DRUPAL_USER_ON_USER_AUTHENTICATION, $triggers, TRUE)) {
       $this->syncToDrupalAccount();
     }
 
