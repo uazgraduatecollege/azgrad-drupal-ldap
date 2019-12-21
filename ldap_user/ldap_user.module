@@ -336,7 +336,7 @@ function ldap_user_form_register_form_validate($form, FormStateInterface &$form_
           'ldap_user_create_ldap_acct', t(
             'User %name already has a corresponding LDAP Entry (%dn). Uncheck "Create corresponding LDAP entry" to allow this Drupal user to be created. Select "Make this an LDAP associated account" to associate this account with the LDAP entry.',
             [
-              '%dn' => $ldap_user['dn'],
+              '%dn' => $ldap_user->getDn(),
               '%name' => $form_state->getValue('name'),
             ])
         );
@@ -352,7 +352,7 @@ function ldap_user_form_register_form_validate($form, FormStateInterface &$form_
       $form_state->setErrorByName(
         'name', t(
           'User %name conflicts with an LDAP Entry (%dn). Creation blocked per your configuration.',
-          ['%dn' => $ldap_user['dn'], '%name' => $form_state->getValue('name')])
+          ['%dn' => $ldap_user->getDn(), '%name' => $form_state->getValue('name')])
       );
     }
   }
