@@ -5,11 +5,11 @@ namespace Drupal\ldap_user\Processor;
 use Drupal\Core\Config\ConfigFactory;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
-use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\Core\Mail\MailManagerInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\Core\Url;
 use Drupal\ldap_servers\ServerFactory;
+use Psr\Log\LoggerInterface;
 
 /**
  * Locates potential orphan user accounts.
@@ -31,7 +31,7 @@ class OrphanProcessor {
   /**
    * Constructor.
    */
-  public function __construct(LoggerChannelInterface $logger, ConfigFactory $config, ServerFactory $factory, MailManagerInterface $mail_manager, LanguageManagerInterface $language_manager, StateInterface $state, EntityTypeManagerInterface $entity_type_manager) {
+  public function __construct(LoggerInterface $logger, ConfigFactory $config, ServerFactory $factory, MailManagerInterface $mail_manager, LanguageManagerInterface $language_manager, StateInterface $state, EntityTypeManagerInterface $entity_type_manager) {
     $this->logger = $logger;
     $this->configFactory = $config;
     $this->configLdapUser = $config->get('ldap_user.settings');

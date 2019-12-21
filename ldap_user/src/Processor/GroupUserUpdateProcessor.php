@@ -5,13 +5,13 @@ namespace Drupal\ldap_user\Processor;
 use Drupal\Core\Config\ConfigFactory;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandler;
-use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\ldap_query\Controller\QueryController;
 use Drupal\ldap_servers\Logger\LdapDetailLog;
 use Drupal\ldap_servers\ServerFactory;
 use Drupal\ldap_user\Helper\ExternalAuthenticationHelper;
 use Drupal\user\Entity\User;
+use Psr\Log\LoggerInterface;
 
 /**
  * Provides functionality to generically update existing users.
@@ -31,7 +31,7 @@ class GroupUserUpdateProcessor {
   /**
    * Constructor for update process.
    */
-  public function __construct(LoggerChannelInterface $logger, LdapDetailLog $detail_log, ConfigFactory $config, ServerFactory $factory, StateInterface $state, ModuleHandler $module_handler, EntityTypeManagerInterface $entity_type_manager) {
+  public function __construct(LoggerInterface $logger, LdapDetailLog $detail_log, ConfigFactory $config, ServerFactory $factory, StateInterface $state, ModuleHandler $module_handler, EntityTypeManagerInterface $entity_type_manager) {
     $this->logger = $logger;
     $this->detailLog = $detail_log;
     $this->config = $config->get('ldap_user.settings');

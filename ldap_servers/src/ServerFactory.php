@@ -6,13 +6,13 @@ use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Link;
-use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
 use Drupal\ldap_servers\Helper\ConversionHelper;
 use Drupal\ldap_user\Helper\ExternalAuthenticationHelper;
 use Drupal\ldap_user\Helper\LdapConfiguration;
 use Drupal\user\UserInterface;
+use Psr\Log\LoggerInterface;
 
 /**
  * Helper class to working with the Server classes.
@@ -34,7 +34,7 @@ class ServerFactory implements LdapUserAttributesInterface {
   /**
    * Constructor.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, LoggerChannelInterface $logger, EntityTypeManagerInterface $entity_type_manager, CacheBackendInterface $cache) {
+  public function __construct(ConfigFactoryInterface $config_factory, LoggerInterface $logger, EntityTypeManagerInterface $entity_type_manager, CacheBackendInterface $cache) {
     $this->config = $config_factory;
     $this->logger = $logger;
     $this->entityManager = $entity_type_manager->getStorage('ldap_server');
