@@ -270,7 +270,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
    * @return bool
    *   Returns FALSE on invalid user or LDAP accounts.
    */
-  public function ldapAssociateDrupalAccount($drupal_username) {
+  public function ldapAssociateDrupalAccount($drupal_username): bool {
     if ($this->config->get('drupalAcctProvisionServer')) {
 
       /** @var \Drupal\ldap_servers\Entity\Server $ldap_server */
@@ -299,6 +299,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
       $this->account->set('ldap_user_last_checked', time());
       $this->account->set('ldap_user_ldap_exclude', 0);
       $this->saveAccount();
+      $this->externalAuth->save($this->account, 'ldap_user', $this->account->getAccountName());
 
       return TRUE;
     }
