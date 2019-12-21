@@ -290,7 +290,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
       }
 
       $persistent_uid = $ldap_server->derivePuidFromLdapResponse($this->ldapEntry);
-      if ($persistent_uid) {
+      if (!empty($persistent_uid)) {
         $this->account->set('ldap_user_puid', $persistent_uid);
       }
       $this->account->set('ldap_user_puid_property', $ldap_server->getUniquePersistentAttribute());
@@ -302,9 +302,8 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
 
       return TRUE;
     }
-    else {
-      return FALSE;
-    }
+
+    return FALSE;
   }
 
   /**
@@ -358,7 +357,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
     // Look for existing Drupal account with the same PUID. If found, update
     // that user instead of creating a new user.
     $persistentUid = $this->server->derivePuidFromLdapResponse($this->ldapEntry);
-    $accountFromPuid = $persistentUid ? $this->ldapUserManager->getUserAccountFromPuid($persistentUid) : FALSE;
+    $accountFromPuid = !empty($persistentUid) ? $this->ldapUserManager->getUserAccountFromPuid($persistentUid) : FALSE;
     if ($accountFromPuid) {
       $this->updateExistingAccountByPersistentUid($accountFromPuid);
     }
@@ -716,7 +715,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
 
     if ($this->fieldProvider->attributeIsSyncedOnEvent('[property.mail]', $event)) {
       $derived_mail = $this->server->deriveEmailFromLdapResponse($this->ldapEntry);
-      if ($derived_mail) {
+      if (!empty($derived_mail)) {
         $this->account->set('mail', $derived_mail);
       }
     }
@@ -730,7 +729,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
 
     if ($this->fieldProvider->attributeIsSyncedOnEvent('[field.ldap_user_puid]', $event)) {
       $ldap_user_puid = $this->server->derivePuidFromLdapResponse($this->ldapEntry);
-      if ($ldap_user_puid) {
+      if (!empty($ldap_user_puid)) {
         $this->account->set('ldap_user_puid', $ldap_user_puid);
       }
     }

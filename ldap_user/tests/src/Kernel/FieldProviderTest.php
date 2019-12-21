@@ -132,8 +132,8 @@ class FieldProviderTest extends EntityKernelTestBase implements LdapUserAttribut
 
     $processor->loadAttributes(FieldProvider::PROVISION_TO_DRUPAL, $this->server);
     $data = $processor->getConfigurableAttributesSyncedOnEvent(FieldProvider::EVENT_CREATE_DRUPAL_USER);
-    $this->assertEquals(2, count($data));
-    $this->assertEquals(2, count($data['[property.name]']->getProvisioningEvents()));
+    $this->assertCount(6, $data);
+    $this->assertCount(2, $data['[property.name]']->getProvisioningEvents());
     $data = $processor->getConfigurableAttributesSyncedOnEvent(FieldProvider::EVENT_SYNC_TO_LDAP_ENTRY);
     $this->assertEmpty($data);
 

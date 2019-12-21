@@ -21,7 +21,7 @@ class LoginValidatorLoginForm extends LoginValidatorBase {
    *   The form state.
    */
   public function validateLogin(FormStateInterface $form_state): FormStateInterface {
-    $this->authName = trim($form_state->getValue('name'));
+    $this->authName = trim($form_state->getValue('name') ?? '');
     $this->formState = $form_state;
 
     $this->detailLog->log(

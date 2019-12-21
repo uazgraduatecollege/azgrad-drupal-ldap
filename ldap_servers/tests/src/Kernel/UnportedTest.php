@@ -115,7 +115,7 @@ class UnportedTest extends EntityKernelTestBase {
 
     /** @var \Drupal\ldap_servers\Entity\Server $stub */
     $username = $stub->deriveUsernameFromLdapResponse(new Entry('undefined', []));
-    $this->assertEquals(FALSE, $username);
+    $this->assertEquals('', $username);
 
     $userActiveDirectory = new Entry('undefined', [
       'cn' => [0 => 'hpotter'],

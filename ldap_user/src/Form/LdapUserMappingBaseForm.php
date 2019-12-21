@@ -151,7 +151,7 @@ abstract class LdapUserMappingBaseForm extends LdapUserBaseForm {
 
         $mapping = new Mapping(
           $row['target'],
-          $this->t('User defined mapping for @field', ['@field' => $row['target']]),
+          (string) $this->t('User defined mapping for @field', ['@field' => $row['target']]),
           TRUE,
           TRUE,
           $events,

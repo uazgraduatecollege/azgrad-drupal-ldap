@@ -40,8 +40,8 @@ class ServerListBuilder extends ConfigEntityListBuilder {
     /** @var \Drupal\ldap_servers\Entity\Server $entity */
     $row = [];
     $row['label'] = $entity->label();
-    $row['bind_method'] = ucfirst($entity->getFormattedBind());
-    if ($entity->get('bind_method') == 'service_account') {
+    $row['bind_method'] = ucfirst((string) $entity->getFormattedBind());
+    if ($entity->get('bind_method') === 'service_account') {
       $row['binddn'] = $entity->get('binddn');
     }
     else {
@@ -60,8 +60,9 @@ class ServerListBuilder extends ConfigEntityListBuilder {
       'port',
     ];
 
+    $stored_entity = $this->storage->loadUnchanged($entity->id());
     foreach ($fields as $field) {
-      if ($entity->get($field) !== $entity->get($field)) {
+      if ($entity->get($field) !== $stored_entity->get($field)) {
         $row[$field] .= ' ' . $this->t('(overridden)');
       }
     }
@@ -78,35 +79,37 @@ class ServerListBuilder extends ConfigEntityListBuilder {
    * @return \Drupal\Core\StringTranslation\TranslatableMarkup
    *   The status string.
    */
-  private function checkStatus(Server $server) {
+  private function checkStatus(Server $server): \Drupal\Core\StringTranslation\TranslatableMarkup {
     /** @var \Drupal\ldap_servers\LdapBridge $bridge */
     $bridge = \Drupal::service('ldap.bridge');
     $bridge->setServer($server);
 
     if ($server->get('status')) {
       if ($bridge->bind()) {
-        return $this->t('Server available');
+        $result = $this->t('Server available');
       }
       else {
-        return $this->t('Binding issues, please see log.');
+        $result = $this->t('Binding issues, please see log.');
       }
     }
     else {
-      return $this->t('Deactivated');
+      $result = $this->t('Deactivated');
     }
+
+    return $result;
   }
 
   /**
    * Get Operations.
    *
-   * @param \Drupal\Core\Entity\EntityInterface $entity
+   * @param \Drupal\Core\Entity\EntityInterface|\Drupal\ldap_servers\ServerInterface $entity
    *   Entity interface.
    *
    * @return array
    *   Available operations in dropdown.
    */
   public function getOperations(EntityInterface $entity) {
-    $operations = parent::getDefaultOperations($entity);
+    $operations = $this->getDefaultOperations($entity);
     if (!isset($operations['test'])) {
       $operations['test'] = [
         'title' => $this->t('Test'),
@@ -114,7 +117,7 @@ class ServerListBuilder extends ConfigEntityListBuilder {
         'url' => Url::fromRoute('entity.ldap_server.test_form', ['ldap_server' => $entity->id()]),
       ];
     }
-    if ($entity->get('status') == 1) {
+    if ($entity->get('status')) {
       $operations['disable'] = [
         'title' => $this->t('Disable'),
         'weight' => 15,

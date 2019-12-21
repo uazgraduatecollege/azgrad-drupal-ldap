@@ -409,7 +409,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
    * {@inheritdoc}
    */
   public function deriveUsernameFromLdapResponse(Entry $ldap_entry): string {
-    $accountName = FALSE;
+    $accountName = '';
 
     if ($this->getAccountNameAttribute()) {
       if ($ldap_entry->hasAttribute($this->getAccountNameAttribute())) {
@@ -428,33 +428,32 @@ class Server extends ConfigEntityBase implements ServerInterface {
   /**
    * {@inheritdoc}
    */
-  public function deriveEmailFromLdapResponse(Entry $ldap_entry) {
+  public function deriveEmailFromLdapResponse(Entry $ldap_entry): string {
+    $mail = '';
     // Not using template.
     if ($this->getMailAttribute() && $ldap_entry->hasAttribute($this->getMailAttribute())) {
-      return $ldap_entry->getAttribute($this->getMailAttribute())[0];
+      $mail = $ldap_entry->getAttribute($this->getMailAttribute())[0];
     }
-
-    if ($this->getMailTemplate()) {
+    elseif ($this->getMailTemplate()) {
       // Template is of form [cn]@illinois.edu.
-      return $this->tokenProcessor->ldapEntryReplacementsForDrupalAccount($ldap_entry, $this->getMailTemplate());
+      $mail = $this->tokenProcessor->ldapEntryReplacementsForDrupalAccount($ldap_entry, $this->getMailTemplate());
     }
 
-    return FALSE;
+    return $mail;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function derivePuidFromLdapResponse(Entry $ldapEntry) {
+  public function derivePuidFromLdapResponse(Entry $ldapEntry): string {
+    $puid = '';
     if ($this->getUniquePersistentAttribute() && $ldapEntry->hasAttribute($this->getUniquePersistentAttribute())) {
       $puid = $ldapEntry->getAttribute($this->getUniquePersistentAttribute())[0];
-      if (($this->isUniquePersistentAttributeBinary())) {
-        return ConversionHelper::binaryConversionToString($puid);
+      if ($this->isUniquePersistentAttributeBinary()) {
+        $puid = ConversionHelper::binaryConversionToString($puid);
       }
-      return $puid;
     }
-
-    return FALSE;
+    return $puid;
   }
 
   /**
@@ -468,7 +467,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
    * {@inheritdoc}
    */
   public function hasAccountNameAttribute(): bool {
-    return empty($this->account_name_attr);
+    return !empty($this->account_name_attr);
   }
 
   /**

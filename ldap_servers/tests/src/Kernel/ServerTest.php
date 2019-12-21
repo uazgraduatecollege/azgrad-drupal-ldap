@@ -72,8 +72,8 @@ class ServerTest extends EntityKernelTestBase {
     $this->server->set('unique_persistent_attr', 'guid');
 
     $empty_entry = new Entry('undefined', []);
-    $this->assertEquals(FALSE, $this->server->deriveUsernameFromLdapResponse($empty_entry));
-    $this->assertEquals(FALSE, $this->server->deriveEmailFromLdapResponse($empty_entry));
+    $this->assertEquals('', $this->server->deriveUsernameFromLdapResponse($empty_entry));
+    $this->assertEquals('', $this->server->deriveEmailFromLdapResponse($empty_entry));
 
     $userOpenLdap = new Entry('cn=hpotter,ou=people,dc=hogwarts,dc=edu', [
       'cn' => [0 => 'hpotter'],

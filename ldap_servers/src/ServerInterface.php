@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace Drupal\ldap_servers;
 
+use Drupal\Core\Config\Entity\ConfigEntityInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Symfony\Component\Ldap\Entry;
 
 /**
  * Server configuration entity interface.
  */
-interface ServerInterface {
+interface ServerInterface extends ConfigEntityInterface {
 
   /**
    * Returns the formatted label of the bind method.
@@ -45,10 +46,10 @@ interface ServerInterface {
    * @param \Symfony\Component\Ldap\Entry $ldap_entry
    *   The LDAP entry.
    *
-   * @return string|bool
-   *   The user's mail value or FALSE if none present.
+   * @return string
+   *   The user's mail value.
    */
-  public function deriveEmailFromLdapResponse(Entry $ldap_entry);
+  public function deriveEmailFromLdapResponse(Entry $ldap_entry): string;
 
   /**
    * Fetches the persistent UID from the LDAP entry.

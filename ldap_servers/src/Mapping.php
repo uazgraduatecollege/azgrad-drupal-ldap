@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Drupal\ldap_servers;
 
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+
 /**
  * Interface for the synchronization mappings ldap_user provides.
  */

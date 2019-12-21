@@ -251,7 +251,7 @@ class FieldProvider implements LdapUserAttributesInterface {
     foreach ($fields as $key => $name) {
       $this->attributes[$key] = new Mapping(
         $key,
-        $name,
+        (string) $name,
         FALSE,
         TRUE,
         [self::EVENT_CREATE_DRUPAL_USER],
@@ -324,7 +324,7 @@ class FieldProvider implements LdapUserAttributesInterface {
   private function addDn(): void {
     $this->attributes['[field.ldap_user_current_dn]'] = new Mapping(
       '[field.ldap_user_current_dn]',
-      $this->t('Field: Most Recent DN'),
+      (string) $this->t('Field: Most Recent DN'),
       FALSE,
       TRUE,
       [self::EVENT_CREATE_DRUPAL_USER, self::EVENT_SYNC_TO_DRUPAL_USER],
@@ -416,7 +416,6 @@ class FieldProvider implements LdapUserAttributesInterface {
 
     $this->attributes['[property.timezone]'] = new Mapping(
       '[property.timezone]',
-
       'Property: User Timezone',
       TRUE,
       FALSE,
@@ -427,7 +426,6 @@ class FieldProvider implements LdapUserAttributesInterface {
 
     $this->attributes['[property.signature]'] = new Mapping(
       '[property.signature]',
-
       'Property: User Signature',
       TRUE,
       FALSE,
@@ -441,14 +439,14 @@ class FieldProvider implements LdapUserAttributesInterface {
     $user_fields = $this->entityFieldManager
       ->getFieldStorageDefinitions('user');
     foreach ($user_fields as $field_name => $field_instance) {
-      $field_id = sprintf("[field.%s]", $field_name);
+      $field_id = sprintf('[field.%s]', $field_name);
       if (isset($this->attributes[$field_id])) {
-        $this->attributes[$field_id]->isConfigurable(TRUE);
+        $this->attributes[$field_id]->setConfigurable(TRUE);
       }
       else {
         $this->attributes[$field_id] = new Mapping(
           $field_id,
-          $this->t('Field: @label', ['@label' => $field_instance->getLabel()]),
+          (string) $this->t('Field: @label', ['@label' => $field_instance->getLabel()]),
           TRUE,
           FALSE,
           [],

@@ -396,7 +396,7 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
    *   Response text.
    */
   protected function additionalDebuggingResponse(int $authenticationResult): TranslatableMarkup {
-    $information = '';
+    $information = $this->t('(unknown issue)');
     if ($authenticationResult === self::AUTHENTICATION_FAILURE_FIND) {
       $information = $this->t('(not found)');
     }
@@ -441,10 +441,10 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
    * @param int $error
    *   Error code.
    *
-   * @return string
+   * @return TranslatableMarkup
    *   Human readable error text.
    */
-  protected function authenticationHelpText(int $error): string {
+  protected function authenticationHelpText(int $error): TranslatableMarkup {
 
     switch ($error) {
       case self::AUTHENTICATION_FAILURE_BIND:
@@ -564,7 +564,7 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
   /**
    * Update an outdated email address.
    */
-  protected function fixOutdatedEmailAddress() {
+  protected function fixOutdatedEmailAddress(): void {
 
     if ($this->config->get('emailTemplateUsageNeverUpdate') && $this->emailTemplateUsed) {
       return;
@@ -574,11 +574,12 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
       return;
     }
 
-    if ($this->drupalUser->get('mail')->value == $this->serverDrupalUser->deriveEmailFromLdapResponse($this->ldapEntry)) {
+    if ($this->drupalUser->get('mail')->value === $this->serverDrupalUser->deriveEmailFromLdapResponse($this->ldapEntry)) {
       return;
     }
+    $update_type = $this->config->get('emailUpdate');
 
-    if ($this->config->get('emailUpdate') === 'update_notify' || $this->config->get('emailUpdate') === 'update') {
+    if (in_array($update_type, ['update_notify', 'update'], true)) {
       $this->drupalUser->set('mail', $this->serverDrupalUser->deriveEmailFromLdapResponse($this->ldapEntry));
       if (!$this->drupalUser->save()) {
         $this->logger
@@ -588,15 +589,13 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
           ]
           );
       }
-      else {
-        if ($this->config->get('emailUpdate') === 'update_notify') {
-          $this->messenger->addStatus(
-            $this->t('Your e-mail has been updated to match your current account (%mail).', [
-              '%mail' => $this->serverDrupalUser->deriveEmailFromLdapResponse($this->ldapEntry),
-            ]
-            )
-          );
-        }
+      elseif ($update_type === 'update_notify') {
+        $this->messenger->addStatus(
+          $this->t('Your e-mail has been updated to match your current account (%mail).', [
+            '%mail' => $this->serverDrupalUser->deriveEmailFromLdapResponse($this->ldapEntry),
+          ]
+          )
+        );
       }
     }
   }
@@ -610,7 +609,7 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
    */
   protected function updateAuthNameFromPuid(): void {
     $puid = $this->serverDrupalUser->derivePuidFromLdapResponse($this->ldapEntry);
-    if ($puid) {
+    if (!empty($puid)) {
       $this->drupalUser = $this->ldapUserManager->getUserAccountFromPuid($puid);
       /** @var \Drupal\user\Entity\User $userMatchingPuid */
       if ($this->drupalUser) {
@@ -673,7 +672,7 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
         $this->logger
           ->error('Derived Drupal username from attribute %account_name_attr returned no username for authname %authname.', [
             '%authname' => $this->authName,
-            '%account_name_attr' => $this->serverDrupalUser->getAccountNameAttribute(),
+            '%account_name_attr' => $user_attribute,
           ]
           );
         return FALSE;
@@ -810,7 +809,7 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
     // Do not provision Drupal account if provisioning disabled.
     $triggers = $this->configFactory->get('ldap_user.settings')
       ->get('drupalAcctProvisionTriggers');
-    if (!in_array(self::PROVISION_DRUPAL_USER_ON_USER_AUTHENTICATION, $triggers)) {
+    if (!in_array(self::PROVISION_DRUPAL_USER_ON_USER_AUTHENTICATION, $triggers, TRUE)) {
       $this->logger->error(
         'Drupal account for authname=%authname does not exist and provisioning of Drupal accounts on authentication is not enabled',
         ['%authname' => $this->authName]

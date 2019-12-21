@@ -427,7 +427,7 @@ final class ServerTestForm extends EntityForm {
           ];
 
           if ($this->ldapGroupManager->groupUserMembershipsFromAttributeConfigured()) {
-            $entry = $this->ldapServer->matchUsernameToExistingLdapEntry($username);
+            $entry = $this->ldapGroupManager->matchUsernameToExistingLdapEntry($username);
             $groupUserMembershipsFromUserAttributes = $this->ldapGroupManager->groupUserMembershipsFromUserAttr($entry);
             $settings = [
               '#theme' => 'item_list',
@@ -446,7 +446,7 @@ final class ServerTestForm extends EntityForm {
           ];
 
           if ($this->ldapGroupManager->groupGroupEntryMembershipsConfigured()) {
-            $ldap_entry = $this->ldapServer->matchUsernameToExistingLdapEntry($username);
+            $ldap_entry = $this->ldapGroupManager->matchUsernameToExistingLdapEntry($username);
             $groupUserMembershipsFromEntry = $this->ldapGroupManager->groupUserMembershipsFromEntry($ldap_entry);
             $settings = [
               '#theme' => 'item_list',
@@ -550,11 +550,12 @@ final class ServerTestForm extends EntityForm {
    * @param string $drupal_username
    *   The Drupal username.
    *
-   * @return \Symfony\Component\Ldap\Entry
-   *   Errors and the user.
+   * @return \Symfony\Component\Ldap\Entry|false
+   *   Entry.
    */
-  public function testUserMapping($drupal_username): Entry {
-    $ldap_user = $this->ldapServer->matchUsernameToExistingLdapEntry($drupal_username);
+  public function testUserMapping($drupal_username) {
+    $this->ldapGroupManager->setServerById($this->ldapServer->id());
+    $ldap_user = $this->ldapGroupManager->matchUsernameToExistingLdapEntry($drupal_username);
 
     if (!$ldap_user) {
       $this->resultsTables['basic'][] = [

@@ -18,9 +18,9 @@ sAMAccountName is the unique name attribute for your Active Directory.
 The following requirements need to be met for you to work with any of the LDAP
 modules.
 
-* PHP version 5.6.
+* PHP version 7.1
 * PHP LDAP extension.
-* Drupal Core >=8.2.0.
+* Drupal Core >=8.8.0.
 
 For SSO please see ldap_sso/README.md.
 
