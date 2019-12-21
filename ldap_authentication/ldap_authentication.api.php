@@ -5,6 +5,8 @@
  * Summary of hooks and other developer related functions.
  */
 
+declare(strict_types=1);
+
 use Symfony\Component\Ldap\Entry;
 
 /**
@@ -25,11 +27,11 @@ use Symfony\Component\Ldap\Entry;
 function hook_ldap_authentication_allowuser_results_alter(Entry $ldap_user, $name, &$hook_result) {
 
   // Other module has denied user, should not override.
-  if ($hook_result === FALSE) {
+  if (!$hook_result) {
     return;
   }
   // Other module has allowed, maybe override.
-  elseif ($hook_result === TRUE) {
+  elseif ($hook_result) {
     if (mymodule_dissapproves($ldap_user, $name)) {
       $hook_result = FALSE;
     }

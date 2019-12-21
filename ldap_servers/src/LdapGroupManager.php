@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\ldap_servers;
 
 use Drupal\ldap_servers\Helper\ConversionHelper;
@@ -14,7 +16,13 @@ class LdapGroupManager extends LdapBaseManager {
 
   use LdapTransformationTraits;
 
+  /**
+   * @var int
+   */
   const LDAP_QUERY_CHUNK = 50;
+  /**
+   * @var int
+   */
   const LDAP_QUERY_RECURSION_LIMIT = 10;
 
   /**
@@ -52,7 +60,7 @@ class LdapGroupManager extends LdapBaseManager {
    */
   private function getNestedGroupDnFilters(array $all_group_dns, array $or_filters, $level) {
     // Only 50 or so per query.
-    for ($key = 0; $key < count($or_filters); $key = $key + self::LDAP_QUERY_CHUNK) {
+    for ($key = 0; $key < count($or_filters); $key += self::LDAP_QUERY_CHUNK) {
       $current_or_filters = array_slice($or_filters, $key, self::LDAP_QUERY_CHUNK);
       // Example 1: (|(cn=group1)(cn=group2))
       // Example 2: (|(dn=cn=group1,ou=blah...)(dn=cn=group2,ou=blah...))
@@ -306,7 +314,7 @@ class LdapGroupManager extends LdapBaseManager {
       }
     }
 
-    if ($result !== FALSE) {
+    if ($result) {
       return $members;
     }
     else {
@@ -454,7 +462,7 @@ class LdapGroupManager extends LdapBaseManager {
               foreach ($object_classes as $object_class) {
                 $object_classes_ors[] = '(objectClass=' . $object_class . ')';
               }
-              $query_for_child_members = '&(|' . implode($object_classes_ors) . ')(' . $query_for_child_members . ')';
+              $query_for_child_members = '&(|' . implode('', $object_classes_ors) . ')(' . $query_for_child_members . ')';
             }
 
             $return_attributes = [
@@ -650,13 +658,13 @@ class LdapGroupManager extends LdapBaseManager {
     $max_levels
   ) {
 
-    if (!$this->groupGroupEntryMembershipsConfigured() || $current_group_entries->count() == 0) {
+    if (!$this->groupGroupEntryMembershipsConfigured() || $current_group_entries->count() === 0) {
       return FALSE;
     }
 
     $or_filters = [];
     /** @var \Symfony\Component\Ldap\Entry $group_entry */
-    foreach ($current_group_entries->toArray() as $key => $group_entry) {
+    foreach ($current_group_entries->toArray() as $group_entry) {
       if ($this->server->get('grp_memb_attr_match_user_attr') == 'dn') {
         $member_id = $group_entry->getDn();
       }
@@ -677,7 +685,7 @@ class LdapGroupManager extends LdapBaseManager {
       // Only 50 or so per query.
       // TODO: We can likely remove this since we are fetching one result at a
       // time with symfony/ldap.
-      for ($key = 0; $key < count($or_filters); $key = $key + self::LDAP_QUERY_CHUNK) {
+      for ($key = 0; $key < count($or_filters); $key += self::LDAP_QUERY_CHUNK) {
         $current_or_filters = array_slice($or_filters, $key, self::LDAP_QUERY_CHUNK);
         // Example 1: (|(cn=group1)(cn=group2))
         // Example 2: (|(dn=cn=group1,ou=blah...)(dn=cn=group2,ou=blah...))
@@ -755,7 +763,7 @@ class LdapGroupManager extends LdapBaseManager {
     $rdn_value = FALSE;
     foreach ($pairs as $p) {
       $pair = explode('=', $p);
-      if (mb_strtolower(trim($pair[0])) == $rdn) {
+      if (mb_strtolower(trim($pair[0])) === $rdn) {
         $rdn_value = ConversionHelper::unescapeDnValue(trim($pair[1]));
         break;
       }
@@ -785,7 +793,7 @@ class LdapGroupManager extends LdapBaseManager {
     $rdn_values = [];
     foreach ($pairs as $p) {
       $pair = explode('=', $p);
-      if (mb_strtolower(trim($pair[0])) == $rdn) {
+      if (mb_strtolower(trim($pair[0])) === $rdn) {
         $rdn_values[] = ConversionHelper::unescapeDnValue(trim($pair[1]));
         break;
       }

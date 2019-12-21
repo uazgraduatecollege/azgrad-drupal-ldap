@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\ldap_authentication\Form;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
@@ -90,7 +92,7 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
       $authenticationServers[$sid] = $ldap_server->get('label') . ' (' . $ldap_server->get('address') . ') Status: ' . $enabled;
     }
 
-    if (count($authenticationServers) == 0) {
+    if (count($authenticationServers) === 0) {
 
       $url = Url::fromRoute('entity.ldap_server.collection');
       $edit_server_link = Link::fromTextAndUrl($this->t('@path', ['@path' => 'LDAP Servers']), $url)
@@ -227,7 +229,7 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
         Requires LDAP Authorization to be enabled and configured!'),
       '#default_value' => $config->get('excludeIfNoAuthorizations'),
       '#description' => $this->t('If the user is not granted any Drupal roles, organic groups, etc. by LDAP Authorization, login will be denied.  LDAP Authorization must be enabled for this to work.'),
-      '#disabled' => (boolean) (!$this->moduleHandler->moduleExists('ldap_authorization')),
+      '#disabled' => !$this->moduleHandler->moduleExists('ldap_authorization'),
     ];
 
     $form['email'] = [

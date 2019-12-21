@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\ldap_servers\Processor;
 
 use Drupal\Component\Utility\Unicode;
@@ -211,7 +213,7 @@ class TokenProcessor {
         $tokens[sprintf('[%s]', mb_strtolower($name))] = $value;
         $parts_count[$name] = 0;
       }
-      $tokens[sprintf('[%s:%s]', mb_strtolower($name), (int) $parts_count[$name])] = $value;
+      $tokens[sprintf('[%s:%s]', mb_strtolower($name), $parts_count[$name])] = $value;
 
       $parts_last_value[$name] = $value;
       $parts_count[$name]++;
@@ -293,13 +295,13 @@ class TokenProcessor {
 
     $parts = explode(':', $token_key);
     $name = mb_strtolower($parts[0]);
-    $ordinal_key = isset($parts[1]) ? $parts[1] : 0;
+    $ordinal_key = $parts[1] ?? 0;
     $i = NULL;
 
     $value = $entry->getAttribute($name);
 
     // Don't use empty() since a 0, "", etc value may be a desired value.
-    if ($name == 'dn' || $value === NULL) {
+    if ($name === 'dn' || $value === NULL) {
       return [];
     }
     else {
@@ -308,7 +310,7 @@ class TokenProcessor {
         $i = ($count > 0) ? $count - 1 : 0;
         $value = $value[$i];
       }
-      elseif (is_numeric($ordinal_key) || $ordinal_key == '0') {
+      elseif (is_numeric($ordinal_key) || $ordinal_key === '0') {
         $value = $value[$ordinal_key];
       }
       else {
@@ -322,7 +324,7 @@ class TokenProcessor {
     $tokens[sprintf('[%s]', $key)] = $value;
     // We are redundantly setting the lowercase value here for consistency with
     // parent function.
-    if ($key != mb_strtolower($key)) {
+    if ($key !== mb_strtolower($key)) {
       $tokens[sprintf('[%s]', mb_strtolower($key))] = $value;
     }
     return $tokens;

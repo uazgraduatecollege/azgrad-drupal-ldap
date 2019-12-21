@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\ldap_user\Event;
 
 use Drupal\user\UserInterface;
@@ -10,6 +12,11 @@ use Symfony\Component\EventDispatcher\Event;
  */
 class LdapNewUserCreatedEvent extends Event {
 
+  /**
+   * Event name.
+   *
+   * @var string
+   */
   public const EVENT_NAME = 'ldap_new_drupal_user_created';
 
   /**

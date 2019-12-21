@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\ldap_user\EventSubscriber;
 
 use Drupal\Core\Config\ConfigFactory;
@@ -82,7 +84,7 @@ class LdapEntryDeletionSubscriber implements EventSubscriberInterface, LdapUserA
       $entries = $account->get('ldap_user_prov_entries')->getValue();
       foreach ($entries as $entry) {
         $parts = explode('|', $entry['value']);
-        if (count($parts) == 2) {
+        if (count($parts) === 2) {
           list($sid, $dn) = $parts;
           $tokens = [
             '%sid' => $sid,

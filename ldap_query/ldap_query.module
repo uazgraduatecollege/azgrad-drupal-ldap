@@ -5,6 +5,8 @@
  * Module file for ldap_query.
  */
 
+declare(strict_types=1);
+
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Entity\EntityInterface;
 

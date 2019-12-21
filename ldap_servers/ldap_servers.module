@@ -5,6 +5,8 @@
  * The ldap_servers module file.
  */
 
+declare(strict_types=1);
+
 use Drupal\Core\Routing\RouteMatchInterface;
 
 /**

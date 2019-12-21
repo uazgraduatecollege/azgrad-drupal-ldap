@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\ldap_servers;
 
 /**
@@ -40,9 +42,8 @@ trait LdapTransformationTraits {
     if (!empty($value) && ' ' === $value[\strlen($value) - 1]) {
       $value = substr($value, 0, -1) . '\\20';
     }
-    $value = str_replace("\r", '\0d', $value);
 
-    return $value;
+    return str_replace("\r", '\0d', $value);
   }
 
   /**

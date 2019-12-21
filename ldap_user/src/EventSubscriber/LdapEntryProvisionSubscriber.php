@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\ldap_user\EventSubscriber;
 
 use Drupal\ldap_servers\LdapTransformationTraits;
@@ -333,10 +335,10 @@ class LdapEntryProvisionSubscriber implements EventSubscriberInterface, LdapUser
         break;
     }
 
-    if ($attribute_conversion == 'to-md5') {
+    if ($attribute_conversion === 'to-md5') {
       $value = md5($value);
     }
-    elseif ($attribute_conversion == 'to-lowercase') {
+    elseif ($attribute_conversion === 'to-lowercase') {
       $value = mb_strtolower($value);
     }
 

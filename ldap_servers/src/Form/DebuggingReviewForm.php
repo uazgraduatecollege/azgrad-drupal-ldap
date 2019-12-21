@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\ldap_servers\Form;
 
 use Drupal\Core\Config\ConfigFactoryInterface;

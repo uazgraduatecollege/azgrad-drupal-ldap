@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\ldap_user\Plugin;
 
 use Drupal\Core\Form\FormStateInterface;
@@ -26,7 +28,7 @@ class MappingPlugin extends DefaultPluginManager {
     $row['foo'] = [
       '#type' => 'textfield',
       '#title' => $this->t('LDAP foo'),
-      '#default_value' => isset($mappings[$index]['foo']) ? $mappings[$index]['foo'] : NULL,
+      '#default_value' => $mappings[$index]['foo'] ?? NULL,
     ];
 
     return $row;

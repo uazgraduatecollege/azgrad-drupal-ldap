@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\ldap_authorization\Unit;
 
 use Drupal\authorization\Form\SubFormState;

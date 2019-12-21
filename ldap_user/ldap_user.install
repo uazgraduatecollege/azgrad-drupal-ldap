@@ -5,6 +5,8 @@
  * Install, update and uninstall functions for the LDAP User module.
  */
 
+declare(strict_types=1);
+
 use Drupal\Core\Database\Database;
 use Drupal\Core\Url;
 use Drupal\Component\Utility\Html;

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\ldap_authentication\Controller;
 
 use Drupal\Core\Form\FormStateInterface;

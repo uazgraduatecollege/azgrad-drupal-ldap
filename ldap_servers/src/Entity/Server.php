@@ -1,9 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\ldap_servers\Entity;
 
 use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ldap_servers\Helper\ConversionHelper;
 use Drupal\ldap_servers\LdapTransformationTraits;
 use Drupal\ldap_servers\ServerInterface;
@@ -366,7 +369,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
   /**
    * {@inheritdoc}
    */
-  public function getFormattedBind(): string {
+  public function getFormattedBind(): TranslatableMarkup {
     switch ($this->get('bind_method')) {
       case 'service_account':
       default:
@@ -465,7 +468,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
    * {@inheritdoc}
    */
   public function hasAccountNameAttribute(): bool {
-    return empty($this->account_name_attr) ? TRUE : FALSE;
+    return empty($this->account_name_attr);
   }
 
   /**

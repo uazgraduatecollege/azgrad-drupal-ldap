@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\ldap_servers;
 
 /**
@@ -235,11 +237,7 @@ class Mapping {
    *   Available.
    */
   public function hasProvisioningEvent($event): bool {
-    if (in_array($event, $this->provisioningEvents, TRUE)) {
-      return TRUE;
-    }
-
-    return FALSE;
+    return in_array($event, $this->provisioningEvents, TRUE);
   }
 
   /**

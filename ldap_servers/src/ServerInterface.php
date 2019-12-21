@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\ldap_servers;
 
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Symfony\Component\Ldap\Entry;
 
 /**
@@ -15,7 +18,7 @@ interface ServerInterface {
    * @return string
    *   The formatted text for the current bind.
    */
-  public function getFormattedBind(): string;
+  public function getFormattedBind(): TranslatableMarkup;
 
   /**
    * Fetch base DN.

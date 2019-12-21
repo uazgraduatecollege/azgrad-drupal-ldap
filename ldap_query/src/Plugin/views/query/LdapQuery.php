@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\ldap_query\Plugin\views\query;
 
 use Drupal\Component\Utility\Html;
@@ -140,7 +142,7 @@ class LdapQuery extends QueryPluginBase {
    * @return array
    *   Result data.
    */
-  private function sortResults(array $results) {
+  private function sortResults(array $results): array {
     $parameters = [];
     $orders = $this->orderby;
     $set = [];
@@ -160,7 +162,7 @@ class LdapQuery extends QueryPluginBase {
       }
     }
     $parameters[] = &$set;
-    call_user_func_array('array_multisort', $parameters);
+    array_multisort(...$parameters);
 
     $processedResults = [];
     foreach ($set as $row) {
@@ -187,7 +189,7 @@ class LdapQuery extends QueryPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function addOrderBy($table, $field, $order, $alias = '', $params = []) {
+  public function addOrderBy($table, $field, $order, $alias = '', $params = []): void {
     $this->orderby[] = [
       'field' => $field,
       'direction' => $order,
@@ -197,7 +199,7 @@ class LdapQuery extends QueryPluginBase {
   /**
    * {@inheritdoc}
    */
-  protected function defineOptions() {
+  protected function defineOptions(): array {
     $options = parent::defineOptions();
     $options['query_id'] = [
       'default' => NULL,
@@ -272,7 +274,7 @@ class LdapQuery extends QueryPluginBase {
     }
 
     if (count($groups) > 1) {
-      $output = '(' . self::LDAP_FILTER_OPERATORS[$this->groupOperator] . implode($groups) . ')';
+      $output = '(' . self::LDAP_FILTER_OPERATORS[$this->groupOperator] . implode('', $groups) . ')';
     }
     else {
       $output = array_pop($groups);

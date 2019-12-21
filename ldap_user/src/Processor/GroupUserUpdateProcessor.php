@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\ldap_user\Processor;
 
 use Drupal\Core\Config\ConfigFactory;

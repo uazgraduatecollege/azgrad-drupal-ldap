@@ -5,6 +5,8 @@
  * This module injects itself into Drupal's Authentication stack.
  */
 
+declare(strict_types=1);
+
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Url;

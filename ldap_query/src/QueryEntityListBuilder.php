@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\ldap_query;
 
 use Drupal\Core\Config\Entity\ConfigEntityListBuilder;

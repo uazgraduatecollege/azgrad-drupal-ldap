@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\ldap_authentication\Routing;
 
 use Drupal\Core\Config\ConfigFactory;
@@ -74,7 +76,7 @@ class EmailTemplateService implements EventSubscriberInterface {
     $result = FALSE;
 
     // We only want non-anonymous and non-1 users.
-    if ($proxy->id() != 1 && $proxy->isAuthenticated()) {
+    if ($proxy->id() !== 1 && $proxy->isAuthenticated()) {
       $user = User::load($proxy->id());
       $regex = \Drupal::config('ldap_authentication.settings')
         ->get('emailTemplateUsagePromptRegex');

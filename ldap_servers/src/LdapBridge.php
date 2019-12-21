@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\ldap_servers;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -137,8 +139,8 @@ class LdapBridge {
         $password = CredentialsStorage::getPassword();
       }
 
-      if (mb_strlen($password) == 0 || mb_strlen($userDn) == 0) {
-        $this->logger->notice("LDAP bind failure due to missing credentials for user userdn=%userdn", [
+      if ($password === '' || $userDn === '') {
+        $this->logger->notice('LDAP bind failure due to missing credentials for user userdn=%userdn', [
           '%userdn' => $userDn,
         ]);
         return FALSE;
@@ -149,13 +151,13 @@ class LdapBridge {
       $this->ldap->bind($userDn, $password);
     }
     catch (ConnectionException $e) {
-      $this->logger->notice("LDAP connection failure: %message.", [
+      $this->logger->notice('LDAP connection failure: %message.', [
         '%message' => $e->getMessage(),
       ]);
       return FALSE;
     }
     catch (LdapException $e) {
-      $this->logger->notice("LDAP bind failure: %message.", [
+      $this->logger->notice('LDAP bind failure: %message.', [
         '%message' => $e->getMessage(),
       ]);
       return FALSE;

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\ldap_user\Processor;
 
 use Drupal\Core\Config\ConfigFactory;
@@ -206,7 +208,7 @@ class OrphanProcessor {
         substr($hex_string, 16, 4) . substr($hex_string, 20, 12);
     }
 
-    for ($i = 0; $i < strlen($value); $i = $i + 2) {
+    for ($i = 0; $i < strlen($value); $i += 2) {
       $match .= '\\' . substr($value, $i, 2);
     }
 

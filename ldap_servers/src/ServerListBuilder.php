@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\ldap_servers;
 
 use Drupal\Core\Url;
@@ -59,7 +61,7 @@ class ServerListBuilder extends ConfigEntityListBuilder {
     ];
 
     foreach ($fields as $field) {
-      if ($entity->get($field) != $entity->get($field)) {
+      if ($entity->get($field) !== $entity->get($field)) {
         $row[$field] .= ' ' . $this->t('(overridden)');
       }
     }

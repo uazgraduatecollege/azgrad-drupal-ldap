@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\ldap_servers\Form;
 
 use Drupal\Core\Entity\EntityForm;
@@ -479,17 +481,15 @@ class ServerForm extends EntityForm {
 
     $status = $this->entity->save();
 
-    switch ($status) {
-      case SAVED_NEW:
-        $this->messenger()->addMessage($this->t('Created the %label Server.', [
-          '%label' => $this->entity->label(),
-        ]));
-        break;
-
-      default:
-        $this->messenger()->addMessage($this->t('Saved the %label Server.', [
-          '%label' => $this->entity->label(),
-        ]));
+    if ($status == SAVED_NEW) {
+      $this->messenger()->addMessage($this->t('Created the %label Server.', [
+        '%label' => $this->entity->label(),
+      ]));
+    }
+    else {
+      $this->messenger()->addMessage($this->t('Saved the %label Server.', [
+        '%label' => $this->entity->label(),
+      ]));
     }
     $form_state->setRedirectUrl($this->entity->toUrl('collection'));
   }

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\ldap_authentication\Kernel;
 
 use Drupal\Core\Form\FormState;

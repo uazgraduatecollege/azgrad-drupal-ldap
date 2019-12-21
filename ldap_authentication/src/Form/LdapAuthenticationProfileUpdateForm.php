@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\ldap_authentication\Form;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;

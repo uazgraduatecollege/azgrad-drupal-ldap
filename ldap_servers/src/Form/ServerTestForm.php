@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\ldap_servers\Form;
 
 use Drupal\Component\Utility\Unicode;
@@ -635,13 +637,13 @@ final class ServerTestForm extends EntityForm {
 
     $this->resultsTables['group1'][] = [
       $this->t('Starting test without group (group was deleted if present): @group', ['@group' => $new_group]),
-      $this->booleanResult(($this->ldapGroupManager->checkDnExists($new_group) === FALSE)),
+      $this->booleanResult((!$this->ldapGroupManager->checkDnExists($new_group))),
     ];
 
     // Make sure there are no entries being a member of it.
     $this->resultsTables['group1'][] = [
       $this->t('Are there no members in the writable group?', ['@group' => $new_group]),
-      $this->booleanResult(($this->ldapGroupManager->groupMembers($new_group) === FALSE)),
+      $this->booleanResult((!$this->ldapGroupManager->groupMembers($new_group))),
     ];
 
     // Add group.
@@ -661,7 +663,7 @@ final class ServerTestForm extends EntityForm {
     }
     $this->resultsTables['group1'][] = [
       $this->t('Call to all members in an empty group returns an empty array for group', ['@group' => $new_group]),
-      $this->booleanResult((is_array($result) && empty($result))),
+      $this->booleanResult(($result === [])),
     ];
 
     // Add member to group.
@@ -696,7 +698,7 @@ final class ServerTestForm extends EntityForm {
         '@group' => $new_group,
         '@dn' => $member,
       ]),
-      $this->booleanResult((is_array($result) && empty($result))),
+      $this->booleanResult(($result === [])),
     ];
 
     if ($openLdap) {

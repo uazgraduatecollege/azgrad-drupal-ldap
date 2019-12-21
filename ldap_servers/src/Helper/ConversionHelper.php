@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\ldap_servers\Helper;
 
 /**
@@ -48,14 +50,13 @@ class ConversionHelper {
    *   Converted string.
    */
   public static function hex2asc($string) {
-    $string = preg_replace_callback(
-      "/\\\([0-9A-Fa-f]{2})/",
-      function (array $matches) {
-        return chr(hexdec($matches[0]));
-      },
-      $string
-    );
-    return $string;
+    return preg_replace_callback(
+        "/\\\([0-9A-Fa-f]{2})/",
+        function (array $matches) {
+          return chr(hexdec($matches[0]));
+        },
+        $string
+      );
   }
 
   /**
@@ -73,7 +74,7 @@ class ConversionHelper {
       $char = substr($string, $i, 1);
       if (ord($char) < 32) {
         $hex = dechex(ord($char));
-        if (strlen($hex) == 1) {
+        if (strlen($hex) === 1) {
           $hex = '0' . $hex;
         }
         $string = str_replace($char, '\\' . $hex, $string);

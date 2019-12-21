@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\ldap_user\Form;
 
 use Drupal\Core\Form\FormStateInterface;
@@ -240,7 +242,7 @@ abstract class LdapUserMappingBaseForm extends LdapUserBaseForm {
     }
 
     $index = 0;
-    foreach ($available_mappings as $target_id => $mapping) {
+    foreach ($available_mappings as $mapping) {
       if ($mapping->isEnabled()) {
         $rows[$index] = $this->getMappingRow($mapping, $user_attribute_options, $index);
         $index++;

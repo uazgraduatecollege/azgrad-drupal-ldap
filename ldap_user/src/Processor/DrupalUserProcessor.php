@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\ldap_user\Processor;
 
 use Drupal\Core\Config\ConfigFactory;
@@ -244,14 +246,9 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
         return TRUE;
       }
     }
-
-    // Exclude users who have been manually flagged as excluded.
-    if ($account->get('ldap_user_ldap_exclude')->value == 1) {
-      return TRUE;
-    }
-
-    // Everyone else is fine.
-    return FALSE;
+    // Exclude users who have been manually flagged as excluded, everyone else
+    // is fine.
+    return $account->get('ldap_user_ldap_exclude')->value == 1;
   }
 
   /**
@@ -402,18 +399,21 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
    * @return bool
    *   Whether the user is LDAP associated.
    */
-  public function isUserLdapAssociated(UserInterface $account) {
+  public function isUserLdapAssociated(UserInterface $account): bool {
 
     $associated = FALSE;
 
-    if (property_exists($account, 'ldap_user_current_dn') &&
-      !empty($account->get('ldap_user_current_dn')->value)) {
+    if (
+      property_exists($account, 'ldap_user_current_dn')
+      && !empty($account->get('ldap_user_current_dn')->value)
+    ) {
       $associated = TRUE;
     }
-    elseif ($account->id()) {
-      if ($this->externalAuth->get($account->id(), 'ldap_user')) {
-        $associated = TRUE;
-      }
+    elseif (
+      $account->id()
+      && $this->externalAuth->get($account->id(), 'ldap_user')
+    ) {
+      $associated = TRUE;
     }
 
     return $associated;
@@ -425,7 +425,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
    * @param \Drupal\user\UserInterface $account
    *   The Drupal user.
    */
-  public function drupalUserUpdate(UserInterface $account) {
+  public function drupalUserUpdate(UserInterface $account): void {
     $this->account = $account;
     if ($this->excludeUser($this->account)) {
       return;

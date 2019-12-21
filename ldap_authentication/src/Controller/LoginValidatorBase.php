@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\ldap_authentication\Controller;
 
 use Drupal\Component\Render\FormattableMarkup;
@@ -9,6 +11,7 @@ use Drupal\Core\Extension\ModuleHandler;
 use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\externalauth\Authmap;
 use Drupal\ldap_authentication\AuthenticationServers;
 use Drupal\ldap_servers\Helper\CredentialsStorage;
@@ -26,11 +29,46 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
 
   use StringTranslationTrait;
 
+  /**
+   * Failure value.
+   *
+   * @var int
+   */
   public const AUTHENTICATION_FAILURE_BIND = 2;
+
+  /**
+   * Failure value.
+   *
+   * @var int
+   */
   public const AUTHENTICATION_FAILURE_FIND = 3;
+
+  /**
+   * Failure value.
+   *
+   * @var int
+   */
   public const AUTHENTICATION_FAILURE_DISALLOWED = 4;
+
+  /**
+   * Failure value.
+   *
+   * @var int
+   */
   public const AUTHENTICATION_FAILURE_CREDENTIALS = 5;
+
+  /**
+   * Success value.
+   *
+   * @var int
+   */
   public const AUTHENTICATION_SUCCESS = 6;
+
+  /**
+   * Failure value.
+   *
+   * @var int
+   */
   public const AUTHENTICATION_FAILURE_SERVER = 8;
 
   /**
@@ -351,19 +389,19 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
   /**
    * Provides formatting for authentication failures.
    *
-   * @return string
+   * @param int $authenticationResult
+   *   Case.
+   *
+   * @return TranslatableMarkup
    *   Response text.
    */
-  protected function additionalDebuggingResponse($authenticationResult) {
+  protected function additionalDebuggingResponse(int $authenticationResult): TranslatableMarkup {
     $information = '';
-    switch ($authenticationResult) {
-      case self::AUTHENTICATION_FAILURE_FIND:
-        $information = $this->t('(not found)');
-        break;
-
-      case self::AUTHENTICATION_FAILURE_CREDENTIALS:
-        $information = $this->t('(wrong credentials)');
-        break;
+    if ($authenticationResult === self::AUTHENTICATION_FAILURE_FIND) {
+      $information = $this->t('(not found)');
+    }
+    elseif ($authenticationResult === self::AUTHENTICATION_FAILURE_CREDENTIALS) {
+      $information = $this->t('(wrong credentials)');
     }
     return $information;
   }
@@ -374,7 +412,7 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
    * @param int $authenticationResult
    *   The error code.
    */
-  protected function failureResponse($authenticationResult) {
+  protected function failureResponse(int $authenticationResult): void {
     // Fail scenario 1. LDAP auth exclusive and failed  throw error so no other
     // authentication methods are allowed.
     if ($this->config->get('authenticationMode') === 'exclusive') {
@@ -406,7 +444,7 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
    * @return string
    *   Human readable error text.
    */
-  protected function authenticationHelpText($error) {
+  protected function authenticationHelpText(int $error): string {
 
     switch ($error) {
       case self::AUTHENTICATION_FAILURE_BIND:
@@ -514,7 +552,7 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
     $hook_result = TRUE;
     $this->moduleHandler->alter('ldap_authentication_allowuser_results', $ldap_user, $authName, $hook_result);
 
-    if ($hook_result === FALSE) {
+    if (!$hook_result) {
       $this->logger->notice('Authentication Allow User Result=refused for %name', ['%name' => $authName]);
       return FALSE;
     }
@@ -570,7 +608,7 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
    * in another Drupal account; this means username has changed and needs to be
    * saved in Drupal account.
    */
-  protected function updateAuthNameFromPuid() {
+  protected function updateAuthNameFromPuid(): void {
     $puid = $this->serverDrupalUser->derivePuidFromLdapResponse($this->ldapEntry);
     if ($puid) {
       $this->drupalUser = $this->ldapUserManager->getUserAccountFromPuid($puid);
@@ -599,7 +637,7 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
    * @return bool
    *   Continue authentication.
    */
-  protected function validateCommonLoginConstraints() {
+  protected function validateCommonLoginConstraints(): bool {
 
     if (!$this->authenticationServers->authenticationServersAvailable()) {
       $this->logger->error('No LDAP servers configured for authentication.');
@@ -679,7 +717,7 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
    *   User matched.
    */
   protected function matchExistingUserWithLdap(): bool {
-    if ($this->configFactory->get('ldap_user.settings')->get('userConflictResolve') == self::USER_CONFLICT_LOG) {
+    if ($this->configFactory->get('ldap_user.settings')->get('userConflictResolve') === self::USER_CONFLICT_LOG) {
       if ($account_with_same_email = user_load_by_mail($this->serverDrupalUser->deriveEmailFromLdapResponse($this->ldapEntry))) {
         /** @var \Drupal\user\UserInterface $account_with_same_email */
         $this->logger
@@ -790,9 +828,9 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
      */
 
     if ($this->configFactory->get('ldap_user.settings')
-      ->get('acctCreation') == self::ACCOUNT_CREATION_USER_SETTINGS_FOR_LDAP &&
+      ->get('acctCreation') === self::ACCOUNT_CREATION_USER_SETTINGS_FOR_LDAP &&
       $this->configFactory->get('user.settings')
-        ->get('register') == USER_REGISTER_VISITORS_ADMINISTRATIVE_APPROVAL
+        ->get('register') === UserInterface::REGISTER_VISITORS_ADMINISTRATIVE_APPROVAL
     ) {
       // If admin approval required, set status to 0.
       $user_values = ['name' => $this->drupalUserName, 'status' => 0];

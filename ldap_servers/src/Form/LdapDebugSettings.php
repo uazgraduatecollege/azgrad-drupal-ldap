@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\ldap_servers\Form;
 
 use Drupal\Core\Form\ConfigFormBase;
@@ -36,8 +38,7 @@ class LdapDebugSettings extends ConfigFormBase {
       '#description' => $this->t('This is generally useful for debugging and reporting issues with the LDAP modules and should not be left enabled in a production environment.'),
       '#default_value' => $this->config('ldap_servers.settings')->get('watchdog_detail'),
     ];
-    $form = parent::buildForm($form, $form_state);
-    return $form;
+    return parent::buildForm($form, $form_state);
   }
 
   /**

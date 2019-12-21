@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\ldap_query\Controller;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;

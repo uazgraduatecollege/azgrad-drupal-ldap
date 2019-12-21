@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\ldap_authorization\Plugin\authorization\Provider;
 
 use Drupal\authorization\AuthorizationSkipAuthorization;

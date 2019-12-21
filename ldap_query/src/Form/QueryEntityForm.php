@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\ldap_query\Form;
 
 use Drupal\Core\Entity\EntityForm;
@@ -161,19 +163,17 @@ class QueryEntityForm extends EntityForm {
     $ldap_query_entity = $this->entity;
     $status = $ldap_query_entity->save();
 
-    switch ($status) {
-      case SAVED_NEW:
-        $this->messenger()
-          ->addMessage($this->t('Created the %label LDAP Queries.', [
-            '%label' => $ldap_query_entity->label(),
-          ]));
-        break;
-
-      default:
-        $this->messenger()
-          ->addMessage($this->t('Saved the %label LDAP Queries.', [
-            '%label' => $ldap_query_entity->label(),
-          ]));
+    if ($status == SAVED_NEW) {
+      $this->messenger()
+        ->addMessage($this->t('Created the %label LDAP Queries.', [
+          '%label' => $ldap_query_entity->label(),
+        ]));
+    }
+    else {
+      $this->messenger()
+        ->addMessage($this->t('Saved the %label LDAP Queries.', [
+          '%label' => $ldap_query_entity->label(),
+        ]));
     }
     $form_state->setRedirectUrl($ldap_query_entity->toUrl('collection'));
   }

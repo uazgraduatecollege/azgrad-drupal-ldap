@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\ldap_servers;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -183,12 +185,7 @@ abstract class LdapBaseManager {
     catch (LdapException $e) {
       return FALSE;
     }
-
-    if ($result->count() > 0) {
-      return TRUE;
-    }
-
-    return FALSE;
+    return $result->count() > 0;
   }
 
   /**
@@ -382,7 +379,7 @@ abstract class LdapBaseManager {
 
     foreach ($this->server->getBaseDn() as $base_dn) {
       $result = $this->queryLdapForUsername($base_dn, $drupal_username);
-      if ($result === FALSE || $result instanceof Entry) {
+      if (!$result || $result instanceof Entry) {
         return $result;
       }
     }
@@ -460,10 +457,10 @@ abstract class LdapBaseManager {
       return FALSE;
     }
 
-    if ($ldap_response->count() == 0) {
+    if ($ldap_response->count() === 0) {
       return NULL;
     }
-    elseif ($ldap_response->count() != 1) {
+    elseif ($ldap_response->count() !== 1) {
       // Must find exactly one user for authentication to work.
       $this->logger->error('Error: %count users found with %filter under %base_dn.', [
         '%count' => $ldap_response->count(),
