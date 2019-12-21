@@ -11,7 +11,6 @@ use Drupal\ldap_servers\Helper\CredentialsStorage;
 use Symfony\Component\Ldap\Exception\ConnectionException;
 use Symfony\Component\Ldap\Exception\LdapException;
 use Symfony\Component\Ldap\Ldap;
-use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
  * Ldap Bridge to symfony/ldap.
@@ -94,15 +93,11 @@ class LdapBridge {
    *   Server object.
    */
   public function setServer(Server $server): void {
-    $options = new OptionsResolver();
-    // TODO: Fix network timeout option
-    // $options->setAllowedValues('network_timeout', $this->server->get('timeout'));.
     $parameters = [
       'host' => $server->get('address'),
       'port' => $server->get('port'),
       'encryption' => 'none',
-      // TODO network timeout.
-      'options' => [],
+      'options' => ['timeout' => $server->getTimeout()],
     ];
     if ($server->isUsingStartTls()) {
       $parameters['encryption'] = 'tls';

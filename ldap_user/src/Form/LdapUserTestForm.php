@@ -203,16 +203,17 @@ class LdapUserTestForm extends FormBase implements LdapUserAttributesInterface {
     $sync_trigger_description = self::$syncTriggerOptions[$selected_action];
     foreach ([self::PROVISION_TO_DRUPAL, self::PROVISION_TO_LDAP] as $direction) {
       if ($this->provisionEnabled($direction, $selected_action)) {
-        if ($direction == self::PROVISION_TO_DRUPAL) {
+        if ($direction === self::PROVISION_TO_DRUPAL) {
           $this->drupalUserProcessor->createDrupalUserFromLdapEntry($account);
           $results['createDrupalUserFromLdapEntry method results']["context = $sync_trigger_description"]['proposed'] = $account;
         }
         else {
           // @FIXME
-          // This is not testing all supported event, only the new user created event.
+          // This is not testing all supported event,
+          // only the new user created event.
           // The form needs to be restructured in general for those!
           // $event = new LdapNewUserCreatedEvent($account);
-          // /** @var \Symfony\Component\EventDispatcher\EventDispatcher $dispatcher */
+          // /** @var EventDispatcher $dispatcher */
           // $dispatcher = \Drupal::service('event_dispatcher');
           // $dispatcher->dispatch(LdapNewUserCreatedEvent::EVENT_NAME, $event);
           // @FIXME.
@@ -220,7 +221,7 @@ class LdapUserTestForm extends FormBase implements LdapUserAttributesInterface {
         }
       }
       else {
-        if ($direction == self::PROVISION_TO_DRUPAL) {
+        if ($direction === self::PROVISION_TO_DRUPAL) {
           $results['createDrupalUserFromLdapEntry method results']["context = $sync_trigger_description"] = 'Not enabled.';
         }
         else {
@@ -258,15 +259,15 @@ class LdapUserTestForm extends FormBase implements LdapUserAttributesInterface {
    * @return bool
    *   Provisioning enabled.
    */
-  private function provisionEnabled($direction, $provision_trigger) {
+  private function provisionEnabled($direction, $provision_trigger): bool {
     $result = FALSE;
 
-    $config = $this->config->get('ldap_user.settings');
-    if ($direction == self::PROVISION_TO_LDAP) {
-      $result = in_array($provision_trigger, $config->get('ldapEntryProvisionTriggers'));
+    $config = $this->configFactory()->get('ldap_user.settings');
+    if ($direction === self::PROVISION_TO_LDAP) {
+      $result = in_array($provision_trigger, $config->get('ldapEntryProvisionTriggers'), TRUE);
     }
-    elseif ($direction == self::PROVISION_TO_DRUPAL) {
-      $result = in_array($provision_trigger, $config->get('drupalAcctProvisionTriggers'));
+    elseif ($direction === self::PROVISION_TO_DRUPAL) {
+      $result = in_array($provision_trigger, $config->get('drupalAcctProvisionTriggers'), TRUE);
     }
 
     return $result;

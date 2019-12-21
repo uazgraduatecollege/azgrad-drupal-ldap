@@ -68,9 +68,11 @@ class TokenTest extends UnitTestCase {
     $this->assertEquals('thisold' . $this->ldapEntry->getAttribute('house')[0], $mixed);
 
     $compound = $processor->ldapEntryReplacementsForDrupalAccount($this->ldapEntry, '[samaccountname:0][house:0]');
-    // TODO Expected :'hpotterGryffindor', Actual:'[samaccountname:0]Gryffindor'
+    // @TODO Expected :'hpotterGryffindor', Actual:'[samaccountname:0]Gryffindor'
+    // @TODO Beta blocker.
     // $this->assertEquals(
-    // $this->ldapEntry->getAttribute('sAMAccountName')[0] . $this->ldapEntry->getAttribute('house')[0],
+    // $this->ldapEntry->getAttribute('sAMAccountName')[0] .
+    // $this->ldapEntry->getAttribute('house')[0],
     // $compound
     // );
     // End TODO.
@@ -84,6 +86,7 @@ class TokenTest extends UnitTestCase {
     $this->assertEquals($this->ldapEntry->getAttribute('house')[1], $houseLast);
 
     $sAMAccountName = $processor->ldapEntryReplacementsForDrupalAccount($this->ldapEntry, '[samaccountname:0]');
+    // @TODO Beta blocker.
     // TODO: Expected :'hpotter', Actual: NULL
     // $this->assertEquals($this->ldapEntry->getAttribute('sAMAccountName')[0], $sAMAccountName);.
     $sAMAccountNameMixedCase = $processor->ldapEntryReplacementsForDrupalAccount($this->ldapEntry, '[sAMAccountName:0]');

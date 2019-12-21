@@ -392,7 +392,7 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
    * @param int $authenticationResult
    *   Case.
    *
-   * @return TranslatableMarkup
+   * @return \Drupal\Core\StringTranslation\TranslatableMarkup
    *   Response text.
    */
   protected function additionalDebuggingResponse(int $authenticationResult): TranslatableMarkup {
@@ -441,7 +441,7 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
    * @param int $error
    *   Error code.
    *
-   * @return TranslatableMarkup
+   * @return \Drupal\Core\StringTranslation\TranslatableMarkup
    *   Human readable error text.
    */
   protected function authenticationHelpText(int $error): TranslatableMarkup {
@@ -579,7 +579,7 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
     }
     $update_type = $this->config->get('emailUpdate');
 
-    if (in_array($update_type, ['update_notify', 'update'], true)) {
+    if (in_array($update_type, ['update_notify', 'update'], TRUE)) {
       $this->drupalUser->set('mail', $this->serverDrupalUser->deriveEmailFromLdapResponse($this->ldapEntry));
       if (!$this->drupalUser->save()) {
         $this->logger

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Drupal\ldap_servers;
 
 use Drupal\ldap_servers\Helper\ConversionHelper;
-use Symfony\Component\Ldap\Adapter\ExtLdap\Collection;
+use Robo\Collection\CollectionInterface;
 use Symfony\Component\Ldap\Entry;
 use Symfony\Component\Ldap\Exception\LdapException;
 
@@ -17,10 +17,15 @@ class LdapGroupManager extends LdapBaseManager {
   use LdapTransformationTraits;
 
   /**
+   * Query chunk.
+   *
    * @var int
    */
   const LDAP_QUERY_CHUNK = 50;
+
   /**
+   * Recursion limit.
+   *
    * @var int
    */
   const LDAP_QUERY_RECURSION_LIMIT = 10;
@@ -606,7 +611,8 @@ class LdapGroupManager extends LdapBaseManager {
     // Need to search on all basedns one at a time.
     foreach ($this->server->getBaseDn() as $baseDn) {
       // Only need dn, so empty array forces return of no attributes.
-      // TODO: See if this syntax is correct and returns us valid DN with no attributes.
+      // TODO: See if this syntax is correct.
+      // It should return a valid DN with n attributes.
       try {
         $group_query = '(&(objectClass=' . $this->server->get('grp_object_cat') . ')(' . $this->server->get('grp_memb_attr') . "=$member_value))";
         $ldap_result = $this->ldap->query($baseDn, $group_query, ['filter' => []])->execute();
@@ -629,7 +635,7 @@ class LdapGroupManager extends LdapBaseManager {
   /**
    * Recurse through all groups, adding parent groups to $all_group_dns array.
    *
-   * @param \Symfony\Component\Ldap\Adapter\ExtLdap\Collection $current_group_entries
+   * @param \Symfony\Component\Ldap\Adapter\CollectionInterface|Entry[] $current_group_entries
    *   Entries of LDAP groups, which are that are starting point. Should include
    *   at least one entry.
    * @param array $all_group_dns
@@ -651,12 +657,12 @@ class LdapGroupManager extends LdapBaseManager {
    * @TODO: See if we can do this with groupAllMembers().
    */
   private function groupMembershipsFromEntryRecursive(
-    Collection $current_group_entries,
+    CollectionInterface $current_group_entries,
     array &$all_group_dns,
     array &$tested_group_ids,
     $level,
     $max_levels
-  ) {
+  ): bool {
 
     if (!$this->groupGroupEntryMembershipsConfigured() || $current_group_entries->count() === 0) {
       return FALSE;
@@ -665,7 +671,7 @@ class LdapGroupManager extends LdapBaseManager {
     $or_filters = [];
     /** @var \Symfony\Component\Ldap\Entry $group_entry */
     foreach ($current_group_entries->toArray() as $group_entry) {
-      if ($this->server->get('grp_memb_attr_match_user_attr') == 'dn') {
+      if ($this->server->get('grp_memb_attr_match_user_attr') === 'dn') {
         $member_id = $group_entry->getDn();
       }
       // Maybe cn, uid, etc is held.
@@ -681,11 +687,12 @@ class LdapGroupManager extends LdapBaseManager {
       }
     }
 
-    if (count($or_filters)) {
+    $filter_count = count($or_filters);
+    if ($filter_count > 0) {
       // Only 50 or so per query.
       // TODO: We can likely remove this since we are fetching one result at a
       // time with symfony/ldap.
-      for ($key = 0; $key < count($or_filters); $key += self::LDAP_QUERY_CHUNK) {
+      for ($key = 0; $key < $filter_count; $key += self::LDAP_QUERY_CHUNK) {
         $current_or_filters = array_slice($or_filters, $key, self::LDAP_QUERY_CHUNK);
         // Example 1: (|(cn=group1)(cn=group2))
         // Example 2: (|(dn=cn=group1,ou=blah...)(dn=cn=group2,ou=blah...))

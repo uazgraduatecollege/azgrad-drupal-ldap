@@ -10,8 +10,8 @@ use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 /**
  * The detailed logger for the LDAP modules.
  *
- * This logger is only active the ldap_servers setting watchdog_detail is active.
- * When it is, it passes messages to the regular logger with priority debug.
+ * This logger is only active when the ldap_servers setting watchdog_detail is
+ * active. It passes messages to the regular logger with priority debug.
  */
 class LdapDetailLog {
 

@@ -239,13 +239,15 @@ class TokenProcessor {
    *
    * @param string $name
    *   Name.
-   * @param array|null $value
+   * @param array|null|string $value
    *   Value.
    *
    * @return array
    *   Tokens.
+   *
+   * @TODO: Clean up input types of $value.
    */
-  private function processLdapEntryAttribute($name, $value): array {
+  private function processLdapEntryAttribute(string $name, $value): array {
     $tokens = [];
     $key = mb_strtolower($name);
 
@@ -266,7 +268,8 @@ class TokenProcessor {
         }
       }
       elseif (is_scalar($value)) {
-        // Only one entry (as string), example output: ['cn', 'cn:0', 'cn:last'].
+        // Only one entry (as string).
+        // Example output: ['cn', 'cn:0', 'cn:last'].
         $tokens[sprintf('[%s]', $key)] = $value;
         $tokens[sprintf('[%s:0]', $key)] = $value;
         $tokens[sprintf('[%s:last]', $key)] = $value;
@@ -304,19 +307,18 @@ class TokenProcessor {
     if ($name === 'dn' || $value === NULL) {
       return [];
     }
+
+    $count = count($value);
+    if ($ordinal_key === 'last') {
+      $i = ($count > 0) ? $count - 1 : 0;
+      $value = $value[$i];
+    }
+    elseif (is_numeric($ordinal_key) || $ordinal_key === '0') {
+      $value = $value[$ordinal_key];
+    }
     else {
-      $count = count($value);
-      if ($ordinal_key === 'last') {
-        $i = ($count > 0) ? $count - 1 : 0;
-        $value = $value[$i];
-      }
-      elseif (is_numeric($ordinal_key) || $ordinal_key === '0') {
-        $value = $value[$ordinal_key];
-      }
-      else {
-        // don't add token if case not covered.
-        return [];
-      }
+      // don't add token if case not covered.
+      return [];
     }
 
     $value = ConversionHelper::convertAttribute($value, $conversion);
