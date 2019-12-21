@@ -7,11 +7,11 @@ namespace Drupal\ldap_user\Processor;
 use Drupal\Core\Config\ConfigFactory;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
-use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\Core\Mail\MailManagerInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\Core\Url;
 use Drupal\ldap_servers\LdapUserManager;
+use Psr\Log\LoggerInterface;
 
 /**
  * Locates potential orphan user accounts.
@@ -49,7 +49,7 @@ class OrphanProcessor {
   /**
    * Logger.
    *
-   * @var \Drupal\Core\Logger\LoggerChannelInterface
+   * @var \Psr\Log\LoggerInterface
    */
   protected $logger;
 
@@ -112,7 +112,7 @@ class OrphanProcessor {
   /**
    * Constructor.
    *
-   * @param \Drupal\Core\Logger\LoggerChannelInterface $logger
+   * @param \Psr\Log\LoggerInterface $logger
    *   Logger.
    * @param \Drupal\Core\Config\ConfigFactory $config
    *   Config.
@@ -130,7 +130,7 @@ class OrphanProcessor {
    *   LDAP user manager.
    */
   public function __construct(
-    LoggerChannelInterface $logger,
+    LoggerInterface $logger,
     ConfigFactory $config,
     MailManagerInterface $mail_manager,
     LanguageManagerInterface $language_manager,

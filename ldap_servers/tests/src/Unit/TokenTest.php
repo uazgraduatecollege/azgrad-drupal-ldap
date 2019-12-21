@@ -35,7 +35,6 @@ class TokenTest extends UnitTestCase {
   protected function setUp() {
     parent::setUp();
 
-
     $this->ldapEntry = new Entry('cn=hpotter,ou=Gryffindor,ou=student,ou=people,dc=hogwarts,dc=edu', [
       'mail' => ['hpotter@hogwarts.edu'],
       'sAMAccountName' => ['hpotter'],

@@ -106,7 +106,7 @@ class LdapEntryProvisionTest extends EntityKernelTestBase {
   /**
    * Test building the entry.
    */
-  public function testEntry() {
+  public function testEntry(): void {
     $user = $this->createUser();
     $this->subscriber->setUser($user);
     $this->assertEquals('test', $this->config('ldap_user.settings')

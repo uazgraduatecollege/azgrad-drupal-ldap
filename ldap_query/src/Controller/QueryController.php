@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Drupal\ldap_query\Controller;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\ldap_servers\LdapBridge;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Ldap\Exception\LdapException;
 
 /**
@@ -52,7 +52,7 @@ class QueryController {
   /**
    * Logger.
    *
-   * @var \Drupal\Core\Logger\LoggerChannelInterface
+   * @var \Psr\Log\LoggerInterface
    */
   protected $logger;
 
@@ -63,13 +63,13 @@ class QueryController {
    *   Entity Type Manager.
    * @param \Drupal\ldap_servers\LdapBridge $ldap_bridge
    *   LDAP bridge.
-   * @param \Drupal\Core\Logger\LoggerChannelInterface $logger
+   * @param \Psr\Log\LoggerInterface $logger
    *   Logger.
    */
   public function __construct(
     EntityTypeManagerInterface $entity_type_manager,
     LdapBridge $ldap_bridge,
-    LoggerChannelInterface $logger
+    LoggerInterface $logger
   ) {
     $this->storage = $entity_type_manager->getStorage('ldap_query_entity');
     $this->ldapBridge = $ldap_bridge;

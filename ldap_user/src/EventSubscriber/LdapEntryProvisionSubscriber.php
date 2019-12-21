@@ -9,12 +9,12 @@ use Drupal\ldap_user\Event\LdapNewUserCreatedEvent;
 use Drupal\ldap_user\Event\LdapUserLoginEvent;
 use Drupal\ldap_user\Event\LdapUserUpdatedEvent;
 use Drupal\user\UserInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Ldap\Entry;
 use Drupal\Core\Config\ConfigFactory;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\File\FileSystem;
-use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\ldap_servers\Helper\ConversionHelper;
 use Drupal\ldap_servers\Helper\CredentialsStorage;
 use Drupal\ldap_servers\LdapUserAttributesInterface;
@@ -41,7 +41,7 @@ class LdapEntryProvisionSubscriber implements EventSubscriberInterface, LdapUser
   /**
    * Logger.
    *
-   * @var \Drupal\Core\Logger\LoggerChannelInterface
+   * @var \Psr\Log\LoggerInterface
    */
   private $logger;
 
@@ -119,7 +119,7 @@ class LdapEntryProvisionSubscriber implements EventSubscriberInterface, LdapUser
    *
    * @param \Drupal\Core\Config\ConfigFactory $config_factory
    *   Config factory.
-   * @param \Drupal\Core\Logger\LoggerChannelInterface $logger
+   * @param \Psr\Log\LoggerInterface $logger
    *   Logger.
    * @param \Drupal\ldap_servers\Logger\LdapDetailLog $detail_log
    *   Detail log.
@@ -136,7 +136,7 @@ class LdapEntryProvisionSubscriber implements EventSubscriberInterface, LdapUser
    */
   public function __construct(
     ConfigFactory $config_factory,
-    LoggerChannelInterface $logger,
+    LoggerInterface $logger,
     LdapDetailLog $detail_log,
     EntityTypeManagerInterface $entity_type_manager,
     ModuleHandlerInterface $module_handler,
@@ -174,7 +174,7 @@ class LdapEntryProvisionSubscriber implements EventSubscriberInterface, LdapUser
    */
   public function setUser(UserInterface $account): void {
     $this->account = $account;
-}
+  }
 
   /**
    * Handle account login with LDAP entry provisioning.
@@ -307,7 +307,7 @@ class LdapEntryProvisionSubscriber implements EventSubscriberInterface, LdapUser
       'direction' => self::PROVISION_TO_LDAP,
     ];
     $this->moduleHandler
-      ->alter('ldap_entry', $ldap_user_entry, $params);
+      ->alter('ldap_entry', $entry, $params);
 
     return $entry;
   }
@@ -320,11 +320,11 @@ class LdapEntryProvisionSubscriber implements EventSubscriberInterface, LdapUser
    */
   private function fetchDrupalAccountAttribute($token): void {
     // Trailing period to allow for empty value.
-    [
+    list(
       $attribute_type,
       $attribute_name,
       $attribute_conversion,
-    ] = explode('.', $token . '.');
+      ) = explode('.', $token . '.');
     $value = NULL;
 
     if ($attribute_type === 'field' || $attribute_type === 'property') {
@@ -411,8 +411,6 @@ class LdapEntryProvisionSubscriber implements EventSubscriberInterface, LdapUser
   /**
    * Replace a single token.
    *
-   * @param \Drupal\user\UserInterface $user
-   *   The resource to act upon.
    * @param string $text
    *   The text such as "[dn]", "[cn]@my.org", "[displayName] [sn]",
    *   "Drupal Provisioned".
@@ -633,6 +631,7 @@ class LdapEntryProvisionSubscriber implements EventSubscriberInterface, LdapUser
    *   Entry, false or null.
    */
   private function checkExistingLdapEntry() {
+    // TODO: Inject.
     $authmap = \Drupal::service('externalauth.authmap')
       ->get($this->account->id(), 'ldap_user');
     if ($authmap) {
@@ -642,9 +641,10 @@ class LdapEntryProvisionSubscriber implements EventSubscriberInterface, LdapUser
   }
 
   /**
-   * Tokens.
+   * Get the tokens.
    *
    * @return array
+   *   Tokens.
    */
   public function getTokens(): array {
     return $this->tokens;

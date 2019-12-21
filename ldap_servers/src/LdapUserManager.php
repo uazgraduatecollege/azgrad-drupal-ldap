@@ -7,9 +7,9 @@ namespace Drupal\ldap_servers;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandler;
-use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\externalauth\Authmap;
 use Drupal\user\UserInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Ldap\Entry;
 use Symfony\Component\Ldap\Exception\LdapException;
 
@@ -36,7 +36,7 @@ class LdapUserManager extends LdapBaseManager {
   /**
    * Constructor.
    *
-   * @param \Drupal\Core\Logger\LoggerChannelInterface $logger
+   * @param \Psr\Log\LoggerInterface $logger
    *   Logger.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   Entity Type Manager.
@@ -50,7 +50,7 @@ class LdapUserManager extends LdapBaseManager {
    *   External auth.
    */
   public function __construct(
-    LoggerChannelInterface $logger,
+    LoggerInterface $logger,
     EntityTypeManagerInterface $entity_type_manager,
     LdapBridge $ldap_bridge,
     ModuleHandler $module_handler,

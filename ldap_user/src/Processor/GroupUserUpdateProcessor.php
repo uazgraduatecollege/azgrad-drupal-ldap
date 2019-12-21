@@ -7,12 +7,12 @@ namespace Drupal\ldap_user\Processor;
 use Drupal\Core\Config\ConfigFactory;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandler;
-use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\externalauth\Authmap;
 use Drupal\ldap_query\Controller\QueryController;
 use Drupal\ldap_servers\Logger\LdapDetailLog;
 use Drupal\user\Entity\User;
+use Psr\Log\LoggerInterface;
 
 /**
  * Provides functionality to generically update existing users.
@@ -22,7 +22,7 @@ class GroupUserUpdateProcessor {
   /**
    * Logger.
    *
-   * @var \Drupal\Core\Logger\LoggerChannelInterface
+   * @var \Psr\Log\LoggerInterface
    */
   protected $logger;
 
@@ -92,7 +92,7 @@ class GroupUserUpdateProcessor {
   /**
    * Constructor for update process.
    *
-   * @param \Drupal\Core\Logger\LoggerChannelInterface $logger
+   * @param \Psr\Log\LoggerInterface $logger
    *   Logger.
    * @param \Drupal\ldap_servers\Logger\LdapDetailLog $detail_log
    *   Detail log.
@@ -112,7 +112,7 @@ class GroupUserUpdateProcessor {
    *   Drupal user processor.
    */
   public function __construct(
-    LoggerChannelInterface $logger,
+    LoggerInterface $logger,
     LdapDetailLog $detail_log,
     ConfigFactory $config,
     StateInterface $state,

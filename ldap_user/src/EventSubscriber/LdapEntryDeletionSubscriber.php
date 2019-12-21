@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace Drupal\ldap_user\EventSubscriber;
 
 use Drupal\Core\Config\ConfigFactory;
-use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\ldap_servers\LdapUserAttributesInterface;
 use Drupal\ldap_servers\LdapUserManager;
 use Drupal\ldap_user\Event\LdapUserDeletedEvent;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
@@ -26,7 +26,7 @@ class LdapEntryDeletionSubscriber implements EventSubscriberInterface, LdapUserA
   /**
    * Logger.
    *
-   * @var \Drupal\Core\Logger\LoggerChannelInterface
+   * @var \Psr\Log\LoggerInterface
    */
   private $logger;
 
@@ -42,14 +42,14 @@ class LdapEntryDeletionSubscriber implements EventSubscriberInterface, LdapUserA
    *
    * @param \Drupal\Core\Config\ConfigFactory $config_factory
    *   Config factory.
-   * @param \Drupal\Core\Logger\LoggerChannelInterface $logger
+   * @param \Psr\Log\LoggerInterface $logger
    *   Logger.
    * @param \Drupal\ldap_servers\LdapUserManager $ldap_user_manager
    *   LDAP user manager.
    */
   public function __construct(
     ConfigFactory $config_factory,
-    LoggerChannelInterface $logger,
+    LoggerInterface $logger,
     LdapUserManager $ldap_user_manager
   ) {
     $this->config = $config_factory->get('ldap_user.settings');

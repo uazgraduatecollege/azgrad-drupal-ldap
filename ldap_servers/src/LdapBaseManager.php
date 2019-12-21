@@ -6,8 +6,8 @@ namespace Drupal\ldap_servers;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandler;
-use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\ldap_servers\Entity\Server;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Ldap\Entry;
 use Symfony\Component\Ldap\Exception\LdapException;
 
@@ -21,7 +21,7 @@ abstract class LdapBaseManager {
   /**
    * Logger.
    *
-   * @var \Drupal\Core\Logger\LoggerChannelInterface
+   * @var \Psr\Log\LoggerInterface
    */
   protected $logger;
 
@@ -63,7 +63,7 @@ abstract class LdapBaseManager {
   /**
    * Constructor.
    *
-   * @param \Drupal\Core\Logger\LoggerChannelInterface $logger
+   * @param \Psr\Log\LoggerInterface $logger
    *   Logger.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   Entity type manager.
@@ -72,7 +72,7 @@ abstract class LdapBaseManager {
    * @param \Drupal\Core\Extension\ModuleHandler $module_handler
    *   Module handler.
    */
-  public function __construct(LoggerChannelInterface $logger, EntityTypeManagerInterface $entity_type_manager, LdapBridge $ldap_bridge, ModuleHandler $module_handler) {
+  public function __construct(LoggerInterface $logger, EntityTypeManagerInterface $entity_type_manager, LdapBridge $ldap_bridge, ModuleHandler $module_handler) {
     $this->logger = $logger;
     $this->entityTypeManager = $entity_type_manager;
     $this->ldapBridge = $ldap_bridge;

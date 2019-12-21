@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Drupal\ldap_servers\Processor;
 
 use Drupal\Component\Utility\Unicode;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\ldap_servers\Helper\ConversionHelper;
 use Drupal\ldap_servers\LdapTransformationTraits;
 use Drupal\ldap_servers\Logger\LdapDetailLog;
@@ -119,6 +118,8 @@ class TokenProcessor {
    *
    * @param \Symfony\Component\Ldap\Entry $ldap_entry
    *   The LDAP entry.
+   * @param array $required_tokens
+   *   Tokens requested.
    */
   public function tokenizeLdapEntry(Entry $ldap_entry, array $required_tokens): void {
     if (empty($ldap_entry->getAttributes())) {
@@ -206,8 +207,7 @@ class TokenProcessor {
    */
   private function processLdapTokenKey(Entry $entry, string $required_token): void {
     // Trailing period to allow for empty value.
-    [$token_key, $conversion] = explode(';', $required_token . ';');
-
+    list($token_key, $conversion) = explode(';', $required_token . ';');
 
     $parts = explode(':', $token_key);
     $requested_name = mb_strtolower($parts[0]);

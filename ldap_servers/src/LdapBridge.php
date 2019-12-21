@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Drupal\ldap_servers;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\ldap_servers\Entity\Server;
 use Drupal\ldap_servers\Helper\CredentialsStorage;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Ldap\Exception\ConnectionException;
 use Symfony\Component\Ldap\Exception\LdapException;
 use Symfony\Component\Ldap\Ldap;
@@ -48,7 +48,7 @@ class LdapBridge {
   /**
    * Logger.
    *
-   * @var \Drupal\Core\Logger\LoggerChannelInterface
+   * @var \Psr\Log\LoggerInterface
    */
   protected $logger;
 
@@ -62,12 +62,12 @@ class LdapBridge {
   /**
    * Constructor.
    *
-   * @param \Drupal\Core\Logger\LoggerChannelInterface $logger
+   * @param \Psr\Log\LoggerInterface $logger
    *   Logger.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   Entity type manager.
    */
-  public function __construct(LoggerChannelInterface $logger, EntityTypeManagerInterface $entity_type_manager) {
+  public function __construct(LoggerInterface $logger, EntityTypeManagerInterface $entity_type_manager) {
     $this->logger = $logger;
     $this->entityManager = $entity_type_manager->getStorage('ldap_server');
   }

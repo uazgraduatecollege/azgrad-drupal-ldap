@@ -9,7 +9,6 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandler;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\File\FileSystem;
-use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
@@ -22,6 +21,7 @@ use Drupal\ldap_user\Event\LdapUserLoginEvent;
 use Drupal\ldap_user\FieldProvider;
 use Drupal\Core\Utility\Token;
 use Drupal\user\UserInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 /**
@@ -34,7 +34,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
   /**
    * Logger.
    *
-   * @var \Drupal\Core\Logger\LoggerChannelInterface
+   * @var \Psr\Log\LoggerInterface
    */
   protected $logger;
 
@@ -163,7 +163,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
    * TODO: Make this service smaller.
    * (The number of dependencies alone makes this clear.)
    *
-   * @param \Drupal\Core\Logger\LoggerChannelInterface $logger
+   * @param \Psr\Log\LoggerInterface $logger
    *   Logger.
    * @param \Drupal\Core\Config\ConfigFactory $config_factory
    *   Config factory.
@@ -193,7 +193,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
    *   Messenger.
    */
   public function __construct(
-    LoggerChannelInterface $logger,
+    LoggerInterface $logger,
     ConfigFactory $config_factory,
     LdapDetailLog $detail_log,
     TokenProcessor $token_processor,
