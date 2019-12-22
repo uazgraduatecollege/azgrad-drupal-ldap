@@ -88,10 +88,10 @@ class FakeLdap implements LdapInterface {
   /**
    * Set the query result.
    *
-   * @param array
+   * @param array $queryResult
    *   Query result.
    */
-  public function setQueryResult($queryResult): void {
+  public function setQueryResult(array $queryResult): void {
     $this->queryResult = $queryResult;
   }
 

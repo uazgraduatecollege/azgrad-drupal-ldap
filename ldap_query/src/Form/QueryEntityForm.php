@@ -163,15 +163,15 @@ class QueryEntityForm extends EntityForm {
     $ldap_query_entity = $this->entity;
     $status = $ldap_query_entity->save();
 
-    if ($status == SAVED_NEW) {
+    if ($status === SAVED_NEW) {
       $this->messenger()
-        ->addMessage($this->t('Created the %label LDAP Queries.', [
+        ->addMessage($this->t('Created the %label LDAP query.', [
           '%label' => $ldap_query_entity->label(),
         ]));
     }
     else {
       $this->messenger()
-        ->addMessage($this->t('Saved the %label LDAP Queries.', [
+        ->addMessage($this->t('Saved the %label LDAP query.', [
           '%label' => $ldap_query_entity->label(),
         ]));
     }

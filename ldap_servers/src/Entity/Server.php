@@ -186,7 +186,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
    *
    * @var bool
    */
-  protected $grp_derive_from_dn;
+  protected $grp_derive_from_dn = FALSE;
 
   /**
    * User attribute held in "LDAP Group Entry Attribute Holding...".
@@ -207,7 +207,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
    *
    * @var bool
    */
-  protected $grp_nested;
+  protected $grp_nested = FALSE;
 
   /**
    * Name of Group Object Class.
@@ -235,7 +235,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
    *
    * @var bool
    */
-  protected $grp_unused;
+  protected $grp_unused = TRUE;
 
   /**
    * Attribute in User Entry Containing Groups.
@@ -312,7 +312,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
    *
    * @var bool
    */
-  protected $tls;
+  protected $tls = FALSE;
 
   /**
    * Does PUID hold a binary value?
