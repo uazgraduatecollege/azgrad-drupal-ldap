@@ -13,6 +13,11 @@ use Drupal\Tests\BrowserTestBase;
  */
 class LdapAuthenticationProfileUpdateFormTest extends BrowserTestBase {
 
+  /**
+   * {@inheritdoc}
+   */
+  protected $defaultTheme = 'stark';
+
   protected const FORM_PATH = '/user/ldap-profile-update';
 
   /**

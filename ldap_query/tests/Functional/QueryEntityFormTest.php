@@ -13,6 +13,11 @@ use Drupal\Tests\BrowserTestBase;
  */
 class QueryEntityFormTest extends BrowserTestBase {
 
+  /**
+   * {@inheritdoc}
+   */
+  protected $defaultTheme = 'stark';
+
   protected const FORM_PATH = '/admin/config/people/ldap/query/add';
 
   /**
