@@ -1,5 +1,5 @@
 ldap_servers.settings:
-  type: mapping
+  type: config_object
   label: Settings
   mapping:
     watchdog_detail:

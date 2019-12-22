@@ -102,7 +102,7 @@ class TokenTest extends UnitTestCase {
     $this->assertEquals(ConversionHelper::convertMsguidToString('sdafsdfsdf'), $msguid);
 
     $binary = $this->processor->ldapEntryReplacementsForDrupalAccount($this->ldapEntry, '[guid;binary]');
-    $this->assertEquals(ConversionHelper::binaryConversionToString('sdafsdfsdf'), $binary);
+    $this->assertEquals(bin2hex('sdafsdfsdf'), $binary);
   }
 
   /**

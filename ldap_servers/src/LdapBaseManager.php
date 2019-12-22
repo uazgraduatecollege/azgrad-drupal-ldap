@@ -67,12 +67,17 @@ abstract class LdapBaseManager {
    *   Logger.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   Entity type manager.
-   * @param \Drupal\ldap_servers\LdapBridge $ldap_bridge
+   * @param \Drupal\ldap_servers\LdapBridgeInterface $ldap_bridge
    *   LDAP Bridge.
    * @param \Drupal\Core\Extension\ModuleHandler $module_handler
    *   Module handler.
    */
-  public function __construct(LoggerInterface $logger, EntityTypeManagerInterface $entity_type_manager, LdapBridge $ldap_bridge, ModuleHandler $module_handler) {
+  public function __construct(
+    LoggerInterface $logger,
+    EntityTypeManagerInterface $entity_type_manager,
+    LdapBridgeInterface $ldap_bridge,
+    ModuleHandler $module_handler
+  ) {
     $this->logger = $logger;
     $this->entityTypeManager = $entity_type_manager;
     $this->ldapBridge = $ldap_bridge;

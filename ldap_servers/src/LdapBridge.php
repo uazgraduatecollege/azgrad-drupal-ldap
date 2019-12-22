@@ -15,7 +15,7 @@ use Symfony\Component\Ldap\Ldap;
 /**
  * Ldap Bridge to symfony/ldap.
  */
-class LdapBridge {
+class LdapBridge implements LdapBridgeInterface {
 
   /**
    * Bind method.
@@ -73,10 +73,7 @@ class LdapBridge {
   }
 
   /**
-   * Set Server by ID.
-   *
-   * @param string $sid
-   *   Server machine name.
+   * {@inheritdoc}
    */
   public function setServerById($sid): void {
     $server = $this->entityManager->load($sid);
@@ -87,10 +84,7 @@ class LdapBridge {
   }
 
   /**
-   * Set Server.
-   *
-   * @param \Drupal\ldap_servers\Entity\Server $server
-   *   Server object.
+   * {@inheritdoc}
    */
   public function setServer(Server $server): void {
     $parameters = [
@@ -105,16 +99,14 @@ class LdapBridge {
     $this->bindMethod = $server->get('bind_method');
     $this->bindDn = $server->get('binddn');
     $this->bindPw = $server->get('bindpw');
+    // TODO: Make this cacheable.
     $this->ldap = Ldap::create('ext_ldap', $parameters);
   }
 
   /**
-   * Bind (authenticate) against an active LDAP database.
-   *
-   * @return bool
-   *   Binding successful.
+   * {@inheritdoc}
    */
-  public function bind() {
+  public function bind(): bool {
 
     if (
       $this->bindMethod === 'anon' ||

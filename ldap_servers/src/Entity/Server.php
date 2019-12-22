@@ -7,7 +7,6 @@ namespace Drupal\ldap_servers\Entity;
 use Drupal\Core\Config\Entity\ConfigEntityBase;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
-use Drupal\ldap_servers\Helper\ConversionHelper;
 use Drupal\ldap_servers\LdapTransformationTraits;
 use Drupal\ldap_servers\ServerInterface;
 use Symfony\Component\Ldap\Entry;
@@ -450,7 +449,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
     if ($this->getUniquePersistentAttribute() && $ldapEntry->hasAttribute($this->getUniquePersistentAttribute())) {
       $puid = $ldapEntry->getAttribute($this->getUniquePersistentAttribute())[0];
       if ($this->isUniquePersistentAttributeBinary()) {
-        $puid = ConversionHelper::binaryConversionToString($puid);
+        $puid = bin2hex($puid);
       }
     }
     return $puid;

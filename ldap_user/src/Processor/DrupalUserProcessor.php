@@ -277,7 +277,9 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
       $ldap_server = $this->entityTypeManager
         ->getStorage('ldap_server')
         ->load($this->config->get('drupalAcctProvisionServer'));
-      $this->account = user_load_by_name($drupal_username);
+      $load_by_name = $this->entityTypeManager->getStorage('user')
+        ->loadByProperties(['name' => $this->$drupal_username]);
+      $this->account = $load_by_name ? reset($load_by_name) : FALSE;
       if (!$this->account) {
         $this->logger->error('Failed to LDAP associate Drupal account %drupal_username because account not found', ['%drupal_username' => $drupal_username]);
         return FALSE;
@@ -479,7 +481,11 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
       return;
     }
 
-    if ($account_with_same_email = user_load_by_mail($mail)) {
+    $users = $this->entityTypeManager->getStorage('user')
+      ->loadByProperties(['mail' => $mail]);
+    $account_with_same_email = $users ? reset($users) : FALSE;
+
+    if ($account_with_same_email) {
       $this->logger
         ->error('LDAP user %drupal_username has email address (%email) conflict with a Drupal user %duplicate_name', [
           '%drupal_username' => $this->account->getAccountName(),

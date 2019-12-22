@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Drupal\ldap_query\Controller;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\ldap_servers\LdapBridge;
+use Drupal\ldap_servers\LdapBridgeInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Ldap\Exception\LdapException;
 
@@ -61,14 +61,17 @@ class QueryController {
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   Entity Type Manager.
-   * @param \Drupal\ldap_servers\LdapBridge $ldap_bridge
+   * @param \Drupal\ldap_servers\LdapBridgeInterface $ldap_bridge
    *   LDAP bridge.
    * @param \Psr\Log\LoggerInterface $logger
    *   Logger.
+   *
+   * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
   public function __construct(
     EntityTypeManagerInterface $entity_type_manager,
-    LdapBridge $ldap_bridge,
+    LdapBridgeInterface $ldap_bridge,
     LoggerInterface $logger
   ) {
     $this->storage = $entity_type_manager->getStorage('ldap_query_entity');

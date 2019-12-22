@@ -7,7 +7,7 @@ namespace Drupal\ldap_authentication\Controller;
 /**
  * Handles the actual testing of credentials and authentication of users.
  */
-final class LoginValidatorSso extends LoginValidatorBase {
+class LoginValidatorSso extends LoginValidatorBase {
 
   /**
    * {@inheritdoc}

@@ -12,7 +12,7 @@ use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Render\Renderer;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ldap_servers\Entity\Server;
-use Drupal\ldap_servers\LdapBridge;
+use Drupal\ldap_servers\LdapBridgeInterface;
 use Drupal\ldap_servers\LdapGroupManager;
 use Drupal\ldap_servers\Processor\TokenProcessor;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -22,7 +22,7 @@ use Symfony\Component\Ldap\Exception\LdapException;
 /**
  * Use Drupal\Core\Form\FormBase;.
  */
-final class ServerTestForm extends EntityForm {
+class ServerTestForm extends EntityForm {
 
   /**
    * The main server to work with.
@@ -105,7 +105,7 @@ final class ServerTestForm extends EntityForm {
    *   Token Processor.
    * @param \Drupal\Core\Render\Renderer $renderer
    *   Renderer.
-   * @param \Drupal\ldap_servers\LdapBridge $ldap_bridge
+   * @param \Drupal\ldap_servers\LdapBridgeInterface $ldap_bridge
    *   LDAP Bridge.
    * @param \Drupal\ldap_servers\LdapGroupManager $ldap_group_manager
    *   LDAP Group Manager.
@@ -115,7 +115,7 @@ final class ServerTestForm extends EntityForm {
     ModuleHandler $module_handler,
     TokenProcessor $token_processor,
     Renderer $renderer,
-    LdapBridge $ldap_bridge,
+    LdapBridgeInterface $ldap_bridge,
     LdapGroupManager $ldap_group_manager
   ) {
     $this->config = $config_factory;
@@ -285,14 +285,16 @@ final class ServerTestForm extends EntityForm {
       }
 
       if (!empty($test_data['username'])) {
-        $user_name = $test_data['username'];
-        if ($user = user_load_by_name($user_name)) {
+        $users = $this->entityTypeManager->getStorage('user')
+          ->loadByProperties(['name' => $test_data['username']]);
+        $users ? reset($users) : FALSE;
+        if ($users) {
           $form['#suffix'] .= sprintf(
             '<h3>%s</h3>, <pre>%s</pre>',
             $this->t('Corresponding Drupal user object for @user:', [
-              '@user' => $user_name,
+              '@user' => $test_data['username'],
             ]),
-            json_encode($user->toArray(), JSON_PRETTY_PRINT)
+            json_encode(reset($users)->toArray(), JSON_PRETTY_PRINT)
           );
           if (isset($test_data['group_entry'][0])) {
             $form['#suffix'] .= sprintf(

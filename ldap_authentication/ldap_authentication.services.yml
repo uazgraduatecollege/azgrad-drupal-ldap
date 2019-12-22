@@ -33,6 +33,7 @@ services:
     - '@ldap_authentication.servers'
     - '@ldap.user_manager'
     - '@messenger'
+    - '@ldap.drupal_user_processor'
   ldap_authentication.login_validator_sso:
     class: \Drupal\ldap_authentication\Controller\LoginValidatorSso
     arguments:
@@ -46,6 +47,7 @@ services:
     - '@ldap_authentication.servers'
     - '@ldap.user_manager'
     - '@messenger'
+    - '@ldap.drupal_user_processor'
   ldap_authentication.servers:
     class: Drupal\ldap_authentication\AuthenticationServers
     arguments:

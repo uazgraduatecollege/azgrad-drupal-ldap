@@ -21,6 +21,8 @@ class RedirectTest extends KernelTestBase {
     'externalauth',
     'ldap_servers',
     'ldap_authentication',
+    'ldap_user',
+    'ldap_query',
   ];
 
   /**

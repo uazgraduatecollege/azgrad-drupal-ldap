@@ -15,10 +15,11 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\externalauth\Authmap;
 use Drupal\ldap_authentication\AuthenticationServers;
 use Drupal\ldap_servers\Helper\CredentialsStorage;
-use Drupal\ldap_servers\LdapBridge;
+use Drupal\ldap_servers\LdapBridgeInterface;
 use Drupal\ldap_servers\LdapUserManager;
 use Drupal\ldap_servers\Logger\LdapDetailLog;
 use Drupal\ldap_servers\LdapUserAttributesInterface;
+use Drupal\ldap_user\Processor\DrupalUserProcessor;
 use Drupal\user\UserInterface;
 use Symfony\Component\Ldap\Entry;
 
@@ -214,6 +215,13 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
   protected $messenger;
 
   /**
+   * Drupal User Processor.
+   *
+   * @var \Drupal\ldap_user\Processor\DrupalUserProcessor
+   */
+  protected $drupalUserProcessor;
+
+  /**
    * Constructor.
    *
    * @param \Drupal\Core\Config\ConfigFactoryInterface $configFactory
@@ -226,7 +234,7 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
    *   Entity type manager.
    * @param \Drupal\Core\Extension\ModuleHandler $module_handler
    *   Module handler.
-   * @param \Drupal\ldap_servers\LdapBridge $ldap_bridge
+   * @param \Drupal\ldap_servers\LdapBridgeInterface $ldap_bridge
    *   LDAP bridge.
    * @param \Drupal\externalauth\Authmap $external_auth
    *   External auth.
@@ -236,6 +244,8 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
    *   Ldap user manager.
    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
    *   Messenger.
+   * @param \Drupal\ldap_user\Processor\DrupalUserProcessor $drupal_user_processor
+   *   Drupal User Processor.
    */
   public function __construct(
     ConfigFactoryInterface $configFactory,
@@ -243,11 +253,12 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
     LoggerChannelInterface $logger,
     EntityTypeManagerInterface $entity_type_manager,
     ModuleHandler $module_handler,
-    LdapBridge $ldap_bridge,
+    LdapBridgeInterface $ldap_bridge,
     Authmap $external_auth,
     AuthenticationServers $authentication_servers,
     LdapUserManager $ldap_user_manager,
-    MessengerInterface $messenger
+    MessengerInterface $messenger,
+    DrupalUserProcessor $drupal_user_processor
   ) {
     $this->configFactory = $configFactory;
     $this->config = $configFactory->get('ldap_authentication.settings');
@@ -260,6 +271,7 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
     $this->authenticationServers = $authentication_servers;
     $this->ldapUserManager = $ldap_user_manager;
     $this->messenger = $messenger;
+    $this->drupalUserProcessor = $drupal_user_processor;
   }
 
   /**
@@ -269,7 +281,9 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
    * by name, too, for association handling later.
    */
   protected function initializeDrupalUserFromAuthName(): void {
-    $this->drupalUser = user_load_by_name($this->authName);
+    $load_by_name = $this->entityTypeManager->getStorage('user')
+      ->loadByProperties(['name' => $this->authName]);
+    $this->drupalUser = $load_by_name ? reset($load_by_name) : FALSE;
     if (!$this->drupalUser) {
       $uid = $this->externalAuth->getUid($this->authName, 'ldap_user');
       if ($uid) {
@@ -333,9 +347,10 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
    *   Whether to allow user login and creation.
    */
   protected function verifyAccountCreation() {
-    $ldapUserConfig = $this->configFactory->get('ldap_user.settings');
-    if ($ldapUserConfig->get('acctCreation') === self::ACCOUNT_CREATION_LDAP_BEHAVIOUR ||
-      $ldapUserConfig->get('register') === UserInterface::REGISTER_VISITORS) {
+    if (
+      $this->configFactory->get('ldap_user.settings')->get('acctCreation') === self::ACCOUNT_CREATION_LDAP_BEHAVIOUR ||
+      $this->configFactory->get('user.settings')->get('register') === UserInterface::REGISTER_VISITORS
+    ) {
       $this->detailLog->log(
         '%username: Existing Drupal user account not found. Continuing on to attempt LDAP authentication', ['%username' => $this->authName],
         'ldap_authentication'
@@ -717,7 +732,11 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
    */
   protected function matchExistingUserWithLdap(): bool {
     if ($this->configFactory->get('ldap_user.settings')->get('userConflictResolve') === self::USER_CONFLICT_LOG) {
-      if ($account_with_same_email = user_load_by_mail($this->serverDrupalUser->deriveEmailFromLdapResponse($this->ldapEntry))) {
+      $users = $this->entityTypeManager
+        ->getStorage('user')
+        ->loadByProperties(['mail' => $this->serverDrupalUser->deriveEmailFromLdapResponse($this->ldapEntry)]);
+      $account_with_same_email = $users ? reset($users) : FALSE;
+      if ($account_with_same_email) {
         /** @var \Drupal\user\UserInterface $account_with_same_email */
         $this->logger
           ->error('LDAP user with DN %dn has a naming conflict with a local Drupal user %conflict_name',
@@ -764,11 +783,14 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
    *   Provisioning successful.
    */
   protected function provisionDrupalUser(): bool {
-
+    $users = $this->entityTypeManager
+      ->getStorage('user')
+      ->loadByProperties(['mail' => $this->serverDrupalUser->deriveEmailFromLdapResponse($this->ldapEntry)]);
+    $accountDuplicateMail = $users ? reset($users) : FALSE;
     // Do not provision Drupal account if another account has same email.
-    if ($accountDuplicateMail = user_load_by_mail($this->serverDrupalUser->deriveEmailFromLdapResponse($this->ldapEntry))) {
+    if ($accountDuplicateMail) {
       $emailAvailable = FALSE;
-      if ($this->config->get('emailTemplateUsageResolveConflict') && (!$this->emailTemplateUsed)) {
+      if (!$this->emailTemplateUsed && $this->config->get('emailTemplateUsageResolveConflict')) {
         $this->detailLog->log(
           'Conflict detected, using template generated email for %username',
           ['%duplicate_name' => $accountDuplicateMail->getAccountName()],
@@ -778,7 +800,11 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
         $this->replaceUserMailWithTemplate();
         $this->emailTemplateUsed = TRUE;
         // Recheck with the template email to make sure it doesn't also exist.
-        if ($accountDuplicateMail = user_load_by_mail($this->serverDrupalUser->deriveEmailFromLdapResponse($this->ldapEntry))) {
+        $users = $this->entityTypeManager
+          ->getStorage('user')
+          ->loadByProperties(['mail' => $this->serverDrupalUser->deriveEmailFromLdapResponse($this->ldapEntry)]);
+        $accountDuplicateMail = $users ? reset($users) : FALSE;
+        if ($accountDuplicateMail) {
           $emailAvailable = FALSE;
         }
         else {
@@ -825,11 +851,9 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
      * point the account does not exist, so there is no reason not to create
      * it here.
      */
-
-    if ($this->configFactory->get('ldap_user.settings')
-      ->get('acctCreation') === self::ACCOUNT_CREATION_USER_SETTINGS_FOR_LDAP &&
-      $this->configFactory->get('user.settings')
-        ->get('register') === UserInterface::REGISTER_VISITORS_ADMINISTRATIVE_APPROVAL
+    if (
+      $this->configFactory->get('ldap_user.settings')->get('acctCreation') === self::ACCOUNT_CREATION_USER_SETTINGS_FOR_LDAP &&
+      $this->configFactory->get('user.settings')->get('register') === UserInterface::REGISTER_VISITORS_ADMINISTRATIVE_APPROVAL
     ) {
       // If admin approval required, set status to 0.
       $user_values = ['name' => $this->drupalUserName, 'status' => 0];
@@ -842,10 +866,7 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
       $user_values['mail'] = $this->serverDrupalUser->deriveEmailFromLdapResponse($this->ldapEntry);
     }
 
-    // TODO: DI.
-    /** @var \Drupal\ldap_user\Processor\DrupalUserProcessor $processor */
-    $processor = \Drupal::service('ldap.drupal_user_processor');
-    $result = $processor->createDrupalUserFromLdapEntry($user_values);
+    $result = $this->drupalUserProcessor->createDrupalUserFromLdapEntry($user_values);
 
     if (!$result) {
       $this->logger->error(
@@ -861,7 +882,7 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
       return FALSE;
     }
 
-    $this->drupalUser = $processor->getUserAccount();
+    $this->drupalUser = $this->drupalUserProcessor->getUserAccount();
     return TRUE;
   }
 

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Drupal\ldap_servers;
 
 use Drupal\ldap_servers\Helper\ConversionHelper;
-use Robo\Collection\CollectionInterface;
+use Symfony\Component\Ldap\Adapter\CollectionInterface;
 use Symfony\Component\Ldap\Entry;
 use Symfony\Component\Ldap\Exception\LdapException;
 

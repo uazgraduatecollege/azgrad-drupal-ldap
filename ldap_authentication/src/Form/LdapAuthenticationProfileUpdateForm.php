@@ -94,7 +94,9 @@ class LdapAuthenticationProfileUpdateForm extends FormBase {
     if (!filter_var($form_state->getValue(['mail']), FILTER_VALIDATE_EMAIL)) {
       $form_state->setErrorByName('mail', $this->t('You must specify a valid email address.'));
     }
-    $existing = user_load_by_mail($form_state->getValue(['mail']));
+    $users = $this->entityTypeManager->getStorage('user')
+      ->loadByProperties(['mail' => $form_state->getValue(['mail'])]);
+    $existing = $users ? reset($users) : FALSE;
     if ($existing) {
       $form_state->setErrorByName('mail', $this->t('This email address is already in use.'));
     }

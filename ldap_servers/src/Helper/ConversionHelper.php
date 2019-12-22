@@ -106,27 +106,6 @@ class ConversionHelper {
   }
 
   /**
-   * General binary conversion function for GUID.
-   *
-   * Tries to determine which approach based on length of string.
-   *
-   * @param string $value
-   *   GUID.
-   *
-   * @return string
-   *   Encoded string.
-   */
-  public static function binaryConversionToString($value) {
-    if (strlen($value) === 16) {
-      $value = self::convertMsguidToString($value);
-    }
-    else {
-      $value = bin2hex($value);
-    }
-    return $value;
-  }
-
-  /**
    * Converts an attribute by their format.
    *
    * @param string $value
@@ -153,7 +132,7 @@ class ConversionHelper {
         break;
 
       case 'binary':
-        $value = self::binaryConversionToString($value);
+        $value = bin2hex($value);
         break;
 
       case 'md5':

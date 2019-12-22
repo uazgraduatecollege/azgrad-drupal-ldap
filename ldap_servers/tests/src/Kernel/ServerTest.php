@@ -105,13 +105,8 @@ class ServerTest extends EntityKernelTestBase {
     $this->assertEquals('101', $this->server->derivePuidFromLdapResponse($userOpenLdap));
 
     $this->server->set('unique_persistent_attr_binary', TRUE);
-    $this->assertEquals(bin2hex('101'), $this->server->derivePuidFromLdapResponse($userOpenLdap));
-
-    // TODO: Disabled until better examples are reviewed.
     $userOpenLdap->setAttribute('guid', ['Rr0by/+kSEKzVGoWnkpQ4Q==']);
-    // Either the example data is wrong or the length check of 16 in
-    // binaryConversionToString incorrect.
-    /* $this->assertEquals('cb1bbd46-a4ff-4248-b354-6a169e4a50e1', $this->server->derivePuidFromLdapResponse($userOpenLdap)); */
+    $this->assertEquals('52723062792f2b6b53454b7a56476f576e6b705134513d3d', $this->server->derivePuidFromLdapResponse($userOpenLdap));
   }
 
 }

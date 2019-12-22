@@ -40,7 +40,7 @@ class LdapUserManager extends LdapBaseManager {
    *   Logger.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   Entity Type Manager.
-   * @param \Drupal\ldap_servers\LdapBridge $ldap_bridge
+   * @param \Drupal\ldap_servers\LdapBridgeInterface $ldap_bridge
    *   LDAP bridge.
    * @param \Drupal\Core\Extension\ModuleHandler $module_handler
    *   Module handler.
@@ -52,7 +52,7 @@ class LdapUserManager extends LdapBaseManager {
   public function __construct(
     LoggerInterface $logger,
     EntityTypeManagerInterface $entity_type_manager,
-    LdapBridge $ldap_bridge,
+    LdapBridgeInterface $ldap_bridge,
     ModuleHandler $module_handler,
     CacheBackendInterface $cache,
     Authmap $external_auth) {
