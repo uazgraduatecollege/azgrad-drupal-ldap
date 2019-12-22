@@ -132,9 +132,7 @@ class LoginTest extends KernelTestBase {
     $form_state = new FormState();
     $form_state->setValues(['name' => 'hpotter', 'pass' => 'pass']);
     $state = $this->validator->validateLogin($form_state);
-    $errors = $state->getErrors();
-    $error = reset($errors);
-    self::assertCount(0, $state->getErrors(), $error);
+    self::assertCount(0, $state->getErrors());
     /** @var \Drupal\Core\Messenger\MessengerInterface $messenger */
     $messenger = $this->container->get('messenger');
     $messenger_errors = $messenger->messagesByType(MessengerInterface::TYPE_ERROR);

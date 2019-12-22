@@ -43,4 +43,3 @@ grants.ldif to allow for it. Here is an example which simply allows anyone:
 >   by dn="cn=admin,dc=hogwarts,dc=edu" write
 >   by * read
 ```
-
