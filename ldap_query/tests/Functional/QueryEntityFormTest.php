@@ -1,6 +1,6 @@
 <?php
 
-declare(strict_types=1);
+declare(strict_types = 1);
 
 namespace Drupal\Tests\ldap_query\Functional;
 
@@ -8,6 +8,8 @@ use Drupal\Tests\BrowserTestBase;
 
 /**
  * Test the admin form.
+ *
+ * @group ldap
  */
 class QueryEntityFormTest extends BrowserTestBase {
 

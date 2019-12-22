@@ -5,7 +5,7 @@
  * Hooks provided by ldap_servers module.
  */
 
-declare(strict_types=1);
+declare(strict_types = 1);
 
 use Drupal\ldap_servers\Entity\Server;
 

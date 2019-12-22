@@ -5,7 +5,7 @@
  * Hooks and functions relevant to developers.
  */
 
-declare(strict_types=1);
+declare(strict_types = 1);
 
 use Symfony\Component\Ldap\Entry;
 
