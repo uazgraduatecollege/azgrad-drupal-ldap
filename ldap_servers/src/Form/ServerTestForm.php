@@ -430,7 +430,7 @@ class ServerTestForm extends EntityForm {
             $result,
           ];
 
-          if ($this->ldapGroupManager->groupUserMembershipsFromAttributeConfigured()) {
+          if ($this->ldapServer->isGroupUserMembershipAttributeInUse()) {
             $entry = $this->ldapGroupManager->matchUsernameToExistingLdapEntry($username);
             $groupUserMembershipsFromUserAttributes = $this->ldapGroupManager->groupUserMembershipsFromUserAttr($entry);
             $settings = [

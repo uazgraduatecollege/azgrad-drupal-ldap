@@ -66,4 +66,102 @@ class LdapAuthorizationProviderTest extends UnitTestCase {
     // TODO: Still needs more useful assertions here.
   }
 
+  public function testFilterProposal() {
+
+    // Example of groups defined in
+    $input = [
+      'cn=students'
+    ];
+
+    $this->assertCount(
+      1,
+      $this->providerPlugin->filterProposals($input, [
+        'query' => 'cn=students',
+        'is_regex' => FALSE,
+      ])
+    );
+
+    $input = [
+      'cn=students,ou=groups,dc=hogwarts,dc=edu',
+      'cn=gryffindor,ou=groups,dc=hogwarts,dc=edu',
+      'cn=users,ou=groups,dc=hogwarts,dc=edu',
+    ];
+
+    $this->assertCount(
+      0,
+      $this->providerPlugin->filterProposals($input, [
+        'query' => 'cn=students',
+        'is_regex' => FALSE,
+      ])
+    );
+
+    $this->assertCount(
+      1,
+      $this->providerPlugin->filterProposals($input, [
+        'query' => 'cn=students,ou=groups,dc=hogwarts,dc=edu',
+        'is_regex' => FALSE,
+      ])
+    );
+    $this->assertCount(
+      1,
+      $this->providerPlugin->filterProposals($input, [
+        'query' => 'CN=students,ou=groups,dc=hogwarts,dc=edu',
+        'is_regex' => FALSE,
+      ])
+    );
+    $this->assertCount(
+      1,
+      $this->providerPlugin->filterProposals($input, [
+        'query' => '/cn=students/i',
+        'is_regex' => TRUE,
+      ])
+    );
+    $this->assertCount(
+      1,
+      $this->providerPlugin->filterProposals($input, [
+        'query' => '/CN=students/i',
+        'is_regex' => TRUE,
+      ])
+    );
+
+    $input = [
+      'memberOf=students,ou=groups,dc=hogwarts,dc=edu',
+    ];
+    $this->assertCount(
+      1,
+      $this->providerPlugin->filterProposals($input, [
+        'query' => 'memberOf=students,ou=groups,dc=hogwarts,dc=edu',
+        'is_regex' => FALSE,
+      ])
+    );
+    $this->assertCount(
+      1,
+      $this->providerPlugin->filterProposals($input, [
+        'query' => 'memberof=students,ou=groups,dc=hogwarts,dc=edu',
+        'is_regex' => FALSE,
+      ])
+    );
+    $this->assertCount(
+      1,
+      $this->providerPlugin->filterProposals($input, [
+        'query' => '/^memberof=students/i',
+        'is_regex' => TRUE,
+      ])
+    );
+    $this->assertCount(
+      1,
+      $this->providerPlugin->filterProposals($input, [
+        'query' => '/^memberOf=students/i',
+        'is_regex' => TRUE,
+      ])
+    );
+    $this->assertCount(
+      0,
+      $this->providerPlugin->filterProposals($input, [
+        'query' => '/^emberOf=students/i',
+        'is_regex' => TRUE,
+      ])
+    );
+  }
+
 }

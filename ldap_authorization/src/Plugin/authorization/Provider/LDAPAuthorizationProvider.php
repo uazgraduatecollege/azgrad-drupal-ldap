@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Drupal\ldap_authorization\Plugin\authorization\Provider;
 
 use Drupal\authorization\AuthorizationSkipAuthorization;
+use Drupal\Component\Render\FormattableMarkup;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\authorization\Provider\ProviderPluginBase;
@@ -206,6 +207,7 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
     $row['is_regex'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Is this query a regular expression?'),
+      '#description' => $this->t('Example (note the "i" for case-insensitive): %example', ['%example' => new FormattableMarkup('<code>/^memberOf=staff/i</code>', [])]),
       '#default_value' => $mappings[$index]['is_regex'] ?? NULL,
     ];
 
@@ -308,7 +310,7 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
             );
         }
       }
-      elseif ($value === $providerMapping['query']) {
+      elseif (mb_strtolower($value) === mb_strtolower($providerMapping['query'])) {
         $filtered_proposals[$key] = $value;
       }
     }

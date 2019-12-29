@@ -359,7 +359,7 @@ class ServerForm extends EntityForm {
       '#type' => 'textfield',
       '#size' => 30,
       '#title' => $this->t('Attribute in User Entry Containing Groups'),
-      '#description' => $this->t('e.g. memberOf <em>(case sensitive)</em>.'),
+      '#description' => $this->t('Example: memberOf'),
       '#states' => [
         'enabled' => [
           ':input[name=grp_user_memb_attr_exists]' => ['checked' => TRUE],
@@ -476,7 +476,9 @@ class ServerForm extends EntityForm {
     ];
 
     foreach ($fields as $field) {
-      $this->entity->set($field, trim($this->entity->get($field)));
+      // We lowercase all fields to match Entry attributes being lowercased in
+      // \Drupal\ldap_servers\LdapBaseManager::sanitizeUserDataResponse().
+      $this->entity->set($field, mb_strtolower(trim($this->entity->get($field))));
     }
 
     $status = $this->entity->save();

@@ -28,6 +28,36 @@ Working with LDAP and the various elements of OpenLDAP, such as slapd, are
 not easy to work with. See also some examples on the
 [track hacks](http://trac-hacks.org/wiki/LdapPluginTests) page.
 
+## Testing LDAP behavior
+
+Since problems often occur with the interpretation of a directory server's
+output it's important that we test against expected results and not just
+test our functions in isolation. 
+
+Whenever you are trying to debug a complex dance between the Drupal integration
+modules and a directory, consider mocking the LDAP connector with the Fake
+classes provided by ldap_servers. For example: 
+\Drupal\Tests\ldap_authentication\LoginTest
+
+## Case-handling
+
+LDAP is a case-aware but not case-sensitive protocol, which means that what
+we get back in Symfony\Component\Ldap\Entry objects, or LDAP data in general,
+may contain differences in case. For example the property "memberOf".
+
+We need to keep the following in mind when making changes to these modules:
+* Comparisons against LDAP data must ignore case. Examples: 
+  * A query for ldap authorization specified as "memberof=..." in
+the configuration must also catch data returned as "memberOf=...".
+  * Token processing on records returned by LDAP must do the same.
+* Data sent to LDAP can ignore case-formatting (we do not need to normalize it).
+
+Note that attributes returned from LDAP via the LdapBaseManager are lowercased
+through `::sanitizeUserDataResponse` so we need to
+`get('businesscategory')` not `get('businessCategory')`.
+
+## Misc
+
 ### User binding
 
 If you want to bind with user credentials, you only need to modify the 

@@ -31,16 +31,6 @@ class LdapGroupManager extends LdapBaseManager {
   const LDAP_QUERY_RECURSION_LIMIT = 10;
 
   /**
-   * Check if group memberships from attribute are configured.
-   *
-   * @return bool
-   *   Whether group user memberships are configured.
-   */
-  public function groupUserMembershipsFromAttributeConfigured() {
-    return $this->server->get('grp_user_memb_attr_exists') && $this->server->getGroupUserMembershipAttribute();
-  }
-
-  /**
    * Check if group memberships from group entry are configured.
    *
    * @return bool
@@ -512,7 +502,7 @@ class LdapGroupManager extends LdapBaseManager {
     }
 
     // Preferred method.
-    if ($this->groupUserMembershipsFromAttributeConfigured()) {
+    if ($this->server->isGroupUserMembershipAttributeInUse() && $this->server->getGroupUserMembershipAttribute()) {
       $group_dns = $this->groupUserMembershipsFromUserAttr($user_ldap_entry);
     }
     elseif ($this->groupGroupEntryMembershipsConfigured()) {
@@ -537,13 +527,13 @@ class LdapGroupManager extends LdapBaseManager {
       return FALSE;
     }
 
-    if (!$this->groupUserMembershipsFromAttributeConfigured()) {
+    if (!$this->server->isGroupUserMembershipAttributeInUse()) {
       return FALSE;
     }
 
     $groupAttribute = $this->server->getGroupUserMembershipAttribute();
 
-    if ($ldap_entry->hasAttribute($groupAttribute)) {
+    if (!$ldap_entry->hasAttribute($groupAttribute)) {
       return FALSE;
     }
 
@@ -558,7 +548,7 @@ class LdapGroupManager extends LdapBaseManager {
     foreach ($membersGroupDns as $memberGroupDn) {
       $allGroupDns[] = $memberGroupDn;
       if ($this->server->get('grp_nested')) {
-        if ($this->server->get('grp_memb_attr_match_user_attr') == 'dn') {
+        if ($this->server->get('grp_memb_attr_match_user_attr') === 'dn') {
           $member_value = $memberGroupDn;
         }
         else {
