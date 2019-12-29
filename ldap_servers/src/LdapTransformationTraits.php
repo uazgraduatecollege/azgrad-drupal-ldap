@@ -27,7 +27,7 @@ trait LdapTransformationTraits {
       $value = ldap_escape($value, '', LDAP_ESCAPE_DN);
     }
     else {
-      $value = Php56\Php56::ldap_escape($value, '', LDAP_ESCAPE_DN);
+      $value = Php56\Php56::ldap_escape($value, '', 2);
     }
 
     // Copied from Symfonfy's Adapter.php for ease of use.
@@ -59,7 +59,7 @@ trait LdapTransformationTraits {
       $value = ldap_escape($value, '', LDAP_ESCAPE_FILTER);
     }
     else {
-      $value = Php56\Php56::ldap_escape($value, '', LDAP_ESCAPE_FILTER);
+      $value = Php56\Php56::ldap_escape($value, '', 1);
     }
     return $value;
   }
