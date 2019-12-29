@@ -4,6 +4,8 @@ declare(strict_types = 1);
 
 namespace Drupal\ldap_servers;
 
+use Symfony\Polyfill\Php56;
+
 /**
  * Helper functions to work around hard dependencies on the LDAP extension.
  */
@@ -25,12 +27,7 @@ trait LdapTransformationTraits {
       $value = ldap_escape($value, '', LDAP_ESCAPE_DN);
     }
     else {
-      $value = str_replace(['*', '\\', '(', ')'], [
-        '\\*',
-        '\\\\',
-        '\\(',
-        '\\)',
-      ], $value);
+      $value = Php56\Php56::ldap_escape($value, '', LDAP_ESCAPE_DN);
     }
 
     // Copied from Symfonfy's Adapter.php for ease of use.
@@ -59,33 +56,12 @@ trait LdapTransformationTraits {
    */
   protected function ldapEscapeFilter($value) {
     if (function_exists('ldap_escape')) {
-      return ldap_escape($value, '', LDAP_ESCAPE_FILTER);
+      $value = ldap_escape($value, '', LDAP_ESCAPE_FILTER);
     }
     else {
-      // Taken from symfony/polyfill-php56.
-      $charMaps['filter'] = [
-        '\\',
-        ',',
-        '=',
-        '+',
-        '<',
-        '>',
-        ';',
-        '"',
-        '#',
-        "\r",
-      ];
-      for ($i = 0; $i < 256; ++$i) {
-        $charMaps[0][\chr($i)] = sprintf('\\%02x', $i);
-      }
-      for ($i = 0, $l = \count($charMaps['filter']); $i < $l; ++$i) {
-        $chr = $charMaps['filter'][$i];
-        unset($charMaps['filter'][$i]);
-        $charMaps['filter'][$chr] = $charMaps[0][$chr];
-      }
-
-      return strtr($value, $charMaps['filter']);
+      $value = Php56\Php56::ldap_escape($value, '', LDAP_ESCAPE_FILTER);
     }
+    return $value;
   }
 
   /**
