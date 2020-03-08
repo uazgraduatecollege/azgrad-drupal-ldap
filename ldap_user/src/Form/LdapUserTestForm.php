@@ -116,7 +116,7 @@ class LdapUserTestForm extends FormBase implements LdapUserAttributesInterface {
       $container->get('entity_type.manager'),
       $container->get('externalauth.authmap'),
       $container->get('ldap.drupal_user_processor'),
-      $container->get('ldap.ldap_user_manager')
+      $container->get('ldap.user_manager')
     );
   }
 
