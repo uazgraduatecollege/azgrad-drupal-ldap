@@ -278,7 +278,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
         ->getStorage('ldap_server')
         ->load($this->config->get('drupalAcctProvisionServer'));
       $load_by_name = $this->entityTypeManager->getStorage('user')
-        ->loadByProperties(['name' => $this->$drupal_username]);
+        ->loadByProperties(['name' => $drupal_username]);
       $this->account = $load_by_name ? reset($load_by_name) : FALSE;
       if (!$this->account) {
         $this->logger->error('Failed to LDAP associate Drupal account %drupal_username because account not found', ['%drupal_username' => $drupal_username]);
