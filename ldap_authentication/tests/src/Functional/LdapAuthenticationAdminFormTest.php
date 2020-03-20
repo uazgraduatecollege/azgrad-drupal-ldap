@@ -48,7 +48,7 @@ class LdapAuthenticationAdminFormTest extends BrowserTestBase {
       'tls' => FALSE,
       'address' => 'example',
       'port' => 963,
-      'basedn' => 'ou=people,dc=hogwarts,dc=edu',
+      'basedn' => ['ou=people,dc=hogwarts,dc=edu'],
       'user_attr' => 'cn',
       'unique_persistent_attr' => 'uid',
       'status' => TRUE,
@@ -59,12 +59,14 @@ class LdapAuthenticationAdminFormTest extends BrowserTestBase {
       'id' => 'my_test_server_2',
       'label' => 'My Test Server 2',
       'status' => TRUE,
+      'basedn' => ['ou=people,dc=hogwarts,dc=edu'],
     ]);
     $server->save();
     $server = $manager->getStorage('ldap_server')->create([
       'id' => 'my_test_server_3',
       'label' => 'My FALSe Server 3',
       'status' => FALSE,
+      'basedn' => ['ou=people,dc=hogwarts,dc=edu'],
     ]);
     $server->save();
   }

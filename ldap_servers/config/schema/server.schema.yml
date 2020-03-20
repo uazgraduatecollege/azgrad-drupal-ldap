@@ -41,8 +41,10 @@ ldap_servers.server.*:
       type: string
       label: 'Password for non-anonymous search'
     basedn:
-      type: string
+      type: sequence
       label: 'Base DNs for LDAP users, groups, and other entries.'
+      sequence:
+        type: string
     user_attr:
       type: string
       label: 'Authentication name attribute'

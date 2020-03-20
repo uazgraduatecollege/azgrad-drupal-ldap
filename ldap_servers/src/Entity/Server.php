@@ -149,7 +149,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
   /**
    * Base DN.
    *
-   * @var string
+   * @var array
    */
   protected $basedn;
 
@@ -394,14 +394,7 @@ class Server extends ConfigEntityBase implements ServerInterface {
    * {@inheritdoc}
    */
   public function getBaseDn(): array {
-    // @TODO: Improve storage in database (should be a proper array)./
-    if ($this->get('basedn')) {
-      $base_dn = explode("\r\n", $this->get('basedn'));
-    }
-    else {
-      $base_dn = [];
-    }
-    return $base_dn;
+    return $this->get('basedn');
   }
 
   /**

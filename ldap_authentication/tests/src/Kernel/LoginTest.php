@@ -60,7 +60,7 @@ class LoginTest extends KernelTestBase {
       'tls' => FALSE,
       'address' => 'example',
       'port' => 963,
-      'basedn' => 'ou=people,dc=hogwarts,dc=edu',
+      'basedn' => ['ou=people,dc=hogwarts,dc=edu'],
       'user_attr' => 'cn',
       'unique_persistent_attr' => 'uid',
       'status' => TRUE,

@@ -54,11 +54,11 @@ class ServerTest extends EntityKernelTestBase {
    * Test the Base DN.
    */
   public function testGetBasedn(): void {
-    $this->server->set('basedn', '');
+    $this->server->set('basedn', []);
     $this->assertEquals([], $this->server->getBaseDn());
-    $this->server->set('basedn', "ou=people,dc=hogwarts,dc=edu\r\nou=groups,dc=hogwarts,dc=edu");
+    $this->server->set('basedn', ['ou=people,dc=hogwarts,dc=edu', 'ou=groups,dc=hogwarts,dc=edu']);
     $this->assertEquals('ou=groups,dc=hogwarts,dc=edu', $this->server->getBaseDn()[1]);
-    $this->assertTrue(count($this->server->getBaseDn()) == 2);
+    $this->assertCount(2, $this->server->getBaseDn());
   }
 
   /**

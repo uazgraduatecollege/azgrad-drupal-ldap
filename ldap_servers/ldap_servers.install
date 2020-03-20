@@ -142,7 +142,7 @@ function ldap_servers_update_8401() {
 /**
  * Corrects a configuration field type.
  */
-function ldap_help_update_8402() {
+function ldap_servers_update_8402() {
   $config_factory = \Drupal::configFactory();
   $config_old = $config_factory->getEditable('ldap_servers.settings');
   if ($config_old) {
@@ -150,5 +150,19 @@ function ldap_help_update_8402() {
     $config_new->set('watchdog_detail', $config_old->get('watchdog_detail'));
     $config_new->save();
     $config_old->delete();
+  }
+}
+
+/**
+ * Convert basedn to array.
+ */
+function ldap_servers_update_8403() {
+  $storage = \Drupal::service('entity_type.manager')->getStorage('ldap_server');
+  $servers = $storage->getQuery()->execute();
+  /** @var \Drupal\ldap_servers\Entity\Server $server */
+  foreach ($storage->loadMultiple($servers) as $server) {
+    $split = preg_split('/\r\n|\r|\n/', $server->get('basedn'));
+    $server->set('basedn', $split);
+    $server->save();
   }
 }

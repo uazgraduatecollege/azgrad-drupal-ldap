@@ -170,8 +170,9 @@ class ServerForm extends EntityForm {
       '#title' => $this->t('Users'),
     ];
 
+    // TODO: Change to "add another" pattern, to avoid linebreak handling.
     $form['users']['basedn'] = [
-      '#default_value' => $server->get('basedn'),
+      '#default_value' => $server->get('basedn') ? implode("\r\n", $server->get('basedn')) : '',
       '#type' => 'textarea',
       '#cols' => 50,
       '#rows' => 6,
@@ -459,6 +460,7 @@ class ServerForm extends EntityForm {
         }
       }
     }
+    $this->entity->set('basedn', preg_split('/\r\n|\r|\n/', $form_state->getValue('basedn')));
 
     $fields = [
       'user_attr',
