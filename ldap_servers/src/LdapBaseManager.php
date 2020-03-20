@@ -384,7 +384,7 @@ abstract class LdapBaseManager {
 
     foreach ($this->server->getBaseDn() as $base_dn) {
       $result = $this->queryLdapForUsername($base_dn, $drupal_username);
-      if (!$result || $result instanceof Entry) {
+      if ($result === FALSE || $result instanceof Entry) {
         return $result;
       }
     }
