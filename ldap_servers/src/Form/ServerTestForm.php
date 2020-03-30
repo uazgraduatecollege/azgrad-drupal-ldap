@@ -363,7 +363,7 @@ class ServerTestForm extends EntityForm {
     }
 
     foreach ($this->tokenProcessor->getTokens() as $key => $value) {
-      $this->resultsTables['tokens'][] = [$key, $this->binaryCheck($value)];
+      $this->resultsTables['tokens'][] = [$key, self::binaryCheck($value)];
     }
 
     $form_state->set(['ldap_server_test_data'], [
@@ -396,14 +396,14 @@ class ServerTestForm extends EntityForm {
 
     $ldap = $this->ldapBridge->get();
     try {
-      $group_entry = $ldap->query($group_dn, 'objectClass=*')->execute();
+      $group_entry = $ldap->query($group_dn, 'objectClass=*')->execute()->toArray();
     }
     catch (LdapException $e) {
-      $group_entry = FALSE;
+      $group_entry = [];
     }
 
-    if ($group_entry && $group_entry->count() > 0) {
-      foreach ([FALSE] as $nested) {
+    if (!empty($group_entry)) {
+      foreach ([TRUE, FALSE] as $nested) {
         $this->ldapServer->set('grp_nested', $nested);
         // TODO: Need to pass server by reference to inject nesting state.
         $this->ldapGroupManager->setServerById($this->ldapServer->id());
@@ -426,10 +426,11 @@ class ServerTestForm extends EntityForm {
 
           $result = ($this->ldapGroupManager->groupIsMember($group_dn, $username)) ? 'Yes' : 'No';
           $this->resultsTables['group2'][] = [
-            'groupIsMember from group DN ' . $group_dn . 'for ' . $username . ' nested=' . $nested_display . ')',
-            $result,
+            sprintf(  'groupIsMember from group DN "%s" for %s nested=%s', $group_dn,  $username, $nested_display),
+            $result
           ];
 
+          $groupUserMembershipsFromUserAttributes = [];
           if ($this->ldapServer->isGroupUserMembershipAttributeInUse()) {
             $entry = $this->ldapGroupManager->matchUsernameToExistingLdapEntry($username);
             $groupUserMembershipsFromUserAttributes = $this->ldapGroupManager->groupUserMembershipsFromUserAttr($entry);
@@ -441,7 +442,6 @@ class ServerTestForm extends EntityForm {
             $result = $this->renderer->render($settings);
           }
           else {
-            $groupUserMembershipsFromUserAttributes = [];
             $result = "'A user LDAP attribute such as memberOf exists that contains a list of their group' is not configured.";
           }
           $this->resultsTables['group2'][] = [
@@ -449,6 +449,7 @@ class ServerTestForm extends EntityForm {
             $result,
           ];
 
+          $groupUserMembershipsFromEntry = [];
           if ($this->ldapGroupManager->groupGroupEntryMembershipsConfigured()) {
             $ldap_entry = $this->ldapGroupManager->matchUsernameToExistingLdapEntry($username);
             $groupUserMembershipsFromEntry = $this->ldapGroupManager->groupUserMembershipsFromEntry($ldap_entry);
@@ -460,7 +461,6 @@ class ServerTestForm extends EntityForm {
             $result = $this->renderer->render($settings);
           }
           else {
-            $groupUserMembershipsFromEntry = [];
             $result = 'Groups by entry not configured.';
           }
 
@@ -517,15 +517,18 @@ class ServerTestForm extends EntityForm {
     }
 
     $result = $this->ldapGroupManager->groupAllMembers($group_dn);
-    $settings = [
-      '#theme' => 'item_list',
-      '#items' => $result,
-      '#list_type' => 'ul',
-    ];
-    $this->resultsTables['group_direct'][] = [
-      $this->t('Entries found on group DN directly'),
-      $this->renderer->render($settings),
-    ];
+    if ($result) {
+      $settings = [
+        '#theme' => 'item_list',
+        '#items' => $result,
+        '#list_type' => 'ul',
+      ];
+      $this->resultsTables['group_direct'][] = [
+        $this->t('Entries found on group DN directly'),
+        $this->renderer->render($settings),
+      ];
+    }
+
     return $group_entry;
   }
 

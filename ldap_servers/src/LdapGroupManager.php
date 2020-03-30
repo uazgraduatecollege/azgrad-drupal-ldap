@@ -21,14 +21,14 @@ class LdapGroupManager extends LdapBaseManager {
    *
    * @var int
    */
-  const LDAP_QUERY_CHUNK = 50;
+  protected const LDAP_QUERY_CHUNK = 50;
 
   /**
    * Recursion limit.
    *
    * @var int
    */
-  const LDAP_QUERY_RECURSION_LIMIT = 10;
+  protected const LDAP_QUERY_RECURSION_LIMIT = 10;
 
   /**
    * Check if group memberships from group entry are configured.
@@ -36,7 +36,7 @@ class LdapGroupManager extends LdapBaseManager {
    * @return bool
    *   Whether group memberships from group entry are configured.
    */
-  public function groupGroupEntryMembershipsConfigured() {
+  public function groupGroupEntryMembershipsConfigured(): bool {
     return $this->server->get('grp_memb_attr_match_user_attr') && $this->server->get('grp_memb_attr');
   }
 
@@ -53,9 +53,10 @@ class LdapGroupManager extends LdapBaseManager {
    * @return array
    *   Nested group filters.
    */
-  private function getNestedGroupDnFilters(array $all_group_dns, array $or_filters, $level) {
+  private function getNestedGroupDnFilters(array $all_group_dns, array $or_filters, $level): array {
     // Only 50 or so per query.
-    for ($key = 0; $key < count($or_filters); $key += self::LDAP_QUERY_CHUNK) {
+    $count = count($or_filters);
+    for ($key = 0; $key < $count; $key += self::LDAP_QUERY_CHUNK) {
       $current_or_filters = array_slice($or_filters, $key, self::LDAP_QUERY_CHUNK);
       // Example 1: (|(cn=group1)(cn=group2))
       // Example 2: (|(dn=cn=group1,ou=blah...)(dn=cn=group2,ou=blah...))
@@ -74,7 +75,7 @@ class LdapGroupManager extends LdapBaseManager {
           ]);
           continue;
         }
-        if ($ldap_result->count() > 0 && $level < self::LDAP_QUERY_RECURSION_LIMIT) {
+        if ($level < self::LDAP_QUERY_RECURSION_LIMIT && $ldap_result->count() > 0) {
           $tested_group_ids = [];
           $this->groupMembershipsFromEntryRecursive($ldap_result, $all_group_dns, $tested_group_ids, $level + 1, self::LDAP_QUERY_RECURSION_LIMIT);
         }
@@ -100,12 +101,8 @@ class LdapGroupManager extends LdapBaseManager {
    * @return bool
    *   Operation result.
    */
-  public function groupAddGroup($group_dn, array $attributes = []) {
-    if (!$this->checkAvailability()) {
-      return FALSE;
-    }
-
-    if ($this->checkDnExists($group_dn)) {
+  public function groupAddGroup($group_dn, array $attributes = []): bool {
+    if (!$this->checkAvailability() || $this->checkDnExists($group_dn)) {
       return FALSE;
     }
 
@@ -165,14 +162,14 @@ class LdapGroupManager extends LdapBaseManager {
    *
    * @TODO: When actually in use split into two to remove boolean modifier.
    */
-  public function groupRemoveGroup($group_dn, $only_if_group_empty = TRUE) {
+  public function groupRemoveGroup($group_dn, $only_if_group_empty = TRUE): bool {
     if (!$this->checkAvailability()) {
       return FALSE;
     }
 
     if ($only_if_group_empty) {
       $members = $this->groupAllMembers($group_dn);
-      if (is_array($members) && count($members) > 0) {
+      if (!empty($members)) {
         return FALSE;
       }
     }
@@ -195,7 +192,7 @@ class LdapGroupManager extends LdapBaseManager {
    *
    * @FIXME symfony/ldap refactoring needed.
    */
-  public function groupAddMember($group_dn, $user) {
+  public function groupAddMember($group_dn, $user): bool {
     if (!$this->checkAvailability()) {
       return FALSE;
     }
@@ -236,13 +233,10 @@ class LdapGroupManager extends LdapBaseManager {
    * @return bool
    *   Operation successful.
    */
-  public function groupRemoveMember($group_dn, $member) {
-    if (!$this->checkAvailability()) {
-      return FALSE;
-    }
-
+  public function groupRemoveMember($group_dn, $member): bool {
     $result = FALSE;
-    if ($this->groupGroupEntryMembershipsConfigured()) {
+
+    if ($this->checkAvailability() && $this->groupGroupEntryMembershipsConfigured()) {
       try {
         $entry = new Entry($group_dn);
         // TODO: Bugreport upstream interface.
@@ -252,7 +246,7 @@ class LdapGroupManager extends LdapBaseManager {
         $result = TRUE;
       }
       catch (LdapException $e) {
-        $this->logger->error("LDAP server error updating %dn on @sid exception: %ldap_error", [
+        $this->logger->error('LDAP server error updating %dn on @sid exception: %ldap_error', [
           '%dn' => $entry->getDn(),
           '@sid' => $this->server->id(),
           '%ldap_error' => $e->getMessage(),
@@ -271,50 +265,38 @@ class LdapGroupManager extends LdapBaseManager {
    * @param string $group_dn
    *   Group DN as LDAP DN.
    *
-   * @return bool|array
-   *   FALSE on error, otherwise array of group members (could be users or
+   * @return array
+   *   Array of group members (could be users or
    *   groups).
    *
    * @TODO: Split return functionality or throw an error.
    */
-  public function groupAllMembers($group_dn) {
-    if (!$this->checkAvailability()) {
-      return FALSE;
-    }
-
-    if (!$this->groupGroupEntryMembershipsConfigured()) {
-      return FALSE;
+  public function groupAllMembers($group_dn): array {
+    $members = [];
+    if (!$this->checkAvailability() || !$this->groupGroupEntryMembershipsConfigured()) {
+      return $members;
     }
 
     $attributes = [$this->server->get('grp_memb_attr'), 'cn', 'objectclass'];
     $group_entry = $this->checkDnExistsIncludeData($group_dn, $attributes);
     if (!$group_entry) {
-      return FALSE;
-    }
-    else {
-      // If attributes weren't returned, don't give false  empty group.
-      if (empty($group_entry->getAttribute('cn'))) {
-        return FALSE;
-      }
-      if (empty($group_entry->getAttribute($this->server->get('grp_memb_attr')))) {
-        // If no attribute returned, no members.
-        return [];
-      }
-      $members = $group_entry->getAttribute($this->server->get('grp_memb_attr'));
-
-      $result = $this->groupMembersRecursive($group_entry, $members, [], 0, self::LDAP_QUERY_RECURSION_LIMIT);
-      // Remove the DN of the source group.
-      if (($key = array_search($group_dn, $members)) !== FALSE) {
-        unset($members[$key]);
-      }
-    }
-
-    if ($result) {
       return $members;
     }
-    else {
-      return FALSE;
+
+    // If attributes weren't returned, don't give false  empty group.
+    if (empty($group_entry->getAttribute('cn')) || empty($group_entry->getAttribute($this->server->get('grp_memb_attr')))) {
+      // If no attribute returned, no members.
+      return $members;
     }
+    $members = $group_entry->getAttribute($this->server->get('grp_memb_attr'));
+
+    $result = $this->groupMembersRecursive($group_entry, $members, [], 0, self::LDAP_QUERY_RECURSION_LIMIT);
+    // Remove the DN of the source group.
+    if (($key = array_search($group_dn, $members, TRUE)) !== FALSE) {
+      unset($members[$key]);
+    }
+
+    return $members;
   }
 
   /**
@@ -363,7 +345,7 @@ class LdapGroupManager extends LdapBaseManager {
   /**
    * Is a user a member of group?
    *
-   * @param string $groupDn
+   * @param string $group_dn
    *   Group DN in mixed case.
    * @param string $username
    *   A Drupal username.
@@ -371,22 +353,20 @@ class LdapGroupManager extends LdapBaseManager {
    * @return bool
    *   Whether the user belongs to the group.
    */
-  public function groupIsMember($groupDn, $username) {
-    if (!$this->checkAvailability()) {
-      return FALSE;
+  public function groupIsMember($group_dn, $username): bool {
+    if ($this->checkAvailability()) {
+      $group_dns = $this->groupMembershipsFromUser($username);
+      if ($group_dns && !empty($group_dns)) {
+        // While list of group dns is going to be in correct mixed case, $group_dn
+        // may not since it may be derived from user entered values so make sure
+        // in_array() is case insensitive.
+        $lower_cased_group_dns = array_keys(array_change_key_case(array_flip($group_dns), CASE_LOWER));
+        if (in_array(mb_strtolower($group_dn), $lower_cased_group_dns, TRUE)) {
+          return TRUE;
+        }
+      }
     }
-
-    $groupDns = $this->groupMembershipsFromUser($username);
-    // While list of group dns is going to be in correct mixed case, $group_dn
-    // may not since it may be derived from user entered values so make sure
-    // in_array() is case insensitive.
-    $lowerCasedGroupDns = array_keys(array_change_key_case(array_flip($groupDns), CASE_LOWER));
-    if (is_array($groupDns) && in_array(mb_strtolower($groupDn), $lowerCasedGroupDns)) {
-      return TRUE;
-    }
-    else {
-      return FALSE;
-    }
+    return FALSE;
   }
 
   /**
@@ -487,18 +467,18 @@ class LdapGroupManager extends LdapBaseManager {
    * @param string $username
    *   A Drupal user entity.
    *
-   * @return array|false
+   * @return array
    *   Array of group dns in mixed case or FALSE on error.
    */
-  public function groupMembershipsFromUser($username) {
+  public function groupMembershipsFromUser($username): array {
+    $group_dns = [];
     if (!$this->checkAvailability()) {
-      return FALSE;
+      return $group_dns;
     }
 
-    $group_dns = FALSE;
     $user_ldap_entry = $this->matchUsernameToExistingLdapEntry($username);
     if (!$user_ldap_entry || $this->server->get('grp_unused')) {
-      return FALSE;
+      return $group_dns;
     }
 
     // Preferred method.
@@ -517,52 +497,47 @@ class LdapGroupManager extends LdapBaseManager {
    * @param \Symfony\Component\Ldap\Entry $ldap_entry
    *   A Drupal user entity, an LDAP entry array of a user  or a username.
    *
-   * @return array|false
+   * @return array
    *   Array of group dns in mixed case or FALSE on error.
    *
    * @see groupMembershipsFromUser()
    */
-  public function groupUserMembershipsFromUserAttr(Entry $ldap_entry) {
-    if (!$this->checkAvailability()) {
-      return FALSE;
+  public function groupUserMembershipsFromUserAttr(Entry $ldap_entry): array {
+    $all_group_dns = [];
+
+    if (!$this->checkAvailability() || !$this->server->isGroupUserMembershipAttributeInUse()) {
+      return $all_group_dns;
     }
 
-    if (!$this->server->isGroupUserMembershipAttributeInUse()) {
-      return FALSE;
+    $group_attribute = $this->server->getGroupUserMembershipAttribute();
+    if (!$ldap_entry->hasAttribute($group_attribute)) {
+      return $all_group_dns;
     }
 
-    $groupAttribute = $this->server->getGroupUserMembershipAttribute();
-
-    if (!$ldap_entry->hasAttribute($groupAttribute)) {
-      return FALSE;
-    }
-
-    $allGroupDns = [];
     $level = 0;
-
-    $membersGroupDns = $ldap_entry[$groupAttribute];
-    if (isset($membersGroupDns['count'])) {
-      unset($membersGroupDns['count']);
+    $members_group_dns = $ldap_entry[$group_attribute];
+    if (isset($members_group_dns['count'])) {
+      unset($members_group_dns['count']);
     }
     $orFilters = [];
-    foreach ($membersGroupDns as $memberGroupDn) {
-      $allGroupDns[] = $memberGroupDn;
+    foreach ($members_group_dns as $member_group_dn) {
+      $all_group_dns[] = $member_group_dn;
       if ($this->server->get('grp_nested')) {
         if ($this->server->get('grp_memb_attr_match_user_attr') === 'dn') {
-          $member_value = $memberGroupDn;
+          $member_value = $member_group_dn;
         }
         else {
-          $member_value = $this->getFirstRdnValueFromDn($memberGroupDn, $this->server->get('grp_memb_attr_match_user_attr'));
+          $member_value = $this->getFirstRdnValueFromDn($member_group_dn, $this->server->get('grp_memb_attr_match_user_attr'));
         }
         $orFilters[] = $this->server->get('grp_memb_attr') . '=' . $this->ldapEscapeDn($member_value);
       }
     }
 
     if ($this->server->get('grp_nested') && count($orFilters)) {
-      $allGroupDns = $this->getNestedGroupDnFilters($allGroupDns, $orFilters, $level);
+      $all_group_dns = $this->getNestedGroupDnFilters($all_group_dns, $orFilters, $level);
     }
 
-    return $allGroupDns;
+    return $all_group_dns;
   }
 
   /**
@@ -571,27 +546,24 @@ class LdapGroupManager extends LdapBaseManager {
    * @param \Symfony\Component\Ldap\Entry $ldap_entry
    *   LDAP entry.
    *
-   * @return array|false
-   *   Array of group dns in mixed case or FALSE on error.
+   * @return array
+   *   Array of group dns in mixed case.
    *
    * @see groupMembershipsFromUser()
    */
-  public function groupUserMembershipsFromEntry(Entry $ldap_entry) {
-    if (!$this->checkAvailability()) {
-      return FALSE;
-    }
-
-    if (!$this->groupGroupEntryMembershipsConfigured()) {
-      return FALSE;
-    }
-
+  public function groupUserMembershipsFromEntry(Entry $ldap_entry): array {
     // MIXED CASE VALUES.
     $all_group_dns = [];
+
+    if (!$this->checkAvailability() || !$this->groupGroupEntryMembershipsConfigured()) {
+      return $all_group_dns;
+    }
+
     // Array of dns already tested to avoid excess queries MIXED CASE VALUES.
     $tested_group_ids = [];
     $level = 0;
 
-    if ($this->server->get('grp_memb_attr_match_user_attr') == 'dn') {
+    if ($this->server->get('grp_memb_attr_match_user_attr') === 'dn') {
       $member_value = $ldap_entry->getDn();
     }
     else {
@@ -720,22 +692,25 @@ class LdapGroupManager extends LdapBaseManager {
    * @param string $username
    *   A username.
    *
-   * @return array|bool
+   * @return array
    *   Array of group strings.
    */
-  public function groupUserMembershipsFromDn($username) {
-    if (!$this->checkAvailability()) {
-      return FALSE;
+  public function groupUserMembershipsFromDn($username): array {
+    $memberships = [];
+    if (
+      $this->checkAvailability() &&
+      $this->server->isGroupDerivedFromDn() &&
+      $this->server->getDerivedGroupFromDnAttribute()
+    ) {
+      $ldap_entry = $this->matchUsernameToExistingLdapEntry($username);
+      if ($ldap_entry) {
+        $memberships = $this->getAllRdnValuesFromDn(
+          $ldap_entry->getDn(),
+          $this->server->getDerivedGroupFromDnAttribute()
+        );
+      }
     }
-
-    if (!$this->server->isGroupDerivedFromDn() || !$this->server->getDerivedGroupFromDnAttribute()) {
-      return FALSE;
-    }
-
-    if ($ldap_entry = $this->matchUsernameToExistingLdapEntry($username)) {
-      return $this->getAllRdnValuesFromDn($ldap_entry->getDn(), $this->server->getDerivedGroupFromDnAttribute());
-    }
-    return FALSE;
+    return $memberships;
   }
 
   /**
@@ -752,9 +727,9 @@ class LdapGroupManager extends LdapBaseManager {
    * @return string
    *   Value of RDN.
    */
-  private function getFirstRdnValueFromDn($dn, $rdn) {
+  private function getFirstRdnValueFromDn($dn, $rdn): string {
     // Escapes attribute values, need to be unescaped later.
-    $pairs = $this->splitDnWithAttributes($dn);
+    $pairs = self::splitDnWithAttributes($dn);
     array_shift($pairs);
     $rdn = mb_strtolower($rdn);
     $rdn_value = FALSE;
@@ -782,9 +757,9 @@ class LdapGroupManager extends LdapBaseManager {
    * @return array
    *   All values of RDN.
    */
-  public function getAllRdnValuesFromDn($dn, $rdn) {
+  public function getAllRdnValuesFromDn($dn, $rdn): array {
     // Escapes attribute values, need to be unescaped later.
-    $pairs = $this->splitDnWithAttributes($dn);
+    $pairs = self::splitDnWithAttributes($dn);
     array_shift($pairs);
     $rdn = mb_strtolower($rdn);
     $rdn_values = [];

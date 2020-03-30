@@ -219,11 +219,11 @@ class LdapUserManager extends LdapBaseManager {
    * @param \Drupal\user\UserInterface $account
    *   Drupal user account.
    *
-   * @return array|bool
-   *   Returns data or FALSE.
+   * @return \Symfony\Component\Ldap\Entry|false
+   *   Returns entry or FALSE.
    *
-   *   This should go into LdapUserProcessor or LdapUserManager, leaning toward
-   *   the former.
+   *   TODO: This should go into LdapUserProcessor or LdapUserManager,
+   *   leaning toward the former.
    */
   public function getUserDataByAccount(UserInterface $account) {
     if (!$this->checkAvailability()) {
