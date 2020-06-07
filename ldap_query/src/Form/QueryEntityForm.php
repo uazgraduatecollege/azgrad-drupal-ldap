@@ -121,7 +121,7 @@ class QueryEntityForm extends EntityForm {
 
     $dereference = $ldap_query_entity->get('dereference');
     if (!$dereference) {
-      $dereference = LDAP_DEREF_NEVER;
+      $dereference = LDAP_DEREF_NEVER ?? 0;
     }
 
     $form['dereference'] = [
@@ -130,10 +130,11 @@ class QueryEntityForm extends EntityForm {
       '#default_value' => $dereference,
       '#required' => TRUE,
       '#options' => [
-        LDAP_DEREF_NEVER => $this->t('Aliases are never dereferenced (default).'),
-        LDAP_DEREF_SEARCHING => $this->t('Aliases should be dereferenced during the search but not when locating the base object of the search.'),
-        LDAP_DEREF_FINDING => $this->t('Aliases should be dereferenced when locating the base object but not during the search.'),
-        LDAP_DEREF_ALWAYS => $this->t('Aliases should always be dereferenced.'),
+        // Integers provided as fallback for CI without ldap extension.
+        LDAP_DEREF_NEVER ?? 0 => $this->t('Aliases are never dereferenced (default).'),
+        LDAP_DEREF_SEARCHING ?? 1 => $this->t('Aliases should be dereferenced during the search but not when locating the base object of the search.'),
+        LDAP_DEREF_FINDING ?? 2 => $this->t('Aliases should be dereferenced when locating the base object but not during the search.'),
+        LDAP_DEREF_ALWAYS ?? 3 => $this->t('Aliases should always be dereferenced.'),
       ],
     ];
 

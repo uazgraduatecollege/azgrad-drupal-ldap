@@ -48,6 +48,7 @@ class LdapEntryProvisionTest extends EntityKernelTestBase {
       'tls' => FALSE,
       'address' => 'example',
       'port' => 963,
+      'basedn' => [],
     ]);
     $server->save();
     $this->config('ldap_user.settings')
