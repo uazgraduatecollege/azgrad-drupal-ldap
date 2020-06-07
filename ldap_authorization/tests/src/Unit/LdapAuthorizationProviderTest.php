@@ -35,7 +35,7 @@ class LdapAuthorizationProviderTest extends UnitTestCase {
   /**
    * Test regex validation().
    */
-  public function testValidateRowForm() {
+  public function testValidateRowForm(): void {
 
     $form_state = new FormState();
     $mappings = [
@@ -66,11 +66,14 @@ class LdapAuthorizationProviderTest extends UnitTestCase {
     // TODO: Still needs more useful assertions here.
   }
 
-  public function testFilterProposal() {
+  /**
+   * Test the filter proposal.
+   */
+  public function testFilterProposal(): void {
 
-    // Example of groups defined in
+    // Example of groups defined in.
     $input = [
-      'cn=students'
+      'cn=students',
     ];
 
     $this->assertCount(

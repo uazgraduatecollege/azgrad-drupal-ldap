@@ -426,8 +426,8 @@ class ServerTestForm extends EntityForm {
 
           $result = ($this->ldapGroupManager->groupIsMember($group_dn, $username)) ? 'Yes' : 'No';
           $this->resultsTables['group2'][] = [
-            sprintf(  'groupIsMember from group DN "%s" for %s nested=%s', $group_dn,  $username, $nested_display),
-            $result
+            sprintf('groupIsMember from group DN "%s" for %s nested=%s', $group_dn, $username, $nested_display),
+            $result,
           ];
 
           $groupUserMembershipsFromUserAttributes = [];

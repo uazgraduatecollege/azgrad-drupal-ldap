@@ -60,7 +60,7 @@ class LdapGroupManager extends LdapBaseManager {
       $current_or_filters = array_slice($or_filters, $key, self::LDAP_QUERY_CHUNK);
       // Example 1: (|(cn=group1)(cn=group2))
       // Example 2: (|(dn=cn=group1,ou=blah...)(dn=cn=group2,ou=blah...))
-      $orFilter = '(|(' . implode(")(", $current_or_filters) . '))';
+      $orFilter = '(|(' . implode(')(', $current_or_filters) . '))';
       $query_for_parent_groups = '(&(objectClass=' . $this->server->get('grp_object_cat') . ')' . $orFilter . ')';
 
       // Need to search on all base DN one at a time.

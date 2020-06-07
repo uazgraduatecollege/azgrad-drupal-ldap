@@ -72,16 +72,16 @@ trait LdapTransformationTraits {
    * @param string $dn
    *   DN to explode.
    *
-   * @return array
+   * @return array|false
    *   Exploded DN.
    */
-  public static function splitDnWithAttributes($dn): ?array {
+  public static function splitDnWithAttributes($dn) {
     if (function_exists('ldap_explode_dn')) {
       return ldap_explode_dn($dn, 0);
     }
 
     $rdn = explode(',', $dn);
-    $rdn = array_map(function ($attribute) {
+    $rdn = array_map(static function ($attribute) {
       $attribute = trim($attribute);
       // This is a workaround for OpenLDAP escaping Unicode values.
       $key_value = explode('=', $attribute);
