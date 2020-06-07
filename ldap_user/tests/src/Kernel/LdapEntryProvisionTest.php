@@ -2,7 +2,7 @@
 
 declare(strict_types = 1);
 
-namespace Drupal\Tests\ldap_user\Unit;
+namespace Drupal\Tests\ldap_user\Kernel;
 
 use Drupal\KernelTests\Core\Entity\EntityKernelTestBase;
 use Drupal\ldap_servers\Entity\Server;
