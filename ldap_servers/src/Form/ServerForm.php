@@ -74,7 +74,7 @@ class ServerForm extends EntityForm {
         'opendir' => 'Apple Open Directory',
       ],
       '#default_value' => $server->get('type'),
-      '#description' => $this->t("This field is informative. It's purpose is to assist with default values and give validation warnings."),
+      '#description' => $this->t("At the moment this only changes whether unicodePwd should be used for AD."),
     ];
 
     $form['server']['address'] = [

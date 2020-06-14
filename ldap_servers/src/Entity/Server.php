@@ -42,6 +42,7 @@ use Symfony\Component\Ldap\Entry;
  *   config_export = {
  *    "id",
  *    "label",
+ *    "type",
  *    "uuid",
  *    "account_name_attr",
  *    "address",
@@ -124,6 +125,13 @@ class Server extends ConfigEntityBase implements ServerInterface {
    * @var string
    */
   protected $label;
+
+  /**
+   * Server type.
+   *
+   * @var string
+   */
+  protected $type;
 
   /**
    * LDAP Server connection.
