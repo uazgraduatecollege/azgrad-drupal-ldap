@@ -18,6 +18,11 @@ class QueryEntityFormTest extends BrowserTestBase {
    */
   protected $defaultTheme = 'stark';
 
+  /**
+   * Form path.
+   *
+   * @var string
+   */
   protected const FORM_PATH = '/admin/config/people/ldap/query/add';
 
   /**
@@ -90,7 +95,7 @@ class QueryEntityFormTest extends BrowserTestBase {
     $attributes = ['objectclass', 'name', 'cn', 'samaccountname'];
     self::assertEquals($attributes, $query->getProcessedAttributes());
     self::assertEquals('sub', $query->getScope());
-    self::assertEquals(LDAP_DEREF_NEVER, $query->getDereference());
+    self::assertEquals(LDAP_DEREF_NEVER ?? 0, $query->getDereference());
     self::assertEquals(0, $query->getTimeLimit());
     self::assertEquals(0, $query->getSizeLimit());
   }

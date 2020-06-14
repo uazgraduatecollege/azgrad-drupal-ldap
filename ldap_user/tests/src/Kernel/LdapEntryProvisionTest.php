@@ -6,6 +6,7 @@ namespace Drupal\Tests\ldap_user\Kernel;
 
 use Drupal\KernelTests\Core\Entity\EntityKernelTestBase;
 use Drupal\ldap_servers\Entity\Server;
+use Drupal\ldap_servers\FakeBridge;
 use Drupal\ldap_servers\LdapUserAttributesInterface;
 use Drupal\ldap_user\EventSubscriber\LdapEntryProvisionSubscriber;
 
@@ -73,6 +74,13 @@ class LdapEntryProvisionTest extends EntityKernelTestBase {
         ],
       ])
       ->save();
+
+    //TODO: Replace bridge with FakeBridge.
+    $fake_bridge = new FakeBridge(
+      $this->container->get('logger.channel.ldap_user'),
+      $this->container->get('entity_type.manager'),
+    );
+    $this->container->set('ldap.bridge', $fake_bridge);
 
     $this->subscriber = new LdapEntryProvisionSubscriber(
       $this->container->get('config.factory'),
