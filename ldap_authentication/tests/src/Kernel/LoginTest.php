@@ -101,7 +101,7 @@ class LoginTest extends KernelTestBase {
             'cn' => ['hpotter'],
             'uid' => ['123'],
             'mail' => ['hpotter@example.com'],
-          ],
+          ]
         ),
       ]),
     ];
