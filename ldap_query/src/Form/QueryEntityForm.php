@@ -121,7 +121,7 @@ class QueryEntityForm extends EntityForm {
 
     $dereference = $ldap_query_entity->get('dereference');
     if (!$dereference) {
-      $dereference = LDAP_DEREF_NEVER ?? 0;
+      $dereference = @constant("LDAP_DEREF_NEVER") ?? 0;
     }
 
     $form['dereference'] = [
