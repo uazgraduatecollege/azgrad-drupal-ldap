@@ -95,7 +95,8 @@ class QueryEntityFormTest extends BrowserTestBase {
     $attributes = ['objectclass', 'name', 'cn', 'samaccountname'];
     self::assertEquals($attributes, $query->getProcessedAttributes());
     self::assertEquals('sub', $query->getScope());
-    self::assertEquals(@constant("LDAP_DEREF_NEVER") ?? 0, $query->getDereference());
+    // Test for LDAP_DEREF_NEVER (0).
+    self::assertEquals( 0, $query->getDereference());
     self::assertEquals(0, $query->getTimeLimit());
     self::assertEquals(0, $query->getSizeLimit());
   }
