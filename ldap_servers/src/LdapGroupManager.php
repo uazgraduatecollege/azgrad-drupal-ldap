@@ -515,7 +515,7 @@ class LdapGroupManager extends LdapBaseManager {
     }
 
     $level = 0;
-    $members_group_dns = $ldap_entry[$group_attribute];
+    $members_group_dns = $ldap_entry->getAttribute($group_attribute);
     if (isset($members_group_dns['count'])) {
       unset($members_group_dns['count']);
     }
