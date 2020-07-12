@@ -573,8 +573,9 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
     $fieldSettings = $field->getFieldDefinition()->getItemDefinition()->getSettings();
     $directory = $this->token->replace($fieldSettings['file_directory']);
     $fullDirectoryPath = $fieldSettings['uri_scheme'] . '://' . $directory;
+    $realpath = $this->fileSystem->realpath($fullDirectoryPath);
 
-    if (!is_dir($this->fileSystem->realpath($fullDirectoryPath))) {
+    if ($realpath && !is_dir((string) $realpath)) {
       $this->fileSystem->mkdir($fullDirectoryPath, NULL, TRUE);
     }
 
