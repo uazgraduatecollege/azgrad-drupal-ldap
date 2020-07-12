@@ -243,7 +243,7 @@ class LoginTest extends KernelTestBase {
       $this->container->get('ldap_authentication.servers'),
       $this->container->get('ldap.user_manager'),
       $this->container->get('messenger'),
-      $this->container->get('ldap.drupal_user_processor'),
+      $this->container->get('ldap.drupal_user_processor')
     );
     $validator->processLogin('hpotter');
     self::assertCount(1, $this->container
