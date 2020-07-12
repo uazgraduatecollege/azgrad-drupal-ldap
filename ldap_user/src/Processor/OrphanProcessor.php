@@ -231,7 +231,7 @@ class OrphanProcessor {
             case 'user_cancel_block_unpublish':
             case 'user_cancel_reassign':
             case 'user_cancel_delete':
-              _user_cancel([], $account, $this->configLdapUser->get('orphanedDrupalAcctBehavior'));
+              user_cancel([], $user['uid'], $this->configLdapUser->get('orphanedDrupalAcctBehavior'));
               break;
           }
         }
