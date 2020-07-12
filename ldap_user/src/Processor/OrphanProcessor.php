@@ -333,7 +333,8 @@ class OrphanProcessor {
           ->load($user['uid']);
         $this->drupalUserProcessor->drupalUserLogsIn($account);
         if ($user['exists'] == FALSE) {
-          switch ($this->configLdapUser->get('orphanedDrupalAcctBehavior')) {
+          $method = $this->configLdapUser->get('orphanedDrupalAcctBehavior');
+          switch ($method) {
             case 'ldap_user_orphan_email';
               $link = Url::fromRoute('entity.user.edit_form', ['user' => $user['uid']])->setAbsolute();
               $this->emailList[] = $account->getAccountName() . "," . $account->getEmail() . "," . $link->toString();
@@ -344,7 +345,7 @@ class OrphanProcessor {
             case 'user_cancel_reassign':
             case 'user_cancel_delete':
               $this->emailList[] = $account->getAccountName() . "," . $account->getEmail();
-              _user_cancel([], $account, $this->configLdapUser->get('orphanedDrupalAcctBehavior'));
+              user_cancel([], $account->id(), $method);
               break;
           }
         }
