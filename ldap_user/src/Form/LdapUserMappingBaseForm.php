@@ -158,6 +158,7 @@ abstract class LdapUserMappingBaseForm extends LdapUserBaseForm {
           'ldap_user',
           'ldap_user'
         );
+        $mapping->convertBinary((bool) $row['convert']);
 
         if (!empty($row['user_tokens'])) {
           $mapping->setUserTokens(trim($row['user_tokens']));

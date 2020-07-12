@@ -157,7 +157,7 @@ class FieldProvider implements LdapUserAttributesInterface {
       $prepared_mapping->setLdapAttribute($mapping['ldap_attr']);
       $prepared_mapping->setUserTokens($mapping['user_tokens']);
       if ($mapping['convert']) {
-        $prepared_mapping->isBinary();
+        $prepared_mapping->convertBinary($mapping['convert']);
       }
       $this->attributes[$mapping['user_attr']] = $prepared_mapping;
     }
