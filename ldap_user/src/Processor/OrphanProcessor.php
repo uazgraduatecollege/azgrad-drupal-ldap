@@ -158,7 +158,7 @@ class OrphanProcessor {
    */
   public function checkOrphans() {
     $orphan_policy = $this->configLdapUser->get('orphanedDrupalAcctBehavior');
-    if (!$orphan_policy || $orphan_policy == 'ldap_user_orphan_do_not_check') {
+    if (!$orphan_policy || $orphan_policy === 'ldap_user_orphan_do_not_check') {
       return;
     }
 
@@ -328,7 +328,9 @@ class OrphanProcessor {
   private function processOrphanedAccounts(array $users) {
     foreach ($users as $user) {
       if (isset($user['uid'])) {
-        $account = $this->entityTypeManager->getStorage('user')->load($user['uid']);
+        $account = $this->entityTypeManager
+          ->getStorage('user')
+          ->load($user['uid']);
         $this->drupalUserProcessor->drupalUserLogsIn($account);
         if ($user['exists'] == FALSE) {
           switch ($this->configLdapUser->get('orphanedDrupalAcctBehavior')) {
@@ -341,6 +343,7 @@ class OrphanProcessor {
             case 'user_cancel_block_unpublish':
             case 'user_cancel_reassign':
             case 'user_cancel_delete':
+              $this->emailList[] = $account->getAccountName() . "," . $account->getEmail();
               _user_cancel([], $account, $this->configLdapUser->get('orphanedDrupalAcctBehavior'));
               break;
           }
