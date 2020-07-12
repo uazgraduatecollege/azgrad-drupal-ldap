@@ -85,19 +85,18 @@ function ldap_authentication_user_pass_validate(array &$form, FormStateInterface
   /** @var \Drupal\externalauth\Authmap $authmap */
   $authmap = \Drupal::service('externalauth.authmap');
   $authname = $authmap->get($account->id(), 'ldap_user');
-  if ($account && $authname) {
-    if ($config->get('passwordOption') !== 'allow') {
-      if ($config->get('ldapUserHelpLinkUrl')) {
-        $helpLink = Link::fromTextAndUrl($config->get('ldapUserHelpLinkText'),
-          Url::fromUri($config->get('ldapUserHelpLinkUrl')));
-        $form_state->setErrorByName('name', t(
-            'You may not reset your password here. You must reset your password via the directions at @link.',
-            ['@link' => $helpLink])
-        );
-      }
-      else {
-        $form_state->setErrorByName('name', t("You may not reset your password here. You must reset your password via one of your organization's password management sites."));
-      }
+  if ($account && $authname && $config->get('passwordOption') !== 'allow') {
+    if ($config->get('ldapUserHelpLinkUrl')) {
+      $form_state->setErrorByName('name', t(
+          'You may not reset your password here. You must reset your password via the directions at <a href=":url">@text</a>.',
+          [
+            ':url' => $config->get('ldapUserHelpLinkUrl'),
+            '@text' => $config->get('ldapUserHelpLinkText'),
+          ])
+      );
+    }
+    else {
+      $form_state->setErrorByName('name', t("You may not reset your password here. You must reset your password via one of your organization's password management sites."));
     }
   }
 }
