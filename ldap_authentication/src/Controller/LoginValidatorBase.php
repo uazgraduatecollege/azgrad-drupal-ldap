@@ -80,7 +80,7 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
   protected $authName = FALSE;
 
   /**
-   * Drupal User authmapped.
+   * Whether the external authmap is linked with the user.
    *
    * @var bool|mixed
    */
@@ -284,14 +284,14 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
     $load_by_name = $this->entityTypeManager->getStorage('user')
       ->loadByProperties(['name' => $this->authName]);
     $this->drupalUser = $load_by_name ? reset($load_by_name) : FALSE;
-    if (!$this->drupalUser) {
-      $uid = $this->externalAuth->getUid($this->authName, 'ldap_user');
-      if ($uid) {
-        $this->drupalUser = $this->entityTypeManager->getStorage('user')
-          ->load($uid);
-      }
+    $authmap_uid = $this->externalAuth->getUid($this->authName, 'ldap_user');
+    if (!$this->drupalUser && $authmap_uid) {
+      // Drupal username differs but we have a UID in the authmap table for it.
+      $this->drupalUser = $this->entityTypeManager
+        ->getStorage('user')
+        ->load($authmap_uid);
     }
-    if ($this->drupalUser) {
+    if ($this->drupalUser && $authmap_uid) {
       $this->drupalUserAuthMapped = TRUE;
     }
   }
