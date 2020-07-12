@@ -78,7 +78,7 @@ class LdapEntryProvisionTest extends EntityKernelTestBase {
     //TODO: Replace bridge with FakeBridge.
     $fake_bridge = new FakeBridge(
       $this->container->get('logger.channel.ldap_user'),
-      $this->container->get('entity_type.manager'),
+      $this->container->get('entity_type.manager')
     );
     $this->container->set('ldap.bridge', $fake_bridge);
 
@@ -90,8 +90,8 @@ class LdapEntryProvisionTest extends EntityKernelTestBase {
       $this->container->get('module_handler'),
       $this->container->get('ldap.user_manager'),
       $this->container->get('ldap_user.field_provider'),
-      $this->container->get('file_system'),
-      );
+      $this->container->get('file_system')
+    );
   }
 
   /**
