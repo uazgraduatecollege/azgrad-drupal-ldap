@@ -218,7 +218,7 @@ class OrphanProcessor {
   /**
    * Send email.
    */
-  public function sendOrphanedAccountsMail() {
+  public function sendOrphanedAccountsMail(): void {
     $to = $this->configFactory->get('system.site')->get('mail');
     $siteLanguage = $this->languageManager->getCurrentLanguage()->getId();
     $params = ['accounts' => $this->emailList];
@@ -239,7 +239,7 @@ class OrphanProcessor {
    * @return array
    *   Queried batch of users.
    */
-  private function batchQueryUsers($batch, array $uids) {
+  private function batchQueryUsers($batch, array $uids): array {
 
     // Creates a list of users in the required format.
     $start = ($batch - 1) * $this->ldapQueryOrLimit;
@@ -345,12 +345,33 @@ class OrphanProcessor {
             case 'user_cancel_reassign':
             case 'user_cancel_delete':
               $this->emailList[] = $account->getAccountName() . "," . $account->getEmail();
-              user_cancel([], $account->id(), $method);
+              $this->cancelUser($account, $method);
               break;
           }
         }
       }
     }
+  }
+
+  /**
+   * Cancel the user.
+   *
+   * @param \Drupal\ldap_user\Processor\UserInterface $account
+   *   Account.
+   * @param string $method
+   *   Method.
+   */
+  private function cancelUser(UserInterface $account, string $method): void {
+    // Copied from user_canel().
+    // When the 'user_cancel_delete' method is used, user_delete() is called,
+    // which invokes hook_ENTITY_TYPE_predelete() and hook_ENTITY_TYPE_delete()
+    // for the user entity. Modules should use those hooks to respond to the
+    // account deletion.
+    $edit = [];
+    if ($method !== 'user_cancel_delete') {
+      \Drupal::moduleHandler()->invokeAll('user_cancel', [$edit, $account, $method]);
+    }
+    _user_cancel($edit, $account, $method);
   }
 
   /**
