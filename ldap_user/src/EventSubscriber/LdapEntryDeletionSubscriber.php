@@ -21,21 +21,21 @@ class LdapEntryDeletionSubscriber implements EventSubscriberInterface, LdapUserA
    *
    * @var \Drupal\Core\Config\Config|\Drupal\Core\Config\ImmutableConfig
    */
-  private $config;
+  protected $config;
 
   /**
    * Logger.
    *
    * @var \Psr\Log\LoggerInterface
    */
-  private $logger;
+  protected $logger;
 
   /**
    * LDAP User Manager.
    *
    * @var \Drupal\ldap_servers\LdapUserManager
    */
-  private $ldapUserManager;
+  protected $ldapUserManager;
 
   /**
    * Constructor.
@@ -75,7 +75,7 @@ class LdapEntryDeletionSubscriber implements EventSubscriberInterface, LdapUserA
    * @param \Drupal\ldap_user\Event\LdapUserDeletedEvent $event
    *   Event.
    */
-  protected function deleteProvisionedLdapEntry(LdapUserDeletedEvent $event) {
+  public function deleteProvisionedLdapEntry(LdapUserDeletedEvent $event): void {
     if ($this->config->get('ldapEntryProvisionServer') &&
     in_array(self::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_DELETE, $this->config->get('ldapEntryProvisionTriggers'))) {
       /** @var \Drupal\user\Entity\User $account */

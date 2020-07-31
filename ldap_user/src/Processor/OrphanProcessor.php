@@ -11,6 +11,7 @@ use Drupal\Core\Mail\MailManagerInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\Core\Url;
 use Drupal\ldap_servers\LdapUserManager;
+use Drupal\user\UserInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -356,7 +357,7 @@ class OrphanProcessor {
   /**
    * Cancel the user.
    *
-   * @param \Drupal\ldap_user\Processor\UserInterface $account
+   * @param \Drupal\user\UserInterface $account
    *   Account.
    * @param string $method
    *   Method.
