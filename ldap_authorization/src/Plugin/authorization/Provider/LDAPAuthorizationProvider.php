@@ -357,7 +357,7 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
     foreach ($form_state->getValues() as $value) {
       if (isset($value['provider_mappings'])) {
         if ($value['provider_mappings']['is_regex'] == 1) {
-          if (@preg_match($value['provider_mappings']['query'], NULL) === FALSE) {
+          if (@preg_match($value['provider_mappings']['query'], '') === FALSE) {
             $form_state->setErrorByName('mapping', $this->t('Invalid regular expression'));
           }
         }
