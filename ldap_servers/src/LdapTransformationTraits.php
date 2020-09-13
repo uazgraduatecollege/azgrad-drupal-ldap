@@ -4,7 +4,7 @@ declare(strict_types = 1);
 
 namespace Drupal\ldap_servers;
 
-use Symfony\Polyfill\Php56;
+use Symfony\Polyfill\Php56\Php56;
 
 /**
  * Helper functions to work around hard dependencies on the LDAP extension.
@@ -22,12 +22,12 @@ trait LdapTransformationTraits {
    * @return string
    *   Escaped string.
    */
-  protected function ldapEscapeDn($value) {
+  protected function ldapEscapeDn($value): string {
     if (function_exists('ldap_escape')) {
       $value = ldap_escape($value, '', LDAP_ESCAPE_DN);
     }
     else {
-      $value = Php56\Php56::ldap_escape($value, '', 2);
+      $value = Php56::ldap_escape($value, '', 2);
     }
 
     // Copied from Symfonfy's Adapter.php for ease of use.
@@ -54,12 +54,12 @@ trait LdapTransformationTraits {
    * @return string
    *   Escaped string.
    */
-  protected function ldapEscapeFilter($value) {
+  protected function ldapEscapeFilter($value): string {
     if (function_exists('ldap_escape')) {
       $value = ldap_escape($value, '', LDAP_ESCAPE_FILTER);
     }
     else {
-      $value = Php56\Php56::ldap_escape($value, '', 1);
+      $value = Php56::ldap_escape($value, '', 1);
     }
     return $value;
   }
