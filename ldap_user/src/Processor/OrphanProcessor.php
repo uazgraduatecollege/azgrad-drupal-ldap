@@ -157,7 +157,7 @@ class OrphanProcessor {
   /**
    * Check for Drupal accounts which no longer have a related LDAP entry.
    */
-  public function checkOrphans() {
+  public function checkOrphans(): void {
     $orphan_policy = $this->configLdapUser->get('orphanedDrupalAcctBehavior');
     if (!$orphan_policy || $orphan_policy === 'ldap_user_orphan_do_not_check') {
       return;
@@ -197,7 +197,7 @@ class OrphanProcessor {
    * @return string
    *   Safe string.
    */
-  private function binaryFilter($value) {
+  private function binaryFilter(string $value): string {
     $match = '';
     if (preg_match('/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i', $value)) {
       // Reconstruct proper "memory" order from (MS?) GUID string.
@@ -240,14 +240,16 @@ class OrphanProcessor {
    * @return array
    *   Queried batch of users.
    */
-  private function batchQueryUsers($batch, array $uids): array {
+  private function batchQueryUsers(int $batch, array $uids): array {
 
     // Creates a list of users in the required format.
     $start = ($batch - 1) * $this->ldapQueryOrLimit;
     $end_plus_1 = min(($batch) * $this->ldapQueryOrLimit, count($uids));
     $batch_uids = array_slice($uids, $start, ($end_plus_1 - $start));
 
-    $accounts = $this->entityTypeManager->getStorage('user')->loadMultiple($batch_uids);
+    $accounts = $this->entityTypeManager
+      ->getStorage('user')
+      ->loadMultiple($batch_uids);
 
     $users = [];
     foreach ($accounts as $uid => $user) {
@@ -269,7 +271,7 @@ class OrphanProcessor {
    * @return array
    *   All relevant UID.
    */
-  private function fetchUidsToCheck() {
+  private function fetchUidsToCheck(): array {
     // We want to query Drupal accounts, which are LDAP associated where a DN
     // is present. The lastUidChecked is used to process only a limited number
     // of batches in the cron run and each user is only checked if the time
@@ -326,29 +328,27 @@ class OrphanProcessor {
    * @param array $users
    *   User to process.
    */
-  private function processOrphanedAccounts(array $users) {
+  private function processOrphanedAccounts(array $users): void {
     foreach ($users as $user) {
-      if (isset($user['uid'])) {
+      if (isset($user['uid']) && $user['exists'] === FALSE) {
+        /** @var \Drupal\user\Entity\User $account */
         $account = $this->entityTypeManager
           ->getStorage('user')
           ->load($user['uid']);
-        $this->drupalUserProcessor->drupalUserLogsIn($account);
-        if ($user['exists'] == FALSE) {
-          $method = $this->configLdapUser->get('orphanedDrupalAcctBehavior');
-          switch ($method) {
-            case 'ldap_user_orphan_email';
-              $link = Url::fromRoute('entity.user.edit_form', ['user' => $user['uid']])->setAbsolute();
-              $this->emailList[] = $account->getAccountName() . "," . $account->getEmail() . "," . $link->toString();
-              break;
+        $method = $this->configLdapUser->get('orphanedDrupalAcctBehavior');
+        switch ($method) {
+          case 'ldap_user_orphan_email';
+            $link = Url::fromRoute('entity.user.edit_form', ['user' => $user['uid']])->setAbsolute();
+            $this->emailList[] = $account->getAccountName() . "," . $account->getEmail() . "," . $link->toString();
+            break;
 
-            case 'user_cancel_block':
-            case 'user_cancel_block_unpublish':
-            case 'user_cancel_reassign':
-            case 'user_cancel_delete':
-              $this->emailList[] = $account->getAccountName() . "," . $account->getEmail();
-              $this->cancelUser($account, $method);
-              break;
-          }
+          case 'user_cancel_block':
+          case 'user_cancel_block_unpublish':
+          case 'user_cancel_reassign':
+          case 'user_cancel_delete':
+            $this->emailList[] = $account->getAccountName() . "," . $account->getEmail();
+            $this->cancelUser($account, $method);
+            break;
         }
       }
     }
@@ -390,7 +390,7 @@ class OrphanProcessor {
    * @return array
    *   Eligible user data.
    */
-  private function ldapQueryEligibleUser($uid, $serverId, $persistentUidProperty, $persistentUid) {
+  private function ldapQueryEligibleUser(int $uid, string $serverId, string $persistentUidProperty, string $persistentUid): array {
 
     $user['uid'] = $uid;
     $user['exists'] = FALSE;
