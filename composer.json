@@ -5,7 +5,7 @@
     "license": "GPL-2.0-or-later",
     "minimum-stability": "dev",
     "require": {
-        "grahl/ldap": "~4.4",
+        "symfony/ldap": "~4.4",
         "drupal/authorization": "^1.0",
         "drupal/externalauth": "^1.0",
         "symfony/polyfill-php56": "~1.8",
