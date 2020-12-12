@@ -17,7 +17,7 @@ class ServerTest extends EntityKernelTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = ['ldap_servers', 'externalauth'];
+  protected static $modules = ['ldap_servers', 'externalauth'];
 
   /**
    * Server.
@@ -29,7 +29,7 @@ class ServerTest extends EntityKernelTestBase {
   /**
    * {@inheritdoc}
    */
-  public function setUp() {
+  public function setUp(): void {
     parent::setUp();
     $this->installEntitySchema('ldap_server');
     $this->server = Server::create(['id' => 'example']);
@@ -45,9 +45,9 @@ class ServerTest extends EntityKernelTestBase {
 
     // Default case, only user_attr set.
     $this->server->set('user_attr', 'samAccountName');
-    $this->assertEquals('hpotter', $this->server->deriveUsernameFromLdapResponse($entry));
+    self::assertEquals('hpotter', $this->server->deriveUsernameFromLdapResponse($entry));
     $this->server->set('account_name_attr', 'username');
-    $this->assertEquals('harry', $this->server->deriveUsernameFromLdapResponse($entry));
+    self::assertEquals('harry', $this->server->deriveUsernameFromLdapResponse($entry));
   }
 
   /**
@@ -55,10 +55,10 @@ class ServerTest extends EntityKernelTestBase {
    */
   public function testGetBasedn(): void {
     $this->server->set('basedn', []);
-    $this->assertEquals([], $this->server->getBaseDn());
+    self::assertEquals([], $this->server->getBaseDn());
     $this->server->set('basedn', ['ou=people,dc=hogwarts,dc=edu', 'ou=groups,dc=hogwarts,dc=edu']);
-    $this->assertEquals('ou=groups,dc=hogwarts,dc=edu', $this->server->getBaseDn()[1]);
-    $this->assertCount(2, $this->server->getBaseDn());
+    self::assertEquals('ou=groups,dc=hogwarts,dc=edu', $this->server->getBaseDn()[1]);
+    self::assertCount(2, $this->server->getBaseDn());
   }
 
   /**
@@ -72,8 +72,8 @@ class ServerTest extends EntityKernelTestBase {
     $this->server->set('unique_persistent_attr', 'guid');
 
     $empty_entry = new Entry('undefined', []);
-    $this->assertEquals('', $this->server->deriveUsernameFromLdapResponse($empty_entry));
-    $this->assertEquals('', $this->server->deriveEmailFromLdapResponse($empty_entry));
+    self::assertEquals('', $this->server->deriveUsernameFromLdapResponse($empty_entry));
+    self::assertEquals('', $this->server->deriveEmailFromLdapResponse($empty_entry));
 
     $userOpenLdap = new Entry('cn=hpotter,ou=people,dc=hogwarts,dc=edu', [
       'cn' => [0 => 'hpotter'],
@@ -95,18 +95,18 @@ class ServerTest extends EntityKernelTestBase {
       'password' => [0 => 'goodpwd'],
     ]);
 
-    $this->assertEquals('hpotter', $this->server->deriveUsernameFromLdapResponse($userOpenLdap));
-    $this->assertEquals('hpotter@hogwarts.edu', $this->server->deriveEmailFromLdapResponse($userOpenLdap));
+    self::assertEquals('hpotter', $this->server->deriveUsernameFromLdapResponse($userOpenLdap));
+    self::assertEquals('hpotter@hogwarts.edu', $this->server->deriveEmailFromLdapResponse($userOpenLdap));
 
     $userOpenLdap->removeAttribute('mail');
     $this->server->set('mail_template', '[cn]@template.com');
-    $this->assertEquals('hpotter@template.com', $this->server->deriveEmailFromLdapResponse($userOpenLdap));
+    self::assertEquals('hpotter@template.com', $this->server->deriveEmailFromLdapResponse($userOpenLdap));
 
-    $this->assertEquals('101', $this->server->derivePuidFromLdapResponse($userOpenLdap));
+    self::assertEquals('101', $this->server->derivePuidFromLdapResponse($userOpenLdap));
 
     $this->server->set('unique_persistent_attr_binary', TRUE);
     $userOpenLdap->setAttribute('guid', ['Rr0by/+kSEKzVGoWnkpQ4Q==']);
-    $this->assertEquals('52723062792f2b6b53454b7a56476f576e6b705134513d3d', $this->server->derivePuidFromLdapResponse($userOpenLdap));
+    self::assertEquals('52723062792f2b6b53454b7a56476f576e6b705134513d3d', $this->server->derivePuidFromLdapResponse($userOpenLdap));
   }
 
 }
