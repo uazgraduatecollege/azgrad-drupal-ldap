@@ -57,7 +57,7 @@ class LoginTest extends KernelTestBase {
     $server = $manager->getStorage('ldap_server')->create([
       'id' => 'test',
       'timeout' => 30,
-      'tls' => FALSE,
+      'encryption' => 'none',
       'address' => 'example',
       'port' => 963,
       'basedn' => ['ou=people,dc=hogwarts,dc=edu'],

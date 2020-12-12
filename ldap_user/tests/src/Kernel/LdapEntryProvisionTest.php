@@ -46,7 +46,7 @@ class LdapEntryProvisionTest extends EntityKernelTestBase {
     $server = Server::create([
       'id' => 'test',
       'timeout' => 30,
-      'tls' => FALSE,
+      'encryption' => 'none',
       'address' => 'example',
       'port' => 963,
       'basedn' => [],

@@ -47,7 +47,7 @@ class QueryEntityFormTest extends BrowserTestBase {
       'id' => 'my_test_server_1',
       'label' => 'My Test Server 1',
       'timeout' => 30,
-      'tls' => FALSE,
+      'encryption' => 'none',
       'address' => 'example',
       'port' => 963,
       'basedn' => ['ou=people,dc=hogwarts,dc=edu'],

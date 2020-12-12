@@ -90,15 +90,13 @@ class LdapBridge implements LdapBridgeInterface {
     $parameters = [
       'host' => $server->get('address'),
       'port' => $server->get('port'),
-      'encryption' => 'none',
+      'encryption' => $server->get('encryption'),
       'options' => [
         'timeout' => $server->getTimeout(),
         'network_timeout' => $server->getTimeout(),
       ],
     ];
-    if ($server->isUsingStartTls()) {
-      $parameters['encryption'] = 'tls';
-    }
+
     $this->bindMethod = $server->get('bind_method');
     $this->bindDn = $server->get('binddn');
     $this->bindPw = $server->get('bindpw');

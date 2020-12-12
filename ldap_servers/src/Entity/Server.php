@@ -50,6 +50,7 @@ use Symfony\Component\Ldap\Entry;
  *    "bind_method",
  *    "binddn",
  *    "bindpw",
+ *    "encryption",
  *    "grp_derive_from_dn_attr",
  *    "grp_derive_from_dn",
  *    "grp_memb_attr_match_user_attr",
@@ -69,7 +70,6 @@ use Symfony\Component\Ldap\Entry;
  *    "testing_drupal_user_dn",
  *    "testing_drupal_username",
  *    "timeout",
- *    "tls",
  *    "unique_persistent_attr_binary",
  *    "unique_persistent_attr",
  *    "user_attr",
@@ -629,13 +629,6 @@ class Server extends ConfigEntityBase implements ServerInterface {
    */
   public function getTimeout(): int {
     return $this->timeout;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function isUsingStartTls(): bool {
-    return $this->tls;
   }
 
   /**

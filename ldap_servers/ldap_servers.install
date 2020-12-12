@@ -166,3 +166,21 @@ function ldap_servers_update_8403() {
     $server->save();
   }
 }
+
+/**
+ * Fix encryption settings.
+ */
+function ldap_servers_update_8404() {
+  $storage = \Drupal::service('entity_type.manager')->getStorage('ldap_server');
+  /** @var \Drupal\ldap_servers\Entity\Server $server */
+  foreach ($storage->loadMultiple() as $server) {
+    $server->set('encryption', 'none');
+    if ($server->get('tls')) {
+      $server->set('encryption', 'tls');
+    }
+    if ($server->get('port') == 636) {
+      $server->set('encryption', 'ssl');
+    }
+    $server->save();
+  }
+}

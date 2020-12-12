@@ -264,14 +264,6 @@ interface ServerInterface extends ConfigEntityInterface {
   public function getTimeout(): int;
 
   /**
-   * Is Start-TLS enabled.
-   *
-   * @return bool
-   *   Value.
-   */
-  public function isUsingStartTls(): bool;
-
-  /**
    * Is the PUID attribute binary?
    *
    * @return bool

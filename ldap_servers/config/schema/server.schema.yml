@@ -25,9 +25,9 @@ ldap_servers.server.*:
     timeout:
       type: integer
       label: 'Timeout'
-    tls:
-      type: boolean
-      label: 'Use Start-TLS'
+    encryption:
+      type: string
+      label: 'Encryption'
     weight:
       type: integer
       label: 'Weight'

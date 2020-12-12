@@ -82,7 +82,7 @@ class ServerForm extends EntityForm {
       '#title' => $this->t('Server address'),
       '#maxlength' => 255,
       '#default_value' => $server->get('address'),
-      '#description' => $this->t('The domain name or IP address of your LDAP Server such as "ad.unm.edu".<br> For SSL use the form ldaps://DOMAIN such as \ldaps://ad.unm.edu"'),
+      '#description' => $this->t('The domain name or IP address of your LDAP Server such as "ad.unm.edu".'),
       '#required' => TRUE,
     ];
 
@@ -92,7 +92,7 @@ class ServerForm extends EntityForm {
       '#min' => 1,
       '#max' => 65535,
       '#default_value' => $server->get('port') ?: 389,
-      '#description' => $this->t('The TCP/IP port on the above server which accepts LDAP connections. Must be an integer.'),
+      '#description' => $this->t('Usually 389 for unencrypted and STARTTLS, 636 for SSL.'),
       '#required' => TRUE,
     ];
 
@@ -106,11 +106,15 @@ class ServerForm extends EntityForm {
       '#required' => TRUE,
     ];
 
-    $form['server']['tls'] = [
-      '#title' => $this->t('Use Start-TLS'),
-      '#type' => 'checkbox',
-      '#default_value' => $server->isUsingStartTls(),
-      '#description' => $this->t('Secure the connection between the Drupal and the LDAP servers using TLS.<br> <em>Note: To use START-TLS, you must set the LDAP Port to 389.</em>'),
+    $form['server']['encryption'] = [
+      '#title' => $this->t('Encryption'),
+      '#type' => 'select',
+      '#options' => [
+        'none' => t('Unencrypted'),
+        'ssl' => t('SSL (i.e. the ldaps:// protocol)'),
+        'tls' => t('STARTTLS')
+      ],
+      '#default_value' => $server->get('encryption') ?: 'none',
     ];
 
     $form['bind'] = [
@@ -482,6 +486,9 @@ class ServerForm extends EntityForm {
       // \Drupal\ldap_servers\LdapBaseManager::sanitizeUserDataResponse().
       $this->entity->set($field, mb_strtolower(trim($this->entity->get($field))));
     }
+
+    // Remove prefix to avoid user error.
+    $this->entity->set('address', preg_replace('#^ldaps?://#', '', $form_state->getValue('address')));
 
     $status = $this->entity->save();
 
