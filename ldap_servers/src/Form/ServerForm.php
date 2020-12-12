@@ -98,11 +98,11 @@ class ServerForm extends EntityForm {
 
     $form['server']['timeout'] = [
       '#type' => 'number',
-      '#title' => $this->t('Network timeout'),
+      '#title' => $this->t('Timeout'),
       '#min' => -1,
       '#max' => 999,
       '#default_value' => $server->get('timeout') ?: 10,
-      '#description' => $this->t('How long to wait for a response from the LDAP server in seconds.'),
+      '#description' => $this->t('How long to wait for a response from the LDAP server in seconds (network or query).'),
       '#required' => TRUE,
     ];
 
