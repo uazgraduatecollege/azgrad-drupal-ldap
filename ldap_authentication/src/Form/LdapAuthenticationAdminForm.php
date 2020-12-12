@@ -364,8 +364,8 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
       ->set('authenticationMode', $values['authenticationMode'])
       ->set('skipAdministrators', $values['skipAdministrators'])
       ->set('sids', $values['authenticationServers'])
-      ->set('allowOnlyIfTextInDn', $this->linesToArray($values['allowOnlyIfTextInDn']))
-      ->set('excludeIfTextInDn', $this->linesToArray($values['excludeIfTextInDn']))
+      ->set('allowOnlyIfTextInDn', self::linesToArray($values['allowOnlyIfTextInDn']))
+      ->set('excludeIfTextInDn', self::linesToArray($values['excludeIfTextInDn']))
       ->set('loginUIUsernameTxt', $values['loginUIUsernameTxt'])
       ->set('loginUIPasswordTxt', $values['loginUIPasswordTxt'])
       ->set('ldapUserHelpLinkUrl', $values['ldapUserHelpLinkUrl'])
@@ -382,6 +382,8 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
       ->set('emailTemplateUsagePromptRegex', $values['templateUsagePromptRegex'])
       ->set('passwordOption', $values['passwordOption'])
       ->save();
+
+    $this->messenger()->addMessage($this->t('Settings updated.'));
   }
 
   /**
