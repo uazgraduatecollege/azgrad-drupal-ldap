@@ -19,7 +19,7 @@ class DrupalUserProcessorTest extends KernelTestBase implements LdapUserAttribut
   /**
    * {@inheritdoc}
    */
-  public static $modules = [
+  protected static $modules = [
     'externalauth',
     'ldap_servers',
     'ldap_user',
@@ -44,26 +44,9 @@ class DrupalUserProcessorTest extends KernelTestBase implements LdapUserAttribut
   private $entityTypeManager;
 
   /**
-   * Provisioning events.
-   *
-   * @var array
-   */
-  private $provisioningEvents = [
-    self::PROVISION_TO_DRUPAL => [
-      self::EVENT_SYNC_TO_DRUPAL_USER,
-      self::EVENT_SYNC_TO_DRUPAL_USER,
-    ],
-
-    self::PROVISION_TO_LDAP => [
-      self::EVENT_SYNC_TO_LDAP_ENTRY,
-      self::EVENT_CREATE_LDAP_ENTRY,
-    ],
-  ];
-
-  /**
    * Setup of kernel tests.
    */
-  public function setUp() {
+  public function setUp(): void {
     parent::setUp();
 
     $this->installConfig(['ldap_authentication']);
@@ -76,7 +59,7 @@ class DrupalUserProcessorTest extends KernelTestBase implements LdapUserAttribut
   /**
    * Tests user exclusion for the authentication helper.
    */
-  public function testUserExclusion() {
+  public function testUserExclusion(): void {
 
     // Skip administrators, if so configured.
     $account = $this->prophesize('\Drupal\user\Entity\User');
@@ -98,10 +81,10 @@ class DrupalUserProcessorTest extends KernelTestBase implements LdapUserAttribut
       ->getQuery()
       ->condition('is_admin', TRUE)
       ->execute();
-    $this->assertNotEmpty($admin_roles);
-    $this->assertTrue($this->drupalUserProcessor->excludeUser($account->reveal()));
+    self::assertNotEmpty($admin_roles);
+    self::assertTrue($this->drupalUserProcessor->excludeUser($account->reveal()));
     $this->config('ldap_authentication.settings')->set('skipAdministrators', 0)->save();
-    $this->assertFalse($this->drupalUserProcessor->excludeUser($account->reveal()));
+    self::assertFalse($this->drupalUserProcessor->excludeUser($account->reveal()));
 
     // Disallow checkbox exclusion (everyone else allowed).
     $account = $this->prophesize(User::class);
@@ -110,7 +93,7 @@ class DrupalUserProcessorTest extends KernelTestBase implements LdapUserAttribut
     $value = new \stdClass();
     $value->value = 1;
     $account->get('ldap_user_ldap_exclude')->willReturn($value);
-    $this->assertTrue($this->drupalUserProcessor->excludeUser($account->reveal()));
+    self::assertTrue($this->drupalUserProcessor->excludeUser($account->reveal()));
 
     // Everyone else allowed.
     $account = $this->prophesize(User::class);
@@ -119,19 +102,19 @@ class DrupalUserProcessorTest extends KernelTestBase implements LdapUserAttribut
     $value = new \stdClass();
     $value->value = '';
     $account->get('ldap_user_ldap_exclude')->willReturn($value);
-    $this->assertFalse($this->drupalUserProcessor->excludeUser($account->reveal()));
+    self::assertFalse($this->drupalUserProcessor->excludeUser($account->reveal()));
   }
 
   /**
    * Test that creating users with createDrupalUserFromLdapEntry() works.
    */
-  public function testProvisioning() {
-    $this->markTestIncomplete('Broken test');
+  public function testProvisioning(): void {
+    self::markTestIncomplete('Broken test');
     $result = $this->drupalUserProcessor->createDrupalUserFromLdapEntry(['name' => 'hpotter']);
-    $this->assertTrue($result);
+    self::assertTrue($result);
     $user = $this->drupalUserProcessor->getUserAccount();
     // Override the server factory to provide a dummy server.
-    $this->assertInstanceOf(User::class, $user);
+    self::assertInstanceOf(User::class, $user);
     // @TODO: Does not work since getUserDataFromServerByIdentifier() loads
     // live data and the server is missing.
     // @TODO: Amend test scenario to user update, user insert, user delete.

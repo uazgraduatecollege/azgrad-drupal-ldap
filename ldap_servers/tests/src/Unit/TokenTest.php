@@ -32,7 +32,7 @@ class TokenTest extends UnitTestCase {
   /**
    * Test setup.
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     $this->ldapEntry = new Entry('cn=hpotter,ou=Gryffindor,ou=student,ou=people,dc=hogwarts,dc=edu', [
@@ -52,26 +52,26 @@ class TokenTest extends UnitTestCase {
    *
    * See http://drupal.org/node/1245736 for test tokens.
    */
-  public function testTokenReplacement() {
+  public function testTokenReplacement(): void {
     $literalValue = $this->processor->ldapEntryReplacementsForDrupalAccount($this->ldapEntry, 'literalvalue');
-    $this->assertEquals('literalvalue', $literalValue);
+    self::assertEquals('literalvalue', $literalValue);
 
     $dn = $this->processor->ldapEntryReplacementsForDrupalAccount($this->ldapEntry, '[dn]');
-    $this->assertEquals($this->ldapEntry->getDn(), $dn);
+    self::assertEquals($this->ldapEntry->getDn(), $dn);
 
     $house0 = $this->processor->ldapEntryReplacementsForDrupalAccount($this->ldapEntry, '[house:0]');
-    $this->assertEquals('Gryffindor', $house0);
+    self::assertEquals('Gryffindor', $house0);
     $house_noindex = $this->processor->ldapEntryReplacementsForDrupalAccount($this->ldapEntry, '[house]');
-    $this->assertEquals('Gryffindor', $house_noindex);
+    self::assertEquals('Gryffindor', $house_noindex);
 
     $houseLast = $this->processor->ldapEntryReplacementsForDrupalAccount($this->ldapEntry, '[house:last]');
-    $this->assertEquals('Privet Drive', $houseLast);
+    self::assertEquals('Privet Drive', $houseLast);
 
     $mixed = $this->processor->ldapEntryReplacementsForDrupalAccount($this->ldapEntry, 'thisold[house:0]');
-    $this->assertEquals('thisoldGryffindor', $mixed);
+    self::assertEquals('thisoldGryffindor', $mixed);
 
     $compound = $this->processor->ldapEntryReplacementsForDrupalAccount($this->ldapEntry, '[sAMAccountName:0][house:0]');
-    $this->assertEquals('hpotterGryffindor', $compound);
+    self::assertEquals('hpotterGryffindor', $compound);
   }
 
   /**
@@ -79,13 +79,13 @@ class TokenTest extends UnitTestCase {
    */
   public function testTokenReplacementCaseSensitivity(): void {
     $sAMAccountName = $this->processor->ldapEntryReplacementsForDrupalAccount($this->ldapEntry, '[samaccountname:0]');
-    $this->assertEquals('hpotter', $sAMAccountName);
+    self::assertEquals('hpotter', $sAMAccountName);
     $sAMAccountNameMixedCase = $this->processor->ldapEntryReplacementsForDrupalAccount($this->ldapEntry, '[sAMAccountName:0]');
-    $this->assertEquals('hpotter', $sAMAccountNameMixedCase);
+    self::assertEquals('hpotter', $sAMAccountNameMixedCase);
     $sAMAccountName2 = $this->processor->ldapEntryReplacementsForDrupalAccount($this->ldapEntry, '[samaccountname]');
-    $this->assertEquals('hpotter', $sAMAccountName2);
+    self::assertEquals('hpotter', $sAMAccountName2);
     $sAMAccountName3 = $this->processor->ldapEntryReplacementsForDrupalAccount($this->ldapEntry, '[sAMAccountName]');
-    $this->assertEquals('hpotter', $sAMAccountName3);
+    self::assertEquals('hpotter', $sAMAccountName3);
   }
 
   /**
@@ -93,16 +93,16 @@ class TokenTest extends UnitTestCase {
    */
   public function testBinaryConversion(): void {
     $base64encode = $this->processor->ldapEntryReplacementsForDrupalAccount($this->ldapEntry, '[guid;base64_encode]');
-    $this->assertEquals(base64_encode('sdafsdfsdf'), $base64encode);
+    self::assertEquals(base64_encode('sdafsdfsdf'), $base64encode);
 
     $bin2hex = $this->processor->ldapEntryReplacementsForDrupalAccount($this->ldapEntry, '[guid;bin2hex]');
-    $this->assertEquals(bin2hex('sdafsdfsdf'), $bin2hex);
+    self::assertEquals(bin2hex('sdafsdfsdf'), $bin2hex);
 
     $msguid = $this->processor->ldapEntryReplacementsForDrupalAccount($this->ldapEntry, '[guid;msguid]');
-    $this->assertEquals(ConversionHelper::convertMsguidToString('sdafsdfsdf'), $msguid);
+    self::assertEquals(ConversionHelper::convertMsguidToString('sdafsdfsdf'), $msguid);
 
     $binary = $this->processor->ldapEntryReplacementsForDrupalAccount($this->ldapEntry, '[guid;binary]');
-    $this->assertEquals(bin2hex('sdafsdfsdf'), $binary);
+    self::assertEquals(bin2hex('sdafsdfsdf'), $binary);
   }
 
   /**
@@ -111,15 +111,15 @@ class TokenTest extends UnitTestCase {
   public function testReversal(): void {
     // Test regular reversal (2 elements) at beginning.
     $dc = $this->processor->ldapEntryReplacementsForDrupalAccount($this->ldapEntry, '[dc:reverse:0]');
-    $this->assertEquals('edu', $dc);
+    self::assertEquals('edu', $dc);
 
     // Test single element reversion.
     $ou = $this->processor->ldapEntryReplacementsForDrupalAccount($this->ldapEntry, '[cn:reverse:0]');
-    $this->assertEquals('hpotter', $ou);
+    self::assertEquals('hpotter', $ou);
 
     // Test 3 element reversion at end.
     $ou2 = $this->processor->ldapEntryReplacementsForDrupalAccount($this->ldapEntry, '[ou:reverse:2]');
-    $this->assertEquals('Gryffindor', $ou2);
+    self::assertEquals('Gryffindor', $ou2);
   }
 
 }

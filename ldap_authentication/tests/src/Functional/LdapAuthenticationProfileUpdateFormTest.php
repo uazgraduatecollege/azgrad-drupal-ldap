@@ -37,7 +37,7 @@ class LdapAuthenticationProfileUpdateFormTest extends BrowserTestBase {
   /**
    * {@inheritdoc}
    */
-  public function setUp() {
+  public function setUp(): void {
     parent::setUp();
     $this->config('ldap_authentication.settings')
       ->set('emailTemplateUsagePromptRegex', '.*@invalid\\.com')
@@ -69,13 +69,14 @@ class LdapAuthenticationProfileUpdateFormTest extends BrowserTestBase {
     $edit = [
       'mail' => 'tester2@invalid.com',
     ];
-    $this->drupalPostForm(NULL, $edit, 'op');
+    $this->submitForm($edit, 'op');
+
     $this->assertSession()->pageTextContains('This email address still matches the invalid email template.');
 
     $edit = [
       'mail' => 'tester2@valid.com',
     ];
-    $this->drupalPostForm(NULL, $edit, 'op');
+    $this->submitForm($edit, 'op');
     $this->assertSession()->pageTextContains('Your profile has been updated.');
   }
 

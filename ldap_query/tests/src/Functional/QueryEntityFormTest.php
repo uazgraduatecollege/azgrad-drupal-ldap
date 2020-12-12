@@ -30,7 +30,7 @@ class QueryEntityFormTest extends BrowserTestBase {
    *
    * @var array
    */
-  public static $modules = [
+  protected static $modules = [
     'system',
     'ldap_servers',
     'ldap_query',
@@ -39,7 +39,7 @@ class QueryEntityFormTest extends BrowserTestBase {
   /**
    * Sets up the test.
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     $manager = $this->container->get('entity_type.manager');
@@ -81,7 +81,8 @@ class QueryEntityFormTest extends BrowserTestBase {
       'filter' => '(&(objectClass=user)(homePhone=*))',
       'attributes' => 'objectclass,name,cn,samaccountname',
     ];
-    $this->drupalPostForm(NULL, $edit, 'op');
+    $this->submitForm($edit, 'op');
+
     $this->assertSession()->statusCodeEquals(200);
     $this->assertSession()->pageTextContains('Created the My Query LDAP query.');
 

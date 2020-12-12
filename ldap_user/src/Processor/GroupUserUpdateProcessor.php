@@ -142,14 +142,12 @@ class GroupUserUpdateProcessor {
    * @return bool
    *   Query valid.
    */
-  protected function constraintsValid() {
+  protected function constraintsValid(): bool {
     if (!$this->queryController) {
       $this->logger->error('Configured query for update mechanism cannot be loaded.');
       return FALSE;
     }
-    else {
-      return TRUE;
-    }
+    return TRUE;
   }
 
   /**
@@ -158,7 +156,7 @@ class GroupUserUpdateProcessor {
    * @return bool
    *   Whether to update.
    */
-  public function updateDue() {
+  public function updateDue(): bool {
     $lastRun = $this->state->get('ldap_user_cron_last_group_user_update', 1);
     $result = FALSE;
     switch ($this->config->get('userUpdateCronInterval')) {
@@ -187,7 +185,7 @@ class GroupUserUpdateProcessor {
    * @param \Drupal\user\Entity\User $user
    *   Drupal user to update.
    */
-  private function updateAuthorizations(User $user) {
+  private function updateAuthorizations(User $user): void {
     if ($this->moduleHandler->moduleExists('ldap_authorization')) {
       // We are not injecting this service properly to avoid forcing this
       // dependency on authorization.
@@ -211,7 +209,7 @@ class GroupUserUpdateProcessor {
    * @param string $id
    *   LDAP QueryEntity ID.
    */
-  public function runQuery($id) {
+  public function runQuery(string $id): void {
 
     $this->queryController->load($id);
     if (!$this->constraintsValid()) {
@@ -220,10 +218,10 @@ class GroupUserUpdateProcessor {
 
     // @TODO: Batch users as OrphanProcessor does.
     $this->queryController->execute();
-    /** @var \Symfony\Component\Ldap\Entry[] $accounts_to_process */
     $accounts_to_process = $this->queryController->getRawResults();
     $attribute = $this->ldapServer->getAuthenticationNameAttribute();
-    $this->logger->notice('Processing @count accounts for periodic update.',
+    $this->logger->notice(
+      'Processing @count accounts for periodic update.',
         ['@count' => count($accounts_to_process)]
       );
 
@@ -236,6 +234,7 @@ class GroupUserUpdateProcessor {
         if ($match) {
           $uid = $this->externalAuth->getUid($username, 'ldap_user');
           if ($uid) {
+            /** @var \Drupal\user\Entity\User $drupal_account */
             $drupal_account = $user_storage->load($uid);
             $this->drupalUserProcessor->drupalUserLogsIn($drupal_account);
             // Reload since data has changed.

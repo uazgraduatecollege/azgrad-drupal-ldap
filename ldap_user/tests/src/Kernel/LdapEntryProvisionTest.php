@@ -20,7 +20,7 @@ class LdapEntryProvisionTest extends EntityKernelTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = [
+  protected static $modules = [
     'externalauth',
     'ldap_servers',
     'ldap_user',
@@ -40,7 +40,7 @@ class LdapEntryProvisionTest extends EntityKernelTestBase {
   /**
    * Test setup.
    */
-  public function setUp() {
+  public function setUp(): void {
     parent::setUp();
 
     $server = Server::create([
@@ -118,15 +118,15 @@ class LdapEntryProvisionTest extends EntityKernelTestBase {
   public function testEntry(): void {
     $user = $this->createUser();
     $this->subscriber->setUser($user);
-    $this->assertEquals('test', $this->config('ldap_user.settings')
+    self::assertEquals('test', $this->config('ldap_user.settings')
       ->get('ldapEntryProvisionServer'));
     $this->invokeNonPublic('loadServer', []);
     /** @var \Symfony\Component\Ldap\Entry $entry */
     $entry = $this->invokeNonPublic('buildLdapEntry', [LdapEntryProvisionSubscriber::EVENT_CREATE_LDAP_ENTRY]);
     $tokens = $this->subscriber->getTokens();
-    $this->assertEquals($user->getEmail(), $tokens['[property.mail]']);
-    $this->assertEquals($user->getEmail(), $entry->getAttribute('mail')[0]);
-    $this->markTestIncomplete('TODO: We still need to fix & test case sensitive here like we did for the token processor.');
+    self::assertEquals($user->getEmail(), $tokens['[property.mail]']);
+    self::assertEquals($user->getEmail(), $entry->getAttribute('mail')[0]);
+    self::markTestIncomplete('TODO: We still need to fix & test case sensitive here like we did for the token processor.');
     // We can simplify since the record *to* LDAP does not care about case.
     // We only need to make sure that the Drupal token isn't an issue
     // (or let the user know how to fix it).

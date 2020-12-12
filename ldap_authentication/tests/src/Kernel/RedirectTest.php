@@ -17,7 +17,7 @@ class RedirectTest extends KernelTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = [
+  protected static $modules = [
     'externalauth',
     'ldap_servers',
     'ldap_authentication',
@@ -28,7 +28,7 @@ class RedirectTest extends KernelTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
     $this->installConfig('ldap_authentication');
   }

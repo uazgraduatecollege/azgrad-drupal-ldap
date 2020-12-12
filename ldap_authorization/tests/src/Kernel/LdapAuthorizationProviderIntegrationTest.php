@@ -17,7 +17,7 @@ class LdapAuthorizationProviderIntegrationTest extends EntityKernelTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = [
+  protected static $modules = [
     'user',
     'system',
     'field',
@@ -40,7 +40,7 @@ class LdapAuthorizationProviderIntegrationTest extends EntityKernelTestBase {
   /**
    * Setup of kernel tests.
    */
-  public function setUp() {
+  public function setUp(): void {
     parent::setUp();
 
     $this->installEntitySchema('user');
@@ -56,7 +56,7 @@ class LdapAuthorizationProviderIntegrationTest extends EntityKernelTestBase {
    * Test Provider.
    */
   public function testProvider(): void {
-    $this->markTestIncomplete('Test missing');
+    self::markTestIncomplete('Test missing');
   }
 
 }

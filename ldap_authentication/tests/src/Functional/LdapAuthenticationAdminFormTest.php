@@ -37,7 +37,7 @@ class LdapAuthenticationAdminFormTest extends BrowserTestBase {
   /**
    * Sets up the test.
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     $manager = $this->container->get('entity_type.manager');
@@ -90,7 +90,7 @@ class LdapAuthenticationAdminFormTest extends BrowserTestBase {
       'allowOnlyIfTextInDn' => "one\ntwo",
       'edit-authenticationservers-my-test-server-1' => 1,
     ];
-    $this->drupalPostForm(NULL, $edit, 'op');
+    $this->submitForm($edit, 'op');
     $this->assertSession()->statusCodeEquals(200);
 
     /** @var \Drupal\Core\Config\ImmutableConfig $config */

@@ -18,7 +18,7 @@ class FieldProviderTest extends EntityKernelTestBase implements LdapUserAttribut
   /**
    * {@inheritdoc}
    */
-  public static $modules = [
+  protected static $modules = [
     'ldap_servers',
     'ldap_user',
     'ldap_query',
@@ -42,7 +42,7 @@ class FieldProviderTest extends EntityKernelTestBase implements LdapUserAttribut
   /**
    * {@inheritdoc}
    */
-  public function setUp() {
+  public function setUp(): void {
     parent::setUp();
     $this->installEntitySchema('ldap_server');
     $this->installConfig('ldap_user');
@@ -112,7 +112,7 @@ class FieldProviderTest extends EntityKernelTestBase implements LdapUserAttribut
   /**
    * Prove that field syncs work and provide the demo data here.
    */
-  public function testSyncValidatorIsSynced() {
+  public function testSyncValidatorIsSynced(): void {
     $container = \Drupal::getContainer();
     $config_factory = $container->get('config.factory');
     $config = $config_factory->getEditable('ldap_user.settings');
@@ -132,31 +132,31 @@ class FieldProviderTest extends EntityKernelTestBase implements LdapUserAttribut
 
     $processor->loadAttributes(FieldProvider::PROVISION_TO_DRUPAL, $this->server);
     $data = $processor->getConfigurableAttributesSyncedOnEvent(FieldProvider::EVENT_CREATE_DRUPAL_USER);
-    $this->assertCount(6, $data);
-    $this->assertCount(2, $data['[property.name]']->getProvisioningEvents());
+    self::assertCount(6, $data);
+    self::assertCount(2, $data['[property.name]']->getProvisioningEvents());
     $data = $processor->getConfigurableAttributesSyncedOnEvent(FieldProvider::EVENT_SYNC_TO_LDAP_ENTRY);
-    $this->assertEmpty($data);
+    self::assertEmpty($data);
 
     $data = $processor->getAttributesSyncedOnEvent(FieldProvider::EVENT_CREATE_DRUPAL_USER);
-    $this->assertEquals('not configurable', $data['[field.ldap_user_current_dn]']->getNotes());
-    $this->assertTrue($data['[property.picture]']->isEnabled());
-    $this->assertEquals('ldap_user', $data['[property.picture]']->getProvisioningModule());
-    $this->assertEquals('[picture_field]', $data['[property.picture]']->getLdapAttribute());
-    $this->assertEquals('[mail]', $data['[property.mail]']->getLdapAttribute());
+    self::assertEquals('not configurable', $data['[field.ldap_user_current_dn]']->getNotes());
+    self::assertTrue($data['[property.picture]']->isEnabled());
+    self::assertEquals('ldap_user', $data['[property.picture]']->getProvisioningModule());
+    self::assertEquals('[picture_field]', $data['[property.picture]']->getLdapAttribute());
+    self::assertEquals('[mail]', $data['[property.mail]']->getLdapAttribute());
 
-    $this->assertTrue($processor->attributeIsSyncedOnEvent(
+    self::assertTrue($processor->attributeIsSyncedOnEvent(
       '[property.name]',
       FieldProvider::EVENT_SYNC_TO_DRUPAL_USER));
-    $this->assertFalse($processor->attributeIsSyncedOnEvent(
+    self::assertFalse($processor->attributeIsSyncedOnEvent(
       '[field.test_field]',
       FieldProvider::EVENT_SYNC_TO_DRUPAL_USER));
 
-    $this->assertEquals('[guid]', $data['[field.ldap_user_puid]']->getLdapAttribute());
+    self::assertEquals('[guid]', $data['[field.ldap_user_puid]']->getLdapAttribute());
 
     $this->server->set('mail_template', '[cn]@example.com');
     $processor->loadAttributes(FieldProvider::PROVISION_TO_DRUPAL, $this->server);
     $data = $processor->getAttributesSyncedOnEvent(FieldProvider::EVENT_SYNC_TO_DRUPAL_USER);
-    $this->assertEquals('[cn]@example.com', $data['[property.mail]']->getLdapAttribute());
+    self::assertEquals('[cn]@example.com', $data['[property.mail]']->getLdapAttribute());
   }
 
 }

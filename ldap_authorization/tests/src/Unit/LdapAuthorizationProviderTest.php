@@ -25,7 +25,7 @@ class LdapAuthorizationProviderTest extends UnitTestCase {
   /**
    * {@inheritdoc}
    */
-  public function setUp() {
+  public function setUp(): void {
     $this->providerPlugin = $this->getMockBuilder(LDAPAuthorizationProvider::class)
       ->disableOriginalConstructor()
       ->setMethods(NULL)
@@ -62,7 +62,7 @@ class LdapAuthorizationProviderTest extends UnitTestCase {
     $sub_form_state = new SubFormState($form_state, ['provider_config']);
     $form = [];
     $this->providerPlugin->validateRowForm($form, $sub_form_state);
-    $this->assertArrayEquals([], $sub_form_state->getErrors());
+    self::assertEquals([], $sub_form_state->getErrors());
     // TODO: Still needs more useful assertions here.
   }
 
@@ -76,7 +76,7 @@ class LdapAuthorizationProviderTest extends UnitTestCase {
       'cn=students',
     ];
 
-    $this->assertCount(
+    self::assertCount(
       1,
       $this->providerPlugin->filterProposals($input, [
         'query' => 'cn=students',
@@ -90,7 +90,7 @@ class LdapAuthorizationProviderTest extends UnitTestCase {
       'cn=users,ou=groups,dc=hogwarts,dc=edu',
     ];
 
-    $this->assertCount(
+    self::assertCount(
       0,
       $this->providerPlugin->filterProposals($input, [
         'query' => 'cn=students',
@@ -98,28 +98,28 @@ class LdapAuthorizationProviderTest extends UnitTestCase {
       ])
     );
 
-    $this->assertCount(
+    self::assertCount(
       1,
       $this->providerPlugin->filterProposals($input, [
         'query' => 'cn=students,ou=groups,dc=hogwarts,dc=edu',
         'is_regex' => FALSE,
       ])
     );
-    $this->assertCount(
+    self::assertCount(
       1,
       $this->providerPlugin->filterProposals($input, [
         'query' => 'CN=students,ou=groups,dc=hogwarts,dc=edu',
         'is_regex' => FALSE,
       ])
     );
-    $this->assertCount(
+    self::assertCount(
       1,
       $this->providerPlugin->filterProposals($input, [
         'query' => '/cn=students/i',
         'is_regex' => TRUE,
       ])
     );
-    $this->assertCount(
+    self::assertCount(
       1,
       $this->providerPlugin->filterProposals($input, [
         'query' => '/CN=students/i',
@@ -130,35 +130,35 @@ class LdapAuthorizationProviderTest extends UnitTestCase {
     $input = [
       'memberOf=students,ou=groups,dc=hogwarts,dc=edu',
     ];
-    $this->assertCount(
+    self::assertCount(
       1,
       $this->providerPlugin->filterProposals($input, [
         'query' => 'memberOf=students,ou=groups,dc=hogwarts,dc=edu',
         'is_regex' => FALSE,
       ])
     );
-    $this->assertCount(
+    self::assertCount(
       1,
       $this->providerPlugin->filterProposals($input, [
         'query' => 'memberof=students,ou=groups,dc=hogwarts,dc=edu',
         'is_regex' => FALSE,
       ])
     );
-    $this->assertCount(
+    self::assertCount(
       1,
       $this->providerPlugin->filterProposals($input, [
         'query' => '/^memberof=students/i',
         'is_regex' => TRUE,
       ])
     );
-    $this->assertCount(
+    self::assertCount(
       1,
       $this->providerPlugin->filterProposals($input, [
         'query' => '/^memberOf=students/i',
         'is_regex' => TRUE,
       ])
     );
-    $this->assertCount(
+    self::assertCount(
       0,
       $this->providerPlugin->filterProposals($input, [
         'query' => '/^emberOf=students/i',

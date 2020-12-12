@@ -18,7 +18,7 @@ use Drupal\ldap_servers\LdapUserAttributesInterface;
  * Implements hook_module_preinstall().
  */
 function ldap_user_module_preinstall($module) {
-  if ($module == 'ldap_user') {
+  if ($module === 'ldap_user') {
     $type = \Drupal::entityTypeManager()->getDefinition('user');
     $fields = ldap_user_entity_base_field_info($type);
     foreach ($fields as $name => $data) {

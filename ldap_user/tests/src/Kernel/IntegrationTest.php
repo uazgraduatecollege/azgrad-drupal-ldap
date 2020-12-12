@@ -17,7 +17,7 @@ class IntegrationTest extends KernelTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = [
+  protected static $modules = [
     'authorization',
     'externalauth',
     'ldap_servers',
@@ -36,7 +36,7 @@ class IntegrationTest extends KernelTestBase {
   /**
    * Setup of kernel tests.
    */
-  public function setUp() {
+  public function setUp(): void {
     parent::setUp();
     $this->installConfig(['ldap_user']);
     $this->configFactory = $this->container->get('config.factory');
@@ -45,21 +45,21 @@ class IntegrationTest extends KernelTestBase {
   /**
    * Test module installation via configuration.
    */
-  public function testConfig() {
+  public function testConfig(): void {
     $value = $this->configFactory->get('ldap_user.settings')->get('orphanedAccountCheckInterval');
-    $this->assertEquals('weekly', $value);
+    self::assertEquals('weekly', $value);
   }
 
   /**
    * Test the integration of the user processor.
    */
-  public function brokenTestProcessor() {
+  public function brokenTestProcessor(): void {
     $processor = \Drupal::service('ldap.drupal_user_processor');
     $processor->createDrupalUserFromLdapEntry(['name' => 'hpotter']);
     $user = $processor->getUserAccount();
     // @TODO: Inject a server configuration for the provisioning server,
     // override the server factory to provide a dummy server.
-    $this->assertInstanceOf(User::class, $user);
+    self::assertInstanceOf(User::class, $user);
     // @TODO: Amend test scenario to user update, user insert, user delete.
     // @TODO: Amend test scenario to log user in, i.e. drupalUserLogsIn().
   }
