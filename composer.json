@@ -8,7 +8,6 @@
         "grahl/ldap": "~4.4",
         "drupal/authorization": "^1.0",
         "drupal/externalauth": "^1.0",
-        "symfony/polyfill-php56": "~1.8",
         "php": ">=7.2.0"
     }
 }
