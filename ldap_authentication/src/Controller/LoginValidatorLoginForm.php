@@ -109,7 +109,7 @@ class LoginValidatorLoginForm extends LoginValidatorBase {
         ], 'ldap_authentication'
       );
 
-      // TODO: Verify new usage of CredentialsStorage here.
+      // @todo Verify new usage of CredentialsStorage here.
       $bindResult = $this->bindToServer();
       if ($bindResult !== TRUE) {
         $authenticationResult = $bindResult;

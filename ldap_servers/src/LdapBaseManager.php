@@ -278,7 +278,7 @@ abstract class LdapBaseManager {
       return FALSE;
     }
 
-    // TODO: Verify unicodePwd was modified if present through alter hook.
+    // @todo Verify unicodePwd was modified if present through alter hook.
     try {
       $this->ldap->getEntryManager()->update($entry);
     }
@@ -337,8 +337,8 @@ abstract class LdapBaseManager {
    *   Current.
    */
   protected function applyModificationsToEntry(Entry $entry, Entry $current): void {
-    // TODO: Make sure the empty attributes sent are actually an array.
-    // TODO: Make sure that count et al are gone.
+    // @todo Make sure the empty attributes sent are actually an array.
+    // @todo Make sure that count et al are gone.
     foreach ($entry->getAttributes() as $new_key => $new_value) {
       if ($current->getAttribute($new_key) == $new_value) {
         $entry->removeAttribute($new_key);
@@ -374,7 +374,7 @@ abstract class LdapBaseManager {
    * @return \Symfony\Component\Ldap\Entry|false
    *   LDAP Entry.
    *
-   * @Todo: This function does return data and check for validity of response.
+   * @todo This function does return data and check for validity of response.
    *  This makes responses difficult to parse and should be optimized.
    */
   public function queryAllBaseDnLdapForUsername($drupal_username) {
@@ -403,13 +403,13 @@ abstract class LdapBaseManager {
    *   LDAP Entry.
    */
   public function sanitizeUserDataResponse(Entry $entry, $drupal_username): ?Entry {
-    // TODO: Make this more elegant.
+    // @todo Make this more elegant.
     foreach ($entry->getAttributes() as $key => $value) {
       $entry->removeAttribute($key);
       $entry->setAttribute(mb_strtolower($key), $value);
     }
 
-    // TODO: Remove this if we are sure no one needs it anymore.
+    // @todo Remove this if we are sure no one needs it anymore.
     $entry->setAttribute('ldap_server_id', [$this->server->id()]);
 
     if ($this->server->get('bind_method') === 'anon_user') {
@@ -437,7 +437,7 @@ abstract class LdapBaseManager {
    * @return \Symfony\Component\Ldap\Entry|false|null
    *   LDAP entry.
    *
-   * @Todo: This function does return data and check for validity of response.
+   * @todo This function does return data and check for validity of response.
    *  This makes responses difficult to parse and should be optimized.
    */
   public function queryLdapForUsername($base_dn, $drupal_username) {

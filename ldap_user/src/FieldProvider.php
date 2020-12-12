@@ -439,7 +439,7 @@ class FieldProvider implements LdapUserAttributesInterface {
     );
 
     // Load active Drupal user fields.
-    // TODO: Consider not hard-coding the other properties.
+    // @todo Consider not hard-coding the other properties.
     $user_fields = $this->entityFieldManager
       ->getFieldStorageDefinitions('user');
     foreach ($user_fields as $field_name => $field_instance) {

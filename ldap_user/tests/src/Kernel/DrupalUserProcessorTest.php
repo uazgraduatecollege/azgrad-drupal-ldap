@@ -115,24 +115,24 @@ class DrupalUserProcessorTest extends KernelTestBase implements LdapUserAttribut
     $user = $this->drupalUserProcessor->getUserAccount();
     // Override the server factory to provide a dummy server.
     self::assertInstanceOf(User::class, $user);
-    // @TODO: Does not work since getUserDataFromServerByIdentifier() loads
+    // @todo Does not work since getUserDataFromServerByIdentifier() loads
     // live data and the server is missing.
-    // @TODO: Amend test scenario to user update, user insert, user delete.
-    // @TODO: Amend test scenario to log user in, i.e. drupalUserLogsIn().
+    // @todo Amend test scenario to user update, user insert, user delete.
+    // @todo Amend test scenario to log user in, i.e. drupalUserLogsIn().
   }
 
-  // @TODO: Write test to show that syncing to existing Drupal users works.
-  // @TODO: Write a test showing that a constant value gets passend on
+  // @todo Write test to show that syncing to existing Drupal users works.
+  // @todo Write a test showing that a constant value gets passend on
   // correctly, i.e. ldap_attr is "Faculty" instead of [type].
-  // @TODO: Write a test validating compound tokens, i.e. ldap_attr is
+  // @todo Write a test validating compound tokens, i.e. ldap_attr is
   // '[cn]@hogwarts.edu' or '[givenName] [sn]'.
-  // @TODO: Write a test validating multiple mail properties, i.e. [mail]
+  // @todo Write a test validating multiple mail properties, i.e. [mail]
   // returns the following and we get both:
   // [['mail' => 'hpotter@hogwarts.edu'], ['mail' => 'hpotter@owlmail.com']].
-  // @TODO: Write a test validating non-integer values on the account status.
-  // @TODO: Write a test for applyAttributes for binary fields.
-  // @TODO: Write a test for applyAttributes for case sensitivity in tokens.
-  // @TODO: Write a test for applyAttributes for user_attr in mappings.
-  // @TODO: Write a test to prove puid update works, with and without binary mode
+  // @todo Write a test validating non-integer values on the account status.
+  // @todo Write a test for applyAttributes for binary fields.
+  // @todo Write a test for applyAttributes for case sensitivity in tokens.
+  // @todo Write a test for applyAttributes for user_attr in mappings.
+  // @todo Write a test to prove puid update works, with and without binary mode
   // and including a conflicting account.
 }

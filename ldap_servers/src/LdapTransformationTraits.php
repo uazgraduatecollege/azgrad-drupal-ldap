@@ -54,27 +54,26 @@ trait LdapTransformationTraits {
    *
    * @param string $subject
    * @param string $ignore
-   * @param int    $flags
+   * @param int $flags
    *
    * @return string
    *
    * @see http://stackoverflow.com/a/8561604
    */
-  public static function php56_polyfill_ldap_escape($subject, $ignore = '', $flags = 0)
-  {
+  public static function php56_polyfill_ldap_escape($subject, $ignore = '', $flags = 0) {
 
     $ldap_escape_filter = 1;
     $ldap_escape_dn = 2;
 
-    static $charMaps = null;
+    static $charMaps = NULL;
 
-    if (null === $charMaps) {
+    if (NULL === $charMaps) {
       $charMaps = [
         $ldap_escape_filter => ['\\', '*', '(', ')', "\x00"],
         $ldap_escape_dn => ['\\', ',', '=', '+', '<', '>', ';', '"', '#', "\r"],
       ];
 
-      $charMaps[0] = array();
+      $charMaps[0] = [];
 
       for ($i = 0; $i < 256; ++$i) {
         $charMaps[0][\chr($i)] = sprintf('\\%02x', $i);
@@ -93,7 +92,7 @@ trait LdapTransformationTraits {
       }
     }
 
-    // Create the base char map to escape
+    // Create the base char map to escape.
     $flags = (int) $flags;
     $charMap = [];
 
@@ -109,24 +108,24 @@ trait LdapTransformationTraits {
       $charMap = $charMaps[0];
     }
 
-    // Remove any chars to ignore from the list
+    // Remove any chars to ignore from the list.
     $ignore = (string) $ignore;
 
     for ($i = 0, $l = \strlen($ignore); $i < $l; ++$i) {
       unset($charMap[$ignore[$i]]);
     }
 
-    // Do the main replacement
+    // Do the main replacement.
     $result = strtr($subject, $charMap);
 
-    // Encode leading/trailing spaces if self::LDAP_ESCAPE_DN is passed
+    // Encode leading/trailing spaces if self::LDAP_ESCAPE_DN is passed.
     if ($flags & $ldap_escape_dn) {
       if ($result[0] === ' ') {
-        $result = '\\20'.substr($result, 1);
+        $result = '\\20' . substr($result, 1);
       }
 
       if ($result[\strlen($result) - 1] === ' ') {
-        $result = substr($result, 0, -1).'\\20';
+        $result = substr($result, 0, -1) . '\\20';
       }
     }
 

@@ -198,7 +198,7 @@ class GroupUserUpdateProcessor {
     else {
       // We are saving here for sites without ldap_authorization since saving is
       // embedded in setAllProfiles().
-      // TODO: Provide method for decoupling saving users and use it instead.
+      // @todo Provide method for decoupling saving users and use it instead.
       $user->save();
     }
   }
@@ -216,7 +216,7 @@ class GroupUserUpdateProcessor {
       return;
     }
 
-    // @TODO: Batch users as OrphanProcessor does.
+    // @todo Batch users as OrphanProcessor does.
     $this->queryController->execute();
     $accounts_to_process = $this->queryController->getRawResults();
     $attribute = $this->ldapServer->getAuthenticationNameAttribute();
@@ -229,7 +229,7 @@ class GroupUserUpdateProcessor {
     foreach ($accounts_to_process as $account) {
       if ($account->hasAttribute($attribute)) {
         $username = $account->getAttribute($attribute)[0];
-        // TODO: Broken.
+        // @todo Broken.
         $match = $this->drupalUserProcessor->drupalUserExists($username);
         if ($match) {
           $uid = $this->externalAuth->getUid($username, 'ldap_user');

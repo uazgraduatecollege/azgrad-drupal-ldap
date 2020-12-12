@@ -69,7 +69,7 @@ class LoginTest extends KernelTestBase {
     $server->save();
     $this->config('ldap_authentication.settings')
       ->set('sids', [$server->id()])
-      // TODO: This should not be necessary, investigate schema.
+      // @todo This should not be necessary, investigate schema.
       ->set('excludeIfTextInDn', [])
       ->set('allowOnlyIfTextInDn', [])
       ->save();
@@ -147,7 +147,7 @@ class LoginTest extends KernelTestBase {
    */
   public function testExclusiveUserMode() {
     $this->markTestIncomplete('Test missing.');
-    // TODO: Write test
+    // @todo Write test
     // assert right credentials LDAP
     // assert local Drupal user without mapping (associated, not associated)
     // see example data.
@@ -251,7 +251,7 @@ class LoginTest extends KernelTestBase {
       ->getStorage('user')
       ->loadMultiple()
     );
-    // TODO:
+    // @todo
     // assert local Drupal user without mapping (associated, not associated)
     // test exclusive/mixed
     // see example data.

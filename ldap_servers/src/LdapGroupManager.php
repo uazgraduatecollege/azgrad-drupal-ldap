@@ -160,7 +160,7 @@ class LdapGroupManager extends LdapBaseManager {
    * @return bool
    *   Removal result.
    *
-   * @TODO: When actually in use split into two to remove boolean modifier.
+   * @todo When actually in use split into two to remove boolean modifier.
    */
   public function groupRemoveGroup($group_dn, $only_if_group_empty = TRUE): bool {
     if (!$this->checkAvailability()) {
@@ -201,7 +201,7 @@ class LdapGroupManager extends LdapBaseManager {
     if ($this->groupGroupEntryMembershipsConfigured()) {
       try {
         $entry = new Entry($group_dn);
-        // TODO: Bugreport upstream interface.
+        // @todo Bugreport upstream interface.
         /** @var \Symfony\Component\Ldap\Adapter\ExtLdap\EntryManager $manager */
         $manager = $this->ldap->getEntryManager();
         $manager->addAttributeValues($entry, $this->server->get('grp_memb_attr'), [$user]);
@@ -239,7 +239,7 @@ class LdapGroupManager extends LdapBaseManager {
     if ($this->checkAvailability() && $this->groupGroupEntryMembershipsConfigured()) {
       try {
         $entry = new Entry($group_dn);
-        // TODO: Bugreport upstream interface.
+        // @todo Bugreport upstream interface.
         /** @var \Symfony\Component\Ldap\Adapter\ExtLdap\EntryManager $manager */
         $manager = $this->ldap->getEntryManager();
         $manager->removeAttributeValues($entry, $this->server->get('grp_memb_attr'), [$member]);
@@ -269,7 +269,7 @@ class LdapGroupManager extends LdapBaseManager {
    *   Array of group members (could be users or
    *   groups).
    *
-   * @TODO: Split return functionality or throw an error.
+   * @todo Split return functionality or throw an error.
    */
   public function groupAllMembers($group_dn): array {
     $members = [];
@@ -311,7 +311,7 @@ class LdapGroupManager extends LdapBaseManager {
    *   FALSE on error, otherwise array of group members (could be users or
    *   groups).
    *
-   * @TODO: Split return functionality or throw an error.
+   * @todo Split return functionality or throw an error.
    */
   public function groupMembers($group_dn) {
     if (!$this->checkAvailability()) {
@@ -394,7 +394,7 @@ class LdapGroupManager extends LdapBaseManager {
    * @return bool
    *   If operation was successful.
    *
-   *   Todo: Should the type hint for Entry not be Entry[]?
+   *   @todo Should the type hint for Entry not be Entry[]?
    */
   public function groupMembersRecursive(Entry $group_dn_entries, array &$all_member_dns, array $tested_group_dns, $level, $max_levels, $object_classes = FALSE) {
     if (!$this->checkAvailability()) {
@@ -573,7 +573,7 @@ class LdapGroupManager extends LdapBaseManager {
     // Need to search on all basedns one at a time.
     foreach ($this->server->getBaseDn() as $baseDn) {
       // Only need dn, so empty array forces return of no attributes.
-      // TODO: See if this syntax is correct.
+      // @todo See if this syntax is correct.
       // It should return a valid DN with n attributes.
       try {
         $group_query = '(&(objectClass=' . $this->server->get('grp_object_cat') . ')(' . $this->server->get('grp_memb_attr') . "=$member_value))";
@@ -616,7 +616,7 @@ class LdapGroupManager extends LdapBaseManager {
    *   False for error or misconfiguration, otherwise TRUE. Results are passed
    *   by reference.
    *
-   * @TODO: See if we can do this with groupAllMembers().
+   * @todo See if we can do this with groupAllMembers().
    */
   private function groupMembershipsFromEntryRecursive(
     CollectionInterface $current_group_entries,
@@ -652,7 +652,7 @@ class LdapGroupManager extends LdapBaseManager {
     $filter_count = count($or_filters);
     if ($filter_count > 0) {
       // Only 50 or so per query.
-      // TODO: We can likely remove this since we are fetching one result at a
+      // @todo We can likely remove this since we are fetching one result at a
       // time with symfony/ldap.
       for ($key = 0; $key < $filter_count; $key += self::LDAP_QUERY_CHUNK) {
         $current_or_filters = array_slice($or_filters, $key, self::LDAP_QUERY_CHUNK);
@@ -675,7 +675,7 @@ class LdapGroupManager extends LdapBaseManager {
           }
 
           if ($ldap_result->count() > 0 && $level < $max_levels) {
-            // @TODO: Verify recursion with true return.
+            // @todo Verify recursion with true return.
             $this->groupMembershipsFromEntryRecursive($ldap_result, $all_group_dns, $tested_group_ids, $level + 1, $max_levels);
           }
         }

@@ -113,7 +113,7 @@ class QueryController {
         $filter = $this->query->getFilter();
       }
 
-      // TODO: exception handling.
+      // @todo exception handling.
       $this->ldapBridge->setServerById($this->query->getServerId());
 
       if ($this->ldapBridge->bind()) {
@@ -140,7 +140,7 @@ class QueryController {
           }
 
           if ($ldap_response && !empty($ldap_response)) {
-            // TODO: $this->results[] = $ldap_response should suffice?
+            // @todo $this->results[] = $ldap_response should suffice?
             $this->results = array_merge($this->results, $ldap_response);
           }
         }

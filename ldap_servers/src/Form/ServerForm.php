@@ -170,7 +170,7 @@ class ServerForm extends EntityForm {
       '#title' => $this->t('Users'),
     ];
 
-    // TODO: Change to "add another" pattern, to avoid linebreak handling.
+    // @todo Change to "add another" pattern, to avoid linebreak handling.
     $form['users']['basedn'] = [
       '#default_value' => $server->get('basedn') ? implode("\r\n", $server->get('basedn')) : '',
       '#type' => 'textarea',

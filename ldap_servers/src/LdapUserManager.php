@@ -104,7 +104,7 @@ class LdapUserManager extends LdapBaseManager {
    * @param \Symfony\Component\Ldap\Entry $current
    *   LDAP Entry.
    *
-   * @TODO / @FIXME: This is not called.
+   * @todo / @FIXME: This is not called.
    */
   protected function applyModificationsToEntry(Entry $entry, Entry $current): void {
     if ($entry->hasAttribute('unicodePwd') && $this->server->get('type') === 'ad') {
@@ -222,7 +222,7 @@ class LdapUserManager extends LdapBaseManager {
    * @return \Symfony\Component\Ldap\Entry|false
    *   Returns entry or FALSE.
    *
-   *   TODO: This should go into LdapUserProcessor or LdapUserManager,
+   *   @todo This should go into LdapUserProcessor or LdapUserManager,
    *   leaning toward the former.
    */
   public function getUserDataByAccount(UserInterface $account) {

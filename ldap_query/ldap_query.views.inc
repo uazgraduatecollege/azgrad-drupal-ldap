@@ -20,7 +20,7 @@ function ldap_query_views_data() {
   ];
 
   // Fields.
-  // TODO: DN often empty for most cases. Less than ideal base field.
+  // @todo DN often empty for most cases. Less than ideal base field.
   $data['ldap_query']['dn'] = [
     'title' => t('DN'),
     'help' => t('Distinguished name attribute.'),

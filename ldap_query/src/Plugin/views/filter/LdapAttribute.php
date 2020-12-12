@@ -83,5 +83,5 @@ class LdapAttribute extends StringFilter {
     }
   }
 
-  // TODO: Port numerical comparisons. Requires change of base type.
+  // @todo Port numerical comparisons. Requires change of base type.
 }

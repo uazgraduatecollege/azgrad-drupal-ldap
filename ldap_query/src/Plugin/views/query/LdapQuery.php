@@ -148,7 +148,7 @@ class LdapQuery extends QueryPluginBase {
     $set = [];
     foreach ($orders as $orderCriterion) {
       foreach ($results as $key => $row) {
-        // TODO: Could be improved by making the element index configurable.
+        // @todo Could be improved by making the element index configurable.
         $orderCriterion['data'][$key] = $row[$orderCriterion['field']][0];
         $set[$key][$orderCriterion['field']] = $row[$orderCriterion['field']][0];
         $set[$key]['index'] = $key;

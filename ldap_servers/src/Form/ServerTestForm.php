@@ -212,7 +212,7 @@ class ServerTestForm extends EntityForm {
       '#type' => 'textfield',
       '#title' => $this->t('Testing Drupal DN'),
       '#default_value' => $this->ldapServer->getTestingDrupalUserDn(),
-      // TODO: Add this field back in. The logic for it is missing completely.
+      // @todo Add this field back in. The logic for it is missing completely.
       '#access' => FALSE,
       '#size' => 120,
       '#maxlength' => 255,
@@ -405,7 +405,7 @@ class ServerTestForm extends EntityForm {
     if (!empty($group_entry)) {
       foreach ([TRUE, FALSE] as $nested) {
         $this->ldapServer->set('grp_nested', $nested);
-        // TODO: Need to pass server by reference to inject nesting state.
+        // @todo Need to pass server by reference to inject nesting state.
         $this->ldapGroupManager->setServerById($this->ldapServer->id());
         // FALSE.
         $nested_display = ($nested) ? 'Yes' : 'No';

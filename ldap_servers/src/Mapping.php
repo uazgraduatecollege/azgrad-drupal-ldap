@@ -373,7 +373,7 @@ class Mapping {
   /**
    * Mapping set is binary.
    *
-   * TODO: improve syntax.
+   * @todo improve syntax.
    *
    * @param bool $binary
    *   Is binary.
@@ -385,7 +385,7 @@ class Mapping {
   /**
    * Mapping set is configurable.
    *
-   * TODO: improve syntax.
+   * @todo improve syntax.
    *
    * @param bool $configurable
    *   Is configurable.

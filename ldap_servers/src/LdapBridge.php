@@ -99,7 +99,7 @@ class LdapBridge implements LdapBridgeInterface {
     $this->bindMethod = $server->get('bind_method');
     $this->bindDn = $server->get('binddn');
     $this->bindPw = $server->get('bindpw');
-    // TODO: Make this cacheable.
+    // @todo Make this cacheable.
     $this->ldap = Ldap::create('ext_ldap', $parameters);
   }
 

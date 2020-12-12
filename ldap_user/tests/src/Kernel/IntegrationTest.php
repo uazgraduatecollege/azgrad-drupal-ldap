@@ -57,11 +57,11 @@ class IntegrationTest extends KernelTestBase {
     $processor = \Drupal::service('ldap.drupal_user_processor');
     $processor->createDrupalUserFromLdapEntry(['name' => 'hpotter']);
     $user = $processor->getUserAccount();
-    // @TODO: Inject a server configuration for the provisioning server,
+    // @todo Inject a server configuration for the provisioning server,
     // override the server factory to provide a dummy server.
     self::assertInstanceOf(User::class, $user);
-    // @TODO: Amend test scenario to user update, user insert, user delete.
-    // @TODO: Amend test scenario to log user in, i.e. drupalUserLogsIn().
+    // @todo Amend test scenario to user update, user insert, user delete.
+    // @todo Amend test scenario to log user in, i.e. drupalUserLogsIn().
   }
 
 }

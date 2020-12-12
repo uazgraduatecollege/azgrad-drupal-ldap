@@ -5,7 +5,6 @@ declare(strict_types = 1);
 
 namespace Drupal\ldap_servers;
 
-use ArrayObject;
 use Symfony\Component\Ldap\Adapter\CollectionInterface;
 
 /**
@@ -27,7 +26,7 @@ class FakeCollection implements CollectionInterface {
    *   Entries.
    */
   public function __construct(array $result) {
-    $this->result = new ArrayObject($result);
+    $this->result = new \ArrayObject($result);
   }
 
   /**

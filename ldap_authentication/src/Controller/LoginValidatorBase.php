@@ -133,7 +133,7 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
    *
    * @var \Drupal\Core\Form\FormState
    *
-   * @TODO: Try to push this up into LoginValidatorLoginForm
+   * @todo Try to push this up into LoginValidatorLoginForm
    */
   protected $formState;
 
@@ -302,7 +302,7 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
    * @return bool
    *   Whether to allow user login.
    *
-   * @TODO: This duplicates DrupalUserProcessor->excludeUser().
+   * @todo This duplicates DrupalUserProcessor->excludeUser().
    */
   protected function verifyUserAllowed(): bool {
     if ($this->config->get('skipAdministrators')) {
@@ -380,7 +380,7 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
     }
     else {
       $this->ldapBridge->setServer($this->serverDrupalUser);
-      // TODO: Verify value in userPW, document!
+      // @todo Verify value in userPW, document!
       CredentialsStorage::storeUserDn($this->ldapEntry->getDn());
       CredentialsStorage::testCredentials(TRUE);
       $bindResult = $this->ldapBridge->bind();

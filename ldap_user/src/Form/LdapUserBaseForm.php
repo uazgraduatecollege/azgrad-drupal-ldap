@@ -98,7 +98,7 @@ abstract class LdapUserBaseForm extends ConfigFormBase implements LdapUserAttrib
   /**
    * Load servers and set their default values.
    *
-   * TODO: Duplicated in LdapUserAdminForm.
+   * @todo Duplicated in LdapUserAdminForm.
    */
   protected function prepareBaseData() {
     $storage = $this->entityTypeManager->getStorage('ldap_server');

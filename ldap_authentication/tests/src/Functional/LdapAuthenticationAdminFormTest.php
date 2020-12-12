@@ -98,7 +98,7 @@ class LdapAuthenticationAdminFormTest extends BrowserTestBase {
       ->get('ldap_authentication.settings');
     self::assertEquals('exclusive', $config->get('authenticationMode'));
     self::assertEquals(['one', 'two'], $config->get('allowOnlyIfTextInDn'));
-    // TODO: Those could be saved nicer.
+    // @todo Those could be saved nicer.
     $sids = [
       'my_test_server_1' => 'my_test_server_1',
       'my_test_server_2' => 0,

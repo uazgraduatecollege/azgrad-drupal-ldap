@@ -294,7 +294,7 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
         try {
           if (preg_match($pattern, $value, $matches)) {
             // If there is a sub-pattern then return the first one.
-            // @TODO support named sub-patterns.
+            // @todo support named sub-patterns.
             if (count($matches) > 1) {
               $filtered_proposals[$key] = $matches[1];
             }

@@ -52,7 +52,7 @@ class LoginValidatorSso extends LoginValidatorBase {
   /**
    * {@inheritdoc}
    *
-   * @Todo: Reduce code duplication w/ LoginValidator, split this function up.
+   * @todo Reduce code duplication w/ LoginValidator, split this function up.
    */
   protected function testCredentials() {
     foreach ($this->authenticationServers->getAvailableAuthenticationServers() as $server) {
@@ -68,7 +68,7 @@ class LoginValidatorSso extends LoginValidatorBase {
         ], 'ldap_authentication'
       );
 
-      // TODO: Verify new usage of CredentialsStorage here.
+      // @todo Verify new usage of CredentialsStorage here.
       $bindResult = $this->bindToServer();
       if ($bindResult !== TRUE) {
         $authenticationResult = $bindResult;

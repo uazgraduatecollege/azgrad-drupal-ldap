@@ -63,7 +63,7 @@ class LdapAuthorizationProviderTest extends UnitTestCase {
     $form = [];
     $this->providerPlugin->validateRowForm($form, $sub_form_state);
     self::assertEquals([], $sub_form_state->getErrors());
-    // TODO: Still needs more useful assertions here.
+    // @todo Still needs more useful assertions here.
   }
 
   /**

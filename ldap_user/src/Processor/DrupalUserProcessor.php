@@ -160,7 +160,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
   /**
    * Constructor.
    *
-   * TODO: Make this service smaller.
+   * @todo Make this service smaller.
    * (The number of dependencies alone makes this clear.)
    *
    * @param \Psr\Log\LoggerInterface $logger
@@ -570,7 +570,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
     $fileName = uniqid('', FALSE);
     $unmanagedFile = $this->fileSystem->getTempDirectory() . '/' . $fileName;
     file_put_contents($unmanagedFile, $ldapUserPicture);
-    // TODO: Declare dependency on exif or resolve it.
+    // @todo Declare dependency on exif or resolve it.
     $image_type = exif_imagetype($unmanagedFile);
     $extension = image_type_to_extension($image_type, FALSE);
     unlink($unmanagedFile);
@@ -597,7 +597,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
       return ['target_id' => $managed_file->id()];
     }
     else {
-      // Todo: Verify file garbage collection.
+      // @todo Verify file garbage collection.
       foreach ($errors as $error) {
         $this->detailLog
           ->log('File upload error for user image with validation error @error',

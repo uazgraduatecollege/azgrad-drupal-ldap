@@ -201,7 +201,7 @@ class LdapEntryProvisionSubscriber implements EventSubscriberInterface, LdapUser
   /**
    * Create or update LDAP entries on user update.
    *
-   * TODO: Make sure we are not working on excluded accounts, see also
+   * @todo Make sure we are not working on excluded accounts, see also
    * other events.
    *
    * @param \Drupal\ldap_user\Event\LdapUserUpdatedEvent $event
@@ -282,7 +282,7 @@ class LdapEntryProvisionSubscriber implements EventSubscriberInterface, LdapUser
     $mappings = $this->fieldProvider->getAttributesSyncedOnEvent($prov_event);
 
     foreach ($mappings as $field) {
-      // TODO: Trimming here shows that we should not be saving the brackets to
+      // @todo Trimming here shows that we should not be saving the brackets to
       // the database.
       $ldap_attribute_name = trim($field->getLdapAttribute(), '[]');
 
@@ -441,7 +441,7 @@ class LdapEntryProvisionSubscriber implements EventSubscriberInterface, LdapUser
       }
     }
 
-    // TODO: Not a great solution.
+    // @todo Not a great solution.
     // We are adding those lowercase duplicates to make sure we can
     // replace all placeholders independent of their case. Note that as a
     // workaround we are lowercasing those on form saving for now.
@@ -631,7 +631,7 @@ class LdapEntryProvisionSubscriber implements EventSubscriberInterface, LdapUser
    *   Entry, false or null.
    */
   private function checkExistingLdapEntry() {
-    // TODO: Inject.
+    // @todo Inject.
     $authmap = \Drupal::service('externalauth.authmap')
       ->get($this->account->id(), 'ldap_user');
     if ($authmap) {

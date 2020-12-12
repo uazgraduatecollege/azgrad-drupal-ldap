@@ -76,7 +76,7 @@ class QueryEntityFormTest extends BrowserTestBase {
       'id' => 'my_query',
       'edit-server-id-my-test-server-1' => 'my_test_server_1',
       'status' => 1,
-      // TODO: Investigate if carriage return is consistent across forms.
+      // @todo Investigate if carriage return is consistent across forms.
       'base_dn' => "ou=group1\r\nou=group2,dc=one",
       'filter' => '(&(objectClass=user)(homePhone=*))',
       'attributes' => 'objectclass,name,cn,samaccountname',
