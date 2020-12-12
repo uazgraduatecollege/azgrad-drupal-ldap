@@ -458,7 +458,12 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
     }
 
     $event = new LdapUserLoginEvent($account);
-    $this->eventDispatcher->dispatch(LdapUserLoginEvent::EVENT_NAME, $event);
+    if (version_compare(\Drupal::VERSION, '9.1', '>=')) {
+      $this->eventDispatcher->dispatch($event, LdapUserLoginEvent::EVENT_NAME);
+    }
+    else {
+      $this->eventDispatcher->dispatch(LdapUserLoginEvent::EVENT_NAME, $event);
+    }
   }
 
   /**

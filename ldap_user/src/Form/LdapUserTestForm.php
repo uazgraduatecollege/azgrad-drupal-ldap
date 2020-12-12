@@ -215,7 +215,7 @@ class LdapUserTestForm extends FormBase implements LdapUserAttributesInterface {
           // $event = new LdapNewUserCreatedEvent($account);
           // /** @var EventDispatcher $dispatcher */
           // $dispatcher = \Drupal::service('event_dispatcher');
-          // $dispatcher->dispatch(LdapNewUserCreatedEvent::EVENT_NAME, $event);
+          // $dispatcher->dispatch($event, LdapNewUserCreatedEvent::EVENT_NAME);
           // @FIXME.
           $results['provisionLdapEntry method results']["context = $sync_trigger_description"] = 'Test not ported';
         }

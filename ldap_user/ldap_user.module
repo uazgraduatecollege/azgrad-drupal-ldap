@@ -100,7 +100,12 @@ function ldap_user_user_insert($account) {
   $event = new LdapNewUserCreatedEvent($account);
   /** @var \Symfony\Component\EventDispatcher\EventDispatcher $dispatcher */
   $dispatcher = \Drupal::service('event_dispatcher');
-  $dispatcher->dispatch(LdapNewUserCreatedEvent::EVENT_NAME, $event);
+  if (version_compare(\Drupal::VERSION, '9.1', '>=')) {
+    $dispatcher->dispatch($event, LdapNewUserCreatedEvent::EVENT_NAME);
+  }
+  else {
+    $dispatcher->dispatch(LdapNewUserCreatedEvent::EVENT_NAME, $event);
+  }
 }
 
 /**
@@ -119,7 +124,12 @@ function ldap_user_user_update($account) {
   $event = new LdapUserUpdatedEvent($account);
   /** @var \Symfony\Component\EventDispatcher\EventDispatcher $dispatcher */
   $dispatcher = \Drupal::service('event_dispatcher');
-  $dispatcher->dispatch(LdapUserUpdatedEvent::EVENT_NAME, $event);
+  if (version_compare(\Drupal::VERSION, '9.1', '>=')) {
+    $dispatcher->dispatch($event, LdapUserUpdatedEvent::EVENT_NAME);
+  }
+  else {
+    $dispatcher->dispatch(LdapNewUserCreatedEvent::EVENT_NAME, $event);
+  }
 }
 
 /**
@@ -129,7 +139,12 @@ function ldap_user_user_delete($account) {
   $event = new LdapUserDeletedEvent($account);
   /** @var \Symfony\Component\EventDispatcher\EventDispatcher $dispatcher */
   $dispatcher = \Drupal::service('event_dispatcher');
-  $dispatcher->dispatch(LdapUserDeletedEvent::EVENT_NAME, $event);
+  if (version_compare(\Drupal::VERSION, '9.1', '>=')) {
+    $dispatcher->dispatch($event, LdapUserDeletedEvent::EVENT_NAME);
+  }
+  else {
+    $dispatcher->dispatch(LdapUserDeletedEvent::EVENT_NAME, $event);
+  }
 }
 
 /**
