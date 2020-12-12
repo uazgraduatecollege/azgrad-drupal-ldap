@@ -260,7 +260,11 @@ function ldap_user_form_user_register_form_alter(&$form, $form_state) {
 
   if ($user_settings->get('disableAdminPasswordField') == TRUE) {
     $form['account']['pass']['#type'] = 'value';
-    $form['account']['pass']['#value'] = user_password(40);
+    if (version_compare(\Drupal::VERSION, '9.1', '>=')) {
+      $form['account']['pass']['#value'] = \Drupal::service('password_generator')->generate(40);
+    } else {
+      $form['account']['pass']['#value'] = user_password(40);
+    }
     $form['account']['pass_disabled']['#type'] = 'fieldset';
     $form['account']['pass_disabled']['#title'] = t('Password');
     $form['account']['pass_disabled'][]['#markup'] = t('LDAP has disabled the password field and generated a random password.');

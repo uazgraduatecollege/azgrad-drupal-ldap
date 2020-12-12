@@ -704,7 +704,11 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
       $this->account->set('mail', $derived_mail);
     }
     if (!$this->account->getPassword()) {
-      $this->account->set('pass', user_password(20));
+      if (version_compare(\Drupal::VERSION, '9.1', '>=')) {
+        $this->account->set('pass', \Drupal::service('password_generator')->generate(20));
+      } else {
+        $this->account->set('pass', user_password(20));
+      }
     }
     if (!$this->account->getInitialEmail()) {
       $this->account->set('init', $derived_mail);

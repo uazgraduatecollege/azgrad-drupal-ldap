@@ -397,11 +397,20 @@ class LdapEntryProvisionSubscriber implements EventSubscriberInterface, LdapUser
 
       case 'user-random':
         $pwd = CredentialsStorage::getPassword();
-        $value = ($pwd) ? $pwd : user_password();
+        if (version_compare(\Drupal::VERSION, '9.1', '>=')) {
+          $generated = \Drupal::service('password_generator')->generate();
+        } else {
+          $generated = user_password();
+        }
+        $value = ($pwd) ? $pwd : $generated;
         break;
 
       case 'random':
-        $value = user_password();
+        if (version_compare(\Drupal::VERSION, '9.1', '>=')) {
+          $value = \Drupal::service('password_generator')->generate();
+        } else {
+          $value = user_password();
+        }
         break;
 
     }
