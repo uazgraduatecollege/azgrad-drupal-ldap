@@ -4,8 +4,6 @@ declare(strict_types = 1);
 
 namespace Drupal\ldap_servers;
 
-use Symfony\Polyfill\Php56\Php56;
-
 /**
  * Helper functions to work around hard dependencies on the LDAP extension.
  */
@@ -60,7 +58,7 @@ trait LdapTransformationTraits {
    *
    * @see http://stackoverflow.com/a/8561604
    */
-  public static function php56_polyfill_ldap_escape($subject, $ignore = '', $flags = 0) {
+  public static function php56_polyfill_ldap_escape(string $subject, $ignore = '', $flags = 0): string {
 
     $ldap_escape_filter = 1;
     $ldap_escape_dn = 2;
