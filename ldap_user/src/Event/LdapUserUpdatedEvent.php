@@ -5,7 +5,10 @@ declare(strict_types = 1);
 namespace Drupal\ldap_user\Event;
 
 use Drupal\user\UserInterface;
-use Symfony\Component\EventDispatcher\Event;
+if (!class_exists('Drupal\Component\EventDispatcher\Event')) {
+  class_alias('Symfony\Component\EventDispatcher\Event', 'Drupal\Component\EventDispatcher\Event');
+}
+use Drupal\Component\EventDispatcher\Event;
 
 /**
  * LDAP User updated event.
