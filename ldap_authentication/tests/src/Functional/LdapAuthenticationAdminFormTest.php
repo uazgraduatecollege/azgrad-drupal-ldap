@@ -25,7 +25,7 @@ class LdapAuthenticationAdminFormTest extends BrowserTestBase {
    *
    * @var array
    */
-  public static $modules = [
+  protected static $modules = [
     'system',
     'ldap_authentication',
     'ldap_servers',

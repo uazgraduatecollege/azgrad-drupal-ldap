@@ -42,6 +42,27 @@ trait LdapTransformationTraits {
   }
 
   /**
+   * Wrapper for ldap_escape().
+   *
+   * Helpful for unit testing without the PHP LDAP module.
+   *
+   * @param string $value
+   *   String to escape.
+   *
+   * @return string
+   *   Escaped string.
+   */
+  protected function ldapEscapeFilter($value): string {
+    if (function_exists('ldap_escape')) {
+      $value = ldap_escape($value, '', LDAP_ESCAPE_FILTER);
+    }
+    else {
+      $value = self::php56_polyfill_ldap_escape($value, '', 1);
+    }
+    return $value;
+  }
+
+  /**
    * Stub implementation of the {@link ldap_escape()} function of the ldap
    * extension.
    *
@@ -128,27 +149,6 @@ trait LdapTransformationTraits {
     }
 
     return $result;
-  }
-
-  /**
-   * Wrapper for ldap_escape().
-   *
-   * Helpful for unit testing without the PHP LDAP module.
-   *
-   * @param string $value
-   *   String to escape.
-   *
-   * @return string
-   *   Escaped string.
-   */
-  protected function ldapEscapeFilter($value): string {
-    if (function_exists('ldap_escape')) {
-      $value = ldap_escape($value, '', LDAP_ESCAPE_FILTER);
-    }
-    else {
-      $value = Php56::ldap_escape($value, '', 1);
-    }
-    return $value;
   }
 
   /**
