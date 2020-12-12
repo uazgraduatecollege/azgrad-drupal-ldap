@@ -230,7 +230,7 @@ class LdapEntryProvisionSubscriber implements EventSubscriberInterface, LdapUser
    * @param \Drupal\ldap_user\Event\LdapNewUserCreatedEvent $event
    *   Event.
    */
-  public function userCreated(LdapNewUserCreatedEvent $event) {
+  public function userCreated(LdapNewUserCreatedEvent $event): void {
     $this->account = $event->account;
     if ($this->provisionLdapEntriesFromDrupalUsers()) {
       if (in_array(self::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_UPDATE_CREATE, $this->config->get('ldapEntryProvisionTriggers'), TRUE)) {

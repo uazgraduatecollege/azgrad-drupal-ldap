@@ -128,7 +128,7 @@ function ldap_user_user_update($account) {
     $dispatcher->dispatch($event, LdapUserUpdatedEvent::EVENT_NAME);
   }
   else {
-    $dispatcher->dispatch(LdapNewUserCreatedEvent::EVENT_NAME, $event);
+    $dispatcher->dispatch(LdapUserUpdatedEvent::EVENT_NAME, $event);
   }
 }
 
