@@ -767,8 +767,8 @@ class LdapAuthenticationTestCase extends LdapTestCase {
       'excludeIfNoAuthorizations' => [
         'property' => 'excludeIfNoAuthorizations',
         'values' => [
-          [TRUE],
-          [TRUE],
+          1,
+          1,
         ],
       ],
       'emailOption' => [
