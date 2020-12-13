@@ -681,8 +681,7 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
   protected function deriveDrupalUserName(): bool {
     // If account_name_attr is set, Drupal username is different than authName.
     if ($this->serverDrupalUser->hasAccountNameAttribute()) {
-      $user_attribute = mb_strtolower($this->serverDrupalUser->getAccountNameAttribute());
-      $user_name_from_attribute = $this->ldapEntry->getAttribute($user_attribute)[0];
+      $user_name_from_attribute = $this->ldapEntry->getAttribute($this->serverDrupalUser->getAccountNameAttribute(), FALSE)[0];
       if (!$user_name_from_attribute) {
         $this->logger
           ->error('Derived Drupal username from attribute %account_name_attr returned no username for authname %authname.', [

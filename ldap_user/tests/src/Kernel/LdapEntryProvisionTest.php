@@ -125,7 +125,7 @@ class LdapEntryProvisionTest extends EntityKernelTestBase {
     $entry = $this->invokeNonPublic('buildLdapEntry', [LdapEntryProvisionSubscriber::EVENT_CREATE_LDAP_ENTRY]);
     $tokens = $this->subscriber->getTokens();
     self::assertEquals($user->getEmail(), $tokens['[property.mail]']);
-    self::assertEquals($user->getEmail(), $entry->getAttribute('mail')[0]);
+    self::assertEquals($user->getEmail(), $entry->getAttribute('mail', FALSE)[0]);
     self::markTestIncomplete('TODO: We still need to fix & test case sensitive here like we did for the token processor.');
     // We can simplify since the record *to* LDAP does not care about case.
     // We only need to make sure that the Drupal token isn't an issue

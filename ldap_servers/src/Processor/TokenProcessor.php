@@ -91,6 +91,7 @@ class TokenProcessor {
    * @see \Drupal\ldap_user\EventSubscriber\LdapEntryProvisionSubscriber::fetchDrupalAttributeValue()
    */
   public function ldapEntryReplacementsForDrupalAccount(Entry $resource, string $text): string {
+    // Greedy matching of gropgs of [], ignore spaces and trailing data with /x.
     preg_match_all('/\[([^\[\]]*)\]/x', $text, $matches);
     if (!isset($matches[1]) || empty($matches[1])) {
       // If no tokens exist in text, return text itself.
@@ -100,10 +101,8 @@ class TokenProcessor {
     $this->tokenizeLdapEntry($resource, $matches[1]);
 
     foreach ($matches[0] as $target) {
-      /** @var string $lowercase_target */
-      $lowercase_target = mb_strtolower($target);
-      if (isset($this->tokens[$lowercase_target])) {
-        $text = str_replace($target, $this->tokens[$lowercase_target], $text);
+      if (isset($this->tokens[$target])) {
+        $text = str_replace($target, $this->tokens[$target], $text);
       }
     }
 
@@ -207,44 +206,33 @@ class TokenProcessor {
    */
   private function processLdapTokenKey(Entry $entry, string $required_token): void {
     // Trailing period to allow for empty value.
-    list($token_key, $conversion) = explode(';', $required_token . ';');
+    [$token_key, $conversion] = explode(';', $required_token . ';');
 
     $parts = explode(':', $token_key);
-    $requested_name = mb_strtolower($parts[0]);
-    if ($requested_name === 'dn') {
+    $requested_name = $parts[0];
+    $requested_index = $parts[1] ?? 0;
+
+    if (mb_strtolower($requested_name) === 'dn') {
       return;
     }
 
-    $requested_index = $parts[1] ?? 0;
+    $values = $entry->getAttribute($requested_name, FALSE);
 
-    $value = NULL;
-    $available_attributes = $entry->getAttributes();
-    foreach ($available_attributes as $attribute_key => $attribute_value) {
-      if ($requested_name === mb_strtolower($attribute_key)) {
-        $value = $attribute_value;
-      }
-    }
-
-    // Don't use empty() since a 0, "", etc value may be a desired value.
-    if ($value === NULL) {
+    if ($values === NULL || count($values) === 0) {
+      // No data.
       return;
     }
 
     if ($requested_index === 'last') {
-      $i = count($value) > 0 ? count($value) - 1 : 0;
-      $value = $value[$i];
-    }
-    elseif (is_numeric($requested_index)) {
-      $value = $value[$requested_index];
+      $i = count($values) > 0 ? count($values) - 1 : 0;
+      $value = $values[$i];
     }
     else {
-      // Don't add token if case not covered.
-      return;
+      $value = $values[$requested_index] ?? NULL;
     }
 
     $value = ConversionHelper::convertAttribute($value, $conversion);
-
-    $this->tokens[sprintf('[%s]', mb_strtolower($required_token))] = $value;
+    $this->tokens[sprintf('[%s]', $required_token)] = $value;
   }
 
 }

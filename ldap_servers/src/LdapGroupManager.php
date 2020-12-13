@@ -284,11 +284,14 @@ class LdapGroupManager extends LdapBaseManager {
     }
 
     // If attributes weren't returned, don't give false  empty group.
-    if (empty($group_entry->getAttribute('cn')) || empty($group_entry->getAttribute($this->server->get('grp_memb_attr')))) {
+    if (
+      empty($group_entry->getAttribute('cn', FALSE)) ||
+      empty($group_entry->getAttribute($this->server->get('grp_memb_attr', FALSE)))
+    ) {
       // If no attribute returned, no members.
       return $members;
     }
-    $members = $group_entry->getAttribute($this->server->get('grp_memb_attr'));
+    $members = $group_entry->getAttribute($this->server->get('grp_memb_attr'), FALSE);
 
     $result = $this->groupMembersRecursive($group_entry, $members, [], 0, self::LDAP_QUERY_RECURSION_LIMIT);
     // Remove the DN of the source group.
@@ -327,19 +330,17 @@ class LdapGroupManager extends LdapBaseManager {
     if (!$group_entry) {
       return FALSE;
     }
-    else {
-      // If attributes weren't returned, don't give false, give empty group.
-      if (!$group_entry->hasAttribute('cn')) {
-        return FALSE;
-      }
-      if (!$group_entry->hasAttribute($this->server->get('grp_memb_attr'))) {
-        // If no attribute returned, no members.
-        return [];
-      }
-      else {
-        return $group_entry->getAttribute($this->server->get('grp_memb_attr'));
-      }
+
+    // If attributes weren't returned, don't give false, give empty group.
+    if (!$group_entry->hasAttribute('cn', FALSE)) {
+      return FALSE;
     }
+    if (!$group_entry->hasAttribute($this->server->get('grp_memb_attr'), FALSE)) {
+      // If no attribute returned, no members.
+      return [];
+    }
+
+    return $group_entry->getAttribute($this->server->get('grp_memb_attr'), FALSE);
   }
 
   /**
@@ -510,7 +511,7 @@ class LdapGroupManager extends LdapBaseManager {
     }
 
     $group_attribute = $this->server->getGroupUserMembershipAttribute();
-    if (!$ldap_entry->hasAttribute($group_attribute)) {
+    if (!$ldap_entry->hasAttribute($group_attribute, FALSE)) {
       return $all_group_dns;
     }
 

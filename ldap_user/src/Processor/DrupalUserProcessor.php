@@ -528,8 +528,8 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
     $picture_attribute = $this->server->getPictureAttribute();
     if ($this->ldapEntry && $picture_attribute) {
       // Check if LDAP entry has been provisioned.
-      if ($this->ldapEntry->hasAttribute($picture_attribute)) {
-        $ldapUserPicture = $this->ldapEntry->getAttribute($picture_attribute)[0];
+      if ($this->ldapEntry->hasAttribute($picture_attribute, FALSE)) {
+        $ldapUserPicture = $this->ldapEntry->getAttribute($picture_attribute, FALSE)[0];
       }
       else {
         // No picture present.

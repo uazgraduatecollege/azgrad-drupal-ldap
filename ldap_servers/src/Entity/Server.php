@@ -412,13 +412,13 @@ class Server extends ConfigEntityBase implements ServerInterface {
     $accountName = '';
 
     if ($this->getAccountNameAttribute()) {
-      if ($ldap_entry->hasAttribute($this->getAccountNameAttribute())) {
-        $accountName = $ldap_entry->getAttribute($this->getAccountNameAttribute())[0];
+      if ($ldap_entry->hasAttribute($this->getAccountNameAttribute(), FALSE)) {
+        $accountName = $ldap_entry->getAttribute($this->getAccountNameAttribute(), FALSE)[0];
       }
     }
     elseif ($this->getAuthenticationNameAttribute()) {
-      if ($ldap_entry->hasAttribute($this->getAuthenticationNameAttribute())) {
-        $accountName = $ldap_entry->getAttribute($this->getAuthenticationNameAttribute())[0];
+      if ($ldap_entry->hasAttribute($this->getAuthenticationNameAttribute(), FALSE)) {
+        $accountName = $ldap_entry->getAttribute($this->getAuthenticationNameAttribute(), FALSE)[0];
       }
     }
 
@@ -431,8 +431,8 @@ class Server extends ConfigEntityBase implements ServerInterface {
   public function deriveEmailFromLdapResponse(Entry $ldap_entry): string {
     $mail = '';
     // Not using template.
-    if ($this->getMailAttribute() && $ldap_entry->hasAttribute($this->getMailAttribute())) {
-      $mail = $ldap_entry->getAttribute($this->getMailAttribute())[0];
+    if ($this->getMailAttribute() && $ldap_entry->hasAttribute($this->getMailAttribute(), FALSE)) {
+      $mail = $ldap_entry->getAttribute($this->getMailAttribute(), FALSE)[0];
     }
     elseif ($this->getMailTemplate()) {
       // Template is of form [cn]@illinois.edu.
@@ -447,8 +447,8 @@ class Server extends ConfigEntityBase implements ServerInterface {
    */
   public function derivePuidFromLdapResponse(Entry $ldapEntry): string {
     $puid = '';
-    if ($this->getUniquePersistentAttribute() && $ldapEntry->hasAttribute($this->getUniquePersistentAttribute())) {
-      $puid = $ldapEntry->getAttribute($this->getUniquePersistentAttribute())[0];
+    if ($this->getUniquePersistentAttribute() && $ldapEntry->hasAttribute($this->getUniquePersistentAttribute(), FALSE)) {
+      $puid = $ldapEntry->getAttribute($this->getUniquePersistentAttribute(), FALSE)[0];
       if ($this->isUniquePersistentAttributeBinary()) {
         $puid = bin2hex($puid);
       }

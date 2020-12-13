@@ -97,8 +97,8 @@ class LdapQuery extends QueryPluginBase {
     foreach ($results as $result) {
       $row = [];
       foreach ($fields as $field_key => $void) {
-        if ($result->hasAttribute($field_key)) {
-          $row[$field_key] = $result->getAttribute($field_key);
+        if ($result->hasAttribute($field_key, FALSE)) {
+          $row[$field_key] = $result->getAttribute($field_key, FALSE);
         }
       }
       $row['dn'] = [0 => $result->getDn()];

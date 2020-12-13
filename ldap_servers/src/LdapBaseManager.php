@@ -340,7 +340,7 @@ abstract class LdapBaseManager {
     // @todo Make sure the empty attributes sent are actually an array.
     // @todo Make sure that count et al are gone.
     foreach ($entry->getAttributes() as $new_key => $new_value) {
-      if ($current->getAttribute($new_key) == $new_value) {
+      if ($current->getAttribute($new_key, FALSE) == $new_value) {
         $entry->removeAttribute($new_key);
       }
     }
@@ -357,7 +357,7 @@ abstract class LdapBaseManager {
    *
    * @see \Drupal\ldap_servers\LdapUserManager::getUserDataByIdentifier
    */
-  public function matchUsernameToExistingLdapEntry($drupal_username) {
+  public function matchUsernameToExistingLdapEntry(string $drupal_username) {
     $result = $this->queryAllBaseDnLdapForUsername($drupal_username);
     if ($result !== FALSE) {
       $result = $this->sanitizeUserDataResponse($result, $drupal_username);
@@ -403,12 +403,6 @@ abstract class LdapBaseManager {
    *   LDAP Entry.
    */
   public function sanitizeUserDataResponse(Entry $entry, $drupal_username): ?Entry {
-    // @todo Make this more elegant.
-    foreach ($entry->getAttributes() as $key => $value) {
-      $entry->removeAttribute($key);
-      $entry->setAttribute(mb_strtolower($key), $value);
-    }
-
     // @todo Remove this if we are sure no one needs it anymore.
     $entry->setAttribute('ldap_server_id', [$this->server->id()]);
 
@@ -419,7 +413,7 @@ abstract class LdapBaseManager {
     // Filter out results with spaces added before or after, which are
     // considered OK by LDAP but are no good for us. Some setups have multiple
     // $nameAttribute per entry, so we loop through all possible options.
-    foreach ($entry->getAttribute($this->server->getAuthenticationNameAttribute()) as $value) {
+    foreach ($entry->getAttribute($this->server->getAuthenticationNameAttribute(), FALSE) as $value) {
       if (mb_strtolower(trim($value)) === mb_strtolower($drupal_username)) {
         return $entry;
       }

@@ -70,11 +70,11 @@ class QueryTestForm extends FormBase {
             $row[] = 'No data';
           }
           else {
-            if (count($entry->getAttribute($attribute_data)) > 1) {
-              $row[] = ServerTestForm::binaryCheck(implode("\n", $entry->getAttribute($attribute_data)));
+            if (count($entry->getAttribute($attribute_data, FALSE)) > 1) {
+              $row[] = ServerTestForm::binaryCheck(implode("\n", $entry->getAttribute($attribute_data, FALSE)));
             }
             else {
-              $row[] = ServerTestForm::binaryCheck($entry->getAttribute($attribute_data)[0]);
+              $row[] = ServerTestForm::binaryCheck($entry->getAttribute($attribute_data, FALSE)[0]);
             }
           }
         }

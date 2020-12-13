@@ -227,8 +227,8 @@ class GroupUserUpdateProcessor {
 
     $user_storage = $this->entityTypeManager->getStorage('user');
     foreach ($accounts_to_process as $account) {
-      if ($account->hasAttribute($attribute)) {
-        $username = $account->getAttribute($attribute)[0];
+      if ($account->hasAttribute($attribute, FALSE)) {
+        $username = $account->getAttribute($attribute, FALSE)[0];
         // @todo Broken.
         $match = $this->drupalUserProcessor->drupalUserExists($username);
         if ($match) {
