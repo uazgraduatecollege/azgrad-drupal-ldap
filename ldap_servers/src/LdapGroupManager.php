@@ -729,11 +729,14 @@ class LdapGroupManager extends LdapBaseManager {
    *   Value of RDN.
    */
   private function getFirstRdnValueFromDn($dn, $rdn): string {
+    if (empty($dn) || empty($rdn)) {
+      return '';
+    }
     // Escapes attribute values, need to be unescaped later.
     $pairs = self::splitDnWithAttributes($dn);
     array_shift($pairs);
     $rdn = mb_strtolower($rdn);
-    $rdn_value = FALSE;
+    $rdn_value = '';
     foreach ($pairs as $p) {
       $pair = explode('=', $p);
       if (mb_strtolower(trim($pair[0])) === $rdn) {
