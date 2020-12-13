@@ -39,7 +39,7 @@ class EmailTemplateService implements EventSubscriberInterface {
    * @param \Symfony\Component\HttpKernel\Event\GetResponseEvent $event
    *   Response event.
    */
-  public function checkTemplate(GetResponseEvent $event) {
+  public function checkTemplate(GetResponseEvent $event): void {
     if ($this->config->get('emailTemplateUsagePromptUser') === TRUE) {
       $this->checkForEmailTemplate();
     }
@@ -49,15 +49,14 @@ class EmailTemplateService implements EventSubscriberInterface {
   /**
    * Form submit callback to check for an email template and redirect if needed.
    */
-  public static function checkForEmailTemplate() {
+  public static function checkForEmailTemplate(): void {
     if (self::profileNeedsUpdate()) {
       $url = Url::fromRoute('ldap_authentication.profile_update_form');
       // Not injected since we need to have this callback be static.
       $currentRoute = \Drupal::service('path.current')->getPath();
-      if ($currentRoute != '/user/ldap-profile-update' && $currentRoute != '/user/logout') {
+      if ($currentRoute !== '/user/ldap-profile-update' && $currentRoute !== '/user/logout') {
         $response = new RedirectResponse($url->toString());
         $response->send();
-
       }
     }
   }
@@ -70,8 +69,11 @@ class EmailTemplateService implements EventSubscriberInterface {
    *
    * @return bool
    *   TRUE if the user's profile is valid, otherwise FALSE.
+   *
+   * @todo: This should not be called statically, so that we don't call
+   * all these services without DI.
    */
-  public static function profileNeedsUpdate() {
+  public static function profileNeedsUpdate(): bool {
     $proxy = \Drupal::currentUser();
     $result = FALSE;
 
@@ -82,8 +84,9 @@ class EmailTemplateService implements EventSubscriberInterface {
       $regex = \Drupal::config('ldap_authentication.settings')
         ->get('emailTemplateUsagePromptRegex');
 
-      $regex = '`' . $regex . '`i';
-      if (preg_match($regex, $user->get('mail')->value)) {
+      $regex = sprintf('`%s`i', $regex);
+      $mail = $user->get('mail')->value ?: '';
+      if (preg_match($regex, $mail)) {
         $result = TRUE;
       }
     }
