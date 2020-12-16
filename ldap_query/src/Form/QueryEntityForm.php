@@ -162,6 +162,11 @@ class QueryEntityForm extends EntityForm {
    */
   public function save(array $form, FormStateInterface $form_state) {
     $ldap_query_entity = $this->entity;
+
+    // Ideally this would not be a text-input but an list of text fields.
+    $attributes_without_spaces = str_replace(' ', '', $ldap_query_entity->get('attributes'));
+    $ldap_query_entity->set('attributes', $attributes_without_spaces);
+
     $status = $ldap_query_entity->save();
 
     if ($status === SAVED_NEW) {
