@@ -529,7 +529,7 @@ class LdapGroupManager extends LdapBaseManager {
           $member_value = $member_group_dn;
         }
         else {
-          $member_value = $this->getFirstRdnValueFromDn($member_group_dn, $this->server->get('grp_memb_attr_match_user_attr'));
+          $member_value = $this->getFirstRdnValueFromDn($member_group_dn);
         }
         $orFilters[] = $this->server->get('grp_memb_attr') . '=' . $this->ldapEscapeDn($member_value);
       }
@@ -640,10 +640,10 @@ class LdapGroupManager extends LdapBaseManager {
       }
       // Maybe cn, uid, etc is held.
       else {
-        $member_id = $this->getFirstRdnValueFromDn($group_entry->getDn(), $this->server->get('grp_memb_attr_match_user_attr'));
+        $member_id = $this->getFirstRdnValueFromDn($group_entry->getDn());
       }
 
-      if ($member_id && !in_array($member_id, $tested_group_ids)) {
+      if ($member_id && !in_array($member_id, $tested_group_ids, TRUE)) {
         $tested_group_ids[] = $member_id;
         $all_group_dns[] = $group_entry->getDn();
         // Add $group_id (dn, cn, uid) to query.
@@ -723,29 +723,22 @@ class LdapGroupManager extends LdapBaseManager {
    *
    * @param string $dn
    *   Input DN.
-   * @param string $rdn
-   *   RDN Value to find.
    *
    * @return string
    *   Value of RDN.
    */
-  private function getFirstRdnValueFromDn($dn, $rdn): string {
-    if (empty($dn) || empty($rdn)) {
-      return '';
-    }
-    // Escapes attribute values, need to be unescaped later.
-    $pairs = self::splitDnWithAttributes($dn);
-    array_shift($pairs);
-    $rdn = mb_strtolower($rdn);
-    $rdn_value = '';
-    foreach ($pairs as $p) {
-      $pair = explode('=', $p);
-      if (mb_strtolower(trim($pair[0])) === $rdn) {
-        $rdn_value = ConversionHelper::unescapeDnValue(trim($pair[1]));
-        break;
+  private function getFirstRdnValueFromDn(string $dn): string {
+    $value = '';
+    if (!empty($dn)) {
+      $parts = self::splitDnWithValues($dn);
+      if ($parts['count'] > 0) {
+        $value = $parts[0];
+        // Possibly unnecessary.
+        $value = ConversionHelper::unescapeDnValue(trim($value));
       }
     }
-    return $rdn_value;
+
+    return $value;
   }
 
   /**

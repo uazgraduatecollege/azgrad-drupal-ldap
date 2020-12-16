@@ -178,7 +178,32 @@ trait LdapTransformationTraits {
       return implode('=', $key_value);
     }, $rdn);
     return ['count' => count($rdn)] + $rdn;
+  }
 
+  /**
+   * Wrapper for ldap_explode_dn().
+   *
+   * Try to avoid working with DN directly and instead use Entry objects.
+   *
+   * @param string $dn
+   *   DN to explode.
+   *
+   * @return array|false
+   *   Exploded DN.
+   */
+  public static function splitDnWithValues(string $dn) {
+    if (function_exists('ldap_explode_dn')) {
+      return ldap_explode_dn($dn, 1);
+    }
+
+    $rdn = explode(',', $dn);
+    $rdn = array_map(static function ($attribute) {
+      $attribute = trim($attribute);
+      // This is a workaround for OpenLDAP escaping Unicode values.
+      $key_value = explode('=', $attribute);
+      return str_replace('%', '\\', urlencode($key_value[1]));
+    }, $rdn);
+    return ['count' => count($rdn)] + $rdn;
   }
 
 }
