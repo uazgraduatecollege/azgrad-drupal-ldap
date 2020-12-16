@@ -336,9 +336,9 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
       '#required' => TRUE,
       '#default_value' => $config->get('passwordOption'),
       '#options' => [
-        'disable' => $this->t('Display password field disabled (Prevents password updates).'),
-        'hide' => $this->t("Don't show password field on user forms except login form."),
-        'allow' => $this->t('Display password field and allow updating it. In order to change password in LDAP, LDAP provisioning for this field must be enabled.'),
+        'disable' => $this->t('Display password field disabled (prevents password updates, password reset disabled).'),
+        'hide' => $this->t("Don't show password field on user forms except login form (prevents password updates, password reset disabled)."),
+        'allow' => $this->t('Display password field and allow updating it (including password reset). In order to change password in LDAP, LDAP provisioning for this field must be enabled.'),
       ],
     ];
 

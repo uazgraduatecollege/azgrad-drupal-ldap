@@ -60,18 +60,24 @@ function ldap_authentication_core_override_user_login_authenticate_validate(arra
 /**
  * Change how password is validated.
  *
- * Primarily a check on the password field with configurable responses as
- * seen on the 'Authentication' tab.
+ * Prevents changing of password for LDAP-associated accounts, these
+ * fields are already blocked in the form but for password reset this is
+ * a necessary check. Non-LDAP accounts should not be affected.
  *
  * @param array $form
  *   The form.
  * @param \Drupal\Core\Form\FormStateInterface $form_state
  *   The form state.
  *
- *   TODO: Verify that this callback is actually needed. The form adjustments
- *   should already create a form that does not allow this.
  */
 function ldap_authentication_user_pass_validate(array &$form, FormStateInterface $form_state) {
+  $config = \Drupal::config('ldap_authentication.settings');
+
+  if ($config->get('passwordOption') === 'allow') {
+    // Password field has not been disabled, reset is generally allowed.
+    return;
+  }
+
   $user_storage = \Drupal::entityTypeManager()->getStorage('user');
   $name_or_mail = trim($form_state->getValue('name'));
   $users = $user_storage->loadByProperties(['mail' => $name_or_mail]);
@@ -81,11 +87,17 @@ function ldap_authentication_user_pass_validate(array &$form, FormStateInterface
     $users = $user_storage->loadByProperties(['name' => $name_or_mail]);
     $account = $users ? reset($users) : FALSE;
   }
-  $config = \Drupal::config('ldap_authentication.settings');
+
+  if (!$account) {
+    // Fall through to regular user-not-found message and associated checks.
+    return;
+  }
+
   /** @var \Drupal\externalauth\Authmap $authmap */
   $authmap = \Drupal::service('externalauth.authmap');
   $authname = $authmap->get($account->id(), 'ldap_user');
-  if ($account && $authname && $config->get('passwordOption') !== 'allow') {
+  if ($authname) {
+    // It's an LDAP account and hide/disable is on, throw a validation error.
     if ($config->get('ldapUserHelpLinkUrl')) {
       $form_state->setErrorByName('name', t(
           'You may not reset your password here. You must reset your password via the directions at <a href=":url">@text</a>.',
