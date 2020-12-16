@@ -202,6 +202,7 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
     $row['query'] = [
       '#type' => 'textfield',
       '#title' => $this->t('LDAP query'),
+      '#maxlength' => 254,
       '#default_value' => $mappings[$index]['query'] ?? NULL,
     ];
     $row['is_regex'] = [
