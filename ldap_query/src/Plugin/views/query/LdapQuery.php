@@ -326,4 +326,11 @@ class LdapQuery extends QueryPluginBase {
     return $condition;
   }
 
+  /**
+   * Let modules modify the query just prior to finalizing it.
+   */
+  public function alter(ViewExecutable $view) {
+    \Drupal::moduleHandler()->invokeAll('views_query_alter', [$view, $this]);
+  }
+
 }
