@@ -516,7 +516,7 @@ class LdapGroupManager extends LdapBaseManager {
     }
 
     $level = 0;
-    $members_group_dns = $ldap_entry->getAttribute($group_attribute);
+    $members_group_dns = $ldap_entry->getAttribute($group_attribute, FALSE);
     if (isset($members_group_dns['count'])) {
       unset($members_group_dns['count']);
     }
@@ -568,7 +568,7 @@ class LdapGroupManager extends LdapBaseManager {
       $member_value = $ldap_entry->getDn();
     }
     else {
-      $member_value = $ldap_entry->getAttribute($this->server->get('grp_memb_attr_match_user_attr'))[0];
+      $member_value = $ldap_entry->getAttribute($this->server->get('grp_memb_attr_match_user_attr'), FALSE)[0];
     }
 
     // Need to search on all basedns one at a time.

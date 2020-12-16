@@ -66,7 +66,7 @@ class QueryTestForm extends FormBase {
       foreach ($data as $entry) {
         $row = [$entry->getDn()];
         foreach ($attributes as $attribute_data) {
-          if (!$entry->hasAttribute($attribute_data)) {
+          if (!$entry->hasAttribute($attribute_data, FALSE)) {
             $row[] = 'No data';
           }
           else {
