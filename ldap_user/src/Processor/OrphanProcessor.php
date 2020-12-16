@@ -97,13 +97,6 @@ class OrphanProcessor {
   protected $entityTypeManager;
 
   /**
-   * Drupal User Processor.
-   *
-   * @var \Drupal\ldap_user\Processor\DrupalUserProcessor
-   */
-  protected $drupalUserProcessor;
-
-  /**
    * LDAP User Manager.
    *
    * @var \Drupal\ldap_servers\LdapUserManager
@@ -125,8 +118,6 @@ class OrphanProcessor {
    *   State.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   Entity type manager.
-   * @param \Drupal\ldap_user\Processor\DrupalUserProcessor $drupal_user_processor
-   *   Drupal user processor.
    * @param \Drupal\ldap_servers\LdapUserManager $ldap_user_manager
    *   LDAP user manager.
    */
@@ -146,7 +137,6 @@ class OrphanProcessor {
     $this->languageManager = $language_manager;
     $this->state = $state;
     $this->entityTypeManager = $entity_type_manager;
-    $this->drupalUserProcessor = $drupal_user_processor;
     $this->ldapUserManager = $ldap_user_manager;
 
     $storage = $this->entityTypeManager->getStorage('ldap_server');

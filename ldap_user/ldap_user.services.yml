@@ -35,7 +35,6 @@ services:
       - '@language_manager'
       - '@state'
       - '@entity_type.manager'
-      - '@ldap.drupal_user_processor'
       - '@ldap.user_manager'
   ldap.group_user_update_processor:
     class: Drupal\ldap_user\Processor\GroupUserUpdateProcessor

@@ -13,6 +13,7 @@ use Drupal\ldap_query\Controller\QueryController;
 use Drupal\ldap_servers\Logger\LdapDetailLog;
 use Drupal\user\Entity\User;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\Ldap\Entry;
 
 /**
  * Provides functionality to generically update existing users.
@@ -90,6 +91,13 @@ class GroupUserUpdateProcessor {
   protected $ldapServer;
 
   /**
+   * User storage.
+   *
+   * @var \Drupal\Core\Entity\EntityStorageInterface
+   */
+  protected $userStorage;
+
+  /**
    * Constructor for update process.
    *
    * @param \Psr\Log\LoggerInterface $logger
@@ -134,6 +142,8 @@ class GroupUserUpdateProcessor {
     $this->ldapServer = $this->entityTypeManager
       ->getStorage('ldap_server')
       ->load($this->config->get('drupalAcctProvisionServer'));
+    $this->userStorage = $this->entityTypeManager
+      ->getStorage('user');
   }
 
   /**
@@ -216,56 +226,85 @@ class GroupUserUpdateProcessor {
       return;
     }
 
-    // @todo Batch users as OrphanProcessor does.
     $this->queryController->execute();
-    $accounts_to_process = $this->queryController->getRawResults();
+    $entries = $this->queryController->getRawResults();
     $attribute = $this->ldapServer->getAuthenticationNameAttribute();
+
+    if (empty($attribute)) {
+      $this->logger->error('No authentication name attribute set for periodic update.');
+      return;
+    }
+
     $this->logger->notice(
       'Processing @count accounts for periodic update.',
-        ['@count' => count($accounts_to_process)]
+        ['@count' => count($entries)]
       );
 
-    $user_storage = $this->entityTypeManager->getStorage('user');
-    foreach ($accounts_to_process as $account) {
-      if ($account->hasAttribute($attribute, FALSE)) {
-        $username = $account->getAttribute($attribute, FALSE)[0];
-        // @todo Broken.
-        $match = $this->drupalUserProcessor->drupalUserExists($username);
-        if ($match) {
-          $uid = $this->externalAuth->getUid($username, 'ldap_user');
-          if ($uid) {
-            /** @var \Drupal\user\Entity\User $drupal_account */
-            $drupal_account = $user_storage->load($uid);
-            $this->drupalUserProcessor->drupalUserLogsIn($drupal_account);
-            // Reload since data has changed.
-            $drupal_account = $user_storage->load($drupal_account->id());
-            $this->updateAuthorizations($drupal_account);
-            $this->detailLog->log(
-              'Periodic update: @name updated',
-              ['@name' => $username],
-              'ldap_user'
-            );
-          }
-          else {
-            $result = $this->drupalUserProcessor
-              ->createDrupalUserFromLdapEntry(['name' => $username, 'status' => TRUE]);
-            if ($result) {
-              $drupal_account = $this->drupalUserProcessor->getUserAccount();
-              $this->drupalUserProcessor->drupalUserLogsIn($drupal_account);
-              // Reload since data has changed.
-              $drupal_account = $user_storage->load($drupal_account->id());
-              $this->updateAuthorizations($drupal_account);
-              $this->detailLog->log(
-                'Periodic update: @name created',
-                ['@name' => $username],
-                'ldap_user'
-              );
-            }
-          }
-        }
-      }
+    foreach ($entries as $entry) {
+      $this->processAccount($entry, $attribute);
     }
     $this->state->set('ldap_user_cron_last_group_user_update', strtotime('today'));
+  }
+
+  /**
+   * Create or update an entry in Drupal.
+   *
+   * @param \Symfony\Component\Ldap\Entry $entry
+   *   LDAP entry.
+   * @param string $attribute
+   *   Authname attribute.
+   */
+  protected function processAccount(Entry $entry, string $attribute): void {
+    if (!$entry->hasAttribute($attribute, FALSE)) {
+      // Missing authname attribute.
+      $this->detailLog->log(
+        'DN @dn missing authentication name.',
+        ['@dn' => $entry->getDn()],
+        'ldap_user'
+      );
+      return;
+    }
+    $username = $entry->getAttribute($attribute, FALSE)[0];
+
+    // Make sure nothing from the previous request can interact on login.
+    $this->drupalUserProcessor->reset();
+
+    $uid = $this->externalAuth->getUid($username, 'ldap_user');
+    if (!$uid) {
+      $result = $this->drupalUserProcessor->createDrupalUserFromLdapEntry(
+        [
+          'name' => $username,
+          'status' => TRUE,
+        ]
+      );
+      if ($result) {
+        $this->detailLog->log(
+          'Periodic update: @name created',
+          ['@name' => $username],
+          'ldap_user'
+        );
+        $uid = $this->externalAuth->getUid($username, 'ldap_user');
+      }
+      else {
+        $this->logger->error(
+          'Periodic update: Error creating user @name',
+          ['@name' => $username]
+        );
+        return;
+      }
+    }
+
+    // User exists and is mapped in authmap.
+    /** @var \Drupal\user\Entity\User $drupal_account */
+    $drupal_account = $this->userStorage->load($uid);
+    $this->drupalUserProcessor->drupalUserLogsIn($drupal_account);
+    // Reload since data has changed.
+    $this->updateAuthorizations($this->userStorage->load($drupal_account->id()));
+    $this->detailLog->log(
+      'Periodic update: @name updated',
+      ['@name' => $username],
+      'ldap_user'
+    );
   }
 
 }

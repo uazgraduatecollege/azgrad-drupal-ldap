@@ -234,7 +234,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
    * @return bool
    *   TRUE if user should be excluded from LDAP provision/syncing
    */
-  public function excludeUser(UserInterface $account = NULL) {
+  public function excludeUser(UserInterface $account = NULL): bool {
 
     if ($this->configAuthentication->get('skipAdministrators')) {
       $admin_roles = $this->entityTypeManager
@@ -254,7 +254,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
   /**
    * Get the user account.
    *
-   * @return \Drupal\user\Entity\User
+   * @return \Drupal\user\Entity\User|null
    *   User account.
    */
   public function getUserAccount() {
@@ -545,9 +545,12 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
       $file = $this->entityTypeManager
         ->getStorage('file')
         ->load($currentUserPicture[0]['target_id']);
-      if ($file && md5(file_get_contents($file->getFileUri())) === md5($ldapUserPicture)) {
-        // Same image, do nothing.
-        return FALSE;
+      if ($file && file_exists($file->getFileUri())) {
+        $file_data = file_get_contents($file->getFileUri());
+        if (md5($file_data) === md5($ldapUserPicture)) {
+          // Same image, do nothing.
+          return FALSE;
+        }
       }
 
       return $this->saveUserPicture($this->account->get('user_picture'), $ldapUserPicture);
@@ -706,7 +709,8 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
     if (!$this->account->getPassword()) {
       if (version_compare(\Drupal::VERSION, '9.1', '>=')) {
         $this->account->set('pass', \Drupal::service('password_generator')->generate(20));
-      } else {
+      }
+      else {
         $this->account->set('pass', user_password(20));
       }
     }
@@ -781,7 +785,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
       $value = $this->tokenProcessor->ldapEntryReplacementsForDrupalAccount($this->ldapEntry, $mapping->getLdapAttribute());
       // The ordinal $value_instance is not used and could probably be
       // removed.
-      list($value_type, $value_name) = $this->parseUserAttributeNames($key);
+      [$value_type, $value_name] = $this->parseUserAttributeNames($key);
 
       if ($value_type === 'field' || $value_type === 'property') {
         $this->account->set($value_name, $value === '' ? NULL : $value);
@@ -816,18 +820,11 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
   }
 
   /**
-   * Drupal user exists.
-   *
-   * Convenience function for GroupUserUpdateProcessor (for now).
-   *
-   * @param string $username
-   *   Username.
-   *
-   * @return false|null|\Symfony\Component\Ldap\Entry
-   *   Entry.
+   * Resets the processor so it can be used for additional queries.
    */
-  public function drupalUserExists(string $username) {
-    return $this->ldapUserManager->matchUsernameToExistingLdapEntry($username);
+  public function reset(): void {
+    $this->account = NULL;
+    $this->ldapEntry = NULL;
   }
 
 }
