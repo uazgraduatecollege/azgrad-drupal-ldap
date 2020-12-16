@@ -138,7 +138,7 @@ class LdapUserTestForm extends FormBase implements LdapUserAttributesInterface {
       '#type' => 'textfield',
       '#title' => $this->t('Testing Drupal Username'),
       '#default_value' => $this->request->query->get('username'),
-      '#required' => 1,
+      '#required' => TRUE,
       '#size' => 30,
       '#maxlength' => 255,
       '#description' => $this->t("The user need not exist in Drupal and testing will not affect the user's LDAP or Drupal Account."),

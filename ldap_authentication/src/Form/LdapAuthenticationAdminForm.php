@@ -121,7 +121,7 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
     $form['logon']['authenticationMode'] = [
       '#type' => 'radios',
       '#title' => $this->t('Allowable Authentications'),
-      '#required' => 1,
+      '#required' => TRUE,
       '#default_value' => $config->get('authenticationMode'),
       '#options' => [
         'mixed' => $this->t('Mixed mode: Drupal authentication is tried first. On failure, LDAP authentication is performed.'),
@@ -166,7 +166,7 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
     $form['login_UI']['loginUIUsernameTxt'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Username Description Text'),
-      '#required' => 0,
+      '#required' => FALSE,
       '#default_value' => $config->get('loginUIUsernameTxt'),
       '#description' => $this->t('Text to be displayed to user below the username field of the user login screen.'),
     ];
@@ -174,7 +174,7 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
     $form['login_UI']['loginUIPasswordTxt'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Password Description Text'),
-      '#required' => 0,
+      '#required' => FALSE,
       '#default_value' => $config->get('loginUIPasswordTxt'),
       '#description' => $this->t('Text to be displayed to user below the password field of the user login screen.'),
     ];
@@ -182,7 +182,7 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
     $form['login_UI']['ldapUserHelpLinkUrl'] = [
       '#type' => 'textfield',
       '#title' => $this->t('LDAP Account User Help URL'),
-      '#required' => 0,
+      '#required' => FALSE,
       '#default_value' => $config->get('ldapUserHelpLinkUrl'),
       '#description' => $this->t('URL to LDAP user help/documentation for users resetting
      passwords etc. Should be of form http://domain.com/. Could be the institutions LDAP password support page
@@ -192,7 +192,7 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
     $form['login_UI']['ldapUserHelpLinkText'] = [
       '#type' => 'textfield',
       '#title' => $this->t('LDAP Account User Help Link Text'),
-      '#required' => 0,
+      '#required' => FALSE,
       '#default_value' => $config->get('ldapUserHelpLinkText'),
       '#description' => $this->t('Text for above link e.g. Account Help or Campus Password Help Page'),
     ];
@@ -240,7 +240,7 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
     $form['email']['emailOption'] = [
       '#type' => 'radios',
       '#title' => $this->t('Email Behavior'),
-      '#required' => 1,
+      '#required' => TRUE,
       '#default_value' => $config->get('emailOption'),
       '#options' => [
         'remove' => $this->t("Don't show an email field on user forms. LDAP derived email will be used for user and cannot be changed by user."),
@@ -252,7 +252,7 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
     $form['email']['emailUpdate'] = [
       '#type' => 'radios',
       '#title' => $this->t('Email Update'),
-      '#required' => 1,
+      '#required' => TRUE,
       '#default_value' => $config->get('emailUpdate'),
       '#options' => [
         'update_notify' => $this->t('Update stored email if LDAP email differs at login and notify user.'),
@@ -269,7 +269,7 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
     $form['email']['template']['emailTemplateHandling'] = [
       '#type' => 'radios',
       '#title' => $this->t('Email Template Handling'),
-      '#required' => 1,
+      '#required' => TRUE,
       '#default_value' => $config->get('emailTemplateHandling'),
       '#options' => [
         'none' => $this->t('Never use the template.'),
@@ -282,7 +282,7 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
       '#type' => 'textfield',
       '#title' => $this->t('Email Template'),
       '#description' => $this->t("This is a pattern in the form of <em>@username@yourdomain.com</em>. <br>Note that the <em>@username</em> placeholder including the '@' will be replaced with the actual username."),
-      '#required' => 0,
+      '#required' => FALSE,
       '#default_value' => $config->get('emailTemplate'),
     ];
 

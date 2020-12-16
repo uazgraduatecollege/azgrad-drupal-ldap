@@ -155,7 +155,7 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
       $form['status']['server'] = [
         '#type' => 'radios',
         '#title' => $this->t('LDAP Server used in @profile_name configuration.', $tokens),
-        '#required' => 1,
+        '#required' => TRUE,
         '#default_value' => $default_server,
         '#options' => $server_options,
       ];

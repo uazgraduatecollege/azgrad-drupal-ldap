@@ -75,7 +75,7 @@ class LdapUserAdminForm extends LdapUserBaseForm {
     $form['basic_to_drupal']['drupalAcctProvisionServer'] = [
       '#type' => 'radios',
       '#title' => $this->t('LDAP Servers Providing Provisioning Data'),
-      '#required' => 1,
+      '#required' => TRUE,
       '#default_value' => $config->get('drupalAcctProvisionServer') ? $config->get('drupalAcctProvisionServer') : 'none',
       '#options' => $this->drupalAcctProvisionServerOptions,
       '#description' => $this->t('Choose the LDAP server configuration to use in provisioning Drupal users and their user fields.'),
@@ -102,7 +102,7 @@ class LdapUserAdminForm extends LdapUserBaseForm {
     $form['basic_to_drupal']['userConflictResolve'] = [
       '#type' => 'radios',
       '#title' => $this->t('Existing Drupal User Account Conflict'),
-      '#required' => 1,
+      '#required' => TRUE,
       '#default_value' => $config->get('userConflictResolve'),
       '#options' => [
         self::USER_CONFLICT_LOG => $this->t("Don't associate Drupal account with LDAP. Require user to use Drupal password. Log the conflict"),
@@ -114,7 +114,7 @@ class LdapUserAdminForm extends LdapUserBaseForm {
     $form['basic_to_drupal']['acctCreation'] = [
       '#type' => 'radios',
       '#title' => $this->t('Application of Drupal Account settings to LDAP Authenticated Users'),
-      '#required' => 1,
+      '#required' => TRUE,
       '#default_value' => $config->get('acctCreation'),
       '#options' => [
         self::ACCOUNT_CREATION_LDAP_BEHAVIOUR => $this->t('Account creation settings at /admin/config/people/accounts/settings do not affect "LDAP Associated" Drupal accounts.'),
@@ -238,8 +238,8 @@ class LdapUserAdminForm extends LdapUserBaseForm {
     $form['basic_to_ldap']['ldapEntryProvisionServer'] = [
       '#type' => 'radios',
       '#title' => $this->t('LDAP Servers to Provision LDAP Entries on'),
-      '#required' => 1,
-      '#default_value' => $config->get('ldapEntryProvisionServer') ? $config->get('ldapEntryProvisionServer') : 'none',
+      '#required' => TRUE,
+      '#default_value' => $config->get('ldapEntryProvisionServer') ?: 'none',
       '#options' => $this->ldapEntryProvisionServerOptions,
       '#description' => $this->t('Check ONE LDAP server configuration to create LDAP entries on.'),
     ];
