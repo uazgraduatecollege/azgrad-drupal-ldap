@@ -41,7 +41,7 @@ class DynamicUserHelpLink extends DeriverBase implements ContainerDeriverInterfa
   /**
    * {@inheritdoc}
    */
-  public function getDerivativeDefinitions($basePluginDefinition) {
+  public function getDerivativeDefinitions($basePluginDefinition): array {
     if ($this->config->get('ldapUserHelpLinkText') &&
       $this->config->get('ldapUserHelpLinkUrl')) {
       $basePluginDefinition['title'] = $this->config->get('ldapUserHelpLinkText');

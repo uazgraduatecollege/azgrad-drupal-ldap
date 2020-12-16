@@ -292,7 +292,7 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function filterProposals(array $proposedLdapAuthorizations, array $providerMapping) {
+  public function filterProposals(array $proposedLdapAuthorizations, array $providerMapping): array {
     $filtered_proposals = [];
     foreach ($proposedLdapAuthorizations as $key => $value) {
       if ($providerMapping['is_regex']) {
@@ -300,7 +300,7 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
         try {
           if (preg_match($pattern, $value, $matches)) {
             // If there is a sub-pattern then return the first one.
-            // @todo support named sub-patterns.
+            // Named sub-patterns not supported.
             if (count($matches) > 1) {
               $filtered_proposals[$key] = $matches[1];
             }
@@ -326,14 +326,14 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function sanitizeProposals(array $proposals) {
+  public function sanitizeProposals(array $proposals): array {
     // Configure this provider.
     /** @var \Drupal\authorization\Entity\AuthorizationProfile $profile */
     $profile = $this->configuration['profile'];
     $config = $profile->getProviderConfig();
     foreach ($proposals as $key => $authorization_id) {
       if ($config['filter_and_mappings']['use_first_attr_as_groupid']) {
-        $attr_parts = $this->splitDnWithAttributes($authorization_id);
+        $attr_parts = self::splitDnWithAttributes($authorization_id);
         if (is_array($attr_parts) && count($attr_parts) > 0) {
           $first_part = explode('=', $attr_parts[0]);
           if (count($first_part) > 1) {
@@ -357,7 +357,7 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function validateRowForm(array &$form, FormStateInterface $form_state) {
+  public function validateRowForm(array &$form, FormStateInterface $form_state): void {
     parent::validateRowForm($form, $form_state);
 
     foreach ($form_state->getValues() as $value) {
