@@ -448,7 +448,7 @@ class LdapEntryProvisionSubscriber implements EventSubscriberInterface, LdapUser
     // This is inelegant but otherwise we cannot support compound tokens for DN.
     if ($type === 'dn') {
       foreach ($this->tokens as $key => $value) {
-        $this->tokens[$key] = $this->ldapEscapeDn($value);
+        $this->tokens[$key] = $value;
       }
     }
 
