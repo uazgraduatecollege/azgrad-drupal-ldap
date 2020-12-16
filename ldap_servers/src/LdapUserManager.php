@@ -79,10 +79,8 @@ class LdapUserManager extends LdapBaseManager {
 
     // Can be mixed case on direction-to-LDAP.
     if ($entry->hasAttribute('unicodePwd', FALSE) && $this->server->get('type') === 'ad') {
-      $entry->setAttribute(
-        'unicodePwd',
-        [$this->convertPasswordForActiveDirectoryUnicodePwd($entry->getAttribute('unicodePwd', FALSE)[0])]
-      );
+      $converted = $this->convertPasswordForActiveDirectoryUnicodePwd($entry->getAttribute('unicodePwd', FALSE)[0]);
+      $entry->setAttribute('unicodePwd', [$converted]);
     }
 
     try {
@@ -111,10 +109,8 @@ class LdapUserManager extends LdapBaseManager {
    */
   protected function applyModificationsToEntry(Entry $entry, Entry $current): void {
     if ($entry->hasAttribute('unicodePwd', FALSE) && $this->server->get('type') === 'ad') {
-      $entry->setAttribute(
-        'unicodePwd',
-        [$this->convertPasswordForActiveDirectoryUnicodePwd($entry->getAttribute('unicodePwd', FALSE)[0])]
-      );
+      $converted = $this->convertPasswordForActiveDirectoryUnicodePwd($entry->getAttribute('unicodePwd', FALSE)[0]);
+      $entry->setAttribute('unicodePwd', [$converted]);
     }
 
     parent::applyModificationsToEntry($entry, $current);

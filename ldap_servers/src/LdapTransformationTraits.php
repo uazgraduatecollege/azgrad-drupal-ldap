@@ -25,7 +25,7 @@ trait LdapTransformationTraits {
       $value = ldap_escape($value, '', LDAP_ESCAPE_DN);
     }
     else {
-      $value = self::php56_polyfill_ldap_escape($value, '', 2);
+      $value = self::php56PolyfillLdapEscape($value, '', 2);
     }
 
     // Copied from Symfonfy's Adapter.php for ease of use.
@@ -57,29 +57,31 @@ trait LdapTransformationTraits {
       $value = ldap_escape($value, '', LDAP_ESCAPE_FILTER);
     }
     else {
-      $value = self::php56_polyfill_ldap_escape($value, '', 1);
+      $value = self::php56PolyfillLdapEscape($value, '', 1);
     }
     return $value;
   }
 
   /**
-   * Stub implementation of the {@link ldap_escape()} function of the ldap
-   * extension.
+   * Stub implementation of the {@link ldap_escape()} function of ext-ldap.
    *
    * Escape strings for safe use in LDAP filters and DNs. Copied from polyfill
    * due to issues from testing infrastructure.
    *
-   * @author Chris Wright <ldapi@daverandom.com>
-   *
    * @param string $subject
+   *   Subject.
    * @param string $ignore
+   *   Ignore.
    * @param int $flags
+   *   Flags.
    *
    * @return string
+   *   Escaped string.
    *
    * @see http://stackoverflow.com/a/8561604
+   * @author Chris Wright <ldapi@daverandom.com>
    */
-  public static function php56_polyfill_ldap_escape(string $subject, $ignore = '', $flags = 0): string {
+  public static function php56PolyfillLdapEscape(string $subject, $ignore = '', $flags = 0): string {
 
     $ldap_escape_filter = 1;
     $ldap_escape_dn = 2;
@@ -162,7 +164,7 @@ trait LdapTransformationTraits {
    * @return array|false
    *   Exploded DN.
    */
-  public static function splitDnWithAttributes($dn) {
+  public static function splitDnWithAttributes(string $dn) {
     if (function_exists('ldap_explode_dn')) {
       return ldap_explode_dn($dn, 0);
     }

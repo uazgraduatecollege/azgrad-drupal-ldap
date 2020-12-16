@@ -293,6 +293,7 @@ class LdapGroupManager extends LdapBaseManager {
     }
     $members = $group_entry->getAttribute($this->server->get('grp_memb_attr'), FALSE);
 
+    // @todo Unused result.
     $result = $this->groupMembersRecursive($group_entry, $members, [], 0, self::LDAP_QUERY_RECURSION_LIMIT);
     // Remove the DN of the source group.
     if (($key = array_search($group_dn, $members, TRUE)) !== FALSE) {
@@ -358,9 +359,9 @@ class LdapGroupManager extends LdapBaseManager {
     if ($this->checkAvailability()) {
       $group_dns = $this->groupMembershipsFromUser($username);
       if ($group_dns && !empty($group_dns)) {
-        // While list of group dns is going to be in correct mixed case, $group_dn
-        // may not since it may be derived from user entered values so make sure
-        // in_array() is case insensitive.
+        // While list of group dns is going to be in correct mixed case,
+        // $group_dn may not since it may be derived from user entered values so
+        // make sure in_array() is case insensitive.
         $lower_cased_group_dns = array_keys(array_change_key_case(array_flip($group_dns), CASE_LOWER));
         if (in_array(mb_strtolower($group_dn), $lower_cased_group_dns, TRUE)) {
           return TRUE;

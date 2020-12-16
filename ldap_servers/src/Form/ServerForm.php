@@ -9,7 +9,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\ldap_servers\Entity\Server;
 
 /**
- * Class ServerForm.
+ * Server form.
  *
  * @package Drupal\ldap_servers\Form
  */
@@ -67,11 +67,11 @@ class ServerForm extends EntityForm {
       '#title' => $this->t('LDAP Server type'),
       '#type' => 'select',
       '#options' => [
-        'default' => 'Default LDAP',
-        'ad' => 'Active Directory',
-        'novell_edir' => 'Novell',
-        'openldap' => 'Open LDAP',
-        'opendir' => 'Apple Open Directory',
+        'default' => $this->t('Default LDAP'),
+        'ad' => $this->t('Active Directory'),
+        'novell_edir' => $this->t('Novell'),
+        'openldap' => $this->t('Open LDAP'),
+        'opendir' => $this->t('Apple Open Directory'),
       ],
       '#default_value' => $server->get('type'),
       '#description' => $this->t("At the moment this only changes whether unicodePwd should be used for AD."),
@@ -110,9 +110,9 @@ class ServerForm extends EntityForm {
       '#title' => $this->t('Encryption'),
       '#type' => 'select',
       '#options' => [
-        'none' => t('Unencrypted'),
-        'ssl' => t('SSL (i.e. the ldaps:// protocol)'),
-        'tls' => t('STARTTLS')
+        'none' => $this->t('Unencrypted'),
+        'ssl' => $this->t('SSL (i.e. the ldaps:// protocol)'),
+        'tls' => $this->t('STARTTLS'),
       ],
       '#default_value' => $server->get('encryption') ?: 'none',
     ];

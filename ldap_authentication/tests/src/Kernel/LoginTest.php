@@ -251,8 +251,8 @@ class LoginTest extends KernelTestBase {
       ->getStorage('user')
       ->loadMultiple()
     );
-    // @todo
-    // assert local Drupal user without mapping (associated, not associated)
+    // @todo assert local Drupal user without mapping
+    // (associated, not associated)
     // test exclusive/mixed
     // see example data.
     // consider moving to ldap_sso.

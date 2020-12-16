@@ -20,6 +20,7 @@ use Drupal\ldap_servers\LdapUserAttributesInterface;
 use Drupal\ldap_user\Event\LdapUserLoginEvent;
 use Drupal\ldap_user\FieldProvider;
 use Drupal\Core\Utility\Token;
+use Drupal\user\Entity\User;
 use Drupal\user\UserInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
@@ -257,7 +258,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
    * @return \Drupal\user\Entity\User|null
    *   User account.
    */
-  public function getUserAccount() {
+  public function getUserAccount(): ?User {
     return $this->account;
   }
 
@@ -270,7 +271,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
    * @return bool
    *   Returns FALSE on invalid user or LDAP accounts.
    */
-  public function ldapAssociateDrupalAccount($drupal_username): bool {
+  public function ldapAssociateDrupalAccount(string $drupal_username): bool {
     if ($this->config->get('drupalAcctProvisionServer')) {
 
       /** @var \Drupal\ldap_servers\Entity\Server $ldap_server */
@@ -568,7 +569,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
    * @return array|bool
    *   Returns file ID wrapped in target or false.
    */
-  private function saveUserPicture(FieldItemListInterface $field, $ldapUserPicture) {
+  private function saveUserPicture(FieldItemListInterface $field, string $ldapUserPicture) {
     // Create tmp file to get image format and derive extension.
     $fileName = uniqid('', FALSE);
     $unmanagedFile = $this->fileSystem->getTempDirectory() . '/' . $fileName;
@@ -630,7 +631,10 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
     $this->setLdapBaseFields(self::EVENT_SYNC_TO_DRUPAL_USER);
     $this->setUserDefinedMappings(self::EVENT_SYNC_TO_DRUPAL_USER);
 
-    $context = ['ldap_server' => $this->server, 'prov_event' => self::EVENT_SYNC_TO_DRUPAL_USER];
+    $context = [
+      'ldap_server' => $this->server,
+      'prov_event' => self::EVENT_SYNC_TO_DRUPAL_USER,
+    ];
     $this->moduleHandler
       ->alter('ldap_user_edit_user',
         $this->account,
@@ -652,7 +656,10 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
     $this->setFieldsOnDrupalUserCreation();
     $this->setUserDefinedMappings(self::EVENT_CREATE_DRUPAL_USER);
 
-    $context = ['ldap_server' => $this->server, 'prov_event' => self::EVENT_CREATE_DRUPAL_USER];
+    $context = [
+      'ldap_server' => $this->server,
+      'prov_event' => self::EVENT_CREATE_DRUPAL_USER,
+    ];
     $this->moduleHandler
       ->alter('ldap_user_edit_user',
         $this->account,
@@ -691,7 +698,9 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
     }
 
     if ($this->config->get('drupalAcctProvisionServer')) {
-      $this->server = $this->entityTypeManager->getStorage('ldap_server')->load($this->config->get('drupalAcctProvisionServer'));
+      $this->server = $this->entityTypeManager
+        ->getStorage('ldap_server')
+        ->load($this->config->get('drupalAcctProvisionServer'));
       $this->applyAttributesToAccount();
       $this->account->ldap_synced = TRUE;
     }
@@ -782,7 +791,11 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
       if ($mapping->isBinary() && strpos($mapping->getLdapAttribute(), ';') === FALSE) {
         $mapping->setLdapAttribute(str_replace(']', ';binary]', $mapping->getLdapAttribute()));
       }
-      $value = $this->tokenProcessor->ldapEntryReplacementsForDrupalAccount($this->ldapEntry, $mapping->getLdapAttribute());
+      $value = $this->tokenProcessor
+        ->ldapEntryReplacementsForDrupalAccount(
+          $this->ldapEntry,
+          $mapping->getLdapAttribute()
+        );
       // The ordinal $value_instance is not used and could probably be
       // removed.
       [$value_type, $value_name] = $this->parseUserAttributeNames($key);

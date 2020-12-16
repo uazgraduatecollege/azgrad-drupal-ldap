@@ -142,7 +142,10 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
       '#type' => 'checkbox',
       '#title' => $this->t('Exclude members of the administrative group from LDAP authentication'),
       '#default_value' => $config->get('skipAdministrators'),
-      '#description' => $this->t('Members in the group(s) "@groups" will not be able to log in with LDAP', ['@groups' => implode(', ', $admin_roles)]),
+      '#description' => $this->t(
+        'Members in the group(s) "@groups" will not be able to log in with LDAP',
+        ['@groups' => implode(', ', $admin_roles)]
+      ),
     ];
 
     $form['logon']['authenticationServers'] = [

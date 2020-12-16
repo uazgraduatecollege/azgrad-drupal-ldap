@@ -207,7 +207,12 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
     $row['is_regex'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Is this query a regular expression?'),
-      '#description' => $this->t('Example (note the "i" for case-insensitive): %example', ['%example' => new FormattableMarkup('<code>/^memberOf=staff/i</code>', [])]),
+      '#description' => $this->t(
+        'Example (note the "i" for case-insensitive): %example',
+        [
+          '%example' => new FormattableMarkup('<code>/^memberOf=staff/i</code>', []),
+        ]
+      ),
       '#default_value' => $mappings[$index]['is_regex'] ?? NULL,
     ];
 

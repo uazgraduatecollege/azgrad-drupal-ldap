@@ -28,7 +28,10 @@ class LdapUserMappingToLdapForm extends LdapUserMappingBaseForm {
    *
    * @var array
    */
-  protected $events = [self::EVENT_CREATE_LDAP_ENTRY, self::EVENT_SYNC_TO_LDAP_ENTRY];
+  protected $events = [
+    self::EVENT_CREATE_LDAP_ENTRY,
+    self::EVENT_SYNC_TO_LDAP_ENTRY,
+  ];
 
   /**
    * {@inheritdoc}

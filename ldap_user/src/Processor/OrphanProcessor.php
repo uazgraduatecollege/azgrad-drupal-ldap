@@ -128,8 +128,8 @@ class OrphanProcessor {
     LanguageManagerInterface $language_manager,
     StateInterface $state,
     EntityTypeManagerInterface $entity_type_manager,
-    DrupalUserProcessor $drupal_user_processor,
-    LdapUserManager $ldap_user_manager) {
+    LdapUserManager $ldap_user_manager
+  ) {
     $this->logger = $logger;
     $this->configFactory = $config;
     $this->configLdapUser = $config->get('ldap_user.settings');
@@ -360,7 +360,10 @@ class OrphanProcessor {
     // account deletion.
     $edit = [];
     if ($method !== 'user_cancel_delete') {
-      \Drupal::moduleHandler()->invokeAll('user_cancel', [$edit, $account, $method]);
+      \Drupal::moduleHandler()->invokeAll(
+        'user_cancel',
+        [$edit, $account, $method]
+      );
     }
     _user_cancel($edit, $account, $method);
   }

@@ -56,7 +56,10 @@ class ServerTest extends EntityKernelTestBase {
   public function testGetBasedn(): void {
     $this->server->set('basedn', []);
     self::assertEquals([], $this->server->getBaseDn());
-    $this->server->set('basedn', ['ou=people,dc=hogwarts,dc=edu', 'ou=groups,dc=hogwarts,dc=edu']);
+    $this->server->set('basedn', [
+      'ou=people,dc=hogwarts,dc=edu',
+      'ou=groups,dc=hogwarts,dc=edu',
+    ]);
     self::assertEquals('ou=groups,dc=hogwarts,dc=edu', $this->server->getBaseDn()[1]);
     self::assertCount(2, $this->server->getBaseDn());
   }

@@ -9,7 +9,7 @@ use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Routing\TrustedRedirectResponse;
 
 /**
- * Class LdapHelpRedirect.
+ * LDAP help redirect controller.
  */
 class LdapHelpRedirect extends ControllerBase {
 

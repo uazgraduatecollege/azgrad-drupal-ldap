@@ -231,6 +231,7 @@ class LdapUserTestForm extends FormBase implements LdapUserAttributesInterface {
     }
 
     if (function_exists('kint')) {
+      // @phpcs:ignore
       kint($results);
     }
     else {

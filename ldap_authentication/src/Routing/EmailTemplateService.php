@@ -13,7 +13,7 @@ use Symfony\Component\HttpKernel\Event\GetResponseEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 
 /**
- * Class EmailTemplateService.
+ * Email template service.
  *
  * @package Drupal\ldap_authentication
  */
@@ -70,7 +70,7 @@ class EmailTemplateService implements EventSubscriberInterface {
    * @return bool
    *   TRUE if the user's profile is valid, otherwise FALSE.
    *
-   * @todo: This should not be called statically, so that we don't call
+   * @todo This should not be called statically, so that we don't call
    * all these services without DI.
    */
   public static function profileNeedsUpdate(): bool {

@@ -5,21 +5,21 @@ declare(strict_types = 1);
 namespace Drupal\ldap_authentication\Routing;
 
 use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Routing\RouteSubscriberBase;
 use Symfony\Component\Routing\RouteCollection;
 
 /**
- * Class RouteSubscriber.
+ * Authentication route subscriber.
  *
  * @package Drupal\ldap_authentication\Routing
- * Listens to the dynamic route events.
  */
 class RouteSubscriber extends RouteSubscriberBase {
 
   /**
    * {@inheritdoc}
    */
-  protected function alterRoutes(RouteCollection $collection) {
+  protected function alterRoutes(RouteCollection $collection): void {
     if ($route = $collection->get('user.pass')) {
       $route->setRequirement('_custom_access', '\Drupal\ldap_authentication\Routing\RouteSubscriber::validateResetPasswordAllowed');
     }
@@ -31,25 +31,21 @@ class RouteSubscriber extends RouteSubscriberBase {
    * @return \Drupal\Core\Access\AccessResultInterface
    *   Show password or not.
    */
-  public static function validateResetPasswordAllowed() {
+  public static function validateResetPasswordAllowed(): AccessResultInterface {
+    $config = \Drupal::config('ldap_authentication.settings');
     if (\Drupal::currentUser()->isAnonymous()) {
-
-      if (\Drupal::config('ldap_authentication.settings')->get('authenticationMode') == 'mixed') {
+      if ($config->get('authenticationMode') === 'mixed') {
         return AccessResult::allowed();
       }
 
       // Hide reset password for anonymous users if LDAP-only authentication and
       // password updates are disabled, otherwise show.
-      if (\Drupal::config('ldap_authentication.settings')->get('passwordOption') == 'allow') {
+      if ($config->get('passwordOption') === 'allow') {
         return AccessResult::allowed();
       }
-      else {
-        return AccessResult::forbidden();
-      }
     }
-    else {
-      return AccessResult::forbidden();
-    }
+
+    return AccessResult::forbidden();
   }
 
 }

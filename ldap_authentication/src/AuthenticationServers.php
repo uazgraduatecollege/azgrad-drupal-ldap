@@ -8,7 +8,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 
 /**
- * Class AuthenticationServers.
+ * Authentication serves.
  */
 class AuthenticationServers {
 

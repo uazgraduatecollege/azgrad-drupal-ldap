@@ -8,7 +8,7 @@ use Drupal\Core\Entity\EntityForm;
 use Drupal\Core\Form\FormStateInterface;
 
 /**
- * Class QueryEntityForm.
+ * Query entity form.
  *
  * @package Drupal\ldap_query\Form
  */
