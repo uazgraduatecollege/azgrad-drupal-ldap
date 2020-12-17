@@ -193,7 +193,7 @@ class LdapUserManager extends LdapBaseManager {
    *   This should go into LdapUserProcessor or LdapUserManager, leaning toward
    *   the former.
    */
-  public function getUserDataByIdentifier($identifier) {
+  public function getUserDataByIdentifier(string $identifier) {
     if (!$this->checkAvailability()) {
       return FALSE;
     }

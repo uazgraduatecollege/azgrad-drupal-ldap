@@ -93,8 +93,10 @@ abstract class LdapBaseManager {
    * @return bool
    *   Binding successful.
    */
-  public function setServerById($sid) {
-    $server = $this->entityTypeManager->getStorage('ldap_server')->load($sid);
+  public function setServerById(string $sid): bool {
+    $server = $this->entityTypeManager
+      ->getStorage('ldap_server')
+      ->load($sid);
     return $this->setServer($server);
   }
 
@@ -107,7 +109,7 @@ abstract class LdapBaseManager {
    * @return bool
    *   Binding successful.
    */
-  public function setServer(Server $server) {
+  public function setServer(Server $server): bool {
     $this->server = $server;
     $this->ldapBridge->setServer($this->server);
     $bind_result = $this->ldapBridge->bind();
@@ -121,7 +123,7 @@ abstract class LdapBaseManager {
    * We have to explicitly check this in many calls since the Server might not
    * have been set yet.
    */
-  protected function checkAvailability() {
+  protected function checkAvailability(): bool {
     if ($this->server && $this->ldapBridge->bind()) {
       return TRUE;
     }
@@ -141,7 +143,7 @@ abstract class LdapBaseManager {
    * @return bool|Entry
    *   Return ldap entry or false.
    */
-  public function checkDnExistsIncludeData($dn, array $attributes) {
+  public function checkDnExistsIncludeData(string $dn, array $attributes) {
     if (!$this->checkAvailability()) {
       return FALSE;
     }
@@ -174,7 +176,7 @@ abstract class LdapBaseManager {
    * @return bool
    *   DN exists.
    */
-  public function checkDnExists($dn) {
+  public function checkDnExists(string $dn): bool {
     if (!$this->checkAvailability()) {
       return FALSE;
     }
@@ -303,7 +305,7 @@ abstract class LdapBaseManager {
    * @return bool
    *   Result of ldap_delete() call.
    */
-  public function deleteLdapEntry($dn): bool {
+  public function deleteLdapEntry(string $dn): bool {
     if (!$this->checkAvailability()) {
       return FALSE;
     }
@@ -352,7 +354,7 @@ abstract class LdapBaseManager {
    * @param string $drupal_username
    *   Drupal username.
    *
-   * @return false|\Symfony\Component\Ldap\Entry
+   * @return false|null|\Symfony\Component\Ldap\Entry
    *   LDAP Entry.
    *
    * @see \Drupal\ldap_servers\LdapUserManager::getUserDataByIdentifier
@@ -377,7 +379,7 @@ abstract class LdapBaseManager {
    * @todo This function does return data and check for validity of response.
    *  This makes responses difficult to parse and should be optimized.
    */
-  public function queryAllBaseDnLdapForUsername($drupal_username) {
+  public function queryAllBaseDnLdapForUsername(string $drupal_username) {
     if (!$this->checkAvailability()) {
       return FALSE;
     }
@@ -402,10 +404,7 @@ abstract class LdapBaseManager {
    * @return \Symfony\Component\Ldap\Entry
    *   LDAP Entry.
    */
-  public function sanitizeUserDataResponse(Entry $entry, $drupal_username): ?Entry {
-    // @todo Remove this if we are sure no one needs it anymore.
-    $entry->setAttribute('ldap_server_id', [$this->server->id()]);
-
+  public function sanitizeUserDataResponse(Entry $entry, string $drupal_username): ?Entry {
     if ($this->server->get('bind_method') === 'anon_user') {
       return $entry;
     }
@@ -413,9 +412,12 @@ abstract class LdapBaseManager {
     // Filter out results with spaces added before or after, which are
     // considered OK by LDAP but are no good for us. Some setups have multiple
     // $nameAttribute per entry, so we loop through all possible options.
-    foreach ($entry->getAttribute($this->server->getAuthenticationNameAttribute(), FALSE) as $value) {
-      if (mb_strtolower(trim($value)) === mb_strtolower($drupal_username)) {
-        return $entry;
+    $attribute_values = $entry->getAttribute($this->server->getAuthenticationNameAttribute(), FALSE);
+    if ($attribute_values) {
+      foreach ($attribute_values as $attribute_value) {
+        if (mb_strtolower(trim($attribute_value)) === mb_strtolower($drupal_username)) {
+          return $entry;
+        }
       }
     }
   }
@@ -423,7 +425,7 @@ abstract class LdapBaseManager {
   /**
    * Queries LDAP server for the user.
    *
-   * @param string $base_dn
+   * @param string|null $base_dn
    *   Base DN.
    * @param string $drupal_username
    *   Drupal user name.
@@ -434,7 +436,7 @@ abstract class LdapBaseManager {
    * @todo This function does return data and check for validity of response.
    *  This makes responses difficult to parse and should be optimized.
    */
-  public function queryLdapForUsername($base_dn, $drupal_username) {
+  public function queryLdapForUsername(?string $base_dn, string $drupal_username) {
     if (!$this->checkAvailability()) {
       return FALSE;
     }
@@ -459,7 +461,8 @@ abstract class LdapBaseManager {
     if ($ldap_response->count() === 0) {
       return NULL;
     }
-    elseif ($ldap_response->count() !== 1) {
+
+    if ($ldap_response->count() !== 1) {
       // Must find exactly one user for authentication to work.
       $this->logger->error('Error: %count users found with %filter under %base_dn.', [
         '%count' => $ldap_response->count(),
