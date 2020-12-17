@@ -472,7 +472,7 @@ class LdapGroupManager extends LdapBaseManager {
    * @return array
    *   Array of group dns in mixed case or FALSE on error.
    */
-  public function groupMembershipsFromUser($username): array {
+  public function groupMembershipsFromUser(string $username): array {
     $group_dns = [];
     if (!$this->checkAvailability()) {
       return $group_dns;
@@ -505,22 +505,19 @@ class LdapGroupManager extends LdapBaseManager {
    * @see groupMembershipsFromUser()
    */
   public function groupUserMembershipsFromUserAttr(Entry $ldap_entry): array {
-    $all_group_dns = [];
 
     if (!$this->checkAvailability() || !$this->server->isGroupUserMembershipAttributeInUse()) {
-      return $all_group_dns;
+      return [];
     }
 
     $group_attribute = $this->server->getGroupUserMembershipAttribute();
     if (!$ldap_entry->hasAttribute($group_attribute, FALSE)) {
-      return $all_group_dns;
+      return [];
     }
 
     $level = 0;
+    $all_group_dns = [];
     $members_group_dns = $ldap_entry->getAttribute($group_attribute, FALSE);
-    if (isset($members_group_dns['count'])) {
-      unset($members_group_dns['count']);
-    }
     $orFilters = [];
     foreach ($members_group_dns as $member_group_dn) {
       $all_group_dns[] = $member_group_dn;
