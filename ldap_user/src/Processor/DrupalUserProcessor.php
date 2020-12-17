@@ -516,6 +516,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
     $this->account = $accountFromPuid;
     $this->externalAuth->save($this->account, 'ldap_user', $this->account->getAccountName());
     $this->syncToDrupalAccount();
+    $this->saveAccount();
   }
 
   /**
