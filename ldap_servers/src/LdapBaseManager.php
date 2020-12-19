@@ -447,7 +447,15 @@ abstract class LdapBaseManager {
 
     $query = sprintf('(%s=%s)', $this->server->getAuthenticationNameAttribute(), $this->ldapEscapeFilter($drupal_username));
     try {
-      $ldap_response = $this->ldap->query($base_dn, $query)->execute();
+      // We are requesting regular and operational attributes with this filter
+      // since some directories (e.g. OpenLDAP) have common overlays such as
+      // "memberOf" in operational attributes.
+      // @see https://www.drupal.org/i/2939308
+      $ldap_response = $this->ldap->query(
+        $base_dn,
+        $query,
+        ['filter' => ['*', '+']]
+      )->execute();
     }
     catch (LdapException $e) {
       // Must find exactly one user for authentication to work.
