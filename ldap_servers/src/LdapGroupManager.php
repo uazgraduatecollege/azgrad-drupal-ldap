@@ -417,7 +417,9 @@ class LdapGroupManager extends LdapBaseManager {
             $query_for_child_members = sprintf('(|(%s))', implode(')(', $member_ids));
             // Add or on object classes, otherwise get all object classes.
             if ($object_classes && count($object_classes)) {
-              $object_classes_ors = [sprintf('(objectClass=%s)', $this->server->get('grp_object_cat'))];
+              $object_classes_ors = [
+                sprintf('(objectClass=%s)', $this->server->get('grp_object_cat')),
+              ];
               foreach ($object_classes as $object_class) {
                 $object_classes_ors[] = sprintf('(objectClass=%s)', $object_class);
               }
@@ -632,7 +634,6 @@ class LdapGroupManager extends LdapBaseManager {
       }
     }
 
-    $filter_count = count();
     if (!empty($or_filters)) {
       // Example 1: (|(cn=group1)(cn=group2))
       // Example 2: (|(dn=cn=group1,ou=blah...)(dn=cn=group2,ou=blah...))

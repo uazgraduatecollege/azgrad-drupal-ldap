@@ -718,6 +718,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
     }
     if (!$this->account->getPassword()) {
       if (version_compare(\Drupal::VERSION, '9.1', '>=')) {
+        // phpcs:ignore
         $this->account->set('pass', \Drupal::service('password_generator')->generate(20));
       }
       else {

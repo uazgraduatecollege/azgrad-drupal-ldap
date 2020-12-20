@@ -26,7 +26,7 @@ use Symfony\Component\Ldap\Entry;
 /**
  * Handles the actual testing of credentials and authentication of users.
  */
-abstract class LoginValidatorBase implements LdapUserAttributesInterface {
+abstract class LoginValidatorBase implements LdapUserAttributesInterface, LoginValidatorInterface {
 
   use StringTranslationTrait;
 
@@ -105,7 +105,7 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
    *
    * @var \Drupal\user\Entity\User
    */
-  protected $drupalUser = FALSE;
+  protected $drupalUser;
 
   /**
    * LDAP Entry.
@@ -283,7 +283,7 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
   protected function initializeDrupalUserFromAuthName(): void {
     $load_by_name = $this->entityTypeManager->getStorage('user')
       ->loadByProperties(['name' => $this->authName]);
-    $this->drupalUser = $load_by_name ? reset($load_by_name) : FALSE;
+    $this->drupalUser = $load_by_name ? reset($load_by_name) : NULL;
     $authmap_uid = $this->externalAuth->getUid($this->authName, 'ldap_user');
     if (!$this->drupalUser && $authmap_uid) {
       // Drupal username differs but we have a UID in the authmap table for it.
@@ -346,7 +346,7 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
    * @return bool
    *   Whether to allow user login and creation.
    */
-  protected function verifyAccountCreation() {
+  protected function verifyAccountCreation(): bool {
     if (
       $this->configFactory->get('ldap_user.settings')->get('acctCreation') === self::ACCOUNT_CREATION_LDAP_BEHAVIOUR ||
       $this->configFactory->get('user.settings')->get('register') === UserInterface::REGISTER_VISITORS
@@ -357,14 +357,13 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
       );
       return TRUE;
     }
-    else {
-      $this->detailLog->log(
-        '%username: Drupal user account not found and configuration is set to not create new accounts.',
-        ['%username' => $this->authName],
-        'ldap_authentication'
-      );
-      return FALSE;
-    }
+
+    $this->detailLog->log(
+      '%username: Drupal user account not found and configuration is set to not create new accounts.',
+      ['%username' => $this->authName],
+      'ldap_authentication'
+    );
+    return FALSE;
   }
 
   /**
@@ -373,7 +372,7 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
    * @return bool
    *   Valid login.
    */
-  protected function testUserPassword() {
+  protected function testUserPassword(): bool {
     $loginValid = FALSE;
     if ($this->serverDrupalUser->get('bind_method') === 'user') {
       $loginValid = TRUE;
@@ -490,7 +489,7 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
   /**
    * {@inheritdoc}
    */
-  public function checkAllowedExcluded($authName, Entry $ldap_user) {
+  public function checkAllowedExcluded(string $authName, Entry $ldap_user): bool {
 
     // Do one of the exclude attribute pairs match? If user does not already
     // exists and deferring to user settings AND user settings only allow.
@@ -888,10 +887,10 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
   /**
    * Bind to server.
    *
-   * @return int|true
+   * @return int
    *   Success or failure result.
    */
-  protected function bindToServer() {
+  protected function bindToServer(): int {
     if ($this->serverDrupalUser->get('bind_method') === 'user') {
       return $this->bindToServerAsUser();
     }
@@ -909,16 +908,16 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
 
       return self::AUTHENTICATION_FAILURE_BIND;
     }
-    return TRUE;
+    return self::AUTHENTICATION_SUCCESS;
   }
 
   /**
    * Bind to server.
    *
-   * @return int|true
+   * @return int
    *   Success or failure result.
    */
-  protected function bindToServerAsUser() {
+  protected function bindToServerAsUser(): int {
     $bindResult = FALSE;
 
     foreach ($this->serverDrupalUser->getBaseDn() as $base_dn) {
@@ -943,13 +942,13 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface {
 
       return self::AUTHENTICATION_FAILURE_CREDENTIALS;
     }
-    return TRUE;
+    return self::AUTHENTICATION_SUCCESS;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getDrupalUser(): UserInterface {
+  public function getDrupalUser(): ?UserInterface {
     return $this->drupalUser;
   }
 

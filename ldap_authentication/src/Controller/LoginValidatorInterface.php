@@ -28,15 +28,15 @@ interface LoginValidatorInterface {
    * @return bool
    *   Exclusion result.
    */
-  public function checkAllowedExcluded($authName, Entry $ldap_user): bool;
+  public function checkAllowedExcluded(string $authName, Entry $ldap_user): bool;
 
   /**
    * Returns the derived user account.
    *
-   * @return \Drupal\user\UserInterface
+   * @return \Drupal\user\UserInterface|null
    *   User account.
    */
-  public function getDrupalUser(): UserInterface;
+  public function getDrupalUser(): ?UserInterface;
 
   /**
    * Credentials are tested.
