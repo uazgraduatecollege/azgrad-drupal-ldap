@@ -20,8 +20,8 @@ class LdapVariableAttribute extends LdapAttribute {
   /**
    * {@inheritdoc}
    */
-  public function query($group_by = FALSE) {
-    parent::query($group_by);
+  public function query($group_by = FALSE): void {
+    $this->ensureMyTable();
     $this->realField = $this->options['attribute_name'];
     $this->query->addWhere(0, $this->realField, $this->argument, '=');
   }

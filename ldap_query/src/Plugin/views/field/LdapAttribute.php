@@ -39,7 +39,7 @@ class LdapAttribute extends FieldPluginBase {
 
         case 'v-index':
           if ($this->options['index_value'] >= 0) {
-            $index = intval($this->options['index_value']);
+            $index = (int) $this->options['index_value'];
           }
           else {
             // Allows for negative offset.
@@ -55,7 +55,7 @@ class LdapAttribute extends FieldPluginBase {
   /**
    * {@inheritdoc}
    */
-  protected function defineOptions() {
+  protected function defineptions(): array {
     $options = parent::defineOptions();
     $options['multi_value'] = ['default' => 'v-all'];
     $options['value_separator'] = ['default' => ''];
@@ -113,6 +113,14 @@ class LdapAttribute extends FieldPluginBase {
    */
   public function usesGroupBy() {
     return FALSE;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function clickSort($order): void {
+    $params = $this->options['group_type'] !== 'group' ? ['function' => $this->options['group_type']] : [];
+    $this->query->addOrderBy(NULL, $this->realField, $order, $this->field_alias, $params);
   }
 
 }
