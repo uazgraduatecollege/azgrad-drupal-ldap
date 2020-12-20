@@ -17,13 +17,6 @@ class LdapGroupManager extends LdapBaseManager {
   use LdapTransformationTraits;
 
   /**
-   * Query chunk.
-   *
-   * @var int
-   */
-  protected const LDAP_QUERY_CHUNK = 50;
-
-  /**
    * Recursion limit.
    *
    * @var int
@@ -53,32 +46,27 @@ class LdapGroupManager extends LdapBaseManager {
    * @return array
    *   Nested group filters.
    */
-  private function getNestedGroupDnFilters(array $all_group_dns, array $or_filters, $level): array {
-    // Only 50 or so per query.
-    $count = count($or_filters);
-    for ($key = 0; $key < $count; $key += self::LDAP_QUERY_CHUNK) {
-      $current_or_filters = array_slice($or_filters, $key, self::LDAP_QUERY_CHUNK);
-      // Example 1: (|(cn=group1)(cn=group2))
-      // Example 2: (|(dn=cn=group1,ou=blah...)(dn=cn=group2,ou=blah...))
-      $orFilter = '(|(' . implode(')(', $current_or_filters) . '))';
-      $query_for_parent_groups = '(&(objectClass=' . $this->server->get('grp_object_cat') . ')' . $orFilter . ')';
+  private function getNestedGroupDnFilters(array $all_group_dns, array $or_filters, int $level): array {
+    // Example 1: (|(cn=group1)(cn=group2))
+    // Example 2: (|(dn=cn=group1,ou=blah...)(dn=cn=group2,ou=blah...))
+    $or_filter = sprintf('(|(%s))', implode(')(', $or_filters));
+    $query_for_parent_groups = sprintf('(&(objectClass=%s)%s)', $this->server->get('grp_object_cat'), $or_filter);
 
-      // Need to search on all base DN one at a time.
-      foreach ($this->server->getBaseDn() as $base_dn) {
-        // No attributes, just dns needed.
-        try {
-          $ldap_result = $this->ldap->query($base_dn, $query_for_parent_groups, ['filter' => []])->execute();
-        }
-        catch (LdapException $e) {
-          $this->logger->critical('LDAP search error with %message', [
-            '%message' => $e->getMessage(),
-          ]);
-          continue;
-        }
-        if ($level < self::LDAP_QUERY_RECURSION_LIMIT && $ldap_result->count() > 0) {
-          $tested_group_ids = [];
-          $this->groupMembershipsFromEntryRecursive($ldap_result, $all_group_dns, $tested_group_ids, $level + 1, self::LDAP_QUERY_RECURSION_LIMIT);
-        }
+    // Need to search on all base DN one at a time.
+    foreach ($this->server->getBaseDn() as $base_dn) {
+      // No attributes, just dns needed.
+      try {
+        $ldap_result = $this->ldap->query($base_dn, $query_for_parent_groups, ['filter' => []])->execute();
+      }
+      catch (LdapException $e) {
+        $this->logger->critical('LDAP search error with %message', [
+          '%message' => $e->getMessage(),
+        ]);
+        continue;
+      }
+      if ($level < self::LDAP_QUERY_RECURSION_LIMIT && $ldap_result->count() > 0) {
+        $tested_group_ids = [];
+        $this->groupMembershipsFromEntryRecursive($ldap_result, $all_group_dns, $tested_group_ids, $level + 1, self::LDAP_QUERY_RECURSION_LIMIT);
       }
     }
     return $all_group_dns;
@@ -101,7 +89,7 @@ class LdapGroupManager extends LdapBaseManager {
    * @return bool
    *   Operation result.
    */
-  public function groupAddGroup($group_dn, array $attributes = []): bool {
+  public function groupAddGroup(string $group_dn, array $attributes = []): bool {
     if (!$this->checkAvailability() || $this->checkDnExists($group_dn)) {
       return FALSE;
     }
@@ -162,7 +150,7 @@ class LdapGroupManager extends LdapBaseManager {
    *
    * @todo When actually in use split into two to remove boolean modifier.
    */
-  public function groupRemoveGroup($group_dn, $only_if_group_empty = TRUE): bool {
+  public function groupRemoveGroup(string $group_dn, bool $only_if_group_empty = TRUE): bool {
     if (!$this->checkAvailability()) {
       return FALSE;
     }
@@ -192,7 +180,7 @@ class LdapGroupManager extends LdapBaseManager {
    *
    * @FIXME symfony/ldap refactoring needed.
    */
-  public function groupAddMember($group_dn, $user): bool {
+  public function groupAddMember(string $group_dn, string $user): bool {
     if (!$this->checkAvailability()) {
       return FALSE;
     }
@@ -233,7 +221,7 @@ class LdapGroupManager extends LdapBaseManager {
    * @return bool
    *   Operation successful.
    */
-  public function groupRemoveMember($group_dn, $member): bool {
+  public function groupRemoveMember(string $group_dn, string $member): bool {
     $result = FALSE;
 
     if ($this->checkAvailability() && $this->groupGroupEntryMembershipsConfigured()) {
@@ -271,7 +259,7 @@ class LdapGroupManager extends LdapBaseManager {
    *
    * @todo Split return functionality or throw an error.
    */
-  public function groupAllMembers($group_dn): array {
+  public function groupAllMembers(string $group_dn): array {
     $members = [];
     if (!$this->checkAvailability() || !$this->groupGroupEntryMembershipsConfigured()) {
       return $members;
@@ -293,8 +281,7 @@ class LdapGroupManager extends LdapBaseManager {
     }
     $members = $group_entry->getAttribute($this->server->get('grp_memb_attr'), FALSE);
 
-    // @todo Unused result.
-    $result = $this->groupMembersRecursive($group_entry, $members, [], 0, self::LDAP_QUERY_RECURSION_LIMIT);
+    $this->groupMembersRecursive([$group_entry], $members, [], 0, self::LDAP_QUERY_RECURSION_LIMIT);
     // Remove the DN of the source group.
     if (($key = array_search($group_dn, $members, TRUE)) !== FALSE) {
       unset($members[$key]);
@@ -317,7 +304,7 @@ class LdapGroupManager extends LdapBaseManager {
    *
    * @todo Split return functionality or throw an error.
    */
-  public function groupMembers($group_dn) {
+  public function groupMembers(string $group_dn) {
     if (!$this->checkAvailability()) {
       return FALSE;
     }
@@ -355,10 +342,10 @@ class LdapGroupManager extends LdapBaseManager {
    * @return bool
    *   Whether the user belongs to the group.
    */
-  public function groupIsMember($group_dn, $username): bool {
+  public function groupIsMember(string $group_dn, string $username): bool {
     if ($this->checkAvailability()) {
       $group_dns = $this->groupMembershipsFromUser($username);
-      if ($group_dns && !empty($group_dns)) {
+      if (!empty($group_dns)) {
         // While list of group dns is going to be in correct mixed case,
         // $group_dn may not since it may be derived from user entered values so
         // make sure in_array() is case insensitive.
@@ -374,7 +361,7 @@ class LdapGroupManager extends LdapBaseManager {
   /**
    * Recurse through all child groups and add members.
    *
-   * @param \Symfony\Component\Ldap\Entry $group_dn_entries
+   * @param \Symfony\Component\Ldap\Entry[] $entries
    *   Entries of LDAP group entries that are starting point. Should include at
    *   least 1 entry and must include 'objectclass'.
    * @param array $all_member_dns
@@ -392,63 +379,60 @@ class LdapGroupManager extends LdapBaseManager {
    * @param bool|array $object_classes
    *   You can set the object class evaluated for recursion here, otherwise
    *   derived from group configuration.
-   *
-   * @return bool
-   *   If operation was successful.
-   *
-   *   @todo Should the type hint for Entry not be Entry[]?
    */
-  public function groupMembersRecursive(Entry $group_dn_entries, array &$all_member_dns, array $tested_group_dns, $level, $max_levels, $object_classes = FALSE) {
+  public function groupMembersRecursive(array $entries, array &$all_member_dns, array $tested_group_dns, int $level, int $max_levels, $object_classes = FALSE): void {
     if (!$this->checkAvailability()) {
-      return FALSE;
+      return;
     }
 
-    if (!$this->groupGroupEntryMembershipsConfigured() || !is_array($group_dn_entries)) {
-      return FALSE;
+    if (!$this->groupGroupEntryMembershipsConfigured()) {
+      return;
     }
 
-    foreach ($group_dn_entries as $member_entry) {
+    foreach ($entries as $entry) {
       // 1.  Add entry itself if of the correct type to $all_member_dns.
-      $object_class_match = (!$object_classes || (count(array_intersect(array_values($member_entry['objectclass']), $object_classes)) > 0));
-      $object_is_group = in_array($this->server->get('grp_object_cat'), array_map('strtolower', array_values($member_entry['objectclass'])));
+      $object_class_match = !$object_classes || count(array_intersect(array_values($entry->getAttribute('objectClass', FALSE)), $object_classes)) > 0;
+      $object_is_group = in_array($this->server->get('grp_object_cat'), array_map('strtolower', array_values($entry->getAttribute('objectClass', FALSE))), TRUE);
       // Add member.
-      if ($object_class_match && !in_array($member_entry['dn'], $all_member_dns)) {
-        $all_member_dns[] = $member_entry['dn'];
+      if ($object_class_match && !in_array($entry->getDn(), $all_member_dns, TRUE)) {
+        $all_member_dns[] = $entry->getDn();
       }
 
       // 2. If its a group, keep recurse the group for descendants.
       if ($object_is_group && $level < $max_levels) {
-        if ($this->server->get('grp_memb_attr_match_user_attr') == 'dn') {
-          $group_id = $member_entry['dn'];
+        if ($this->server->get('grp_memb_attr_match_user_attr') === 'dn') {
+          $group_id = $entry->getDn();
         }
         else {
-          $group_id = $member_entry[$this->server->get('grp_memb_attr_match_user_attr')][0];
+          $group_id = $entry->getAttribute($this->server->get('grp_memb_attr_match_user_attr'), FALSE)[0];
         }
         // 3. skip any groups that have already been tested.
-        if (!in_array($group_id, $tested_group_dns)) {
+        if (!in_array($group_id, $tested_group_dns, TRUE)) {
           $tested_group_dns[] = $group_id;
-          $member_ids = $member_entry[$this->server->get('grp_memb_attr')];
+          $member_ids = $entry->getAttribute($this->server->get('grp_memb_attr'), FALSE);
 
           if (count($member_ids)) {
             // Example 1: (|(cn=group1)(cn=group2))
             // Example 2: (|(dn=cn=group1,ou=blah...)(dn=cn=group2,ou=blah...))
-            $query_for_child_members = '(|(' . implode(")(", $member_ids) . '))';
+            $query_for_child_members = sprintf('(|(%s))', implode(')(', $member_ids));
             // Add or on object classes, otherwise get all object classes.
             if ($object_classes && count($object_classes)) {
-              $object_classes_ors = ['(objectClass=' . $this->server->get('grp_object_cat') . ')'];
+              $object_classes_ors = [sprintf('(objectClass=%s)', $this->server->get('grp_object_cat'))];
               foreach ($object_classes as $object_class) {
-                $object_classes_ors[] = '(objectClass=' . $object_class . ')';
+                $object_classes_ors[] = sprintf('(objectClass=%s)', $object_class);
               }
-              $query_for_child_members = '&(|' . implode('', $object_classes_ors) . ')(' . $query_for_child_members . ')';
+              $query_for_child_members = sprintf('&(|%s)(%s)', implode('', $object_classes_ors), $query_for_child_members);
             }
 
-            $return_attributes = [
-              'objectclass',
-              $this->server->get('grp_memb_attr'),
-              $this->server->get('grp_memb_attr_match_user_attr'),
-            ];
-            $child_member_entries = $this->searchAllBaseDns($query_for_child_members, $return_attributes);
-            if ($child_member_entries !== FALSE) {
+            $child_member_entries = $this->searchAllBaseDns(
+              $query_for_child_members,
+              [
+                'objectClass',
+                $this->server->get('grp_memb_attr'),
+                $this->server->get('grp_memb_attr_match_user_attr'),
+              ]
+            );
+            if (!empty($child_member_entries)) {
               $this->groupMembersRecursive($child_member_entries, $all_member_dns, $tested_group_dns, $level + 1, $max_levels, $object_classes);
             }
           }
@@ -575,7 +559,7 @@ class LdapGroupManager extends LdapBaseManager {
       // @todo See if this syntax is correct.
       // It should return a valid DN with n attributes.
       try {
-        $group_query = '(&(objectClass=' . $this->server->get('grp_object_cat') . ')(' . $this->server->get('grp_memb_attr') . "=$member_value))";
+        $group_query = sprintf('(&(objectClass=%s)(%s=%s))', $this->server->get('grp_object_cat'), $this->server->get('grp_memb_attr'), $member_value);
         $ldap_result = $this->ldap->query($baseDn, $group_query, ['filter' => []])->execute();
       }
       catch (LdapException $e) {
@@ -621,8 +605,8 @@ class LdapGroupManager extends LdapBaseManager {
     CollectionInterface $current_group_entries,
     array &$all_group_dns,
     array &$tested_group_ids,
-    $level,
-    $max_levels
+    int $level,
+    int $max_levels
   ): bool {
 
     if (!$this->groupGroupEntryMembershipsConfigured() || $current_group_entries->count() === 0) {
@@ -648,35 +632,28 @@ class LdapGroupManager extends LdapBaseManager {
       }
     }
 
-    $filter_count = count($or_filters);
-    if ($filter_count > 0) {
-      // Only 50 or so per query.
-      // @todo We can likely remove this since we are fetching one result at a
-      // time with symfony/ldap.
-      for ($key = 0; $key < $filter_count; $key += self::LDAP_QUERY_CHUNK) {
-        $current_or_filters = array_slice($or_filters, $key, self::LDAP_QUERY_CHUNK);
-        // Example 1: (|(cn=group1)(cn=group2))
-        // Example 2: (|(dn=cn=group1,ou=blah...)(dn=cn=group2,ou=blah...))
-        $or = '(|(' . implode(")(", $current_or_filters) . '))';
-        $query_for_parent_groups = '(&(objectClass=' . $this->server->get('grp_object_cat') . ')' . $or . ')';
+    $filter_count = count();
+    if (!empty($or_filters)) {
+      // Example 1: (|(cn=group1)(cn=group2))
+      // Example 2: (|(dn=cn=group1,ou=blah...)(dn=cn=group2,ou=blah...))
+      $or = sprintf('(|(%s))', implode(')(', $current_or_filters));
+      $query_for_parent_groups = sprintf('(&(objectClass=%s)%s)', $this->server->get('grp_object_cat'), $or);
 
-        // Need to search on all base DNs one at a time.
-        foreach ($this->server->getBaseDn() as $base_dn) {
-          // No attributes, just dns needed.
-          try {
-            $ldap_result = $this->ldap->query($base_dn, $query_for_parent_groups, ['filter' => []])->execute();
-          }
-          catch (LdapException $e) {
-            $this->logger->critical('LDAP search error with %message', [
-              '%message' => $e->getMessage(),
-            ]);
-            continue;
-          }
+      // Need to search on all base DNs one at a time.
+      foreach ($this->server->getBaseDn() as $base_dn) {
+        // No attributes, just dns needed.
+        try {
+          $ldap_result = $this->ldap->query($base_dn, $query_for_parent_groups, ['filter' => []])->execute();
+        }
+        catch (LdapException $e) {
+          $this->logger->critical('LDAP search error with %message', [
+            '%message' => $e->getMessage(),
+          ]);
+          continue;
+        }
 
-          if ($ldap_result->count() > 0 && $level < $max_levels) {
-            // @todo Verify recursion with true return.
-            $this->groupMembershipsFromEntryRecursive($ldap_result, $all_group_dns, $tested_group_ids, $level + 1, $max_levels);
-          }
+        if ($ldap_result->count() > 0 && $level < $max_levels) {
+          $this->groupMembershipsFromEntryRecursive($ldap_result, $all_group_dns, $tested_group_ids, $level + 1, $max_levels);
         }
       }
     }
@@ -694,7 +671,7 @@ class LdapGroupManager extends LdapBaseManager {
    * @return array
    *   Array of group strings.
    */
-  public function groupUserMembershipsFromDn($username): array {
+  public function groupUserMembershipsFromDn(string $username): array {
     $memberships = [];
     if (
       $this->checkAvailability() &&
@@ -752,7 +729,7 @@ class LdapGroupManager extends LdapBaseManager {
    * @return array
    *   All values of RDN.
    */
-  public function getAllRdnValuesFromDn($dn, $rdn): array {
+  public function getAllRdnValuesFromDn(string $dn, string $rdn): array {
     // Escapes attribute values, need to be unescaped later.
     $pairs = self::splitDnWithAttributes($dn);
     array_shift($pairs);

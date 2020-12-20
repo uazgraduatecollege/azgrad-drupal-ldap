@@ -207,7 +207,7 @@ abstract class LdapBaseManager {
    * @return \Symfony\Component\Ldap\Entry[]
    *   An array of matching entries combined from all DN.
    */
-  public function searchAllBaseDns($filter, array $attributes = []) {
+  public function searchAllBaseDns($filter, array $attributes = []): array {
     $all_entries = [];
 
     if (!$this->checkAvailability()) {
