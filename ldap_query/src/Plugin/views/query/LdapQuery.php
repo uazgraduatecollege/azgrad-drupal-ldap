@@ -82,7 +82,7 @@ class LdapQuery extends QueryPluginBase {
     }
     $start = microtime(TRUE);
 
-    // @todo: Dependency Injection.
+    // @todo Dependency Injection.
     /** @var \Drupal\ldap_query\Controller\QueryController $controller */
     $controller = \Drupal::service('ldap.query');
     $controller->load($this->options['query_id']);
@@ -142,8 +142,7 @@ class LdapQuery extends QueryPluginBase {
    * @return array
    *   Result data.
    *
-   * @todo: Sh
-   * ould be private, public for easier testing.
+   * @todo Should be private, public for easier testing.
    */
   public function sortResults(array $rows): array {
     $sorts = $this->orderby;
