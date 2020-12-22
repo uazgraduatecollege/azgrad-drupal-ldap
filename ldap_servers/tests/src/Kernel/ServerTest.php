@@ -122,7 +122,6 @@ class ServerTest extends EntityKernelTestBase {
     $this->server->set('bind_method', 'user');
     self::assertEquals('user', $this->server->getBindMethod());
 
-
     $this->server->set('binddn', '1');
     self::assertEquals('1', $this->server->getBindDn());
 
@@ -138,10 +137,8 @@ class ServerTest extends EntityKernelTestBase {
     $this->server->set('grp_memb_attr_match_user_attr', '5');
     self::assertEquals('5', $this->server->getUserAttributeFromGroupMembershipEntryAttribute());
 
-
     $this->server->set('grp_memb_attr', '6');
     self::assertEquals('6', $this->server->getGroupMembershipAttribute());
-
 
     $this->server->set('grp_nested', FALSE);
     self::assertEquals(FALSE, $this->server->isGrouppNested());

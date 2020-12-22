@@ -11,6 +11,7 @@ use Psr\Log\LoggerInterface;
 use Symfony\Component\Ldap\Exception\ConnectionException;
 use Symfony\Component\Ldap\Exception\LdapException;
 use Symfony\Component\Ldap\Ldap;
+use Symfony\Component\Ldap\LdapInterface;
 
 /**
  * Ldap Bridge to symfony/ldap.
@@ -156,10 +157,10 @@ class LdapBridge implements LdapBridgeInterface {
   /**
    * Get LDAP service.
    *
-   * @return \Symfony\Component\Ldap\Ldap
+   * @return \Symfony\Component\Ldap\LdapInterface
    *   LDAP service.
    */
-  public function get(): Ldap {
+  public function get(): LdapInterface {
     return $this->ldap;
   }
 

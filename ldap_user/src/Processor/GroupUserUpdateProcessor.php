@@ -11,7 +11,6 @@ use Drupal\Core\State\StateInterface;
 use Drupal\externalauth\Authmap;
 use Drupal\ldap_query\Controller\QueryController;
 use Drupal\ldap_servers\Logger\LdapDetailLog;
-use Drupal\user\Entity\User;
 use Drupal\user\UserInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Ldap\Entry;
