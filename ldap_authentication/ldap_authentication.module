@@ -23,8 +23,7 @@ function ldap_authentication_help($path, $arg) {
   switch ($path) {
     case 'admin/config/people/ldap/authentication':
     case 'admin/help#ldap_authentication':
-      $output = '<p>' . $authentication_help . '</p>';
-      return $output;
+      return '<p>' . $authentication_help . '</p>';
   }
 }
 
@@ -262,12 +261,14 @@ function _ldap_authentication_login_form_alter(array &$form, FormStateInterface 
   // 'user_login_authenticate_validate',
   // 'user_login_final_validate'
   // ].
-  if (@in_array('::validateAuthentication', $form['#validate']) &&
-    $config->get('authenticationMode')) {
-    $key = array_search('::validateAuthentication', $form['#validate']);
-    $form['#validate'][$key] = 'ldap_authentication_core_override_user_login_authenticate_validate';
-    array_splice($form['#validate'], $key + 1, 0, 'ldap_authentication_user_login_authenticate_validate');
-  }
+  if (is_array($form['#validate']) && $config->get('authenticationMode')) {
+    $key = array_search('::validateAuthentication', $form['#validate'], TRUE);
+    if ($key !== FALSE) {
+      $form['#validate'][$key] = 'ldap_authentication_core_override_user_login_authenticate_validate';
+      array_splice($form['#validate'], $key + 1, 0, 'ldap_authentication_user_login_authenticate_validate');
+
+    }
+   }
 
   // Add help information for entering in username/password.
   if ($config->get('loginUIUsernameTxt')) {

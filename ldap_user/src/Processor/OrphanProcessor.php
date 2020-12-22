@@ -199,7 +199,8 @@ class OrphanProcessor {
         substr($hex_string, 16, 4) . substr($hex_string, 20, 12);
     }
 
-    for ($i = 0; $i < strlen($value); $i += 2) {
+    $length = \strlen($value);
+    for ($i = 0; $i < $length; $i += 2) {
       $match .= '\\' . substr($value, $i, 2);
     }
 
@@ -235,7 +236,7 @@ class OrphanProcessor {
     // Creates a list of users in the required format.
     $start = ($batch - 1) * $this->ldapQueryOrLimit;
     $end_plus_1 = min(($batch) * $this->ldapQueryOrLimit, count($uids));
-    $batch_uids = array_slice($uids, $start, ($end_plus_1 - $start));
+    $batch_uids = \array_slice($uids, $start, ($end_plus_1 - $start));
 
     $accounts = $this->entityTypeManager
       ->getStorage('user')
@@ -329,14 +330,14 @@ class OrphanProcessor {
         switch ($method) {
           case 'ldap_user_orphan_email';
             $link = Url::fromRoute('entity.user.edit_form', ['user' => $user['uid']])->setAbsolute();
-            $this->emailList[] = $account->getAccountName() . "," . $account->getEmail() . "," . $link->toString();
+            $this->emailList[] = $account->getAccountName() . ',' . $account->getEmail() . ',' . $link->toString();
             break;
 
           case 'user_cancel_block':
           case 'user_cancel_block_unpublish':
           case 'user_cancel_reassign':
           case 'user_cancel_delete':
-            $this->emailList[] = $account->getAccountName() . "," . $account->getEmail();
+            $this->emailList[] = $account->getAccountName() . ',' . $account->getEmail();
             $this->cancelUser($account, $method);
             break;
         }
@@ -393,21 +394,23 @@ class OrphanProcessor {
         $this->logger->error('Server %id not enabled, but needed to remove orphaned LDAP users', ['%id' => $serverId]);
         $this->missingServerSemaphore[$serverId] = TRUE;
       }
+      return $user;
     }
-    else {
-      if ($this->enabledServers[$serverId]->get('unique_persistent_attr_binary')) {
-        $filter = "($persistentUidProperty=" . $this->binaryFilter($persistentUid) . ")";
-      }
-      else {
-        $filter = "($persistentUidProperty=$persistentUid)";
-      }
 
-      $this->ldapUserManager->setServerById($serverId);
-      $ldapEntries = $this->ldapUserManager->searchAllBaseDns($filter, [$persistentUidProperty]);
-      if (!empty($ldapEntries)) {
-        $user['exists'] = TRUE;
-      }
+    if ($this->enabledServers[$serverId]->get('unique_persistent_attr_binary')) {
+      $persistentUid = $this->binaryFilter($persistentUid);
     }
+
+    $this->ldapUserManager->setServerById($serverId);
+    $ldapEntries = $this->ldapUserManager
+      ->searchAllBaseDns(
+        sprintf('(%s=%s)', $persistentUidProperty, $persistentUid),
+        [$persistentUidProperty]
+      );
+    if (!empty($ldapEntries)) {
+      $user['exists'] = TRUE;
+    }
+
     return $user;
   }
 

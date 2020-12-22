@@ -95,8 +95,8 @@ class LoginValidatorLoginForm extends LoginValidatorBase {
    * {@inheritdoc}
    */
   public function testCredentials(): int {
+    $authenticationResult = self::AUTHENTICATION_FAILURE_UNKNOWN;
     foreach ($this->authenticationServers->getAvailableAuthenticationServers() as $server) {
-      $authenticationResult = NULL;
       $this->serverDrupalUser = $this->entityTypeManager
         ->getStorage('ldap_server')
         ->load($server);

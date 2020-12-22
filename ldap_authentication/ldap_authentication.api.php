@@ -30,11 +30,9 @@ function hook_ldap_authentication_allowuser_results_alter(Entry $ldap_user, $nam
   if (!$hook_result) {
     return;
   }
-  // Other module has allowed, maybe override.
-  elseif ($hook_result) {
-    if (mymodule_dissapproves($ldap_user, $name)) {
-      $hook_result = FALSE;
-    }
-  }
 
+  // Other module has allowed, maybe override.
+  if (mymodule_dissapproves($ldap_user, $name)) {
+    $hook_result = FALSE;
+  }
 }

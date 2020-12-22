@@ -19,10 +19,8 @@ function ldap_query_help($route_name, RouteMatchInterface $route_match) {
     t('This module does nothing in and of itself.  It should only be
     enabled and configured if another module requires it.') . '</p>';
 
-  switch ($route_name) {
-    case 'ldap_query.admin_form':
-      $output = '<p>' . $help . '</p>';
-      return $output;
+  if ($route_name === 'ldap_query.admin_form') {
+    return '<p>' . $help . '</p>';
   }
 }
 

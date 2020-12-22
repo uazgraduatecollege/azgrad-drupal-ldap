@@ -35,6 +35,13 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface, LoginV
    *
    * @var int
    */
+  public const AUTHENTICATION_FAILURE_UNKNOWN = 0;
+
+  /**
+   * Failure value.
+   *
+   * @var int
+   */
   public const AUTHENTICATION_FAILURE_BIND = 2;
 
   /**
@@ -64,13 +71,6 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface, LoginV
    * @var int
    */
   public const AUTHENTICATION_SUCCESS = 6;
-
-  /**
-   * Failure value.
-   *
-   * @var int
-   */
-  public const AUTHENTICATION_FAILURE_SERVER = 8;
 
   /**
    * Authname.
@@ -685,7 +685,7 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface, LoginV
         $this->logger
           ->error('Derived Drupal username from attribute %account_name_attr returned no username for authname %authname.', [
             '%authname' => $this->authName,
-            '%account_name_attr' => $user_attribute,
+            '%account_name_attr' => $this->serverDrupalUser->getAccountNameAttribute(),
           ]
           );
         return FALSE;

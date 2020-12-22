@@ -187,17 +187,15 @@ class LdapGroupManager extends LdapBaseManager {
 
     $result = FALSE;
     if ($this->groupGroupEntryMembershipsConfigured()) {
+      $entry = new Entry($group_dn);
+      $manager = $this->ldap->getEntryManager();
       try {
-        $entry = new Entry($group_dn);
-        // @todo Bugreport upstream interface.
-        /** @var \Symfony\Component\Ldap\Adapter\ExtLdap\EntryManager $manager */
-        $manager = $this->ldap->getEntryManager();
         $manager->addAttributeValues($entry, $this->server->get('grp_memb_attr'), [$user]);
         $result = TRUE;
       }
       catch (LdapException $e) {
-        $this->logger->error("LDAP server error updating %dn on @sid exception: %ldap_error", [
-          '%dn' => $entry->getDn(),
+        $this->logger->error('LDAP server error updating %dn on @sid exception: %ldap_error', [
+          '%dn' => $group_dn,
           '@sid' => $this->server->id(),
           '%ldap_error' => $e->getMessage(),
         ]
@@ -225,17 +223,15 @@ class LdapGroupManager extends LdapBaseManager {
     $result = FALSE;
 
     if ($this->checkAvailability() && $this->groupGroupEntryMembershipsConfigured()) {
+      $entry = new Entry($group_dn);
+      $manager = $this->ldap->getEntryManager();
       try {
-        $entry = new Entry($group_dn);
-        // @todo Bugreport upstream interface.
-        /** @var \Symfony\Component\Ldap\Adapter\ExtLdap\EntryManager $manager */
-        $manager = $this->ldap->getEntryManager();
         $manager->removeAttributeValues($entry, $this->server->get('grp_memb_attr'), [$member]);
         $result = TRUE;
       }
       catch (LdapException $e) {
         $this->logger->error('LDAP server error updating %dn on @sid exception: %ldap_error', [
-          '%dn' => $entry->getDn(),
+          '%dn' => $group_dn,
           '@sid' => $this->server->id(),
           '%ldap_error' => $e->getMessage(),
         ]
@@ -271,20 +267,23 @@ class LdapGroupManager extends LdapBaseManager {
       return $members;
     }
 
-    // If attributes weren't returned, don't give false  empty group.
+    // If attributes weren't returned, don't give false empty group.
     if (
       empty($group_entry->getAttribute('cn', FALSE)) ||
-      empty($group_entry->getAttribute($this->server->get('grp_memb_attr', FALSE)))
+      empty($group_entry->getAttribute($this->server->get('grp_memb_attr'), FALSE))
     ) {
       // If no attribute returned, no members.
       return $members;
     }
+
     $members = $group_entry->getAttribute($this->server->get('grp_memb_attr'), FALSE);
 
     $this->groupMembersRecursive([$group_entry], $members, [], 0, self::LDAP_QUERY_RECURSION_LIMIT);
+
     // Remove the DN of the source group.
-    if (($key = array_search($group_dn, $members, TRUE)) !== FALSE) {
-      unset($members[$key]);
+    $source_dn_key = array_search($group_dn, $members, TRUE);
+    if ($source_dn_key !== FALSE) {
+      unset($members[$source_dn_key]);
     }
 
     return $members;
@@ -637,7 +636,7 @@ class LdapGroupManager extends LdapBaseManager {
     if (!empty($or_filters)) {
       // Example 1: (|(cn=group1)(cn=group2))
       // Example 2: (|(dn=cn=group1,ou=blah...)(dn=cn=group2,ou=blah...))
-      $or = sprintf('(|(%s))', implode(')(', $current_or_filters));
+      $or = sprintf('(|(%s))', implode(')(', $or_filters));
       $query_for_parent_groups = sprintf('(&(objectClass=%s)%s)', $this->server->get('grp_object_cat'), $or);
 
       // Need to search on all base DNs one at a time.
@@ -706,7 +705,7 @@ class LdapGroupManager extends LdapBaseManager {
     $value = '';
     if (!empty($dn)) {
       $parts = self::splitDnWithValues($dn);
-      if ($parts['count'] > 0) {
+      if ($parts && $parts['count'] > 0) {
         $value = $parts[0];
         // Possibly unnecessary.
         $value = ConversionHelper::unescapeDnValue(trim($value));

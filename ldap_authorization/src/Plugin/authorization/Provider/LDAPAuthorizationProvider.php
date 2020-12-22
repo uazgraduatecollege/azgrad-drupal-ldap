@@ -73,7 +73,7 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
    */
   public function __construct(
     array $configuration,
-    $plugin_id,
+    string $plugin_id,
     array $plugin_definition,
     EntityTypeManagerInterface $entity_type_manager,
     DrupalUserProcessor $drupal_user_processor
@@ -104,7 +104,7 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
+  public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
     /** @var \Drupal\authorization\Entity\AuthorizationProfile $profile */
     $profile = $this->configuration['profile'];
     $tokens = $this->getTokens();
@@ -194,7 +194,7 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function buildRowForm(array $form, FormStateInterface $form_state, $index = 0) {
+  public function buildRowForm(array $form, FormStateInterface $form_state, $index = 0): array {
     $row = [];
     /** @var \Drupal\authorization\Entity\AuthorizationProfile $profile */
     $profile = $this->configuration['profile'];
@@ -223,11 +223,11 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function getProposals(UserInterface $user) {
+  public function getProposals(UserInterface $user): array {
 
     // Do not continue if user should be excluded from LDAP authentication.
     if ($this->drupalUserProcessor->excludeUser($user)) {
-      throw new AuthorizationSkipAuthorization();
+      throw new AuthorizationSkipAuthorization('User in list of excluded users');
     }
     /** @var \Drupal\authorization\Entity\AuthorizationProfile $profile */
     $profile = $this->configuration['profile'];
@@ -332,22 +332,23 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
     $profile = $this->configuration['profile'];
     $config = $profile->getProviderConfig();
     foreach ($proposals as $key => $authorization_id) {
+      /** @var string $lowercase_key */
+      $lowercase_key = \mb_strtolower($key);
+
       if ($config['filter_and_mappings']['use_first_attr_as_groupid']) {
         $attr_parts = self::splitDnWithAttributes($authorization_id);
-        if (is_array($attr_parts) && count($attr_parts) > 0) {
-          $first_part = explode('=', $attr_parts[0]);
-          if (count($first_part) > 1) {
-            // @FIXME: Potential bug on trim.
+        unset($attr_parts['count']);
+        if (count($attr_parts) > 0) {
+          $first_part = \explode('=', $attr_parts[0]);
+          if ($first_part && isset($first_part[1])) {
             $authorization_id = ConversionHelper::unescapeDnValue(trim($first_part[1]));
           }
         }
-        $new_key = mb_strtolower($authorization_id);
+        $lowercase_key = \mb_strtolower($authorization_id);
       }
-      else {
-        $new_key = mb_strtolower($key);
-      }
-      $proposals[$new_key] = $authorization_id;
-      if ($key !== $new_key) {
+
+      $proposals[$lowercase_key] = $authorization_id;
+      if ($key !== $lowercase_key) {
         unset($proposals[$key]);
       }
     }

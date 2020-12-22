@@ -491,7 +491,7 @@ class LdapEntryProvisionSubscriber implements EventSubscriberInterface, LdapUser
    * @return bool
    *   Provisioning successful.
    */
-  private function provisionLdapEntry() {
+  private function provisionLdapEntry(): bool {
 
     if ($this->account->isAnonymous()) {
       $this->logger->notice('Cannot provision LDAP user unless corresponding Drupal account exists.');
@@ -542,7 +542,7 @@ class LdapEntryProvisionSubscriber implements EventSubscriberInterface, LdapUser
         [
           '%dn' => $entry->getDn(),
           '@sid' => $this->ldapServer->id(),
-          '@username' => @$this->account->getAccountName(),
+          '@username' => $this->account ? $this->account->getAccountName() : 'Missing',
         ]);
       return FALSE;
     }
@@ -552,7 +552,7 @@ class LdapEntryProvisionSubscriber implements EventSubscriberInterface, LdapUser
       [
         '%dn' => $entry->getDn(),
         '@sid' => $this->ldapServer->id(),
-        '@username' => @$this->account->getAccountName(),
+        '@username' => $this->account ? $this->account->getAccountName() : 'Missing',
       ],
       'ldap_user'
     );

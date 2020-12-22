@@ -26,7 +26,8 @@ class LdapAttribute extends FieldPluginBase {
    * @return array
    *   The processed result in a render array.
    */
-  public function render(ResultRow $values) {
+  public function render(ResultRow $values): array {
+    $output = '';
     if ($value = $this->getValue($values)) {
       switch ($this->options['multi_value']) {
         case 'v-all':
@@ -45,17 +46,17 @@ class LdapAttribute extends FieldPluginBase {
             // Allows for negative offset.
             $index = count($value) + $this->options['index_value'];
           }
-          $output = array_key_exists($index, $value) ? $value[$index] : $value[0];
+          $output = \array_key_exists($index, $value) ? $value[$index] : $value[0];
           break;
       }
-      return ['#plain_text' => $output];
     }
+    return ['#plain_text' => $output];
   }
 
   /**
    * {@inheritdoc}
    */
-  protected function defineptions(): array {
+  protected function defineOptions(): array {
     $options = parent::defineOptions();
     $options['multi_value'] = ['default' => 'v-all'];
     $options['value_separator'] = ['default' => ''];
@@ -66,7 +67,7 @@ class LdapAttribute extends FieldPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function buildOptionsForm(&$form, FormStateInterface $form_state) {
+  public function buildOptionsForm(&$form, FormStateInterface $form_state): void {
     $form['multi_value'] = [
       '#type' => 'select',
       '#title' => $this->t('Values to show'),

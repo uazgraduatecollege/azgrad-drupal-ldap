@@ -63,6 +63,7 @@ class LoginValidatorSso extends LoginValidatorBase {
    * @todo Reduce code duplication w/ LoginValidator, split this function up.
    */
   public function testCredentials(): int {
+    $authenticationResult = self::AUTHENTICATION_FAILURE_UNKNOWN;
     foreach ($this->authenticationServers->getAvailableAuthenticationServers() as $server) {
       $this->serverDrupalUser = $this->entityTypeManager
         ->getStorage('ldap_server')

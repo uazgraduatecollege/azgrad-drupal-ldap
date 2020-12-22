@@ -60,6 +60,7 @@ class AuthenticationServers {
    *   Server IDs.
    */
   public function getAvailableAuthenticationServers(): array {
+    /** @var array $available_servers */
     $available_servers = $this->storage
       ->getQuery()
       ->condition('status', 1)

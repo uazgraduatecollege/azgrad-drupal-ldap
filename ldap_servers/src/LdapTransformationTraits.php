@@ -161,11 +161,11 @@ trait LdapTransformationTraits {
    * @param string $dn
    *   DN to explode.
    *
-   * @return array|false
+   * @return array
    *   Exploded DN.
    */
-  public static function splitDnWithAttributes(string $dn) {
-    if (function_exists('ldap_explode_dn')) {
+  public static function splitDnWithAttributes(string $dn): array {
+    if (\function_exists('ldap_explode_dn')) {
       return ldap_explode_dn($dn, 0);
     }
 

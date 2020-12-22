@@ -207,9 +207,13 @@ abstract class LdapUserMappingBaseForm extends LdapUserBaseForm {
    *   Attributes of Drupal user target options.
    * @param int $row_id
    *   Only needed for LDAP.
+   *
+   * @return array
+   *   Row.
    */
   protected function getMappingRow(Mapping $mapping, array $target_fields, int $row_id): array {
     // Sub form does it's variant here.
+    return [];
   }
 
   /**
@@ -218,10 +222,10 @@ abstract class LdapUserMappingBaseForm extends LdapUserBaseForm {
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   Form State.
    *
-   * @return array|bool
+   * @return array
    *   Returns the mappings
    */
-  protected function getServerMappingFields(FormStateInterface $form_state) {
+  protected function getServerMappingFields(FormStateInterface $form_state): array {
     $rows = [];
     $user_attribute_options = ['0' => $this->t('Select option')];
 
@@ -281,7 +285,7 @@ abstract class LdapUserMappingBaseForm extends LdapUserBaseForm {
    * @return array
    *   The form element we are changing via ajax
    */
-  public function mappingsAjaxCallback(array &$form, FormStateInterface $form_state) {
+  public function mappingsAjaxCallback(array &$form, FormStateInterface $form_state): array {
     return $form['mappings'];
   }
 
@@ -293,7 +297,7 @@ abstract class LdapUserMappingBaseForm extends LdapUserBaseForm {
    * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   The form state, passed by reference so we can modify.
    */
-  public function mappingsAddAnother(array &$form, FormStateInterface $form_state) {
+  public function mappingsAddAnother(array &$form, FormStateInterface $form_state): void {
     $form_state->set('row_count', ($form_state->get('row_count') + 1));
     $form_state->setRebuild();
   }

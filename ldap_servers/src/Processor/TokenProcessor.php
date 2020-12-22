@@ -144,7 +144,7 @@ class TokenProcessor {
    * @param string $dn
    *   DN.
    */
-  private function processDnParts($dn): void {
+  private function processDnParts(string $dn): void {
     // 1. Tokenize dn
     // Escapes attribute values, need to be unescaped later.
     $dn_parts = self::splitDnWithAttributes($dn);
@@ -152,7 +152,7 @@ class TokenProcessor {
     $parts_count = [];
     $parts_last_value = [];
     foreach ($dn_parts as $pair) {
-      list($name, $value) = explode('=', $pair);
+      [$name, $value] = explode('=', $pair);
       $value = ConversionHelper::unescapeDnValue($value);
       if (!Unicode::validateUtf8($value)) {
         $this->detailLog->log('Skipped tokenization of attribute %attr_name because the value is not valid UTF-8 string.', [

@@ -139,7 +139,7 @@ class QueryController {
             $ldap_response = FALSE;
           }
 
-          if ($ldap_response && !empty($ldap_response)) {
+          if ($ldap_response) {
             // @todo $this->results[] = $ldap_response should suffice?
             $this->results = array_merge($this->results, $ldap_response);
           }

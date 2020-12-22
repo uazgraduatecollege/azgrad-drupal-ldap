@@ -401,7 +401,7 @@ abstract class LdapBaseManager {
    * @param string $drupal_username
    *   Drupal username.
    *
-   * @return \Symfony\Component\Ldap\Entry
+   * @return \Symfony\Component\Ldap\Entry|null
    *   LDAP Entry.
    */
   public function sanitizeUserDataResponse(Entry $entry, string $drupal_username): ?Entry {
@@ -420,6 +420,7 @@ abstract class LdapBaseManager {
         }
       }
     }
+    return NULL;
   }
 
   /**
