@@ -112,4 +112,52 @@ class ServerTest extends EntityKernelTestBase {
     self::assertEquals('52723062792f2b6b53454b7a56476f576e6b705134513d3d', $this->server->derivePuidFromLdapResponse($userOpenLdap));
   }
 
+  /**
+   * Test remaining getters.
+   */
+  public function testGetters(): void {
+    $this->server->set('address', 'example.com');
+    self::assertEquals('example.com', $this->server->getServerAddress());
+
+    $this->server->set('bind_method', 'user');
+    self::assertEquals('user', $this->server->getBindMethod());
+
+
+    $this->server->set('binddn', '1');
+    self::assertEquals('1', $this->server->getBindDn());
+
+    $this->server->set('bindpw', '2');
+    self::assertEquals('2', $this->server->getBindPassword());
+
+    $this->server->set('grp_derive_from_dn_attr', '3');
+    self::assertEquals('3', $this->server->getDerivedGroupFromDnAttribute());
+
+    $this->server->set('grp_derive_from_dn', TRUE);
+    self::assertEquals(TRUE, $this->server->isGroupDerivedFromDn());
+
+    $this->server->set('grp_memb_attr_match_user_attr', '5');
+    self::assertEquals('5', $this->server->getUserAttributeFromGroupMembershipEntryAttribute());
+
+
+    $this->server->set('grp_memb_attr', '6');
+    self::assertEquals('6', $this->server->getGroupMembershipAttribute());
+
+
+    $this->server->set('grp_nested', FALSE);
+    self::assertEquals(FALSE, $this->server->isGrouppNested());
+
+    self::assertNull($this->server->getGroupObjectClass());
+    $this->server->set('grp_object_cat', '7');
+    self::assertEquals('7', $this->server->getGroupObjectClass());
+
+    $this->server->set('grp_test_grp_dn_writeable', '8');
+    self::assertEquals('8', $this->server->getGroupTestGroupDnWriteable());
+
+    $this->server->set('grp_test_grp_dn', '9');
+    self::assertEquals('9', $this->server->getGroupTestGroupDn());
+
+    $this->server->set('grp_unused', TRUE);
+    self::assertEquals(TRUE, $this->server->isGroupUnused());
+  }
+
 }
