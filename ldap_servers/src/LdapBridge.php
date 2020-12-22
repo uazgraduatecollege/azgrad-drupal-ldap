@@ -159,7 +159,7 @@ class LdapBridge implements LdapBridgeInterface {
    * @return \Symfony\Component\Ldap\Ldap
    *   LDAP service.
    */
-  public function get() {
+  public function get(): Ldap {
     return $this->ldap;
   }
 

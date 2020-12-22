@@ -454,7 +454,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
     $triggers = $this->config->get('drupalAcctProvisionTriggers');
     $server = $this->config->get('drupalAcctProvisionServer');
 
-    if ($server && in_array(self::PROVISION_DRUPAL_USER_ON_USER_AUTHENTICATION, $triggers, TRUE)) {
+    if ($server && \in_array(self::PROVISION_DRUPAL_USER_ON_USER_AUTHENTICATION, $triggers, TRUE)) {
       $this->syncToDrupalAccount();
     }
 

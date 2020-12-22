@@ -62,7 +62,8 @@ class DrupalUserProcessorTest extends KernelTestBase implements LdapUserAttribut
   public function testUserExclusion(): void {
 
     // Skip administrators, if so configured.
-    $account = $this->prophesize('\Drupal\user\Entity\User');
+    /** @var \Drupal\user\Entity\User $account */
+    $account = $this->prophesize(User::class);
     $account->getRoles()->willReturn(['administrator']);
     $account->id()->willReturn(1);
     $value = new \stdClass();

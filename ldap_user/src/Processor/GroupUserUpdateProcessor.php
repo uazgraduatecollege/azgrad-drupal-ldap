@@ -12,6 +12,7 @@ use Drupal\externalauth\Authmap;
 use Drupal\ldap_query\Controller\QueryController;
 use Drupal\ldap_servers\Logger\LdapDetailLog;
 use Drupal\user\Entity\User;
+use Drupal\user\UserInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Ldap\Entry;
 
@@ -192,10 +193,12 @@ class GroupUserUpdateProcessor {
   /**
    * Update authorizations.
    *
-   * @param \Drupal\user\Entity\User $user
+   * @param \Drupal\user\UserInterface $user
    *   Drupal user to update.
+   *
+   * @throws \Drupal\Core\Entity\EntityStorageException
    */
-  private function updateAuthorizations(User $user): void {
+  private function updateAuthorizations(UserInterface $user): void {
     if ($this->moduleHandler->moduleExists('ldap_authorization')) {
       // We are not injecting this service properly to avoid forcing this
       // dependency on authorization.
@@ -299,7 +302,9 @@ class GroupUserUpdateProcessor {
     $drupal_account = $this->userStorage->load($uid);
     $this->drupalUserProcessor->drupalUserLogsIn($drupal_account);
     // Reload since data has changed.
-    $this->updateAuthorizations($this->userStorage->load($drupal_account->id()));
+    /** @var \Drupal\user\UserInterface $user */
+    $user = $this->userStorage->load($drupal_account->id());
+    $this->updateAuthorizations($user);
     $this->detailLog->log(
       'Periodic update: @name updated',
       ['@name' => $username],

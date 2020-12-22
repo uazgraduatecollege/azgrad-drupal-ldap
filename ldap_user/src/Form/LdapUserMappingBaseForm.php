@@ -36,7 +36,7 @@ abstract class LdapUserMappingBaseForm extends LdapUserBaseForm {
   /**
    * {@inheritdoc}
    */
-  public function validateForm(array &$form, FormStateInterface $form_state) {
+  public function validateForm(array &$form, FormStateInterface $form_state): void {
     $values = $form_state->getValues();
 
     foreach ($values['mappings'] as $key => $mapping) {
@@ -64,7 +64,7 @@ abstract class LdapUserMappingBaseForm extends LdapUserBaseForm {
    * @param array $mappings
    *   Field mappings.
    */
-  private function checkEmptyEvents(array $mappings) {
+  private function checkEmptyEvents(array $mappings): void {
     foreach ($mappings as $key => $mapping) {
       if (empty($mapping['prov_events'])) {
 
@@ -85,7 +85,7 @@ abstract class LdapUserMappingBaseForm extends LdapUserBaseForm {
    * @return array
    *   Mappings.
    */
-  protected function loadAvailableMappings($direction, $sid): array {
+  protected function loadAvailableMappings(string $direction, string $sid): array {
     $attributes = [];
     if ($sid) {
       try {

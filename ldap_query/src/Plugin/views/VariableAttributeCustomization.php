@@ -14,7 +14,7 @@ trait VariableAttributeCustomization {
   /**
    * {@inheritdoc}
    */
-  protected function defineOptions() {
+  protected function defineOptions(): array {
     $options = parent::defineOptions();
     $options['attribute_name'] = ['default' => ''];
     return $options;
@@ -23,7 +23,7 @@ trait VariableAttributeCustomization {
   /**
    * {@inheritdoc}
    */
-  public function buildOptionsForm(&$form, FormStateInterface $form_state) {
+  public function buildOptionsForm(&$form, FormStateInterface $form_state): void {
     parent::buildOptionsForm($form, $form_state);
     $queryOptions = $this->view->getDisplay()->getOption('query')['options'];
 
@@ -53,7 +53,7 @@ trait VariableAttributeCustomization {
   /**
    * {@inheritdoc}
    */
-  public function query() {
+  public function query(): void {
     $this->realField = $this->options['attribute_name'];
     parent::query();
   }

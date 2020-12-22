@@ -148,38 +148,40 @@ class LdapUserManager extends LdapBaseManager {
    * @param string $puid
    *   As returned from ldap_read or other LDAP function (can be binary).
    *
-   * @return false|UserInterface|EntityInterface
+   * @return false|\Drupal\user\UserInterface|\Drupal\Core\Entity\EntityInterface
    *   The updated user or error.
    */
   public function getUserAccountFromPuid($puid) {
     if (!$this->checkAvailability()) {
       return FALSE;
     }
-
-    $query = $this->entityTypeManager->getStorage('user')->getQuery();
+    $storage = $this->entityTypeManager->getStorage('user');
+    $query = $storage->getQuery();
     $query->condition('ldap_user_puid_sid', $this->server->id(), '=')
       ->condition('ldap_user_puid', $puid, '=')
       ->condition('ldap_user_puid_property', $this->server->getUniquePersistentAttribute(), '=')
       ->accessCheck(FALSE);
     $result = $query->execute();
 
-    if (!empty($result)) {
-      if (count($result) === 1) {
-        return $this->entityTypeManager->getStorage('user')
-          ->load(array_values($result)[0]);
-      }
-      else {
-        $uids = implode(',', $result);
-        $this->logger->error('Multiple users (uids: %uids) with same puid (puid=%puid, sid=%sid, ldap_user_puid_property=%ldap_user_puid_property)', [
+    if (empty($result)) {
+      return FALSE;
+    }
+
+    if (count($result) > 1) {
+      $uids = implode(',', $result);
+      $this->logger->error(
+        'Multiple users (uids: %uids) with same puid (puid=%puid, sid=%sid, ldap_user_puid_property=%ldap_user_puid_property)',
+        [
           '%uids' => $uids,
           '%puid' => $puid,
           '%id' => $this->server->id(),
           '%ldap_user_puid_property' => $this->server->getUniquePersistentAttribute(),
         ]
-        );
-      }
+      );
+      return FALSE;
     }
-    return FALSE;
+
+    return $storage->load(array_values($result)[0]);
   }
 
   /**

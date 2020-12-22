@@ -94,6 +94,7 @@ abstract class LdapBaseManager {
    *   Binding successful.
    */
   public function setServerById(string $sid): bool {
+    /** @var \Drupal\ldap_servers\Entity\Server $server */
     $server = $this->entityTypeManager
       ->getStorage('ldap_server')
       ->load($sid);
@@ -316,7 +317,7 @@ abstract class LdapBaseManager {
     catch (LdapException $e) {
       $this->logger->error("LDAP entry '%dn' could not be delete from from server @sid: @message", [
         '%dn' => $dn,
-        '@sid' => $this->id(),
+        '@sid' => $this->server->id(),
         '@message' => $e->getMessage(),
       ]
       );
@@ -324,7 +325,7 @@ abstract class LdapBaseManager {
     }
     $this->logger->info("LDAP entry '%dn' deleted from server @sid", [
       '%dn' => $dn,
-      '@sid' => $this->id(),
+      '@sid' => $this->server->id(),
     ]);
 
     return TRUE;

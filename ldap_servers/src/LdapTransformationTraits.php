@@ -34,7 +34,7 @@ trait LdapTransformationTraits {
     if (!empty($value) && strpos($value, ' ') === 0) {
       $value = '\\20' . substr($value, 1);
     }
-    if (!empty($value) && ' ' === $value[\strlen($value) - 1]) {
+    if (!empty($value) && $value[\strlen($value) - 1] === ' ') {
       $value = substr($value, 0, -1) . '\\20';
     }
 

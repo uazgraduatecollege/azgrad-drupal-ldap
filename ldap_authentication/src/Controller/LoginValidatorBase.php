@@ -161,7 +161,7 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface, LoginV
   /**
    * Logger.
    *
-   * @var LoggerInterface
+   * @var LoggerChannelInterface
    */
   protected $logger;
 
@@ -187,7 +187,7 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface, LoginV
   protected $ldapBridge;
 
   /**
-   * Externalauth.
+   * External authentication mapper.
    *
    * @var \Drupal\externalauth\Authmap
    */

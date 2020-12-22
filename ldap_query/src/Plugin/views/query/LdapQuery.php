@@ -201,16 +201,16 @@ class LdapQuery extends QueryPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function buildOptionsForm(&$form, FormStateInterface $form_state): array {
+  public function buildOptionsForm(&$form, FormStateInterface $form_state): void {
     parent::buildOptionsForm($form, $form_state);
 
-    $qids = \Drupal::EntityQuery('ldap_query_entity')
+    $queries = \Drupal::EntityQuery('ldap_query_entity')
       ->condition('status', 1)
       ->execute();
 
     $form['query_id'] = [
       '#type' => 'select',
-      '#options' => $qids,
+      '#options' => $queries,
       '#title' => $this->t('Ldap Query'),
       '#default_value' => $this->options['query_id'],
       '#description' => $this->t('The LDAP query you want Views to use.'),
@@ -219,7 +219,22 @@ class LdapQuery extends QueryPluginBase {
   }
 
   /**
-   * {@inheritdoc}
+   * Add a simple WHERE clause to the query.
+   *
+   * @param mixed $group
+   *   The WHERE group to add these to; groups are used to create AND/OR
+   *   sections. Groups cannot be nested. Use 0 as the default group.
+   *   If the group does not yet exist it will be created as an AND group.
+   * @param mixed $field
+   *   The name of the field to check.
+   * @param mixed $value
+   *   The value to test the field against. In most cases, this is a scalar. For
+   *   more complex options, it is an array. The meaning of each element in the
+   *   array is dependent on the $operator.
+   * @param mixed $operator
+   *   The comparison operator, such as =, <, or >=. It also accepts more
+   *   complex options such as IN, LIKE, LIKE BINARY, or BETWEEN. Defaults to =.
+   *   If $field is a string you have to use 'formula' here.
    */
   public function addWhere($group, $field, $value = NULL, $operator = NULL): void {
     // Ensure all variants of 0 are actually 0. Thus '', 0 and NULL are all
@@ -319,6 +334,9 @@ class LdapQuery extends QueryPluginBase {
 
   /**
    * Let modules modify the query just prior to finalizing it.
+   *
+   * @param \Drupal\views\ViewExecutable $view
+   *   View.
    */
   public function alter(ViewExecutable $view): void {
     \Drupal::moduleHandler()->invokeAll('views_query_alter', [$view, $this]);

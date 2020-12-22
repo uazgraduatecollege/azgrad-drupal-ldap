@@ -53,6 +53,7 @@ class LoginTest extends KernelTestBase {
 
     /** @var \Drupal\Core\Entity\EntityTypeManager $manager */
     $manager = $this->container->get('entity_type.manager');
+    /** @var \Drupal\ldap_servers\Entity\Server $server */
     $server = $manager->getStorage('ldap_server')->create([
       'id' => 'test',
       'timeout' => 30,
