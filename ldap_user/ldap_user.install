@@ -285,3 +285,12 @@ function ldap_user_update_8307() {
   $config->set('ldapUserSyncMappings', $syncMappings);
   $config->save();
 }
+
+/**
+ * Ensure ldap_query dependency.
+ */
+function ldap_user_update_8401() {
+  if (!\Drupal::service('module_handler')->moduleExists('ldap_query')) {
+    \Drupal::service('module_installer')->install(['ldap_query']);
+  }
+}
