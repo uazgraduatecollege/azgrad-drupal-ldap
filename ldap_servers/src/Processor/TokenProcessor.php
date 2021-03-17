@@ -196,6 +196,13 @@ class TokenProcessor {
   }
 
   /**
+   * Reset the tokens.
+   */
+  public function resetTokens(): void {
+    $this->tokens = [];
+  }
+
+  /**
    * Process a single LDAP Token key.
    *
    * @param \Symfony\Component\Ldap\Entry $entry

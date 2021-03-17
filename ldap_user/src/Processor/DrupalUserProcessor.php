@@ -780,6 +780,9 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
   private function setUserDefinedMappings($event): void {
     $mappings = $this->fieldProvider->getConfigurableAttributesSyncedOnEvent($event);
 
+    // Reset the tokens to avoid mixed user data.
+    $this->tokenProcessor->resetTokens();
+
     foreach ($mappings as $key => $mapping) {
       // If "convert from binary is selected" and no particular method is in
       // token default to binaryConversionToString() function.
