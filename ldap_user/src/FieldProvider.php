@@ -140,7 +140,7 @@ class FieldProvider implements LdapUserAttributesInterface {
   private function loadUserDefinedMappings(): void {
     $database_mappings = $this->config->get('ldapUserSyncMappings');
     // Leave early if there are no user mappings.
-    if (!$database_mappings) {
+    if (!isset($database_mappings[$this->direction]) || empty($database_mappings[$this->direction])) {
       return;
     }
 
