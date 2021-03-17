@@ -19,6 +19,8 @@ class LdapEntryProvisionTest extends EntityKernelTestBase {
 
   /**
    * {@inheritdoc}
+   *
+   * @phpstan-ignore-next-line
    */
   public static $modules = [
     'externalauth',

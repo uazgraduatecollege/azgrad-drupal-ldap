@@ -17,6 +17,8 @@ class FieldProviderTest extends EntityKernelTestBase implements LdapUserAttribut
 
   /**
    * {@inheritdoc}
+   *
+   * @phpstan-ignore-next-line
    */
   public static $modules = [
     'ldap_servers',
