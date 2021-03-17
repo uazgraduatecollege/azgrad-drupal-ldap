@@ -4,25 +4,33 @@ declare(strict_types = 1);
 
 namespace Drupal\Tests\ldap_user\Kernel;
 
-use Drupal\KernelTests\Core\Entity\EntityKernelTestBase;
+use Drupal\KernelTests\KernelTestBase;
 use Drupal\ldap_servers\Entity\Server;
 use Drupal\ldap_servers\FakeBridge;
 use Drupal\ldap_servers\LdapUserAttributesInterface;
 use Drupal\ldap_user\EventSubscriber\LdapEntryProvisionSubscriber;
+use Drupal\Tests\user\Traits\UserCreationTrait;
 
 /**
  * @coversDefaultClass \Drupal\ldap_servers\Processor\TokenProcessor
  * @group ldap
  */
-class LdapEntryProvisionTest extends EntityKernelTestBase {
+class LdapEntryProvisionTest extends KernelTestBase {
 
+  use UserCreationTrait {
+    checkPermissions as drupalCheckPermissions;
+    createAdminRole as drupalCreateAdminRole;
+    createRole as drupalCreateRole;
+    createUser as drupalCreateUser;
+    grantPermissions as drupalGrantPermissions;
+    setCurrentUser as drupalSetCurrentUser;
+    setUpCurrentUser as drupalSetUpCurrentUser;
+  }
 
   /**
    * {@inheritdoc}
-   *
-   * @phpstan-ignore-next-line
    */
-  public static $modules = [
+  protected static $modules = [
     'externalauth',
     'ldap_servers',
     'ldap_user',
@@ -44,6 +52,9 @@ class LdapEntryProvisionTest extends EntityKernelTestBase {
    */
   public function setUp(): void {
     parent::setUp();
+
+    $this->installSchema('system', 'sequences');
+    $this->installEntitySchema('user');
 
     $server = Server::create([
       'id' => 'test',

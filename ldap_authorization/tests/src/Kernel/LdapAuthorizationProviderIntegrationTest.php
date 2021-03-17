@@ -5,21 +5,19 @@ declare(strict_types = 1);
 namespace Drupal\Tests\ldap_authorization\Kernel;
 
 use Drupal\authorization_drupal_roles\Plugin\authorization\Consumer\DrupalRolesConsumer;
-use Drupal\KernelTests\Core\Entity\EntityKernelTestBase;
+use Drupal\KernelTests\KernelTestBase;
 
 /**
  * Integration tests for LdapAuthorizationProvider.
  *
  * @group ldap
  */
-class LdapAuthorizationProviderIntegrationTest extends EntityKernelTestBase {
+class LdapAuthorizationProviderIntegrationTest extends KernelTestBase {
 
   /**
    * {@inheritdoc}
-   *
-   *  @phpstan-ignore-next-line
    */
-  public static $modules = [
+  protected static $modules = [
     'user',
     'system',
     'field',

@@ -4,7 +4,7 @@ declare(strict_types = 1);
 
 namespace Drupal\Tests\ldap_user\Kernel;
 
-use Drupal\KernelTests\Core\Entity\EntityKernelTestBase;
+use Drupal\KernelTests\KernelTestBase;
 use Drupal\ldap_servers\Entity\Server;
 use Drupal\ldap_servers\LdapUserAttributesInterface;
 use Drupal\ldap_user\FieldProvider;
@@ -13,18 +13,17 @@ use Drupal\ldap_user\FieldProvider;
  * @coversDefaultClass \Drupal\ldap_user\FieldProvider
  * @group ldap
  */
-class FieldProviderTest extends EntityKernelTestBase implements LdapUserAttributesInterface {
+class FieldProviderTest extends KernelTestBase implements LdapUserAttributesInterface {
 
   /**
    * {@inheritdoc}
-   *
-   * @phpstan-ignore-next-line
    */
-  public static $modules = [
+  protected static $modules = [
     'ldap_servers',
     'ldap_user',
     'ldap_query',
     'externalauth',
+    'user',
   ];
 
   /**
@@ -47,6 +46,7 @@ class FieldProviderTest extends EntityKernelTestBase implements LdapUserAttribut
   public function setUp(): void {
     parent::setUp();
     $this->installEntitySchema('ldap_server');
+    $this->installEntitySchema('user');
     $this->installConfig('ldap_user');
     $this->server = Server::create([
       'id' => 'example',

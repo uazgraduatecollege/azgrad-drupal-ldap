@@ -4,7 +4,7 @@ declare(strict_types = 1);
 
 namespace Drupal\Tests\ldap_servers\Kernel;
 
-use Drupal\KernelTests\Core\Entity\EntityKernelTestBase;
+use Drupal\KernelTests\KernelTestBase;
 use Drupal\ldap_servers\Entity\Server;
 use Drupal\ldap_servers\FakeBridge;
 use Symfony\Component\Ldap\Entry;
@@ -14,14 +14,12 @@ use Symfony\Component\Ldap\Entry;
  *
  * @group ldap
  */
-class GroupManagerTest extends EntityKernelTestBase {
+class GroupManagerTest extends KernelTestBase {
 
   /**
    * {@inheritdoc}
-   *
-   * @phpstan-ignore-next-line
    */
-  public static $modules = ['ldap_servers', 'externalauth'];
+  protected static $modules = ['ldap_servers', 'externalauth'];
 
   /**
    * Server.
