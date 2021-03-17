@@ -8,7 +8,7 @@ use Drupal\Core\Config\ConfigFactory;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandler;
 use Drupal\Core\Field\FieldItemListInterface;
-use Drupal\Core\File\FileSystem;
+use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
@@ -84,7 +84,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
   /**
    * Filesystem.
    *
-   * @var \Drupal\Core\File\FileSystem
+   * @var \Drupal\Core\File\FileSystemInterface
    */
   protected $fileSystem;
 
@@ -176,7 +176,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
    *   Authmap.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   Entity type manager.
-   * @param \Drupal\Core\File\FileSystem $file_system
+   * @param \Drupal\Core\File\FileSystemInterface $file_system
    *   File system.
    * @param \Drupal\Core\Utility\Token $token
    *   Token.
@@ -200,7 +200,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
     TokenProcessor $token_processor,
     Authmap $authmap,
     EntityTypeManagerInterface $entity_type_manager,
-    FileSystem $file_system,
+    FileSystemInterface $file_system,
     Token $token,
     ModuleHandler $module_handler,
     AccountInterface $current_user,

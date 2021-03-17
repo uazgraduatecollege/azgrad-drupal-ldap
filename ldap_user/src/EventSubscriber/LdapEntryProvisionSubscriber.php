@@ -14,7 +14,7 @@ use Symfony\Component\Ldap\Entry;
 use Drupal\Core\Config\ConfigFactory;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
-use Drupal\Core\File\FileSystem;
+use Drupal\Core\File\FileSystemInterface;
 use Drupal\ldap_servers\Helper\ConversionHelper;
 use Drupal\ldap_servers\Helper\CredentialsStorage;
 use Drupal\ldap_servers\LdapUserAttributesInterface;
@@ -84,7 +84,7 @@ class LdapEntryProvisionSubscriber implements EventSubscriberInterface, LdapUser
   /**
    * File system.
    *
-   * @var \Drupal\Core\File\FileSystem
+   * @var \Drupal\Core\File\FileSystemInterface
    */
   private $fileSystem;
 
@@ -131,7 +131,7 @@ class LdapEntryProvisionSubscriber implements EventSubscriberInterface, LdapUser
    *   LDAP user manager.
    * @param \Drupal\ldap_user\FieldProvider $field_provider
    *   Field Provider.
-   * @param \Drupal\Core\File\FileSystem $file_system
+   * @param \Drupal\Core\File\FileSystemInterface $file_system
    *   File system.
    */
   public function __construct(
@@ -142,7 +142,7 @@ class LdapEntryProvisionSubscriber implements EventSubscriberInterface, LdapUser
     ModuleHandlerInterface $module_handler,
     LdapUserManager $ldap_user_manager,
     FieldProvider $field_provider,
-    FileSystem $file_system) {
+    FileSystemInterface $file_system) {
     $this->config = $config_factory->get('ldap_user.settings');
     $this->logger = $logger;
     $this->detailLog = $detail_log;
