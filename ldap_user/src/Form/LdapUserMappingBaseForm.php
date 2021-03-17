@@ -229,6 +229,11 @@ abstract class LdapUserMappingBaseForm extends LdapUserBaseForm {
     $rows = [];
     $user_attribute_options = ['0' => $this->t('Select option')];
 
+    if (!$this->server) {
+      $this->messenger()->addWarning('You do not have a server configured for mapping.');
+      return $rows;
+    }
+
     $available_mappings = $this->loadAvailableMappings($this->direction, $this->server);
     // Potential mappings (i.e. fields provided for the user entity) are
     // aggregated so that they can be input for user-defined mappings.
