@@ -17,7 +17,7 @@ class ServerTest extends EntityKernelTestBase {
   /**
    * {@inheritdoc}
    */
-  protected static $modules = ['ldap_servers', 'externalauth'];
+  public static $modules = ['ldap_servers', 'externalauth'];
 
   /**
    * Server.

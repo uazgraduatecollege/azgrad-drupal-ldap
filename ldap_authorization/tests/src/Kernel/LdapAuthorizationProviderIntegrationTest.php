@@ -17,7 +17,7 @@ class LdapAuthorizationProviderIntegrationTest extends EntityKernelTestBase {
   /**
    * {@inheritdoc}
    */
-  protected static $modules = [
+  public static $modules = [
     'user',
     'system',
     'field',

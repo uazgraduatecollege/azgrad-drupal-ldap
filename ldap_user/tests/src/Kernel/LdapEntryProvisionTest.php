@@ -20,7 +20,7 @@ class LdapEntryProvisionTest extends EntityKernelTestBase {
   /**
    * {@inheritdoc}
    */
-  protected static $modules = [
+  public static $modules = [
     'externalauth',
     'ldap_servers',
     'ldap_user',
