@@ -69,7 +69,7 @@ class FieldProvider implements LdapUserAttributesInterface {
    *
    * @var \Drupal\ldap_servers\Mapping[]
    */
-  private $attributes;
+  private $attributes = [];
 
   /**
    * Constructor.
@@ -106,7 +106,7 @@ class FieldProvider implements LdapUserAttributesInterface {
    * @return array
    *   All attributes.
    */
-  public function loadAttributes(string $direction, Server $server) {
+  public function loadAttributes(string $direction, Server $server): array {
     $this->server = $server;
     $this->direction = $direction;
     if ($this->direction === self::PROVISION_TO_DRUPAL && $this->server) {
@@ -163,7 +163,10 @@ class FieldProvider implements LdapUserAttributesInterface {
       if ($mapping['convert']) {
         $prepared_mapping->convertBinary($mapping['convert']);
       }
-      $this->attributes[$mapping['user_attr']] = $prepared_mapping;
+      // This is an unideal solution to the mappings being keyed on name.
+      // @todo Replace with a plain array in the configuration storage.
+      $key = $this->direction === self::PROVISION_TO_DRUPAL ? $mapping['user_attr'] : $mapping['ldap_attr'];
+      $this->attributes[$key] = $prepared_mapping;
     }
   }
 

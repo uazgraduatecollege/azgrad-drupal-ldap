@@ -138,10 +138,12 @@ abstract class LdapUserMappingBaseForm extends LdapUserBaseForm {
   protected function syncMappingsFromForm(array $values): array {
     $mappings = [];
     foreach ($values['mappings'] as $row) {
-      if (isset($row['source']) &&
+      if (
+        isset($row['source']) &&
         !empty($row['source']) &&
         $row['configured_mapping'] == TRUE &&
-        $row['delete'] == FALSE) {
+        $row['delete'] == FALSE
+      ) {
         $events = [];
         foreach ($this->events as $event) {
           if ($row[$event] == 1) {
@@ -194,7 +196,7 @@ abstract class LdapUserMappingBaseForm extends LdapUserBaseForm {
    * @param array $row
    *   Row.
    */
-  protected function setSpecificMapping(Mapping $mapping, array $row) {
+  protected function setSpecificMapping(Mapping $mapping, array $row): void {
     // Sub form does it's variant here.
   }
 
