@@ -119,7 +119,9 @@ class LdapQuery extends QueryPluginBase {
     $offset = $view->pager->getCurrentPage() * $view->pager->getItemsPerPage() + $view->pager->getOffset();
     $length = NULL;
     if ($view->pager->getItemsPerPage() > 0) {
-      $length = $view->pager->getItemsPerPage();
+      // A Views ExposedInput for items_for_page will return a string value
+      // via a querystring parameter.
+      $length = (int) $view->pager->getItemsPerPage();
     }
 
     if ($offset > 0 || $length > 0) {
