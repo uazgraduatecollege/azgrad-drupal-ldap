@@ -304,6 +304,9 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
             if (count($matches) > 1) {
               $filtered_proposals[$key] = $matches[1];
             }
+            elseif (count($matches) === 1) {
+              $filtered_proposals[$key] = $matches[0];
+            }
             else {
               $filtered_proposals[$key] = $value;
             }

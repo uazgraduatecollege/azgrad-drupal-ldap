@@ -127,6 +127,17 @@ class LdapAuthorizationProviderTest extends UnitTestCase {
       ])
     );
 
+    // Get only one of the values.
+    $input = [
+      'cn=users,ou=gryffindor,ou=slytherin,ou=ravenclaw,dc=hogwarts,dc=edu',
+    ];
+    $output = $this->providerPlugin->filterProposals($input, [
+      'query' => '/(?<=ou=).+?[^\,]*/i',
+      'is_regex' => TRUE,
+    ]);
+    self::assertEquals('gryffindor', $output[0]);
+    self::assertCount(1, $output);
+
     $input = [
       'memberOf=students,ou=groups,dc=hogwarts,dc=edu',
     ];
