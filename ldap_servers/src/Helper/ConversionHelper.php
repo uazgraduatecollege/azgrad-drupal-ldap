@@ -35,52 +35,29 @@ class ConversionHelper {
     $value = str_replace('\=', '=', $value);
 
     // Translate hex code into ascii.
-    $value = self::hex2asc($value);
+    $value = self::hex2string($value);
 
     return $value;
   }
 
   /**
-   * Converts all Hex expressions ("\HEX") to their original ASCII characters.
+   * Converts all hex expressions ("\HEX") to their original characters.
    *
-   * @param string $string
+   * @param string $input
    *   String to convert.
    *
    * @return string
    *   Converted string.
    */
-  public static function hex2asc($string) {
+  public static function hex2string(string $input): string {
     return preg_replace_callback(
         "/\\\([0-9A-Fa-f]{2})/",
-        function (array $matches) {
-          return chr(hexdec($matches[0]));
+        static function (array $matches) {
+          $subject = str_replace('\\', '', $matches[0]);
+          return pack("H*", $subject);
         },
-        $string
+      $input
       );
-  }
-
-  /**
-   * Converts all ASCII chars < 32 to "\HEX".
-   *
-   * @param string $string
-   *   String to convert.
-   *
-   * @return string
-   *   Converted string.
-   */
-  public static function asc2hex32($string) {
-    $length = strlen($string);
-    for ($i = 0; $i < $length; $i++) {
-      $char = substr($string, $i, 1);
-      if (ord($char) < 32) {
-        $hex = dechex(ord($char));
-        if (strlen($hex) === 1) {
-          $hex = '0' . $hex;
-        }
-        $string = str_replace($char, '\\' . $hex, $string);
-      }
-    }
-    return $string;
   }
 
   /**
