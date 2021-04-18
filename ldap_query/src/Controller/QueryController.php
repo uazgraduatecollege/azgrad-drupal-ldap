@@ -125,6 +125,8 @@ class QueryController {
             'timeout' => $this->query->getTimeLimit(),
             'deref' => $this->query->getDereference(),
             'scope' => $this->query->getScope(),
+            // @todo Make this configurable on query or, ideally, server.
+            'pageSize' => 1000,
           ];
 
           try {
