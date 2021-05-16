@@ -24,6 +24,7 @@ use Drupal\user\Entity\User;
 use Drupal\user\UserInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use function in_array;
 
 /**
  * Handles processing of a user from LDAP to Drupal.
@@ -235,7 +236,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
    * @return bool
    *   TRUE if user should be excluded from LDAP provision/syncing
    */
-  public function excludeUser(UserInterface $account = NULL): bool {
+  public function excludeUser(UserInterface $account): bool {
 
     if ($this->configAuthentication->get('skipAdministrators')) {
       $admin_roles = $this->entityTypeManager
@@ -249,7 +250,8 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
     }
     // Exclude users who have been manually flagged as excluded, everyone else
     // is fine.
-    return $account->get('ldap_user_ldap_exclude')->value == 1;
+    return $account->get('ldap_user_ldap_exclude') &&
+      $account->get('ldap_user_ldap_exclude')->value == 1;
   }
 
   /**
@@ -272,42 +274,42 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
    *   Returns FALSE on invalid user or LDAP accounts.
    */
   public function ldapAssociateDrupalAccount(string $drupal_username): bool {
-    if ($this->config->get('drupalAcctProvisionServer')) {
-
-      /** @var \Drupal\ldap_servers\Entity\Server $ldap_server */
-      $ldap_server = $this->entityTypeManager
-        ->getStorage('ldap_server')
-        ->load($this->config->get('drupalAcctProvisionServer'));
-      $load_by_name = $this->entityTypeManager->getStorage('user')
-        ->loadByProperties(['name' => $drupal_username]);
-      $this->account = $load_by_name ? reset($load_by_name) : FALSE;
-      if (!$this->account) {
-        $this->logger->error('Failed to LDAP associate Drupal account %drupal_username because account not found', ['%drupal_username' => $drupal_username]);
-        return FALSE;
-      }
-
-      $this->ldapEntry = $this->ldapUserManager->matchUsernameToExistingLdapEntry($drupal_username);
-      if (!$this->ldapEntry) {
-        $this->logger->error('Failed to LDAP associate Drupal account %drupal_username because corresponding LDAP entry not found', ['%drupal_username' => $drupal_username]);
-        return FALSE;
-      }
-
-      $persistent_uid = $ldap_server->derivePuidFromLdapResponse($this->ldapEntry);
-      if (!empty($persistent_uid)) {
-        $this->account->set('ldap_user_puid', $persistent_uid);
-      }
-      $this->account->set('ldap_user_puid_property', $ldap_server->getUniquePersistentAttribute());
-      $this->account->set('ldap_user_puid_sid', $ldap_server->id());
-      $this->account->set('ldap_user_current_dn', $this->ldapEntry->getDn());
-      $this->account->set('ldap_user_last_checked', time());
-      $this->account->set('ldap_user_ldap_exclude', 0);
-      $this->saveAccount();
-      $this->externalAuth->save($this->account, 'ldap_user', $this->account->getAccountName());
-
-      return TRUE;
+    if (!$this->config->get('drupalAcctProvisionServer')) {
+      return FALSE;
     }
 
-    return FALSE;
+    /** @var \Drupal\ldap_servers\Entity\Server $ldap_server */
+    $ldap_server = $this->entityTypeManager
+      ->getStorage('ldap_server')
+      ->load($this->config->get('drupalAcctProvisionServer'));
+    $load_by_name = $this->entityTypeManager
+      ->getStorage('user')
+      ->loadByProperties(['name' => $drupal_username]);
+    $this->account = $load_by_name ? reset($load_by_name) : FALSE;
+    if (!$this->account) {
+      $this->logger->error('Failed to LDAP associate Drupal account %drupal_username because account not found', ['%drupal_username' => $drupal_username]);
+      return FALSE;
+    }
+
+    $this->ldapEntry = $this->ldapUserManager->matchUsernameToExistingLdapEntry($drupal_username);
+    if (!$this->ldapEntry) {
+      $this->logger->error('Failed to LDAP associate Drupal account %drupal_username because corresponding LDAP entry not found', ['%drupal_username' => $drupal_username]);
+      return FALSE;
+    }
+
+    $persistent_uid = $ldap_server->derivePuidFromLdapResponse($this->ldapEntry);
+    if (!empty($persistent_uid)) {
+      $this->account->set('ldap_user_puid', $persistent_uid);
+    }
+    $this->account->set('ldap_user_puid_property', $ldap_server->getUniquePersistentAttribute());
+    $this->account->set('ldap_user_puid_sid', $ldap_server->id());
+    $this->account->set('ldap_user_current_dn', $this->ldapEntry->getDn());
+    $this->account->set('ldap_user_last_checked', time());
+    $this->account->set('ldap_user_ldap_exclude', 0);
+    $this->saveAccount();
+    $this->externalAuth->save($this->account, 'ldap_user', $this->account->getAccountName());
+
+    return TRUE;
   }
 
   /**
@@ -319,11 +321,10 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
    * @param array $user_data
    *   A keyed array normally containing 'name' and optionally more.
    *
-   * @return bool|\Drupal\user\Entity\User
-   *   Return the user on success or FALSE on any problem.
+   * @return bool
+   *   Whether creation was a success.
    */
-  public function createDrupalUserFromLdapEntry(array $user_data) {
-
+  public function createDrupalUserFromLdapEntry(array $user_data): bool {
     $this->account = $this->entityTypeManager
       ->getStorage('user')
       ->create($user_data);
@@ -335,7 +336,8 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
     // Get an LDAP user from the LDAP server.
     if ($this->config->get('drupalAcctProvisionServer')) {
       $this->ldapUserManager->setServer($this->server);
-      $this->ldapEntry = $this->ldapUserManager->getUserDataByIdentifier($this->account->getAccountName());
+      $this->ldapEntry = $this->ldapUserManager
+        ->getUserDataByIdentifier($this->account->getAccountName());
     }
 
     if (!$this->ldapEntry) {
@@ -381,8 +383,10 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
    * @return bool
    *   TRUE on success, FALSE on error or failure because of invalid user.
    */
-  public function ldapExcludeDrupalAccount($drupalUsername) {
-    $account = $this->entityTypeManager->getStorage('user')->load($drupalUsername);
+  public function ldapExcludeDrupalAccount(string $drupalUsername): bool {
+    $account = $this->entityTypeManager
+      ->getStorage('user')
+      ->load($drupalUsername);
     if (!$account) {
       $this->logger->error('Failed to exclude user from LDAP association because Drupal account %username was not found', ['%username' => $drupalUsername]);
       return FALSE;
@@ -391,35 +395,6 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
     $account->set('ldap_user_ldap_exclude', 1);
     $account->save();
     return (boolean) $account;
-  }
-
-  /**
-   * Test if the user is LDAP associated.
-   *
-   * @param \Drupal\user\UserInterface $account
-   *   The Drupal user.
-   *
-   * @return bool
-   *   Whether the user is LDAP associated.
-   */
-  public function isUserLdapAssociated(UserInterface $account): bool {
-
-    $associated = FALSE;
-
-    if (
-      property_exists($account, 'ldap_user_current_dn')
-      && !empty($account->get('ldap_user_current_dn')->value)
-    ) {
-      $associated = TRUE;
-    }
-    elseif (
-      $account->id()
-      && $this->externalAuth->get($account->id(), 'ldap_user')
-    ) {
-      $associated = TRUE;
-    }
-
-    return $associated;
   }
 
   /**
@@ -454,7 +429,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
     $triggers = $this->config->get('drupalAcctProvisionTriggers');
     $server = $this->config->get('drupalAcctProvisionServer');
 
-    if ($server && \in_array(self::PROVISION_DRUPAL_USER_ON_USER_AUTHENTICATION, $triggers, TRUE)) {
+    if ($server && in_array(self::PROVISION_DRUPAL_USER_ON_USER_AUTHENTICATION, $triggers, TRUE)) {
       $this->syncToDrupalAccount();
     }
 
@@ -522,8 +497,8 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
   /**
    * Process user picture from LDAP entry.
    *
-   * @return array
-   *   Drupal file object image user's thumbnail or FALSE if none present or
+   * @return array|null
+   *   Drupal file object image user's thumbnail or NULL if none present or
    *   an error occurs.
    */
   private function userPictureFromLdapEntry(): ?array {
@@ -732,7 +707,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
    * @param string $event
    *   Provisioning event.
    */
-  private function setLdapBaseFields($event): void {
+  private function setLdapBaseFields(string $event): void {
     // Basic $user LDAP fields.
     if ($this->fieldProvider->attributeIsSyncedOnEvent('[property.name]', $event)) {
       $this->account->set('name', $this->server->deriveUsernameFromLdapResponse($this->ldapEntry));
@@ -777,11 +752,8 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
    * @param string $event
    *   Provisioning event.
    */
-  private function setUserDefinedMappings($event): void {
+  private function setUserDefinedMappings(string $event): void {
     $mappings = $this->fieldProvider->getConfigurableAttributesSyncedOnEvent($event);
-
-    // Reset the tokens to avoid mixed user data.
-    $this->tokenProcessor->resetTokens();
 
     foreach ($mappings as $key => $mapping) {
       // If "convert from binary is selected" and no particular method is in
@@ -807,27 +779,32 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
   /**
    * Parse user attribute names.
    *
-   * @param string $user_attr_key
+   * @param string $user_attribute_key
    *   A string in the form of <attr_type>.<attr_name>[:<instance>] such as
    *   field.lname, property.mail, field.aliases:2.
    *
    * @return array
-   *   An array such as array('field','field_user_lname', NULL).
+   *   An array such as [field, 'field_user_lname'].
    */
-  private function parseUserAttributeNames(string $user_attr_key): array {
+  private function parseUserAttributeNames(string $user_attribute_key): array {
+    $type = '';
+    $name = '';
     // Make sure no [] are on attribute.
-    $user_attr_key = trim($user_attr_key, '[]');
-    $parts = explode('.', $user_attr_key);
-    $attr_type = $parts[0];
-    $attr_name = $parts[1] ?? FALSE;
+    $user_attribute_key = trim($user_attribute_key, '[]');
+    $parts = explode('.', $user_attribute_key);
+    if ($parts !== FALSE) {
+      $type = $parts[0];
+      $name = $parts[1] ?? '';
 
-    if ($attr_name) {
-      $attr_name_parts = explode(':', $attr_name);
-      if (isset($attr_name_parts[1])) {
-        $attr_name = $attr_name_parts[0];
+      if ($name) {
+        // Remove everything after the colon (could be simplified).
+        $name_parts = explode(':', $name);
+        if ($name_parts !== FALSE && isset($name_parts[1])) {
+          $name = $name_parts[0];
+        }
       }
     }
-    return [$attr_type, $attr_name];
+    return [$type, $name];
   }
 
   /**

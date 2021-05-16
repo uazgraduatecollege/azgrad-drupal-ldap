@@ -159,12 +159,12 @@ class OrphanProcessor {
       // To avoid query limits, queries are batched by the limit, for example
       // with 175 users and a limit of 30, 6 batches are run.
       $batches = floor(count($uids) / $this->ldapQueryOrLimit) + 1;
-      $queriedUsers = [];
+      $batchResults = [];
       for ($batch = 1; $batch <= $batches; $batch++) {
-        $queriedUsers = array_merge($queriedUsers, $this->batchQueryUsers($batch, $uids));
+        $batchResults[] = $this->batchQueryUsers($batch, $uids);
       }
 
-      $this->processOrphanedAccounts($queriedUsers);
+      $this->processOrphanedAccounts(array_merge(...$batchResults));
 
       if (count($this->emailList) > 0) {
         $this->sendOrphanedAccountsMail();
@@ -269,14 +269,16 @@ class OrphanProcessor {
     // configured for checking has lapsed.
     $lastUidChecked = $this->state->get('ldap_user_cron_last_uid_checked', 1);
 
-    $query = $this->entityTypeManager->getStorage('user')->getQuery()
+    $query = $this->entityTypeManager->getStorage('user')
+      ->getQuery()
+      ->accessCheck(FALSE)
       ->exists('ldap_user_current_dn')
       ->exists('ldap_user_puid_property')
       ->exists('ldap_user_puid_sid')
       ->exists('ldap_user_puid')
       ->condition('uid', $lastUidChecked, '>')
       ->condition('status', 1)
-      ->sort('uid', 'ASC')
+      ->sort('uid')
       ->range(0, $this->configLdapUser->get('orphanedCheckQty'));
 
     $group = $query->orConditionGroup();

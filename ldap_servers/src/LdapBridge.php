@@ -28,14 +28,14 @@ class LdapBridge implements LdapBridgeInterface {
   /**
    * Bind DN.
    *
-   * @var string
+   * @var string|null
    */
   protected $bindDn;
 
   /**
    * Bind PW.
    *
-   * @var string
+   * @var string|null
    */
   protected $bindPw;
 
@@ -68,9 +68,13 @@ class LdapBridge implements LdapBridgeInterface {
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   Entity type manager.
    */
-  public function __construct(LoggerInterface $logger, EntityTypeManagerInterface $entity_type_manager) {
+  public function __construct(
+    LoggerInterface $logger,
+    EntityTypeManagerInterface $entity_type_manager
+  ) {
     $this->logger = $logger;
-    $this->entityManager = $entity_type_manager->getStorage('ldap_server');
+    $this->entityManager = $entity_type_manager
+      ->getStorage('ldap_server');
   }
 
   /**
@@ -109,7 +113,6 @@ class LdapBridge implements LdapBridgeInterface {
    * {@inheritdoc}
    */
   public function bind(): bool {
-
     if (
       $this->bindMethod === 'anon' ||
       ($this->bindMethod === 'anon_user' && !CredentialsStorage::validateCredentials())
@@ -128,7 +131,7 @@ class LdapBridge implements LdapBridgeInterface {
         $password = CredentialsStorage::getPassword();
       }
 
-      if ($password === '' || $userDn === '') {
+      if (empty($password) || empty($userDn)) {
         $this->logger->notice('LDAP bind failure due to missing credentials for user userdn=%userdn', [
           '%userdn' => $userDn,
         ]);

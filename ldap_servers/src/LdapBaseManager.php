@@ -219,6 +219,7 @@ abstract class LdapBaseManager {
       'filter' => $attributes,
     ];
 
+    $results = [];
     foreach ($this->server->getBaseDn() as $base_dn) {
       $relative_filter = str_replace(',' . $base_dn, '', $filter);
       try {
@@ -232,11 +233,11 @@ abstract class LdapBaseManager {
       }
 
       if ($ldap_response->count() > 0) {
-        $all_entries = array_merge($all_entries, $ldap_response->toArray());
+        $results[] = $ldap_response->toArray();
       }
     }
 
-    return $all_entries;
+    return array_merge(...$results);
   }
 
   /**

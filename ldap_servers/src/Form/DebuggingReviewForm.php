@@ -216,11 +216,11 @@ class DebuggingReviewForm extends FormBase {
           $vpat = '<info>([^<]+)<\/info>';
           $vpat3 = "/$vpat\s*$vpat\s*$vpat/";
           $vpat2 = "/$vpat\s*$vpat/";
-          // 3cols.
+          // 3 columns.
           if (preg_match($vpat3, $vone, $vmat)) {
             $vmodules[$vname][trim($vmat[1])] = [trim($vmat[2]), trim($vmat[3])];
           }
-          // 2cols.
+          // 2 columns.
           elseif (preg_match($vpat2, $vone, $vmat)) {
             $vmodules[$vname][trim($vmat[1])] = trim($vmat[2]);
           }

@@ -355,11 +355,14 @@ class ServerTestForm extends EntityForm {
     }
 
     if ($ldap_entry) {
-      $desired_attributes = [];
+      $desired_attributes = '';
       foreach (array_keys($ldap_entry->getAttributes()) as $attribute) {
-        $desired_attributes[] = sprintf('[%s]', $attribute);
+        $desired_attributes .= sprintf('[%s]', $attribute);
       }
-      $this->tokenProcessor->tokenizeLdapEntry($ldap_entry, $desired_attributes);
+      $this->tokenProcessor->ldapEntryReplacementsForDrupalAccount(
+          $ldap_entry,
+          $desired_attributes
+        );
     }
 
     foreach ($this->tokenProcessor->getTokens() as $key => $value) {

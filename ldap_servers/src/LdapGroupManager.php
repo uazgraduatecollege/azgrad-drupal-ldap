@@ -8,6 +8,7 @@ use Drupal\ldap_servers\Helper\ConversionHelper;
 use Symfony\Component\Ldap\Adapter\CollectionInterface;
 use Symfony\Component\Ldap\Entry;
 use Symfony\Component\Ldap\Exception\LdapException;
+use function in_array;
 
 /**
  * LDAP Group Manager.
@@ -30,7 +31,8 @@ class LdapGroupManager extends LdapBaseManager {
    *   Whether group memberships from group entry are configured.
    */
   public function groupGroupEntryMembershipsConfigured(): bool {
-    return $this->server->get('grp_memb_attr_match_user_attr') && $this->server->get('grp_memb_attr');
+    return $this->server->get('grp_memb_attr_match_user_attr') &&
+      $this->server->get('grp_memb_attr');
   }
 
   /**
@@ -117,7 +119,7 @@ class LdapGroupManager extends LdapBaseManager {
       $this->ldap->getEntryManager()->add($entry);
     }
     catch (LdapException $e) {
-      $this->logger->error("LDAP server %id exception: %ldap_error", [
+      $this->logger->error('LDAP server %id exception: %ldap_error', [
         '%id' => $this->server->id(),
         '%ldap_error' => $e->getMessage(),
       ]
@@ -375,11 +377,18 @@ class LdapGroupManager extends LdapBaseManager {
    *   Current level of recursion.
    * @param int $max_levels
    *   Maximum number of recursion levels allowed.
-   * @param bool|array $object_classes
+   * @param array|null $object_classes
    *   You can set the object class evaluated for recursion here, otherwise
    *   derived from group configuration.
    */
-  public function groupMembersRecursive(array $entries, array &$all_member_dns, array $tested_group_dns, int $level, int $max_levels, $object_classes = FALSE): void {
+  public function groupMembersRecursive(
+    array $entries,
+    array &$all_member_dns,
+    array $tested_group_dns,
+    int $level,
+    int $max_levels,
+    $object_classes = NULL
+  ): void {
     if (!$this->checkAvailability()) {
       return;
     }
@@ -389,15 +398,15 @@ class LdapGroupManager extends LdapBaseManager {
     }
 
     foreach ($entries as $entry) {
-      // 1.  Add entry itself if of the correct type to $all_member_dns.
+      // Add entry itself if of the correct type to $all_member_dns.
+      $lowercased_object_class = array_map('strtolower', array_values($entry->getAttribute('objectClass', FALSE)));
+      $object_is_group = in_array($this->server->get('grp_object_cat'), $lowercased_object_class, TRUE);
       $object_class_match = !$object_classes || count(array_intersect(array_values($entry->getAttribute('objectClass', FALSE)), $object_classes)) > 0;
-      $object_is_group = in_array($this->server->get('grp_object_cat'), array_map('strtolower', array_values($entry->getAttribute('objectClass', FALSE))), TRUE);
-      // Add member.
       if ($object_class_match && !in_array($entry->getDn(), $all_member_dns, TRUE)) {
         $all_member_dns[] = $entry->getDn();
       }
 
-      // 2. If its a group, keep recurse the group for descendants.
+      // If its a group, keep recurse the group for descendants.
       if ($object_is_group && $level < $max_levels) {
         if ($this->server->get('grp_memb_attr_match_user_attr') === 'dn') {
           $group_id = $entry->getDn();
@@ -434,7 +443,14 @@ class LdapGroupManager extends LdapBaseManager {
               ]
             );
             if (!empty($child_member_entries)) {
-              $this->groupMembersRecursive($child_member_entries, $all_member_dns, $tested_group_dns, $level + 1, $max_levels, $object_classes);
+              $this->groupMembersRecursive(
+                $child_member_entries,
+                $all_member_dns,
+                $tested_group_dns,
+                $level + 1,
+                $max_levels,
+                $object_classes
+              );
             }
           }
         }
@@ -652,8 +668,14 @@ class LdapGroupManager extends LdapBaseManager {
           continue;
         }
 
-        if ($ldap_result->count() > 0 && $level < $max_levels) {
-          $this->groupMembershipsFromEntryRecursive($ldap_result, $all_group_dns, $tested_group_ids, $level + 1, $max_levels);
+        if ($level < $max_levels && $ldap_result->count() > 0) {
+          $this->groupMembershipsFromEntryRecursive(
+            $ldap_result,
+            $all_group_dns,
+            $tested_group_ids,
+            $level + 1,
+            $max_levels
+          );
         }
       }
     }
@@ -737,7 +759,7 @@ class LdapGroupManager extends LdapBaseManager {
     $rdn_values = [];
     foreach ($pairs as $p) {
       $pair = explode('=', $p);
-      if (mb_strtolower(trim($pair[0])) === $rdn) {
+      if ($pair !== FALSE && mb_strtolower(trim($pair[0])) === $rdn) {
         $rdn_values[] = ConversionHelper::unescapeDnValue(trim($pair[1]));
         break;
       }

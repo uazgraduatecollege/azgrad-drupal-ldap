@@ -400,19 +400,20 @@ class LdapAuthenticationAdminForm extends ConfigFormBase {
    * @return array
    *   Deserialized content.
    */
-  public static function linesToArray($lines) {
+  public static function linesToArray(string $lines): array {
     $lines = trim($lines);
+    $splitLines = [];
 
     if ($lines) {
-      $array = preg_split('/[\n\r]+/', $lines);
-      foreach ($array as $i => $value) {
-        $array[$i] = trim($value);
+      $splitLines = preg_split('/[\n\r]+/', $lines);
+      if ($splitLines !== FALSE) {
+        foreach ($splitLines as $i => $value) {
+          $splitLines[$i] = trim($value);
+        }
       }
     }
-    else {
-      $array = [];
-    }
-    return $array;
+
+    return $splitLines;
   }
 
 }

@@ -60,14 +60,7 @@ class TokenProcessor {
    *
    * @var array
    */
-  public $tokens = [];
-
-  /**
-   * Requested tokens.
-   *
-   * @var array
-   */
-  private $requestedTokens = [];
+  private $tokens = [];
 
   /**
    * {@inheritdoc}
@@ -91,7 +84,9 @@ class TokenProcessor {
    * @see \Drupal\ldap_user\EventSubscriber\LdapEntryProvisionSubscriber::fetchDrupalAttributeValue()
    */
   public function ldapEntryReplacementsForDrupalAccount(Entry $resource, string $text): string {
-    // Greedy matching of gropgs of [], ignore spaces and trailing data with /x.
+    // Reset since service can be reused in multi-user processors.
+    $this->tokens = [];
+    // Greedy matching of groups of [], ignore spaces and trailing data with /x.
     preg_match_all('/\[([^\[\]]*)\]/x', $text, $matches);
     if (!isset($matches[1]) || empty($matches[1])) {
       // If no tokens exist in text, return text itself.
@@ -120,7 +115,7 @@ class TokenProcessor {
    * @param array $required_tokens
    *   Tokens requested.
    */
-  public function tokenizeLdapEntry(Entry $ldap_entry, array $required_tokens): void {
+  private function tokenizeLdapEntry(Entry $ldap_entry, array $required_tokens): void {
     if (empty($ldap_entry->getAttributes())) {
       $this->detailLog->log(
         'Skipped tokenization of LDAP entry because no LDAP entry provided when called from %calling_function.', [
@@ -188,18 +183,13 @@ class TokenProcessor {
   /**
    * Get Tokens.
    *
+   * Convenience helper for ServerTestForm.
+   *
    * @return array
    *   Tokens.
    */
   public function getTokens(): array {
     return $this->tokens;
-  }
-
-  /**
-   * Reset the tokens.
-   */
-  public function resetTokens(): void {
-    $this->tokens = [];
   }
 
   /**
@@ -216,6 +206,11 @@ class TokenProcessor {
     [$token_key, $conversion] = explode(';', $required_token . ';');
 
     $parts = explode(':', $token_key);
+
+    if ($parts === FALSE) {
+      return;
+    }
+
     $requested_name = $parts[0];
     $requested_index = $parts[1] ?? 0;
 
@@ -232,7 +227,7 @@ class TokenProcessor {
 
     if ($requested_index === 'last') {
       $i = count($values) > 0 ? count($values) - 1 : 0;
-      $value = $values[$i];
+      $value = $values[(int) $i];
     }
     else {
       $value = $values[$requested_index] ?? NULL;

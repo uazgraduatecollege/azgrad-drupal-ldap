@@ -386,7 +386,7 @@ class LdapEntryProvisionSubscriber implements EventSubscriberInterface, LdapUser
    * @return string
    *   Password.
    */
-  private function fetchDrupalAccountPassword($attribute_name) {
+  private function fetchDrupalAccountPassword($attribute_name): string {
     $value = '';
     switch ($attribute_name) {
 
@@ -403,7 +403,7 @@ class LdapEntryProvisionSubscriber implements EventSubscriberInterface, LdapUser
         else {
           $generated = user_password();
         }
-        $value = ($pwd) ? $pwd : $generated;
+        $value = $pwd ?: $generated;
         break;
 
       case 'random':

@@ -8,7 +8,7 @@ namespace Drupal\ldap_servers\Helper;
  * Temporarily stores credentials from user input.
  *
  * This temporary storage is required so that LDAP can work with them in the
- * clear indepedent of the login form process and to avoid passend them
+ * clear independent of the login form process and to avoid passing them
  * around dozens of functions.
  */
 class CredentialsStorage {
