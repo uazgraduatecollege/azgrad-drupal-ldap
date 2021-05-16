@@ -211,7 +211,10 @@ class OrphanProcessor {
    * Send email.
    */
   public function sendOrphanedAccountsMail(): void {
-    $to = $this->configFactory->get('system.site')->get('mail');
+    $to = $this->configLdapUser->get('orphanedDrupalAcctReportingInbox');
+    if (empty($to)) {
+      $to = $this->configFactory->get('system.site')->get('mail');
+    }
     $siteLanguage = $this->languageManager->getCurrentLanguage()->getId();
     $params = ['accounts' => $this->emailList];
     $result = $this->mailManager->mail('ldap_user', 'orphaned_accounts', $to, $siteLanguage, $params, NULL, TRUE);

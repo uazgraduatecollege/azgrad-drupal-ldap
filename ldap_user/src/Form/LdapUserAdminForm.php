@@ -209,6 +209,21 @@ class LdapUserAdminForm extends LdapUserBaseForm {
       '#description' => $this->t('It is highly recommended to fetch an email report first before attempting to disable or even delete users.'),
     ];
 
+    $form['basic_to_drupal']['orphanedAccounts']['orphanedDrupalAcctReportingInbox'] = [
+      '#type' => 'email',
+      '#title' => $this->t('Report recipient email address'),
+      '#default_value' => $config->get('orphanedDrupalAcctReportingInbox'),
+      '#placeholder' => $this->config('system.site')->get('mail'),
+      '#description' => $this->t('The email address to report orphaned accounts to. (Defaults to site-wide email address.)'),
+      '#states' => [
+        'invisible' => [
+          ':input[name=orphanedDrupalAcctBehavior]' => [
+            'value' => 'ldap_user_orphan_do_not_check',
+          ],
+        ],
+      ],
+    ];
+
     $form['basic_to_drupal']['orphanedAccounts']['orphanedCheckQty'] = [
       '#type' => 'textfield',
       '#size' => 10,
@@ -283,6 +298,7 @@ class LdapUserAdminForm extends LdapUserBaseForm {
       ->set('userUpdateCronQuery', $form_state->getValue('userUpdateCronQuery'))
       ->set('userUpdateCronInterval', $form_state->getValue('userUpdateCronInterval'))
       ->set('orphanedDrupalAcctBehavior', $form_state->getValue('orphanedDrupalAcctBehavior'))
+      ->set('orphanedDrupalAcctReportingInbox', $form_state->getValue('orphanedDrupalAcctReportingInbox'))
       ->set('orphanedCheckQty', $form_state->getValue('orphanedCheckQty'))
       ->set('orphanedAccountCheckInterval', $form_state->getValue('orphanedAccountCheckInterval'))
       ->set('userConflictResolve', $form_state->getValue('userConflictResolve'))

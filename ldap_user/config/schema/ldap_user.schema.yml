@@ -22,6 +22,9 @@ ldap_user.settings:
     orphanedDrupalAcctBehavior:
       label: 'orphanedDrupalAcctBehavior'
       type: string
+    orphanedDrupalAcctReportingInbox:
+      label: 'orphanedDrupalAcctReportingInbox'
+      type: string
     orphanedCheckQty:
       label: 'orphanedCheckQty'
       type: integer
