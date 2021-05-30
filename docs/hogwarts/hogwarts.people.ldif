@@ -2666,7 +2666,7 @@ objectClass: organizationalPerson
 objectClass: person
 objectClass: inetOrgPerson
 objectClass: top
-cn: Test
+cn: tażółćgęśląjaźń
 sn: Ażółćgęśląjaźń
 businessCategory: instructor
 businessCategory: college director
