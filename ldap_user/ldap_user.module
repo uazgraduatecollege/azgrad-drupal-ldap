@@ -414,3 +414,35 @@ function ldap_user_form_register_form_submit2(&$form, FormState $form_state) {
   }
 
 }
+
+/**
+ * Implements hook_entity_base_field_info_alter().
+ */
+function ldap_user_entity_base_field_info_alter(&$fields, EntityTypeInterface $entity_type) {
+  if ($entity_type->id() !== 'user') {
+    return;
+  }
+
+  $field_names = ['pass', 'mail'];
+  foreach ($field_names as $field_name) {
+    /** @var BaseFieldDefinition $field */
+    $field = $fields[$field_name];
+    $constraints = $field->getConstraints();
+    $new_constraints = [];
+
+    // Replaces the core constraint on user fields with an LDAP-specific one
+    // to allow for updating mail and pass.
+    $changed = FALSE;
+    foreach ($constraints as $name => $options) {
+      if ($name === 'ProtectedUserField') {
+        $name = 'LdapProtectedUserField';
+        $changed = TRUE;
+      }
+      $new_constraints[$name] = $options;
+    }
+
+    if ($changed) {
+      $field->setConstraints($new_constraints);
+    }
+  }
+}
