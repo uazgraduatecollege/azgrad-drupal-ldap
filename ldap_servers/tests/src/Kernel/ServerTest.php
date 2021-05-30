@@ -113,6 +113,22 @@ class ServerTest extends KernelTestBase {
   }
 
   /**
+   * Test non-latin DN.
+   */
+  public function testNonLatinDn(): void {
+
+    $this->server->set('account_name_attr', '');
+    $this->server->set('user_attr', 'cn');
+    $this->server->set('mail_attr', 'mail');
+    $this->server->set('unique_persistent_attr', 'guid');
+
+    $userOpenLdap = new Entry('cn=zażółćgęśląjaźń,ou=people,dc=hogwarts,dc=edu', [
+      'cn' => [0 => 'zażółćgęśląjaźń'],
+    ]);
+    self::assertEquals('zażółćgęśląjaźń', $this->server->deriveUsernameFromLdapResponse($userOpenLdap));
+  }
+
+  /**
    * Test remaining getters.
    */
   public function testGetters(): void {
