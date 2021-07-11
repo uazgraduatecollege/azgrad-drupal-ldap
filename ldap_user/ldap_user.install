@@ -294,3 +294,25 @@ function ldap_user_update_8401() {
     \Drupal::service('module_installer')->install(['ldap_query']);
   }
 }
+
+/**
+ * Update base fields.
+ */
+function ldap_user_update_8402() {
+  $manager = \Drupal::entityDefinitionUpdateManager();
+
+  $fields = [
+    'ldap_user_puid_sid',
+    'ldap_user_puid',
+    'ldap_user_puid_property',
+    'ldap_user_current_dn',
+    'ldap_user_prov_entries',
+    'ldap_user_last_checked',
+    'ldap_user_ldap_exclude',
+  ];
+
+  foreach ($fields as $field) {
+    $field_storage_definition = $manager->getFieldStorageDefinition($field, 'user');
+    $manager->updateFieldStorageDefinition($field_storage_definition);
+  }
+}
