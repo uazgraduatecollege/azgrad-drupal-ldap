@@ -410,12 +410,21 @@ abstract class LoginValidatorBase implements LdapUserAttributesInterface, LoginV
    *   Response text.
    */
   protected function additionalDebuggingResponse(int $authenticationResult): TranslatableMarkup {
-    $information = $this->t('(unknown issue)');
-    if ($authenticationResult === self::AUTHENTICATION_FAILURE_FIND) {
-      $information = $this->t('(not found)');
-    }
-    elseif ($authenticationResult === self::AUTHENTICATION_FAILURE_CREDENTIALS) {
-      $information = $this->t('(wrong credentials)');
+    switch ($authenticationResult) {
+      case self::AUTHENTICATION_FAILURE_FIND:
+        $information = $this->t('(not found)');
+        break;
+
+      case self::AUTHENTICATION_FAILURE_CREDENTIALS:
+        $information = $this->t('(wrong credentials)');
+        break;
+
+      case self::AUTHENTICATION_SUCCESS:
+        $information = $this->t('(no issue)');
+        break;
+
+      default:
+        $information = $this->t('(unknown issue)');
     }
     return $information;
   }
