@@ -119,9 +119,9 @@ function ldap_servers_update_8401() {
  */
 function ldap_servers_update_8402() {
   $config_factory = \Drupal::configFactory();
-  $config_old = $config_factory->getEditable('ldap_servers.settings');
+  $config_old = $config_factory->getEditable('ldap_help.settings');
   if ($config_old) {
-    $config_new = $config_factory->getEditable('ldap_help.settings');
+    $config_new = $config_factory->getEditable('ldap_servers.settings');
     $config_new->set('watchdog_detail', $config_old->get('watchdog_detail'));
     $config_new->save();
     $config_old->delete();
