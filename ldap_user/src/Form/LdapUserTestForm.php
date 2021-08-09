@@ -173,12 +173,12 @@ class LdapUserTestForm extends FormBase implements LdapUserAttributesInterface {
     $user_ldap_entry = FALSE;
 
     if ($config['drupalAcctProvisionServer']) {
-      $this->ldapUserManager->setServer($config['drupalAcctProvisionServer']);
+      $this->ldapUserManager->setServerById($config['drupalAcctProvisionServer']);
       $user_ldap_entry = $this->ldapUserManager->getUserDataByIdentifier($username);
     }
     if ($config['ldapEntryProvisionServer']) {
       if (!$user_ldap_entry) {
-        $this->ldapUserManager->setServer($config['ldapEntryProvisionServer']);
+        $this->ldapUserManager->setServerById($config['ldapEntryProvisionServer']);
         $user_ldap_entry = $this->ldapUserManager->getUserDataByIdentifier($username);
       }
     }
@@ -250,16 +250,16 @@ class LdapUserTestForm extends FormBase implements LdapUserAttributesInterface {
    *
    * This is overall, not a per field syncing configuration.
    *
-   * @param int $direction
+   * @param string $direction
    *   self::PROVISION_TO_DRUPAL or self::PROVISION_TO_LDAP.
-   * @param int $provision_trigger
+   * @param string $provision_trigger
    *   Provision trigger, see events above, such as 'sync', 'provision',
    *   'delete_ldap_entry', 'delete_drupal_entry', 'cancel_drupal_entry'.
    *
    * @return bool
    *   Provisioning enabled.
    */
-  private function provisionEnabled(int $direction, int $provision_trigger): bool {
+  private function provisionEnabled(string $direction, string $provision_trigger): bool {
     $result = FALSE;
 
     $config = $this->configFactory()->get('ldap_user.settings');
