@@ -376,14 +376,26 @@ function ldap_user_form_register_form_validate($form, FormStateInterface $form_s
 
   // If a conflict with an LDAP account exists (no association), throw error.
   if ($form_state->getValue('ldap_user_association') === LdapUserAttributesInterface::MANUAL_ACCOUNT_CONFLICT_REJECT) {
-    $ldap_user_manager->setServerById($config->get('drupalAcctProvisionServer'));
-    $ldap_user = $ldap_user_manager->getUserDataByIdentifier($form_state->getValue('name'));
-    if ($ldap_user) {
-      $form_state->setErrorByName(
-        'name', t(
-          'User %name conflicts with an LDAP Entry (%dn). Creation blocked per your configuration.',
-          ['%dn' => $ldap_user->getDn(), '%name' => $form_state->getValue('name')])
-      );
+    // @todo The behavior of what to do with missing provisioning server in the
+    //   validation check cases is mostly undefined. Ideally we'd prevent such
+    //   a setup from occurring, or at least behaving more consistently.
+    if ($config->get('drupalAcctProvisionServer')) {
+      $ldap_user_manager->setServerById($config->get('drupalAcctProvisionServer'));
+      $ldap_user = $ldap_user_manager->getUserDataByIdentifier($form_state->getValue('name'));
+      if ($ldap_user) {
+        $form_state->setErrorByName(
+          'name', t(
+            'User %name conflicts with an LDAP Entry (%dn). Creation blocked per your configuration.',
+            [
+              '%dn' => $ldap_user->getDn(),
+              '%name' => $form_state->getValue('name'),
+            ])
+        );
+      }
+    }
+    else {
+      \Drupal::logger('ldap_user')
+        ->notice('No server available for provisioning to Drupal, conflict rejection has no effect.');
     }
   }
 }
