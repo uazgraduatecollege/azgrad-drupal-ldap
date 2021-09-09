@@ -67,8 +67,8 @@ class LdapEntryProvisionTest extends KernelTestBase {
     $server->save();
     $this->config('ldap_user.settings')
       ->set('ldapEntryProvisionTriggers', [
-        LdapEntryProvisionSubscriber::EVENT_CREATE_LDAP_ENTRY,
-        LdapEntryProvisionSubscriber::EVENT_SYNC_TO_LDAP_ENTRY,
+        LdapUserAttributesInterface::EVENT_CREATE_LDAP_ENTRY,
+        LdapUserAttributesInterface::EVENT_SYNC_TO_LDAP_ENTRY,
       ])
       ->set('ldapEntryProvisionServer', $server->id())
       ->set('ldapUserSyncMappings', [
@@ -88,7 +88,6 @@ class LdapEntryProvisionTest extends KernelTestBase {
       ])
       ->save();
 
-    // @todo Replace bridge with FakeBridge.
     $fake_bridge = new FakeBridge(
       $this->container->get('logger.channel.ldap_user'),
       $this->container->get('entity_type.manager')
@@ -135,7 +134,7 @@ class LdapEntryProvisionTest extends KernelTestBase {
       ->get('ldapEntryProvisionServer'));
     $this->invokeNonPublic('loadServer', []);
     /** @var \Symfony\Component\Ldap\Entry $entry */
-    $entry = $this->invokeNonPublic('buildLdapEntry', [LdapEntryProvisionSubscriber::EVENT_CREATE_LDAP_ENTRY]);
+    $entry = $this->invokeNonPublic('buildLdapEntry', [LdapUserAttributesInterface::EVENT_CREATE_LDAP_ENTRY]);
     $tokens = $this->subscriber->getTokens();
     self::assertEquals($user->getEmail(), $tokens['[property.mail]']);
     self::assertEquals($user->getEmail(), $entry->getAttribute('mail', FALSE)[0]);

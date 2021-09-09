@@ -63,7 +63,7 @@ function ldap_user_update_8301(&$sandbox) {
     $authmap->save($account, 'ldap_user', $identity->identifier);
 
     // Delete the row if successful.
-    $connection->query("DELETE FROM {ldap_user_identities} WHERE aid = :aid", [':aid' => $identity->aid]);
+    $connection->query('DELETE FROM {ldap_user_identities} WHERE aid = :aid', [':aid' => $identity->aid]);
 
     $sandbox['results'][] = $identity->aid . ' : ' . Html::escape($identity->identifier);
     $sandbox['progress']++;
@@ -88,7 +88,7 @@ function ldap_user_update_8302(&$sandbox) {
   }
   // Drop the table if it exists.
   try {
-    Database::getConnection()->query("DROP TABLE {ldap_user_identities}");
+    Database::getConnection()->query('DROP TABLE {ldap_user_identities}');
   }
   catch (Exception $e) {
     \Drupal::messenger()->addWarning(t("Couldn't drop the table 'ldap_user_identities'. Maybe it's been dropped already?"));

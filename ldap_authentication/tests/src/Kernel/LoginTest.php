@@ -145,7 +145,7 @@ class LoginTest extends KernelTestBase {
   /**
    * Test exclusive user mode.
    */
-  public function testExclusiveUserMode() {
+  public function testExclusiveUserMode(): void {
     $this->markTestIncomplete('Test missing.');
     // @todo Write test
     // assert right credentials LDAP
@@ -156,7 +156,7 @@ class LoginTest extends KernelTestBase {
   /**
    * Test the whitelist.
    */
-  public function testWhiteListPresent() {
+  public function testWhiteListPresent(): void {
     $this->config('ldap_authentication.settings')
       ->set('allowOnlyIfTextInDn', [
         'hpotter',
@@ -177,7 +177,7 @@ class LoginTest extends KernelTestBase {
   /**
    * Test the whitelist.
    */
-  public function testWhiteListMissing() {
+  public function testWhiteListMissing(): void {
     $this->config('ldap_authentication.settings')
       ->set('allowOnlyIfTextInDn', [
         'HGRANGER',

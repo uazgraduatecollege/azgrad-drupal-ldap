@@ -365,12 +365,12 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
     parent::validateRowForm($form, $form_state);
 
     foreach ($form_state->getValues() as $value) {
-      if (isset($value['provider_mappings'])) {
-        if ($value['provider_mappings']['is_regex'] == 1) {
-          if (@preg_match($value['provider_mappings']['query'], '') === FALSE) {
-            $form_state->setErrorByName('mapping', $this->t('Invalid regular expression'));
-          }
-        }
+      if (
+        isset($value['provider_mappings']) &&
+        $value['provider_mappings']['is_regex'] == 1 &&
+        @preg_match($value['provider_mappings']['query'], '') === FALSE
+      ) {
+        $form_state->setErrorByName('mapping', $this->t('Invalid regular expression'));
       }
     }
   }

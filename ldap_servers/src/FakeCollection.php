@@ -32,7 +32,7 @@ class FakeCollection implements CollectionInterface {
   /**
    * {@inheritdoc}
    */
-  public function toArray() {
+  public function toArray(): array {
     return (array) $this->result;
   }
 
@@ -46,7 +46,7 @@ class FakeCollection implements CollectionInterface {
   /**
    * {@inheritdoc}
    */
-  public function offsetExists($offset) {
+  public function offsetExists($offset): bool {
     return $this->result->offsetExists($offset);
   }
 
@@ -60,21 +60,21 @@ class FakeCollection implements CollectionInterface {
   /**
    * {@inheritdoc}
    */
-  public function offsetSet($offset, $value) {
+  public function offsetSet($offset, $value): void {
     $this->result->offsetSet($offset, $value);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function offsetUnset($offset) {
+  public function offsetUnset($offset): void {
     $this->result->offsetUnset($offset);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function count() {
+  public function count(): int {
     return $this->result->count();
   }
 

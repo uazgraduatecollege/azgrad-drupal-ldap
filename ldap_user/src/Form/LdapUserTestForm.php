@@ -65,7 +65,7 @@ class LdapUserTestForm extends FormBase implements LdapUserAttributesInterface {
   /**
    * {@inheritdoc}
    */
-  public function getFormId() {
+  public function getFormId(): string {
     return 'ldap_user_test_form';
   }
 
@@ -109,7 +109,7 @@ class LdapUserTestForm extends FormBase implements LdapUserAttributesInterface {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container) {
+  public static function create(ContainerInterface $container): LdapUserTestForm {
     return new static(
       $container->get('request_stack'),
       $container->get('ldap.user_manager'),
@@ -176,11 +176,9 @@ class LdapUserTestForm extends FormBase implements LdapUserAttributesInterface {
       $this->ldapUserManager->setServerById($config['drupalAcctProvisionServer']);
       $user_ldap_entry = $this->ldapUserManager->getUserDataByIdentifier($username);
     }
-    if ($config['ldapEntryProvisionServer']) {
-      if (!$user_ldap_entry) {
-        $this->ldapUserManager->setServerById($config['ldapEntryProvisionServer']);
-        $user_ldap_entry = $this->ldapUserManager->getUserDataByIdentifier($username);
-      }
+    if ($config['ldapEntryProvisionServer'] && !$user_ldap_entry) {
+      $this->ldapUserManager->setServerById($config['ldapEntryProvisionServer']);
+      $user_ldap_entry = $this->ldapUserManager->getUserDataByIdentifier($username);
     }
     $results = [];
     $results['username'] = $username;

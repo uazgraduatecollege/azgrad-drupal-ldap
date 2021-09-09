@@ -10,7 +10,7 @@ declare(strict_types = 1);
 /**
  * Implements hook_requirements().
  */
-function ldap_servers_requirements($phase) {
+function ldap_servers_requirements($phase): array {
   $requirements = [];
 
   if (version_compare(phpversion(), '7.2.0') < 0) {
@@ -79,7 +79,7 @@ function ldap_servers_update_8301() {
 /**
  * Removes HTTPS checking.
  */
-function ldap_servers_update_8302() {
+function ldap_servers_update_8302(): \Drupal\Core\StringTranslation\TranslatableMarkup {
   $config_factory = \Drupal::configFactory();
   $config = $config_factory->getEditable('ldap_servers.settings');
   $config->delete();
@@ -90,7 +90,7 @@ function ldap_servers_update_8302() {
 /**
  * Adds default timeout to all servers.
  */
-function ldap_servers_update_8303() {
+function ldap_servers_update_8303(): \Drupal\Core\StringTranslation\TranslatableMarkup {
   /** @var \Drupal\Core\Entity\EntityStorageInterface $storage */
   $storage = \Drupal::service('entity_type.manager')->getStorage('ldap_server');
   $servers = $storage->getQuery()->execute();
@@ -112,14 +112,14 @@ function ldap_servers_update_8304() {
 /**
  * Removal of double-escaping.
  */
-function ldap_servers_update_8305() {
+function ldap_servers_update_8305(): \Drupal\Core\StringTranslation\TranslatableMarkup {
   return t('Escaping of field data now relies solely on Twig auto-escaping. If you have created custom code make sure it takes this into account. See https://www.drupal.org/project/ldap/issues/2969097 for details.');
 }
 
 /**
  * Paged search removal.
  */
-function ldap_servers_update_8401() {
+function ldap_servers_update_8401(): \Drupal\Core\StringTranslation\TranslatableMarkup {
   return t('Paged search has been removed in favor of more robust data retrieval. Please retest your configuration if you have used paged search.');
 }
 

@@ -27,8 +27,8 @@ class LdapAuthorizationProviderTest extends UnitTestCase {
    */
   public function setUp(): void {
     $this->providerPlugin = $this->getMockBuilder(LDAPAuthorizationProvider::class)
-      ->disableOriginalConstructor()
       ->setMethods(NULL)
+      ->disableOriginalConstructor()
       ->getMock();
   }
 

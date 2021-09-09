@@ -43,7 +43,7 @@ class OrphanProcessor {
   /**
    * Enabled servers.
    *
-   * @var \Drupal\Core\Entity\EntityInterface[]
+   * @var \Drupal\ldap_servers\ServerInterface[]
    */
   private $enabledServers;
 
@@ -217,7 +217,7 @@ class OrphanProcessor {
     }
     $siteLanguage = $this->languageManager->getCurrentLanguage()->getId();
     $params = ['accounts' => $this->emailList];
-    $result = $this->mailManager->mail('ldap_user', 'orphaned_accounts', $to, $siteLanguage, $params, NULL, TRUE);
+    $result = $this->mailManager->mail('ldap_user', 'orphaned_accounts', $to, $siteLanguage, $params);
     if (!$result) {
       $this->logger->error('Could not send orphaned LDAP accounts notification.');
     }

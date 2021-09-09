@@ -47,8 +47,8 @@ class LdapAuthorizationProviderIntegrationTest extends KernelTestBase {
     $this->installConfig(['field', 'text']);
 
     $this->consumerPlugin = $this->getMockBuilder(DrupalRolesConsumer::class)
-      ->disableOriginalConstructor()
       ->setMethods(NULL)
+      ->disableOriginalConstructor()
       ->getMock();
   }
 

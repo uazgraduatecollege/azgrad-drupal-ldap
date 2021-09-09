@@ -11,7 +11,6 @@ use Drupal\user\Entity\User;
 /**
  * Tests for the DrupalUserProcessor.
  *
- * @coversDefaultClass \Drupal\ldap_user\Processor\DrupalUserProcessor
  * @group ldap
  */
 class DrupalUserProcessorTest extends KernelTestBase implements LdapUserAttributesInterface {
@@ -66,9 +65,9 @@ class DrupalUserProcessorTest extends KernelTestBase implements LdapUserAttribut
     $account = $this->prophesize(User::class);
     $account->getRoles()->willReturn(['administrator']);
     $account->id()->willReturn(1);
-    $value = new \stdClass();
-    $value->value = '';
-    $account->get('ldap_user_ldap_exclude')->willReturn($value);
+    $exclusion = new GetStringHelper();
+    $exclusion->value = '';
+    $account->get('ldap_user_ldap_exclude')->willReturn($exclusion);
     $this->entityTypeManager
       ->getStorage('user_role')
       ->create([
@@ -91,18 +90,16 @@ class DrupalUserProcessorTest extends KernelTestBase implements LdapUserAttribut
     $account = $this->prophesize(User::class);
     $account->getRoles()->willReturn(['']);
     $account->id()->willReturn(2);
-    $value = new \stdClass();
-    $value->value = 1;
-    $account->get('ldap_user_ldap_exclude')->willReturn($value);
+    $exclusion->value = 1;
+    $account->get('ldap_user_ldap_exclude')->willReturn($exclusion);
     self::assertTrue($this->drupalUserProcessor->excludeUser($account->reveal()));
 
     // Everyone else allowed.
     $account = $this->prophesize(User::class);
     $account->getRoles()->willReturn(['']);
     $account->id()->willReturn(2);
-    $value = new \stdClass();
-    $value->value = '';
-    $account->get('ldap_user_ldap_exclude')->willReturn($value);
+    $exclusion->value = 0;
+    $account->get('ldap_user_ldap_exclude')->willReturn($exclusion);
     self::assertFalse($this->drupalUserProcessor->excludeUser($account->reveal()));
   }
 
@@ -123,7 +120,7 @@ class DrupalUserProcessorTest extends KernelTestBase implements LdapUserAttribut
   }
 
   // @todo Write test to show that syncing to existing Drupal users works.
-  // @todo Write a test showing that a constant value gets passend on
+  // @todo Write a test showing that a constant value gets passed on
   // correctly, i.e. ldap_attr is "Faculty" instead of [type].
   // @todo Write a test validating compound tokens, i.e. ldap_attr is
   // '[cn]@hogwarts.edu' or '[givenName] [sn]'.

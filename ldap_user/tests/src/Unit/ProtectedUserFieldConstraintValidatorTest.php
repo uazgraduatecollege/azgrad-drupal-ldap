@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Drupal\Tests\ldap_user\Unit;
 
+use Drupal\ldap_authentication\Controller\LoginValidatorBase;
 use Drupal\ldap_authentication\Controller\LoginValidatorLoginForm;
 use Drupal\ldap_user\Plugin\Validation\Constraint\LdapProtectedUserFieldConstraint;
 use Drupal\ldap_user\Plugin\Validation\Constraint\LdapProtectedUserFieldConstraintValidator;
@@ -17,12 +18,16 @@ use Drupal\Core\Field\FieldDefinitionInterface;
 
 /**
  * Extended from core tests.
+ *
  * @group ldap
  */
 class ProtectedUserFieldConstraintValidatorTest extends UnitTestCase {
 
   /**
-   * {@inheritdoc}
+   * Creates a validator.
+   *
+   * @return \Drupal\ldap_user\Plugin\Validation\Constraint\LdapProtectedUserFieldConstraintValidator
+   *   Validator.
    */
   protected function createValidator(): LdapProtectedUserFieldConstraintValidator {
     // Setup mocks that don't need to change.
@@ -47,7 +52,7 @@ class ProtectedUserFieldConstraintValidatorTest extends UnitTestCase {
     $login_service = $this->createMock(LoginValidatorLoginForm::class);
     $login_service->expects($this->any())
       ->method('validateCredentialsLoggedIn')
-      ->willReturn(LoginValidatorLoginForm::AUTHENTICATION_FAILURE_CREDENTIALS);
+      ->willReturn(LoginValidatorBase::AUTHENTICATION_FAILURE_CREDENTIALS);
     $validator->setLoginValidator($login_service);
     return $validator;
   }
@@ -129,7 +134,7 @@ class ProtectedUserFieldConstraintValidatorTest extends UnitTestCase {
     $field_definition->expects($this->exactly(2))
       ->method('getName')
       ->willReturn('field_not_password');
-    $account = $this->createMock('Drupal\user\UserInterface');
+    $account = $this->createMock(UserInterface::class);
     $account->expects($this->once())
       ->method('isNew')
       ->willReturn(FALSE);
@@ -246,7 +251,7 @@ class ProtectedUserFieldConstraintValidatorTest extends UnitTestCase {
     $login_service = $this->createMock(LoginValidatorLoginForm::class);
     $login_service->expects($this->any())
       ->method('validateCredentialsLoggedIn')
-      ->willReturn(LoginValidatorLoginForm::AUTHENTICATION_SUCCESS);
+      ->willReturn(LoginValidatorBase::AUTHENTICATION_SUCCESS);
     $validator->setLoginValidator($login_service);
     $validator->initialize($context);
     $validator->validate($items, $constraint);

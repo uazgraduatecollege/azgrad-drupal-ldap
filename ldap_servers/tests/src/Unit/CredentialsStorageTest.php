@@ -16,7 +16,7 @@ class CredentialsStorageTest extends UnitTestCase {
   /**
    * Test the temporary storage of passwords.
    */
-  public function testCredentialsStorage() {
+  public function testCredentialsStorage(): void {
     $user = 'my-user';
     $password = 'my-pass';
 
