@@ -39,6 +39,10 @@ class ServerListBuilder extends ConfigEntityListBuilder {
    */
   public function buildRow(EntityInterface $entity) {
     /** @var \Drupal\ldap_servers\Entity\Server $entity */
+    $entityWithoutOverrides = $entity;
+    /** @var \Drupal\ldap_servers\Entity\Server $entity_with_overrides */
+    $entity = $this->storage->load($entity->id());
+
     $row = [];
     $row['label'] = $entity->label();
     $row['bind_method'] = ucfirst((string) $entity->getFormattedBind());
@@ -61,9 +65,8 @@ class ServerListBuilder extends ConfigEntityListBuilder {
       'port',
     ];
 
-    $stored_entity = $this->storage->loadUnchanged($entity->id());
     foreach ($fields as $field) {
-      if ($entity->get($field) !== $stored_entity->get($field)) {
+      if ($entity->get($field) !== $entityWithoutOverrides->get($field)) {
         $row[$field] .= ' ' . $this->t('(overridden)');
       }
     }
