@@ -13,10 +13,10 @@ declare(strict_types = 1);
 function ldap_servers_requirements($phase) {
   $requirements = [];
 
-  if (version_compare(phpversion(), '5.6.0') < 0) {
+  if (version_compare(phpversion(), '7.2.0') < 0) {
     $requirements['php_ldap_version'] = [
       'title' => t('PHP Version for LDAP'),
-      'description' => t('Your PHP installation is too old for the LDAP module. Please upgrade to at least 5.6, 7.1 is recommended.'),
+      'description' => t('Your PHP installation is too old for the LDAP module. Please upgrade to at least 7.2.'),
       'severity' => REQUIREMENT_ERROR,
       'value' => phpversion(),
     ];
@@ -35,6 +35,15 @@ function ldap_servers_requirements($phase) {
       'severity' => REQUIREMENT_ERROR,
       'value' => t('Missing'),
       'description' => t('The LDAP extension of PHP is not available. Please consult your distribution to discover how to install it.'),
+    ];
+  }
+
+  if (!class_exists('Symfony\Component\Ldap\Ldap')) {
+    $requirements['ldap_library_present'] = [
+      'title' => t('LDAP library'),
+      'severity' => REQUIREMENT_ERROR,
+      'value' => t('Missing \Symfony\Component\Ldap\Ldap'),
+      'description' => t('You are missing a critical dependency, you should install via Composer which provides it.'),
     ];
   }
 
