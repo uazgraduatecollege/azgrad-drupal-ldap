@@ -164,19 +164,6 @@ class LdapEntryProvisionSubscriber implements EventSubscriberInterface, LdapUser
   }
 
   /**
-   * Set the user.
-   *
-   * This should not be used in practice and is a workaround to ease testing
-   * this class, before we can refactor it.
-   *
-   * @param \Drupal\user\UserInterface $account
-   *   Account.
-   */
-  public function setUser(UserInterface $account): void {
-    $this->account = $account;
-  }
-
-  /**
    * Handle account login with LDAP entry provisioning.
    *
    * @param \Drupal\ldap_user\Event\LdapUserLoginEvent $event
@@ -257,14 +244,8 @@ class LdapEntryProvisionSubscriber implements EventSubscriberInterface, LdapUser
    *   Provisioning available.
    */
   private function provisionLdapEntriesFromDrupalUsers(): bool {
-    if (
-      $this->config->get('ldapEntryProvisionServer') &&
-      count(array_filter(array_values($this->config->get('ldapEntryProvisionTriggers')))) > 0
-    ) {
-      return TRUE;
-    }
-
-    return FALSE;
+    return $this->config->get('ldapEntryProvisionServer') &&
+      count(array_filter(array_values($this->config->get('ldapEntryProvisionTriggers')))) > 0;
   }
 
   /**
@@ -604,7 +585,7 @@ class LdapEntryProvisionSubscriber implements EventSubscriberInterface, LdapUser
   /**
    * Given a Drupal account, sync to related LDAP entry.
    */
-  public function syncToLdapEntry(): void {
+  private function syncToLdapEntry(): void {
     if (!$this->config->get('ldapEntryProvisionServer')) {
       $this->logger->error('Provisioning server not available');
       return;
@@ -656,16 +637,6 @@ class LdapEntryProvisionSubscriber implements EventSubscriberInterface, LdapUser
       return $this->ldapUserManager->queryAllBaseDnLdapForUsername($authmap);
     }
     return FALSE;
-  }
-
-  /**
-   * Get the tokens.
-   *
-   * @return array
-   *   Tokens.
-   */
-  public function getTokens(): array {
-    return $this->tokens;
   }
 
 }
