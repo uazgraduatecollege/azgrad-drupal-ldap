@@ -6,7 +6,7 @@ namespace Drupal\Tests\ldap_user\Kernel;
 
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\ldap_servers\Entity\Server;
-use Drupal\ldap_servers\FakeBridge;
+use Drupal\ldap_servers_dummy\FakeBridge;
 use Drupal\ldap_servers\LdapUserAttributesInterface;
 use Drupal\ldap_user\EventSubscriber\LdapEntryProvisionSubscriber;
 use Drupal\Tests\user\Traits\UserCreationTrait;
@@ -32,12 +32,13 @@ class LdapEntryProvisionTest extends KernelTestBase {
    */
   protected static $modules = [
     'externalauth',
-    'ldap_servers',
-    'ldap_user',
-    'ldap_query',
     'ldap_authentication',
-    'user',
+    'ldap_query',
+    'ldap_servers',
+    'ldap_servers_dummy',
+    'ldap_user',
     'system',
+    'user',
   ];
 
   /**
@@ -55,6 +56,7 @@ class LdapEntryProvisionTest extends KernelTestBase {
 
     $this->installSchema('system', 'sequences');
     $this->installEntitySchema('user');
+    $this->installSchema('externalauth', 'authmap');
 
     $server = Server::create([
       'id' => 'test',
@@ -67,8 +69,9 @@ class LdapEntryProvisionTest extends KernelTestBase {
     $server->save();
     $this->config('ldap_user.settings')
       ->set('ldapEntryProvisionTriggers', [
-        LdapUserAttributesInterface::EVENT_CREATE_LDAP_ENTRY,
-        LdapUserAttributesInterface::EVENT_SYNC_TO_LDAP_ENTRY,
+        LdapUserAttributesInterface::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_AUTHENTICATION,
+        LdapUserAttributesInterface::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_UPDATE_CREATE,
+        LdapUserAttributesInterface::PROVISION_LDAP_ENTRY_ON_USER_ON_USER_DELETE,
       ])
       ->set('ldapEntryProvisionServer', $server->id())
       ->set('ldapUserSyncMappings', [

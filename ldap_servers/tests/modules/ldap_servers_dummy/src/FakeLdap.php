@@ -2,7 +2,7 @@
 
 declare(strict_types = 1);
 
-namespace Drupal\ldap_servers;
+namespace Drupal\ldap_servers_dummy;
 
 use Symfony\Component\Ldap\Adapter\EntryManagerInterface;
 use Symfony\Component\Ldap\Exception\ConnectionException;

@@ -8,8 +8,8 @@ use Drupal\Core\Form\FormState;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\ldap_authentication\Controller\LoginValidatorLoginForm;
 use Drupal\KernelTests\KernelTestBase;
-use Drupal\ldap_servers\FakeBridge;
-use Drupal\ldap_servers\FakeCollection;
+use Drupal\ldap_servers_dummy\FakeBridge;
+use Drupal\ldap_servers_dummy\FakeCollection;
 use Drupal\ldap_servers\LdapUserAttributesInterface;
 use Symfony\Component\Ldap\Entry;
 
@@ -24,13 +24,14 @@ class LoginTest extends KernelTestBase {
    * {@inheritdoc}
    */
   protected static $modules = [
+    'externalauth',
+    'ldap_authentication',
+    'ldap_query',
+    'ldap_servers',
+    'ldap_servers_dummy',
+    'ldap_user',
     'system',
     'user',
-    'externalauth',
-    'ldap_servers',
-    'ldap_authentication',
-    'ldap_user',
-    'ldap_query',
   ];
 
   /**

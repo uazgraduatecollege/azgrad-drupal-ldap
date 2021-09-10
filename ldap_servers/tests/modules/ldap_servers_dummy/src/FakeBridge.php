@@ -2,10 +2,11 @@
 
 declare(strict_types = 1);
 
-namespace Drupal\ldap_servers;
+namespace Drupal\ldap_servers_dummy;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\ldap_servers\Entity\Server;
+use Drupal\ldap_servers\LdapBridgeInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Ldap\LdapInterface;
 
@@ -17,7 +18,7 @@ class FakeBridge implements LdapBridgeInterface {
   /**
    * LDAP.
    *
-   * @var \Drupal\ldap_servers\FakeLdap
+   * @var \Drupal\ldap_servers_dummy\FakeLdap
    */
   protected $ldap;
 

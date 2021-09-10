@@ -8,10 +8,9 @@ use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\file\Entity\File;
 use Drupal\KernelTests\Core\Entity\EntityKernelTestBase;
-use Drupal\KernelTests\KernelTestBase;
 use Drupal\ldap_servers\Entity\Server;
-use Drupal\ldap_servers\FakeBridge;
-use Drupal\ldap_servers\FakeCollection;
+use Drupal\ldap_servers_dummy\FakeBridge;
+use Drupal\ldap_servers_dummy\FakeCollection;
 use Drupal\ldap_servers\LdapUserAttributesInterface;
 use Drupal\user\Entity\User;
 use Symfony\Component\Ldap\Entry;
@@ -28,12 +27,13 @@ class DrupalUserProcessorTest extends EntityKernelTestBase implements LdapUserAt
    */
   protected static $modules = [
     'externalauth',
-    'ldap_servers',
     'file',
     'image',
-    'ldap_user',
-    'ldap_query',
     'ldap_authentication',
+    'ldap_query',
+    'ldap_servers',
+    'ldap_servers_dummy',
+    'ldap_user',
   ];
 
   /**
