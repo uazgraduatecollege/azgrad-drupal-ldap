@@ -4,6 +4,10 @@ declare(strict_types = 1);
 
 namespace Drupal\Tests\ldap_user\Kernel;
 
+use Drupal\field\Entity\FieldConfig;
+use Drupal\field\Entity\FieldStorageConfig;
+use Drupal\file\Entity\File;
+use Drupal\KernelTests\Core\Entity\EntityKernelTestBase;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\ldap_servers\Entity\Server;
 use Drupal\ldap_servers\FakeBridge;
@@ -17,7 +21,7 @@ use Symfony\Component\Ldap\Entry;
  *
  * @group ldap
  */
-class DrupalUserProcessorTest extends KernelTestBase implements LdapUserAttributesInterface {
+class DrupalUserProcessorTest extends EntityKernelTestBase implements LdapUserAttributesInterface {
 
   /**
    * {@inheritdoc}
@@ -25,11 +29,11 @@ class DrupalUserProcessorTest extends KernelTestBase implements LdapUserAttribut
   protected static $modules = [
     'externalauth',
     'ldap_servers',
+    'file',
+    'image',
     'ldap_user',
     'ldap_query',
     'ldap_authentication',
-    'user',
-    'system',
   ];
 
   /**
@@ -38,13 +42,6 @@ class DrupalUserProcessorTest extends KernelTestBase implements LdapUserAttribut
    * @var \Drupal\ldap_user\Processor\DrupalUserProcessor
    */
   private $drupalUserProcessor;
-
-  /**
-   * Entity Type Manager.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManager
-   */
-  private $entityTypeManager;
 
   /**
    * Server.
@@ -61,11 +58,21 @@ class DrupalUserProcessorTest extends KernelTestBase implements LdapUserAttribut
 
     $this->installConfig(['ldap_authentication']);
     $this->installConfig(['ldap_user']);
-    $this->installConfig(['user']);
     $this->installEntitySchema('ldap_server');
-    $this->installEntitySchema('user');
-    $this->installSchema('system', 'sequences');
+    $this->installEntitySchema('file');
+    $this->installSchema('file', 'file_usage');
     $this->installSchema('externalauth', 'authmap');
+
+    FieldStorageConfig::create([
+      'entity_type' => 'user',
+      'field_name' => 'user_picture',
+      'type' => 'image',
+    ])->save();
+    FieldConfig::create([
+      'field_name' => 'user_picture',
+      'entity_type' => 'user',
+      'bundle' => 'user',
+    ])->save();
 
     $this->config('ldap_user.settings')
       ->set('drupalAcctProvisionServer', 'example')
@@ -80,6 +87,7 @@ class DrupalUserProcessorTest extends KernelTestBase implements LdapUserAttribut
       'basedn' => ['ou=people,dc=hogwarts,dc=edu'],
       'user_attr' => 'cn',
       'mail_attr' => 'mail',
+      'picture_attr' => 'picture_field',
     ]);
     $this->server->save();
 
@@ -96,7 +104,10 @@ class DrupalUserProcessorTest extends KernelTestBase implements LdapUserAttribut
             'cn' => ['hpotter'],
             'uid' => ['123'],
             'mail' => ['hpotter@example.com'],
-          ]
+            'picture_field' => [
+              file_get_contents(__DIR__ . '/../../example.png'),
+            ],
+          ],
         ),
       ]),
     ];
@@ -105,14 +116,12 @@ class DrupalUserProcessorTest extends KernelTestBase implements LdapUserAttribut
     $this->container->set('ldap.bridge', $bridge);
 
     $this->drupalUserProcessor = $this->container->get('ldap.drupal_user_processor');
-    $this->entityTypeManager = $this->container->get('entity_type.manager');
   }
 
   /**
    * Tests user exclusion for the authentication helper.
    */
   public function testUserExclusion(): void {
-
     // Skip administrators, if so configured.
     /** @var \Drupal\user\Entity\User $account */
     $account = $this->prophesize(User::class);
@@ -160,11 +169,20 @@ class DrupalUserProcessorTest extends KernelTestBase implements LdapUserAttribut
    * Test that creating users with createDrupalUserFromLdapEntry() works.
    */
   public function testProvisioning(): void {
+    $result = $this->drupalUserProcessor->createDrupalUserFromLdapEntry(['name' => 'invalid']);
+    self::assertFalse($result);
     $result = $this->drupalUserProcessor->createDrupalUserFromLdapEntry(['name' => 'hpotter']);
     self::assertTrue($result);
     $user = $this->drupalUserProcessor->getUserAccount();
     self::assertInstanceOf(User::class, $user);
     self::assertEquals('hpotter@example.com', $user->getEmail());
+
+    // Check picture file.
+    /** @var \Drupal\file\Entity\File $picture */
+    $picture = $user->get('user_picture')->referencedEntities()[0];
+    self::assertInstanceOf(File::class, $picture);
+    self::assertStringContainsString('.png', $picture->getFilename());
+
     // Let email be overwritten from LDAP via presave due to
     // PROVISION_DRUPAL_USER_ON_USER_UPDATE_CREATE.
     $user->setEmail('overridden@example.com')->save();
