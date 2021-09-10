@@ -5,8 +5,12 @@ declare(strict_types = 1);
 namespace Drupal\Tests\ldap_user\Kernel;
 
 use Drupal\KernelTests\KernelTestBase;
+use Drupal\ldap_servers\Entity\Server;
+use Drupal\ldap_servers\FakeBridge;
+use Drupal\ldap_servers\FakeCollection;
 use Drupal\ldap_servers\LdapUserAttributesInterface;
 use Drupal\user\Entity\User;
+use Symfony\Component\Ldap\Entry;
 
 /**
  * Tests for the DrupalUserProcessor.
@@ -43,6 +47,13 @@ class DrupalUserProcessorTest extends KernelTestBase implements LdapUserAttribut
   private $entityTypeManager;
 
   /**
+   * Server.
+   *
+   * @var \Drupal\ldap_servers\Entity\Server
+   */
+  private $server;
+
+  /**
    * Setup of kernel tests.
    */
   public function setUp(): void {
@@ -51,6 +62,48 @@ class DrupalUserProcessorTest extends KernelTestBase implements LdapUserAttribut
     $this->installConfig(['ldap_authentication']);
     $this->installConfig(['ldap_user']);
     $this->installConfig(['user']);
+    $this->installEntitySchema('ldap_server');
+    $this->installEntitySchema('user');
+    $this->installSchema('system', 'sequences');
+    $this->installSchema('externalauth', 'authmap');
+
+    $this->config('ldap_user.settings')
+      ->set('drupalAcctProvisionServer', 'example')
+      ->set('drupalAcctProvisionTriggers', [
+        self::PROVISION_DRUPAL_USER_ON_USER_AUTHENTICATION,
+        self::PROVISION_DRUPAL_USER_ON_USER_UPDATE_CREATE,
+      ])
+      ->save();
+
+    $this->server = Server::create([
+      'id' => 'example',
+      'basedn' => ['ou=people,dc=hogwarts,dc=edu'],
+      'user_attr' => 'cn',
+      'mail_attr' => 'mail',
+    ]);
+    $this->server->save();
+
+    $bridge = new FakeBridge(
+      $this->container->get('logger.channel.ldap_servers'),
+      $this->container->get('entity_type.manager')
+    );
+    $bridge->setServer($this->server);
+    $collection = [
+      '(cn=hpotter)' => new FakeCollection([
+        new Entry(
+          'cn=hpotter,ou=people,dc=hogwarts,dc=edu',
+          [
+            'cn' => ['hpotter'],
+            'uid' => ['123'],
+            'mail' => ['hpotter@example.com'],
+          ]
+        ),
+      ]),
+    ];
+    $bridge->get()->setQueryResult($collection);
+    $bridge->setBindResult(TRUE);
+    $this->container->set('ldap.bridge', $bridge);
+
     $this->drupalUserProcessor = $this->container->get('ldap.drupal_user_processor');
     $this->entityTypeManager = $this->container->get('entity_type.manager');
   }
@@ -107,30 +160,27 @@ class DrupalUserProcessorTest extends KernelTestBase implements LdapUserAttribut
    * Test that creating users with createDrupalUserFromLdapEntry() works.
    */
   public function testProvisioning(): void {
-    self::markTestIncomplete('Broken test');
     $result = $this->drupalUserProcessor->createDrupalUserFromLdapEntry(['name' => 'hpotter']);
     self::assertTrue($result);
     $user = $this->drupalUserProcessor->getUserAccount();
-    // Override the server factory to provide a dummy server.
     self::assertInstanceOf(User::class, $user);
-    // @todo Does not work since getUserDataFromServerByIdentifier() loads
-    // live data and the server is missing.
-    // @todo Amend test scenario to user update, user insert, user delete.
-    // @todo Amend test scenario to log user in, i.e. drupalUserLogsIn().
+    self::assertEquals('hpotter@example.com', $user->getEmail());
+    // Let email be overwritten from LDAP via presave due to
+    // PROVISION_DRUPAL_USER_ON_USER_UPDATE_CREATE.
+    $user->setEmail('overridden@example.com')->save();
+    $user = $this->entityTypeManager->getStorage('user')->load($user->id());
+    self::assertEquals('hpotter@example.com', $user->getEmail());
+
+    $this->config('ldap_user.settings')
+      ->set('drupalAcctProvisionServer', 'example')
+      ->set('drupalAcctProvisionTriggers', [
+        self::PROVISION_DRUPAL_USER_ON_USER_AUTHENTICATION,
+      ])->save();
+
+    // Value overwritten due to different trigger.
+    $user->setEmail('overridden@example.com')->save();
+    $user = $this->entityTypeManager->getStorage('user')->load($user->id());
+    self::assertEquals('overridden@example.com', $user->getEmail());
   }
 
-  // @todo Write test to show that syncing to existing Drupal users works.
-  // @todo Write a test showing that a constant value gets passed on
-  // correctly, i.e. ldap_attr is "Faculty" instead of [type].
-  // @todo Write a test validating compound tokens, i.e. ldap_attr is
-  // '[cn]@hogwarts.edu' or '[givenName] [sn]'.
-  // @todo Write a test validating multiple mail properties, i.e. [mail]
-  // returns the following and we get both:
-  // [['mail' => 'hpotter@hogwarts.edu'], ['mail' => 'hpotter@owlmail.com']].
-  // @todo Write a test validating non-integer values on the account status.
-  // @todo Write a test for applyAttributes for binary fields.
-  // @todo Write a test for applyAttributes for case sensitivity in tokens.
-  // @todo Write a test for applyAttributes for user_attr in mappings.
-  // @todo Write a test to prove puid update works, with and without binary mode
-  // and including a conflicting account.
 }
