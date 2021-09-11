@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Drupal\Tests\ldap_authorization\Kernel;
 
 use Drupal\authorization\Entity\AuthorizationProfile;
+use Drupal\Core\Form\FormState;
 use Drupal\KernelTests\Core\Entity\EntityKernelTestBase;
 use Drupal\ldap_servers\Entity\Server;
 use Drupal\ldap_servers_dummy\FakeBridge;
@@ -31,13 +32,6 @@ class LdapAuthorizationProviderIntegrationTest extends EntityKernelTestBase {
     'ldap_servers_dummy',
     'ldap_user',
   ];
-
-  /**
-   * Consumer plugin.
-   *
-   * @var \Drupal\authorization_drupal_roles\Plugin\authorization\Consumer\DrupalRolesConsumer
-   */
-  protected $consumerPlugin;
 
   /**
    * Setup of kernel tests.
@@ -153,6 +147,7 @@ class LdapAuthorizationProviderIntegrationTest extends EntityKernelTestBase {
       'query' => 'example',
     ]);
     $profile->setConsumerMappings([['role' => 'student']]);
+    /** @var \Drupal\ldap_authorization\Plugin\authorization\Provider\LDAPAuthorizationProvider $provider */
     $provider = $profile->getProvider();
 
     $user = User::create(['name' => 'hpotter', 'mail' => 'hpotter@hogwarts.edu']);
@@ -162,6 +157,98 @@ class LdapAuthorizationProviderIntegrationTest extends EntityKernelTestBase {
       'student' => 'student',
       'wizard' => 'wizard',
     ], $provider->sanitizeProposals($provider->getProposals($user)));
+
+    // Alternative structure with DN in attribute.
+    /** @var FakeBridge $bridge */
+    $bridge = $this->container->get('ldap.bridge');
+    $collection = [
+      '(cn=hpotter)' => new FakeCollection([
+        new Entry(
+          'cn=hpotter,ou=people,dc=hogwarts,dc=edu',
+          [
+            'cn' => ['hpotter'],
+            'uid' => ['123'],
+            'mail' => ['hpotter@example.com'],
+            'businessCategory' => [
+              'cn=students,ou=groups,dc=hogwarts,dc=edu',
+              'cn=wizards,ou=groups,dc=hogwarts,dc=edu',
+            ],
+          ],
+        ),
+      ]),
+    ];
+    $bridge->get()->setQueryResult($collection);
+    self::assertEquals([
+      'students' => 'students',
+      'wizards' => 'wizards',
+    ], $provider->sanitizeProposals($provider->getProposals($user)));
+  }
+
+
+  /**
+   * Test form structure.
+   */
+  public function testFormBuildValidate(): void {
+    $profile = AuthorizationProfile::create([
+      'status' => 'true',
+      'description' => 'test',
+      'id' => 'test',
+      'provider' => 'ldap_provider',
+      'consumer' => 'authorization_drupal_roles',
+    ]);
+    $profile->setProviderMappings([
+      [
+        'query' => 'cn=users,ou=groups,dc=hogwarts,dc=edu',
+        'is_regex' => 0,
+      ],
+    ]);
+    $profile->setProviderConfig([
+      'status' => [
+        'server' => 'example',
+        'only_ldap_authenticated' => 1,
+      ],
+      'filter_and_mappings' => [
+        'use_first_attr_as_groupid' => 1,
+      ],
+    ]);
+    $provider = $profile->getProvider();
+
+    $form = [];
+    $formState = new FormState();
+
+    $form = $provider->buildConfigurationForm($form, $formState);
+    self::assertEquals('example', $form['status']['server']['#default_value']);
+    self::assertEquals(1, $form['status']['only_ldap_authenticated']['#default_value']);
+    self::assertEquals(1, $form['filter_and_mappings']['use_first_attr_as_groupid']['#default_value']);
+
+    $formRow = [];
+    $formRowState = new FormState();
+
+    $row = $provider->buildRowForm($formRow, $formRowState);
+    self::assertEquals('cn=users,ou=groups,dc=hogwarts,dc=edu', $row['query']['#default_value']);
+    self::assertEquals(0, $row['is_regex']['#default_value']);
+
+    $formRowState->setValues([
+      [
+        'provider_mappings' => [
+          'is_regex' => 1,
+          'query' => 'invalid',
+        ],
+      ],
+    ]);
+    $provider->validateRowForm($formRow, $formRowState);
+    self::assertCount(1, $formRowState->getErrors());
+    $formRowState = new FormState();
+    $formRowState->setValues([
+      'row_element' => [
+        'provider_mappings' => [
+          'is_regex' => 1,
+          'query' => '/^valid$/',
+        ],
+      ],
+    ]);
+    $provider->validateRowForm($formRow, $formRowState);
+    self::assertCount(0, $formRowState->getErrors());
   }
 
 }

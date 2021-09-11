@@ -344,7 +344,7 @@ class LDAPAuthorizationProvider extends ProviderPluginBase {
       // that is not in DN format.
       if (
         $config['filter_and_mappings']['use_first_attr_as_groupid'] &&
-        strpos('=', $authorization_id) !== FALSE
+        strpos($authorization_id, '=') !== FALSE
       ) {
         $attr_parts = self::splitDnWithAttributes($authorization_id);
         unset($attr_parts['count']);

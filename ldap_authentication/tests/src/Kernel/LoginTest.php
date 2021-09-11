@@ -144,17 +144,6 @@ class LoginTest extends KernelTestBase {
   }
 
   /**
-   * Test exclusive user mode.
-   */
-  public function testExclusiveUserMode(): void {
-    $this->markTestIncomplete('Test missing.');
-    // @todo Write test
-    // assert right credentials LDAP
-    // assert local Drupal user without mapping (associated, not associated)
-    // see example data.
-  }
-
-  /**
    * Test the whitelist.
    */
   public function testWhiteListPresent(): void {
