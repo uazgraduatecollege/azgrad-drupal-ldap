@@ -73,6 +73,14 @@ class GroupManagerTest extends KernelTestBase {
     $group_manager->setServer($this->server);
     $result = $group_manager->groupUserMembershipsFromUserAttr($entry);
     self::assertEquals($memberships, $result);
+
+    $this->server->set('grp_user_memb_attr', 'invalidAttribute');
+    $result = $group_manager->groupUserMembershipsFromUserAttr($entry);
+    self::assertEmpty($result);
+
+    $this->server->set('grp_user_memb_attr_exists', FALSE);
+    $result = $group_manager->groupUserMembershipsFromUserAttr($entry);
+    self::assertEmpty($result);
   }
 
 }
