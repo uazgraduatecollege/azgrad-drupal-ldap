@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Drupal\Tests\ldap_authorization\Kernel;
 
+use Drupal\authorization\AuthorizationSkipAuthorization;
 use Drupal\authorization\Entity\AuthorizationProfile;
 use Drupal\Core\Form\FormState;
 use Drupal\KernelTests\Core\Entity\EntityKernelTestBase;
@@ -106,6 +107,7 @@ class LdapAuthorizationProviderIntegrationTest extends EntityKernelTestBase {
       'query' => 'example',
     ]);
     $profile->setConsumerMappings([['role' => 'student']]);
+    /** @var \Drupal\ldap_authorization\Plugin\authorization\Provider\LDAPAuthorizationProvider $provider */
     $provider = $profile->getProvider();
 
     $user = User::create(['name' => 'hpotter', 'mail' => 'hpotter@hogwarts.edu']);
@@ -116,6 +118,19 @@ class LdapAuthorizationProviderIntegrationTest extends EntityKernelTestBase {
 
     $sanitized = $provider->sanitizeProposals($proposals);
     self::assertEquals(['student' => 'student', 'wizard' => 'wizard'], $sanitized);
+
+    // Username differs, no matches.
+    $user->set('name', 'asdf')->save();
+    self::assertEquals([], $provider->getProposals($user));
+
+    // Server unavailable, no matches.
+    Server::load('example')->set('status', 0)->save();
+    self::assertEquals([], $provider->getProposals($user));
+
+    // Exception on exclusion.
+    $user->set('ldap_user_ldap_exclude', 1)->save();
+    $this->expectException(AuthorizationSkipAuthorization::class);
+    $provider->getProposals($user);
   }
 
   /**

@@ -34,13 +34,6 @@ class OrphanProcessor {
   private $ldapQueryOrLimit = 30;
 
   /**
-   * Missing server semaphore.
-   *
-   * @var array
-   */
-  private $missingServerSemaphore = [];
-
-  /**
    * Enabled servers.
    *
    * @var \Drupal\ldap_servers\ServerInterface[]
@@ -289,7 +282,7 @@ class OrphanProcessor {
 
     switch ($this->configLdapUser->get('orphanedAccountCheckInterval')) {
       case 'always':
-        $group->condition('ldap_user_last_checked', time(), '<');
+        $group->condition('ldap_user_last_checked', time(), '<=');
         break;
 
       case 'daily':
@@ -336,6 +329,7 @@ class OrphanProcessor {
           case 'ldap_user_orphan_email';
             $link = Url::fromRoute('entity.user.edit_form', ['user' => $user['uid']])->setAbsolute();
             $this->emailList[] = $account->getAccountName() . ',' . $account->getEmail() . ',' . $link->toString();
+            $account->set('ldap_user_last_checked', time())->save();
             break;
 
           case 'user_cancel_block':
@@ -395,11 +389,8 @@ class OrphanProcessor {
     $user['exists'] = FALSE;
     // Query LDAP and update the prepared users with the actual state.
     if (!isset($this->enabledServers[$serverId])) {
-      if (!isset($this->missingServerSemaphore[$serverId])) {
-        $this->logger->error('Server %id not enabled, but needed to remove orphaned LDAP users', ['%id' => $serverId]);
-        $this->missingServerSemaphore[$serverId] = TRUE;
-      }
-      return $user;
+      $this->logger->error('Server %id not enabled, but needed to remove orphaned LDAP users', ['%id' => $serverId]);
+      throw new \Exception('Server not available, aborting.');
     }
 
     if ($this->enabledServers[$serverId]->get('unique_persistent_attr_binary')) {
