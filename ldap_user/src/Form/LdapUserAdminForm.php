@@ -114,10 +114,11 @@ class LdapUserAdminForm extends ConfigFormBase implements LdapUserAttributesInte
   public function buildForm(array $form, FormStateInterface $form_state): array {
     $config = $this->config('ldap_user.settings');
 
-    if (count($this->drupalAcctProvisionServerOptions) === 0) {
+    // If nothing except "None" is present, skip the rest of the form.
+    if (count($this->drupalAcctProvisionServerOptions) === 1) {
       $url = Url::fromRoute('entity.ldap_server.collection');
       $edit_server_link = Link::fromTextAndUrl($this->t('@path', ['@path' => 'LDAP Servers']), $url)->toString();
-      $message = $this->t('At least one LDAP server must configured and <em>enabled</em> before configuring LDAP user. Please go to @link to configure an LDAP server.',
+      $message = $this->t('At least one LDAP server must be configured and <em>enabled</em> before you can configure user settings. Please go to @link, to configure an LDAP server.',
         ['@link' => $edit_server_link]
       );
       $form['intro'] = [
