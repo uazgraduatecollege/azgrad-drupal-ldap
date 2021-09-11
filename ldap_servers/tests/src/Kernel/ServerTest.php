@@ -9,7 +9,8 @@ use Drupal\ldap_servers\Entity\Server;
 use Symfony\Component\Ldap\Entry;
 
 /**
- * @coversDefaultClass \Drupal\ldap_servers\Entity\Server
+ * Server tests.
+ *
  * @group ldap
  */
 class ServerTest extends KernelTestBase {

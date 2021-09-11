@@ -8,7 +8,8 @@ use Drupal\ldap_servers\Helper\CredentialsStorage;
 use Drupal\Tests\UnitTestCase;
 
 /**
- * @coversDefaultClass \Drupal\ldap_servers\Helper\CredentialsStorage
+ * Credential storage tests.
+ *
  * @group ldap
  */
 class CredentialsStorageTest extends UnitTestCase {

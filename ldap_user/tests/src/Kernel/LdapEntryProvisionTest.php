@@ -11,11 +11,11 @@ use Drupal\ldap_servers\LdapUserAttributesInterface;
 use Drupal\ldap_user\Event\LdapUserLoginEvent;
 use Drupal\ldap_user\EventSubscriber\LdapEntryProvisionSubscriber;
 use Drupal\Tests\user\Traits\UserCreationTrait;
-use Symfony\Component\Ldap\Adapter\EntryManagerInterface;
 use Symfony\Component\Ldap\Adapter\ExtLdap\EntryManager;
 
 /**
- * @coversDefaultClass \Drupal\ldap_servers\Processor\TokenProcessor
+ * Token processor tests.
+ *
  * @group ldap
  */
 class LdapEntryProvisionTest extends KernelTestBase {

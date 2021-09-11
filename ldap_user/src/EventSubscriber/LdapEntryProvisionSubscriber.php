@@ -8,7 +8,6 @@ use Drupal\ldap_servers\LdapTransformationTraits;
 use Drupal\ldap_user\Event\LdapNewUserCreatedEvent;
 use Drupal\ldap_user\Event\LdapUserLoginEvent;
 use Drupal\ldap_user\Event\LdapUserUpdatedEvent;
-use Drupal\user\UserInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Ldap\Entry;
 use Drupal\Core\Config\ConfigFactory;

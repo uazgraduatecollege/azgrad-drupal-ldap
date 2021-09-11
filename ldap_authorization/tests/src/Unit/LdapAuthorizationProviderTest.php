@@ -10,7 +10,8 @@ use Drupal\ldap_authorization\Plugin\authorization\Provider\LDAPAuthorizationPro
 use Drupal\Tests\UnitTestCase;
 
 /**
- * @coversDefaultClass \Drupal\ldap_authorization\Plugin\authorization\Provider\LDAPAuthorizationProvider
+ * Authorization provider tests.
+ *
  * @group authorization
  */
 class LdapAuthorizationProviderTest extends UnitTestCase {
