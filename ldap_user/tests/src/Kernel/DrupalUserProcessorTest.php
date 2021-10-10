@@ -201,11 +201,10 @@ class DrupalUserProcessorTest extends EntityKernelTestBase implements LdapUserAt
     self::assertEquals('overridden@example.com', $user->getEmail());
   }
 
-
   /**
-   * Test the 'associate' option when provisioning an account
+   * Test the 'associate' option when provisioning an account.
    */
-  function testLdapAssociateDrupalAccount(): void {
+  public function testLdapAssociateDrupalAccount(): void {
     $result = $this->drupalUserProcessor->createDrupalUserFromLdapEntry(['name' => 'hpotter']);
     self::assertTrue($result);
     self::assertEquals(TRUE, $this->drupalUserProcessor->ldapAssociateDrupalAccount('hpotter'));
@@ -214,6 +213,6 @@ class DrupalUserProcessorTest extends EntityKernelTestBase implements LdapUserAt
       ->save();
     self::assertEquals(FALSE, $this->drupalUserProcessor->ldapAssociateDrupalAccount('hpotter'));
 
-
   }
+
 }

@@ -3,7 +3,6 @@
 namespace Drupal\Tests\ldap_user\Kernel;
 
 use Drupal\KernelTests\Core\Entity\EntityKernelTestBase;
-use Drupal\KernelTests\KernelTestBase;
 use Drupal\ldap_servers\Entity\Server;
 use Drupal\ldap_servers_dummy\FakeBridge;
 use Drupal\ldap_servers_dummy\FakeCollection;

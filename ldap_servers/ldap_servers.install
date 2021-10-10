@@ -5,6 +5,8 @@
  * Install, update and uninstall functions for the LDAP API module.
  */
 
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+
 declare(strict_types = 1);
 
 /**
@@ -79,7 +81,7 @@ function ldap_servers_update_8301() {
 /**
  * Removes HTTPS checking.
  */
-function ldap_servers_update_8302(): \Drupal\Core\StringTranslation\TranslatableMarkup {
+function ldap_servers_update_8302(): TranslatableMarkup {
   $config_factory = \Drupal::configFactory();
   $config = $config_factory->getEditable('ldap_servers.settings');
   $config->delete();
@@ -90,7 +92,7 @@ function ldap_servers_update_8302(): \Drupal\Core\StringTranslation\Translatable
 /**
  * Adds default timeout to all servers.
  */
-function ldap_servers_update_8303(): \Drupal\Core\StringTranslation\TranslatableMarkup {
+function ldap_servers_update_8303(): TranslatableMarkup {
   /** @var \Drupal\Core\Entity\EntityStorageInterface $storage */
   $storage = \Drupal::service('entity_type.manager')->getStorage('ldap_server');
   $servers = $storage->getQuery()->execute();
@@ -106,20 +108,20 @@ function ldap_servers_update_8303(): \Drupal\Core\StringTranslation\Translatable
  * Force server attributes to be lowercase.
  */
 function ldap_servers_update_8304() {
- // Update removed due to upstream support in symfony/ldap.
+  // Update removed due to upstream support in symfony/ldap.
 }
 
 /**
  * Removal of double-escaping.
  */
-function ldap_servers_update_8305(): \Drupal\Core\StringTranslation\TranslatableMarkup {
+function ldap_servers_update_8305(): TranslatableMarkup {
   return t('Escaping of field data now relies solely on Twig auto-escaping. If you have created custom code make sure it takes this into account. See https://www.drupal.org/project/ldap/issues/2969097 for details.');
 }
 
 /**
  * Paged search removal.
  */
-function ldap_servers_update_8401(): \Drupal\Core\StringTranslation\TranslatableMarkup {
+function ldap_servers_update_8401(): TranslatableMarkup {
   return t('Paged search has been removed in favor of more robust data retrieval. Please retest your configuration if you have used paged search.');
 }
 

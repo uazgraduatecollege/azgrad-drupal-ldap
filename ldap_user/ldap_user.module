@@ -285,7 +285,8 @@ function ldap_user_form_user_register_form_alter(&$form, $form_state) {
     $form['account']['pass']['#type'] = 'value';
     if (version_compare(\Drupal::VERSION, '9.1', '>=')) {
       $form['account']['pass']['#value'] = \Drupal::service('password_generator')->generate(40);
-    } else {
+    }
+    else {
       $form['account']['pass']['#value'] = user_password(40);
     }
     $form['account']['pass_disabled']['#type'] = 'fieldset';
@@ -366,10 +367,10 @@ function ldap_user_form_register_form_validate($form, FormStateInterface $form_s
     $form_state->getValue('ldap_user_association') === LdapUserAttributesInterface::MANUAL_ACCOUNT_CONFLICT_LDAP_ASSOCIATE &&
     empty($config->get('drupalAcctProvisionServer'))
   ) {
-      $form_state->setErrorByName('ldap_user_missing_', t('The provisioning server is not set up correctly.'));
-      \Drupal::logger('ldap_user')
-        ->error('No server available for provisioning to Drupal.');
-    }
+    $form_state->setErrorByName('ldap_user_missing_', t('The provisioning server is not set up correctly.'));
+    \Drupal::logger('ldap_user')
+      ->error('No server available for provisioning to Drupal.');
+  }
 
   // If trying to provision an LDAP account and one already exists, throw error.
   if ($form_state->getValue('ldap_user_create_ldap_acct')) {
@@ -463,7 +464,7 @@ function ldap_user_entity_base_field_info_alter(&$fields, EntityTypeInterface $e
 
   $field_names = ['pass', 'mail'];
   foreach ($field_names as $field_name) {
-    /** @var BaseFieldDefinition $field */
+    /** @var \Drupal\Core\Field\BaseFieldDefinition $field */
     $field = $fields[$field_name];
     $constraints = $field->getConstraints();
     $new_constraints = [];

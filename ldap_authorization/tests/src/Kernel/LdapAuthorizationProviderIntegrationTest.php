@@ -174,7 +174,7 @@ class LdapAuthorizationProviderIntegrationTest extends EntityKernelTestBase {
     ], $provider->sanitizeProposals($provider->getProposals($user)));
 
     // Alternative structure with DN in attribute.
-    /** @var FakeBridge $bridge */
+    /** @var \Drupal\ldap_servers_dummy\FakeBridge $bridge */
     $bridge = $this->container->get('ldap.bridge');
     $collection = [
       '(cn=hpotter)' => new FakeCollection([
@@ -198,7 +198,6 @@ class LdapAuthorizationProviderIntegrationTest extends EntityKernelTestBase {
       'wizards' => 'wizards',
     ], $provider->sanitizeProposals($provider->getProposals($user)));
   }
-
 
   /**
    * Test form structure.

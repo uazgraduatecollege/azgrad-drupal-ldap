@@ -7,6 +7,7 @@
 
 declare(strict_types = 1);
 
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Database\Database;
 
 /**
@@ -127,7 +128,7 @@ function ldap_authentication_update_8305() {
 /**
  * Add system administrator role for exclusion.
  */
-function ldap_authentication_update_8306(): \Drupal\Core\StringTranslation\TranslatableMarkup {
+function ldap_authentication_update_8306(): TranslatableMarkup {
   $config = \Drupal::configFactory()
     ->getEditable('ldap_authentication.settings');
   if ($config->get('authenticationMode') === 'mixed') {

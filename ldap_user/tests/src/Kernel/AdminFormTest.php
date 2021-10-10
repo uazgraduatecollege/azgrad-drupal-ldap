@@ -3,7 +3,6 @@
 namespace Drupal\Tests\ldap_user\Kernel;
 
 use Drupal\Core\Form\FormState;
-use Drupal\Core\Render\Element\Form;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\ldap_servers\Entity\Server;
 use Drupal\ldap_user\Form\LdapUserAdminForm;
