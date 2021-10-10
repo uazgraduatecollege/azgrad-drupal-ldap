@@ -17,6 +17,7 @@ use Drupal\ldap_servers\LdapUserManager;
 use Drupal\ldap_servers\Logger\LdapDetailLog;
 use Drupal\ldap_servers\Processor\TokenProcessor;
 use Drupal\ldap_servers\LdapUserAttributesInterface;
+use Drupal\ldap_servers\ServerInterface;
 use Drupal\ldap_user\Event\LdapUserLoginEvent;
 use Drupal\ldap_user\FieldProvider;
 use Drupal\Core\Utility\Token;
@@ -281,6 +282,7 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
     $ldap_server = $this->entityTypeManager
       ->getStorage('ldap_server')
       ->load($this->config->get('drupalAcctProvisionServer'));
+
     $load_by_name = $this->entityTypeManager
       ->getStorage('user')
       ->loadByProperties(['name' => $drupal_username]);
@@ -288,6 +290,12 @@ class DrupalUserProcessor implements LdapUserAttributesInterface {
       $this->logger->error('Failed to LDAP associate Drupal account %drupal_username because account not found', ['%drupal_username' => $drupal_username]);
       return FALSE;
     }
+
+    if (!$ldap_server instanceof ServerInterface) {
+      $this->logger->error('Failed to load a valid LDAP server from configuration');
+      return FALSE;
+    }
+    $this->ldapUserManager->setServer($ldap_server);
 
     $this->account = reset($load_by_name);
     $this->ldapEntry = $this->ldapUserManager->matchUsernameToExistingLdapEntry($drupal_username);
