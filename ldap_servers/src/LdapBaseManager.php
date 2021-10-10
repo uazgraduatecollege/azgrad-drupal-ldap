@@ -239,7 +239,11 @@ abstract class LdapBaseManager {
       }
     }
 
-    return array_merge(...$results);
+    if (!empty($results)) {
+      $results = array_merge(...$results);
+    }
+
+    return $results;
   }
 
   /**
