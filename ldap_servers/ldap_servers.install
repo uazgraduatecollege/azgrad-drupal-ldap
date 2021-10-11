@@ -5,9 +5,9 @@
  * Install, update and uninstall functions for the LDAP API module.
  */
 
-use Drupal\Core\StringTranslation\TranslatableMarkup;
-
 declare(strict_types = 1);
+
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 
 /**
  * Implements hook_requirements().
