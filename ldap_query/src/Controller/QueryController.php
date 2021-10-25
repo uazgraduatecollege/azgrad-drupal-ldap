@@ -138,7 +138,7 @@ class QueryController {
               ->toArray();
           }
           catch (LdapException $e) {
-            $this->logger->warning('LDAP query exception %message', ['@message' => $e->getMessage()]);
+            $this->logger->warning('LDAP query exception @message', ['@message' => $e->getMessage()]);
             $ldap_response = FALSE;
           }
 
