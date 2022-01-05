@@ -147,10 +147,13 @@ function ldap_servers_update_8403() {
   $servers = $storage->getQuery()->execute();
   /** @var \Drupal\ldap_servers\Entity\Server $server */
   foreach ($storage->loadMultiple($servers) as $server) {
-    $split = preg_split('/\r\n|\r|\n/', $server->get('basedn'));
-    $server->set('basedn', $split);
-    $server->save();
+    if (is_string($server->get('basedn')))  {
+      $split = preg_split('/\r\n|\r|\n/', $server->get('basedn'));
+      $server->set('basedn', $split);
+      $server->save();
+    }
   }
+  return t('Base DN settings were updated, please verify your server configuration.');
 }
 
 /**
@@ -169,4 +172,5 @@ function ldap_servers_update_8404() {
     }
     $server->save();
   }
+  return t('Encryption settings were updated, please verify your server configuration.');
 }
