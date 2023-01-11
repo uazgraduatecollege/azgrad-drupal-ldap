@@ -1,5 +1,5 @@
 {
-    "name": "uazgraduatecollege/ldap",
+    "name": "uazgraduatecollege/azgrad-drupal-ldap",
     "description": "Lightweight Directory Access Protocol (LDAP)",
     "type": "drupal-custom-module",
     "license": "GPL-2.0-or-later",
