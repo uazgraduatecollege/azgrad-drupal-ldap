@@ -235,7 +235,7 @@ class LdapUserManager extends LdapBaseManager {
       return FALSE;
     }
 
-    $identifier = $this->externalAuth->get($account->id(), 'ldap_user');
+    $identifier = $this->externalAuth->get((int)$account->id(), 'ldap_user');
     if ($identifier) {
       return $this->getUserDataByIdentifier($identifier);
     }
