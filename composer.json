@@ -7,7 +7,7 @@
     "require": {
         "symfony/ldap": "^6.0",
         "drupal/authorization": "^1.0",
-        "drupal/externalauth": "2.0.2",
+        "drupal/externalauth": "^2.0.2",
         "php": ">=7.2.0"
     }
 }
